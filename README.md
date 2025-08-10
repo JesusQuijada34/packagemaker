@@ -13,7 +13,7 @@
 - **Interfaz dual**: GUI (PyQt5) + Terminal interactiva
 - **Formatos soportados**:
   - `.iflapp` (paquete normal)
-  - `.iflappb` (bundle)
+  - `.iflappb` (bundle, nuevamente en febrero de 2026 se harán paquetes xml con esta extensión estilo android. Por lo tanto son paquetes en común y corriente)
 - **Gestión completa**: Crear, construir, instalar/desinstalar
 - **Protección integrada**: Hash SHA256 automático
 - **Multiplataforma**: Linux y Windows
@@ -112,5 +112,7 @@
 > Instalador de paquetes haciendo un "scanner" dentro del paquete para verificar validez y que cumpla con los TERMS and CONDITIONS
 
 > Version multiplataforma para terminal interactiva con colores ANSI, "choices" y comandos integrados ("flatr-shell") para dispositivos no compatibles con PyQT
+
 > Version multiplataforma para interfaz adictiva a entorno QT "flatr" para dispositivos alta gama con esta poderosa interfaz
-> Integración con Gabo AI para búsqueda de paquetes fuera del cátalogo, búsqueda por voz similar a PlayStore, categorías para búsqueda poderosa de apps.
+
+> Integración con Gabo AI para búsqueda de paquetes fuera del cátalogo, búsqueda por voz similar a `Google PlayStore`, categorías para búsqueda poderosa de apps.
