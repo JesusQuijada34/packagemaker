@@ -1,5 +1,11 @@
 #!/usr/bin/env/python
 # -*- coding: utf-8 -*-
+# Nueva actualización: Se escoje crear un paquete Packaged (Normal) o Bundled (Solo un py lanzador de actividades xml)
+# Tiene el entorno "knosthalij" (Bundle) y "danenone" (Packaged
+# Se crea lo siguiente o se agregan estas variables a un bundle de esta forma:
+# icon = "bundle/bundle-icon.ico"
+# folders = "bundle,res,data,code,bin,manifest,activity,theme,blob"
+#
 import sys
 import os
 import time
@@ -16,16 +22,16 @@ from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 # ----------- CONFIGURABLE VARIABLES -----------
-APP_FONT = QFont('Arial', 11)
-TAB_FONT = QFont('Arial', 12, QFont.Bold)
-BUTTON_FONT = QFont('Arial', 11, QFont.Bold)
+APP_FONT = QFont('Roboto', 13)
+TAB_FONT = QFont('Roboto', 12) #, QFont.Bold)
+BUTTON_FONT = QFont('Arial', 12, QFont.Bold)
 TAB_ICONS = {
-    "crear": "app/package_add.ico",
-    "construir": "app/package_build.ico",
-    "gestor": "app/package_fm.ico",
-    "about": "app/package_about.ico",
-    "instalar": "app/package_install.ico",
-    "desinstalar": "app/package_uninstall.ico",
+    "crear": "./app/package_add.ico",
+    "construir": "./app/package_build.ico",
+    "gestor": "./app/package_fm.ico",
+    "about": "./app/package_about.ico",
+    "instalar": "./app/package_install.ico",
+    "desinstalar": "./app/package_uninstall.ico",
 }
 BTN_STYLES = {
     "default": "background-color: #29b6f6;color: #000000;border-radius:5px;padding:10px 18px;font-weight:bold;border: 1px solid #45addc;",
@@ -64,7 +70,7 @@ LGDR_BUILD_MESSAGES = {
     "_LGDR_PUBLISHER_E" : "Nombre del publicador quien hizo el proyecto",
     "_LGDR_NAME_E" : "Nombre corto del proyecto a construir",
     "_LGDR_VERSION_E" : "Versión del proyecto a detectar",
-    "_LGDR_TYPE_DDL" : "Packaged (Programa multiplataforma sin código)\nBundled (Script Python con dependencias necesarias",
+    "_LGDR_TYPE_DDL" : "Packaged (Programa multiplataforma en código Python)\nBundled (Manifest.xml + Recursos locales o externos + XML Activities)",
     "_LGDR_BUILD_BTN" : "Construir a partir de RAW (Flatr Packaged/Bundled)"
 }
 
@@ -241,7 +247,7 @@ class PackageTodoGUI(QMainWindow):
         self.resize(1200, 750)
         self.setFont(APP_FONT)
         self.setWindowIcon(QtGui.QIcon(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""))
-        self.statusBar().showMessage("Preparado")
+        self.statusBar().showMessage("Iniciando...")
         self.central = QWidget()
         self.setCentralWidget(self.central)
         self.layout = QVBoxLayout(self.central)
@@ -273,6 +279,7 @@ class PackageTodoGUI(QMainWindow):
         self.tab_about = QWidget()
         self.tabs.addTab(self.tab_about, QIcon(TAB_ICONS["about"]), "Acerca de")
         self.init_about_tab()
+        self.statusBar().showMessage("Preparable!...")
 
     def init_create_tab(self):
         layout = QVBoxLayout()
@@ -298,6 +305,7 @@ class PackageTodoGUI(QMainWindow):
         self.input_titulo.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_TITLE_E"])
         form_layout.addWidget(QLabel("Título completo:"))
         form_layout.addWidget(self.input_titulo)
+        form_layout.addWidget(QLabel("TELEGRAM: t.me/JesusQuijada34"))
         self.btn_create = QPushButton("Crear Proyecto")
         self.btn_create.setFont(BUTTON_FONT)
         self.btn_create.setStyleSheet(BTN_STYLES["success"])
@@ -310,8 +318,10 @@ class PackageTodoGUI(QMainWindow):
         layout.addWidget(self.btn_create)
         layout.addWidget(self.create_status)
         self.tab_create.setLayout(layout)
+        self.statusBar().showMessage("Preparando entorno...")
 
     def create_package_action(self):
+        self.statusBar().showMessage("Creando Proyecto Flatr Packaged...")
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         version = self.input_version.text().strip()
@@ -1041,25 +1051,25 @@ clear
 # version: IO-{version}
 # script: Python3
 # nocombination
-#  
+#
 #  Copyright 2025 Jesus Quijada <@JesusQuijada34>
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 2 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
+#
+#
 
 
 def main(args):
@@ -1106,6 +1116,7 @@ if __name__ == '__main__':
         ET.SubElement(root, "rate").text = rating
         tree = ET.ElementTree(root)
         tree.write(os.path.join(path, "details.xml"))
+        self.statusBar().showMessage(f"Proyecto creado como {empresa}.{nombre_logico}.v{version}!")
 
     def init_build_tab(self):
         layout = QVBoxLayout()
@@ -1116,33 +1127,33 @@ if __name__ == '__main__':
         self.input_build_empresa.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_PUBLISHER_E"])
         form_layout.addWidget(QLabel("Fabricante:"))
         form_layout.addWidget(self.input_build_empresa)
-        
+
         self.input_build_nombre = QLineEdit()
         self.input_build_nombre.setPlaceholderText("Ejemplo: mycoolapp")
         self.input_build_nombre.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_NAME_E"])
         form_layout.addWidget(QLabel("Nombre interno:"))
         form_layout.addWidget(self.input_build_nombre)
-        
+
         self.input_build_version = QLineEdit()
         self.input_build_version.setPlaceholderText("Ejemplo: 1.0")
         self.input_build_version.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_VERSION_E"])
         form_layout.addWidget(QLabel("Versión:"))
         form_layout.addWidget(self.input_build_version)
-        
+
         self.combo_tipo = QComboBox()
         self.combo_tipo.addItem(".iflapp NORMAL", "1")
         self.combo_tipo.addItem(".iflappb BUNDLE", "2")
         self.combo_tipo.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_TYPE_DDL"])
         form_layout.addWidget(QLabel("Tipo de paquete:"))
         form_layout.addWidget(self.combo_tipo)
-        
+
         self.btn_build = QPushButton("Construir paquete")
         self.btn_build.setFont(BUTTON_FONT)
         self.btn_build.setStyleSheet(BTN_STYLES["default"])
         self.btn_build.setIcon(QIcon(TAB_ICONS["construir"]))
         self.btn_build.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_BUILD_BTN"])
         self.btn_build.clicked.connect(self.build_package_action)
-        
+
         self.build_status = QLabel("")
         self.build_status.setStyleSheet("color:#0277bd;")
         layout.addWidget(form_group)
@@ -1161,6 +1172,7 @@ if __name__ == '__main__':
         self.build_thread.finished.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.error.connect(lambda msg: self.build_status.setText(f"❌ Error: {msg}"))
         self.build_thread.start()
+        self.statusBar().showMessage(f"Paquete armado como {empresa}.{nombre_logico}.v{version}!")
 
     def init_manager_tab(self):
         layout = QVBoxLayout()
@@ -1174,7 +1186,7 @@ if __name__ == '__main__':
         self.projects_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_LOCAL_LV"])
         proj_layout.addWidget(self.projects_list)
         splitter.addWidget(proj_group)
-        
+
         apps_group = QGroupBox("Apps instaladas")
         apps_layout = QVBoxLayout(apps_group)
         self.apps_list = QListWidget()
@@ -1184,7 +1196,7 @@ if __name__ == '__main__':
         self.apps_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALLED_LV"])
         apps_layout.addWidget(self.apps_list)
         splitter.addWidget(apps_group)
-        
+
         splitter.setSizes([1, 1])
         layout.addWidget(splitter)
         btn_row = QHBoxLayout()
@@ -1195,7 +1207,7 @@ if __name__ == '__main__':
         btn_refresh.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_REFRESH_BTN"])
         btn_refresh.clicked.connect(self.load_manager_lists)
         btn_row.addWidget(btn_refresh)
-        
+
         btn_install = QPushButton("Instalar paquete")
         btn_install.setFont(BUTTON_FONT)
         btn_install.setStyleSheet(BTN_STYLES["success"])
@@ -1203,7 +1215,7 @@ if __name__ == '__main__':
         btn_install.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALL_BTN"])
         btn_install.clicked.connect(self.install_package_action)
         btn_row.addWidget(btn_install)
-        
+
         btn_uninstall = QPushButton("Desinstalar paquete")
         btn_uninstall.setFont(BUTTON_FONT)
         btn_uninstall.setStyleSheet(BTN_STYLES["danger"])
@@ -1212,7 +1224,7 @@ if __name__ == '__main__':
         btn_uninstall.clicked.connect(self.uninstall_package_action)
         btn_row.addWidget(btn_uninstall)
         layout.addLayout(btn_row)
-        
+
         self.manager_status = QLabel("")
         self.manager_status.setWordWrap(True)
         self.manager_status.setToolTip("Estado de la app")
@@ -1509,8 +1521,9 @@ if __name__ == '__main__':
             "<li>Ejecuta scripts .py desde la interfaz</li>"
             "<li>Paneles ajustables y organización por pestañas</li>"
             "</ul>"
-            "<b>Autor:</b> Jesus Quijada (@JesusQuijada34)<br>"
-            "<b>GitHub:</b> <a href='https://github.com/jesusquijada34/packagemaker/'>packagemaker</a>"
+            "<b>Desarrollador:</b> <a href='https://t.me/JesusQuijada34/'>Jesus Quijada (@JesusQuijada34)</a><br>"
+            "<b>Colaborador:</b> <a href='https://t.me/MkelCT/'>MkelCT18 (@MkelCT)</a><br>"
+            "<b>GitHub:</b> <a href='https://github.com/jesusquijada34/packagemaker/'>packagemaker</a><br>"
         )
         about_label = QLabel(about_text)
         about_label.setOpenExternalLinks(True)

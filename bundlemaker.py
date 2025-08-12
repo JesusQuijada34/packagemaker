@@ -15,10 +15,8 @@ else:
 
 icon = "app/app-icon.ico"
 folders = "bundle,res,data,code,bin,manifest,activity,theme,blob"
-
 plataforma = plataforma_platform.capitalize()
 nombre = plataforma_name.capitalize()
-
 publisher = ""
 bundle = ""
 title = ""
@@ -42,3 +40,7 @@ X-MATE-Autostart-Phase=Desktop
 X-MATE-Autostart-Notify=true
 X-MATE-AutoRestart=true
 X-MATE-Provides={bundle}"""
+
+def getversion():
+    newversion = time.strftime("%y.%m-%H.%M")
+    return f"v{newversion}-{env}"
