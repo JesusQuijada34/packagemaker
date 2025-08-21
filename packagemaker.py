@@ -1,4 +1,5 @@
 #!/usr/bin/env/python
+# COdigo para generar [aquetes]
 # -*- coding: utf-8 -*-
 # Nueva actualización: Se escoje crear un paquete Packaged (Normal) o Bundled (Solo un py lanzador de actividades xml)
 # Tiene el entorno "knosthalij" (Bundle) y "danenone" (Packaged
