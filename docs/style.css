@@ -1,40 +1,25 @@
-body {
-  font-family: system-ui,Segoe UI,Arial,sans-serif;
-  background: #fafbfc;
-  color: #24292e;
-  margin: 0;
-}
-header.gh-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: #24292e;
-  color: #fff;
-  padding: 18px 36px;
-}
-.gh-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 4px;
-  background: #fff;
-  border: 1px solid #e1e4e8;
-  margin-right: 12px;
-}
-header h1 {
-  font-size: 1.7em;
-  font-weight: 600;
-  margin: 0;
-  letter-spacing: .01em;
-}
-header #platform {
-  margin-left: auto;
-  font-size: 1em;
-  color: #768390;
-  font-weight: 500;
-}
-main {
-  max-width: 620px;
-  margin: 38px auto 24px auto;
+body { font-family: system-ui,Segoe UI,Arial,sans-serif; background: #fafbfc; color: #24292e; margin: 0; }
+.gh-header { display: flex; align-items: center; gap: 16px; background: #24292e; color: #fff; padding: 18px 36px;}
+.gh-logo { width: 36px; height: 36px; border-radius: 5px; background: #fff; border: 1px solid #e1e4e8; margin-right: 10px;}
+.gh-header h1 { font-size: 1.1em; font-weight: 600; margin: 0; letter-spacing: .01em;}
+main { max-width: 430px; margin: 25px auto 21px auto; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; padding: 30px 17px 19px 17px; box-shadow: 0 2px 7px #0002;}
+section h2 { font-size: 1.08em; margin-bottom: 10px; font-weight: 600;}
+.gh-form { display: flex; flex-direction: column; gap: 13px; margin-bottom: 8px;}
+.gh-form label { display: flex; flex-direction: column; gap: 3px; font-weight: 500;}
+.gh-form input[type="text"], .gh-form input[type="file"] { padding: 7px 11px; font-size: 1em; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc; color: #24292e; transition: border-color .2s;}
+.gh-form input[type="text"]:focus { border-color: #0366d6; outline: none;}
+.gh-btn { padding: 9px 18px; font-size: 1em; font-weight: 600; color: #fff; background: #2ea44f; border: none; border-radius: 6px; box-shadow: 0 2px 4px #0001; cursor: pointer; transition: background .2s;}
+.gh-btn:hover { background: #22863a;}
+.gh-status { margin-top: 9px; font-size: 1em; color: #22863a;}
+#preview-files, #zip-details { margin-top: 13px; font-size: .96em; background: #f6f8fa; border-radius: 5px; border: 1px solid #e1e4e8; padding: 12px; word-break: break-all;}
+footer { text-align: center; background: #fff; border-top: 1px solid #e1e4e8; padding: 12px 0 7px 0; font-size: .97em; color: #586069;}
+footer a { color: #0366d6; text-decoration: none; margin: 0 2px;}
+footer a:hover { text-decoration: underline;}
+hr { border: none; border-bottom: 1px solid #e1e4e8; margin: 26px 0 18px 0;}
+@media (max-width:520px){
+  main{max-width:97vw;padding:7vw 4vw;}
+  .gh-header{padding:7vw 4vw;}
+}  margin: 38px auto 24px auto;
   background: #fff;
   border: 1px solid #e1e4e8;
   border-radius: 6px;
