@@ -2,308 +2,260 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Influent Package Maker Web</title>
+  <title>Influent Package Maker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
-      --primary-color: #0366d6;
-      --success-color: #2ea44f;
-      --success-hover: #22863a;
-      --warning-color: #f57c00;
-      --bg-color: #fafbfc;
-      --text-color: #24292e;
-      --border-color: #e1e4e8;
-      --card-bg: #fff;
-      --shadow: 0 2px 7px rgba(0,0,0,0.1);
-      --gradient-start: #667eea;
-      --gradient-end: #764ba2;
+      --color-border-default: #d0d7de;
+      --color-border-muted: #d8dee4;
+      --color-canvas-default: #ffffff;
+      --color-canvas-subtle: #f6f8fa;
+      --color-fg-default: #24292f;
+      --color-fg-muted: #57606a;
+      --color-accent-fg: #0969da;
+      --color-success-fg: #1a7f37;
+      --color-danger-fg: #cf222e;
+      --color-attention-fg: #9a6700;
     }
     
-    body { 
-      font-family: system-ui, Segoe UI, Arial, sans-serif; 
-      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-      color: var(--text-color); 
-      margin: 0; 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--color-canvas-default);
+      color: var(--color-fg-default);
       line-height: 1.5;
-      min-height: 100vh;
     }
     
-    .gh-header { 
-      display: flex; 
-      align-items: center; 
-      gap: 14px; 
-      background: rgba(36, 41, 46, 0.95); 
-      color: #fff; 
-      padding: 16px 18px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(10px);
+    .header {
+      background-color: #24292f;
+      color: white;
+      padding: 16px;
+      border-bottom: 1px solid var(--color-border-default);
     }
     
-    .gh-logo { 
-      width: 34px; 
-      height: 34px; 
-      border-radius: 4px; 
-      background: #fff; 
-      border: 1px solid var(--border-color);
-    }
-    
-    .gh-header h1 { 
-      font-size: 1.1em; 
-      font-weight: 600; 
-      margin: 0; 
-    }
-    
-    main { 
-      max-width: 1200px; 
-      margin: 22px auto 15px auto; 
-      background: var(--card-bg); 
-      border: 1px solid var(--border-color); 
-      border-radius: 12px; 
-      padding: 25px; 
-      box-shadow: var(--shadow);
-    }
-    
-    section h2 { 
-      font-size: 1.25em; 
-      margin-bottom: 15px; 
-      font-weight: 600;
+    .header-content {
+      max-width: 1280px;
+      margin: 0 auto;
       display: flex;
       align-items: center;
-      gap: 8px;
-      color: var(--primary-color);
+      gap: 12px;
     }
     
-    .gh-form { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 15px; 
-      margin-bottom: 15px;
-    }
-    
-    .gh-form label { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 5px; 
-      font-weight: 500;
-    }
-    
-    .gh-form input[type="text"], 
-    .gh-form input[type="file"],
-    .gh-form textarea,
-    .gh-form select { 
-      padding: 10px 12px; 
-      font-size: 1em; 
-      border: 1px solid var(--border-color); 
-      border-radius: 8px; 
-      background: var(--bg-color); 
-      color: var(--text-color); 
-      transition: all 0.3s ease;
-    }
-    
-    .gh-form input[type="text"]:focus, 
-    .gh-form textarea:focus,
-    .gh-form select:focus { 
-      border-color: var(--primary-color); 
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
-    }
-    
-    .gh-btn { 
-      padding: 12px 20px; 
-      font-size: 1em; 
-      font-weight: 600; 
-      color: #fff; 
-      background: var(--success-color); 
-      border: none; 
-      border-radius: 8px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15); 
-      cursor: pointer; 
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    
-    .gh-btn:hover { 
-      background: var(--success-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    
-    .gh-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .gh-btn.secondary {
-      background: var(--primary-color);
-    }
-    
-    .gh-btn.secondary:hover {
-      background: #0256b3;
-    }
-    
-    .gh-btn.warning {
-      background: var(--warning-color);
-    }
-    
-    .gh-btn.warning:hover {
-      background: #e65100;
-    }
-    
-    .gh-status { 
-      margin-top: 12px; 
-      font-size: 1em; 
-      color: var(--success-color);
-      padding: 10px;
-      border-radius: 6px;
-      background: #f0f9f0;
-      border: 1px solid #d4edda;
-    }
-    
-    .gh-status.error {
-      color: #d73a49;
-      background: #fdf2f2;
-      border-color: #f5c6cb;
-    }
-    
-    .gh-status.warning {
-      color: #856404;
-      background: #fff3cd;
-      border-color: #ffeaa7;
-    }
-    
-    #preview-files, 
-    #zip-details { 
-      margin-top: 15px; 
-      font-size: .97em; 
-      background: #f6f8fa; 
-      border-radius: 8px; 
-      border: 1px solid var(--border-color); 
-      padding: 15px; 
-      word-break: break-all;
-      max-height: 500px;
-      overflow-y: auto;
-    }
-    
-    .file-editbox { 
-      width: 98%; 
-      min-height: 60px; 
-      font-size: .97em; 
-      border: 1px solid var(--border-color); 
-      border-radius: 6px; 
-      margin:8px 0; 
-      background:#fff; 
-      color:var(--text-color); 
-      font-family: 'Courier New', monospace;
-      resize: vertical;
-      padding: 10px;
-    }
-    
-    .file-editbox:focus { 
-      border-color: var(--primary-color); 
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.1);
-    }
-    
-    footer { 
-      text-align: center; 
-      background: rgba(255, 255, 255, 0.9); 
-      border-top: 1px solid var(--border-color); 
-      padding: 15px 0 10px 0; 
-      font-size: .97em; 
-      color: #586069;
-      margin-top: 30px;
-      backdrop-filter: blur(10px);
-    }
-    
-    footer a { 
-      color: var(--primary-color); 
-      text-decoration: none;
-      font-weight: 500;
-    }
-    
-    footer a:hover { 
-      text-decoration: underline;
-    }
-    
-    hr { 
-      border: none; 
-      border-bottom: 1px solid var(--border-color); 
-      margin: 25px 0 15px 0;
-    }
-    
-    .ai-suggestions {
-      margin-top: 20px;
-      padding: 20px;
-      background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
-      border-radius: 10px;
-      border: 1px solid #c8e1ff;
-    }
-    
-    .ai-suggestions h3 {
-      margin-top: 0;
-      font-size: 1.1em;
-      color: var(--primary-color);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .ai-suggestions button {
-      background: var(--primary-color);
-      margin-top: 12px;
-    }
-    
-    .ai-suggestions button:hover {
-      background: #0256b3;
-    }
-    
-    .suggestion-content {
-      margin-top: 15px;
-      padding: 15px;
+    .logo {
+      width: 32px;
+      height: 32px;
       background: white;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      font-size: 0.95em;
-      white-space: pre-wrap;
+      border-radius: 6px;
+    }
+    
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .section {
+      background: var(--color-canvas-default);
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      margin-bottom: 24px;
+    }
+    
+    .section-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--color-border-default);
+      background: var(--color-canvas-subtle);
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .section-body {
+      padding: 16px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      font-size: 14px;
+      background: var(--color-canvas-default);
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-accent-fg);
+      box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
+    }
+    
+    .textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 13px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      background: var(--color-canvas-default);
+      color: var(--color-fg-default);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: var(--color-canvas-subtle);
+    }
+    
+    .btn-primary {
+      background: var(--color-success-fg);
+      border-color: var(--color-success-fg);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #1a7f37;
+      border-color: #1a7f37;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+    
+    .status-success {
+      background: #dafbe1;
+      border: 1px solid #ace1af;
+      color: var(--color-success-fg);
+    }
+    
+    .status-error {
+      background: #ffebe9;
+      border: 1px solid #ffcecb;
+      color: var(--color-danger-fg);
+    }
+    
+    .status-warning {
+      background: #fff8c5;
+      border: 1px solid #fae17d;
+      color: var(--color-attention-fg);
+    }
+    
+    .status-info {
+      background: #ddf4ff;
+      border: 1px solid #b6e3ff;
+      color: var(--color-accent-fg);
+    }
+    
+    .thinking {
+      background: #fff8c5;
+      border: 1px solid #fae17d;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 12px 0;
+      font-size: 14px;
+      font-style: italic;
+      color: var(--color-attention-fg);
+    }
+    
+    .file-tree {
+      background: var(--color-canvas-subtle);
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      padding: 16px;
+      margin: 16px 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 13px;
+    }
+    
+    .file-item {
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .file-icon {
+      color: var(--color-fg-muted);
+      width: 16px;
+      text-align: center;
     }
     
     .code-block {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      padding: 15px;
+      background: #0d1117;
+      color: #e6edf3;
+      padding: 16px;
       border-radius: 6px;
       margin: 12px 0;
-      font-family: 'Courier New', monospace;
       overflow-x: auto;
-      position: relative;
-      border: 1px solid #444;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.45;
     }
     
-    .code-block::before {
-      content: attr(data-language);
-      position: absolute;
-      top: 0;
-      right: 0;
-      background: #007acc;
-      color: white;
-      padding: 4px 12px;
-      font-size: 0.8em;
-      border-radius: 0 6px 0 6px;
-      font-weight: 600;
+    .code-block-header {
+      background: #161b22;
+      margin: -16px -16px 16px -16px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #30363d;
+      font-size: 12px;
+      color: #7d8590;
+    }
+    
+    .verification-step {
+      padding: 8px 12px;
+      margin: 4px 0;
+      background: var(--color-canvas-subtle);
+      border-radius: 4px;
+      font-size: 13px;
+      border-left: 3px solid var(--color-border-default);
+    }
+    
+    .verification-step.success {
+      border-left-color: var(--color-success-fg);
+      background: #dafbe1;
+    }
+    
+    .verification-step.error {
+      border-left-color: var(--color-danger-fg);
+      background: #ffebe9;
     }
     
     .loading {
       display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 2px solid #ffffff;
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
       border-radius: 50%;
       border-top-color: transparent;
       animation: spin 1s linear infinite;
@@ -313,730 +265,655 @@
       to { transform: rotate(360deg); }
     }
     
-    .three-column {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 20px;
-    }
-    
-    .two-column {
+    .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    
-    .idea-input {
-      min-height: 100px;
-      font-size: 1em;
-    }
-    
-    .suggestion-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 15px;
-      flex-wrap: wrap;
-    }
-    
-    .logo-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 15px;
-      margin: 15px 0;
-    }
-    
-    .logo-option {
-      text-align: center;
-      padding: 15px;
-      border: 2px solid transparent;
-      border-radius: 8px;
-      background: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    
-    .logo-option:hover {
-      border-color: var(--primary-color);
-      transform: translateY(-3px);
-    }
-    
-    .logo-option.selected {
-      border-color: var(--success-color);
-      background: #f0f9f0;
-    }
-    
-    .logo-img {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      object-fit: cover;
-      margin-bottom: 8px;
-      border: 1px solid var(--border-color);
-    }
-    
-    .verification-step {
-      padding: 10px 15px;
-      margin: 8px 0;
-      background: #f8f9fa;
-      border-radius: 6px;
-      border-left: 4px solid var(--primary-color);
-    }
-    
-    .verification-step.success {
-      border-left-color: var(--success-color);
-      background: #f0f9f0;
-    }
-    
-    .verification-step.error {
-      border-left-color: #d73a49;
-      background: #fdf2f2;
-    }
-    
-    .advanced-options {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-    
-    .theme-selector {
-      display: flex;
-      gap: 10px;
-      margin: 10px 0;
-      flex-wrap: wrap;
-    }
-    
-    .theme-option {
-      padding: 8px 15px;
-      border: 2px solid var(--border-color);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background: white;
-    }
-    
-    .theme-option:hover {
-      border-color: var(--primary-color);
-    }
-    
-    .theme-option.selected {
-      border-color: var(--primary-color);
-      background: var(--primary-color);
-      color: white;
-    }
-    
-    @media (max-width: 968px) {
-      .three-column {
-        grid-template-columns: 1fr;
-      }
-      .two-column {
-        grid-template-columns: 1fr;
-      }
+      gap: 24px;
     }
     
     @media (max-width: 768px) {
-      .suggestion-actions {
-        flex-direction: column;
+      .grid {
+        grid-template-columns: 1fr;
       }
-      main {
-        margin: 15px 10px;
-        padding: 15px;
+      .container {
+        padding: 16px;
       }
     }
     
-    @media (max-width:520px){
-      main{
-        max-width:97vw;
-        padding:5vw;
-        margin: 10px auto;
-      }
-      .gh-header{
-        padding:5vw 4vw;
-      }
+    .ai-thinking {
+      background: #fff8c5;
+      border: 1px solid #fae17d;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 8px 0;
+      font-size: 13px;
+      color: var(--color-attention-fg);
+    }
+    
+    .prompt-log {
+      background: var(--color-canvas-subtle);
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      padding: 12px;
+      margin: 8px 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 12px;
+      color: var(--color-fg-muted);
+      max-height: 200px;
+      overflow-y: auto;
     }
   </style>
 </head>
 <body>
-<header class="gh-header">
-  <img id="main-logo" src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" alt="Logo" class="gh-logo">
-  <h1>Influent Package Maker Web - Asistente IA</h1>
-</header>
-<main>
-  <section>
-    <h2>🚀 Crear Proyecto Influent con IA</h2>
-    <div class="three-column">
-      <div class="gh-form">
-        <label><span>Fabricante</span><input name="empresa" type="text" required value="influent"></label>
-        <label><span>Nombre interno</span><input name="nombre" type="text" required></label>
-        <label><span>Versión</span><input name="version" type="text" required value="1.0"></label>
-        <label><span>Título completo</span><input name="titulo" type="text" required></label>
-        
-        <div class="advanced-options">
-          <label><span>Tema de la aplicación</span>
-            <select name="tema">
-              <option value="calculadora">Calculadora/Científico</option>
-              <option value="educativo">Educativo</option>
-              <option value="negocios">Negocios/Productividad</option>
-              <option value="juegos">Juegos/Entretenimiento</option>
-              <option value="utilidades">Utilidades del Sistema</option>
-              <option value="multimedia">Multimedia</option>
-              <option value="desarrollo">Desarrollo/Programación</option>
-            </select>
-          </label>
-          
-          <label><span>Complejidad</span>
-            <select name="complejidad">
-              <option value="basica">Básica</option>
-              <option value="intermedia" selected>Intermedia</option>
-              <option value="avanzada">Avanzada</option>
-            </select>
-          </label>
-        </div>
-        
-        <button type="button" id="btn-generar-ia" class="gh-btn warning">🎯 Generar Todo con IA</button>
-      </div>
-      
-      <div class="ai-suggestions">
-        <h3>💡 Descripción de la Aplicación</h3>
-        <p>Describe tu idea en detalle para que la IA pueda generar código, estructura y diseño completos:</p>
-        <label>
-          <span>Tu idea (ej: "calculadora científica con gráficos, historial y temas")</span>
-          <textarea id="idea-input" class="idea-input" placeholder="Describe funcionalidades, interfaz, características especiales..."></textarea>
-        </label>
-        
-        <div class="theme-selector">
-          <div class="theme-option" data-theme="blue-purple">Azul-Morado</div>
-          <div class="theme-option" data-theme="green-teal">Verde-Turquesa</div>
-          <div class="theme-option" data-theme="orange-red">Naranja-Rojo</div>
-          <div class="theme-option" data-theme="purple-pink">Morado-Rosa</div>
-        </div>
-        
-        <button id="btn-suggest" class="gh-btn secondary">
-          <span id="suggest-text">🧠 Analizar y Generar</span>
-          <span id="suggest-loading" class="loading" style="display:none;"></span>
-        </button>
-        
-        <div id="verification-steps"></div>
-      </div>
-      
-      <div id="suggestion-content" class="suggestion-content" style="display:none;"></div>
+  <div class="header">
+    <div class="header-content">
+      <div class="logo"></div>
+      <h1 style="font-size: 16px; font-weight: 600;">Influent Package Maker</h1>
     </div>
-    
-    <div id="create-status" class="gh-status"></div>
-    
-    <div id="logo-section" style="display:none; margin-top: 20px;">
-      <h3>🎨 Logotipos Generados</h3>
-      <div class="logo-preview" id="logo-preview"></div>
-    </div>
-    
-    <div id="preview-files" style="display:none;"></div>
-    
-    <div class="suggestion-actions" id="final-actions" style="display:none; margin-top: 20px;">
-      <button id="btn-download" class="gh-btn">📦 Descargar Paquete Completado</button>
-      <button id="btn-optimize" class="gh-btn secondary">⚡ Optimizar con IA</button>
-      <button id="btn-validate" class="gh-btn warning">🔍 Validar Código</button>
-    </div>
-  </section>
-  
-  <hr>
-  
-  <section>
-    <h2>📁 Instalar/Explorar Paquete Existente</h2>
-    <form class="gh-form">
-      <label><span>Selecciona paquete ZIP (.iflapp/.iflappb)</span><input type="file" accept=".zip,.iflapp,.iflappb" id="zipfile"></label>
-    </form>
-    <div id="install-status" class="gh-status"></div>
-    <div id="zip-details"></div>
-  </section>
-</main>
+  </div>
 
-<footer>
-  <span>GitHub: <a href="https://github.com/JesusQuijada34/packagemaker/">packagemaker</a> | 
-  Desarrollado con ♥ y Gemini AI | 
-  <a href="#" id="ethics-link">Ética y Directrices</a></span>
-</footer>
+  <div class="container">
+    <div class="grid">
+      <!-- Columna Izquierda: Formulario y Configuración -->
+      <div>
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">Configuración del Proyecto</h2>
+          </div>
+          <div class="section-body">
+            <div class="form-group">
+              <label class="form-label">Fabricante</label>
+              <input type="text" class="form-control" id="empresa" value="influent" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Nombre interno</label>
+              <input type="text" class="form-control" id="nombre" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Versión</label>
+              <input type="text" class="form-control" id="version" value="1.0.0" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Título completo</label>
+              <input type="text" class="form-control" id="titulo" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Tipo de aplicación</label>
+              <select class="form-control" id="tipo">
+                <option value="calculadora">Calculadora/Científica</option>
+                <option value="utilidad">Utilidad del Sistema</option>
+                <option value="herramienta">Herramienta de Desarrollo</option>
+                <option value="productividad">Productividad</option>
+                <option value="multimedia">Multimedia</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">Descripción con IA</h2>
+          </div>
+          <div class="section-body">
+            <div class="form-group">
+              <label class="form-label">Describe tu aplicación en detalle</label>
+              <textarea class="form-control textarea" id="idea-input" placeholder="Ej: Calculadora científica con interfaz moderna, funciones trigonométricas, historial de operaciones y temas personalizables..."></textarea>
+            </div>
+            
+            <button class="btn btn-primary" id="btn-generar">
+              <span id="btn-text">🚀 Generar Proyecto Completo</span>
+              <span id="btn-loading" class="loading" style="display: none;"></span>
+            </button>
+            
+            <div id="thinking" class="thinking" style="display: none;">
+              <span class="loading"></span> La IA está analizando y generando tu proyecto...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Resultados y Verificación -->
+      <div>
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">Progreso y Verificación</h2>
+          </div>
+          <div class="section-body">
+            <div id="status" class="status status-info">
+              Esperando descripción del proyecto...
+            </div>
+            
+            <div id="prompt-log" class="prompt-log" style="display: none;">
+              <!-- Log de prompts y respuestas de la IA -->
+            </div>
+            
+            <div id="verification-steps">
+              <!-- Pasos de verificación se insertarán aquí -->
+            </div>
+            
+            <div id="ai-thinking" class="ai-thinking" style="display: none;">
+              <!-- Pensamientos en tiempo real de la IA -->
+            </div>
+          </div>
+        </div>
+
+        <div class="section" id="results-section" style="display: none;">
+          <div class="section-header">
+            <h2 class="section-title">Resultados Generados</h2>
+          </div>
+          <div class="section-body">
+            <div id="file-tree" class="file-tree">
+              <!-- Estructura de archivos se insertará aquí -->
+            </div>
+            
+            <div id="code-preview">
+              <!-- Vista previa del código se insertará aquí -->
+            </div>
+            
+            <div class="form-group">
+              <button class="btn btn-primary" id="btn-descargar">📦 Descargar Paquete .iflapp</button>
+              <button class="btn" id="btn-validar">🔍 Validar Código</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script>
-// --- Protección de API Key ---
+// --- Configuración y Constantes ---
 const API_KEY_PARTS = [
   "AIzaSyDD8X1GvPm6j3axGaW",
   "z-pmjKSQXdP8eci4"
 ];
 const GEMINI_API_KEY = API_KEY_PARTS.join("");
 
-// --- Constantes y Configuración ---
-const RAW_ICON_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png";
-const RAW_LICENSE_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE";
-const DEFAULT_FOLDERS = ["app","assets","config","docs","source","lib","tests","resources"];
+const DEFAULT_FOLDERS = ["app", "assets", "config", "docs", "source", "lib", "tests"];
+let currentProjectData = null;
+let lastFiles = null;
+let verificationAttempts = 0;
+const MAX_VERIFICATION_ATTEMPTS = 3;
 
-// Temas de colores
-const THEMES = {
-  "blue-purple": { start: "#667eea", end: "#764ba2" },
-  "green-teal": { start: "#4facfe", end: "#00f2fe" },
-  "orange-red": { start: "#fa709a", end: "#fee140" },
-  "purple-pink": { start: "#a8edea", end: "#fed6e3" }
-};
-
-// --- Utilidades ---
-function getversion() {
+// --- Utilidades Básicas ---
+function getTimestamp() {
   const d = new Date();
-  return `${d.getFullYear().toString().slice(-2)}.${(d.getMonth()+1)}-${d.getHours()}.${d.getMinutes()}`;
+  return `${d.getFullYear().toString().slice(-2)}.${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getHours().toString().padStart(2, '0')}.${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
 async function sha256(str) {
   const buf = new TextEncoder().encode(str);
   const hash = await window.crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// --- Sistema de Verificación en Bucle ---
-let verificationAttempts = 0;
-const MAX_VERIFICATION_ATTEMPTS = 3;
-
-async function verifyWithAI(content, type, context) {
-  const prompt = `
-  Eres un verificador de código y contenido especializado. Analiza el siguiente ${type}:
-
-  CONTENIDO:
-  ${content}
-
-  CONTEXTO: ${context}
-
-  DIRECTRICES ÉTICAS Y TÉCNICAS:
-  1. El código debe ser seguro, eficiente y seguir mejores prácticas
-  2. El contenido debe ser apropiado y profesional
-  3. La estructura debe ser lógica y mantenible
-  4. Cumplir con estándares de calidad de software
-
-  Responde EXCLUSIVAMENTE con un JSON:
-  {
-    "is_valid": true/false,
-    "issues": ["lista de problemas encontrados"],
-    "suggestions": ["sugerencias de mejora"],
-    "confidence_score": 0-100
-  }
-
-  Solo marca como válido si cumple completamente con las directrices.`;
+// --- Sistema de Logging ---
+function logPrompt(prompt, response = null) {
+  const logElement = document.getElementById('prompt-log');
+  logElement.style.display = 'block';
   
+  const timestamp = new Date().toLocaleTimeString();
+  let logEntry = `[${timestamp}] PROMPT: ${prompt.substring(0, 100)}...\n`;
+  
+  if (response) {
+    logEntry += `[${timestamp}] RESPUESTA: ${response.substring(0, 150)}...\n`;
+    logEntry += '─'.repeat(50) + '\n';
+  }
+  
+  logElement.textContent += logEntry;
+  logElement.scrollTop = logElement.scrollHeight;
+}
+
+function showThinking(message) {
+  const thinkingElement = document.getElementById('ai-thinking');
+  thinkingElement.style.display = 'block';
+  thinkingElement.textContent = `💭 ${message}`;
+}
+
+function hideThinking() {
+  document.getElementById('ai-thinking').style.display = 'none';
+}
+
+// --- Sistema de Verificación Mejorado ---
+async function verifyWithAI(content, fileType, context) {
+  showThinking(`Verificando ${fileType}...`);
+  
+  const prompt = `ANÁLISIS DE ${fileType.toUpperCase()} - CONTEXTO: ${context}
+
+CONTENIDO A VERIFICAR:
+\`\`\`
+${content}
+\`\`\`
+
+CRITERIOS DE VERIFICACIÓN:
+1. ✅ SINTÁXIS: El código debe ser sintácticamente correcto
+2. ✅ SEGURIDAD: No debe contener vulnerabilidades o código malicioso
+3. ✅ FUNCIONALIDAD: Debe cumplir con su propósito declarado
+4. ✅ ESTÁNDARES: Seguir mejores prácticas del lenguaje
+5. ✅ ÉTICA: Contenido apropiado y profesional
+
+RESPONDE EXCLUSIVAMENTE con este formato JSON:
+{
+  "is_valid": true/false,
+  "confidence": 0-100,
+  "issues": ["lista específica de problemas"],
+  "suggestions": ["sugerencias concretas de mejora"],
+  "summary": "Resumen breve del análisis"
+}`;
+
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+    logPrompt(`Verificación ${fileType}`, `Analizando: ${context}`);
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 1024
+        }
+      })
     });
-    
-    if (!response.ok) throw new Error(`Error en la API: ${response.status}`);
-    
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
     const data = await response.json();
     const resultText = data.candidates[0].content.parts[0].text;
-    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
     
+    logPrompt(`Verificación ${fileType}`, `Respuesta recibida: ${resultText.substring(0, 100)}...`);
+    
+    // Extraer JSON de la respuesta
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     } else {
-      return { is_valid: false, issues: ["Formato de respuesta inválido"], suggestions: [], confidence_score: 0 };
+      return {
+        is_valid: false,
+        confidence: 0,
+        issues: ["No se pudo parsear la respuesta de verificación"],
+        suggestions: ["Revisar el formato de la respuesta"],
+        summary: "Error en el análisis"
+      };
     }
   } catch (error) {
     console.error('Error en verificación:', error);
-    return { is_valid: false, issues: ["Error de conexión con IA"], suggestions: [], confidence_score: 0 };
+    return {
+      is_valid: false,
+      confidence: 0,
+      issues: [`Error de conexión: ${error.message}`],
+      suggestions: ["Reintentar la verificación"],
+      summary: "Error en el proceso de verificación"
+    };
+  } finally {
+    hideThinking();
   }
 }
 
-// --- Gemini AI Integration Mejorada ---
-async function getCompleteProjectAnalysis(idea, tema, complejidad) {
-  const prompt = `
-  Eres un arquitecto de software senior especializado en aplicaciones Python con PyQt5. 
-  El usuario quiere crear: "${idea}"
+// --- Generación de Proyecto con IA ---
+async function generateProjectWithAI(idea, projectConfig) {
+  showThinking("Analizando requisitos y generando estructura del proyecto...");
   
-  TEMA: ${tema}
-  COMPLEJIDAD: ${complejidad}
-  
-  DIRECTRICES ÉTICAS Y TÉCNICAS:
-  1. Generar código seguro, eficiente y mantenible
-  2. Seguir patrones de diseño apropiados
-  3. Incluir manejo de errores robusto
-  4. Documentación clara y concisa
-  5. Interfaz de usuario intuitiva y accesible
-  6. Estructura de proyecto profesional
-  
-  Responde EXCLUSIVAMENTE en el siguiente formato JSON:
+  const prompt = `GENERACIÓN DE PROYECTO PYTHON COMPLETO
 
-  {
-    "project_analysis": {
-      "suggested_name": "nombre_autoexplicativo",
-      "suggested_title": "Título Atractivo y Descriptivo",
-      "description": "Descripción completa del proyecto",
-      "complexity_analysis": "Análisis de complejidad técnica",
-      "ethical_considerations": "Consideraciones éticas relevantes"
-    },
-    "structure": {
-      "folders": ["lista", "de", "carpetas", "adicionales"],
-      "files": {
-        "ruta/archivo.py": "contenido completo del archivo",
-        "ruta/otro.txt": "contenido de otro archivo"
-      },
-      "dependencies": ["lista", "de", "dependencias"]
-    },
-    "design": {
-      "color_scheme": {
-        "primary": "#color",
-        "secondary": "#color", 
-        "accent": "#color"
-      },
-      "ui_recommendations": ["lista de recomendaciones de UI"],
-      "logo_concepts": ["concepto1", "concepto2", "concepto3"]
+CONFIGURACIÓN:
+- Idea: ${idea}
+- Fabricante: ${projectConfig.empresa}
+- Nombre: ${projectConfig.nombre}
+- Versión: ${projectConfig.version}
+- Título: ${projectConfig.titulo}
+- Tipo: ${projectConfig.tipo}
+
+REQUISITOS TÉCNICOS:
+1. Aplicación Python con PyQt5 para interfaz gráfica
+2. Estructura de proyecto profesional y mantenible
+3. Código limpio, documentado y con manejo de errores
+4. Archivos de configuración y dependencias
+5. README completo con instrucciones de instalación
+
+GENERA EXCLUSIVAMENTE en formato JSON:
+
+{
+  "project_structure": {
+    "folders": ["lista", "de", "carpetas"],
+    "files": {
+      "ruta/archivo.py": "contenido completo del archivo aquí",
+      "ruta/otro.txt": "contenido de archivo de texto"
     }
-  }
+  },
+  "metadata": {
+    "description": "Descripción completa del proyecto",
+    "dependencies": ["PyQt5", "otras dependencias"],
+    "entry_point": "archivo principal .py"
+  },
+  "verification_notes": "Notas importantes para la verificación"
+}
 
-  Genera una estructura completa y profesional. Incluye al menos 8 archivos esenciales.`;
-  
+IMPORTANTE: Genera al menos 6 archivos esenciales incluyendo el principal, README, requirements.txt y configuración.`;
+
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+    logPrompt("Generación de proyecto completo", `Idea: ${idea}`);
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 4096
+        }
+      })
     });
-    
-    if (!response.ok) throw new Error(`Error en la API: ${response.status}`);
-    
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
     const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
-  } catch (error) {
-    console.error('Error en análisis completo:', error);
-    throw error;
-  }
-}
-
-// --- Generación de Logotipos ---
-async function generateLogos(concepts, projectName) {
-  // En un entorno real, aquí se integraría con una API de generación de imágenes
-  // Por ahora simulamos la generación de logotipos
-  return concepts.map((concept, index) => {
-    const colors = ['#667eea', '#764ba2', '#4facfe', '#00f2fe', '#fa709a', '#fee140'];
-    const color1 = colors[index % colors.length];
-    const color2 = colors[(index + 2) % colors.length];
+    const resultText = data.candidates[0].content.parts[0].text;
     
-    return {
-      concept: concept,
-      url: `https://via.placeholder.com/200x200/${color1.replace('#', '')}/${color2.replace('#', '')}?text=${encodeURIComponent(projectName)}`,
-      description: concept
-    };
-  });
-}
-
-// --- Aplicación de Tema de Colores ---
-function applyTheme(themeName) {
-  const theme = THEMES[themeName];
-  if (theme) {
-    document.documentElement.style.setProperty('--gradient-start', theme.start);
-    document.documentElement.style.setProperty('--gradient-end', theme.end);
+    logPrompt("Generación de proyecto completo", `Respuesta recibida (${resultText.length} caracteres)`);
+    
+    // Extraer y parsear JSON
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No se encontró JSON en la respuesta");
+    }
+    
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error('Error en generación:', error);
+    throw error;
+  } finally {
+    hideThinking();
   }
 }
 
-// --- Manejo de Verificación en Bucle ---
-async function verifyAllContent(files, context) {
+// --- Verificación en Bucle Mejorada ---
+async function verifyAllFiles(files, context) {
   const verificationSteps = document.getElementById('verification-steps');
-  verificationSteps.innerHTML = '<div class="verification-step">🔄 Iniciando verificación de contenido...</div>';
+  verificationSteps.innerHTML = '<div class="verification-step">🔄 Iniciando verificación de archivos...</div>';
   
   let allValid = true;
   const issues = [];
-  
+  let filesProcessed = 0;
+  const totalFiles = Object.keys(files).filter(f => typeof files[f] === 'string').length;
+
   for (const [filePath, content] of Object.entries(files)) {
     if (typeof content === 'string') {
-      verificationSteps.innerHTML += `<div class="verification-step">🔍 Verificando: ${filePath}</div>`;
+      filesProcessed++;
+      const progress = Math.round((filesProcessed / totalFiles) * 100);
       
-      const result = await verifyWithAI(content, 
-        filePath.endsWith('.py') ? 'código Python' : 'contenido de archivo',
-        `${context} - Archivo: ${filePath}`
-      );
+      verificationSteps.innerHTML += `<div class="verification-step">🔍 Verificando (${progress}%): ${filePath}</div>`;
       
-      if (result.is_valid) {
-        verificationSteps.innerHTML += `<div class="verification-step success">✅ ${filePath} - Válido (Confianza: ${result.confidence_score}%)</div>`;
+      const fileType = filePath.endsWith('.py') ? 'código Python' : 
+                      filePath.endsWith('.md') ? 'documentación Markdown' :
+                      filePath.endsWith('.txt') ? 'archivo de texto' : 'contenido';
+      
+      const result = await verifyWithAI(content, fileType, `${context} - ${filePath}`);
+      
+      if (result.is_valid && result.confidence > 80) {
+        verificationSteps.innerHTML += `<div class="verification-step success">✅ ${filePath} - Válido (${result.confidence}% confianza)</div>`;
       } else {
         verificationSteps.innerHTML += `<div class="verification-step error">❌ ${filePath} - Problemas encontrados</div>`;
-        issues.push({ file: filePath, problems: result.issues });
+        issues.push({ 
+          file: filePath, 
+          problems: result.issues,
+          suggestions: result.suggestions
+        });
         allValid = false;
       }
       
       // Pequeña pausa para no saturar la API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
     }
   }
   
   return { allValid, issues };
 }
 <script>
-// --- Implementación de Event Listeners ---
-let currentProjectData = null;
-let lastFiles = null;
-
-// Selectores de tema
-document.querySelectorAll('.theme-option').forEach(option => {
-  option.addEventListener('click', function() {
-    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
-    this.classList.add('selected');
-    applyTheme(this.dataset.theme);
-  });
-});
-
-// Botón principal de generación con IA
-document.getElementById('btn-generar-ia').addEventListener('click', async function() {
+// --- Lógica Principal de la Aplicación ---
+document.getElementById('btn-generar').addEventListener('click', async function() {
   const ideaInput = document.getElementById('idea-input').value.trim();
   if (!ideaInput) {
-    document.getElementById('create-status').textContent = "❌ Por favor, describe tu idea primero";
-    document.getElementById('create-status').className = "gh-status error";
+    showStatus('❌ Por favor, describe tu aplicación primero', 'error');
     return;
   }
 
-  const tema = document.querySelector('select[name="tema"]').value;
-  const complejidad = document.querySelector('select[name="complejidad"]').value;
-  
-  await generateCompleteProject(ideaInput, tema, complejidad);
-});
+  // Obtener configuración del formulario
+  const projectConfig = {
+    empresa: document.getElementById('empresa').value,
+    nombre: document.getElementById('nombre').value,
+    version: document.getElementById('version').value,
+    titulo: document.getElementById('titulo').value,
+    tipo: document.getElementById('tipo').value
+  };
 
-// Botón de análisis y generación
-document.getElementById('btn-suggest').addEventListener('click', async function() {
-  const ideaInput = document.getElementById('idea-input').value.trim();
-  if (!ideaInput) {
-    document.getElementById('create-status').textContent = "❌ Por favor, describe tu idea primero";
-    document.getElementById('create-status').className = "gh-status error";
+  // Validar campos requeridos
+  if (!projectConfig.nombre || !projectConfig.titulo) {
+    showStatus('❌ Completa todos los campos requeridos', 'error');
     return;
   }
 
-  const tema = document.querySelector('select[name="tema"]').value;
-  const complejidad = document.querySelector('select[name="complejidad"]').value;
-  
-  await generateCompleteProject(ideaInput, tema, complejidad);
+  await generateCompleteProject(ideaInput, projectConfig);
 });
 
-// Función principal de generación de proyecto
-async function generateCompleteProject(idea, tema, complejidad) {
-  const suggestBtn = document.getElementById('btn-suggest');
-  const suggestText = document.getElementById('suggest-text');
-  const suggestLoading = document.getElementById('suggest-loading');
-  const statusElement = document.getElementById('create-status');
+// Función principal de generación
+async function generateCompleteProject(idea, projectConfig) {
+  const btn = document.getElementById('btn-generar');
+  const btnText = document.getElementById('btn-text');
+  const btnLoading = document.getElementById('btn-loading');
+  const thinkingElement = document.getElementById('thinking');
   
-  // Mostrar estado de carga
-  suggestText.textContent = "Analizando y generando...";
-  suggestLoading.style.display = "inline-block";
-  suggestBtn.disabled = true;
-  statusElement.textContent = "🚀 Iniciando generación completa del proyecto...";
-  statusElement.className = "gh-status";
+  // Estado de carga
+  btn.disabled = true;
+  btnText.textContent = 'Generando...';
+  btnLoading.style.display = 'inline-block';
+  thinkingElement.style.display = 'block';
   
   try {
-    // Paso 1: Análisis completo del proyecto
-    statusElement.textContent = "📋 Analizando requisitos y estructura...";
-    const analysisResponse = await getCompleteProjectAnalysis(idea, tema, complejidad);
+    showStatus('🚀 Iniciando generación del proyecto...', 'info');
     
-    let projectData;
-    try {
-      const jsonMatch = analysisResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        projectData = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("Formato de respuesta inválido");
-      }
-    } catch (parseError) {
-      console.error("Error parseando JSON:", parseError);
-      statusElement.textContent = "❌ Error en el formato de respuesta de la IA";
-      statusElement.className = "gh-status error";
-      return;
+    // Paso 1: Generar estructura con IA
+    showStatus('📋 Analizando requisitos con IA...', 'info');
+    const aiResult = await generateProjectWithAI(idea, projectConfig);
+    
+    if (!aiResult.project_structure || !aiResult.metadata) {
+      throw new Error('La IA no generó una estructura válida');
     }
     
-    currentProjectData = projectData;
-    
-    // Paso 2: Aplicar datos al formulario
-    const form = document.getElementById('create-form');
-    form.nombre.value = projectData.project_analysis.suggested_name;
-    form.titulo.value = projectData.project_analysis.suggested_title;
-    form.empresa.value = "influent";
-    form.version.value = "1.0";
-    
-    // Paso 3: Generar estructura de archivos
-    statusElement.textContent = "📁 Generando estructura de archivos...";
-    const folder_name = `influent.${projectData.project_analysis.suggested_name}.v1.0-${getversion()}-danenone`;
-    const hv = await sha256(`influent.${projectData.project_analysis.suggested_name}.v1.0`);
+    // Paso 2: Crear estructura de archivos
+    showStatus('📁 Creando estructura de archivos...', 'info');
+    const folderName = `${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}-${getTimestamp()}`;
+    const hash = await sha256(`${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}`);
     
     const files = {};
     
-    // Crear carpetas base
-    [...DEFAULT_FOLDERS, ...(projectData.structure.folders || [])].forEach(f => {
-      files[`${folder_name}/${f}/.${f}-container`] = `#store (sha256 hash):${f}/.${hv}`;
+    // Crear carpetas
+    [...DEFAULT_FOLDERS, ...(aiResult.project_structure.folders || [])].forEach(folder => {
+      files[`${folderName}/${folder}/.gitkeep`] = '# Carpeta ' + folder;
     });
     
     // Archivos generados por IA
-    Object.entries(projectData.structure.files || {}).forEach(([filePath, content]) => {
-      files[`${folder_name}/${filePath}`] = content;
+    Object.entries(aiResult.project_structure.files || {}).forEach(([filePath, content]) => {
+      files[`${folderName}/${filePath}`] = content;
     });
     
-    // Archivos esenciales
-    files[`${folder_name}/README.md`] = `# ${projectData.project_analysis.suggested_title}\n\n${projectData.project_analysis.description}\n\n## Características\n\n- Desarrollado con Influent Package Maker Web\n- ${projectData.project_analysis.complexity_analysis}\n\n## Consideraciones Éticas\n\n${projectData.project_analysis.ethical_considerations}`;
+    // Archivos esenciales adicionales
+    files[`${folderName}/README.md`] = `# ${projectConfig.titulo}\n\n${aiResult.metadata.description}\n\n## Instalación\n\n1. Instalar dependencias: pip install -r requirements.txt\n2. Ejecutar: python ${aiResult.metadata.entry_point || 'main.py'}\n\n## Características\n\n- Desarrollado con Influent Package Maker\n- ${projectConfig.tipo}\n- Versión ${projectConfig.version}`;
     
-    files[`${folder_name}/lib/requirements.txt`] = (projectData.structure.dependencies || ["PyQt5", "numpy"]).join("\n");
+    files[`${folderName}/requirements.txt`] = (aiResult.metadata.dependencies || ['PyQt5==5.15.9', 'numpy']).join('\n');
     
-    // Paso 4: Verificación en bucle
-    statusElement.textContent = "🔍 Verificando calidad del código y contenido...";
-    const verificationResult = await verifyAllContent(files, projectData.project_analysis.description);
+    files[`${folderName}/config/settings.json`] = JSON.stringify({
+      app_name: projectConfig.titulo,
+      version: projectConfig.version,
+      company: projectConfig.empresa
+    }, null, 2);
     
-    if (!verificationResult.allValid) {
-      statusElement.textContent = "⚠️ Se encontraron problemas durante la verificación";
-      statusElement.className = "gh-status warning";
-      
-      // Mostrar problemas encontrados
-      let issuesHtml = "<h4>Problemas encontrados:</h4>";
-      verificationResult.issues.forEach(issue => {
-        issuesHtml += `<div class="verification-step error"><strong>${issue.file}:</strong> ${issue.problems.join(', ')}</div>`;
-      });
-      document.getElementById('verification-steps').innerHTML += issuesHtml;
+    // Paso 3: Verificación en bucle
+    showStatus('🔍 Verificando calidad del código...', 'info');
+    const verificationResult = await verifyAllFiles(files, aiResult.metadata.description);
+    
+    // Paso 4: Mostrar resultados
+    showResults(files, projectConfig, aiResult, verificationResult);
+    
+    if (verificationResult.allValid) {
+      showStatus('✅ Proyecto generado y verificado exitosamente!', 'success');
     } else {
-      statusElement.textContent = "✅ Todo el contenido verificado correctamente";
-      statusElement.className = "gh-status";
+      showStatus('⚠️ Proyecto generado con advertencias de verificación', 'warning');
+      showVerificationIssues(verificationResult.issues);
     }
     
-    // Paso 5: Generar logotipos
-    statusElement.textContent = "🎨 Generando conceptos de logotipo...";
-    const logos = await generateLogos(projectData.design.logo_concepts || ["Moderno", "Minimalista", "Profesional"], 
-                                    projectData.project_analysis.suggested_title);
-    
-    // Mostrar logotipos
-    const logoSection = document.getElementById('logo-section');
-    const logoPreview = document.getElementById('logo-preview');
-    
-    logoPreview.innerHTML = logos.map((logo, index) => `
-      <div class="logo-option" data-logo-index="${index}">
-        <img src="${logo.url}" alt="${logo.concept}" class="logo-img">
-        <div><strong>${logo.concept}</strong></div>
-        <small>${logo.description}</small>
-      </div>
-    `).join('');
-    
-    logoSection.style.display = 'block';
-    
-    // Paso 6: Mostrar archivos generados
-    let html = `<h3>📂 Estructura Generada para: ${projectData.project_analysis.suggested_title}</h3>`;
-    html += `<p><strong>Descripción:</strong> ${projectData.project_analysis.description}</p>`;
-    html += `<div class="two-column"><div><h4>Archivos y Carpetas:</h4><ul>`;
-    
-    Object.keys(files).forEach(f => {
-      let ext = f.split('.').pop();
-      html += `<li>${f} ${ext==="py"?"<span style='color:#2ea44f;'>(Python)</span>":ext==="txt"?"<span style='color:#0366d6;'>(Texto)</span>":""}</li>`;
-    });
-    
-    html += `</ul></div><div><h4>Dependencias:</h4><ul>`;
-    (projectData.structure.dependencies || ["PyQt5"]).forEach(dep => {
-      html += `<li>${dep}</li>`;
-    });
-    html += `</ul></div></div>`;
-    
-    html += `<hr><h4>Edita archivos antes de descargar:</h4>`;
-    Object.keys(files).forEach(f => {
-      if (typeof files[f] === "string" && (f.endsWith(".py") || f.endsWith(".md") || f.endsWith(".txt"))) {
-        html += `<details open><summary>${f}</summary>
-        <textarea class="file-editbox" data-file="${f}">${files[f]}</textarea></details>`;
-      }
-    });
-    
-    document.getElementById('preview-files').innerHTML = html;
-    document.getElementById('preview-files').style.display = 'block';
-    document.getElementById('final-actions').style.display = 'flex';
-    
     lastFiles = files;
-    currentProjectData = projectData;
-    
-    statusElement.textContent = `✅ Proyecto "${projectData.project_analysis.suggested_title}" generado exitosamente!`;
+    currentProjectData = { projectConfig, aiResult };
     
   } catch (error) {
-    console.error("Error en generación completa:", error);
-    statusElement.textContent = "❌ Error durante la generación: " + error.message;
-    statusElement.className = "gh-status error";
+    console.error('Error en generación:', error);
+    showStatus(`❌ Error: ${error.message}`, 'error');
   } finally {
     // Restaurar estado del botón
-    suggestText.textContent = "🧠 Analizar y Generar";
-    suggestLoading.style.display = "none";
-    suggestBtn.disabled = false;
+    btn.disabled = false;
+    btnText.textContent = '🚀 Generar Proyecto Completo';
+    btnLoading.style.display = 'none';
+    thinkingElement.style.display = 'none';
   }
 }
 
-// Botón de descarga
-document.getElementById('btn-download').addEventListener('click', async function() {
-  if (!lastFiles) return;
+// --- Funciones de UI ---
+function showStatus(message, type = 'info') {
+  const statusElement = document.getElementById('status');
+  statusElement.textContent = message;
+  statusElement.className = `status status-${type}`;
+}
+
+function showResults(files, projectConfig, aiResult, verificationResult) {
+  // Mostrar sección de resultados
+  document.getElementById('results-section').style.display = 'block';
   
-  const statusElement = document.getElementById('create-status');
-  statusElement.textContent = "📦 Empacando y verificando final...";
+  // Mostrar árbol de archivos
+  const fileTree = document.getElementById('file-tree');
+  fileTree.innerHTML = '<strong>Estructura generada:</strong><br>';
   
-  // Recoger ediciones
-  document.querySelectorAll(".file-editbox").forEach(e => {
-    lastFiles[e.dataset.file] = e.value;
+  Object.keys(files).forEach(filePath => {
+    const icon = filePath.endsWith('.py') ? '🐍' : 
+                 filePath.endsWith('.md') ? '📝' : 
+                 filePath.endsWith('.txt') ? '📄' : '📁';
+    
+    fileTree.innerHTML += `<div class="file-item"><span class="file-icon">${icon}</span> ${filePath}</div>`;
   });
   
-  // Verificación final
-  const finalVerification = await verifyAllContent(lastFiles, "Verificación final antes de descargar");
+  // Mostrar vista previa del código principal
+  const codePreview = document.getElementById('code-preview');
+  const mainFile = Object.entries(files).find(([path]) => path.includes('.py') && !path.includes('__'));
   
-  if (!finalVerification.allValid) {
-    statusElement.textContent = "❌ No se puede descargar - Hay problemas en el contenido";
-    statusElement.className = "gh-status error";
-    return;
+  if (mainFile) {
+    const [filePath, content] = mainFile;
+    codePreview.innerHTML = `
+      <div class="code-block">
+        <div class="code-block-header">${filePath}</div>
+        <pre>${escapeHtml(content)}</pre>
+      </div>
+    `;
   }
   
-  // Generar ZIP
-  const zip = new JSZip();
-  for (const f in lastFiles) {
-    if (typeof lastFiles[f] === "string") {
-      zip.file(f, lastFiles[f]);
+  // Mostrar issues de verificación si los hay
+  if (!verificationResult.allValid) {
+    showVerificationIssues(verificationResult.issues);
+  }
+}
+
+function showVerificationIssues(issues) {
+  const verificationSteps = document.getElementById('verification-steps');
+  
+  issues.forEach(issue => {
+    verificationSteps.innerHTML += `
+      <div class="verification-step error">
+        <strong>${issue.file}:</strong><br>
+        ${issue.problems.join('<br>')}
+        ${issue.suggestions.length ? `<br><em>Sugerencias: ${issue.suggestions.join(', ')}</em>` : ''}
+      </div>
+    `;
+  });
+}
+
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// --- Descarga del Proyecto ---
+document.getElementById('btn-descargar').addEventListener('click', async function() {
+  if (!lastFiles) return;
+  
+  showStatus('📦 Preparando descarga del paquete...', 'info');
+  
+  try {
+    // Verificación final rápida
+    const finalCheck = await verifyAllFiles(lastFiles, 'Verificación final antes de descargar');
+    
+    if (!finalCheck.allValid) {
+      showStatus('❌ No se puede descargar - Problemas detectados en la verificación final', 'error');
+      return;
     }
+    
+    // Crear ZIP
+    const zip = new JSZip();
+    for (const [filePath, content] of Object.entries(lastFiles)) {
+      zip.file(filePath, content);
+    }
+    
+    const folderName = Object.keys(lastFiles)[0].split('/')[0];
+    const blob = await zip.generateAsync({ type: 'blob' });
+    
+    saveAs(blob, `${folderName}.iflapp`);
+    showStatus(`✅ Paquete descargado: ${folderName}.iflapp`, 'success');
+    
+  } catch (error) {
+    console.error('Error en descarga:', error);
+    showStatus(`❌ Error al descargar: ${error.message}`, 'error');
   }
-  
-  let folder_name = Object.keys(lastFiles)[0].split("/")[0];
-  zip.generateAsync({ type: "blob" }).then(blob => {
-    saveAs(blob, `${folder_name}.iflapp`);
-    statusElement.textContent = `✅ Paquete descargado: ${folder_name}.iflapp`;
-  });
 });
 
-// Botón de optimización
-document.getElementById('btn-optimize').addEventListener('click', async function() {
-  // Implementar optimización con IA
-  alert("🚀 Función de optimización con IA - Próximamente!");
-});
-
-// Botón de validación
-document.getElementById('btn-validate').addEventListener('click', async function() {
+// --- Validación Adicional ---
+document.getElementById('btn-validar').addEventListener('click', async function() {
   if (!lastFiles) return;
   
-  const statusElement = document.getElementById('create-status');
-  statusElement.textContent = "🔍 Ejecutando validación completa...";
+  showStatus('🔍 Ejecutando validación completa...', 'info');
   
-  const result = await verifyAllContent(lastFiles, "Validación completa solicitada por usuario");
+  const result = await verifyAllFiles(lastFiles, 'Validación completa solicitada por usuario');
   
   if (result.allValid) {
-    statusElement.textContent = "✅ Validación completada - Todo el código es correcto";
-    statusElement.className = "gh-status";
+    showStatus('✅ Validación completada - Todo el código es correcto', 'success');
   } else {
-    statusElement.textContent = "⚠️ Validación completada - Se encontraron problemas";
-    statusElement.className = "gh-status warning";
+    showStatus('⚠️ Validación completada - Se encontraron problemas que requieren atención', 'warning');
   }
 });
 
-// Enlace de ética
-document.getElementById('ethics-link').addEventListener('click', function(e) {
-  e.preventDefault();
-  alert(`DIRECTRICES ÉTICAS DEL SISTEMA:
-
-1. SEGURIDAD: Todo el código generado debe ser seguro y no contener vulnerabilidades
-2. PRIVACIDAD: Respetar la privacidad del usuario y no recopilar datos sensibles
-3. TRANSPARENCIA: El código debe ser claro y comprensible
-4. ACCESIBILIDAD: Las interfaces deben ser accesibles para todos los usuarios
-5. LEGALIDAD: Cumplir con todas las leyes y regulaciones aplicables
-6. BENEFICIO: El software debe proporcionar valor real a los usuarios
-
-Estas directrices son aplicadas automáticamente por el sistema de verificación.`);
+// --- Inicialización ---
+document.addEventListener('DOMContentLoaded', function() {
+  showStatus('💡 Describe tu aplicación y haz clic en "Generar Proyecto Completo" para comenzar', 'info');
+  
+  // Ejemplo de descripción pre-cargada
+  document.getElementById('idea-input').value = 'Calculadora científica con interfaz moderna PyQt5, funciones trigonométricas, historial de operaciones, temas claros/oscuros y exportación de resultados.';
+  document.getElementById('nombre').value = 'scicalc';
+  document.getElementById('titulo').value = 'Scientific Calculator Pro';
 });
-
-// Inicializar con tema por defecto
-applyTheme('blue-purple');
-document.querySelector('.theme-option[data-theme="blue-purple"]').classList.add('selected');
 </script>
 </body>
 </html>
