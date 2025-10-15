@@ -1,0 +1,13 @@
+{
+  "name": "Influent Package Maker PWA",
+  "short_name": "PackageMaker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#2e4a66",
+  "theme_color": "#29b6f6",
+  "description": "Creador y gestor de paquetes Influent en Web.",
+  "icons": [
+    { "src": "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}
