@@ -3,38 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Influent Package Maker</title>
-  <link rel="manifest" href="manifest.json">
+  <title>Influent Package Maker Web</title>
   <meta name="theme-color" content="#24292e">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="gh-header">
-    <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png"
-         alt="Logo" class="gh-logo">
-    <h1>Influent Package Maker</h1>
-    <span id="platform"></span>
-  </header>
-  <main>
-    <section id="create-section">
-      <h2>Crear y descargar proyecto Influent</h2>
-      <form id="create-form" class="gh-form">
-        <label>
-          <span>Fabricante</span>
-          <input name="empresa" type="text" placeholder="Ejemplo: influent" required>
-        </label>
-        <label>
-          <span>Nombre interno</span>
-          <input name="nombre" type="text" placeholder="Ejemplo: mycoolapp" required>
-        </label>
-        <label>
-          <span>Versión</span>
-          <input name="version" type="text" placeholder="Ejemplo: 1.0" required>
-        </label>
-        <label>
-          <span>Título completo</span>
-          <input name="titulo" type="text" placeholder="Ejemplo: My Cool App" required>
-        </label>
+<header class="gh-header">
+  <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" alt="Logo" class="gh-logo">
+  <h1>Influent Package Maker Web</h1>
+</header>
+<main>
+  <section>
+    <h2>Crear y editar proyecto Influent</h2>
+    <form id="create-form" class="gh-form">
+      <label><span>Fabricante</span><input name="empresa" type="text" required></label>
+      <label><span>Nombre interno</span><input name="nombre" type="text" required></label>
+      <label><span>Versión</span><input name="version" type="text" required></label>
+      <label><span>Título completo</span><input name="titulo" type="text" required></label>
+      <button type="submit" class="gh-btn">Generar estructura</button>
+    </form>
+    <div id="create-status" class="gh-status"></div>
+    <div id="preview-files"></div>
+    <button id="btn-download" class="gh-btn" style="display:none;">Descargar ZIP</button>
+  </section>
+  <hr>
+  <section>
+    <h2>Instalar/explorar paquete Influent</h2>
+    <form class="gh-form">
+      <label><span>Selecciona paquete ZIP (.iflapp/.iflappb)</span><input type="file" accept=".zip,.iflapp,.iflappb" id="zipfile"></label>
+    </form>
+    <div id="install-status" class="gh-status"></div>
+    <div id="zip-details"></div>
+  </section>
+</main>
+<footer>
+  <span>GitHub: <a href="https://github.com/JesusQuijada34/packagemaker/">packagemaker</a></span>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>        </label>
         <button type="submit" class="gh-btn">Descargar proyecto</button>
       </form>
       <div id="create-status" class="gh-status"></div>
