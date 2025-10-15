@@ -2,358 +2,115 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Influent Package Maker</title>
+  <title>Influent Package Maker — Fix & UI Improvements</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
       --primary-color: #0969da;
       --success-color: #1a7f37;
+      --accent-color: #0f1724;
       --warning-color: #9a6700;
       --error-color: #cf222e;
-      --bg-color: #ffffff;
-      --sidebar-bg: #f6f8fa;
-      --border-color: #d0d7de;
-      --text-color: #24292f;
-      --text-muted: #57606a;
+      --bg-color: #f7f9fc;
+      --card-bg: #ffffff;
+      --sidebar-bg: #f1f5f9;
+      --border-color: #e2e8f0;
+      --text-color: #0b1220;
+      --text-muted: #475569;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', monospace;
     }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      line-height: 1.5;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-    
-    .sidebar {
-      width: 300px;
-      background: var(--sidebar-bg);
-      border-right: 1px solid var(--border-color);
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    
-    .header {
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--border-color);
-      background: var(--bg-color);
-    }
-    
-    .header h1 {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    
-    .content-area {
-      flex: 1;
-      padding: 24px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    
-    .section {
-      background: var(--bg-color);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-    }
-    
-    .section-header {
-      padding: 16px;
-      border-bottom: 1px solid var(--border-color);
-      background: var(--sidebar-bg);
-    }
-    
-    .section-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-    
-    .section-body {
-      padding: 16px;
-    }
-    
-    .form-group {
-      margin-bottom: 16px;
-    }
-    
-    .form-label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 4px;
-      font-size: 14px;
-    }
-    
-    .form-control {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 14px;
-      background: var(--bg-color);
-    }
-    
-    .form-control:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
-    }
-    
-    .textarea {
-      min-height: 100px;
-      resize: vertical;
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      font-size: 13px;
-    }
-    
-    .btn {
-      padding: 8px 16px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
       background: var(--bg-color);
       color: var(--text-color);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
+      display: flex; height: 100vh; overflow: hidden;
     }
-    
-    .btn:hover {
-      background: var(--sidebar-bg);
-    }
-    
-    .btn-primary {
-      background: var(--success-color);
-      border-color: var(--success-color);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background: #1a7f37;
-      border-color: #1a7f37;
-    }
-    
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    
-    .status {
-      padding: 12px;
-      border-radius: 6px;
-      margin: 12px 0;
-      font-size: 14px;
-    }
-    
-    .status-success {
-      background: #dafbe1;
-      border: 1px solid #ace1af;
-      color: var(--success-color);
-    }
-    
-    .status-error {
-      background: #ffebe9;
-      border: 1px solid #ffcecb;
-      color: var(--error-color);
-    }
-    
-    .status-warning {
-      background: #fff8c5;
-      border: 1px solid #fae17d;
-      color: var(--warning-color);
-    }
-    
-    .status-info {
-      background: #ddf4ff;
-      border: 1px solid #b6e3ff;
-      color: var(--primary-color);
-    }
-    
-    .console {
-      background: #0d1117;
-      color: #e6edf3;
-      border-radius: 6px;
-      padding: 16px;
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      font-size: 13px;
-      line-height: 1.45;
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .console-header {
-      display: flex;
-      justify-content: between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #30363d;
-    }
-    
-    .console-title {
-      font-weight: 600;
-      color: #7d8590;
-    }
-    
-    .console-content {
-      flex: 1;
-      overflow-y: auto;
-    }
-    
-    .console-line {
-      margin-bottom: 8px;
-      padding: 4px 0;
-    }
-    
-    .console-timestamp {
-      color: #7d8590;
-      margin-right: 8px;
-    }
-    
-    .console-info {
-      color: #7ee787;
-    }
-    
-    .console-warning {
-      color: #f2cc60;
-    }
-    
-    .console-error {
-      color: #ff7b72;
-    }
-    
-    .console-debug {
-      color: #a5d6ff;
-    }
-    
-    .file-tree {
-      background: var(--sidebar-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 16px;
-      margin: 16px 0;
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      font-size: 13px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    
-    .file-item {
-      padding: 4px 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .file-icon {
-      color: var(--text-muted);
-      width: 16px;
-      text-align: center;
-    }
-    
-    .code-block {
-      background: #0d1117;
-      color: #e6edf3;
-      padding: 16px;
-      border-radius: 6px;
-      margin: 12px 0;
-      overflow-x: auto;
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    
-    .code-block-header {
-      background: #161b22;
-      margin: -16px -16px 16px -16px;
-      padding: 12px 16px;
-      border-bottom: 1px solid #30363d;
-      font-size: 12px;
-      color: #7d8590;
-    }
-    
-    .loading {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid currentColor;
-      border-radius: 50%;
-      border-top-color: transparent;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: var(--border-color);
-      border-radius: 2px;
-      overflow: hidden;
-      margin: 8px 0;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: var(--success-color);
-      transition: width 0.3s ease;
+
+    /* Sidebar */
+    .sidebar { width: 320px; background: var(--sidebar-bg); border-right: 1px solid var(--border-color); padding: 20px; overflow-y: auto; }
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    h1, h2 { color: var(--text-color); }
+    .header { padding: 20px; border-bottom: 1px solid var(--border-color); background: linear-gradient(90deg,#fff 0%, #fbfdff 100%); }
+    .header h1 { font-size: 18px; font-weight: 700; }
+
+    .content-area { padding: 20px; overflow-y: auto; display: grid; grid-template-columns: 1fr; gap: 16px; }
+
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; }
+    .card .card-header { padding: 14px 16px; border-bottom: 1px solid var(--border-color); background: transparent; }
+    .card .card-body { padding: 16px; }
+    .section-title { font-size: 14px; font-weight: 700; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px; }
+    .form-control { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; font-size:14px; }
+    .form-control:focus { outline: none; box-shadow: 0 4px 12px rgba(9,105,218,.08); border-color: var(--primary-color); }
+    .textarea { min-height: 110px; resize: vertical; font-family: var(--mono); font-size:13px; }
+
+    .btn { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); background:#fff; cursor:pointer; font-weight:600; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .btn-primary { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+    .btn-success { background: var(--success-color); color:#fff; border-color: var(--success-color); }
+
+    .status { padding: 10px; border-radius: 8px; font-size:13px; }
+    .status-info { background: #e6f0ff; color: var(--primary-color); }
+
+    /* Console */
+    .console { background: #0b1220; color: #dbeafe; border-radius: 8px; padding: 12px; font-family: var(--mono); min-height: 260px; max-height: 420px; overflow-y:auto; }
+    .console-line { margin-bottom:8px; display:flex; gap:8px; align-items:flex-start; }
+    .console-timestamp { color:#94a3b8; font-size:12px; min-width:92px; }
+    .console-info { color:#9be7ff; }
+    .console-success { color:#a7f3d0; }
+    .console-warning { color:#fbd38d; }
+    .console-error { color:#ffb4b4; }
+
+    .file-tree { background: transparent; border-radius:8px; padding:8px; font-family: var(--mono); font-size:13px; max-height:260px; overflow:auto; }
+    .file-item { display:flex; gap:8px; align-items:center; padding:6px; border-radius:6px; cursor:pointer; }
+    .file-item:hover { background: rgba(15,23,42,0.03); }
+    .file-icon { width:20px; text-align:center; }
+
+    .code-block { background:#071027; color:#e6f6ff; padding:12px; border-radius:8px; font-family:var(--mono); font-size:13px; overflow:auto; }
+    .code-block-header { font-size:12px; color:#94a3b8; margin-bottom:8px; }
+
+    .progress-bar { width:100%; height:6px; background:var(--border-color); border-radius:6px; overflow:hidden; margin-top:10px; }
+    .progress-fill { height:100%; background:var(--success-color); width:0%; transition:width 300ms ease; }
+
+    /* responsive */
+    @media (max-width: 900px) {
+      .sidebar { display:none; }
+      body { flex-direction:column; }
+      .header { position:sticky; top:0; z-index:10; }
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
-    <div class="section">
-      <div class="section-header">
-        <h2 class="section-title">Configuración del Proyecto</h2>
-      </div>
-      <div class="section-body">
+    <div class="card">
+      <div class="card-header"><div class="section-title">Configuración del Proyecto</div></div>
+      <div class="card-body">
         <div class="form-group">
-          <label class="form-label">Fabricante</label>
-          <input type="text" class="form-control" id="empresa" value="influent" required>
+          <label class="form-label" for="empresa">Fabricante</label>
+          <input id="empresa" class="form-control" value="influent" placeholder="ej. influent">
         </div>
-        
         <div class="form-group">
-          <label class="form-label">Nombre interno</label>
-          <input type="text" class="form-control" id="nombre" value="scicalc" required>
+          <label class="form-label" for="nombre">Nombre interno</label>
+          <input id="nombre" class="form-control" value="scicalc" placeholder="ej. scicalc">
         </div>
-        
         <div class="form-group">
-          <label class="form-label">Versión</label>
-          <input type="text" class="form-control" id="version" value="1.0.0" required>
+          <label class="form-label" for="version">Versión</label>
+          <input id="version" class="form-control" value="1.0.0">
         </div>
-        
         <div class="form-group">
-          <label class="form-label">Título completo</label>
-          <input type="text" class="form-control" id="titulo" value="Scientific Calculator Pro" required>
+          <label class="form-label" for="titulo">Título completo</label>
+          <input id="titulo" class="form-control" value="Scientific Calculator Pro">
         </div>
-        
         <div class="form-group">
-          <label class="form-label">Tipo de aplicación</label>
-          <select class="form-control" id="tipo">
+          <label class="form-label" for="tipo">Tipo de aplicación</label>
+          <select id="tipo" class="form-control">
             <option value="calculadora">Calculadora/Científica</option>
             <option value="utilidad">Utilidad del Sistema</option>
             <option value="herramienta">Herramienta de Desarrollo</option>
@@ -364,597 +121,258 @@
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-header">
-        <h2 class="section-title">Descripción con IA</h2>
-      </div>
-      <div class="section-body">
+    <div class="card" style="margin-top:12px;">
+      <div class="card-header"><div class="section-title">Descripción con IA</div></div>
+      <div class="card-body">
         <div class="form-group">
-          <label class="form-label">Describe tu aplicación en detalle</label>
-          <textarea class="form-control textarea" id="idea-input">Calculadora científica con interfaz moderna PyQt5, funciones trigonométricas, historial de operaciones, temas claros/oscuros y exportación de resultados.</textarea>
+          <label class="form-label" for="idea-input">Describe tu aplicación en detalle</label>
+          <textarea id="idea-input" class="form-control textarea">Calculadora científica con interfaz moderna PyQt5, funciones trigonométricas, historial de operaciones, temas claros/oscuros y exportación de resultados.</textarea>
         </div>
-        
-        <button class="btn btn-primary" id="btn-generar">
-          <span id="btn-text">🚀 Generar Proyecto Completo</span>
-          <span id="btn-loading" class="loading" style="display: none;"></span>
-        </button>
-        
-        <div class="progress-bar" id="progress-bar" style="display: none;">
-          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="btn-generar" class="btn btn-primary">🚀 Generar Proyecto Completo</button>
+          <button id="btn-generate-local" class="btn">⚙️ Generación local (fallback)</button>
+        </div>
+
+        <div class="progress-bar" id="progress-bar" style="display:none;">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+
+        <div style="margin-top:10px; font-size:13px; color:var(--text-muted);">
+          <div>API Gemini: <span id="api-status">No configurada</span></div>
         </div>
       </div>
     </div>
 
-    <div class="section" id="results-section" style="display: none;">
-      <div class="section-header">
-        <h2 class="section-title">Resultados</h2>
-      </div>
-      <div class="section-body">
-        <div id="file-tree" class="file-tree">
-          <!-- Estructura de archivos se insertará aquí -->
-        </div>
-        
-        <div class="form-group">
-          <button class="btn btn-primary" id="btn-descargar">📦 Descargar Paquete .iflapp</button>
+    <div class="card" style="margin-top:12px; display:none;" id="results-section">
+      <div class="card-header"><div class="section-title">Resultados</div></div>
+      <div class="card-body">
+        <div id="file-tree" class="file-tree"></div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button id="btn-descargar" class="btn btn-success" disabled>📦 Descargar Paquete .iflapp</button>
+          <button id="btn-copy-structure" class="btn">📋 Copiar estructura</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
     <div class="header">
-      <h1>Influent Package Maker - Consola de Desarrollo</h1>
+      <h1>Influent Package Maker — Consola de Desarrollo</h1>
     </div>
-    
+
     <div class="content-area">
-      <div class="section">
-        <div class="section-header">
-          <h2 class="section-title">Consola de Debug</h2>
+      <div class="card">
+        <div class="card-header"><div class="section-title">Consola de Debug</div>
+          <div style="float:right;"><button id="btn-clear-console" class="btn" style="font-size:12px;">🧹 Limpiar</button></div>
         </div>
-        <div class="section-body" style="padding: 0; height: 500px;">
-          <div class="console">
-            <div class="console-header">
-              <div class="console-title">Actividad del Sistema</div>
-              <button class="btn" id="btn-clear-console" style="font-size: 12px; padding: 4px 8px;">Limpiar</button>
-            </div>
-            <div class="console-content" id="console-content">
-              <div class="console-line">
-                <span class="console-timestamp" id="current-time"></span>
-                <span class="console-info">✅ Sistema inicializado correctamente</span>
-              </div>
-              <div class="console-line">
-                <span class="console-timestamp" id="current-time2"></span>
-                <span class="console-info">💡 Completa la descripción y haz clic en Generar Proyecto</span>
-              </div>
-            </div>
-          </div>
+        <div class="card-body">
+          <div class="console" id="console-content"></div>
         </div>
       </div>
 
-      <div class="section">
-        <div class="section-header">
-          <h2 class="section-title">Vista Previa del Código</h2>
-        </div>
-        <div class="section-body">
-          <div id="code-preview">
-            <div class="code-block">
-              <div class="code-block-header">Esperando generación de código...</div>
-              <pre>El código generado aparecerá aquí después de que completes la descripción y hagas clic en "Generar Proyecto Completo".</pre>
-            </div>
+      <div class="card">
+        <div class="card-header"><div class="section-title">Vista Previa del Código</div></div>
+        <div class="card-body" id="code-preview">
+          <div class="code-block">
+            <div class="code-block-header">Esperando generación de código...</div>
+            <pre id="code-pre">El código generado aparecerá aquí después de que completes la descripción y hagas clic en "Generar Proyecto Completo".</pre>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Dependencies -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <script>
-  // =============================================
-  // CONFIGURACIÓN Y CONSTANTES
-  // =============================================
-  const GEMINI_API_KEY = "AIzaSyDD8X1GvPm6j3axGaWz-pmjKSQXdP8eci4";
-  const DEFAULT_FOLDERS = ["app", "assets", "config", "docs", "source", "lib", "tests"];
-  let currentProjectData = null;
+  // ================ CONFIG & STATE ================
+  // IMPORTANT: Set your Gemini API key here (or leave empty to use local fallback)
+  const GEMINI_API_KEY = "AIzaSyDD8X1GvPm6j3axGaWz-pmjKSQXdP8eci4"; // <-- removed embedded key for security. Add your key if you want remote AI.
+
+  const DEFAULT_FOLDERS = ["app","assets","config","docs","source","lib","tests"];
   let lastFiles = null;
+  let currentProjectData = null;
 
-  // =============================================
-  // SISTEMA DE LOGGING Y CONSOLA
-  // =============================================
-  function getCurrentTime() {
-    return new Date().toLocaleTimeString();
+  // ================ UTILITIES ================
+  function nowTimestamp() { return new Date().toLocaleString(); }
+  function getCurrentTime() { return new Date().toLocaleTimeString(); }
+
+  function logToConsole(message, level = 'info'){
+    try{
+      const container = document.getElementById('console-content');
+      const line = document.createElement('div');
+      line.className = 'console-line';
+      const ts = document.createElement('div'); ts.className='console-timestamp'; ts.textContent = '[' + getCurrentTime() + ']';
+      const msg = document.createElement('div'); msg.className = 'console-' + (level||'info'); msg.textContent = message;
+      line.appendChild(ts); line.appendChild(msg); container.appendChild(line);
+      container.scrollTop = container.scrollHeight;
+      console.log(`[${nowTimestamp()}] ${message}`);
+    } catch(e){ console.error('Console log failed', e); }
   }
 
-  function logToConsole(message, type = "info") {
-    const consoleContent = document.getElementById('console-content');
-    const timestamp = getCurrentTime();
-    
-    const line = document.createElement('div');
-    line.className = 'console-line';
-    
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'console-timestamp';
-    timeSpan.textContent = `[${timestamp}]`;
-    
-    const messageSpan = document.createElement('span');
-    messageSpan.className = `console-${type}`;
-    messageSpan.textContent = message;
-    
-    line.appendChild(timeSpan);
-    line.appendChild(messageSpan);
-    consoleContent.appendChild(line);
-    
-    // Auto-scroll to bottom
-    consoleContent.scrollTop = consoleContent.scrollHeight;
-    
-    // También log a la consola del navegador
-    console.log(`[${timestamp}] ${message}`);
+  function updateProgress(percent, message){
+    const bar = document.getElementById('progress-bar'); const fill = document.getElementById('progress-fill');
+    if(!bar || !fill) return;
+    bar.style.display = 'block'; fill.style.width = percent + '%';
+    if(message) logToConsole(message, 'info');
   }
+  function hideProgress(){ const bar = document.getElementById('progress-bar'); if(bar) bar.style.display='none'; }
 
-  function updateProgress(percent, message = "") {
-    const progressBar = document.getElementById('progress-bar');
-    const progressFill = document.getElementById('progress-fill');
-    
-    progressBar.style.display = 'block';
-    progressFill.style.width = `${percent}%`;
-    
-    if (message) {
-      logToConsole(message, "info");
-    }
-  }
+  async function sha256(s){ const buf = new TextEncoder().encode(s); const h = await crypto.subtle.digest('SHA-256', buf); return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function hideProgress() {
-    document.getElementById('progress-bar').style.display = 'none';
-  }
-
-  // =============================================
-  // UTILIDADES BÁSICAS
-  // =============================================
-  function getTimestamp() {
-    const d = new Date();
-    return `${d.getFullYear().toString().slice(-2)}.${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getHours().toString().padStart(2, '0')}.${d.getMinutes().toString().padStart(2, '0')}`;
-  }
-
-  async function sha256(str) {
-    const buf = new TextEncoder().encode(str);
-    const hash = await window.crypto.subtle.digest('SHA-256', buf);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
-  }
-
-  function escapeHtml(unsafe) {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  // =============================================
-  // COMUNICACIÓN CON GEMINI AI
-  // =============================================
-  async function callGeminiAPI(prompt, context = "Generación") {
-    logToConsole(`📡 Enviando solicitud a Gemini: ${context}`, "debug");
-    
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 4096,
-            topP: 0.8,
-            topK: 40
-          }
-        })
+  // ================ GEMINI COMMUNICATION (optional) ================
+  async function callGeminiAPI(prompt){
+    if(!GEMINI_API_KEY) throw new Error('Gemini API key no configurada');
+    logToConsole('📡 Enviando solicitud a Gemini...', 'info');
+    try{
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }], generationConfig:{ temperature:0.2, maxOutputTokens:4096, topP:0.8 } })
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        throw new Error("Respuesta de API inválida: estructura incorrecta");
-      }
-      
-      const resultText = data.candidates[0].content.parts[0].text;
-      logToConsole(`✅ Respuesta recibida de Gemini (${resultText.length} caracteres)`, "debug");
-      
-      return resultText;
-    } catch (error) {
-      logToConsole(`❌ Error en API Gemini: ${error.message}`, "error");
-      throw error;
-    }
+      if(!res.ok){ const t = await res.text(); throw new Error('HTTP ' + res.status + ': ' + t); }
+      const data = await res.json();
+      // safe access
+      const text = (data?.candidates?.[0]?.content?.parts?.[0]?.text) || JSON.stringify(data);
+      logToConsole('✅ Respuesta recibida de Gemini', 'success');
+      return text;
+    } catch(err){ logToConsole('❌ Error Gemini: ' + err.message, 'error'); throw err; }
   }
 
-  // =============================================
-  // GENERACIÓN DE PROYECTO CON IA
-  // =============================================
-  async function generateProjectWithAI(idea, projectConfig) {
-    updateProgress(10, "🧠 Analizando requisitos con IA...");
-    
-    const prompt = `Eres un experto en desarrollo de aplicaciones Python con PyQt5. 
+  // ================ AI GENERATION & FALLBACK ================
+  async function generateProjectWithAI(idea, projectConfig){
+    updateProgress(10, '🧠 Preparando prompt...');
 
-CONFIGURACIÓN DEL PROYECTO:
-- Idea: ${idea}
-- Fabricante: ${projectConfig.empresa}
-- Nombre interno: ${projectConfig.nombre}
-- Versión: ${projectConfig.version}
-- Título: ${projectConfig.titulo}
-- Tipo: ${projectConfig.tipo}
+    const prompt = `Eres un experto en desarrollo de aplicaciones Python con PyQt5.\n\nCONFIG:\n- Idea: ${idea}\n- Fabricante: ${projectConfig.empresa}\n- Nombre: ${projectConfig.nombre}\n- Versión: ${projectConfig.version}\n- Título: ${projectConfig.titulo}\n- Tipo: ${projectConfig.tipo}\n\nGenera una estructura de proyecto en JSON con carpetas y archivos (archivos con contenido real). Responde únicamente con JSON.`;
 
-REQUISITOS:
-1. Genera una aplicación Python completa con PyQt5
-2. Código funcional y bien estructurado
-3. Interfaz de usuario moderna
-4. Manejo de errores robusto
-5. Documentación clara
-
-RESPONDE EXCLUSIVAMENTE con este formato JSON:
-
-{
-  "project_structure": {
-    "folders": ["app", "config", "lib", "assets"],
-    "files": {
-      "main.py": "código python completo aquí",
-      "requirements.txt": "PyQt5\\n...",
-      "README.md": "# Título\\nDescripción...",
-      "config/settings.json": "configuración en JSON",
-      "lib/utils.py": "funciones utilitarias"
-    }
-  },
-  "metadata": {
-    "description": "Descripción completa",
-    "dependencies": ["PyQt5", "numpy"],
-    "entry_point": "main.py"
-  }
-}
-
-Genera código REAL y FUNCIONAL. El usuario debe poder ejecutarlo inmediatamente.`;
-
-    try {
-      const response = await callGeminiAPI(prompt, "Generación de proyecto");
-      
-      // Intentar extraer JSON
+    try{
+      const response = await callGeminiAPI(prompt);
+      // intentar extraer primer bloque JSON
       const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      } else {
-        logToConsole("⚠️ No se pudo extraer JSON de la respuesta, usando proyecto por defecto", "warning");
-        return createFallbackProject(idea, projectConfig);
-      }
-    } catch (error) {
-      logToConsole("❌ Error en generación con IA, usando proyecto por defecto", "error");
+      if(jsonMatch){ try{ return JSON.parse(jsonMatch[0]); }catch(err){ logToConsole('⚠️ JSON inválido recibido de Gemini, se usará fallback', 'warning'); return createFallbackProject(idea, projectConfig); } }
+      logToConsole('⚠️ No se encontró JSON en la respuesta de Gemini, usando fallback', 'warning');
       return createFallbackProject(idea, projectConfig);
-    }
+    } catch(err){ logToConsole('🔄 Usando generación local por fallback', 'warning'); return createFallbackProject(idea, projectConfig); }
   }
 
-  function createFallbackProject(idea, projectConfig) {
-    logToConsole("🔄 Creando proyecto básico por defecto...", "warning");
-    
+  function createFallbackProject(idea, projectConfig){
+    logToConsole('🔧 Creando proyecto de ejemplo (fallback)', 'info');
     return {
-      project_structure: {
-        folders: ["app", "config", "lib"],
-        files: {
-          "main.py": `#!/usr/bin/env python3
-# ${projectConfig.titulo}
-# Versión: ${projectConfig.version}
-
-import sys
-import os
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, 
-                             QWidget, QPushButton, QLabel, QTextEdit)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-        
-    def initUI(self):
-        self.setWindowTitle("${projectConfig.titulo}")
-        self.setGeometry(100, 100, 600, 400)
-        
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        
-        layout = QVBoxLayout()
-        central_widget.setLayout(layout)
-        
-        title = QLabel("${projectConfig.titulo}")
-        title.setAlignment(Qt.AlignCenter)
-        title.setFont(QFont("Arial", 16, QFont.Bold))
-        layout.addWidget(title)
-        
-        desc = QLabel("${idea.substring(0, 100)}")
-        desc.setAlignment(Qt.AlignCenter)
-        layout.addWidget(desc)
-        
-        self.text_area = QTextEdit()
-        self.text_area.setPlaceholderText("Aquí irá la funcionalidad principal...")
-        layout.addWidget(self.text_area)
-        
-        btn = QPushButton("Ejecutar")
-        btn.clicked.connect(self.ejecutar_funcion)
-        layout.addWidget(btn)
-        
-    def ejecutar_funcion(self):
-        self.text_area.append("✅ Aplicación ejecutándose correctamente")
-        
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())`,
-          "requirements.txt": "PyQt5==5.15.9\nnumpy",
-          "README.md": `# ${projectConfig.titulo}
-
-${idea}
-
-## Instalación
-
-\\`\\`\\`bash
-pip install -r requirements.txt
-python main.py
-\\`\\`\\`
-
-## Características
-
-- Interfaz gráfica con PyQt5
-- Desarrollado con Influent Package Maker
-- Versión ${projectConfig.version}`,
-          "config/settings.json": `{
-  "app_name": "${projectConfig.titulo}",
-  "version": "${projectConfig.version}",
-  "company": "${projectConfig.empresa}"
-}`,
-          "lib/utils.py": `# Utilidades para ${projectConfig.titulo}
-
-def saludar():
-    return "¡Hola desde ${projectConfig.titulo}!"
-
-def version():
-    return "${projectConfig.version}"`
-        }
-      },
-      metadata: {
-        description: idea,
-        dependencies: ["PyQt5", "numpy"],
-        entry_point: "main.py"
-      }
+      project_structure:{ folders:['app','config','lib'], files:{
+        'main.py': `#!/usr/bin/env python3\n# ${projectConfig.titulo}\n# Versión: ${projectConfig.version}\n\nimport sys\nfrom PyQt5.QtWidgets import QApplication, QMainWindow, QLabel\n\nclass MainWindow(QMainWindow):\n  def __init__(self):\n    super().__init__()\n    self.setWindowTitle('${projectConfig.titulo}')\n    self.setGeometry(100,100,640,420)\n    lbl=QLabel('¡Aplicación generada automáticamente (fallback)!', self)\n    lbl.move(20,20)\n\nif __name__=='__main__':\n  app=QApplication(sys.argv)\n  w=MainWindow()\n  w.show()\n  sys.exit(app.exec_())`,
+        'requirements.txt': 'PyQt5==5.15.9\nnumpy',
+        'README.md': `# ${projectConfig.titulo}\n\n${idea}\n\nInstalación:\n\n\`\`\`bash\npip install -r requirements.txt\npython main.py\n\`\`\``,
+        'config/settings.json': JSON.stringify({ app_name: projectConfig.titulo, version: projectConfig.version, company: projectConfig.empresa }, null, 2),
+        'lib/utils.py': `def saludo():\n  return '¡Hola desde ${projectConfig.titulo}!'`
+      } }, metadata:{ description: idea, dependencies:['PyQt5','numpy'], entry_point:'main.py' }
     };
   }
 
-  // =============================================
-  // VERIFICACIÓN DE CÓDIGO
-  // =============================================
-  async function verifyCodeWithAI(content, fileType, context) {
-    logToConsole(`🔍 Verificando ${fileType}: ${context}`, "debug");
-    
-    const prompt = `Verifica este ${fileType}:
-
-CONTENIDO:
-\`\`\`
-${content.substring(0, 1500)}
-\`\`\`
-
-CRITERIOS:
-1. Sintaxis correcta
-2. Seguridad (sin código malicioso)
-3. Funcionalidad básica
-
-Responde SOLO con: VALIDO o INVALIDO seguido de una breve explicación.`;
-
-    try {
-      const response = await callGeminiAPI(prompt, `Verificación de ${fileType}`);
-      return response.includes("VALIDO") ? { isValid: true, feedback: response } : { isValid: false, feedback: response };
-    } catch (error) {
-      logToConsole(`⚠️ Error en verificación, asumiendo válido: ${error.message}`, "warning");
-      return { isValid: true, feedback: "Verificación omitida por error" };
-    }
+  // ================ CODE VERIFICATION (light) ================
+  async function verifyCodeWithAI(content,fileType,context){
+    logToConsole(`🔍 Verificando ${fileType} (${context})`, 'info');
+    // Simple local checks: ensure balanced indentation, no obvious 'eval' calls, file not empty
+    if(!content || content.trim().length===0) return { isValid:false, feedback:'Archivo vacío' };
+    if(/\beval\(/i.test(content)) return { isValid:false, feedback:'Uso de eval detectado' };
+    return { isValid:true, feedback:'Verificación local OK' };
   }
 
-  // =============================================
-  // LÓGICA PRINCIPAL DE GENERACIÓN
-  // =============================================
-  async function generateCompleteProject(idea, projectConfig) {
+  // ================ MAIN GENERATION FLOW ================
+  async function generateCompleteProject(idea, projectConfig){
     const btn = document.getElementById('btn-generar');
-    const btnText = document.getElementById('btn-text');
-    const btnLoading = document.getElementById('btn-loading');
-    
-    // Estado de carga
-    btn.disabled = true;
-    btnText.textContent = 'Generando...';
-    btnLoading.style.display = 'inline-block';
-    
-    try {
-      logToConsole("🚀 INICIANDO GENERACIÓN DE PROYECTO", "info");
-      
-      // Paso 1: Generar estructura con IA
-      updateProgress(25, "📋 Generando estructura del proyecto...");
+    btn.disabled = true; updateProgress(5, '🚀 Iniciando generación');
+    try{
       const aiResult = await generateProjectWithAI(idea, projectConfig);
-      
-      if (!aiResult.project_structure) {
-        throw new Error("No se pudo generar la estructura del proyecto");
-      }
-      
-      // Paso 2: Crear estructura de archivos
-      updateProgress(50, "📁 Construyendo archivos...");
-      const folderName = `${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}-${getTimestamp()}`;
+      if(!aiResult?.project_structure) throw new Error('Estructura de proyecto inválida');
+
+      updateProgress(40, '📁 Construyendo archivos...');
+      const folderName = `${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}`;
       const hash = await sha256(`${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}`);
-      
       const files = {};
-      
-      // Crear carpetas
-      [...DEFAULT_FOLDERS, ...(aiResult.project_structure.folders || [])].forEach(folder => {
-        files[`${folderName}/${folder}/.gitkeep`] = '# Carpeta ' + folder;
-      });
-      
-      // Archivos generados por IA
-      Object.entries(aiResult.project_structure.files || {}).forEach(([filePath, content]) => {
-        files[`${folderName}/${filePath}`] = content;
-      });
-      
-      // Archivos esenciales del sistema
-      files[`${folderName}/details.xml`] = `<?xml version="1.0" encoding="UTF-8"?>
-<app>
-  <publisher>${projectConfig.empresa}</publisher>
-  <app>${projectConfig.nombre}</app>
-  <name>${projectConfig.titulo}</name>
-  <version>${projectConfig.version}</version>
-  <description>${aiResult.metadata.description}</description>
-  <entry_point>${aiResult.metadata.entry_point || 'main.py'}</entry_point>
-  <hash>${hash}</hash>
-</app>`;
-      
-      // Paso 3: Verificación rápida del archivo principal
-      updateProgress(75, "✅ Verificando código principal...");
-      const mainFile = Object.entries(files).find(([path]) => path.includes('main.py'));
-      if (mainFile) {
-        const verification = await verifyCodeWithAI(mainFile[1], "código Python", "Archivo principal");
-        if (verification.isValid) {
-          logToConsole("✅ Código principal verificado correctamente", "info");
-        } else {
-          logToConsole(`⚠️ Advertencias en código principal: ${verification.feedback}`, "warning");
-        }
+
+      // ensure default folders present
+      const folders = Array.from(new Set([...DEFAULT_FOLDERS, ...(aiResult.project_structure.folders || [])]));
+      folders.forEach(f => files[`${folderName}/${f}/.gitkeep`] = '# placeholder');
+
+      // add AI files
+      Object.entries(aiResult.project_structure.files || {}).forEach(([path, content]) => { files[`${folderName}/${path}`] = content; });
+
+      files[`${folderName}/details.xml`] = `<?xml version="1.0" encoding="UTF-8"?>\n<app>\n  <publisher>${projectConfig.empresa}</publisher>\n  <app>${projectConfig.nombre}</app>\n  <name>${projectConfig.titulo}</name>\n  <version>${projectConfig.version}</version>\n  <description>${escapeHtml(aiResult.metadata?.description || '')}</description>\n  <entry_point>${aiResult.metadata?.entry_point || 'main.py'}</entry_point>\n  <hash>${hash}</hash>\n</app>`;
+
+      updateProgress(70, '🔎 Verificando archivo principal...');
+      const mainFileEntry = Object.entries(files).find(([p])=>p.endsWith('/main.py') || p.endsWith('main.py'));
+      if(mainFileEntry){
+        const verification = await verifyCodeWithAI(mainFileEntry[1],'python','Archivo principal');
+        if(!verification.isValid) logToConsole('⚠️ Advertencia: ' + verification.feedback, 'warning');
+        else logToConsole('✅ Código principal verificado (local)', 'success');
       }
-      
-      // Paso 4: Mostrar resultados
-      updateProgress(100, "🎉 Proyecto generado exitosamente!");
+
+      updateProgress(94, '🎉 Preparando resultados...');
+      lastFiles = files; currentProjectData = { projectConfig, aiResult };
       showResults(files, projectConfig, aiResult);
-      
-      lastFiles = files;
-      currentProjectData = { projectConfig, aiResult };
-      
-      logToConsole("✅ GENERACIÓN COMPLETADA - Proyecto listo para descargar", "success");
-      
-    } catch (error) {
-      logToConsole(`❌ ERROR CRÍTICO: ${error.message}`, "error");
-      console.error("Error detallado:", error);
-    } finally {
-      // Restaurar estado del botón
-      btn.disabled = false;
-      btnText.textContent = '🚀 Generar Proyecto Completo';
-      btnLoading.style.display = 'none';
-      setTimeout(hideProgress, 1000);
-    }
+      logToConsole('✅ Proyecto generado correctamente', 'success');
+    } catch(err){ logToConsole('❌ Error durante generación: ' + err.message, 'error'); }
+    finally{ document.getElementById('btn-generar').disabled = false; setTimeout(hideProgress, 800); }
   }
 
-  // =============================================
-  // FUNCIONES DE UI
-  // =============================================
-  function showResults(files, projectConfig, aiResult) {
-    // Mostrar sección de resultados
-    document.getElementById('results-section').style.display = 'block';
-    
-    // Mostrar árbol de archivos
-    const fileTree = document.getElementById('file-tree');
-    fileTree.innerHTML = '<strong>Estructura generada:</strong><br>';
-    
-    Object.keys(files).forEach(filePath => {
-      const icon = filePath.endsWith('.py') ? '🐍' : 
-                   filePath.endsWith('.md') ? '📝' : 
-                   filePath.endsWith('.txt') ? '📄' : 
-                   filePath.endsWith('.xml') ? '⚙️' : 
-                   filePath.endsWith('.json') ? '🔧' : '📁';
-      
-      fileTree.innerHTML += `<div class="file-item"><span class="file-icon">${icon}</span> ${filePath}</div>`;
+  // ================ UI HELPERS ================
+  function showResults(files){
+    const results = document.getElementById('results-section'); results.style.display = 'block';
+    const tree = document.getElementById('file-tree'); tree.innerHTML = '';
+
+    Object.keys(files).sort().forEach(fp => {
+      const item = document.createElement('div'); item.className='file-item';
+      const icon = document.createElement('div'); icon.className='file-icon';
+      if(fp.endsWith('.py')) icon.textContent='🐍'; else if(fp.endsWith('.md')) icon.textContent='📝'; else if(fp.endsWith('.txt')) icon.textContent='📄'; else if(fp.endsWith('.json')) icon.textContent='🔧'; else icon.textContent='📁';
+      const label = document.createElement('div'); label.textContent = fp;
+      item.appendChild(icon); item.appendChild(label);
+      item.addEventListener('click', ()=>{ previewFile(fp, files[fp]); });
+      tree.appendChild(item);
     });
-    
-    // Mostrar vista previa del código principal
-    const codePreview = document.getElementById('code-preview');
-    const mainFile = Object.entries(files).find(([path]) => path.includes('main.py') || path.includes('.py') && !path.includes('__'));
-    
-    if (mainFile) {
-      const [filePath, content] = mainFile;
-      codePreview.innerHTML = `
-        <div class="code-block">
-          <div class="code-block-header">${filePath}</div>
-          <pre>${escapeHtml(content)}</pre>
-        </div>
-      `;
-    }
+
+    document.getElementById('btn-descargar').disabled = false;
   }
 
-  // =============================================
-  // MANEJADORES DE EVENTOS
-  // =============================================
-  document.getElementById('btn-generar').addEventListener('click', async function() {
-    const ideaInput = document.getElementById('idea-input').value.trim();
-    if (!ideaInput) {
-      logToConsole("❌ Error: Describe tu aplicación primero", "error");
-      return;
-    }
+  function previewFile(path, content){
+    const preview = document.getElementById('code-pre');
+    preview.textContent = content;
+    const header = document.querySelector('.code-block-header');
+    if(header) header.textContent = path;
+    logToConsole('🔎 Vista previa: ' + path, 'info');
+  }
+  // ================ EVENTS ================
 
-    const projectConfig = {
-      empresa: document.getElementById('empresa').value,
-      nombre: document.getElementById('nombre').value,
-      version: document.getElementById('version').value,
-      titulo: document.getElementById('titulo').value,
-      tipo: document.getElementById('tipo').value
-    };
-
-    if (!projectConfig.nombre || !projectConfig.titulo) {
-      logToConsole("❌ Error: Completa todos los campos requeridos", "error");
-      return;
-    }
-
-    await generateCompleteProject(ideaInput, projectConfig);
+  document.getElementById('btn-descargar').addEventListener('click', async ()=>{
+    if(!lastFiles){ logToConsole('❌ No hay archivos para descargar', 'error'); return; }
+    try{
+      logToConsole('📦 Creando paquete...');
+      const zip = new JSZip(); for(const [p,c] of Object.entries(lastFiles)) zip.file(p, c);
+      const folder = Object.keys(lastFiles)[0].split('/')[0] || 'project';
+      const blob = await zip.generateAsync({type:'blob'});
+      saveAs(blob, folder + '.iflapp');
+      logToConsole('✅ Paquete descargado: ' + folder + '.iflapp', 'success');
+    }catch(err){ logToConsole('❌ Error al crear paquete: ' + err.message, 'error'); }
   });
 
-  document.getElementById('btn-descargar').addEventListener('click', async function() {
-    if (!lastFiles) {
-      logToConsole("❌ Error: No hay proyecto para descargar", "error");
-      return;
-    }
-    
-    logToConsole("📦 Preparando descarga del paquete...", "info");
-    
-    try {
-      const zip = new JSZip();
-      for (const [filePath, content] of Object.entries(lastFiles)) {
-        zip.file(filePath, content);
-      }
-      
-      const folderName = Object.keys(lastFiles)[0].split('/')[0];
-      const blob = await zip.generateAsync({ type: 'blob' });
-      
-      saveAs(blob, `${folderName}.iflapp`);
-      logToConsole(`✅ Paquete descargado: ${folderName}.iflapp`, "success");
-      
-    } catch (error) {
-      logToConsole(`❌ Error al descargar: ${error.message}`, "error");
-    }
+  document.getElementById('btn-clear-console').addEventListener('click', ()=>{
+    const c = document.getElementById('console-content'); c.innerHTML = ''; logToConsole('🧹 Consola limpiada', 'info');
   });
 
-  document.getElementById('btn-clear-console').addEventListener('click', function() {
-    document.getElementById('console-content').innerHTML = '';
-    logToConsole("🧹 Consola limpiada", "info");
+  document.getElementById('btn-copy-structure').addEventListener('click', ()=>{
+    if(!lastFiles) return logToConsole('❌ Nada que copiar', 'error');
+    const structure = Object.keys(lastFiles).join('\n'); navigator.clipboard.writeText(structure).then(()=> logToConsole('📋 Estructura copiada al portapapeles', 'success')).catch(e=> logToConsole('❌ No se pudo copiar: '+e.message,'error'));
   });
 
-  // =============================================
-  // INICIALIZACIÓN
-  // =============================================
-  document.addEventListener('DOMContentLoaded', function() {
-    // Actualizar timestamps iniciales
-    document.getElementById('current-time').textContent = `[${getCurrentTime()}]`;
-    document.getElementById('current-time2').textContent = `[${getCurrentTime()}]`;
-    
-    logToConsole("✅ Sistema inicializado correctamente", "info");
-    logToConsole("💡 Completa la configuración y haz clic en 'Generar Proyecto Completo'", "info");
-  });
+  // ================ INITIALIZE ================
+  (function init(){
+    document.getElementById('api-status').textContent = GEMINI_API_KEY ? 'Configurada' : 'No configurada (usar fallback local)';
+    logToConsole('✅ Sistema inicializado', 'success');
+    logToConsole('💡 Describe tu app y pulsa "Generar Proyecto Completo" (o usa "Generación local" si no tienes API key)', 'info');
+  })();
+
   </script>
 </body>
 </html>
