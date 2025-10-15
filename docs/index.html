@@ -3,34 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Influent Package Maker PWA</title>
+  <title>Influent Package Maker</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#29b6f6">
+  <meta name="theme-color" content="#24292e">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="bg-anim"></div>
-  <header class="glass crystal-glow">
-    <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" alt="Icon" class="app-icon crystal-glow">
-    <h1 class="crystal-glow">Influent Package Maker PWA</h1>
+  <header class="gh-header">
+    <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png"
+         alt="Logo" class="gh-logo">
+    <h1>Influent Package Maker</h1>
     <span id="platform"></span>
   </header>
-  <nav>
-    <button data-tab="create" class="glass crystal-glow">Crear Proyecto</button>
-    <button data-tab="build" class="glass crystal-glow">Construir Paquete</button>
-    <button data-tab="manager" class="glass crystal-glow">Gestor de Proyectos</button>
-    <button data-tab="about" class="glass crystal-glow">Acerca de</button>
-  </nav>
   <main>
-    <section id="tab-create" class="tab active glass"></section>
-    <section id="tab-build" class="tab glass"></section>
-    <section id="tab-manager" class="tab glass"></section>
-    <section id="tab-about" class="tab glass"></section>
+    <section id="create-section">
+      <h2>Crear y descargar proyecto Influent</h2>
+      <form id="create-form" class="gh-form">
+        <label>
+          <span>Fabricante</span>
+          <input name="empresa" type="text" placeholder="Ejemplo: influent" required>
+        </label>
+        <label>
+          <span>Nombre interno</span>
+          <input name="nombre" type="text" placeholder="Ejemplo: mycoolapp" required>
+        </label>
+        <label>
+          <span>Versión</span>
+          <input name="version" type="text" placeholder="Ejemplo: 1.0" required>
+        </label>
+        <label>
+          <span>Título completo</span>
+          <input name="titulo" type="text" placeholder="Ejemplo: My Cool App" required>
+        </label>
+        <button type="submit" class="gh-btn">Descargar proyecto</button>
+      </form>
+      <div id="create-status" class="gh-status"></div>
+    </section>
+    <hr>
+    <section id="install-section">
+      <h2>Instalar y explorar paquete Influent</h2>
+      <form id="install-form" class="gh-form">
+        <label>
+          <span>Selecciona paquete ZIP (.iflapp/.iflappb)</span>
+          <input name="packagefile" type="file" accept=".zip,.iflapp,.iflappb">
+        </label>
+      </form>
+      <div id="install-status" class="gh-status"></div>
+      <div id="zip-details"></div>
+    </section>
   </main>
-  <footer class="glass crystal-glow">
-    <span id="status">Listo.</span>
+  <footer>
+    <span>Desarrollador: <a href="https://github.com/JesusQuijada34">JesusQuijada34</a> | <a href="https://github.com/JesusQuijada34/packagemaker/">GitHub Repo</a></span>
   </footer>
-  <!-- Incluye JSZip y FileSaver desde CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="app.js"></script>
