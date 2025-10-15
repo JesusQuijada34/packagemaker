@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Influent Package Maker PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#29b6f6">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="bg-anim"></div>
+  <header class="glass crystal-glow">
+    <img src="icons/app-icon.png" alt="Icon" class="app-icon crystal-glow">
+    <h1 class="crystal-glow">Influent Package Maker PWA</h1>
+    <span id="platform"></span>
+  </header>
+  <nav>
+    <button data-tab="create" class="glass crystal-glow">Crear Proyecto</button>
+    <button data-tab="build" class="glass crystal-glow">Construir Paquete</button>
+    <button data-tab="manager" class="glass crystal-glow">Gestor de Proyectos</button>
+    <button data-tab="about" class="glass crystal-glow">Acerca de</button>
+  </nav>
+  <main>
+    <section id="tab-create" class="tab active glass"></section>
+    <section id="tab-build" class="tab glass"></section>
+    <section id="tab-manager" class="tab glass"></section>
+    <section id="tab-about" class="tab glass"></section>
+  </main>
+  <footer class="glass crystal-glow">
+    <span id="status">Listo.</span>
+  </footer>
+  <!-- Incluye JSZip y FileSaver desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
