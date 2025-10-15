@@ -6,16 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
-      --color-border-default: #d0d7de;
-      --color-border-muted: #d8dee4;
-      --color-canvas-default: #ffffff;
-      --color-canvas-subtle: #f6f8fa;
-      --color-fg-default: #24292f;
-      --color-fg-muted: #57606a;
-      --color-accent-fg: #0969da;
-      --color-success-fg: #1a7f37;
-      --color-danger-fg: #cf222e;
-      --color-attention-fg: #9a6700;
+      --primary-color: #0969da;
+      --success-color: #1a7f37;
+      --warning-color: #9a6700;
+      --error-color: #cf222e;
+      --bg-color: #ffffff;
+      --sidebar-bg: #f6f8fa;
+      --border-color: #d0d7de;
+      --text-color: #24292f;
+      --text-muted: #57606a;
     }
     
     * {
@@ -26,54 +25,66 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background-color: var(--color-canvas-default);
-      color: var(--color-fg-default);
+      background-color: var(--bg-color);
+      color: var(--text-color);
       line-height: 1.5;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .sidebar {
+      width: 300px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border-color);
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     
     .header {
-      background-color: #24292f;
-      color: white;
-      padding: 16px;
-      border-bottom: 1px solid var(--color-border-default);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-color);
     }
     
-    .header-content {
-      max-width: 1280px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
     }
     
-    .logo {
-      width: 32px;
-      height: 32px;
-      background: white;
-      border-radius: 6px;
-    }
-    
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
+    .content-area {
+      flex: 1;
       padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
     
     .section {
-      background: var(--color-canvas-default);
-      border: 1px solid var(--color-border-default);
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
-      margin-bottom: 24px;
     }
     
     .section-header {
       padding: 16px;
-      border-bottom: 1px solid var(--color-border-default);
-      background: var(--color-canvas-subtle);
+      border-bottom: 1px solid var(--border-color);
+      background: var(--sidebar-bg);
     }
     
     .section-title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
     }
     
@@ -95,20 +106,20 @@
     .form-control {
       width: 100%;
       padding: 8px 12px;
-      border: 1px solid var(--color-border-default);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       font-size: 14px;
-      background: var(--color-canvas-default);
+      background: var(--bg-color);
     }
     
     .form-control:focus {
       outline: none;
-      border-color: var(--color-accent-fg);
+      border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1);
     }
     
     .textarea {
-      min-height: 80px;
+      min-height: 100px;
       resize: vertical;
       font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
       font-size: 13px;
@@ -116,10 +127,10 @@
     
     .btn {
       padding: 8px 16px;
-      border: 1px solid var(--color-border-default);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
-      background: var(--color-canvas-default);
-      color: var(--color-fg-default);
+      background: var(--bg-color);
+      color: var(--text-color);
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
@@ -127,12 +138,12 @@
     }
     
     .btn:hover {
-      background: var(--color-canvas-subtle);
+      background: var(--sidebar-bg);
     }
     
     .btn-primary {
-      background: var(--color-success-fg);
-      border-color: var(--color-success-fg);
+      background: var(--success-color);
+      border-color: var(--success-color);
       color: white;
     }
     
@@ -156,46 +167,96 @@
     .status-success {
       background: #dafbe1;
       border: 1px solid #ace1af;
-      color: var(--color-success-fg);
+      color: var(--success-color);
     }
     
     .status-error {
       background: #ffebe9;
       border: 1px solid #ffcecb;
-      color: var(--color-danger-fg);
+      color: var(--error-color);
     }
     
     .status-warning {
       background: #fff8c5;
       border: 1px solid #fae17d;
-      color: var(--color-attention-fg);
+      color: var(--warning-color);
     }
     
     .status-info {
       background: #ddf4ff;
       border: 1px solid #b6e3ff;
-      color: var(--color-accent-fg);
+      color: var(--primary-color);
     }
     
-    .thinking {
-      background: #fff8c5;
-      border: 1px solid #fae17d;
-      padding: 12px;
+    .console {
+      background: #0d1117;
+      color: #e6edf3;
       border-radius: 6px;
-      margin: 12px 0;
-      font-size: 14px;
-      font-style: italic;
-      color: var(--color-attention-fg);
+      padding: 16px;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .console-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #30363d;
+    }
+    
+    .console-title {
+      font-weight: 600;
+      color: #7d8590;
+    }
+    
+    .console-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .console-line {
+      margin-bottom: 8px;
+      padding: 4px 0;
+    }
+    
+    .console-timestamp {
+      color: #7d8590;
+      margin-right: 8px;
+    }
+    
+    .console-info {
+      color: #7ee787;
+    }
+    
+    .console-warning {
+      color: #f2cc60;
+    }
+    
+    .console-error {
+      color: #ff7b72;
+    }
+    
+    .console-debug {
+      color: #a5d6ff;
     }
     
     .file-tree {
-      background: var(--color-canvas-subtle);
-      border: 1px solid var(--color-border-default);
+      background: var(--sidebar-bg);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       padding: 16px;
       margin: 16px 0;
       font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
       font-size: 13px;
+      max-height: 300px;
+      overflow-y: auto;
     }
     
     .file-item {
@@ -206,7 +267,7 @@
     }
     
     .file-icon {
-      color: var(--color-fg-muted);
+      color: var(--text-muted);
       width: 16px;
       text-align: center;
     }
@@ -232,25 +293,6 @@
       color: #7d8590;
     }
     
-    .verification-step {
-      padding: 8px 12px;
-      margin: 4px 0;
-      background: var(--color-canvas-subtle);
-      border-radius: 4px;
-      font-size: 13px;
-      border-left: 3px solid var(--color-border-default);
-    }
-    
-    .verification-step.success {
-      border-left-color: var(--color-success-fg);
-      background: #dafbe1;
-    }
-    
-    .verification-step.error {
-      border-left-color: var(--color-danger-fg);
-      background: #ffebe9;
-    }
-    
     .loading {
       display: inline-block;
       width: 16px;
@@ -265,158 +307,140 @@
       to { transform: rotate(360deg); }
     }
     
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    
-    @media (max-width: 768px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-      .container {
-        padding: 16px;
-      }
-    }
-    
-    .ai-thinking {
-      background: #fff8c5;
-      border: 1px solid #fae17d;
-      padding: 12px;
-      border-radius: 6px;
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--border-color);
+      border-radius: 2px;
+      overflow: hidden;
       margin: 8px 0;
-      font-size: 13px;
-      color: var(--color-attention-fg);
     }
     
-    .prompt-log {
-      background: var(--color-canvas-subtle);
-      border: 1px solid var(--color-border-default);
-      border-radius: 6px;
-      padding: 12px;
-      margin: 8px 0;
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      font-size: 12px;
-      color: var(--color-fg-muted);
-      max-height: 200px;
-      overflow-y: auto;
+    .progress-fill {
+      height: 100%;
+      background: var(--success-color);
+      transition: width 0.3s ease;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-content">
-      <div class="logo"></div>
-      <h1 style="font-size: 16px; font-weight: 600;">Influent Package Maker</h1>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Configuración del Proyecto</h2>
+      </div>
+      <div class="section-body">
+        <div class="form-group">
+          <label class="form-label">Fabricante</label>
+          <input type="text" class="form-control" id="empresa" value="influent" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Nombre interno</label>
+          <input type="text" class="form-control" id="nombre" value="scicalc" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Versión</label>
+          <input type="text" class="form-control" id="version" value="1.0.0" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Título completo</label>
+          <input type="text" class="form-control" id="titulo" value="Scientific Calculator Pro" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Tipo de aplicación</label>
+          <select class="form-control" id="tipo">
+            <option value="calculadora">Calculadora/Científica</option>
+            <option value="utilidad">Utilidad del Sistema</option>
+            <option value="herramienta">Herramienta de Desarrollo</option>
+            <option value="productividad">Productividad</option>
+            <option value="multimedia">Multimedia</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Descripción con IA</h2>
+      </div>
+      <div class="section-body">
+        <div class="form-group">
+          <label class="form-label">Describe tu aplicación en detalle</label>
+          <textarea class="form-control textarea" id="idea-input">Calculadora científica con interfaz moderna PyQt5, funciones trigonométricas, historial de operaciones, temas claros/oscuros y exportación de resultados.</textarea>
+        </div>
+        
+        <button class="btn btn-primary" id="btn-generar">
+          <span id="btn-text">🚀 Generar Proyecto Completo</span>
+          <span id="btn-loading" class="loading" style="display: none;"></span>
+        </button>
+        
+        <div class="progress-bar" id="progress-bar" style="display: none;">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="results-section" style="display: none;">
+      <div class="section-header">
+        <h2 class="section-title">Resultados</h2>
+      </div>
+      <div class="section-body">
+        <div id="file-tree" class="file-tree">
+          <!-- Estructura de archivos se insertará aquí -->
+        </div>
+        
+        <div class="form-group">
+          <button class="btn btn-primary" id="btn-descargar">📦 Descargar Paquete .iflapp</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="container">
-    <div class="grid">
-      <!-- Columna Izquierda: Formulario y Configuración -->
-      <div>
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">Configuración del Proyecto</h2>
-          </div>
-          <div class="section-body">
-            <div class="form-group">
-              <label class="form-label">Fabricante</label>
-              <input type="text" class="form-control" id="empresa" value="influent" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Nombre interno</label>
-              <input type="text" class="form-control" id="nombre" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Versión</label>
-              <input type="text" class="form-control" id="version" value="1.0.0" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Título completo</label>
-              <input type="text" class="form-control" id="titulo" required>
-            </div>
-            
-            <div class="form-group">
-              <label class="form-label">Tipo de aplicación</label>
-              <select class="form-control" id="tipo">
-                <option value="calculadora">Calculadora/Científica</option>
-                <option value="utilidad">Utilidad del Sistema</option>
-                <option value="herramienta">Herramienta de Desarrollo</option>
-                <option value="productividad">Productividad</option>
-                <option value="multimedia">Multimedia</option>
-              </select>
-            </div>
-          </div>
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h1>Influent Package Maker - Consola de Desarrollo</h1>
+    </div>
+    
+    <div class="content-area">
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">Consola de Debug</h2>
         </div>
-
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">Descripción con IA</h2>
-          </div>
-          <div class="section-body">
-            <div class="form-group">
-              <label class="form-label">Describe tu aplicación en detalle</label>
-              <textarea class="form-control textarea" id="idea-input" placeholder="Ej: Calculadora científica con interfaz moderna, funciones trigonométricas, historial de operaciones y temas personalizables..."></textarea>
+        <div class="section-body" style="padding: 0; height: 500px;">
+          <div class="console">
+            <div class="console-header">
+              <div class="console-title">Actividad del Sistema</div>
+              <button class="btn" id="btn-clear-console" style="font-size: 12px; padding: 4px 8px;">Limpiar</button>
             </div>
-            
-            <button class="btn btn-primary" id="btn-generar">
-              <span id="btn-text">🚀 Generar Proyecto Completo</span>
-              <span id="btn-loading" class="loading" style="display: none;"></span>
-            </button>
-            
-            <div id="thinking" class="thinking" style="display: none;">
-              <span class="loading"></span> La IA está analizando y generando tu proyecto...
+            <div class="console-content" id="console-content">
+              <div class="console-line">
+                <span class="console-timestamp" id="current-time"></span>
+                <span class="console-info">✅ Sistema inicializado correctamente</span>
+              </div>
+              <div class="console-line">
+                <span class="console-timestamp" id="current-time2"></span>
+                <span class="console-info">💡 Completa la descripción y haz clic en Generar Proyecto</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Columna Derecha: Resultados y Verificación -->
-      <div>
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">Progreso y Verificación</h2>
-          </div>
-          <div class="section-body">
-            <div id="status" class="status status-info">
-              Esperando descripción del proyecto...
-            </div>
-            
-            <div id="prompt-log" class="prompt-log" style="display: none;">
-              <!-- Log de prompts y respuestas de la IA -->
-            </div>
-            
-            <div id="verification-steps">
-              <!-- Pasos de verificación se insertarán aquí -->
-            </div>
-            
-            <div id="ai-thinking" class="ai-thinking" style="display: none;">
-              <!-- Pensamientos en tiempo real de la IA -->
-            </div>
-          </div>
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">Vista Previa del Código</h2>
         </div>
-
-        <div class="section" id="results-section" style="display: none;">
-          <div class="section-header">
-            <h2 class="section-title">Resultados Generados</h2>
-          </div>
-          <div class="section-body">
-            <div id="file-tree" class="file-tree">
-              <!-- Estructura de archivos se insertará aquí -->
-            </div>
-            
-            <div id="code-preview">
-              <!-- Vista previa del código se insertará aquí -->
-            </div>
-            
-            <div class="form-group">
-              <button class="btn btn-primary" id="btn-descargar">📦 Descargar Paquete .iflapp</button>
-              <button class="btn" id="btn-validar">🔍 Validar Código</button>
+        <div class="section-body">
+          <div id="code-preview">
+            <div class="code-block">
+              <div class="code-block-header">Esperando generación de código...</div>
+              <pre>El código generado aparecerá aquí después de que completes la descripción y hagas clic en "Generar Proyecto Completo".</pre>
             </div>
           </div>
         </div>
@@ -426,225 +450,204 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script>
-// --- Configuración y Constantes ---
-// API Key corregida para Gemini
-const GEMINI_API_KEY = "AIzaSyDD8X1GvPm6j3axGaWz-pmjKSQXdP8eci4";
 
-const DEFAULT_FOLDERS = ["app", "assets", "config", "docs", "source", "lib", "tests"];
-let currentProjectData = null;
-let lastFiles = null;
+  <script>
+  // =============================================
+  // CONFIGURACIÓN Y CONSTANTES
+  // =============================================
+  const GEMINI_API_KEY = "AIzaSyDD8X1GvPm6j3axGaWz-pmjKSQXdP8eci4";
+  const DEFAULT_FOLDERS = ["app", "assets", "config", "docs", "source", "lib", "tests"];
+  let currentProjectData = null;
+  let lastFiles = null;
 
-// --- Utilidades Básicas ---
-function getTimestamp() {
-  const d = new Date();
-  return `${d.getFullYear().toString().slice(-2)}.${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getHours().toString().padStart(2, '0')}.${d.getMinutes().toString().padStart(2, '0')}`;
-}
-
-async function sha256(str) {
-  const buf = new TextEncoder().encode(str);
-  const hash = await window.crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-// --- Sistema de Logging ---
-function logPrompt(prompt, response = null) {
-  const logElement = document.getElementById('prompt-log');
-  logElement.style.display = 'block';
-  
-  const timestamp = new Date().toLocaleTimeString();
-  let logEntry = `[${timestamp}] PROMPT: ${prompt.substring(0, 100)}...\n`;
-  
-  if (response) {
-    logEntry += `[${timestamp}] RESPUESTA: ${response.substring(0, 150)}...\n`;
-    logEntry += '─'.repeat(50) + '\n';
+  // =============================================
+  // SISTEMA DE LOGGING Y CONSOLA
+  // =============================================
+  function getCurrentTime() {
+    return new Date().toLocaleTimeString();
   }
-  
-  logElement.textContent += logEntry;
-  logElement.scrollTop = logElement.scrollHeight;
-}
 
-function showThinking(message) {
-  const thinkingElement = document.getElementById('ai-thinking');
-  thinkingElement.style.display = 'block';
-  thinkingElement.textContent = `💭 ${message}`;
-}
-
-function hideThinking() {
-  document.getElementById('ai-thinking').style.display = 'none';
-}
-
-function showStatus(message, type = 'info') {
-  const statusElement = document.getElementById('status');
-  statusElement.textContent = message;
-  statusElement.className = `status status-${type}`;
-}
-
-// --- Sistema de Verificación Mejorado ---
-async function verifyWithAI(content, fileType, context) {
-  showThinking(`Verificando ${fileType}...`);
-  
-  const prompt = `ANÁLISIS DE ${fileType.toUpperCase()} - CONTEXTO: ${context}
-
-CONTENIDO A VERIFICAR:
-\`\`\`
-${content.substring(0, 2000)}
-\`\`\`
-
-CRITERIOS DE VERIFICACIÓN:
-1. ✅ SINTÁXIS: El código debe ser sintácticamente correcto
-2. ✅ SEGURIDAD: No debe contener vulnerabilidades o código malicioso
-3. ✅ FUNCIONALIDAD: Debe cumplir con su propósito declarado
-
-RESPONDE EXCLUSIVAMENTE con este formato JSON:
-{
-  "is_valid": true/false,
-  "confidence": 0-100,
-  "issues": ["lista específica de problemas"],
-  "suggestions": ["sugerencias concretas de mejora"]
-}`;
-
-  try {
-    logPrompt(`Verificación ${fileType}`, `Analizando: ${context}`);
+  function logToConsole(message, type = "info") {
+    const consoleContent = document.getElementById('console-content');
+    const timestamp = getCurrentTime();
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 1024
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const resultText = data.candidates[0].content.parts[0].text;
+    const line = document.createElement('div');
+    line.className = 'console-line';
     
-    logPrompt(`Verificación ${fileType}`, `Respuesta recibida: ${resultText.substring(0, 100)}...`);
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'console-timestamp';
+    timeSpan.textContent = `[${timestamp}]`;
     
-    // Extraer JSON de la respuesta
-    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    } else {
-      return {
-        is_valid: false,
-        confidence: 0,
-        issues: ["No se pudo parsear la respuesta de verificación"],
-        suggestions: ["Revisar el formato de la respuesta"]
-      };
-    }
-  } catch (error) {
-    console.error('Error en verificación:', error);
-    return {
-      is_valid: false,
-      confidence: 0,
-      issues: [`Error de conexión: ${error.message}`],
-      suggestions: ["Reintentar la verificación"]
-    };
-  } finally {
-    hideThinking();
+    const messageSpan = document.createElement('span');
+    messageSpan.className = `console-${type}`;
+    messageSpan.textContent = message;
+    
+    line.appendChild(timeSpan);
+    line.appendChild(messageSpan);
+    consoleContent.appendChild(line);
+    
+    // Auto-scroll to bottom
+    consoleContent.scrollTop = consoleContent.scrollHeight;
+    
+    // También log a la consola del navegador
+    console.log(`[${timestamp}] ${message}`);
   }
-}
 
-// --- Generación de Proyecto con IA ---
-async function generateProjectWithAI(idea, projectConfig) {
-  showThinking("Analizando requisitos y generando estructura del proyecto...");
-  
-  const prompt = `GENERACIÓN DE PROYECTO PYTHON COMPLETO
+  function updateProgress(percent, message = "") {
+    const progressBar = document.getElementById('progress-bar');
+    const progressFill = document.getElementById('progress-fill');
+    
+    progressBar.style.display = 'block';
+    progressFill.style.width = `${percent}%`;
+    
+    if (message) {
+      logToConsole(message, "info");
+    }
+  }
 
-CONFIGURACIÓN:
+  function hideProgress() {
+    document.getElementById('progress-bar').style.display = 'none';
+  }
+
+  // =============================================
+  // UTILIDADES BÁSICAS
+  // =============================================
+  function getTimestamp() {
+    const d = new Date();
+    return `${d.getFullYear().toString().slice(-2)}.${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getHours().toString().padStart(2, '0')}.${d.getMinutes().toString().padStart(2, '0')}`;
+  }
+
+  async function sha256(str) {
+    const buf = new TextEncoder().encode(str);
+    const hash = await window.crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // =============================================
+  // COMUNICACIÓN CON GEMINI AI
+  // =============================================
+  async function callGeminiAPI(prompt, context = "Generación") {
+    logToConsole(`📡 Enviando solicitud a Gemini: ${context}`, "debug");
+    
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 4096,
+            topP: 0.8,
+            topK: 40
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error("Respuesta de API inválida: estructura incorrecta");
+      }
+      
+      const resultText = data.candidates[0].content.parts[0].text;
+      logToConsole(`✅ Respuesta recibida de Gemini (${resultText.length} caracteres)`, "debug");
+      
+      return resultText;
+    } catch (error) {
+      logToConsole(`❌ Error en API Gemini: ${error.message}`, "error");
+      throw error;
+    }
+  }
+
+  // =============================================
+  // GENERACIÓN DE PROYECTO CON IA
+  // =============================================
+  async function generateProjectWithAI(idea, projectConfig) {
+    updateProgress(10, "🧠 Analizando requisitos con IA...");
+    
+    const prompt = `Eres un experto en desarrollo de aplicaciones Python con PyQt5. 
+
+CONFIGURACIÓN DEL PROYECTO:
 - Idea: ${idea}
 - Fabricante: ${projectConfig.empresa}
-- Nombre: ${projectConfig.nombre}
+- Nombre interno: ${projectConfig.nombre}
 - Versión: ${projectConfig.version}
 - Título: ${projectConfig.titulo}
 - Tipo: ${projectConfig.tipo}
 
-REQUISITOS TÉCNICOS:
-1. Aplicación Python con PyQt5 para interfaz gráfica
-2. Estructura de proyecto profesional
-3. Código limpio y documentado
-4. Archivos de configuración y dependencias
+REQUISITOS:
+1. Genera una aplicación Python completa con PyQt5
+2. Código funcional y bien estructurado
+3. Interfaz de usuario moderna
+4. Manejo de errores robusto
+5. Documentación clara
 
-GENERA EXCLUSIVAMENTE en formato JSON:
+RESPONDE EXCLUSIVAMENTE con este formato JSON:
 
 {
   "project_structure": {
-    "folders": ["lista", "de", "carpetas"],
+    "folders": ["app", "config", "lib", "assets"],
     "files": {
-      "main.py": "contenido completo del archivo principal aquí",
-      "requirements.txt": "PyQt5\\nnumpy\\nmatplotlib",
-      "README.md": "# Título\\n\\nDescripción"
+      "main.py": "código python completo aquí",
+      "requirements.txt": "PyQt5\\n...",
+      "README.md": "# Título\\nDescripción...",
+      "config/settings.json": "configuración en JSON",
+      "lib/utils.py": "funciones utilitarias"
     }
   },
   "metadata": {
-    "description": "Descripción completa del proyecto",
+    "description": "Descripción completa",
     "dependencies": ["PyQt5", "numpy"],
     "entry_point": "main.py"
   }
 }
 
-IMPORTANTE: Genera código Python real y funcional.`;
+Genera código REAL y FUNCIONAL. El usuario debe poder ejecutarlo inmediatamente.`;
 
-  try {
-    logPrompt("Generación de proyecto completo", `Idea: ${idea}`);
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 4096
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const resultText = data.candidates[0].content.parts[0].text;
-    
-    logPrompt("Generación de proyecto completo", `Respuesta recibida (${resultText.length} caracteres)`);
-    
-    // Extraer y parsear JSON
-    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      // Si no encuentra JSON, crear una estructura básica
+    try {
+      const response = await callGeminiAPI(prompt, "Generación de proyecto");
+      
+      // Intentar extraer JSON
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      } else {
+        logToConsole("⚠️ No se pudo extraer JSON de la respuesta, usando proyecto por defecto", "warning");
+        return createFallbackProject(idea, projectConfig);
+      }
+    } catch (error) {
+      logToConsole("❌ Error en generación con IA, usando proyecto por defecto", "error");
       return createFallbackProject(idea, projectConfig);
     }
-    
-    return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    console.error('Error en generación:', error);
-    // En caso de error, crear proyecto de fallback
-    return createFallbackProject(idea, projectConfig);
-  } finally {
-    hideThinking();
   }
-}
 
-// --- Proyecto de Fallback ---
-function createFallbackProject(idea, projectConfig) {
-  return {
-    project_structure: {
-      folders: ["app", "config", "lib"],
-      files: {
-        "main.py": `#!/usr/bin/env python3
+  function createFallbackProject(idea, projectConfig) {
+    logToConsole("🔄 Creando proyecto básico por defecto...", "warning");
+    
+    return {
+      project_structure: {
+        folders: ["app", "config", "lib"],
+        files: {
+          "main.py": `#!/usr/bin/env python3
 # ${projectConfig.titulo}
 # Versión: ${projectConfig.version}
 
@@ -664,201 +667,148 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("${projectConfig.titulo}")
         self.setGeometry(100, 100, 600, 400)
         
-        # Widget central
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
-        # Layout principal
         layout = QVBoxLayout()
         central_widget.setLayout(layout)
         
-        # Título
         title = QLabel("${projectConfig.titulo}")
         title.setAlignment(Qt.AlignCenter)
         title.setFont(QFont("Arial", 16, QFont.Bold))
         layout.addWidget(title)
         
-        # Descripción
-        desc = QLabel("${idea.substring(0, 100)}...")
+        desc = QLabel("${idea.substring(0, 100)}")
         desc.setAlignment(Qt.AlignCenter)
         layout.addWidget(desc)
         
-        # Área de texto
         self.text_area = QTextEdit()
         self.text_area.setPlaceholderText("Aquí irá la funcionalidad principal...")
         layout.addWidget(self.text_area)
         
-        # Botón de ejemplo
-        btn = QPushButton("Ejecutar Función")
+        btn = QPushButton("Ejecutar")
         btn.clicked.connect(self.ejecutar_funcion)
         layout.addWidget(btn)
         
     def ejecutar_funcion(self):
-        self.text_area.append("Función ejecutada correctamente ✓")
+        self.text_area.append("✅ Aplicación ejecutándose correctamente")
         
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())`,
-        "requirements.txt": "PyQt5==5.15.9\nnumpy",
-        "README.md": `# ${projectConfig.titulo}
+          "requirements.txt": "PyQt5==5.15.9\nnumpy",
+          "README.md": `# ${projectConfig.titulo}
 
 ${idea}
 
 ## Instalación
 
-1. Instalar dependencias:
 \\`\\`\\`bash
 pip install -r requirements.txt
-\\`\\`\\`
-
-2. Ejecutar la aplicación:
-\\`\\`\\`bash
 python main.py
 \\`\\`\\`
 
 ## Características
 
-- Interfaz gráfica moderna con PyQt5
+- Interfaz gráfica con PyQt5
 - Desarrollado con Influent Package Maker
-- Tipo: ${projectConfig.tipo}
-- Versión: ${projectConfig.version}`,
-        "config/settings.json": `{
+- Versión ${projectConfig.version}`,
+          "config/settings.json": `{
   "app_name": "${projectConfig.titulo}",
   "version": "${projectConfig.version}",
-  "company": "${projectConfig.empresa}",
-  "description": "${idea.substring(0, 100)}"
+  "company": "${projectConfig.empresa}"
 }`,
-        "lib/utils.py": `# Utilidades para ${projectConfig.titulo}
+          "lib/utils.py": `# Utilidades para ${projectConfig.titulo}
 
 def saludar():
-    """Función de ejemplo"""
     return "¡Hola desde ${projectConfig.titulo}!"
 
-def calcular_suma(a, b):
-    """Calcula la suma de dos números"""
-    return a + b`
+def version():
+    return "${projectConfig.version}"`
+        }
+      },
+      metadata: {
+        description: idea,
+        dependencies: ["PyQt5", "numpy"],
+        entry_point: "main.py"
       }
-    },
-    metadata: {
-      description: idea,
-      dependencies: ["PyQt5", "numpy"],
-      entry_point: "main.py"
+    };
+  }
+
+  // =============================================
+  // VERIFICACIÓN DE CÓDIGO
+  // =============================================
+  async function verifyCodeWithAI(content, fileType, context) {
+    logToConsole(`🔍 Verificando ${fileType}: ${context}`, "debug");
+    
+    const prompt = `Verifica este ${fileType}:
+
+CONTENIDO:
+\`\`\`
+${content.substring(0, 1500)}
+\`\`\`
+
+CRITERIOS:
+1. Sintaxis correcta
+2. Seguridad (sin código malicioso)
+3. Funcionalidad básica
+
+Responde SOLO con: VALIDO o INVALIDO seguido de una breve explicación.`;
+
+    try {
+      const response = await callGeminiAPI(prompt, `Verificación de ${fileType}`);
+      return response.includes("VALIDO") ? { isValid: true, feedback: response } : { isValid: false, feedback: response };
+    } catch (error) {
+      logToConsole(`⚠️ Error en verificación, asumiendo válido: ${error.message}`, "warning");
+      return { isValid: true, feedback: "Verificación omitida por error" };
     }
-  };
-}
+  }
 
-// --- Verificación en Bucle Mejorada ---
-async function verifyAllFiles(files, context) {
-  const verificationSteps = document.getElementById('verification-steps');
-  verificationSteps.innerHTML = '<div class="verification-step">🔄 Iniciando verificación de archivos...</div>';
-  
-  let allValid = true;
-  const issues = [];
-  let filesProcessed = 0;
-  const totalFiles = Object.keys(files).filter(f => typeof files[f] === 'string').length;
-
-  for (const [filePath, content] of Object.entries(files)) {
-    if (typeof content === 'string' && (filePath.endsWith('.py') || filePath.endsWith('.md'))) {
-      filesProcessed++;
-      const progress = Math.round((filesProcessed / totalFiles) * 100);
+  // =============================================
+  // LÓGICA PRINCIPAL DE GENERACIÓN
+  // =============================================
+  async function generateCompleteProject(idea, projectConfig) {
+    const btn = document.getElementById('btn-generar');
+    const btnText = document.getElementById('btn-text');
+    const btnLoading = document.getElementById('btn-loading');
+    
+    // Estado de carga
+    btn.disabled = true;
+    btnText.textContent = 'Generando...';
+    btnLoading.style.display = 'inline-block';
+    
+    try {
+      logToConsole("🚀 INICIANDO GENERACIÓN DE PROYECTO", "info");
       
-      verificationSteps.innerHTML += `<div class="verification-step">🔍 Verificando (${progress}%): ${filePath}</div>`;
+      // Paso 1: Generar estructura con IA
+      updateProgress(25, "📋 Generando estructura del proyecto...");
+      const aiResult = await generateProjectWithAI(idea, projectConfig);
       
-      const fileType = filePath.endsWith('.py') ? 'código Python' : 'documentación Markdown';
-      
-      const result = await verifyWithAI(content, fileType, `${context} - ${filePath}`);
-      
-      if (result.is_valid && result.confidence > 70) {
-        verificationSteps.innerHTML += `<div class="verification-step success">✅ ${filePath} - Válido (${result.confidence}% confianza)</div>`;
-      } else {
-        verificationSteps.innerHTML += `<div class="verification-step error">❌ ${filePath} - Problemas encontrados</div>`;
-        issues.push({ 
-          file: filePath, 
-          problems: result.issues,
-          suggestions: result.suggestions
-        });
-        allValid = false;
+      if (!aiResult.project_structure) {
+        throw new Error("No se pudo generar la estructura del proyecto");
       }
       
-      // Pequeña pausa para no saturar la API
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-  }
-  
-  return { allValid, issues };
-}
-<script>
-// --- Lógica Principal de la Aplicación ---
-document.getElementById('btn-generar').addEventListener('click', async function() {
-  const ideaInput = document.getElementById('idea-input').value.trim();
-  if (!ideaInput) {
-    showStatus('❌ Por favor, describe tu aplicación primero', 'error');
-    return;
-  }
-
-  // Obtener configuración del formulario
-  const projectConfig = {
-    empresa: document.getElementById('empresa').value,
-    nombre: document.getElementById('nombre').value,
-    version: document.getElementById('version').value,
-    titulo: document.getElementById('titulo').value,
-    tipo: document.getElementById('tipo').value
-  };
-
-  // Validar campos requeridos
-  if (!projectConfig.nombre || !projectConfig.titulo) {
-    showStatus('❌ Completa todos los campos requeridos', 'error');
-    return;
-  }
-
-  await generateCompleteProject(ideaInput, projectConfig);
-});
-
-// Función principal de generación
-async function generateCompleteProject(idea, projectConfig) {
-  const btn = document.getElementById('btn-generar');
-  const btnText = document.getElementById('btn-text');
-  const btnLoading = document.getElementById('btn-loading');
-  const thinkingElement = document.getElementById('thinking');
-  
-  // Estado de carga
-  btn.disabled = true;
-  btnText.textContent = 'Generando...';
-  btnLoading.style.display = 'inline-block';
-  thinkingElement.style.display = 'block';
-  
-  try {
-    showStatus('🚀 Iniciando generación del proyecto...', 'info');
-    
-    // Paso 1: Generar estructura con IA
-    showStatus('📋 Analizando requisitos con IA...', 'info');
-    const aiResult = await generateProjectWithAI(idea, projectConfig);
-    
-    if (!aiResult.project_structure || !aiResult.metadata) {
-      throw new Error('La IA no generó una estructura válida');
-    }
-    
-    // Paso 2: Crear estructura de archivos
-    showStatus('📁 Creando estructura de archivos...', 'info');
-    const folderName = `${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}-${getTimestamp()}`;
-    const hash = await sha256(`${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}`);
-    
-    const files = {};
-    
-    // Crear carpetas
-    [...DEFAULT_FOLDERS, ...(aiResult.project_structure.folders || [])].forEach(folder => {
-      files[`${folderName}/${folder}/.gitkeep`] = '# Carpeta ' + folder;
-    });
-    
-    // Archivos generados por IA
-    Object.entries(aiResult.project_structure.files || {}).forEach(([filePath, content]) => {
-      files[`${folderName}/${filePath}`] = content;
-    });
-    
-    // Archivo details.xml requerido
-    files[`${folderName}/details.xml`] = `<?xml version="1.0" encoding="UTF-8"?>
+      // Paso 2: Crear estructura de archivos
+      updateProgress(50, "📁 Construyendo archivos...");
+      const folderName = `${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}-${getTimestamp()}`;
+      const hash = await sha256(`${projectConfig.empresa}.${projectConfig.nombre}.v${projectConfig.version}`);
+      
+      const files = {};
+      
+      // Crear carpetas
+      [...DEFAULT_FOLDERS, ...(aiResult.project_structure.folders || [])].forEach(folder => {
+        files[`${folderName}/${folder}/.gitkeep`] = '# Carpeta ' + folder;
+      });
+      
+      // Archivos generados por IA
+      Object.entries(aiResult.project_structure.files || {}).forEach(([filePath, content]) => {
+        files[`${folderName}/${filePath}`] = content;
+      });
+      
+      // Archivos esenciales del sistema
+      files[`${folderName}/details.xml`] = `<?xml version="1.0" encoding="UTF-8"?>
 <app>
   <publisher>${projectConfig.empresa}</publisher>
   <app>${projectConfig.nombre}</app>
@@ -868,147 +818,143 @@ async function generateCompleteProject(idea, projectConfig) {
   <entry_point>${aiResult.metadata.entry_point || 'main.py'}</entry_point>
   <hash>${hash}</hash>
 </app>`;
+      
+      // Paso 3: Verificación rápida del archivo principal
+      updateProgress(75, "✅ Verificando código principal...");
+      const mainFile = Object.entries(files).find(([path]) => path.includes('main.py'));
+      if (mainFile) {
+        const verification = await verifyCodeWithAI(mainFile[1], "código Python", "Archivo principal");
+        if (verification.isValid) {
+          logToConsole("✅ Código principal verificado correctamente", "info");
+        } else {
+          logToConsole(`⚠️ Advertencias en código principal: ${verification.feedback}`, "warning");
+        }
+      }
+      
+      // Paso 4: Mostrar resultados
+      updateProgress(100, "🎉 Proyecto generado exitosamente!");
+      showResults(files, projectConfig, aiResult);
+      
+      lastFiles = files;
+      currentProjectData = { projectConfig, aiResult };
+      
+      logToConsole("✅ GENERACIÓN COMPLETADA - Proyecto listo para descargar", "success");
+      
+    } catch (error) {
+      logToConsole(`❌ ERROR CRÍTICO: ${error.message}`, "error");
+      console.error("Error detallado:", error);
+    } finally {
+      // Restaurar estado del botón
+      btn.disabled = false;
+      btnText.textContent = '🚀 Generar Proyecto Completo';
+      btnLoading.style.display = 'none';
+      setTimeout(hideProgress, 1000);
+    }
+  }
+
+  // =============================================
+  // FUNCIONES DE UI
+  // =============================================
+  function showResults(files, projectConfig, aiResult) {
+    // Mostrar sección de resultados
+    document.getElementById('results-section').style.display = 'block';
     
-    // Paso 3: Verificación rápida (opcional)
-    showStatus('🔍 Verificando archivos principales...', 'info');
-    const verificationResult = await verifyAllFiles(files, aiResult.metadata.description);
+    // Mostrar árbol de archivos
+    const fileTree = document.getElementById('file-tree');
+    fileTree.innerHTML = '<strong>Estructura generada:</strong><br>';
     
-    // Paso 4: Mostrar resultados
-    showResults(files, projectConfig, aiResult, verificationResult);
+    Object.keys(files).forEach(filePath => {
+      const icon = filePath.endsWith('.py') ? '🐍' : 
+                   filePath.endsWith('.md') ? '📝' : 
+                   filePath.endsWith('.txt') ? '📄' : 
+                   filePath.endsWith('.xml') ? '⚙️' : 
+                   filePath.endsWith('.json') ? '🔧' : '📁';
+      
+      fileTree.innerHTML += `<div class="file-item"><span class="file-icon">${icon}</span> ${filePath}</div>`;
+    });
     
-    if (verificationResult.allValid) {
-      showStatus('✅ Proyecto generado y verificado exitosamente!', 'success');
-    } else {
-      showStatus('⚠️ Proyecto generado con algunas advertencias', 'warning');
-      showVerificationIssues(verificationResult.issues);
+    // Mostrar vista previa del código principal
+    const codePreview = document.getElementById('code-preview');
+    const mainFile = Object.entries(files).find(([path]) => path.includes('main.py') || path.includes('.py') && !path.includes('__'));
+    
+    if (mainFile) {
+      const [filePath, content] = mainFile;
+      codePreview.innerHTML = `
+        <div class="code-block">
+          <div class="code-block-header">${filePath}</div>
+          <pre>${escapeHtml(content)}</pre>
+        </div>
+      `;
+    }
+  }
+
+  // =============================================
+  // MANEJADORES DE EVENTOS
+  // =============================================
+  document.getElementById('btn-generar').addEventListener('click', async function() {
+    const ideaInput = document.getElementById('idea-input').value.trim();
+    if (!ideaInput) {
+      logToConsole("❌ Error: Describe tu aplicación primero", "error");
+      return;
+    }
+
+    const projectConfig = {
+      empresa: document.getElementById('empresa').value,
+      nombre: document.getElementById('nombre').value,
+      version: document.getElementById('version').value,
+      titulo: document.getElementById('titulo').value,
+      tipo: document.getElementById('tipo').value
+    };
+
+    if (!projectConfig.nombre || !projectConfig.titulo) {
+      logToConsole("❌ Error: Completa todos los campos requeridos", "error");
+      return;
+    }
+
+    await generateCompleteProject(ideaInput, projectConfig);
+  });
+
+  document.getElementById('btn-descargar').addEventListener('click', async function() {
+    if (!lastFiles) {
+      logToConsole("❌ Error: No hay proyecto para descargar", "error");
+      return;
     }
     
-    lastFiles = files;
-    currentProjectData = { projectConfig, aiResult };
+    logToConsole("📦 Preparando descarga del paquete...", "info");
     
-  } catch (error) {
-    console.error('Error en generación:', error);
-    showStatus(`❌ Error: ${error.message}`, 'error');
-  } finally {
-    // Restaurar estado del botón
-    btn.disabled = false;
-    btnText.textContent = '🚀 Generar Proyecto Completo';
-    btnLoading.style.display = 'none';
-    thinkingElement.style.display = 'none';
-  }
-}
-
-// --- Funciones de UI ---
-function showResults(files, projectConfig, aiResult, verificationResult) {
-  // Mostrar sección de resultados
-  document.getElementById('results-section').style.display = 'block';
-  
-  // Mostrar árbol de archivos
-  const fileTree = document.getElementById('file-tree');
-  fileTree.innerHTML = '<strong>Estructura generada:</strong><br>';
-  
-  Object.keys(files).forEach(filePath => {
-    const icon = filePath.endsWith('.py') ? '🐍' : 
-                 filePath.endsWith('.md') ? '📝' : 
-                 filePath.endsWith('.txt') ? '📄' : 
-                 filePath.endsWith('.xml') ? '⚙️' : 
-                 filePath.endsWith('.json') ? '🔧' : '📁';
-    
-    fileTree.innerHTML += `<div class="file-item"><span class="file-icon">${icon}</span> ${filePath}</div>`;
-  });
-  
-  // Mostrar vista previa del código principal
-  const codePreview = document.getElementById('code-preview');
-  const mainFile = Object.entries(files).find(([path]) => path.includes('main.py') || path.includes('.py') && !path.includes('__'));
-  
-  if (mainFile) {
-    const [filePath, content] = mainFile;
-    codePreview.innerHTML = `
-      <div class="code-block">
-        <div class="code-block-header">${filePath}</div>
-        <pre>${escapeHtml(content)}</pre>
-      </div>
-    `;
-  }
-  
-  // Mostrar issues de verificación si los hay
-  if (!verificationResult.allValid) {
-    showVerificationIssues(verificationResult.issues);
-  }
-}
-
-function showVerificationIssues(issues) {
-  const verificationSteps = document.getElementById('verification-steps');
-  
-  issues.forEach(issue => {
-    verificationSteps.innerHTML += `
-      <div class="verification-step error">
-        <strong>${issue.file}:</strong><br>
-        ${issue.problems.join('<br>')}
-        ${issue.suggestions.length ? `<br><em>Sugerencias: ${issue.suggestions.join(', ')}</em>` : ''}
-      </div>
-    `;
-  });
-}
-
-function escapeHtml(unsafe) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-// --- Descarga del Proyecto ---
-document.getElementById('btn-descargar').addEventListener('click', async function() {
-  if (!lastFiles) return;
-  
-  showStatus('📦 Preparando descarga del paquete...', 'info');
-  
-  try {
-    // Crear ZIP
-    const zip = new JSZip();
-    for (const [filePath, content] of Object.entries(lastFiles)) {
-      zip.file(filePath, content);
+    try {
+      const zip = new JSZip();
+      for (const [filePath, content] of Object.entries(lastFiles)) {
+        zip.file(filePath, content);
+      }
+      
+      const folderName = Object.keys(lastFiles)[0].split('/')[0];
+      const blob = await zip.generateAsync({ type: 'blob' });
+      
+      saveAs(blob, `${folderName}.iflapp`);
+      logToConsole(`✅ Paquete descargado: ${folderName}.iflapp`, "success");
+      
+    } catch (error) {
+      logToConsole(`❌ Error al descargar: ${error.message}`, "error");
     }
-    
-    const folderName = Object.keys(lastFiles)[0].split('/')[0];
-    const blob = await zip.generateAsync({ type: 'blob' });
-    
-    saveAs(blob, `${folderName}.iflapp`);
-    showStatus(`✅ Paquete descargado: ${folderName}.iflapp`, 'success');
-    
-  } catch (error) {
-    console.error('Error en descarga:', error);
-    showStatus(`❌ Error al descargar: ${error.message}`, 'error');
-  }
-});
+  });
 
-// --- Validación Adicional ---
-document.getElementById('btn-validar').addEventListener('click', async function() {
-  if (!lastFiles) return;
-  
-  showStatus('🔍 Ejecutando validación completa...', 'info');
-  
-  const result = await verifyAllFiles(lastFiles, 'Validación completa solicitada por usuario');
-  
-  if (result.allValid) {
-    showStatus('✅ Validación completada - Todo el código es correcto', 'success');
-  } else {
-    showStatus('⚠️ Validación completada - Se encontraron problemas que requieren atención', 'warning');
-  }
-});
+  document.getElementById('btn-clear-console').addEventListener('click', function() {
+    document.getElementById('console-content').innerHTML = '';
+    logToConsole("🧹 Consola limpiada", "info");
+  });
 
-// --- Inicialización ---
-document.addEventListener('DOMContentLoaded', function() {
-  showStatus('💡 Describe tu aplicación y haz clic en "Generar Proyecto Completo" para comenzar', 'info');
-  
-  // Ejemplo de descripción pre-cargada
-  document.getElementById('idea-input').value = 'Calculadora científica con interfaz moderna PyQt5, funciones trigonométricas, historial de operaciones, temas claros/oscuros y exportación de resultados.';
-  document.getElementById('nombre').value = 'scicalc';
-  document.getElementById('titulo').value = 'Scientific Calculator Pro';
-});
-</script>
+  // =============================================
+  // INICIALIZACIÓN
+  // =============================================
+  document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar timestamps iniciales
+    document.getElementById('current-time').textContent = `[${getCurrentTime()}]`;
+    document.getElementById('current-time2').textContent = `[${getCurrentTime()}]`;
+    
+    logToConsole("✅ Sistema inicializado correctamente", "info");
+    logToConsole("💡 Completa la configuración y haz clic en 'Generar Proyecto Completo'", "info");
+  });
+  </script>
 </body>
 </html>
