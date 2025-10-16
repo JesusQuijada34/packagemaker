@@ -1,36 +1,69 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
-const client = new OpenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Inicializa el cliente Gemini con la API key desde Vercel
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
 
 export default async function handler(req, res) {
-  if(req.method !== "POST") return res.status(405).end("Method Not Allowed");
+  if (req.method !== "POST") return res.status(405).end("Method Not Allowed");
 
   const { prompt, mode, files } = req.body;
 
-  // Prompts extendidos tipo enciclopedia
+  // Construir prompts enciclopédicos según el modo
   let fullPrompt = "";
-  if(mode === "full"){
+
+  if (mode === "full") {
     fullPrompt = `
-Eres un asistente experto en generación de paquetes. Crea todos los archivos y carpetas, genera meta info (empresa, nombre, version, titulo) y colores coherentes. Devuelve **JSON válido** en bloque. Prompt usuario: ${prompt}
+Eres un asistente experto en generación de paquetes de software. 
+Tu objetivo es generar proyectos completos listos para descargar en ZIP.
+Incluso si el prompt del usuario es vago o confuso, debes inferir todos los detalles.
+Debes generar:
+- Carpetas: app, assets, config, docs, source, lib
+- Archivos obligatorios: README.md, main.py, lib/requirements.txt, details.xml, autorun, LICENSE
+- Meta: empresa, short name, versión, título completo, colores coherentes (primario, secundario, fondo)
+- Headers en archivos, README con pasos básicos, main.py funcional, autorun para Linux/Windows
+- Mantener buenas prácticas y consistencia
+
+Responde **siempre en JSON válido** dentro de un bloque de código.
+Prompt usuario: ${prompt}
 `;
-  } else if(mode === "edit"){
+  } else if (mode === "edit") {
     fullPrompt = `
-Eres un editor experto de paquetes. Modifica los archivos existentes según la descripción de usuario, preservando headers y hashes. Devuelve JSON válido. Prompt: ${prompt}
+Eres un editor experto de paquetes de software. Modifica archivos existentes según el prompt del usuario.
+Debes:
+- Mantener la estructura de carpetas
+- Preservar headers, hashes y licencias
+- Ajustar colores, títulos, versiones si el prompt lo indica
+- Mantener coherencia y buenas prácticas
+- Responder en JSON válido dentro de un bloque de código
+Prompt del usuario: ${prompt}
+Archivos actuales: ${JSON.stringify(files)}
 `;
   } else { // suggest
     fullPrompt = `
-Sugiere campos: empresa, nombre, version, titulo y paleta de colores a partir de: ${prompt}. Devuelve JSON válido.
+Sugiere campos: empresa, short name, versión, título completo y paleta de colores coherente a partir de:
+${prompt}
+Aunque el prompt sea confuso, genera resultados coherentes y claros.
+Responde siempre en JSON válido dentro de un bloque de código.
 `;
   }
 
-  try{
-    const g = await client.responses.create({
-      model: "gemini-1",
-      input: fullPrompt
+  try {
+    // Llamada a Gemini usando @google/genai
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: fullPrompt,
+      temperature: 0.7,
+      maxOutputTokens: 2000
     });
-    const jsonText = g.output_text || "{}";
+
+    // La respuesta se encuentra en response.text
+    const jsonText = response?.text || "{}";
+
     res.status(200).json(JSON.parse(jsonText));
-  } catch(e){
-    res.status(500).json({error:e.message});
+  } catch (e) {
+    console.error("Error Gemini:", e);
+    res.status(500).json({ error: e.message });
   }
 }
