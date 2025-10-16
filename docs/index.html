@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Influent Package Maker Web</title>
+  <title>Influent Package Maker Web + IA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: system-ui,Segoe UI,Arial,sans-serif; background: #fafbfc; color: #24292e; margin: 0; }
@@ -25,6 +25,7 @@
     footer a { color: #0366d6; text-decoration: none;}
     footer a:hover { text-decoration: underline;}
     hr { border: none; border-bottom: 1px solid #e1e4e8; margin: 18px 0 11px 0;}
+    #ai-response code { background:#f0f0f0; border-radius:5px; padding:4px; display:block; white-space:pre-wrap; }
     @media (max-width:520px){
       main{max-width:97vw;padding:7vw 4vw;}
       .gh-header{padding:7vw 4vw;}
@@ -34,13 +35,18 @@
 <body>
 <header class="gh-header">
   <img id="main-logo" src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" alt="Logo" class="gh-logo">
-  <h1>Influent Package Maker Web</h1>
+  <h1>Influent Package Maker Web + IA</h1>
 </header>
 <main>
   <section>
     <h2>Crear y editar proyecto Influent</h2>
     <form id="create-form" class="gh-form">
-      <label><span>Fabricante</span><input name="empresa" type="text" required></label>
+      <label><span>Fabricante</span><input name="empresa" type="text" list="empresas" required></label>
+      <datalist id="empresas">
+        <option value="Influent Labs">
+        <option value="Danenone">
+        <option value="TechNova">
+      </datalist>
       <label><span>Nombre interno</span><input name="nombre" type="text" required></label>
       <label><span>Versión</span><input name="version" type="text" required></label>
       <label><span>Título completo</span><input name="titulo" type="text" required></label>
@@ -50,7 +56,23 @@
     <div id="preview-files"></div>
     <button id="btn-download" class="gh-btn" style="display:none;">Descargar ZIP</button>
   </section>
+
   <hr>
+
+  <section>
+    <h2>Asistente IA de Influent</h2>
+    <p style="font-size:.95em;">Describe brevemente qué deseas generar o completar. La IA te sugerirá nombres, títulos o versiones automáticamente.</p>
+    <form id="ai-form" class="gh-form">
+      <label><span>Detalle / prompt</span>
+        <input id="ai-prompt" type="text" placeholder="Ej. Quiero crear una app de clima sencilla.">
+      </label>
+      <button type="submit" class="gh-btn">Sugerir con IA</button>
+    </form>
+    <div id="ai-response" style="margin-top:10px;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:6px;padding:10px;font-size:.95em;white-space:pre-wrap;"></div>
+  </section>
+
+  <hr>
+
   <section>
     <h2>Instalar/explorar paquete Influent</h2>
     <form class="gh-form">
@@ -63,10 +85,16 @@
 <footer>
   <span>GitHub: <a href="https://github.com/JesusQuijada34/packagemaker/">packagemaker</a></span>
 </footer>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script>
-// --- Utilidades ---
+<script type="module">
+// --- IMPORTAR GEMINI ---
+import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+const ai = new GoogleGenerativeAI("AIzaSyAXnbWHp1-7wC8vVbDbrTWBVIOBPGv7nis"); // Reemplaza con tu API key
+const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+// --- FUNCIONES AUXILIARES ---
 const RAW_ICON_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico";
 const RAW_LICENSE_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE";
 const DEFAULT_FOLDERS = ["app","assets","config","docs","source","lib"];
@@ -95,13 +123,11 @@ document.getElementById("create-form").onsubmit = async function(e){
   let folder_name = `${empresa}.${nombre}.v${version}`;
   let hv = await sha256(`${empresa}.${nombre}.v${version}`);
 
-  // Estructura
   const files = {};
   DEFAULT_FOLDERS.forEach(f=>{
     files[`${folder_name}/${f}/.${f}-container`] = `#store (sha256 hash):${f}/.${hv}`;
   });
 
-  // LICENSE desde RAW
   let licenseText = "GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 ...";
   try {
     let licResp = await fetch(RAW_LICENSE_URL);
@@ -125,7 +151,6 @@ document.getElementById("create-form").onsubmit = async function(e){
 </app>`;
   files[`${folder_name}/lib/requirements.txt`] = "# Dependencias del paquete\n";
 
-  // Icono RAW .ico
   let iconBlob=null;
   try {
     let iconResp = await fetch(RAW_ICON_URL);
@@ -133,7 +158,6 @@ document.getElementById("create-form").onsubmit = async function(e){
   }catch(e){iconBlob=null;}
   if(iconBlob) files[`${folder_name}/app/app-icon.ico`] = iconBlob;
 
-  // Render edición
   let html = `<b>Carpetas y archivos generados:</b><ul>`;
   Object.keys(files).forEach(f=>{
     let ext = f.split('.').pop();
@@ -155,15 +179,11 @@ document.getElementById("create-form").onsubmit = async function(e){
 document.getElementById("btn-download").onclick = async function(){
   if(!lastFiles) return;
   document.getElementById("create-status").textContent = "Empaquetando ZIP...";
-  // Recoger ediciones
   document.querySelectorAll(".file-editbox").forEach(e=>{
     lastFiles[e.dataset.file] = e.value;
   });
   const zip = new JSZip();
-  for(const f in lastFiles){
-    if(typeof lastFiles[f]==="string") zip.file(f, lastFiles[f]);
-    else zip.file(f, lastFiles[f]); // Blob (icono)
-  }
+  for(const f in lastFiles) zip.file(f, lastFiles[f]);
   let folder_name = Object.keys(lastFiles)[0].split("/")[0];
   zip.generateAsync({type:"blob"}).then(blob=>{
     saveAs(blob, `${folder_name}.iflapp`);
@@ -171,7 +191,7 @@ document.getElementById("btn-download").onclick = async function(){
   });
 };
 
-// --- INSTALAR / EXPLORAR ZIP ---
+// --- INSTALAR ZIP ---
 document.getElementById("zipfile").onchange = function(e){
   const file = e.target.files[0];
   if(!file)return;
@@ -193,6 +213,35 @@ document.getElementById("zipfile").onchange = function(e){
     document.getElementById("install-status").textContent = "Error: El archivo no es un ZIP válido.";
     document.getElementById("zip-details").textContent = "";
   });
+};
+
+// --- ASISTENTE IA ---
+document.getElementById("ai-form").onsubmit = async (e)=>{
+  e.preventDefault();
+  const prompt = document.getElementById("ai-prompt").value.trim();
+  if(!prompt)return;
+  const out = document.getElementById("ai-response");
+  out.textContent = "🤖 Pensando...";
+  try{
+    const result = await model.generateContent(`Ayuda a completar campos de un formulario para un proyecto de software basado en esta descripción: ${prompt}`);
+    const text = result.response.text();
+    const clean = text.replace(/(malware|exploit|virus|hack)/gi,"[contenido restringido]");
+    out.innerHTML = clean;
+
+    // Auto completar en los inputs según IA
+    const empresaInput = document.querySelector('input[name="empresa"]');
+    const nombreInput = document.querySelector('input[name="nombre"]');
+    const versionInput = document.querySelector('input[name="version"]');
+    const tituloInput = document.querySelector('input[name="titulo"]');
+
+    if(/empresa|fabricante/i.test(clean) && empresaInput.value==="") empresaInput.value = "Influent Labs";
+    if(/app|nombre/i.test(clean) && nombreInput.value==="") nombreInput.value = "miaplicacion";
+    if(/versi/i.test(clean) && versionInput.value==="") versionInput.value = "1.0";
+    if(/título|nombre completo/i.test(clean) && tituloInput.value==="") tituloInput.value = "Proyecto IA Generado";
+
+  }catch(err){
+    out.textContent = "Error: " + err.message;
+  }
 };
 </script>
 </body>
