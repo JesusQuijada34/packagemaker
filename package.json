@@ -1,8 +1,7 @@
 {
-  "name": "packagemaker",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "@google/generative-ai": "^0.11.1"
+  "name":"packagemaker",
+  "version":"1.0.0",
+  "dependencies":{
+    "@google/generative-ai":"^0.11.1"
   }
 }
