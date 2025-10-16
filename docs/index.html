@@ -1,84 +1,80 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Influent Package Maker — IA</title>
-  <meta name="description" content="Generador de paquetes con IA (Gemini). Genera estructura, archivos y descarga .iflapp." />
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#24292e" />
+  <title>Influent Package Maker — Gemini</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand">
-      <div class="logo">IPM</div>
-      <div class="brand-text">
-        <div class="title">Influent Package Maker</div>
-        <div class="subtitle">Generador de paquetes con IA — Gemini</div>
-      </div>
+  <header>
+    <div class="logo">
+      <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" alt="logo" />
     </div>
-    <div class="header-actions">
-      <button id="btnLogout" class="btn ghost small" style="display:none">Cerrar sesión</button>
+    <div>
+      <h1>Influent Package Maker — IA</h1>
+      <p class="muted">Generador avanzado de paquetes inteligentes con IA</p>
     </div>
   </header>
 
-  <main class="layout">
-    <section class="card controls">
-      <h2>Generador</h2>
-      <div class="grid">
-        <label>Fabricante
-          <input id="inp-fabricante" type="text" placeholder="Acme Corp" />
-        </label>
+  <main>
+    <section class="card">
+      <h2>Generar paquete con IA</h2>
 
-        <label>Short name
-          <input id="inp-short" type="text" placeholder="helloworld" />
-        </label>
-
-        <label>Versión
+      <div class="form-grid">
+        <div>
+          <label>Fabricante</label>
+          <input id="inp-fabricante" type="text" placeholder="ej. influent-labs" />
+        </div>
+        <div>
+          <label>Short name</label>
+          <input id="inp-short" type="text" placeholder="ej. weatherly" />
+        </div>
+        <div>
+          <label>Versión</label>
           <input id="inp-version" type="text" placeholder="1.0.0" />
-        </label>
+        </div>
+        <div>
+          <label>Título</label>
+          <input id="inp-titulo" type="text" placeholder="Weatherly - App del Clima" />
+        </div>
+      </div>
 
-        <label class="full">Título
-          <input id="inp-title" type="text" placeholder="Hola Mundo" />
-        </label>
-
-        <label class="full">Descripción / prompt IA
-          <textarea id="inp-prompt" placeholder="ej. app CLI que imprime Hola Mundo, minimal"></textarea>
-        </label>
+      <div class="full">
+        <label>Descripción (Prompt)</label>
+        <textarea id="inp-descripcion" placeholder="Describe tu proyecto o aplicación..."></textarea>
       </div>
 
       <div class="actions">
-        <button id="btn-generate" class="btn primary">Generar con IA</button>
-        <button id="btn-fast" class="btn ghost">Modo rápido</button>
-        <button id="btn-edit" class="btn ghost">Editar archivos (IA)</button>
-        <button id="btn-clear" class="btn ghost">Limpiar</button>
+        <button id="btn-generar" class="btn btn-primary">Generar con IA</button>
+        <button id="btn-limpiar" class="btn btn-ghost">Limpiar salida</button>
       </div>
 
-      <div id="status" class="status muted">Estado: esperando</div>
+      <div id="status" class="status"></div>
 
-      <div class="progress-wrap" id="progress-wrap" aria-hidden="true" style="display:none">
-        <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+      <div id="thinking" class="thinking hidden">
+        🤖 <span id="thinking-text">Pensando...</span>
+        <div class="progress-bar"><div class="progress"></div></div>
       </div>
+
+      <pre id="json-output" class="preview"></pre>
     </section>
 
-    <aside class="card right">
-      <h2>Preview & Salida</h2>
-      <div id="preview-meta" class="meta preview-block"></div>
-      <div id="preview-files" class="files preview-block"></div>
-
-      <div class="bottom-row">
-        <button id="btn-download" class="btn primary" style="display:none">Descargar .iflapp</button>
-        <div id="ai-output" class="ai-output preview-block"></div>
-      </div>
+    <aside class="card">
+      <h2>Vista previa de archivos</h2>
+      <div id="preview-files" class="preview"></div>
+      <button id="btn-download" class="btn btn-primary hidden">Descargar .iflapp (ZIP)</button>
     </aside>
   </main>
 
-  <footer class="site-footer">
-    <small>Packagemaker • integrado con Gemini • Desplegable en Netlify / GitHub Pages</small>
+  <footer>
+    <p>GitHub: <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank">packagemaker</a></p>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="main.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
