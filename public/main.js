@@ -1,5 +1,5 @@
 document.getElementById("packageForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+  e.preventDefault(); // ← esto evita que la página se recargue
 
   const manufacturer = document.getElementById("manufacturer").value;
   const shortName = document.getElementById("shortName").value;
@@ -25,16 +25,14 @@ Descripción: ${description}
       body: JSON.stringify({ prompt }),
     });
 
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Error ${res.status}: ${text}`);
+    }
+
     const data = await res.json();
     resultArea.textContent = JSON.stringify(data, null, 2);
   } catch (err) {
-    resultArea.textContent = `Error: ${err.message}`;
+    resultArea.textContent = `❌ Error: ${err.message}`;
   }
-});
-  const zip = new JSZip();
-  const folderName = Object.keys(LAST_FILES)[0]?.split("/")[0] || "project";
-  Object.keys(LAST_FILES).forEach(p=> zip.file(p, LAST_FILES[p]));
-  const blob = await zip.generateAsync({type:"blob"});
-  saveAs(blob, `${folderName}.iflapp`);
-  document.getElementById("status").textContent = `✅ ZIP generado: ${folderName}.iflapp`;
 });
