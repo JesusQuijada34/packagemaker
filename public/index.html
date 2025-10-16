@@ -1,88 +1,41 @@
-// /api/genai.js
-import fetch from "node-fetch";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Influent Package Maker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Influent Package Maker ⚙️</h1>
+    <p>Describe tu paquete y la IA generará la estructura y archivos necesarios.</p>
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+    <form id="packageForm">
+      <label>Fabricante:</label>
+      <input id="manufacturer" type="text" placeholder="Ej: DevForge" autocomplete="on" />
 
-  const { prompt, mode, files } = req.body;
+      <label>Nombre corto:</label>
+      <input id="shortName" type="text" placeholder="Ej: forge-kit" autocomplete="on" />
 
-  if (!prompt || !mode) return res.status(400).json({ error: "Missing prompt or mode" });
+      <label>Versión:</label>
+      <input id="version" type="text" placeholder="Ej: 1.0.0" autocomplete="on" />
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  if (!GEMINI_API_KEY) return res.status(500).json({ error: "GEMINI_API_KEY not set" });
+      <label>Título del paquete:</label>
+      <input id="title" type="text" placeholder="Ej: Generador modular inteligente" autocomplete="on" />
 
-  try {
-    // Construir prompt para Gemini
-    let systemPrompt = "";
-    let userPrompt = prompt;
+      <label>Descripción del proyecto:</label>
+      <textarea id="description" placeholder="Describe brevemente tu idea..."></textarea>
 
-    if (mode === "full") {
-      systemPrompt = `
-      Eres un asistente que genera proyectos de software completos en JSON.
-      Devuelve un bloque de código JSON con la siguiente estructura:
-      {
-        "meta": {
-          "empresa": "nombre fabricante",
-          "nombre": "nombre corto",
-          "version": "1.0",
-          "titulo": "Titulo completo",
-          "colores": {"primario":"#...","secundario":"#...","fondo":"#..."}
-        },
-        "files": [
-          {"path":"{folder}/README.md","content":"..."},
-          {"path":"{folder}/main.py","content":"..."},
-          {"path":"{folder}/lib/requirements.txt","content":"..."},
-          {"path":"{folder}/details.xml","content":"..."},
-          {"path":"{folder}/autorun","content":"..."},
-          {"path":"{folder}/LICENSE","content":"..."}
-        ]
-      }
-      Usa prompts internos y material previo para generar los archivos.`;
-    } else if (mode === "edit") {
-      systemPrompt = `
-      Eres un asistente que edita archivos existentes. Recibirás un JSON con los archivos actuales.
-      Devuelve el mismo JSON con los contenidos actualizados según la descripción del usuario.`;
-    } else {
-      systemPrompt = "Eres un asistente que sugiere valores para un proyecto de software en JSON.";
-    }
+      <button type="submit">✨ Generar con IA</button>
+    </form>
 
-    // Preparar payload para Gemini
-    const payload = {
-      model: "gemini-1.5",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify({ prompt: userPrompt, files: files || [] }) }
-      ],
-      temperature: 0.7
-    };
+    <div id="output">
+      <h2>Resultado</h2>
+      <pre id="resultArea"></pre>
+    </div>
+  </main>
 
-    const r = await fetch("https://api.generativeai.google/v1beta2/models/gemini-1.5:generateMessage", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!r.ok) {
-      const t = await r.text();
-      return res.status(500).json({ error: "Gemini API error", details: t });
-    }
-
-    const data = await r.json();
-    let content = data?.candidates?.[0]?.content?.[0]?.text || "";
-
-    // Extraer JSON del bloque de código (si lo hay)
-    const match = content.match(/```json([\s\S]*?)```/i);
-    if (match) content = match[1];
-
-    const parsed = JSON.parse(content);
-
-    // Responder al frontend
-    res.status(200).json(parsed);
-
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-}
+  <script src="main.js"></script>
+</body>
+</html>
