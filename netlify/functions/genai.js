@@ -1,13 +1,12 @@
 // netlify/functions/genai.js
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export default async function handler(req, res) {
+export default async (req, res) => {
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
+    // Netlify no parsea automáticamente el body
+    const body = req.body ? JSON.parse(req.body) : {};
+    const { prompt } = body;
 
-    const { prompt, mode } = req.body || {};
     if (!prompt) {
       return res.status(400).json({ error: "Missing prompt" });
     }
@@ -20,26 +19,15 @@ export default async function handler(req, res) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-    // Prompt extendido y explicativo
     const fullPrompt = `
-Eres un sistema experto en ingeniería de software llamado "Influent Package Maker".
-Tu función es crear proyectos completos (paquetes) basados en descripciones humanas.
-Debes:
-1. Interpretar y mejorar la idea del usuario aunque el prompt sea incompleto.
-2. Retornar SIEMPRE un bloque de código con JSON que contenga:
-   {
-     "meta": { "fabricante", "shortName", "version", "title", "description", "colors" },
-     "files": [ { "path": "ruta/del/archivo", "content": "contenido" } ]
-   }
-3. El campo "description" debe ser generado creativamente, técnica y comercialmente.
-4. Puedes sugerir colores, interfaces y estructura de carpetas.
-5. Si el usuario no da datos, inventa valores realistas.
-6. Tu salida siempre debe incluir el JSON dentro de triple backticks.
-
+Eres un generador avanzado de paquetes de software ("Influent Package Maker").
+Debes generar SIEMPRE un bloque de código JSON que contenga:
+{
+  "meta": { "fabricante", "shortName", "version", "title", "description", "colors" },
+  "files": [ { "path": "...", "content": "..." } ]
+}
 Prompt del usuario:
 ${prompt}
-
-Modo: ${mode}
 `;
 
     const result = await model.generateContent(fullPrompt);
@@ -49,9 +37,9 @@ Modo: ${mode}
     const jsonText = match ? match[1].trim() : text;
     const parsed = JSON.parse(jsonText);
 
-    res.status(200).json(parsed);
+    return res.status(200).json(parsed);
   } catch (error) {
-    console.error("Error en genai.js:", error);
-    res.status(500).json({ error: error.message || "AI backend error" });
+    console.error("Error en función genai:", error);
+    return res.status(500).json({ error: error.message || "AI backend error" });
   }
-}
+};
