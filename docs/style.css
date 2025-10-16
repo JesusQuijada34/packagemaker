@@ -1,75 +1,171 @@
-:root{
-  --bg:#0f1115;
-  --panel:#0b0d0f;
-  --muted:#8b949e;
-  --text:#c9d1d9;
-  --accent:#0366d6;
-  --surface:#0b0d0f;
-  --border: rgba(255,255,255,0.04);
-  --glass: rgba(255,255,255,0.02);
-  --card-radius:12px;
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --text: #24292e;
+  --muted: #6e7781;
+  --primary: #2da44e;
+  --primary-dark: #22863a;
+  --border: #d0d7de;
+  --shadow: rgba(0, 0, 0, 0.04);
 }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family:Inter, "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial;
-  background:linear-gradient(180deg,#020409 0%, #071018 60%);
-  color:var(--text);
-  padding:18px;
+body {
+  font-family: "Segoe UI", Inter, system-ui;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
 }
 
-/* header */
-.site-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
-.brand{display:flex;gap:12px;align-items:center}
-.logo{
-  width:48px;height:48px;border-radius:10px;
-  background:linear-gradient(180deg,#ffffff10,#ffffff03);
-  display:flex;align-items:center;justify-content:center;font-weight:800;
-  border:1px solid var(--border);
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #24292e;
+  color: #fff;
+  padding: 14px 20px;
 }
-.brand-text .title{font-weight:700}
-.brand-text .subtitle{color:var(--muted);font-size:0.9rem}
-.header-actions{display:flex;gap:8px}
 
-/* layout */
-.layout{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 420px;gap:18px}
-@media (max-width:1024px){ .layout{grid-template-columns:1fr;padding:0 12px} }
+header img {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+}
 
-/* cards */
-.card{background:linear-gradient(180deg,var(--panel),#071018);border-radius:var(--card-radius);padding:18px;border:1px solid var(--border);box-shadow:0 12px 30px rgba(0,0,0,.5)}
-h2{margin:0 0 12px 0;color:var(--accent)}
+h1 {
+  font-size: 1.2rem;
+  margin: 0;
+}
 
-/* controls */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid .full{grid-column:1/-1}
-label{display:block;font-size:0.9rem;color:var(--muted);margin-bottom:6px}
-input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:0.95rem}
-textarea{min-height:88px}
-.actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
-.btn{padding:10px 14px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
-.btn.primary{background:var(--accent);color:white}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--text)}
-.btn.small{font-size:.85rem;padding:8px 10px}
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: auto;
+}
 
-/* progress */
-.progress-wrap{margin-top:12px;height:10px;background:rgba(255,255,255,0.02);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
-.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#20c997);transition:width 200ms linear}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 2px 6px var(--shadow);
+  padding: 16px;
+}
 
-/* preview */
-.preview-block{margin-top:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,0.02);font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;color:var(--text)}
-.meta{display:flex;flex-direction:column;gap:6px;font-size:0.95rem}
-.files{display:flex;flex-direction:column;gap:12px}
-.file-card{background:var(--glass);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.02)}
-.file-path{font-weight:700;color:var(--muted);font-size:0.9rem;margin-bottom:6px}
-.file-edit{width:100%;min-height:96px;border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.03);background:#020203;color:var(--text);resize:vertical;font-family:ui-monospace,monospace}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 
-/* bottom */
-.bottom-row{display:flex;gap:10px;align-items:center;margin-top:12px}
-.ai-output{max-height:220px;overflow:auto;white-space:pre-wrap;font-size:0.9rem;color:#bfe0ff}
-.status{margin-top:12px;color:var(--muted);font-weight:600}
-.site-footer{margin-top:18px;text-align:center;color:var(--muted);font-size:0.9rem}
+.full {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
 
-/* small tweaks */
-.file-block{border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px}
+label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+.btn-ghost {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.preview {
+  background: #f6f8fa;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.status {
+  margin-top: 10px;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.thinking {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  font-weight: 500;
+  color: #555;
+}
+.hidden {
+  display: none !important;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e1e4e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress {
+  width: 0%;
+  height: 100%;
+  background: var(--primary);
+  animation: progressAnim 2s infinite linear;
+}
+@keyframes progressAnim {
+  0% { width: 0%; }
+  50% { width: 80%; }
+  100% { width: 0%; }
+}
+
+footer {
+  text-align: center;
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
