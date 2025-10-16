@@ -1,177 +1,236 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   <title>Influent Package Maker — IA (Cliente)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval'">
-
-  <!-- CSS Mejorado -->
   <style>
-    :root {
+    :root{
       --gradient-from:#0366d6;
       --gradient-to:#2ea44f;
       --bg:#f4f6f8;
       --surface:#ffffff;
       --text:#222;
-      --shadow:0 8px 24px rgba(0,0,0,0.08);
-      --radius:12px;
-      --transition:.3s ease;
     }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:Inter,system-ui,Segoe UI,Arial; background:var(--bg); color:var(--text); }
-    header {
-      display:flex; gap:12px; align-items:center; padding:20px;
-      background:linear-gradient(90deg,var(--gradient-from),var(--gradient-to));
-      color:#fff; box-shadow:var(--shadow);
-    }
-    .logo {
-      width:50px; height:50px; border-radius:var(--radius); background:#fff;
-      padding:6px; display:flex; align-items:center; justify-content:center;
-      transition:transform var(--transition);
-    }
-    .logo:hover { transform:scale(1.05); }
-    main {
-      max-width:980px; margin:20px auto; display:grid;
-      grid-template-columns:1fr 420px; gap:20px; padding:0 14px;
-    }
-    @media (max-width:980px){ main { grid-template-columns:1fr; padding:12px; } }
-    .card {
-      background:var(--surface); border-radius:var(--radius);
-      padding:20px; box-shadow:var(--shadow); border:1px solid rgba(10,10,10,.05);
-      transition:transform var(--transition);
-    }
-    .card:hover { transform:translateY(-3px); }
-    h2 { margin:0 0 12px 0; font-size:1.2rem; }
-    label { display:block; font-weight:600; margin-bottom:6px; }
-    input[type="text"], textarea, select {
-      width:100%; padding:10px; border-radius:var(--radius); border:1px solid #dfe7ee;
-      background:#fbfdff; font-size:0.95rem; transition:border-color var(--transition);
-    }
-    input:focus, textarea:focus, select:focus { border-color:var(--gradient-from); outline:none; }
-    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .full { grid-column:1/-1; }
-    .btn {
-      display:inline-flex; gap:8px; align-items:center;
-      padding:10px 16px; border-radius:var(--radius); border:0;
-      cursor:pointer; font-weight:700; transition:all var(--transition);
-    }
-    .btn-primary { background:var(--gradient-from); color:#fff; }
-    .btn-primary:hover { opacity:.9; }
-    .btn-ghost { background:transparent; border:1px solid rgba(0,0,0,.08); color:var(--text); }
-    .btn-ghost:hover { background:rgba(0,0,0,.04); }
-    .preview {
-      margin-top:12px; background:#f7fbff; padding:12px;
-      border-radius:var(--radius); max-height:520px; overflow:auto; border:1px solid #eef6ff;
-      font-family:monospace; font-size:.95rem;
-    }
-    .file-edit { font-family:monospace; font-size:.95rem; border-radius:var(--radius);
-      border:1px solid #e6eef3; padding:10px; width:100%; min-height:96px; transition:border-color var(--transition);
-    }
-    .file-edit:focus { border-color:var(--gradient-to); outline:none; }
-    .muted { color:#687182; font-size:0.9rem; }
-    footer { text-align:center; padding:12px; color:#6b7280; font-size:0.9rem; }
-    a { color:var(--gradient-from); text-decoration:none; }
-    a:hover { text-decoration:underline; }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial; background:var(--bg); color:var(--text);}
+    header{display:flex;gap:12px;align-items:center;padding:18px;background:linear-gradient(90deg,var(--gradient-from),var(--gradient-to));color:#fff}
+    .logo{width:44px;height:44px;border-radius:8px;background:#fff;padding:6px;display:flex;align-items:center;justify-content:center}
+    main{max-width:980px;margin:18px auto;display:grid;grid-template-columns:1fr 420px;gap:18px;padding:0 14px}
+    @media (max-width:980px){main{grid-template-columns:1fr;padding:12px}}
+    .card{background:var(--surface);border-radius:12px;padding:16px;box-shadow:0 8px 30px rgba(20,20,40,.05);border:1px solid rgba(10,10,10,.03)}
+    h2{margin:0 0 10px 0;font-size:1.05rem}
+    label{display:block;font-weight:600;margin-bottom:6px}
+    input[type="text"], textarea {width:100%;padding:10px;border-radius:8px;border:1px solid #dfe7ee;background:#fbfdff;font-size:0.95rem}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .full{grid-column:1/-1}
+    .btn{display:inline-flex;gap:8px;align-items:center;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    .btn-primary{background:var(--gradient-from);color:#fff}
+    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,.06)}
+    .preview{margin-top:12px;background:#f7fbff;padding:10px;border-radius:10px;max-height:520px;overflow:auto;border:1px solid #eef6ff}
+    .file-edit{font-family:monospace;font-size:.95rem;border-radius:8px;border:1px solid #e6eef3;padding:8px;width:100%;min-height:96px}
+    .muted{color:#687182;font-size:0.9rem}
+    footer{text-align:center;padding:10px;color:#6b7280}
   </style>
 </head>
 <body>
-
-<header>
-  <div class="logo"><img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" alt="logo" style="height:100%;width:100%;object-fit:contain;border-radius:6px"></div>
-  <div>
-    <div style="font-weight:800">Influent Package Maker — IA</div>
-    <div class="muted">Autocompletado y edición de archivos, descarga .iflapp (ZIP)</div>
-  </div>
-</header>
-
-<main>
-  <!-- LEFT: generator -->
-  <section class="card">
-    <h2>Generador — estructura y archivos</h2>
-    <div class="form-grid" style="margin-bottom:12px">
-      <div>
-        <label>Fabricante</label>
-        <input id="inp-empresa" type="text" placeholder="ej. influent-labs">
-      </div>
-      <div>
-        <label>Nombre interno</label>
-        <input id="inp-nombre" type="text" placeholder="ej. weatherly">
-      </div>
-      <div>
-        <label>Versión</label>
-        <input id="inp-version" type="text" placeholder="1.0">
-      </div>
-      <div>
-        <label>Título completo</label>
-        <input id="inp-titulo" type="text" placeholder="Weatherly - App del Clima">
-      </div>
-      <div class="full">
-        <label>Detalle (prompt principal)</label>
-        <input id="inp-detail" type="text" placeholder="Descripción breve: 'app de notas local, UI minimal'">
-      </div>
+  <header>
+    <div class="logo"><img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" alt="logo" style="height:100%;width:100%;object-fit:contain;border-radius:6px"></div>
+    <div>
+      <div style="font-weight:800">Influent Package Maker — IA</div>
+      <div class="muted" style="font-size:.9rem">Autocompletado y edición de archivos, descarga .iflapp (ZIP)</div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button id="btn-ai-suggest" class="btn btn-primary">Autocompletar con IA</button>
-      <button id="btn-ai-editfiles" class="btn btn-ghost">Editar archivos existentes (IA)</button>
-      <button id="btn-generate" class="btn btn-primary">Generar estructura local</button>
-    </div>
-    <div id="status" style="margin-top:12px;color:#16a34a;font-weight:700"></div>
-    <div id="preview-files" class="preview"></div>
-  </section>
+  </header>
 
-  <!-- RIGHT: IA controls & output -->
-  <aside class="card">
-    <h2>Asistente IA — prompts</h2>
-    <div class="muted" style="margin-bottom:10px">Flujo IA: el cliente envía prompts al backend. El backend ejecuta los 3 prompts y devuelve JSON validado.</div>
+  <main>
+    <!-- LEFT: generator -->
+    <section class="card">
+      <h2>Generador — estructura y archivos</h2>
+      <div class="form-grid" style="margin-bottom:10px">
+        <div>
+          <label>Fabricante</label>
+          <input id="inp-empresa" type="text" placeholder="ej. influent-labs">
+        </div>
+        <div>
+          <label>Nombre corto</label>
+          <input id="inp-nombre" type="text" placeholder="ej. weatherly">
+        </div>
+        <div>
+          <label>Versión</label>
+          <input id="inp-version" type="text" placeholder="1.0">
+        </div>
+        <div class="full">
+          <label>Título completo</label>
+          <input id="inp-titulo" type="text" placeholder="Weatherly - App del Clima">
+        </div>
+        <div class="full">
+          <label>Descripción (prompt IA)</label>
+          <input id="inp-detail" type="text" placeholder="ej. 'app de clima, ligera, offline, UI minimalista'">
+        </div>
+      </div>
 
-    <label>Prompt primario</label>
-    <input id="ai-prompt" type="text" placeholder="ej. 'app de clima, tema azul, ligera, offline'">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="btn-ai-suggest" class="btn btn-primary">Generar con IA</button>
+        <button id="btn-ai-editfiles" class="btn btn-ghost">Editar archivos con IA</button>
+        <button id="btn-generate" class="btn btn-primary">Generar estructura local</button>
+      </div>
 
-    <label style="margin-top:8px">Modo</label>
-    <select id="ai-mode">
-      <option value="suggest">Sugerir campos y colores (meta)</option>
-      <option value="files-min">Generar README + main.py</option>
-      <option value="files-full" selected>Generar archivos principales (README, main, requirements, details, autorun, LICENSE)</option>
-    </select>
+      <div id="status" style="margin-top:10px;color:#16a34a;font-weight:700"></div>
+      <div id="preview-files" class="preview"></div>
+    </section>
 
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-      <button id="btn-ai-run" class="btn btn-primary">Ejecutar IA</button>
-      <button id="btn-clear" class="btn btn-ghost">Limpiar salida</button>
-    </div>
+    <!-- RIGHT: IA output -->
+    <aside class="card">
+      <h2>Asistente IA — salida</h2>
+      <div style="margin-bottom:8px" class="muted">El prompt enviado genera archivos y meta en JSON dentro de bloque de código.</div>
+      <div id="ai-output" class="preview" style="margin-top:12px;min-height:160px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="btn-clear" class="btn btn-ghost">Limpiar salida</button>
+      </div>
+    </aside>
+  </main>
 
-    <div id="ai-output" class="preview" style="margin-top:12px;min-height:160px"></div>
-  </aside>
-</main>
+  <footer>
+    <div class="muted">GitHub: <a href="https://github.com/JesusQuijada34/packagemaker/" target="_blank" rel="noopener">packagemaker</a></div>
+  </footer>
 
-<footer>
-  <div class="muted">GitHub: <a href="https://github.com/JesusQuijada34/packagemaker/" target="_blank" rel="noopener">packagemaker</a></div>
-</footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-<!-- libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script>
+  const API_BASE = "/api/genai"; // backend en Vercel
 
-<script>
-/**************************************************************************
- * CONFIG - tomar API_BASE desde Vercel
- **************************************************************************/
-const API_BASE = window.__ENV?.API_BASE || "/api/genai"; // window.__ENV inyectado por Vercel
+  let LAST_FILES = {};
 
-// Resto del código de JS sigue igual que tu versión anterior
-// Incluye: sha256hex, sanitizeContent, renderFiles, btn-generate, IA flow
-// Solo cambiaremos la URL a API_BASE y se aplica gradiente + mejoras de UX
+  function sanitizeContent(s){
+    if(!s) return s;
+    return s.replace(/<\s*script[\s\S]*?>[\s\S]*?<\/\s*script\s*>/gi,"")
+            .replace(/<\s*iframe[\s\S]*?>[\s\S]*?<\/\s*iframe\s*>/gi,"")
+            .replace(/javascript:/gi,"");
+  }
 
-// --- ejemplo de llamada IA ---
-async function callBackendAI(prompt, mode){
-  const res = await fetch(API_BASE, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ prompt, mode })
+  function applyGradient(meta){
+    if(!meta || !meta.colores) return;
+    document.documentElement.style.setProperty('--gradient-from', meta.colores.primario || "#0366d6");
+    document.documentElement.style.setProperty('--gradient-to', meta.colores.secundario || "#2ea44f");
+    document.documentElement.style.setProperty('--bg', meta.colores.fondo || "#f4f6f8");
+  }
+
+  async function sha256hex(msg){
+    const buf = new TextEncoder().encode(msg);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+
+  function renderFiles(filesArray, folderName){
+    LAST_FILES = {};
+    const preview = document.getElementById("preview-files");
+    preview.innerHTML = "";
+    filesArray.forEach(f=>{
+      const path = (f.path||"").replace("{folder}", folderName);
+      const content = sanitizeContent(f.content||"");
+      LAST_FILES[path]=content;
+      const div = document.createElement("div");
+      div.style.marginBottom="12px";
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong style="font-family:Inter,system-ui">${path}</strong>
+          <span class="muted" style="font-size:.9rem">${path.split('.').pop()}</span>
+        </div>
+        <textarea class="file-edit" data-path="${path}">${content}</textarea>
+      `;
+      preview.appendChild(div);
+    });
+
+    const btnWrap = document.createElement("div");
+    btnWrap.style.marginTop="8px";
+    btnWrap.innerHTML = `<button id="btn-download-zip" class="btn btn-primary">Descargar .iflapp (ZIP)</button>`;
+    preview.appendChild(btnWrap);
+
+    document.getElementById("btn-download-zip").onclick = async ()=>{
+      document.querySelectorAll(".file-edit").forEach(el=>{ LAST_FILES[el.dataset.path]=el.value; });
+      const zip = new JSZip();
+      for(const p in LAST_FILES) zip.file(p,LAST_FILES[p]);
+      const blob = await zip.generateAsync({type:"blob"});
+      saveAs(blob, `${folderName}.iflapp`);
+      document.getElementById("status").textContent = `✅ ZIP generado: ${folderName}.iflapp`;
+    };
+  }
+
+  async function callBackendAI(prompt, mode){
+    const payload = {prompt,mode};
+    if(Object.keys(LAST_FILES).length) payload.files = Object.keys(LAST_FILES).map(p=>({path:p,content:LAST_FILES[p]}));
+    const res = await fetch(API_BASE,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error("Error backend IA: "+res.status);
+    return await res.json();
+  }
+
+  // BOTONES
+  document.getElementById("btn-ai-suggest").addEventListener("click", async ()=>{
+    const prompt = document.getElementById("inp-detail").value;
+    if(!prompt){ alert("Escribe un prompt."); return; }
+    document.getElementById("status").textContent="🤖 Solicitando IA...";
+    try{
+      const parsed = await callBackendAI(prompt,"full");
+      if(parsed && parsed.meta){
+        applyGradient(parsed.meta);
+        document.getElementById("inp-empresa").value = parsed.meta.empresa||"";
+        document.getElementById("inp-nombre").value = parsed.meta.nombre||"";
+        document.getElementById("inp-version").value = parsed.meta.version||"";
+        document.getElementById("inp-titulo").value = parsed.meta.titulo||"";
+        renderFiles(parsed.files, `${parsed.meta.empresa}.${parsed.meta.nombre}.v${parsed.meta.version}`);
+        document.getElementById("status").textContent="✅ Archivos generados por IA.";
+        document.getElementById("ai-output").innerHTML=`<pre style="font-family:monospace">${JSON.stringify(parsed,null,2)}</pre>`;
+      }
+    }catch(err){ document.getElementById("status").textContent="Error IA: "+err.message; }
   });
-  if(!res.ok) throw new Error("Backend IA error: " + res.status);
-  return await res.json();
-}
-</script>
+
+  document.getElementById("btn-ai-editfiles").addEventListener("click", async ()=>{
+    const prompt=document.getElementById("inp-detail").value;
+    if(!prompt){ alert("Escribe un prompt."); return; }
+    if(!Object.keys(LAST_FILES).length){ alert("Genera primero la estructura."); return; }
+    document.getElementById("status").textContent="🤖 Editando archivos con IA...";
+    try{
+      const parsed = await callBackendAI(prompt,"edit");
+      if(parsed && Array.isArray(parsed.files)){
+        parsed.files.forEach(f=>{
+          const ta=document.querySelector(`textarea[data-path="${f.path}"]`);
+          if(ta) ta.value=f.content;
+          LAST_FILES[f.path]=f.content;
+        });
+        document.getElementById("status").textContent="✅ Archivos actualizados por IA.";
+        document.getElementById("ai-output").innerHTML=`<pre style="font-family:monospace">${JSON.stringify(parsed,null,2)}</pre>`;
+      }
+    }catch(err){ document.getElementById("status").textContent="Error IA: "+err.message; }
+  });
+
+  document.getElementById("btn-generate").addEventListener("click", async ()=>{
+    const empresa=(document.getElementById("inp-empresa").value||"influent").trim().toLowerCase().replace(/\s+/g,"-");
+    const nombre=(document.getElementById("inp-nombre").value||"myapp").trim().toLowerCase();
+    const version=(document.getElementById("inp-version").value||"1.0").trim();
+    const titulo=(document.getElementById("inp-titulo").value||nombre.toUpperCase()).trim();
+    const folder=`${empresa}.${nombre}.v${version}`;
+    const hv = await sha256hex(`${folder}`);
+    const DEFAULT_FOLDERS=["app","assets","config","docs","source","lib"];
+    const files=[];
+    DEFAULT_FOLDERS.forEach(f=>files.push({path:`{folder}/${f}/.${f}-container`,content:`#store sha256:${hv}`}));
+    files.push({path:`{folder}/LICENSE`,content:"GNU GENERAL PUBLIC LICENSE Version 3"});
+    files.push({path:`{folder}/README.md`,content:`# ${empresa} ${titulo}\nProyecto generado localmente.`});
+    files.push({path:`{folder}/${nombre}.py`,content:`#!/usr/bin/env python\nprint('Hola desde ${titulo}')`});
+    files.push({path:`{folder}/autorun`,content:`#!/usr/bin/env sh\npip install -r "./lib/requirements.txt"\npython3 "./${nombre}.py"\n`});
+    files.push({path:`{folder}/lib/requirements.txt`,content:"# Dependencias"});
+    files.push({path:`{folder}/details.xml`,content:`<app><publisher>${empresa}</publisher><app>${nombre}</app><name>${titulo}</name><version>v${version}</version><correlationid>${hv}</correlationid></app>`});
+    renderFiles(files,folder);
+    document.getElementById("status").textContent="✅ Estructura generada localmente.";
+  });
+
+  document.getElementById("btn-clear").addEventListener("click", ()=>{ document.getElementById("ai-output").innerHTML=""; });
+
+  </script>
 </body>
 </html>
