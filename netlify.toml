@@ -1,8 +1,7 @@
 [build]
-  base = ""
   publish = "docs"
-  command = "npm install"
   functions = "netlify/functions"
+  command = "npm install"
 
 [[redirects]]
   from = "/*"
