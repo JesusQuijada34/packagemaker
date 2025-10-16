@@ -1,73 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PackageMaker - Generador de proyectos inteligentes con Gemini AI" />
-  <meta name="theme-color" content="#0d1117" />
-  <title>PackageMaker | Generador Inteligente</title>
-  <link rel="icon" href="icon.png" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Influent Package Maker — IA</title>
+  <meta name="description" content="Generador de paquetes con IA (Gemini). Genera estructura, archivos y descarga .iflapp." />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🧠 PackageMaker</h1>
-      <p class="subtitle">Generador Inteligente de Proyectos con Gemini</p>
-    </header>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo">IPM</div>
+      <div class="brand-text">
+        <div class="title">Influent Package Maker</div>
+        <div class="subtitle">Generador de paquetes con IA — Gemini</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="btnLogout" class="btn ghost small" style="display:none">Cerrar sesión</button>
+    </div>
+  </header>
 
-    <main>
-      <div class="prompt-box">
-        <textarea id="userPrompt" placeholder="Describe tu proyecto... Ej: una app de notas con interfaz moderna"></textarea>
-        <div class="controls">
-          <button id="generateBtn">Generar con IA</button>
-          <button id="fastModeBtn">⚡ Modo Rápido</button>
-        </div>
+  <main class="layout">
+    <section class="card controls">
+      <h2>Generador</h2>
+      <div class="grid">
+        <label>Fabricante
+          <input id="inp-fabricante" type="text" placeholder="Acme Corp" />
+        </label>
+
+        <label>Short name
+          <input id="inp-short" type="text" placeholder="helloworld" />
+        </label>
+
+        <label>Versión
+          <input id="inp-version" type="text" placeholder="1.0.0" />
+        </label>
+
+        <label class="full">Título
+          <input id="inp-title" type="text" placeholder="Hola Mundo" />
+        </label>
+
+        <label class="full">Descripción / prompt IA
+          <textarea id="inp-prompt" placeholder="ej. app CLI que imprime Hola Mundo, minimal"></textarea>
+        </label>
       </div>
 
-      <div id="thinkingBox" class="thinking hidden">
-        <p id="thinkingText">🤔 Pensando...</p>
-        <div class="progress-bar">
-          <div id="progressFill" class="progress-fill"></div>
-        </div>
+      <div class="actions">
+        <button id="btn-generate" class="btn primary">Generar con IA</button>
+        <button id="btn-fast" class="btn ghost">Modo rápido</button>
+        <button id="btn-edit" class="btn ghost">Editar archivos (IA)</button>
+        <button id="btn-clear" class="btn ghost">Limpiar</button>
       </div>
 
-      <section id="resultSection" class="hidden">
-        <h2>📦 Resultado JSON</h2>
-        <pre id="jsonOutput"></pre>
-        <button id="downloadBtn" class="hidden">Descargar Archivos</button>
-      </section>
-    </main>
+      <div id="status" class="status muted">Estado: esperando</div>
 
-    <footer>
-      <p>© 2025 PackageMaker · Desarrollado con Gemini 2.5 Flash</p>
-    </footer>
-  </div>
+      <div class="progress-wrap" id="progress-wrap" aria-hidden="true" style="display:none">
+        <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+    </section>
 
-  <script type="module" src="genai.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+    <aside class="card right">
+      <h2>Preview & Salida</h2>
+      <div id="preview-meta" class="meta preview-block"></div>
+      <div id="preview-files" class="files preview-block"></div>
 
-  <footer class="site-footer">
-    <small>Packagemaker • integrado con Gemini • Deploy: Netlify / GitHub Pages</small>
-  </footer>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="/main.js"></script>
-
-  <script>
-    // register service worker only if ?vkinapp present (PWA activation control)
-    if ('serviceWorker' in navigator) {
-      const q = location.search || "";
-      if (q.includes("vkinapp")) {
-        navigator.serviceWorker.register('/sw.js').catch(()=>{/*sw fail silently*/});
-      }
-    }
-  </script>
-</body>
-</html>
+      <div class="bottom-row">
+        <button id="btn-download" class="btn primary" style="display:none">Descargar .iflapp</button>
         <div id="ai-output" class="ai-output preview-block"></div>
       </div>
     </aside>
@@ -79,12 +79,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="/main.js"></script>
-  <script>
-    // register service worker for PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(()=>{/*sw fail silently*/});
-    }
-  </script>
+  <script src="main.js"></script>
 </body>
 </html>
