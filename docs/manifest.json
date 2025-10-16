@@ -1,11 +1,12 @@
 {
   "name": "Influent Package Maker",
-  "short_name": "PackageMaker",
-  "start_url": ".",
+  "short_name": "IPM",
+  "start_url": "/?in?appid=Entorno",
   "display": "standalone",
-  "background_color": "#fafbfc",
-  "theme_color": "#24292e",
+  "background_color": "#0b0d0f",
+  "theme_color": "#0366d6",
   "icons": [
-    { "src": "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png", "type": "image/png", "sizes": "192x192" }
+    { "src": "/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
