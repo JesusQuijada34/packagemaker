@@ -1,48 +1,44 @@
-// netlify/functions/genai.cjs
+// netlify/functions/genai.js
 'use strict';
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const crypto = require('crypto');
+const fetch = require('node-fetch'); // backup fetch
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
- * Extrae bloque THINKING y el bloque JSON (fenced o primer {...} ... } )
- * Devuelve { thinking: string|null, jsonText: string|null, raw: string }
+ * Extract THINKING block and JSON fenced or first {..}..}
+ * return { thinking, jsonText, raw }
  */
 function extractBlocks(raw) {
   if (!raw || typeof raw !== 'string') return { thinking: null, jsonText: null, raw: String(raw) };
 
-  // 1) THINKING markers (opcional)
   const thinkingMatch = raw.match(/---THINKING---([\s\S]*?)---ENDTHINK---/i);
   const thinking = thinkingMatch ? thinkingMatch[1].trim() : null;
 
-  // 2) JSON fenced block
   let jsonMatch = raw.match(/```json([\s\S]*?)```/i) || raw.match(/```([\s\S]*?)```/i);
   let jsonText = jsonMatch ? jsonMatch[1] : null;
 
-  // 3) fallback: first {...} ... last }
   if (!jsonText) {
     const first = raw.indexOf('{');
     const last = raw.lastIndexOf('}');
     if (first !== -1 && last !== -1 && last > first) jsonText = raw.slice(first, last + 1);
   }
 
-  // 4) basic cleanup
   if (jsonText) {
-    jsonText = jsonText.replace(/\r\n/g, '\n');            // normalize CRLF
-    jsonText = jsonText.replace(/\u00A0/g, ' ');          // non-break space
-    jsonText = jsonText.replace(/,\s*([\]}])/g, '$1');    // trailing commas
+    jsonText = jsonText.replace(/\r\n/g, '\n')
+                       .replace(/\u00A0/g, ' ')
+                       .replace(/,\s*([\]}])/g, '$1'); // remove trailing commas
   }
 
   return { thinking, jsonText, raw };
 }
 
-/** Intenta parsear JSON con varias heurísticas */
+/** Try parsing JSON with heuristics (escape raw CR in quotes) */
 function tryParseJSON(t) {
   if (!t) return null;
   try {
     return JSON.parse(t);
   } catch (e) {
-    // attempt: escape raw newlines inside quoted strings
     try {
       const safe = t.replace(/"([^"]*)\n([^"]*)"/g, (m, a, b) => {
         return `"${a}\\n${b.replace(/\n/g, '\\n')}"`;
@@ -54,10 +50,11 @@ function tryParseJSON(t) {
   }
 }
 
-/** Añade archivos contenedor y LICENSE si faltan */
-function ensureDefaults(parsed, folder, hv) {
+/** Ensure default container files and license/icon presence */
+async function ensureDefaults(parsed, folder, hv, opts = {}) {
   parsed.files = parsed.files || [];
   const DEFAULT_FOLDERS = ['app', 'assets', 'config', 'docs', 'source', 'lib'];
+
   DEFAULT_FOLDERS.forEach((f) => {
     const p = `${folder}/${f}/.${f}-container`;
     if (!parsed.files.some((x) => (x.path || '').toLowerCase() === p.toLowerCase())) {
@@ -65,11 +62,57 @@ function ensureDefaults(parsed, folder, hv) {
     }
   });
 
+  // LICENSE: try to fetch from upstream raw if not present
   if (!parsed.files.some((x) => /license/i.test(x.path || ''))) {
-    parsed.files.push({ path: `${folder}/LICENSE`, content: 'MIT License\n\nCopyright (c) ' + new Date().getFullYear() });
+    const licenseUrl = opts.licenseRawUrl || 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE';
+    try {
+      const r = await fetch(licenseUrl);
+      if (r.ok) {
+        const text = await r.text();
+        parsed.files.push({ path: `${folder}/LICENSE`, content: String(text) });
+      } else {
+        parsed.files.push({ path: `${folder}/LICENSE`, content: 'MIT License\n\nCopyright (c) ' + new Date().getFullYear() });
+      }
+    } catch (e) {
+      parsed.files.push({ path: `${folder}/LICENSE`, content: 'MIT License\n\nCopyright (c) ' + new Date().getFullYear() });
+    }
+  }
+
+  // Icon: include ICO from raw URL if not present (as base64)
+  if (!parsed.files.some((x) => /icon/i.test(x.path || ''))) {
+    const iconUrl = opts.iconRawUrl || 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico';
+    try {
+      const r2 = await fetch(iconUrl);
+      if (r2.ok) {
+        const buffer = await r2.arrayBuffer();
+        const b64 = Buffer.from(buffer).toString('base64');
+        parsed.files.push({ path: `${folder}/app-icon.ico`, content: `data:application/octet-stream;base64,${b64}` });
+      }
+    } catch (e) {
+      // ignore icon fetch failure
+    }
   }
 
   return parsed;
+}
+
+/** Build fallback minimal package when parsing fails */
+function fallbackPackage(meta) {
+  const short = (meta.shortName || 'calculator').toString().trim();
+  return {
+    meta: {
+      fabricante: meta.fabricante || 'Default Manufacturer',
+      shortName: short,
+      version: meta.version || '1.0.0',
+      title: meta.title || 'Fallback Package',
+      description: meta.description || 'Fallback generated package'
+    },
+    files: [
+      { path: `${short}.py`, content: `#!/usr/bin/env python\n# simple fallback\nprint("Hello from ${short}")\n` },
+      { path: 'README.md', content: `# ${short}\n\nPaquete fallback generado por servidor.` },
+      { path: 'lib/requirements.txt', content: '# no dependencies\n' }
+    ]
+  };
 }
 
 exports.handler = async function (event) {
@@ -79,97 +122,115 @@ exports.handler = async function (event) {
     const mode = body.mode || 'full';
     const incomingFiles = Array.isArray(body.files) ? body.files : [];
 
-    if (!prompt) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Missing prompt' }) };
-    }
+    if (!prompt) return { statusCode: 400, body: JSON.stringify({ error: 'Missing prompt' }) };
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return { statusCode: 500, body: JSON.stringify({ error: 'Missing GEMINI_API_KEY in environment' }) };
-    }
+    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'Missing GEMINI_API_KEY in environment' }) };
 
-    // Inicializa cliente
+    // Initialize Gemini client
     const ai = new GoogleGenerativeAI(apiKey);
     const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // Prompt maestro: obliga THINKING + JSON fenced block, reglas y ejemplo breve
+    // Construct enforced prompt (THINKING + fenced JSON)
     const systemPrompt = `
-Eres "Influent Package Maker", experto en generar paquetes de software en Python (y otros lenguajes).
-Debes devolver EXACTAMENTE dos cosas en el texto de salida:
-1) Un bloque de pensamiento corto entre marcadores:
+Eres "Influent Package Maker", experto en generar paquetes de software.
+Salida requerida: PRIMERO un bloque THINKING (1-2 oraciones) entre:
 ---THINKING---
-Breve frase (1-2 oraciones) que explique en voz natural lo que vas a generar y por qué.
+...texto...
 ---ENDTHINK---
 
-2) A CONTINUACIÓN y SOLO a continuación, UN BLOQUE JSON válido dentro de triple backticks:
+A CONTINUACIÓN, SOLO un bloque JSON válido, dentro de triple backticks:
 \`\`\`json
-{ "meta": { "fabricante": "...", "shortName": "...", "version":"...", "title":"...", "description":"..." },
-  "files":[ {"path":"README.md","content":"..."}, ... ]
+{
+  "meta": {
+    "fabricante": "Acme Corp",
+    "shortName": "hello",
+    "version": "1.0.0",
+    "title": "Hello App",
+    "description": "Breve descripción"
+  },
+  "files": [
+    {"path":"README.md","content":"..."},
+    {"path":"hello.py","content":"..."},
+    {"path":"lib/requirements.txt","content":"..."},
+    {"path":"details.xml","content":"..."},
+    {"path":"autorun","content":"..."},
+    {"path":"autorun.bat","content":"..."},
+    {"path":"app/app-icon.ico","content":"..."}
+  ]
 }
 \`\`\`
 
-REGLAS:
-- Escapa los saltos de línea dentro de los valores "content" como \\n.
-- Incluye al menos: README.md, <shortName>.py (o .js si el prompt lo sugiere), lib/requirements.txt, details.xml, autorun, autorun.bat, LICENSE.
+REGLAS IMPORTANTES:
+- Escapa saltos de línea como \\n dentro de los valores "content".
+- Incluye al menos: README.md, <shortName>.py (o .js si hace falta), lib/requirements.txt, details.xml, autorun (sh), autorun.bat, LICENSE.
 - Añade contenedores en app/, assets/, config/, docs/, source/, lib/.
-- Si el modo = "edit" y se envían incoming files, modifica esos archivos de forma coherente y devuélvelos.
-- NO incluyas texto adicional fuera de THINKING y del bloque JSON. Si incluyes ejemplos, que estén dentro del JSON como valores.
-- Asegúrate que el JSON sea parseable (no comillas sin escapar, no saltos de línea sin \\n).
+- Si "mode" es "edit", toma incomingFiles y modifica sus contenidos coherentemente.
+- NO añadas texto fuera del bloque THINKING y del bloque JSON.
+- Asegúrate que el JSON sea parseable estrictamente.
 `;
 
-    const userBlock = `USER_PROMPT: ${prompt}\nMODE: ${mode}\nEXISTING_FILES: ${JSON.stringify(incomingFiles).slice(0, 2000)}`;
+    const userBlock = `USER_PROMPT: ${prompt}\nMODE: ${mode}\nEXISTING_FILES: ${JSON.stringify(incomingFiles).slice(0, 3000)}`;
 
-    const requestText = systemPrompt + '\n\n' + userBlock + '\n\nPor favor devuelve la respuesta.';
+    const requestText = systemPrompt + '\n\n' + userBlock + '\n\nDevuelve la respuesta.';
 
-    // Ejecuta el modelo
-    const result = await model.generateContent(requestText, { temperature: 0.6, maxOutputTokens: 2000 });
-    const rawText = (result && result.response && typeof result.response.text === 'function') ? result.response.text() : (result.output || result.text || JSON.stringify(result));
+    // Call Gemini
+    const response = await model.generateContent(requestText, { temperature: 0.6, maxOutputTokens: 2000 });
+    const raw = (response && response.response && typeof response.response.text === 'function') ? response.response.text() : (response.output || response.text || JSON.stringify(response));
 
-    // Extraer thinking y json
-    const blocks = extractBlocks(String(rawText));
+    const blocks = extractBlocks(String(raw));
     let parsed = tryParseJSON(blocks.jsonText);
 
-    // fallback: intentar parsear raw completo
+    // If not parsed, try parsing raw
     if (!parsed) parsed = tryParseJSON(blocks.raw);
 
-    // Si aún no parsea, construir fallback razonable
+    // If still not parsed, create fallback using minimal meta inference
     if (!parsed) {
-      parsed = {
-        meta: {
-          fabricante: 'Default Manufacturer',
-          shortName: 'calculator',
-          version: '1.0.0',
-          title: 'Calculadora Simple',
-          description: 'Fallback generado por servidor'
-        },
-        files: [
-          { path: 'calculator.py', content: 'class Calculator:\\n    def add(self,a,b):\\n        return a+b\\n' },
-          { path: 'README.md', content: '# Calculadora Simple\\nGenerado por fallback' },
-          { path: 'lib/requirements.txt', content: '# Ninguna dependencia' }
-        ]
+      const inferredMeta = {
+        fabricante: /fabricante[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || 'Default Manufacturer',
+        shortName: /shortname[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || /short name[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || 'calculator',
+        version: /version[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || '1.0.0',
+        title: /title[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || '',
+        description: prompt
       };
+      parsed = fallbackPackage(inferredMeta);
     }
 
-    // Construye folder y hash
+    // Compute folder and hash for .storedetail
     const empresa = (parsed.meta && (parsed.meta.fabricante || parsed.meta.manufacturer || 'default')).toString().trim().toLowerCase().replace(/\s+/g, '-');
     const shortn = (parsed.meta && (parsed.meta.shortName || parsed.meta.short || 'myapp')).toString().trim().toLowerCase();
-    const versionVal = (parsed.meta && parsed.meta.version) ? parsed.meta.version : '1.0.0';
+    const versionVal = parsed.meta && parsed.meta.version ? parsed.meta.version : '1.0.0';
     const folder = `${empresa}.${shortn}.v${versionVal}`;
-    const hv = crypto.createHash('sha256').update(`${empresa}.${shortn}.v${versionVal}`).digest('hex');
+    const storeKey = `${empresa}.${shortn}.${versionVal}`;
+    const hv = crypto.createHash('sha256').update(storeKey).digest('hex');
 
-    parsed = ensureDefaults(parsed, folder, hv);
+    // Add .storedetail file (sha256 string)
+    const storedetailPath = `${folder}/.storedetail`;
+    const storedetailContent = hv;
+    if (!parsed.files.some((f) => f.path === storedetailPath)) {
+      parsed.files.push({ path: storedetailPath, content: storedetailContent });
+    }
 
-    // normalize file paths
-    parsed.files = parsed.files.map((f) => ({ path: (f.path || '').replace(/^\.\//, '').replace(/^\/+/, ''), content: f.content || '' }));
+    // Ensure defaults: license + icon + containers
+    parsed = await ensureDefaults(parsed, folder, hv, {
+      licenseRawUrl: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE',
+      iconRawUrl: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico'
+    });
 
-    // Retornar thinking + parsed en body
+    // Normalize file paths and ensure contents are strings
+    parsed.files = parsed.files.map((f) => ({
+      path: (f.path || '').replace(/^\.\//, '').replace(/^\/+/, ''),
+      content: typeof f.content === 'string' ? f.content : String(f.content || '')
+    }));
+
+    // Return thinking + parsed package
     return {
       statusCode: 200,
       body: JSON.stringify({ thinking: blocks.thinking || null, parsed })
     };
-
   } catch (err) {
     console.error('genai error:', err);
     return { statusCode: 500, body: JSON.stringify({ error: err.message || String(err) }) };
   }
 };
+    
