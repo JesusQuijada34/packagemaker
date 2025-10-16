@@ -1,41 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Influent Package Maker</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Influent Package Maker — IA</title>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <main class="container">
-    <h1>Influent Package Maker ⚙️</h1>
-    <p>Describe tu paquete y la IA generará la estructura y archivos necesarios.</p>
-
-    <form id="packageForm">
-      <label>Fabricante:</label>
-      <input id="manufacturer" type="text" placeholder="Ej: DevForge" autocomplete="on" />
-
-      <label>Nombre corto:</label>
-      <input id="shortName" type="text" placeholder="Ej: forge-kit" autocomplete="on" />
-
-      <label>Versión:</label>
-      <input id="version" type="text" placeholder="Ej: 1.0.0" autocomplete="on" />
-
-      <label>Título del paquete:</label>
-      <input id="title" type="text" placeholder="Ej: Generador modular inteligente" autocomplete="on" />
-
-      <label>Descripción del proyecto:</label>
-      <textarea id="description" placeholder="Describe brevemente tu idea..."></textarea>
-
-      <button type="submit">✨ Generar con IA</button>
-    </form>
-
-    <div id="output">
-      <h2>Resultado</h2>
-      <pre id="resultArea"></pre>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo">IPM</div>
+      <div class="brand-text">
+        <div class="title">Influent Package Maker</div>
+        <div class="subtitle">Generador de paquetes con IA — hijo de Gemini 2.5-flash</div>
+      </div>
     </div>
+  </header>
+
+  <main class="layout">
+    <section class="card controls">
+      <h2>Generador</h2>
+
+      <div class="grid">
+        <label>Fabricante
+          <input id="inp-fabricante" type="text" placeholder="Acme Corp">
+        </label>
+        <label>Short name
+          <input id="inp-short" type="text" placeholder="helloworld">
+        </label>
+        <label>Versión
+          <input id="inp-version" type="text" placeholder="1.0.0">
+        </label>
+        <label class="full">Título
+          <input id="inp-title" type="text" placeholder="Hola Mundo">
+        </label>
+        <label class="full">Descripción / prompt IA
+          <textarea id="inp-prompt" placeholder="Describe brevemente (ej.: app CLI que imprime Hola Mundo)"></textarea>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="btn-generate" class="btn primary">Generar con IA</button>
+        <button id="btn-edit" class="btn ghost">Editar con IA</button>
+        <button id="btn-clear" class="btn ghost">Limpiar salida</button>
+      </div>
+
+      <div id="status" class="status muted">Estado: esperando</div>
+    </section>
+
+    <aside class="card right">
+      <h2>Preview & Salida IA</h2>
+
+      <div id="preview-meta" class="meta preview-block">
+        <!-- metadatos autocompletados -->
+      </div>
+
+      <div id="preview-files" class="files preview-block">
+        <!-- archivos aparecerán aquí progresivamente -->
+      </div>
+
+      <div class="bottom-row">
+        <button id="btn-download" class="btn primary">Descargar .iflapp</button>
+        <div id="ai-output" class="ai-output preview-block"></div>
+      </div>
+    </aside>
   </main>
 
-  <script src="main.js"></script>
+  <footer class="site-footer">
+    <small>packagemaker • integrado con Gemini — protegido por Netlify Functions</small>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="/main.js"></script>
 </body>
 </html>
