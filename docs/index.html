@@ -2,51 +2,98 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Influent Package Maker Web + IA</title>
+  <title>Influent Package Maker Web + AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui,Segoe UI,Arial,sans-serif; background: #fafbfc; color: #24292e; margin: 0; }
-    .gh-header { display: flex; align-items: center; gap: 14px; background: #24292e; color: #fff; padding: 16px 18px;}
-    .gh-logo { width: 34px; height: 34px; border-radius: 4px; background: #fff; border: 1px solid #e1e4e8;}
-    .gh-header h1 { font-size: 1.1em; font-weight: 600; margin: 0; }
-    main { max-width: 410px; margin: 22px auto 15px auto; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; padding: 22px 12px 14px 12px; box-shadow: 0 2px 7px #0002;}
-    section h2 { font-size: 1.09em; margin-bottom: 9px; font-weight: 600;}
-    .gh-form { display: flex; flex-direction: column; gap: 11px; margin-bottom: 8px;}
-    .gh-form label { display: flex; flex-direction: column; gap: 3px; font-weight: 500;}
-    .gh-form input[type="text"], .gh-form input[type="file"] { padding: 7px 10px; font-size: 1em; border: 1px solid #e1e4e8; border-radius: 6px; background: #fafbfc; color: #24292e; transition: border-color .2s;}
-    .gh-form input[type="text"]:focus { border-color: #0366d6; outline: none;}
-    .gh-btn { padding: 9px 16px; font-size: 1em; font-weight: 600; color: #fff; background: #2ea44f; border: none; border-radius: 6px; box-shadow: 0 2px 4px #0001; cursor: pointer; transition: background .2s;}
-    .gh-btn:hover { background: #22863a;}
-    .gh-status { margin-top: 8px; font-size: 1em; color: #22863a;}
-    #preview-files, #zip-details { margin-top: 10px; font-size: .97em; background: #f6f8fa; border-radius: 5px; border: 1px solid #e1e4e8; padding: 10px; word-break: break-all;}
-    .file-editbox { width: 98%; min-height: 40px; font-size: .97em; border: 1px solid #e1e4e8; border-radius: 5px; margin:5px 0; background:#fff; color:#24292e; }
-    .file-editbox:focus { border-color: #0366d6; outline: none; }
-    footer { text-align: center; background: #fff; border-top: 1px solid #e1e4e8; padding: 10px 0 6px 0; font-size: .97em; color: #586069;}
-    footer a { color: #0366d6; text-decoration: none;}
-    footer a:hover { text-decoration: underline;}
-    hr { border: none; border-bottom: 1px solid #e1e4e8; margin: 18px 0 11px 0;}
-    #ai-response code { background:#f0f0f0; border-radius:5px; padding:4px; display:block; white-space:pre-wrap; }
+    :root {
+      --color-bg: #f4f6f8;
+      --color-primary: #0366d6;
+      --color-success: #2ea44f;
+      --color-text: #24292e;
+      --color-surface: #ffffff;
+    }
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      margin: 0;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--color-primary);
+      color: #fff;
+      padding: 14px 18px;
+      box-shadow: 0 2px 5px #0003;
+    }
+    .gh-logo {
+      width: 36px; height: 36px; border-radius: 6px; background: #fff; border: 1px solid #e1e4e8;
+    }
+    h1 {
+      font-size: 1.1em; font-weight: 600; margin: 0;
+    }
+    main {
+      max-width: 460px;
+      margin: 25px auto;
+      background: var(--color-surface);
+      border: 1px solid #e1e4e8;
+      border-radius: 10px;
+      padding: 22px 16px 18px 16px;
+      box-shadow: 0 3px 8px #0002;
+    }
+    section h2 {
+      font-size: 1.1em; margin-bottom: 10px; font-weight: 600;
+    }
+    .gh-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+    .gh-form label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
+    input[type="text"], input[type="file"] {
+      padding: 8px 10px; font-size: 1em;
+      border: 1px solid #ccc; border-radius: 6px;
+      background: #fafbfc; transition: border .2s;
+    }
+    input:focus { border-color: var(--color-primary); outline: none; }
+    .gh-btn {
+      padding: 10px 16px; font-weight: 600;
+      border: none; border-radius: 6px;
+      color: #fff; background: var(--color-success);
+      cursor: pointer; transition: background .2s;
+    }
+    .gh-btn:hover { background: #248a3d; }
+    .gh-status { margin-top: 8px; font-size: .95em; color: var(--color-success); }
+    #ai-response {
+      margin-top: 10px; font-size: .93em;
+      background: #f6f8fa; border: 1px solid #e1e4e8;
+      border-radius: 6px; padding: 10px; white-space: pre-wrap;
+    }
+    code {
+      display: block; background: #eee; padding: 6px;
+      border-radius: 5px; font-family: monospace; white-space: pre-wrap;
+    }
+    footer {
+      text-align: center; padding: 10px;
+      font-size: .9em; color: #666;
+    }
+    footer a { color: var(--color-primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    hr { border: none; border-top: 1px solid #e1e4e8; margin: 18px 0 14px 0; }
     @media (max-width:520px){
-      main{max-width:97vw;padding:7vw 4vw;}
-      .gh-header{padding:7vw 4vw;}
+      main{max-width:95vw;padding:7vw 4vw;}
+      header{padding:7vw 4vw;}
     }
   </style>
 </head>
 <body>
-<header class="gh-header">
-  <img id="main-logo" src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" alt="Logo" class="gh-logo">
-  <h1>Influent Package Maker Web + IA</h1>
+<header>
+  <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" class="gh-logo" alt="logo">
+  <h1>Influent Package Maker + AI</h1>
 </header>
+
 <main>
   <section>
-    <h2>Crear y editar proyecto Influent</h2>
+    <h2>Detalles del Proyecto</h2>
     <form id="create-form" class="gh-form">
-      <label><span>Fabricante</span><input name="empresa" type="text" list="empresas" required></label>
-      <datalist id="empresas">
-        <option value="Influent Labs">
-        <option value="Danenone">
-        <option value="TechNova">
-      </datalist>
+      <label><span>Fabricante</span><input name="empresa" type="text" required></label>
       <label><span>Nombre interno</span><input name="nombre" type="text" required></label>
       <label><span>Versión</span><input name="version" type="text" required></label>
       <label><span>Título completo</span><input name="titulo" type="text" required></label>
@@ -60,188 +107,130 @@
   <hr>
 
   <section>
-    <h2>Asistente IA de Influent</h2>
-    <p style="font-size:.95em;">Describe brevemente qué deseas generar o completar. La IA te sugerirá nombres, títulos o versiones automáticamente.</p>
+    <h2>Asistente Inteligente</h2>
     <form id="ai-form" class="gh-form">
-      <label><span>Detalle / prompt</span>
-        <input id="ai-prompt" type="text" placeholder="Ej. Quiero crear una app de clima sencilla.">
+      <label><span>Describe brevemente tu proyecto</span>
+        <input id="ai-prompt" type="text" placeholder="Ej. una app móvil para notas rápidas">
       </label>
       <button type="submit" class="gh-btn">Sugerir con IA</button>
     </form>
-    <div id="ai-response" style="margin-top:10px;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:6px;padding:10px;font-size:.95em;white-space:pre-wrap;"></div>
+    <div id="ai-response"></div>
   </section>
 
   <hr>
 
   <section>
-    <h2>Instalar/explorar paquete Influent</h2>
+    <h2>Explorar Paquete</h2>
     <form class="gh-form">
-      <label><span>Selecciona paquete ZIP (.iflapp/.iflappb)</span><input type="file" accept=".zip,.iflapp,.iflappb" id="zipfile"></label>
+      <label><span>Selecciona un paquete ZIP (.iflapp)</span>
+        <input type="file" accept=".zip,.iflapp" id="zipfile">
+      </label>
     </form>
     <div id="install-status" class="gh-status"></div>
     <div id="zip-details"></div>
   </section>
 </main>
+
 <footer>
   <span>GitHub: <a href="https://github.com/JesusQuijada34/packagemaker/">packagemaker</a></span>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
 <script type="module">
-// --- IMPORTAR GEMINI ---
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 const ai = new GoogleGenerativeAI("AIzaSyAXnbWHp1-7wC8vVbDbrTWBVIOBPGv7nis"); // Reemplaza con tu API key
 const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-// --- FUNCIONES AUXILIARES ---
-const RAW_ICON_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico";
-const RAW_LICENSE_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE";
-const DEFAULT_FOLDERS = ["app","assets","config","docs","source","lib"];
-function getversion() {
-  const d = new Date();
-  return `${d.getFullYear().toString().slice(-2)}.${(d.getMonth()+1)}-${d.getHours()}.${d.getMinutes()}`;
+// --- PROMPT INTERNO CONTROLADO ---
+const SYSTEM_PROMPT = `
+Eres un asistente de desarrollo profesional para Influent Package Maker.
+Responde SIEMPRE en formato JSON compacto y corto como este:
+{
+  "empresa": "TechNova",
+  "nombre": "weatherly",
+  "version": "1.0",
+  "titulo": "Weatherly - App del Clima",
+  "colores": { "primario": "#007acc", "fondo": "#f4f6fb" }
 }
-async function sha256(str) {
-  const buf = new TextEncoder().encode(str);
-  const hash = await window.crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+No expliques, no uses frases largas ni descripciones. Solo devuelve el JSON o bloque de código equivalente.
+Evita texto fuera del bloque JSON.
+`;
+
+// --- FUNCIONES BASE ---
+function applyAITheme(colors) {
+  if (!colors) return;
+  document.documentElement.style.setProperty("--color-primary", colors.primario || "#0366d6");
+  document.documentElement.style.setProperty("--color-bg", colors.fondo || "#f4f6f8");
+}
+function updateFormFields(data) {
+  if (data.empresa) document.querySelector('[name="empresa"]').value = data.empresa;
+  if (data.nombre) document.querySelector('[name="nombre"]').value = data.nombre;
+  if (data.version) document.querySelector('[name="version"]').value = data.version;
+  if (data.titulo) document.querySelector('[name="titulo"]').value = data.titulo;
 }
 
-// --- CREAR Y EDITAR PROYECTO ---
-let lastFiles = null;
-document.getElementById("create-form").onsubmit = async function(e){
-  e.preventDefault();
-  document.getElementById("btn-download").style.display = "none";
-  document.getElementById("preview-files").textContent = "";
-  document.getElementById("create-status").textContent = "Generando estructura...";
-  let empresa = this.empresa.value.trim().toLowerCase().replace(/ /g,"-") || "influent";
-  let nombre = this.nombre.value.trim().toLowerCase() || "mycoolapp";
-  let version = this.version.value.trim();
-  version = version ? `${version}-${getversion()}-danenone` : `1-${getversion()}-danenone`;
-  let titulo = this.titulo.value.trim() || nombre.toUpperCase();
-  let folder_name = `${empresa}.${nombre}.v${version}`;
-  let hv = await sha256(`${empresa}.${nombre}.v${version}`);
-
-  const files = {};
-  DEFAULT_FOLDERS.forEach(f=>{
-    files[`${folder_name}/${f}/.${f}-container`] = `#store (sha256 hash):${f}/.${hv}`;
-  });
-
-  let licenseText = "GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 ...";
-  try {
-    let licResp = await fetch(RAW_LICENSE_URL);
-    if(licResp.ok) licenseText = await licResp.text();
-  }catch(e){}
-  files[`${folder_name}/LICENSE`] = licenseText;
-
-  files[`${folder_name}/README.md`] = `# ${empresa} ${titulo}\nProyecto generado con Influent Package Maker Web.`;
-  files[`${folder_name}/${nombre}.py`] = `#!/usr/bin/env python\n# publisher: ${empresa}\n# name: ${nombre}\n# version: IO-${version}\n`;
-  files[`${folder_name}/autorun.bat`] = `REM\npip install -r lib/requirements.txt\npython ${nombre}.py\n`;
-  files[`${folder_name}/autorun`] = `#!/usr/bin/env sh\npip install -r "./lib/requirements.txt"\nclear\n/usr/bin/python3 "./${nombre}.py"\n`;
-  files[`${folder_name}/details.xml`] = `<app>
-  <publisher>${empresa}</publisher>
-  <app>${nombre}</app>
-  <name>${titulo}</name>
-  <version>v${version}</version>
-  <with>${navigator.platform}</with>
-  <danenone>${getversion()}</danenone>
-  <correlationid>${hv}</correlationid>
-  <rate>Todas las edades</rate>
-</app>`;
-  files[`${folder_name}/lib/requirements.txt`] = "# Dependencias del paquete\n";
-
-  let iconBlob=null;
-  try {
-    let iconResp = await fetch(RAW_ICON_URL);
-    if(iconResp.ok) iconBlob = await iconResp.blob();
-  }catch(e){iconBlob=null;}
-  if(iconBlob) files[`${folder_name}/app/app-icon.ico`] = iconBlob;
-
-  let html = `<b>Carpetas y archivos generados:</b><ul>`;
-  Object.keys(files).forEach(f=>{
-    let ext = f.split('.').pop();
-    html += `<li>${f} ${ext==="ico"?"<span style='color:#0366d6;'>(icono RAW)</span>":""}</li>`;
-  });
-  html += `</ul><hr><b>Edita archivos antes de descargar:</b>`;
-  Object.keys(files).forEach(f=>{
-    if(typeof files[f] === "string" && (f.endsWith(".py")||f.endsWith(".bat")||f.endsWith(".sh")||f.endsWith(".md")||f.endsWith(".xml")||f.endsWith(".txt")||f.endsWith("LICENSE"))){
-      html += `<details open><summary>${f}</summary>
-      <textarea class="file-editbox" data-file="${f}">${files[f]}</textarea></details>`;
-    }
-  });
-  document.getElementById("preview-files").innerHTML = html;
-  document.getElementById("create-status").textContent = `✅ Puedes editar cualquier archivo antes de descargar. SHA256: ${hv}`;
-  document.getElementById("btn-download").style.display = "inline-block";
-  lastFiles = files;
-};
-
-document.getElementById("btn-download").onclick = async function(){
-  if(!lastFiles) return;
-  document.getElementById("create-status").textContent = "Empaquetando ZIP...";
-  document.querySelectorAll(".file-editbox").forEach(e=>{
-    lastFiles[e.dataset.file] = e.value;
-  });
-  const zip = new JSZip();
-  for(const f in lastFiles) zip.file(f, lastFiles[f]);
-  let folder_name = Object.keys(lastFiles)[0].split("/")[0];
-  zip.generateAsync({type:"blob"}).then(blob=>{
-    saveAs(blob, `${folder_name}.iflapp`);
-    document.getElementById("create-status").textContent = `ZIP descargado: ${folder_name}.iflapp`;
-  });
-};
-
-// --- INSTALAR ZIP ---
-document.getElementById("zipfile").onchange = function(e){
-  const file = e.target.files[0];
-  if(!file)return;
-  document.getElementById("install-status").textContent = "Leyendo ZIP...";
-  JSZip.loadAsync(file).then(async zip=>{
-    let details = `<b>Contenido de "${file.name}"</b><ul>`;
-    let xmlContent = "", iconUrl = "";
-    for(const fname of Object.keys(zip.files)){
-      details += `<li>${fname}${fname.endsWith(".ico")?" <span style='color:#0366d6;'>(icono)</span>":""}</li>`;
-      if(fname.endsWith("details.xml")) xmlContent = await zip.file(fname).async("text");
-      if(fname.endsWith("app-icon.ico")) iconUrl = URL.createObjectURL(await zip.file(fname).async("blob"));
-    }
-    details += "</ul>";
-    if(xmlContent) details += "<hr><b>Details.xml:</b><pre style='white-space:pre-wrap;font-size:.96em;background:#fff;'>" + xmlContent + "</pre>";
-    if(iconUrl) details += `<hr><b>Icono:</b><br><img src="${iconUrl}" style="width:38px;height:38px;border-radius:4px;border:1px solid #e1e4e8;">`;
-    document.getElementById("zip-details").innerHTML = details;
-    document.getElementById("install-status").textContent = "ZIP leído correctamente.";
-  }).catch(()=>{
-    document.getElementById("install-status").textContent = "Error: El archivo no es un ZIP válido.";
-    document.getElementById("zip-details").textContent = "";
-  });
-};
-
-// --- ASISTENTE IA ---
+// --- FORMULARIO IA ---
 document.getElementById("ai-form").onsubmit = async (e)=>{
   e.preventDefault();
   const prompt = document.getElementById("ai-prompt").value.trim();
-  if(!prompt)return;
-  const out = document.getElementById("ai-response");
-  out.textContent = "🤖 Pensando...";
-  try{
-    const result = await model.generateContent(`Ayuda a completar campos de un formulario para un proyecto de software basado en esta descripción: ${prompt}`);
-    const text = result.response.text();
-    const clean = text.replace(/(malware|exploit|virus|hack)/gi,"[contenido restringido]");
-    out.innerHTML = clean;
+  const output = document.getElementById("ai-response");
+  if(!prompt){ output.textContent="Escribe una descripción primero."; return; }
+  output.textContent = "🤖 Generando sugerencias...";
 
-    // Auto completar en los inputs según IA
-    const empresaInput = document.querySelector('input[name="empresa"]');
-    const nombreInput = document.querySelector('input[name="nombre"]');
-    const versionInput = document.querySelector('input[name="version"]');
-    const tituloInput = document.querySelector('input[name="titulo"]');
+  try {
+    const fullPrompt = `${SYSTEM_PROMPT}\nDescripción del usuario: ${prompt}`;
+    const result = await model.generateContent(fullPrompt);
+    let text = result.response.text().trim();
 
-    if(/empresa|fabricante/i.test(clean) && empresaInput.value==="") empresaInput.value = "Influent Labs";
-    if(/app|nombre/i.test(clean) && nombreInput.value==="") nombreInput.value = "miaplicacion";
-    if(/versi/i.test(clean) && versionInput.value==="") versionInput.value = "1.0";
-    if(/título|nombre completo/i.test(clean) && tituloInput.value==="") tituloInput.value = "Proyecto IA Generado";
+    // Buscar bloque JSON o bloque de código
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) { output.textContent = "⚠️ No se detectó JSON válido."; return; }
 
-  }catch(err){
-    out.textContent = "Error: " + err.message;
+    const jsonText = match[0];
+    const data = JSON.parse(jsonText);
+
+    // Aplicar en interfaz
+    updateFormFields(data);
+    applyAITheme(data.colores);
+
+    // Mostrar en bloque visual
+    output.innerHTML = `<code>${JSON.stringify(data, null, 2)}</code>`;
+  } catch(err) {
+    output.textContent = "Error: " + err.message;
   }
+};
+
+// --- Resto del código ZIP (resumido pero funcional) ---
+const RAW_ICON_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico";
+const RAW_LICENSE_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE";
+const DEFAULT_FOLDERS = ["app","assets","config","docs","source","lib"];
+
+async function sha256(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+document.getElementById("create-form").onsubmit = async (e)=>{
+  e.preventDefault();
+  const empresa = e.target.empresa.value.trim();
+  const nombre = e.target.nombre.value.trim();
+  const version = e.target.version.value.trim();
+  const titulo = e.target.titulo.value.trim();
+  const hv = await sha256(`${empresa}.${nombre}.${version}`);
+
+  const folder = `${empresa}.${nombre}.v${version}`;
+  const files = {
+    [`${folder}/README.md`]: `# ${titulo}\nGenerado por Influent Package Maker.`,
+    [`${folder}/details.xml`]: `<app><publisher>${empresa}</publisher><name>${titulo}</name><version>${version}</version></app>`
+  };
+
+  const zip = new JSZip();
+  for(const f in files) zip.file(f, files[f]);
+  zip.generateAsync({type:"blob"}).then(blob=>saveAs(blob, `${folder}.iflapp`));
+  document.getElementById("create-status").textContent = "✅ Proyecto empaquetado correctamente.";
 };
 </script>
 </body>
