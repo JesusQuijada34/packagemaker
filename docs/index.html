@@ -4,13 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Influent Package Maker — IA</title>
-
-  <!-- Meta / SEO / PWA -->
   <meta name="description" content="Generador de paquetes con IA (Gemini). Genera estructura, archivos y descarga .iflapp.">
-  <meta name="theme-color" content="#0b0d0f">
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/favicon-32.png" sizes="32x32">
-
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -23,7 +18,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <button id="btnLogout" class="btn ghost small">Cerrar sesión</button>
+      <button id="btnLogout" class="btn ghost small" style="display:none">Cerrar sesión</button>
     </div>
   </header>
 
@@ -61,21 +56,45 @@
       </div>
 
       <div id="status" class="status muted">Estado: esperando</div>
+
+      <div class="progress-wrap" aria-hidden="true" style="display:none">
+        <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
     </section>
 
     <aside class="card right">
       <h2>Preview & Salida</h2>
 
-      <div id="preview-meta" class="meta preview-block">
-        <!-- meta autocompletada -->
-      </div>
+      <div id="preview-meta" class="meta preview-block"></div>
 
-      <div id="preview-files" class="files preview-block">
-        <!-- archivos se añaden progresivamente -->
-      </div>
+      <div id="preview-files" class="files preview-block"></div>
 
       <div class="bottom-row">
         <button id="btn-download" class="btn primary" style="display:none">Descargar .iflapp</button>
+        <div id="ai-output" class="ai-output preview-block"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <small>Packagemaker • integrado con Gemini • Deploy: Netlify / GitHub Pages</small>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="/main.js"></script>
+
+  <script>
+    // register service worker only if ?vkinapp present (PWA activation control)
+    if ('serviceWorker' in navigator) {
+      const q = location.search || "";
+      if (q.includes("vkinapp")) {
+        navigator.serviceWorker.register('/sw.js').catch(()=>{/*sw fail silently*/});
+      }
+    }
+  </script>
+</body>
+</html>
         <div id="ai-output" class="ai-output preview-block"></div>
       </div>
     </aside>
