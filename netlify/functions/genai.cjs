@@ -1,236 +1,204 @@
-// netlify/functions/genai.js
 'use strict';
 
 const crypto = require('crypto');
-const fetch = require('node-fetch'); // backup fetch
+const fetch = require('node-fetch');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-/**
- * Extract THINKING block and JSON fenced or first {..}..}
- * return { thinking, jsonText, raw }
- */
+/* --- Bloques de utilidad --- */
+
 function extractBlocks(raw) {
   if (!raw || typeof raw !== 'string') return { thinking: null, jsonText: null, raw: String(raw) };
-
-  const thinkingMatch = raw.match(/---THINKING---([\s\S]*?)---ENDTHINK---/i);
-  const thinking = thinkingMatch ? thinkingMatch[1].trim() : null;
-
-  let jsonMatch = raw.match(/```json([\s\S]*?)```/i) || raw.match(/```([\s\S]*?)```/i);
-  let jsonText = jsonMatch ? jsonMatch[1] : null;
-
+  const thinking = (raw.match(/---THINKING---([\s\S]*?)---ENDTHINK---/i) || [])[1]?.trim() || null;
+  let jsonText = (raw.match(/```json([\s\S]*?)```/i) || raw.match(/```([\s\S]*?)```/i) || [])[1];
   if (!jsonText) {
     const first = raw.indexOf('{');
     const last = raw.lastIndexOf('}');
-    if (first !== -1 && last !== -1 && last > first) jsonText = raw.slice(first, last + 1);
+    if (first !== -1 && last !== -1) jsonText = raw.slice(first, last + 1);
   }
-
-  if (jsonText) {
-    jsonText = jsonText.replace(/\r\n/g, '\n')
-                       .replace(/\u00A0/g, ' ')
-                       .replace(/,\s*([\]}])/g, '$1'); // remove trailing commas
-  }
-
   return { thinking, jsonText, raw };
 }
 
-/** Try parsing JSON with heuristics (escape raw CR in quotes) */
 function tryParseJSON(t) {
   if (!t) return null;
   try {
     return JSON.parse(t);
-  } catch (e) {
+  } catch {
     try {
-      const safe = t.replace(/"([^"]*)\n([^"]*)"/g, (m, a, b) => {
-        return `"${a}\\n${b.replace(/\n/g, '\\n')}"`;
-      });
+      const safe = t.replace(/"([^"]*)\n([^"]*)"/g, (_, a, b) => `"${a}\\n${b}"`);
       return JSON.parse(safe);
-    } catch (e2) {
+    } catch {
       return null;
     }
   }
 }
 
-/** Ensure default container files and license/icon presence */
-async function ensureDefaults(parsed, folder, hv, opts = {}) {
+async function ensureDefaults(parsed, folder, hv) {
   parsed.files = parsed.files || [];
-  const DEFAULT_FOLDERS = ['app', 'assets', 'config', 'docs', 'source', 'lib'];
+  const folders = ['app', 'assets', 'config', 'docs', 'source', 'lib'];
 
-  DEFAULT_FOLDERS.forEach((f) => {
-    const p = `${folder}/${f}/.${f}-container`;
-    if (!parsed.files.some((x) => (x.path || '').toLowerCase() === p.toLowerCase())) {
-      parsed.files.push({ path: p, content: `#store (sha256 hash):${f}/.${hv}` });
-    }
+  folders.forEach(f => {
+    const path = `${folder}/${f}/.${f}-container`;
+    if (!parsed.files.some(x => x.path === path))
+      parsed.files.push({ path, content: `#store (sha256 hash):${f}/.${hv}` });
   });
 
-  // LICENSE: try to fetch from upstream raw if not present
-  if (!parsed.files.some((x) => /license/i.test(x.path || ''))) {
-    const licenseUrl = opts.licenseRawUrl || 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE';
-    try {
-      const r = await fetch(licenseUrl);
-      if (r.ok) {
-        const text = await r.text();
-        parsed.files.push({ path: `${folder}/LICENSE`, content: String(text) });
-      } else {
-        parsed.files.push({ path: `${folder}/LICENSE`, content: 'MIT License\n\nCopyright (c) ' + new Date().getFullYear() });
-      }
-    } catch (e) {
-      parsed.files.push({ path: `${folder}/LICENSE`, content: 'MIT License\n\nCopyright (c) ' + new Date().getFullYear() });
-    }
+  // LICENSE RAW
+  if (!parsed.files.some(x => /license/i.test(x.path))) {
+    const url = 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE';
+    const res = await fetch(url).catch(() => null);
+    const text = res?.ok ? await res.text() : 'MIT License\nCopyright (c) Influent Labs';
+    parsed.files.push({ path: `${folder}/LICENSE`, content: text });
   }
 
-  // Icon: include ICO from raw URL if not present (as base64)
-  if (!parsed.files.some((x) => /icon/i.test(x.path || ''))) {
-    const iconUrl = opts.iconRawUrl || 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico';
-    try {
-      const r2 = await fetch(iconUrl);
-      if (r2.ok) {
-        const buffer = await r2.arrayBuffer();
-        const b64 = Buffer.from(buffer).toString('base64');
-        parsed.files.push({ path: `${folder}/app-icon.ico`, content: `data:application/octet-stream;base64,${b64}` });
-      }
-    } catch (e) {
-      // ignore icon fetch failure
+  // ICON RAW
+  if (!parsed.files.some(x => /icon/i.test(x.path))) {
+    const url = 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico';
+    const r2 = await fetch(url).catch(() => null);
+    if (r2?.ok) {
+      const b64 = Buffer.from(await r2.arrayBuffer()).toString('base64');
+      parsed.files.push({ path: `${folder}/app-icon.ico`, content: `data:image/x-icon;base64,${b64}` });
     }
   }
-
   return parsed;
 }
 
-/** Build fallback minimal package when parsing fails */
-function fallbackPackage(meta) {
-  const short = (meta.shortName || 'calculator').toString().trim();
-  return {
-    meta: {
-      fabricante: meta.fabricante || 'Default Manufacturer',
-      shortName: short,
-      version: meta.version || '1.0.0',
-      title: meta.title || 'Fallback Package',
-      description: meta.description || 'Fallback generated package'
-    },
-    files: [
-      { path: `${short}.py`, content: `#!/usr/bin/env python\n# simple fallback\nprint("Hello from ${short}")\n` },
-      { path: 'README.md', content: `# ${short}\n\nPaquete fallback generado por servidor.` },
-      { path: 'lib/requirements.txt', content: '# no dependencies\n' }
-    ]
-  };
-}
+/* --- Controlador principal --- */
 
-exports.handler = async function (event) {
+exports.handler = async (event) => {
   try {
     const body = event.body ? JSON.parse(event.body) : {};
     const prompt = body.prompt || '';
     const mode = body.mode || 'full';
-    const incomingFiles = Array.isArray(body.files) ? body.files : [];
-
-    if (!prompt) return { statusCode: 400, body: JSON.stringify({ error: 'Missing prompt' }) };
-
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'Missing GEMINI_API_KEY in environment' }) };
 
-    // Initialize Gemini client
+    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'Falta GEMINI_API_KEY.' }) };
+    if (!prompt.trim()) return { statusCode: 400, body: JSON.stringify({ error: 'Falta prompt del usuario.' }) };
+
     const ai = new GoogleGenerativeAI(apiKey);
     const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // Construct enforced prompt (THINKING + fenced JSON)
-    const systemPrompt = `
-Eres "Influent Package Maker", experto en generar paquetes de software.
-Salida requerida: PRIMERO un bloque THINKING (1-2 oraciones) entre:
----THINKING---
-...texto...
----ENDTHINK---
+    /* --------------------------------------------------------------
+       📘 DOCTRINA INTERNA — ENTRENAMIENTO DEL MODELO
+       --------------------------------------------------------------
+       Este modelo actúa como un generador de software autónomo.
+       Su misión es producir proyectos de software completos,
+       en formato JSON bien formado, desde descripciones humanas.
 
-A CONTINUACIÓN, SOLO un bloque JSON válido, dentro de triple backticks:
-\`\`\`json
-{
-  "meta": {
-    "fabricante": "Acme Corp",
-    "shortName": "hello",
-    "version": "1.0.0",
-    "title": "Hello App",
-    "description": "Breve descripción"
-  },
-  "files": [
-    {"path":"README.md","content":"..."},
-    {"path":"hello.py","content":"..."},
-    {"path":"lib/requirements.txt","content":"..."},
-    {"path":"details.xml","content":"..."},
-    {"path":"autorun","content":"..."},
-    {"path":"autorun.bat","content":"..."},
-    {"path":"app/app-icon.ico","content":"..."}
-  ]
-}
-\`\`\`
+       📖 Filosofía:
+       - No improvises texto fuera del bloque JSON.
+       - Usa THINKING breve (2 frases máx.) para reflexión interna.
+       - Sé técnico, coherente, ordenado y profesional.
+       - Corrige automáticamente inconsistencias del usuario.
+       - Todo lo que entregues debe tener valor de ingeniería real.
 
-REGLAS IMPORTANTES:
-- Escapa saltos de línea como \\n dentro de los valores "content".
-- Incluye al menos: README.md, <shortName>.py (o .js si hace falta), lib/requirements.txt, details.xml, autorun (sh), autorun.bat, LICENSE.
-- Añade contenedores en app/, assets/, config/, docs/, source/, lib/.
-- Si "mode" es "edit", toma incomingFiles y modifica sus contenidos coherentemente.
-- NO añadas texto fuera del bloque THINKING y del bloque JSON.
-- Asegúrate que el JSON sea parseable estrictamente.
+       📦 Estructura final JSON:
+       {
+         "meta": {
+           "fabricante": "string",
+           "shortName": "string",
+           "version": "string",
+           "title": "string",
+           "description": "string"
+         },
+         "files": [
+           {"path": "README.md", "content": "..."},
+           {"path": "{shortName}.py", "content": "..."},
+           {"path": "lib/requirements.txt", "content": "..."},
+           {"path": "details.xml", "content": "..."},
+           {"path": "autorun", "content": "..."},
+           {"path": "autorun.bat", "content": "..."},
+           {"path": "LICENSE", "content": "..."}
+         ]
+       }
+
+       ⚙️ Ejemplo de details.xml:
+       <app>
+         <publisher>Acme</publisher>
+         <app>calculator</app>
+         <version>1.0.0</version>
+         <title>Calculadora</title>
+         <description>Una calculadora con operaciones básicas</description>
+       </app>
+
+       ⚙️ Ejemplo de autorun.bat:
+       @echo off
+       echo Iniciando aplicación...
+       python {shortName}.py
+       pause
+
+       ⚙️ Ejemplo de autorun (sh):
+       #!/bin/bash
+       echo "Iniciando..."
+       python3 {shortName}.py
+
+       🧠 Técnicas:
+       - Escapa saltos de línea como \\n en todos los contenidos.
+       - Elimina comas colgantes.
+       - No incluyas texto fuera del bloque JSON.
+       - Si el usuario pide una app tipo "editor", genera código Python o JS acorde.
+       - No devuelvas HTML, solo código fuente y archivos.
+       - Si no sabes algo, genera un esqueleto técnico básico coherente.
+
+       🧩 Ejemplo de entrada y salida:
+       Entrada:
+         "Quiero una app de notas local sencilla."
+       Salida:
+         ---THINKING---
+         Crear estructura simple con almacenamiento local.
+         ---ENDTHINK---
+         ```json
+         {
+           "meta": {...},
+           "files": [...]
+         }
+         ```
+
+       -------------------------------------------------------------- */
+
+    const fullPrompt = `
+---INSTRUCCIONES---
+${prompt}
+---MODO---
+${mode}
+---FIN---
+Devuelve un bloque THINKING y un bloque JSON según las reglas.
 `;
 
-    const userBlock = `USER_PROMPT: ${prompt}\nMODE: ${mode}\nEXISTING_FILES: ${JSON.stringify(incomingFiles).slice(0, 3000)}`;
+    const result = await model.generateContent(fullPrompt, { temperature: 0.5, maxOutputTokens: 2048 });
+    const raw = result?.response?.text?.() || JSON.stringify(result);
+    const blocks = extractBlocks(raw);
+    let parsed = tryParseJSON(blocks.jsonText) || tryParseJSON(blocks.raw);
 
-    const requestText = systemPrompt + '\n\n' + userBlock + '\n\nDevuelve la respuesta.';
-
-    // Call Gemini
-    const response = await model.generateContent(requestText, { temperature: 0.6, maxOutputTokens: 2000 });
-    const raw = (response && response.response && typeof response.response.text === 'function') ? response.response.text() : (response.output || response.text || JSON.stringify(response));
-
-    const blocks = extractBlocks(String(raw));
-    let parsed = tryParseJSON(blocks.jsonText);
-
-    // If not parsed, try parsing raw
-    if (!parsed) parsed = tryParseJSON(blocks.raw);
-
-    // If still not parsed, create fallback using minimal meta inference
     if (!parsed) {
-      const inferredMeta = {
-        fabricante: /fabricante[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || 'Default Manufacturer',
-        shortName: /shortname[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || /short name[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || 'calculator',
-        version: /version[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || '1.0.0',
-        title: /title[:=]\s*([^\n]+)/i.exec(prompt)?.[1] || '',
-        description: prompt
+      parsed = {
+        meta: { fabricante: 'Default Manufacturer', shortName: 'fallback', version: '1.0.0', title: 'Fallback', description: prompt },
+        files: [{ path: 'README.md', content: '# Fallback\\n\\nNo se pudo analizar JSON correctamente.' }]
       };
-      parsed = fallbackPackage(inferredMeta);
     }
 
-    // Compute folder and hash for .storedetail
-    const empresa = (parsed.meta && (parsed.meta.fabricante || parsed.meta.manufacturer || 'default')).toString().trim().toLowerCase().replace(/\s+/g, '-');
-    const shortn = (parsed.meta && (parsed.meta.shortName || parsed.meta.short || 'myapp')).toString().trim().toLowerCase();
-    const versionVal = parsed.meta && parsed.meta.version ? parsed.meta.version : '1.0.0';
-    const folder = `${empresa}.${shortn}.v${versionVal}`;
-    const storeKey = `${empresa}.${shortn}.${versionVal}`;
-    const hv = crypto.createHash('sha256').update(storeKey).digest('hex');
+    const fabricante = (parsed.meta.fabricante || 'default').toLowerCase().replace(/\s+/g, '-');
+    const shortName = (parsed.meta.shortName || 'myapp').toLowerCase();
+    const version = parsed.meta.version || '1.0.0';
+    const folder = `${fabricante}.${shortName}.v${version}`;
+    const hv = crypto.createHash('sha256').update(`${fabricante}.${shortName}.${version}`).digest('hex');
 
-    // Add .storedetail file (sha256 string)
-    const storedetailPath = `${folder}/.storedetail`;
-    const storedetailContent = hv;
-    if (!parsed.files.some((f) => f.path === storedetailPath)) {
-      parsed.files.push({ path: storedetailPath, content: storedetailContent });
-    }
+    // .storedetail
+    parsed.files.push({ path: `${folder}/.storedetail`, content: hv });
 
-    // Ensure defaults: license + icon + containers
-    parsed = await ensureDefaults(parsed, folder, hv, {
-      licenseRawUrl: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE',
-      iconRawUrl: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico'
-    });
+    // Licencia, ícono y contenedores
+    parsed = await ensureDefaults(parsed, folder, hv);
 
-    // Normalize file paths and ensure contents are strings
-    parsed.files = parsed.files.map((f) => ({
-      path: (f.path || '').replace(/^\.\//, '').replace(/^\/+/, ''),
-      content: typeof f.content === 'string' ? f.content : String(f.content || '')
+    parsed.files = parsed.files.map(f => ({
+      path: f.path.trim(),
+      content: String(f.content || '')
     }));
 
-    // Return thinking + parsed package
     return {
       statusCode: 200,
       body: JSON.stringify({ thinking: blocks.thinking || null, parsed })
     };
   } catch (err) {
-    console.error('genai error:', err);
-    return { statusCode: 500, body: JSON.stringify({ error: err.message || String(err) }) };
+    console.error('Error genai:', err);
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
-    
