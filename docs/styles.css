@@ -1,0 +1,153 @@
+:root {
+  --gradient-from: #0366d6;
+  --gradient-to: #2ea44f;
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --text: #222;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Inter, system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  background: linear-gradient(90deg, var(--gradient-from), var(--gradient-to));
+  color: #fff;
+}
+
+header .logo img {
+  height: 44px;
+  width: 44px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #fff;
+  padding: 4px;
+}
+
+header .header-text h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+header .subtext {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+main {
+  max-width: 1000px;
+  margin: 18px auto;
+  padding: 0 14px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 8px 30px rgba(20,20,40,.05);
+  border: 1px solid rgba(10,10,10,.03);
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 1.15rem;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+input[type="text"], textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #dfe7ee;
+  font-size: 0.95rem;
+  background: #fbfdff;
+}
+
+textarea { min-height: 80px; resize: vertical; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-grid .full { grid-column: 1/-1; }
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--gradient-from);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,.1);
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.preview {
+  margin-top: 12px;
+  background: #f7fbff;
+  padding: 10px;
+  border-radius: 10px;
+  max-height: 400px;
+  overflow: auto;
+  border: 1px solid #eef6ff;
+  font-family: monospace;
+  font-size: 0.95rem;
+}
+
+.status {
+  margin-top: 10px;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+footer {
+  text-align: center;
+  padding: 12px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+footer a { color: #0366d6; text-decoration: none; }
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+  header { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
