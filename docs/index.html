@@ -105,7 +105,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <script type="module">
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-const ai = new AIzaSyAXnbWHp1-7wC8vVbDbrTWBVIOBPGv7nis;
+const ai = new GoogleGenerativeAI("AIzaSyAXnbWHp1-7wC8vVbDbrTWBVIOBPGv7nis");
 const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 const RAW_ICON_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico";
