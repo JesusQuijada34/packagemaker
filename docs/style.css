@@ -1,106 +1,26 @@
-:root {
-  --bg: #f6f8fa;
-  --text: #24292e;
-  --surface: #ffffff;
-  --accent: #0366d6;
-  --accent-hover: #0550ae;
-  --border: #d0d7de;
-  --muted: #57606a;
-}
-
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  background: var(--bg);
-  color: var(--text);
-}
-
-header {
+  height: 100vh;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--accent);
-  color: white;
-  padding: 12px 16px;
-}
-
-.logo {
-  width: 40px;
-  height: 40px;
-  background: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #e0e7ff, #f8fafc);
+  font-family: 'Segoe UI', sans-serif;
 }
-
-main {
-  display: flex;
-  flex-direction: column;
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 0 10px;
+.app-window {
+  width: 500px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  overflow: hidden;
 }
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-}
-
-h2 {
-  font-size: 1.1rem;
-  margin-bottom: 10px;
-}
-
-input[type="text"], textarea {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 0.95rem;
-}
-
-button {
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:hover {
-  background: var(--accent-hover);
-}
-
-.preview {
-  background: #f6f8fa;
-  border: 1px solid #d8dee4;
-  border-radius: 8px;
-  padding: 10px;
-  max-height: 400px;
-  overflow-y: auto;
-  font-family: monospace;
-}
-
-footer {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.85rem;
-  padding: 10px;
-}
-
-@media (max-width: 768px) {
-  main {
-    padding: 0 8px;
-  }
-}
+.window-header { padding:12px 16px; background: rgba(255,255,255,0.3); }
+main { padding: 20px; }
+.form-group { margin-bottom:12px; display:flex; flex-direction:column; }
+label { margin-bottom:4px; font-size:14px; }
+input, select { padding:8px; border:1px solid rgba(0,0,0,0.2); border-radius:8px; font-size:14px; }
+button { width:100%; padding:10px; background:#2563eb; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer; margin-top:8px; }
+button:hover { background:#1d4ed8; }
+#status { margin-top:16px; font-size:14px; color:#333; }
+#pyOutput { background:rgba(255,255,255,0.4); padding:10px; border-radius:8px; max-height:150px; overflow:auto; margin-top:8px; }
