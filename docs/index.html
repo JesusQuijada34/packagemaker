@@ -1,80 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#24292e" />
-  <title>Influent Package Maker — Gemini</title>
-  <link rel="icon" href="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PackageMaker Web + Pyodide</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" alt="logo" />
-    </div>
-    <div>
-      <h1>Influent Package Maker — IA</h1>
-      <p class="muted">Generador avanzado de paquetes inteligentes con IA</p>
-    </div>
-  </header>
-
+<div class="app-window">
+  <header class="window-header"><h1>📦 PackageMaker Web</h1></header>
   <main>
-    <section class="card">
-      <h2>Generar paquete con IA</h2>
-
-      <div class="form-grid">
-        <div>
-          <label>Fabricante</label>
-          <input id="inp-fabricante" type="text" placeholder="ej. influent-labs" />
-        </div>
-        <div>
-          <label>Short name</label>
-          <input id="inp-short" type="text" placeholder="ej. weatherly" />
-        </div>
-        <div>
-          <label>Versión</label>
-          <input id="inp-version" type="text" placeholder="1.0.0" />
-        </div>
-        <div>
-          <label>Título</label>
-          <input id="inp-titulo" type="text" placeholder="Weatherly - App del Clima" />
-        </div>
-      </div>
-
-      <div class="full">
-        <label>Descripción (Prompt)</label>
-        <textarea id="inp-descripcion" placeholder="Describe tu proyecto o aplicación..."></textarea>
-      </div>
-
-      <div class="actions">
-        <button id="btn-generar" class="btn btn-primary">Generar con IA</button>
-        <button id="btn-limpiar" class="btn btn-ghost">Limpiar salida</button>
-      </div>
-
-      <div id="status" class="status"></div>
-
-      <div id="thinking" class="thinking hidden">
-        🤖 <span id="thinking-text">Pensando...</span>
-        <div class="progress-bar"><div class="progress"></div></div>
-      </div>
-
-      <pre id="json-output" class="preview"></pre>
-    </section>
-
-    <aside class="card">
-      <h2>Vista previa de archivos</h2>
-      <div id="preview-files" class="preview"></div>
-      <button id="btn-download" class="btn btn-primary hidden">Descargar .iflapp (ZIP)</button>
-    </aside>
+    <div class="form-group">
+      <label for="inputEmpresa">Empresa / Publisher:</label>
+      <input type="text" id="inputEmpresa" placeholder="influent" />
+    </div>
+    <div class="form-group">
+      <label for="inputNombre">Nombre lógico:</label>
+      <input type="text" id="inputNombre" placeholder="mycoolapp" />
+    </div>
+    <div class="form-group">
+      <label for="inputVersion">Versión:</label>
+      <input type="text" id="inputVersion" placeholder="1.0" />
+    </div>
+    <div class="form-group">
+      <label for="inputTitulo">Título completo:</label>
+      <input type="text" id="inputTitulo" placeholder="My Cool App" />
+    </div>
+    <div class="form-group">
+      <label for="selectTipo">Tipo de paquete:</label>
+      <select id="selectTipo">
+        <option value="packaged">Packaged (.iflapp)</option>
+        <option value="bundled">Bundled (.iflappb)</option>
+      </select>
+    </div>
+    <button id="btnGenerate">Generar paquete</button>
+    <button id="btnRunPython">Ejecutar Python (Pyodide)</button>
+    <div id="status"></div>
+    <pre id="pyOutput"></pre>
   </main>
-
-  <footer>
-    <p>GitHub: <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank">packagemaker</a></p>
-  </footer>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="app.js"></script>
+</div>
+<script src="app.js"></script>
 </body>
 </html>
