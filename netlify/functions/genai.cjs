@@ -80,3 +80,4 @@ Tu misión:
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
+
