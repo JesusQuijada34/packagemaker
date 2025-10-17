@@ -255,3 +255,199 @@ python3 "./${shortName}.py"`,
 
 // Evento del botón manual
 manualBtn.addEventListener("click", generateManual);
+/**************************************************************************
+ * Parte 3 — Modo Inteligente (Gemini 2.5 Flash + Image)
+ * IA genera Python, README, requirements + logo.
+ * El resto se completa automáticamente como modo manual.
+ **************************************************************************/
+
+async function openAIModal() {
+  return new Promise((resolve) => {
+    const modal = document.createElement("div");
+    modal.className = "ai-modal";
+    modal.innerHTML = `
+      <div class="ai-modal-content">
+        <h3>🤖 Generación Inteligente</h3>
+        <p>Describe brevemente lo que quieres que haga tu aplicación Python:</p>
+        <textarea id="ai-description" placeholder="Ej: una app de notas simple con interfaz limpia y guardado local"></textarea>
+        <div style="margin-top:10px;text-align:right">
+          <button id="ai-cancel" class="btn btn-ghost">Cancelar</button>
+          <button id="ai-ok" class="btn btn-primary">Generar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById("ai-cancel").onclick = () => {
+      modal.remove();
+      resolve(null);
+    };
+    document.getElementById("ai-ok").onclick = () => {
+      const val = document.getElementById("ai-description").value.trim();
+      modal.remove();
+      resolve(val || null);
+    };
+  });
+}
+
+// Pensamiento animado
+async function thinkingAnimation(texts = ["💭 Pensando...", "🧠 Analizando...", "⚙️ Construyendo..."]) {
+  for (let i = 0; i < texts.length; i++) {
+    setProgress((i + 1) * 25, texts[i]);
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+
+// Parseo seguro de JSON devuelto por IA
+function safeParseJSON(str) {
+  try {
+    const match = str.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    return JSON.parse(match[0]);
+  } catch (e) {
+    console.warn("JSON malformado, intentando corregir...");
+    try {
+      const fixed = str.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
+      return JSON.parse(fixed);
+    } catch (e2) {
+      return null;
+    }
+  }
+}
+
+// Fusión de estructura faltante
+async function mergeWithStructure(aiData) {
+  const fabricante = aiData.meta.fabricante || "influent-labs";
+  const shortName = aiData.meta.shortName || "app";
+  const version = aiData.meta.version || "1.0.0";
+  const title = aiData.meta.title || shortName;
+  const description = aiData.meta.description || "Aplicación generada por IA";
+
+  const folder = `${fabricante}.${shortName}.v${version}`;
+  const hv = await sha256hex(`${fabricante}.${shortName}.v${version}`);
+
+  const DEFAULT_FOLDERS = ["app", "assets", "config", "docs", "source", "lib"];
+  const files = aiData.files || [];
+
+  // Asegurar estructura .container
+  DEFAULT_FOLDERS.forEach((f) => {
+    if (!files.find((x) => x.path.endsWith(`.${f}-container`))) {
+      files.push({
+        path: `${folder}/${f}/.${f}-container`,
+        content: `#store (sha256 hash):${f}/.${hv}`,
+      });
+    }
+  });
+
+  // Agregar detalles.xml, autorun, licencia, etc.
+  let license = "GNU GENERAL PUBLIC LICENSE Version 3";
+  try {
+    const res = await fetch("https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/LICENSE");
+    if (res.ok) license = await res.text();
+  } catch {}
+
+  files.push({
+    path: `${folder}/LICENSE`,
+    content: license,
+  });
+
+  files.push({
+    path: `${folder}/autorun.bat`,
+    content: `@echo off
+echo Iniciando ${shortName}...
+pip install -r lib/requirements.txt
+python ${shortName}.py
+pause`,
+  });
+
+  files.push({
+    path: `${folder}/autorun`,
+    content: `#!/usr/bin/env sh
+pip install -r "./lib/requirements.txt"
+clear
+python3 "./${shortName}.py"`,
+  });
+
+  files.push({
+    path: `${folder}/details.xml`,
+    content: `<?xml version="1.0" encoding="UTF-8"?>
+<app>
+  <publisher>${fabricante}</publisher>
+  <app>${shortName}</app>
+  <name>${title}</name>
+  <version>${version}</version>
+  <desc>${description}</desc>
+</app>`,
+  });
+
+  files.push({
+    path: `${folder}/.storedetail`,
+    content: `# Package Hash ${hv}\n# Created at ${new Date().toISOString()}`,
+  });
+
+  return { files, folder };
+}
+
+// Llamada IA
+async function generateAI() {
+  clearPreview();
+  IS_AI_MODE = true;
+
+  const userPrompt = await openAIModal();
+  if (!userPrompt) return;
+
+  statusEl.textContent = "🤖 Solicitando generación a IA…";
+  setProgress(10, "Conectando con Gemini...");
+
+  await thinkingAnimation();
+
+  try {
+    const res = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: userPrompt, mode: "intelligent" }),
+    });
+
+    if (!res.ok) throw new Error("Error al conectar con backend IA");
+    const text = await res.text();
+    const parsed = safeParseJSON(text);
+
+    if (!parsed || !parsed.meta || !Array.isArray(parsed.files)) {
+      statusEl.textContent = "⚠️ La IA no devolvió un JSON válido.";
+      return;
+    }
+
+    setProgress(75, "Fusionando estructura...");
+
+    const finalData = await mergeWithStructure(parsed);
+
+    // Si el logotipo fue base64 (desde backend)
+    parsed.files.forEach((f) => {
+      if (f.path === "assets/product_logo.png" && f.content && f.isBinary) {
+        const byteArray = Uint8Array.from(atob(f.content), (c) => c.charCodeAt(0));
+        finalData.files.push({
+          path: `${finalData.folder}/assets/product_logo.png`,
+          content: new Blob([byteArray], { type: "image/png" }),
+        });
+      }
+    });
+
+    renderFiles(finalData.files, finalData.folder);
+    setProgress(100, "Completado");
+    statusEl.textContent = "✅ Archivos generados por IA con éxito.";
+
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "❌ Error IA: " + err.message;
+  }
+}
+
+// Evento del botón IA
+aiBtn.addEventListener("click", generateAI);
+
+// Modo switch
+modeSwitch.addEventListener("change", (e) => {
+  IS_AI_MODE = e.target.checked;
+  if (IS_AI_MODE) aiBtn.disabled = false;
+  else aiBtn.disabled = true;
+});
