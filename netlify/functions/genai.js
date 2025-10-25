@@ -7,7 +7,7 @@
 const https = require('https');
 
 // Configuración
-const GEMINI_API_KEY = process.env.OPENAI_API_KEY; // Usando la variable de entorno disponible
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 /**

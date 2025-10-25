@@ -52,5 +52,5 @@
 
 # Variables de entorno (deben configurarse en Netlify UI)
 [env.production]
-  environment = { OPENAI_API_KEY = "" }
+  environment = { GEMINI_API_KEY = "" }
 
