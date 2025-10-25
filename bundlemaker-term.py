@@ -251,5 +251,5 @@ def main_menu():
 if __name__ == '__main__':
     # Se añade la comprobación de dependencias al inicio
     # El requirements.txt debe contener las dependencias necesarias para la CLI y la GUI
-    install_dependencies(os.path.join(os.path.dirname(__file__), "lib", "requirements.txt"))
+    install_dependencies(os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib", "requirements.txt"))
     main_menu()

@@ -215,6 +215,6 @@ if __name__ == '__main__':
     # Se añade la comprobación de dependencias al inicio
     # Se asume que el requirements.txt está en el directorio lib/ del proyecto principal
     # Si el usuario quiere que esté en el mismo directorio, habría que modificar esta ruta.
-    requirements_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib", "requirements.txt")
+    requirements_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib", "requirements.txt")
     install_dependencies(requirements_path)
     main_menu()
