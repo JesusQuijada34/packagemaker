@@ -1,0 +1,1 @@
+Para Windows, las DLLs de Qt5 (Qt5Core.dll, Qt5Gui.dll, etc.) y las DLLs de Python (python311.dll) son necesarias para la ejecución offline de los scripts .py. No se pueden extraer directamente en este entorno, pero se crea la estructura para que el usuario las añada.
