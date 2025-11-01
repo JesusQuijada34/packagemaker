@@ -44,14 +44,18 @@ BTN_STYLES = {
 plataforma_platform = sys.platform
 plataforma_name = os.name
 if plataforma_platform.startswith("win"):
-    BASE_DIR = os.path.join(os.environ["USERPROFILE"], "My Documents", "Influent Packages")
-    FLATR_APPS = os.path.join(os.environ["USERPROFILE"], "My Documents", "Flatr Apps")
+    BASE_DIR = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Packagemaker Projects")
+    FLATR_APPS = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Flatr Apps")
 elif plataforma_platform.startswith("linux"):
-    BASE_DIR = os.path.expanduser("~/Documentos/Influent Packages")
+    BASE_DIR = os.path.expanduser("~/Documentos/Packagemaker Projects")
     FLATR_APPS = os.path.expanduser("~/Documentos/Flatr Apps")
 else:
-    BASE_DIR = "Influent Packages/"
+    BASE_DIR = "Packagemaker Projects/"
     FLATR_APPS = "Flatr Apps/"
+
+# Crear las carpetas si no existen
+os.makedirs(BASE_DIR, exist_ok=True)
+os.makedirs(FLATR_APPS, exist_ok=True)
 
 IPM_ICON_PATH = "app/app-icon.ico"
 DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
@@ -210,16 +214,16 @@ class BuildThread(QThread):
     progress = pyqtSignal(str)
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
-    def __init__(self, empresa, nombre, version, tipo, parent=None):
+    def __init__(self, empresa, nombre, version, parent=None):
         super().__init__(parent)
         self.empresa = empresa
         self.nombre = nombre
         self.version = version
-        self.tipo = tipo
     def run(self):
         folder = f"{self.empresa}.{self.nombre}.v{self.version}"
         path = os.path.join(BASE_DIR, folder)
-        ext = ".iflapp" if self.tipo == "1" else ".iflappb"
+        # Packagemaker solo compila .iflapp
+        ext = ".iflapp"
         output_file = os.path.join(BASE_DIR, folder + ext)
         zip_path = output_file.replace(ext, "") + ".zip"
         if not os.path.exists(path):
@@ -237,7 +241,7 @@ class BuildThread(QThread):
                     zipf.write(full_path, arcname)
                     self.progress.emit(f"Empaquetando archivo {i+1}/{len(file_list)}: {arcname}")
             os.rename(zip_path, output_file)
-            self.finished.emit(f"Paquete construido: {output_file}")
+            self.finished.emit(f"Paquete .iflapp construido: {output_file}")
         except Exception as e:
             self.error.emit(str(e))
 
@@ -259,12 +263,115 @@ class PackageTodoGUI(QMainWindow):
         self.layout.addWidget(self.tabs)
         self.init_tabs()
         self.setMinimumSize(700, 500)
-        self.setStyleSheet("""
-            QMainWindow { background: #f8fafc; }
-            QTabWidget::pane { border: 0; }
-            QTabBar::tab:selected { background: #e3f2fd; }
-            QLabel { font-size: 15px; }
-            QListWidget { background: #f2f2f2; font-size: 12px; border-radius: 5px;}
+        # Aplicar tema naranja estilo GitHub
+        self.apply_theme()
+    
+    def apply_theme(self):
+        """Aplica el tema naranja estilo GitHub con modo claro/oscuro automático"""
+        from PyQt5.QtGui import QPalette
+        app = QApplication.instance()
+        palette = app.palette()
+        is_dark = palette.color(QPalette.Window).lightness() < 128
+        
+        # Tema Naranja estilo GitHub - Modo Claro
+        theme_light = {
+            "bg": "#ffffff",
+            "fg": "#24292e",
+            "border": "#e1e4e8",
+            "input_bg": "#ffffff",
+            "input_border": "#d1d5da",
+            "button_default": "#f9826c",  # Naranja GitHub
+            "button_hover": "#fb7a60",
+            "button_text": "#ffffff",
+            "group_bg": "#f6f8fa",
+        }
+        
+        # Tema Naranja estilo GitHub - Modo Oscuro
+        theme_dark = {
+            "bg": "#0d1117",
+            "fg": "#c9d1d9",
+            "border": "#30363d",
+            "input_bg": "#161b22",
+            "input_border": "#21262d",
+            "button_default": "#f9826c",  # Naranja GitHub
+            "button_hover": "#fb7a60",
+            "button_text": "#ffffff",
+            "group_bg": "#161b22",
+        }
+        
+        theme = theme_dark if is_dark else theme_light
+        
+        self.setStyleSheet(f"""
+            QMainWindow {{
+                background-color: {theme["bg"]};
+                color: {theme["fg"]};
+            }}
+            QWidget {{
+                background-color: {theme["bg"]};
+                color: {theme["fg"]};
+            }}
+            QTabWidget::pane {{
+                border: 1px solid {theme["border"]};
+                background-color: {theme["bg"]};
+            }}
+            QTabBar::tab {{
+                background-color: {theme["group_bg"]};
+                color: {theme["fg"]};
+                padding: 10px;
+                border: 1px solid {theme["border"]};
+                border-bottom: none;
+                border-radius: 6px 6px 0 0;
+            }}
+            QTabBar::tab:selected {{
+                background-color: {theme["bg"]};
+                border-bottom: 2px solid {theme["button_default"]};
+            }}
+            QGroupBox {{
+                background-color: {theme["group_bg"]};
+                color: {theme["fg"]};
+                border: 1px solid {theme["border"]};
+                border-radius: 6px;
+                padding: 10px;
+                margin-top: 10px;
+                font-weight: bold;
+            }}
+            QLabel {{
+                color: {theme["fg"]};
+                font-size: 15px;
+            }}
+            QLineEdit {{
+                background-color: {theme["input_bg"]};
+                color: {theme["fg"]};
+                border: 1px solid {theme["input_border"]};
+                border-radius: 6px;
+                padding: 6px;
+            }}
+            QLineEdit:focus {{
+                border: 1px solid {theme["button_default"]};
+            }}
+            QPushButton {{
+                background-color: {theme["button_default"]};
+                color: {theme["button_text"]};
+                border: none;
+                border-radius: 6px;
+                padding: 10px 18px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {theme["button_hover"]};
+            }}
+            QListWidget {{
+                background-color: {theme["input_bg"]};
+                color: {theme["fg"]};
+                font-size: 12px;
+                border-radius: 5px;
+                border: 1px solid {theme["border"]};
+            }}
+            QStatusBar {{
+                background-color: {theme["group_bg"]};
+                color: {theme["fg"]};
+                border-top: 1px solid {theme["border"]};
+            }}
         """)
 
     def init_tabs(self):
@@ -309,7 +416,6 @@ class PackageTodoGUI(QMainWindow):
         form_layout.addWidget(QLabel("TELEGRAM: t.me/JesusQuijada34"))
         self.btn_create = QPushButton("Crear Proyecto")
         self.btn_create.setFont(BUTTON_FONT)
-        self.btn_create.setStyleSheet(BTN_STYLES["success"])
         self.btn_create.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_MAKE_BTN"])
         self.btn_create.setIcon(QIcon(TAB_ICONS["crear"]))
         self.btn_create.clicked.connect(self.create_package_action)
@@ -1141,22 +1247,14 @@ if __name__ == '__main__':
         form_layout.addWidget(QLabel("Versión:"))
         form_layout.addWidget(self.input_build_version)
 
-        self.combo_tipo = QComboBox()
-        self.combo_tipo.addItem(".iflapp NORMAL", "1")
-        self.combo_tipo.addItem(".iflappb BUNDLE", "2")
-        self.combo_tipo.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_TYPE_DDL"])
-        form_layout.addWidget(QLabel("Tipo de paquete:"))
-        form_layout.addWidget(self.combo_tipo)
 
-        self.btn_build = QPushButton("Construir paquete")
+        self.btn_build = QPushButton("Construir paquete .iflapp")
         self.btn_build.setFont(BUTTON_FONT)
-        self.btn_build.setStyleSheet(BTN_STYLES["default"])
-        self.btn_build.setIcon(QIcon(TAB_ICONS["construir"]))
         self.btn_build.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_BUILD_BTN"])
+        self.btn_build.setIcon(QIcon(TAB_ICONS["construir"]))
         self.btn_build.clicked.connect(self.build_package_action)
 
         self.build_status = QLabel("")
-        self.build_status.setStyleSheet("color:#0277bd;")
         layout.addWidget(form_group)
         layout.addWidget(self.btn_build)
         layout.addWidget(self.build_status)
@@ -1166,14 +1264,14 @@ if __name__ == '__main__':
         empresa = self.input_build_empresa.text().strip().lower() or "influent"
         nombre = self.input_build_nombre.text().strip().lower() or "mycoolapp"
         version = self.input_build_version.text().strip() or "1"
-        tipo = self.combo_tipo.currentData()
-        self.build_status.setText("🔨 Construyendo paquete...")
-        self.build_thread = BuildThread(empresa, nombre, version, tipo)
+        # Packagemaker solo compila .iflapp
+        self.build_status.setText("🔨 Construyendo paquete .iflapp...")
+        self.build_thread = BuildThread(empresa, nombre, version)
         self.build_thread.progress.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.finished.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.error.connect(lambda msg: self.build_status.setText(f"❌ Error: {msg}"))
         self.build_thread.start()
-        self.statusBar().showMessage(f"Paquete armado como {empresa}.{nombre_logico}.v{version}!")
+        self.statusBar().showMessage(f"Paquete .iflapp armado como {empresa}.{nombre}.v{version}!")
 
     def init_manager_tab(self):
         layout = QVBoxLayout()
