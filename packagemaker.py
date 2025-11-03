@@ -21,7 +21,11 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-
+if getattr(sys, 'frozen', False):
+    try:
+        import pyi_splash
+    except ImportError:
+        pass
 # ----------- CONFIGURABLE VARIABLES -----------
 APP_FONT = QFont('Roboto', 13)
 TAB_FONT = QFont('Roboto', 12) #, QFont.Bold)
@@ -1638,6 +1642,11 @@ def main():
     app.setFont(APP_FONT)
     w = PackageTodoGUI()
     w.show()
+    if getattr(sys, 'frozen', False):
+        try:
+            pyi_splash.close()
+        except ImportError:
+            pass
     sys.exit(app.exec_())
 
 if __name__ == "__main__":

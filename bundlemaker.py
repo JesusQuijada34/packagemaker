@@ -20,6 +20,11 @@ from PyQt5.QtGui import QFont, QIcon, QPalette
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize
 from PyQt5.QtWidgets import QStyle
 
+if getattr(sys, 'frozen', False):
+    try:
+        import pyi_splash
+    except ImportError:
+        pass
 # Detectar tema del sistema (claro/oscuro)
 def is_dark_mode():
     """Detecta si el sistema está en modo oscuro"""
@@ -1390,4 +1395,9 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = BundlemakerApp()
     ex.show()
+    if getattr(sys, 'frozen', False):
+        try:
+            pyi_splash.close()
+        except ImportError:
+            pass
     sys.exit(app.exec_())
