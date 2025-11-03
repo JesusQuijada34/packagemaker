@@ -46,12 +46,15 @@ plataforma_name = os.name
 if plataforma_platform.startswith("win"):
     BASE_DIR = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Packagemaker Projects")
     FLATR_APPS = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Flatr Apps")
+    linkedsys = "knosthalij"
 elif plataforma_platform.startswith("linux"):
-    BASE_DIR = os.path.expanduser("~/Documentos/Packagemaker Projects")
-    FLATR_APPS = os.path.expanduser("~/Documentos/Flatr Apps")
+    BASE_DIR = os.path.expanduser("~/Documents/Packagemaker Projects")
+    FLATR_APPS = os.path.expanduser("~/Documents/Flatr Apps")
+    linkedsys = "danenone"
 else:
     BASE_DIR = "Packagemaker Projects/"
     FLATR_APPS = "Flatr Apps/"
+    linkedsys = "keystone"
 
 # Crear las carpetas si no existen
 os.makedirs(BASE_DIR, exist_ok=True)
@@ -433,9 +436,9 @@ class PackageTodoGUI(QMainWindow):
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         version = self.input_version.text().strip()
         if version == "":
-             f"1-{getversion()}-danenone"
+             version = f"1-{getversion()}-{linkedsys}"
         else:
-            version = f"{version}-{getversion()}-danenone"
+            version = f"{version}-{getversion()}-{linkedsys}"
         nombre_completo = self.input_titulo.text() or nombre_logico.strip().upper()
         folder_name = f"{empresa}.{nombre_logico}.v{version}"
         full_path = os.path.join(BASE_DIR, folder_name)
@@ -1150,7 +1153,7 @@ clear
             with open(main_script, "w") as f:
                 f.write(f"""#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# kejq34/myapps/system/influent.shell.vIO-34-2.18-danenone.iflapp
+# kejq34/myapps/system/influent.shell.vIO-34-2.18-{linkedsys}.iflapp
 # kejq34/home/{folder_name}/.gites
 # App: {nombre_completo}
 # publisher: {empresa}
@@ -1218,7 +1221,7 @@ if __name__ == '__main__':
         ET.SubElement(root, "name").text = nombre_completo
         ET.SubElement(root, "version").text = f"v{version}"
         ET.SubElement(root, "with").text = sys.platform
-        ET.SubElement(root, "danenone").text = newversion
+        ET.SubElement(root, linkedsys).text = newversion
         ET.SubElement(root, "correlationid").text = hash_val
         ET.SubElement(root, "rate").text = rating
         tree = ET.ElementTree(root)
@@ -1261,9 +1264,10 @@ if __name__ == '__main__':
         self.tab_build.setLayout(layout)
 
     def build_package_action(self):
+        version = getversion()
         empresa = self.input_build_empresa.text().strip().lower() or "influent"
         nombre = self.input_build_nombre.text().strip().lower() or "mycoolapp"
-        version = self.input_build_version.text().strip() or "1"
+        version = self.input_build_version.text().strip() or f"1-{version}"
         # Packagemaker solo compila .iflapp
         self.build_status.setText("🔨 Construyendo paquete .iflapp...")
         self.build_thread = BuildThread(empresa, nombre, version)
