@@ -14,13 +14,21 @@ import hashlib
 import shutil
 import zipfile
 import xml.etree.ElementTree as ET
+import urllib.request
+import urllib.error
+import subprocess
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox
+    QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar
 )
 from PyQt5.QtGui import QFont, QIcon
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+if sys.platform.startswith("win"):
+    try:
+        import winreg
+    except ImportError:
+        winreg = None
 if getattr(sys, 'frozen', False):
     try:
         import pyi_splash
@@ -217,19 +225,142 @@ def getversion():
     newversion = time.strftime("%y.%m-%H.%M")
     return f"{newversion}"
 
+def verificar_github_username(username):
+    """Verifica si un username de GitHub existe"""
+    if not username or not username.strip():
+        return False, "El username no puede estar vacío"
+    username = username.strip()
+    url = f"https://api.github.com/users/{username}"
+    try:
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0')
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                return True, "Username válido"
+            else:
+                return False, f"Username no encontrado (código: {response.status})"
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return False, "El username no existe en GitHub"
+        else:
+            return False, f"Error al verificar: {e.code}"
+    except urllib.error.URLError as e:
+        return False, f"Error de conexión: {str(e)}"
+    except Exception as e:
+        return False, f"Error inesperado: {str(e)}"
+
+def detectar_modo_sistema():
+    """Detecta el modo claro/oscuro del sistema operativo"""
+    if sys.platform.startswith("win"):
+        # Windows: leer del registro
+        try:
+            if winreg:
+                key = winreg.OpenKey(
+                    winreg.HKEY_CURRENT_USER,
+                    r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+                )
+                try:
+                    value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+                    winreg.CloseKey(key)
+                    return value == 0  # 0 = oscuro, 1 = claro
+                except FileNotFoundError:
+                    # Si no existe la clave, asumir modo claro
+                    return False
+            else:
+                # Fallback: usar la paleta de Qt
+                app = QApplication.instance()
+                if app:
+                    palette = app.palette()
+                    return palette.color(QtGui.QPalette.Window).lightness() < 128
+                return False
+        except Exception:
+            # Fallback: usar la paleta de Qt
+            app = QApplication.instance()
+            if app:
+                palette = app.palette()
+                return palette.color(QtGui.QPalette.Window).lightness() < 128
+            return False
+    elif sys.platform.startswith("linux"):
+        # Linux: intentar con gsettings (GNOME) o xfconf (XFCE)
+        try:
+            # Intentar gsettings primero (GNOME)
+            result = subprocess.run(
+                ["gsettings", "get", "org.gnome.desktop.interface", "gtk-theme"],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+            if result.returncode == 0:
+                theme = result.stdout.strip().lower()
+                return "dark" in theme
+        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+            pass
+        
+        try:
+            # Intentar xfconf (XFCE)
+            result = subprocess.run(
+                ["xfconf-query", "-c", "xsettings", "-p", "/Net/ThemeName"],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+            if result.returncode == 0:
+                theme = result.stdout.strip().lower()
+                return "dark" in theme
+        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+            pass
+        
+        # Fallback: leer archivo de configuración
+        try:
+            theme_file = os.path.expanduser("~/.config/gtk-3.0/settings.ini")
+            if os.path.exists(theme_file):
+                with open(theme_file, 'r') as f:
+                    content = f.read().lower()
+                    return "dark" in content
+        except Exception:
+            pass
+        
+        # Último fallback: usar la paleta de Qt
+        app = QApplication.instance()
+        if app:
+            palette = app.palette()
+            return palette.color(QtGui.QPalette.Window).lightness() < 128
+        return False
+    else:
+        # Otros sistemas: usar la paleta de Qt
+        app = QApplication.instance()
+        if app:
+            palette = app.palette()
+            return palette.color(QtGui.QPalette.Window).lightness() < 128
+        return False
+
+class GitHubVerifyThread(QThread):
+    """Thread para verificar username de GitHub"""
+    finished = pyqtSignal(bool, str)
+    
+    def __init__(self, username, parent=None):
+        super().__init__(parent)
+        self.username = username
+    
+    def run(self):
+        valido, mensaje = verificar_github_username(self.username)
+        self.finished.emit(valido, mensaje)
+
 class BuildThread(QThread):
     progress = pyqtSignal(str)
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
-    def __init__(self, empresa, nombre, version, parent=None):
+    def __init__(self, empresa, nombre, version, autor, plataforma, parent=None):
         super().__init__(parent)
         self.empresa = empresa
         self.nombre = nombre
         self.version = version
+        self.autor = autor
+        self.plataforma = plataforma
+
     def run(self):
         folder = f"{self.empresa}.{self.nombre}.v{self.version}"
         path = os.path.join(BASE_DIR, folder)
-        # Packagemaker solo compila .iflapp
         ext = ".iflapp"
         output_file = os.path.join(BASE_DIR, folder + ext)
         zip_path = output_file.replace(ext, "") + ".zip"
@@ -252,6 +383,8 @@ class BuildThread(QThread):
         except Exception as e:
             self.error.emit(str(e))
 
+from PyQt5.QtWidgets import QComboBox
+
 class PackageTodoGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -272,13 +405,22 @@ class PackageTodoGUI(QMainWindow):
         self.setMinimumSize(700, 500)
         # Aplicar tema naranja estilo GitHub
         self.apply_theme()
+        # Configurar timer para detectar cambios de tema en tiempo real
+        self.theme_timer = QTimer()
+        self.theme_timer.timeout.connect(self.check_theme_change)
+        self.theme_timer.start(1000)  # Verificar cada segundo
+        self.last_theme_mode = detectar_modo_sistema()
+    
+    def check_theme_change(self):
+        """Verifica si el tema del sistema ha cambiado"""
+        current_mode = detectar_modo_sistema()
+        if current_mode != self.last_theme_mode:
+            self.last_theme_mode = current_mode
+            self.apply_theme()
     
     def apply_theme(self):
         """Aplica el tema naranja estilo GitHub con modo claro/oscuro automático"""
-        from PyQt5.QtGui import QPalette
-        app = QApplication.instance()
-        palette = app.palette()
-        is_dark = palette.color(QPalette.Window).lightness() < 128
+        is_dark = detectar_modo_sistema()
         
         # Tema Naranja estilo GitHub - Modo Claro
         theme_light = {
@@ -347,14 +489,40 @@ class PackageTodoGUI(QMainWindow):
                 font-size: 15px;
             }}
             QLineEdit {{
-                background-color: {theme["input_bg"]};
+                background-color: transparent;
                 color: {theme["fg"]};
                 border: 1px solid {theme["input_border"]};
                 border-radius: 6px;
-                padding: 6px;
+                padding: 6px 10px;
             }}
             QLineEdit:focus {{
-                border: 1px solid {theme["button_default"]};
+                border: 2px solid {theme["button_default"]};
+                background-color: transparent;
+            }}
+            QLineEdit:hover {{
+                background-color: transparent;
+            }}
+            QRadioButton {{
+                color: {theme["fg"]};
+                spacing: 8px;
+            }}
+            QRadioButton::indicator {{
+                width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                border: 2px solid {theme["input_border"]};
+                background-color: transparent;
+            }}
+            QRadioButton::indicator:hover {{
+                border: 2px solid {theme["button_default"]};
+                background-color: {theme["group_bg"]};
+            }}
+            QRadioButton::indicator:checked {{
+                border: 2px solid {theme["button_default"]};
+                background-color: {theme["button_default"]};
+            }}
+            QRadioButton::indicator:checked:hover {{
+                background-color: {theme["button_hover"]};
             }}
             QPushButton {{
                 background-color: {theme["button_default"]};
@@ -379,6 +547,17 @@ class PackageTodoGUI(QMainWindow):
                 color: {theme["fg"]};
                 border-top: 1px solid {theme["border"]};
             }}
+            QProgressBar {{
+                border: 1px solid {theme["border"]};
+                border-radius: 6px;
+                text-align: center;
+                background-color: {theme["input_bg"]};
+                color: {theme["fg"]};
+            }}
+            QProgressBar::chunk {{
+                background-color: {theme["button_default"]};
+                border-radius: 5px;
+            }}
         """)
 
     def init_tabs(self):
@@ -398,44 +577,250 @@ class PackageTodoGUI(QMainWindow):
 
     def init_create_tab(self):
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
         form_group = QGroupBox("Datos del Proyecto")
-        form_layout = QVBoxLayout(form_group)
+        form_layout = QGridLayout(form_group)
+        form_layout.setSpacing(12)
+        form_layout.setColumnMinimumWidth(0, 140)
+        form_layout.setColumnStretch(1, 1)
+        form_layout.setColumnStretch(2, 0)
+        
+        # Fila 1: Fabricante
+        label1 = QLabel("Fabricante:")
+        label1.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label1, 0, 0)
         self.input_empresa = QLineEdit()
         self.input_empresa.setPlaceholderText("Ejemplo: influent")
         self.input_empresa.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_PUBLISHER_E"])
-        form_layout.addWidget(QLabel("Fabricante:"))
-        form_layout.addWidget(self.input_empresa)
+        self.input_empresa.setMaximumWidth(300)
+        form_layout.addWidget(self.input_empresa, 0, 1)
+        
+        # Fila 2: Nombre interno
+        label2 = QLabel("Nombre interno:")
+        label2.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label2, 1, 0)
         self.input_nombre_logico = QLineEdit()
         self.input_nombre_logico.setPlaceholderText("Ejemplo: mycoolapp")
         self.input_nombre_logico.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_NAME_E"])
-        form_layout.addWidget(QLabel("Nombre interno:"))
-        form_layout.addWidget(self.input_nombre_logico)
-        self.input_version = QLineEdit()
-        self.input_version.setPlaceholderText("Ejemplo: 1.0")
-        self.input_version.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_VERSION_E"])
-        form_layout.addWidget(QLabel("Versión:"))
-        form_layout.addWidget(self.input_version)
+        self.input_nombre_logico.setMaximumWidth(300)
+        form_layout.addWidget(self.input_nombre_logico, 1, 1)
+        
+        # Fila 3: Título completo
+        label3 = QLabel("Título completo:")
+        label3.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label3, 2, 0)
         self.input_titulo = QLineEdit()
         self.input_titulo.setPlaceholderText("Ejemplo: MyCoolApp")
         self.input_titulo.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_TITLE_E"])
-        form_layout.addWidget(QLabel("Título completo:"))
-        form_layout.addWidget(self.input_titulo)
-        form_layout.addWidget(QLabel("TELEGRAM: t.me/JesusQuijada34"))
+        self.input_titulo.setMaximumWidth(300)
+        form_layout.addWidget(self.input_titulo, 2, 1)
+        
+        # Fila 4: Versión
+        label4 = QLabel("Versión:")
+        label4.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label4, 3, 0)
+        self.input_version = QLineEdit()
+        self.input_version.setPlaceholderText("Ejemplo: 1.0")
+        self.input_version.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_VERSION_E"])
+        self.input_version.setMaximumWidth(300)
+        form_layout.addWidget(self.input_version, 3, 1)
+        
+        # Fila 5: Autor
+        label5 = QLabel("Autor:")
+        label5.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label5, 4, 0)
+        self.input_autor = QLineEdit()
+        self.input_autor.setPlaceholderText("Ejemplo: Jesus Quijada")
+        self.input_autor.setToolTip("Username de GitHub (obligatorio)")
+        self.input_autor.setMaximumWidth(300)
+        form_layout.addWidget(self.input_autor, 4, 1)
+        
+        # Fila 6: Plataforma con radios personalizados
+        label6 = QLabel("Plataforma:")
+        label6.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label6, 5, 0)
+        
+        self.platform_group = QButtonGroup()
+        platform_layout = QHBoxLayout()
+        platform_layout.setSpacing(12)
+        platform_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.radio_windows = QRadioButton("Windows")
+        self.radio_windows.setChecked(True)
+        self.radio_windows.setStyleSheet("""
+            QRadioButton {
+                padding: 6px 10px;
+                border: 2px solid transparent;
+                border-radius: 6px;
+                background-color: transparent;
+            }
+            QRadioButton:hover {
+                background-color: rgba(249, 130, 108, 0.1);
+                border-color: rgba(249, 130, 108, 0.3);
+            }
+            QRadioButton::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                border: 2px solid #d1d5da;
+            }
+            QRadioButton::indicator:checked {
+                border: 2px solid #f9826c;
+                background-color: #f9826c;
+            }
+        """)
+        
+        self.radio_linux = QRadioButton("Linux")
+        self.radio_linux.setStyleSheet("""
+            QRadioButton {
+                padding: 6px 10px;
+                border: 2px solid transparent;
+                border-radius: 6px;
+                background-color: transparent;
+            }
+            QRadioButton:hover {
+                background-color: rgba(249, 130, 108, 0.1);
+                border-color: rgba(249, 130, 108, 0.3);
+            }
+            QRadioButton::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                border: 2px solid #d1d5da;
+            }
+            QRadioButton::indicator:checked {
+                border: 2px solid #f9826c;
+                background-color: #f9826c;
+            }
+        """)
+        
+        self.radio_multiplataforma = QRadioButton("Multiplataforma")
+        self.radio_multiplataforma.setStyleSheet("""
+            QRadioButton {
+                padding: 6px 10px;
+                border: 2px solid transparent;
+                border-radius: 6px;
+                background-color: transparent;
+            }
+            QRadioButton:hover {
+                background-color: rgba(249, 130, 108, 0.1);
+                border-color: rgba(249, 130, 108, 0.3);
+            }
+            QRadioButton::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                border: 2px solid #d1d5da;
+            }
+            QRadioButton::indicator:checked {
+                border: 2px solid #f9826c;
+                background-color: #f9826c;
+            }
+        """)
+        
+        self.platform_group.addButton(self.radio_windows)
+        self.platform_group.addButton(self.radio_linux)
+        self.platform_group.addButton(self.radio_multiplataforma)
+        platform_layout.addWidget(self.radio_windows)
+        platform_layout.addWidget(self.radio_linux)
+        platform_layout.addWidget(self.radio_multiplataforma)
+        
+        platform_widget = QWidget()
+        platform_widget.setLayout(platform_layout)
+        form_layout.addWidget(platform_widget, 5, 1)
+        
+        # Información adicional
+        info_label = QLabel("TELEGRAM: t.me/JesusQuijada34")
+        info_label.setStyleSheet("color: #6a737d; font-size: 11px; padding: 5px 0px;")
+        form_layout.addWidget(info_label, 6, 0, 1, 2)
+        
         self.btn_create = QPushButton("Crear Proyecto")
         self.btn_create.setFont(BUTTON_FONT)
         self.btn_create.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_MAKE_BTN"])
         self.btn_create.setIcon(QIcon(TAB_ICONS["crear"]))
+        self.btn_create.setMaximumWidth(350)
         self.btn_create.clicked.connect(self.create_package_action)
+        
+        # Barra de progreso para verificación de GitHub
+        self.github_progress = QProgressBar()
+        self.github_progress.setMaximumWidth(350)
+        self.github_progress.setVisible(False)
+        self.github_progress.setRange(0, 0)  # Modo indeterminado
+        
         self.create_status = QLabel("")
         self.create_status.setStyleSheet("color:#388e3c;")
         layout.addWidget(form_group)
         layout.addWidget(self.btn_create)
+        layout.addWidget(self.github_progress)
         layout.addWidget(self.create_status)
+        layout.addStretch()
         self.tab_create.setLayout(layout)
         self.statusBar().showMessage("Preparando entorno...")
 
     def create_package_action(self):
         self.statusBar().showMessage("Creando Proyecto Flatr Packaged...")
+        # Validar autor (obligatorio)
+        autor = self.input_autor.text().strip()
+        if not autor:
+            self.create_status.setStyleSheet("color:#c62828;")
+            self.create_status.setText("❌ Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.")
+            return
+        
+        # Deshabilitar controles y mostrar barra de progreso
+        self.btn_create.setEnabled(False)
+        self.input_empresa.setEnabled(False)
+        self.input_nombre_logico.setEnabled(False)
+        self.input_titulo.setEnabled(False)
+        self.input_version.setEnabled(False)
+        self.input_autor.setEnabled(False)
+        self.radio_windows.setEnabled(False)
+        self.radio_linux.setEnabled(False)
+        self.radio_multiplataforma.setEnabled(False)
+        
+        self.create_status.setText("🔍 Verificando username de GitHub...")
+        self.github_progress.setVisible(True)
+        self.statusBar().showMessage("Verificando username de GitHub...")
+        
+        # Crear y ejecutar thread de verificación
+        self.github_thread = GitHubVerifyThread(autor, self)
+        self.github_thread.finished.connect(self.on_github_verification_finished)
+        self.github_thread.start()
+    
+    def on_github_verification_finished(self, valido, mensaje):
+        """Callback cuando termina la verificación de GitHub"""
+        # Ocultar barra de progreso
+        self.github_progress.setVisible(False)
+        
+        # Rehabilitar controles
+        self.btn_create.setEnabled(True)
+        self.input_empresa.setEnabled(True)
+        self.input_nombre_logico.setEnabled(True)
+        self.input_titulo.setEnabled(True)
+        self.input_version.setEnabled(True)
+        self.input_autor.setEnabled(True)
+        self.radio_windows.setEnabled(True)
+        self.radio_linux.setEnabled(True)
+        self.radio_multiplataforma.setEnabled(True)
+        
+        if not valido:
+            self.create_status.setStyleSheet("color:#c62828;")
+            self.create_status.setText(f"❌ Error: {mensaje}. Por favor, especifica un username válido que exista en GitHub.")
+            self.statusBar().showMessage("Verificación fallida")
+            return
+        
+        # Si la verificación fue exitosa, continuar con la creación del proyecto
+        autor = self.input_autor.text().strip()
+        
+        # Obtener plataforma seleccionada
+        if self.radio_windows.isChecked():
+            plataforma_seleccionada = "Windows"
+        elif self.radio_linux.isChecked():
+            plataforma_seleccionada = "Linux"
+        else:
+            plataforma_seleccionada = "Multiplataforma"
+        
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         version = self.input_version.text().strip()
@@ -1199,17 +1584,20 @@ if __name__ == '__main__':
             requirements_path = os.path.join(full_path, "lib", "requirements.txt")
             with open(requirements_path, "w") as f:
                 f.write("# Dependencias del paquete\n")
-            self.create_details_xml(full_path, empresa, nombre_logico, nombre_completo, version)
+            self.create_details_xml(full_path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada)
             readme_path = os.path.join(full_path, "README.md")
             readme_text = f"""# {empresa} {nombre_completo}\n\nPaquete generado con Influent Package Maker.\n\n## Ejemplo de uso\npython3 {empresa}.{nombre_logico}.v{version}/{nombre_logico}.py\n\n##"""
             with open(readme_path, "w", encoding="utf-8") as f:
                 f.write(readme_text)
+            self.create_status.setStyleSheet("color:#388e3c;")
             self.create_status.setText(f"✅ Paquete creado en: {folder_name}/\n🔐 Protegido con sha256: {hv}")
+            self.statusBar().showMessage(f"Proyecto creado exitosamente: {folder_name}")
         except Exception as e:
-            self.create_status.setStyleSheet(BTN_STYLES["danger"])
+            self.create_status.setStyleSheet("color:#c62828;")
             self.create_status.setText(f"❌ Error: {str(e)}")
+            self.statusBar().showMessage(f"Error al crear proyecto: {str(e)}")
 
-    def create_details_xml(self, path, empresa, nombre_logico, nombre_completo, version):
+    def create_details_xml(self, path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada):
         newversion = getversion()
         full_name = f"{empresa}.{nombre_logico}.v{version}"
         hash_val = hashlib.sha256(full_name.encode()).hexdigest()
@@ -1228,43 +1616,66 @@ if __name__ == '__main__':
         ET.SubElement(root, linkedsys).text = newversion
         ET.SubElement(root, "correlationid").text = hash_val
         ET.SubElement(root, "rate").text = rating
+        ET.SubElement(root, "author").text = autor
+        ET.SubElement(root, "platform").text = plataforma_seleccionada
         tree = ET.ElementTree(root)
         tree.write(os.path.join(path, "details.xml"))
         self.statusBar().showMessage(f"Proyecto creado como {empresa}.{nombre_logico}.v{version}!")
 
     def init_build_tab(self):
         layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
         form_group = QGroupBox("Construir Paquete")
-        form_layout = QVBoxLayout(form_group)
+        form_layout = QGridLayout(form_group)
+        form_layout.setSpacing(12)
+        form_layout.setColumnMinimumWidth(0, 140)
+        form_layout.setColumnStretch(1, 1)
+        form_layout.setColumnStretch(2, 0)
+        
+        # Fila 1: Fabricante
+        label1 = QLabel("Fabricante:")
+        label1.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label1, 0, 0)
         self.input_build_empresa = QLineEdit()
         self.input_build_empresa.setPlaceholderText("Ejemplo: influent")
         self.input_build_empresa.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_PUBLISHER_E"])
-        form_layout.addWidget(QLabel("Fabricante:"))
-        form_layout.addWidget(self.input_build_empresa)
+        self.input_build_empresa.setMaximumWidth(300)
+        form_layout.addWidget(self.input_build_empresa, 0, 1)
 
+        # Fila 2: Nombre interno
+        label2 = QLabel("Nombre interno:")
+        label2.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label2, 1, 0)
         self.input_build_nombre = QLineEdit()
         self.input_build_nombre.setPlaceholderText("Ejemplo: mycoolapp")
         self.input_build_nombre.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_NAME_E"])
-        form_layout.addWidget(QLabel("Nombre interno:"))
-        form_layout.addWidget(self.input_build_nombre)
+        self.input_build_nombre.setMaximumWidth(300)
+        form_layout.addWidget(self.input_build_nombre, 1, 1)
 
+        # Fila 3: Versión
+        label3 = QLabel("Versión:")
+        label3.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label3, 2, 0)
         self.input_build_version = QLineEdit()
         self.input_build_version.setPlaceholderText("Ejemplo: 1.0")
         self.input_build_version.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_VERSION_E"])
-        form_layout.addWidget(QLabel("Versión:"))
-        form_layout.addWidget(self.input_build_version)
-
+        self.input_build_version.setMaximumWidth(300)
+        form_layout.addWidget(self.input_build_version, 2, 1)
 
         self.btn_build = QPushButton("Construir paquete .iflapp")
         self.btn_build.setFont(BUTTON_FONT)
         self.btn_build.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_BUILD_BTN"])
         self.btn_build.setIcon(QIcon(TAB_ICONS["construir"]))
+        self.btn_build.setMaximumWidth(350)
         self.btn_build.clicked.connect(self.build_package_action)
 
         self.build_status = QLabel("")
         layout.addWidget(form_group)
         layout.addWidget(self.btn_build)
         layout.addWidget(self.build_status)
+        layout.addStretch()
         self.tab_build.setLayout(layout)
 
     def build_package_action(self):
@@ -1615,26 +2026,109 @@ if __name__ == '__main__':
 
     def init_about_tab(self):
         layout = QVBoxLayout()
-        about_text = (
-            "<b>Influent Package Suite Todo en Uno</b><br>"
-            "Creador, empaquetador e instalador de proyectos Influent (.iflapp, .iflappb) para terminal y sistema.<br><br>"
-            "<b>Funciones:</b><ul>"
-            "<li>Interfaz adaptable y moderna</li>"
-            "<li>Gestor visual de proyectos y apps instaladas</li>"
-            "<li>Instalación/Desinstalación fácil con doble clic</li>"
-            "<li>Construcción de paquetes protegidos</li>"
-            "<li>Accesos directos y menú inicio en Windows</li>"
-            "<li>Soporte para iconos y detalles personalizados</li>"
-            "<li>Ejecuta scripts .py desde la interfaz</li>"
-            "<li>Paneles ajustables y organización por pestañas</li>"
-            "</ul>"
-            "<b>Desarrollador:</b> <a href='https://t.me/JesusQuijada34/'>Jesus Quijada (@JesusQuijada34)</a><br>"
-            "<b>Colaborador:</b> <a href='https://t.me/MkelCT/'>MkelCT18 (@MkelCT)</a><br>"
-            "<b>GitHub:</b> <a href='https://github.com/jesusquijada34/packagemaker/'>packagemaker</a><br>"
+        layout.setSpacing(20)
+        layout.setContentsMargins(30, 30, 30, 30)
+        
+        # Título principal
+        title_label = QLabel("<h1 style='color: #f9826c;'>Influent Package Maker</h1>")
+        title_label.setAlignment(QtCore.Qt.AlignCenter)
+        layout.addWidget(title_label)
+        
+        # Subtítulo
+        subtitle_label = QLabel("<h3>Suite Todo en Uno para Creación y Gestión de Paquetes</h3>")
+        subtitle_label.setAlignment(QtCore.Qt.AlignCenter)
+        subtitle_label.setStyleSheet("color: #8b949e; margin-bottom: 20px;")
+        layout.addWidget(subtitle_label)
+        
+        # Descripción
+        desc_text = (
+            "<p style='font-size: 14px; line-height: 1.6;'>"
+            "Herramienta completa para crear, empaquetar, instalar y gestionar proyectos Influent "
+            "(.iflapp, .iflappb) con una interfaz moderna y fácil de usar. Diseñada para "
+            "desarrolladores que buscan una solución todo-en-uno para el ciclo de vida completo "
+            "de sus aplicaciones."
+            "</p>"
         )
-        about_label = QLabel(about_text)
-        about_label.setOpenExternalLinks(True)
-        layout.addWidget(about_label)
+        desc_label = QLabel(desc_text)
+        desc_label.setWordWrap(True)
+        layout.addWidget(desc_label)
+        
+        # Características principales
+        features_text = (
+            "<h3 style='color: #f9826c;'>✨ Características Principales</h3>"
+            "<ul style='line-height: 1.8;'>"
+            "<li><b>Creación de Proyectos:</b> Genera estructuras de proyectos completas con "
+            "todas las carpetas necesarias (app, assets, config, docs, source, lib)</li>"
+            "<li><b>Verificación de GitHub:</b> Valida automáticamente que el username de GitHub "
+            "exista antes de crear el proyecto</li>"
+            "<li><b>Empaquetado:</b> Construye paquetes .iflapp listos para distribución</li>"
+            "<li><b>Gestor de Proyectos:</b> Visualiza y gestiona todos tus proyectos locales e "
+            "instalados desde una interfaz unificada</li>"
+            "<li><b>Instalación/Desinstalación:</b> Instala paquetes comprimidos o desinstala "
+            "proyectos con un solo clic</li>"
+            "<li><b>Ejecución de Scripts:</b> Ejecuta scripts Python directamente desde la interfaz</li>"
+            "<li><b>Protección SHA256:</b> Cada proyecto incluye protección mediante hash SHA256</li>"
+            "<li><b>Accesos Directos:</b> Crea accesos directos en Windows automáticamente</li>"
+            "<li><b>Interfaz Moderna:</b> Tema oscuro con acentos naranjas, adaptable al modo del sistema</li>"
+            "<li><b>Multiplataforma:</b> Soporte para Windows, Linux y proyectos multiplataforma</li>"
+            "</ul>"
+        )
+        features_label = QLabel(features_text)
+        features_label.setWordWrap(True)
+        layout.addWidget(features_label)
+        
+        # Información técnica
+        tech_text = (
+            "<h3 style='color: #f9826c;'>🔧 Información Técnica</h3>"
+            "<ul style='line-height: 1.8;'>"
+            "<li><b>Framework:</b> PyQt5</li>"
+            "<li><b>Lenguaje:</b> Python 3</li>"
+            "<li><b>Formato de Paquetes:</b> .iflapp (ZIP comprimido)</li>"
+            "<li><b>Estructura:</b> Basada en el sistema Influent OS</li>"
+            "<li><b>Licencia:</b> GNU General Public License v3</li>"
+            "</ul>"
+        )
+        tech_label = QLabel(tech_text)
+        tech_label.setWordWrap(True)
+        layout.addWidget(tech_label)
+        
+        # Información de contacto y enlaces
+        contact_text = (
+            "<h3 style='color: #f9826c;'>📞 Contacto y Enlaces</h3>"
+            "<p style='line-height: 2;'>"
+            "<b>Desarrollador Principal:</b><br>"
+            "👤 <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
+            "Jesus Quijada (@JesusQuijada34)</a><br><br>"
+            "<b>Colaborador:</b><br>"
+            "🤝 <a href='https://t.me/MkelCT/' style='color: #58a6ff; text-decoration: none;'>"
+            "MkelCT18 (@MkelCT)</a><br><br>"
+            "<b>Repositorio GitHub:</b><br>"
+            "🔗 <a href='https://github.com/jesusquijada34/packagemaker/' "
+            "style='color: #58a6ff; text-decoration: none;'>github.com/jesusquijada34/packagemaker</a><br><br>"
+            "<b>Telegram:</b><br>"
+            "💬 <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
+            "t.me/JesusQuijada34</a><br>"
+            "</p>"
+        )
+        contact_label = QLabel(contact_text)
+        contact_label.setWordWrap(True)
+        contact_label.setOpenExternalLinks(True)
+        layout.addWidget(contact_label)
+        
+        # Versión y copyright
+        version_text = (
+            "<p style='text-align: center; color: #8b949e; margin-top: 30px; padding-top: 20px; "
+            "border-top: 1px solid #30363d;'>"
+            f"Versión: {getversion()}<br>"
+            "Copyright © 2025 Jesus Quijada<br>"
+            "Bajo licencia GNU GPL v3"
+            "</p>"
+        )
+        version_label = QLabel(version_text)
+        version_label.setAlignment(QtCore.Qt.AlignCenter)
+        layout.addWidget(version_label)
+        
+        layout.addStretch()
         self.tab_about.setLayout(layout)
 
 def main():
