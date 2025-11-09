@@ -2025,7 +2025,9 @@ if __name__ == '__main__':
         self.load_manager_lists()
 
     def init_about_tab(self):
-        layout = QVBoxLayout()
+        # Creamos un widget contenedor y le ponemos el layout como antes
+        container_widget = QWidget()
+        layout = QVBoxLayout(container_widget)
         layout.setSpacing(20)
         layout.setContentsMargins(30, 30, 30, 30)
         
@@ -2129,7 +2131,28 @@ if __name__ == '__main__':
         layout.addWidget(version_label)
         
         layout.addStretch()
-        self.tab_about.setLayout(layout)
+        
+        # Hacemos desplazable el contenido con QScrollArea
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(container_widget)
+        scroll.setFrameStyle(0)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        # Limpiamos el layout de la pestaña por si acaso
+        if self.tab_about.layout() is not None:
+            # Remove the old layout and widgets
+            old_layout = self.tab_about.layout()
+            while old_layout.count():
+                item = old_layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.setParent(None)
+            QtWidgets.QWidget().setLayout(old_layout)
+        
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(scroll)
+        self.tab_about.setLayout(main_layout)
 
 def main():
     app = QApplication(sys.argv)
