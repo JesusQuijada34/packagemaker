@@ -198,13 +198,12 @@ class UpdaterWindow(QtWidgets.QWidget):
 
         # UI elements
         self.main = QtWidgets.QFrame(self)
-        self.main.setObjectName("main")
+        self.resize(540, 320)
         self.main.setStyleSheet("#main{background:#071216;border-radius:10px;color:#dfeee6}")
         self.main.setGeometry(0, 0, 480, 280)
 
         # title bar
-        self.title_label = QtWidgets.QLabel("Packagemaker Updater", self.main)
-        self.title_label.setStyleSheet("color:#7ef5a1; font-weight:bold; font-size:14px")
+        self.main.setGeometry(0, 0, 540, 320)
         self.title_label.move(12, 10)
 
         self.close_btn = QtWidgets.QPushButton("✕", self.main)
