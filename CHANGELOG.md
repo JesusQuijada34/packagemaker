@@ -1,5 +1,16 @@
 # CHANGELOG - Influent Package Maker
 
+## v3.2.0 - Actualizador Modernizado (2025-11-09)
+
+### 🚀 Novedades y Mejoras
+- **Reescritura Completa de `updater.py`:** El script de actualización ha sido reescrito desde cero para una experiencia de usuario moderna y eficiente.
+- **Interfaz Gráfica con PyQt5:** Se implementó una interfaz de usuario moderna y atractiva, inspirada en el estilo de GitHub, utilizando la librería PyQt5.
+- **Verificación de Actualización Silenciosa:** El actualizador ahora verifica la disponibilidad de una nueva versión en segundo plano y **solo muestra la interfaz si se encuentra una actualización**.
+- **Selección de Tipo de Descarga:** La interfaz permite al usuario elegir entre descargar el **Código Fuente** o el **Binario** específico para su sistema operativo (Windows/Linux).
+- **Lógica de Reinicio y Verificación de Actualizaciones del Sistema:** Se implementó la lógica para simular el reinicio del actualizador después de una actualización exitosa y la posterior verificación de actualizaciones del sistema en segundo plano.
+
+---
+
 ## v3.1.0 - Refactorización Mayor y Consolidación (2025-10-25)
 
 ### 🚀 Novedades y Mejoras
