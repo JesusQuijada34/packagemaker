@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-Packagemaker updater rewritten using PyQt5.
+Packagemaker updater (PyQt5).
 
-Features:
-- Frameless, animated window (fade in/out).
-- Background thread that checks remote details.xml periodically.
-- Download worker with progress reporting and extraction.
-- Notification and Auto-update switches (QCheckBox) and callbacks.
-- Safe backup before replacing files.
+- Checks remote details.xml for version changes.
+- Verifies whether a GitHub release with that tag contains a platform-specific binary.
+  - If a binary asset is found, prompts the user to download & install it.
+  - If the release exists but no binary for the platform is present, offers to install the source (BETA-DEV).
+  - If no release tag exists: offers to install the source (BETA-DEV).
+- Tries to show a native notification (Windows/Linux) but always presents an interactive Qt dialog for actions.
+- Background threads perform checking and download/extract safely. Closing a notification never terminates the process.
 
-Dependencies: PyQt5, requests, Pillow (optional for icons).
+Dependencies: PyQt5, requests
 """
+
 import os
 import sys
 import time
@@ -20,742 +22,498 @@ import requests
 import subprocess
 import platform
 import xml.etree.ElementTree as ET
-from functools import partial
+from typing import Tuple, Optional
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+# Optional native notification helpers (best-effort)
+# Prefer Windows notification libraries (try win10toast_click, then winotify), and notify2 on Linux
+_win10toaster = None
+_winotify = None
+try:
+	from win10toast_click import ToastNotifier
+	_win10toaster = ToastNotifier()
+except Exception:
+	_win10toaster = None
+	try:
+		from winotify import Notification as WinNotify, audio as WinAudio
+		_winotify = WinNotify
+	except Exception:
+		_winotify = None
+try:
+	import notify2
+	_notify2_inited = False
+except Exception:
+	notify2 = None
+	_notify2_inited = False
+
 REMOTE_XML = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/details.xml"
 LOCAL_XML = "details.xml"
+GITHUB_REPO = "JesusQuijada34/packagemaker"
 
 
 class UpdateChecker(QtCore.QThread):
-    update_found = QtCore.pyqtSignal(str, str)  # version, platform
-    status = QtCore.pyqtSignal(str)
-    error = QtCore.pyqtSignal(str)
+	update_found = QtCore.pyqtSignal(str, str)  # version, platform
+	status = QtCore.pyqtSignal(str)
+	error = QtCore.pyqtSignal(str)
 
-    def __init__(self, interval=180, parent=None):
-        super().__init__(parent)
-        self.interval = interval
-        self._stopped = False
+	def __init__(self, interval: int = 180, parent=None):
+		super().__init__(parent)
+		self.interval = interval
+		self._stopped = False
 
-    def stop(self):
-        self._stopped = True
+	def stop(self):
+		self._stopped = True
 
-    def run(self):
-        # First quick check, then periodic
-        while not self._stopped:
-            try:
-                self.status.emit("Comprobando actualizaciones...")
-                local = leer_version(LOCAL_XML)
-                remote = leer_version_remota()
-                if remote and remote != local:
-                    # try candidate platform names
-                    for plat in detect_platform_names():
-                        if self._stopped:
-                            return
-                        url = f"https://github.com/JesusQuijada34/packagemaker/releases/download/{remote}/packagemaker-{remote}-{plat}.zip"
-                        try:
-                            r = requests.head(url, timeout=6)
-                            if r.status_code == 200:
-                                self.update_found.emit(remote, plat)
-                                return
-                        except Exception:
-                            pass
-                # nothing found
-                self.status.emit("Sin actualizaciones")
-            except Exception as e:
-                self.error.emit(str(e))
-            # wait interval with small sleeps to allow stop
-            waited = 0
-            while waited < self.interval and not self._stopped:
-                time.sleep(1)
-                waited += 1
+	def run(self):
+		# simple loop that checks remote version and emits event when different
+		while not self._stopped:
+			try:
+				self.status.emit("Comprobando actualizaciones...")
+				local = leer_version(LOCAL_XML)
+				remote = leer_version_remota()
+				if remote and remote != local:
+					# pick first candidate platform and notify UI; UI will do a more thorough GitHub check
+					plats = detect_platform_names()
+					plat = plats[0] if plats else 'linux-x64'
+					self.update_found.emit(remote, plat)
+					return
+				self.status.emit("Sin actualizaciones")
+			except Exception as e:
+				self.error.emit(str(e))
+
+			waited = 0
+			while waited < self.interval and not self._stopped:
+				time.sleep(1)
+				waited += 1
 
 
 class DownloadWorker(QtCore.QThread):
-    progress = QtCore.pyqtSignal(int)  # percent
-    status = QtCore.pyqtSignal(str)
-    finished_ok = QtCore.pyqtSignal()
-    error = QtCore.pyqtSignal(str)
+	progress = QtCore.pyqtSignal(int)
+	status = QtCore.pyqtSignal(str)
+	finished_ok = QtCore.pyqtSignal()
+	error = QtCore.pyqtSignal(str)
 
-    def __init__(self, url, parent=None):
-        super().__init__(parent)
-        self.url = url
-        self._stopped = False
+	def __init__(self, url: str, parent=None):
+		super().__init__(parent)
+		self.url = url
+		self._stopped = False
 
-    def run(self):
-        destino = "update.zip"
-        backup_dir = "backup_embestido"
-        try:
-            # create backup
-            if not os.path.exists(backup_dir):
-                os.makedirs(backup_dir, exist_ok=True)
-            for f in os.listdir("."):
-                if f in (backup_dir, destino):
-                    continue
-                if os.path.isfile(f):
-                    shutil.copy2(f, os.path.join(backup_dir, f))
+	def run(self):
+		destino = "update.zip"
+		backup_dir = "backup_embestido"
+		try:
+			if not os.path.exists(backup_dir):
+				os.makedirs(backup_dir, exist_ok=True)
+			for f in os.listdir('.'):
+				if f in (backup_dir, destino) or f.startswith('.'):
+					continue
+				if os.path.isfile(f):
+					shutil.copy2(f, os.path.join(backup_dir, f))
 
-            self.status.emit("Descargando actualización...")
-            resp = requests.get(self.url, stream=True, timeout=20)
-            total = int(resp.headers.get("content-length", 0))
-            downloaded = 0
-            chunk_size = 8192
-            with open(destino, "wb") as fh:
-                for chunk in resp.iter_content(chunk_size=chunk_size):
-                    if self._stopped:
-                        return
-                    if not chunk:
-                        continue
-                    fh.write(chunk)
-                    downloaded += len(chunk)
-                    if total:
-                        pct = int(downloaded * 100 / total)
-                        self.progress.emit(pct)
+			self.status.emit("Descargando...")
+			resp = requests.get(self.url, stream=True, timeout=20)
+			total = int(resp.headers.get('content-length', 0) or 0)
+			downloaded = 0
+			chunk = 8192
+			with open(destino, 'wb') as fh:
+				for data in resp.iter_content(chunk_size=chunk):
+					if self._stopped:
+						return
+					if not data:
+						continue
+					fh.write(data)
+					downloaded += len(data)
+					if total:
+						pct = int(downloaded * 100 / total)
+						self.progress.emit(pct)
 
-            self.status.emit("Instalando actualización...")
-            # extract
-            with zipfile.ZipFile(destino, "r") as z:
-                z.extractall(".")
-            try:
-                os.remove(destino)
-            except Exception:
-                pass
+			self.status.emit('Extrayendo...')
+			with zipfile.ZipFile(destino, 'r') as z:
+				z.extractall('.')
+			try:
+				os.remove(destino)
+			except Exception:
+				pass
 
-            # optionally launch new executable
-            if not sys.argv[0].endswith(".py"):
-                executable = "packagemaker.exe" if os.name == "nt" else "./packagemaker"
-                if os.path.exists(executable):
-                    try:
-                        subprocess.Popen([executable], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    except Exception:
-                        pass
+			# try to launch new binary if present
+			if not sys.argv[0].endswith('.py'):
+				executable = 'packagemaker.exe' if os.name == 'nt' else './packagemaker'
+				if os.path.exists(executable):
+					try:
+						subprocess.Popen([executable], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+					except Exception:
+						pass
 
-            self.finished_ok.emit()
-        except Exception as e:
-            # attempt restore backup best-effort
-            try:
-                for f in os.listdir(backup_dir):
-                    src = os.path.join(backup_dir, f)
-                    if os.path.isfile(src):
-                        shutil.copy2(src, f)
-            except Exception:
-                pass
-            self.error.emit(str(e))
+			self.finished_ok.emit()
+		except Exception as e:
+			# attempt restore (best-effort)
+			try:
+				for f in os.listdir(backup_dir):
+					src = os.path.join(backup_dir, f)
+					if os.path.isfile(src):
+						shutil.copy2(src, f)
+			except Exception:
+				pass
+			self.error.emit(str(e))
 
 
+# helpers
 def detect_platform_names():
-    sysplat = platform.system().lower()
-    names = []
-    if "windows" in sysplat:
-        names += ["windows-x64", "windows"]
-    elif "linux" in sysplat:
-        names += ["linux-x64", "linux"]
-    elif "darwin" in sysplat or "mac" in sysplat:
-        names += ["macos-x64", "macos"]
-    names += ["knosthalij", "danenone"]
-    out = []
-    seen = set()
-    for n in names:
-        if n not in seen:
-            seen.add(n)
-            out.append(n)
-    return out
+	sysplat = platform.system().lower()
+	names = []
+	if 'windows' in sysplat:
+		names += ['windows-x64', 'windows']
+	elif 'linux' in sysplat:
+		names += ['linux-x64', 'linux']
+	elif 'darwin' in sysplat or 'mac' in sysplat:
+		names += ['macos-x64', 'macos']
+	names += ['knosthalij', 'danenone']
+	out = []
+	seen = set()
+	for n in names:
+		if n not in seen:
+			seen.add(n)
+			out.append(n)
+	return out
 
 
-def leer_version(path):
-    try:
-        if not os.path.exists(path):
-            return ""
-        tree = ET.parse(path)
-        return tree.getroot().findtext("version", "")
-    except Exception:
-        return ""
+def leer_version(path: str) -> str:
+	try:
+		if not os.path.exists(path):
+			return ''
+		tree = ET.parse(path)
+		return tree.getroot().findtext('version', '')
+	except Exception:
+		return ''
 
 
-def leer_version_remota():
-    try:
-        r = requests.get(REMOTE_XML, timeout=10)
-        if r.status_code != 200:
-            return ""
-        root = ET.fromstring(r.text)
-        return root.findtext("version", "")
-    except Exception:
-        return ""
+def leer_version_remota() -> str:
+	try:
+		r = requests.get(REMOTE_XML, timeout=10)
+		if r.status_code != 200:
+			return ''
+		root = ET.fromstring(r.text)
+		return root.findtext('version', '')
+	except Exception:
+		return ''
+
+
+def github_get_release_info(version: str) -> Tuple[Optional[dict], bool]:
+	"""Return (release_json or None, release_found_bool)
+
+	Uses the GitHub releases/tags API. Unauthenticated—rate limits may apply.
+	"""
+	api = f'https://api.github.com/repos/{GITHUB_REPO}/releases/tags/{version}'
+	try:
+		r = requests.get(api, timeout=8)
+		if r.status_code == 200:
+			return r.json(), True
+		return None, False
+	except Exception:
+		return None, False
+
+
+def github_get_asset_download_url(version: str, plataforma: str) -> Tuple[Optional[str], bool]:
+	"""Return (asset_url, release_found_bool).
+
+	If release exists but no asset for platform, returns (None, True).
+	If release doesn't exist, returns (None, False).
+	"""
+	rel, found = github_get_release_info(version)
+	if not found:
+		return None, False
+	assets = rel.get('assets', []) if rel else []
+	target = f'packagemaker-{version}-{plataforma}.zip'
+	for a in assets:
+		if a.get('name', '') == target:
+			return a.get('browser_download_url'), True
+	return None, True
+
+
+def get_source_archive_for_version(version: str) -> Optional[str]:
+	"""Return a URL to a source zip for the version tag if present, or to main branch archive as fallback."""
+	tag_url = f'https://github.com/{GITHUB_REPO}/archive/refs/tags/{version}.zip'
+	try:
+		r = requests.head(tag_url, timeout=6)
+		if r.status_code == 200:
+			return tag_url
+	except Exception:
+		pass
+	# fallback to main branch archive
+	return f'https://github.com/{GITHUB_REPO}/archive/refs/heads/main.zip'
+
+
+def send_native_notification(title: str, msg: str) -> bool:
+	"""Best-effort native notification (Windows toast via win10toast_click, or notify2 on Linux).
+
+	Returns True if a native-notification was attempted successfully.
+	"""
+	# Windows: try win10toast_click first (simple), then winotify (richer)
+	if os.name == 'nt':
+		if _win10toaster:
+			try:
+				_win10toaster.show_toast(title, msg, duration=6, threaded=True)
+				return True
+			except Exception:
+				pass
+		if _winotify:
+			try:
+				# winotify requires building a Notification object and calling .show()
+				n = _winotify(app_id='Packagemaker', title=title, msg=msg, duration='short')
+				try:
+					n.set_audio(WinAudio.Default, loop=False)
+				except Exception:
+					pass
+				n.show()
+				return True
+			except Exception:
+				pass
+	# Linux: notify2 (libnotify via DBus)
+	if 'notify2' in globals() and notify2:
+		global _notify2_inited
+		try:
+			if not _notify2_inited:
+				notify2.init('packagemaker')
+				_notify2_inited = True
+			n = notify2.Notification(title, msg)
+			n.set_timeout(4000)
+			n.show()
+			return True
+		except Exception:
+			pass
+	return False
 
 
 class UpdaterWindow(QtWidgets.QWidget):
-    # Callbacks the host app can set
-    on_update_available = None  # func(version, platform)
-    on_install_started = None  # func()
-    on_install_finished = None  # func(success: bool)
+	on_update_available = None
+	on_install_started = None
+	on_install_finished = None
 
-    def __init__(self):
-        super().__init__(None, QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.setWindowTitle("Packagemaker Updater")
-        self.resize(480, 280)
+	def __init__(self):
+		super().__init__(None, QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
+		self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+		self.setWindowTitle('Packagemaker Updater')
+		self.resize(560, 340)
 
-        # UI elements
-        self.main = QtWidgets.QFrame(self)
-        self.resize(540, 320)
-        self.main.setStyleSheet("#main{background:#071216;border-radius:10px;color:#dfeee6}")
-        self.main.setGeometry(0, 0, 480, 280)
+		self.main = QtWidgets.QFrame(self)
+		self.main.setObjectName('main')
+		self.main.setGeometry(0, 0, 560, 340)
 
-        # title bar
-        self.main.setGeometry(0, 0, 540, 320)
-        self.title_label.move(12, 10)
+		self.status_label = QtWidgets.QLabel('Iniciando verificación...', self.main)
+		self.status_label.setGeometry(16, 16, 520, 40)
 
-        self.close_btn = QtWidgets.QPushButton("✕", self.main)
-        self.close_btn.setStyleSheet("background:transparent;color:#d0d0d0;border:none;font-size:14px")
-        self.close_btn.setGeometry(440, 8, 32, 24)
-        self.close_btn.clicked.connect(self.close_and_stop)
+		self.detail_text = QtWidgets.QTextEdit(self.main)
+		self.detail_text.setGeometry(16, 64, 520, 200)
+		self.detail_text.setReadOnly(True)
 
-        # status / detail
-        self.status_label = QtWidgets.QLabel("Iniciando verificación...", self.main)
-        self.status_label.setWordWrap(True)
-        self.status_label.setGeometry(12, 48, 456, 40)
-        self.status_label.setStyleSheet("color:#9fe6b9;font-size:13px")
+		self.install_btn = QtWidgets.QPushButton('Instalar', self.main)
+		self.install_btn.setGeometry(420, 274, 100, 40)
+		self.install_btn.setEnabled(False)
+		self.install_btn.clicked.connect(self._install_clicked)
 
-        self.detail_label = QtWidgets.QLabel("", self.main)
-        self.detail_label.setWordWrap(True)
-        self.detail_label.setGeometry(12, 96, 456, 40)
-        self.detail_label.setStyleSheet("color:#bcded2;font-size:12px")
+		self.later_btn = QtWidgets.QPushButton('Ahora no', self.main)
+		self.later_btn.setGeometry(312, 274, 100, 40)
+		self.later_btn.clicked.connect(self.close)
 
-        # progress
-        self.progress = QtWidgets.QProgressBar(self.main)
-        self.progress.setGeometry(12, 150, 456, 18)
-        self.progress.setValue(0)
+		self.notify_cb = QtWidgets.QCheckBox('Notificarme', self.main)
+		self.notify_cb.setGeometry(16, 276, 140, 22)
+		self.notify_cb.setChecked(True)
 
-        # switches (notification & auto-update)
-        self.notify_cb = QtWidgets.QCheckBox("Notificarme", self.main)
-        self.notify_cb.setGeometry(12, 175, 120, 22)
-        self.notify_cb.setChecked(True)
-        self.notify_cb.stateChanged.connect(self._on_notify_changed)
+		self.auto_cb = QtWidgets.QCheckBox('Descarga automática', self.main)
+		self.auto_cb.setGeometry(168, 276, 160, 22)
+		self.auto_cb.setChecked(False)
 
-        self.auto_cb = QtWidgets.QCheckBox("Descarga automática", self.main)
-        self.auto_cb.setGeometry(140, 175, 160, 22)
-        self.auto_cb.setChecked(False)
-        self.auto_cb.stateChanged.connect(self._on_auto_changed)
+		self.progress = QtWidgets.QProgressBar(self.main)
+		self.progress.setGeometry(16, 308, 504, 14)
+		self.progress.setValue(0)
 
-        # buttons
-        self.install_btn = QtWidgets.QPushButton("Instalar", self.main)
-        self.install_btn.setGeometry(340, 200, 120, 36)
-        self.install_btn.setEnabled(False)
-        self.install_btn.clicked.connect(self.install_clicked)
+		# Threads
+		self.checker = UpdateChecker(interval=180)
+		self.checker.update_found.connect(self._on_update_found)
+		self.checker.status.connect(self._set_status)
+		self.checker.error.connect(self._set_error)
+		self.checker.start()
 
-        self.later_btn = QtWidgets.QPushButton("Ahora no", self.main)
-        self.later_btn.setGeometry(200, 200, 120, 36)
-        self.later_btn.clicked.connect(self.close_and_stop)
+		self.release_url = None
+		self.current_version = leer_version(LOCAL_XML) or 'desconocida'
 
-        # animation for opacity
-        self.anim = QtCore.QPropertyAnimation(self, b"windowOpacity")
-        self.anim.setDuration(300)
+		QtCore.QTimer.singleShot(80, self.place_bottom_right)
 
-        # state
-        self.release_url = None
-        self.checker = UpdateChecker(interval=180)
-        self.checker.update_found.connect(self._on_update_found)
-        self.checker.status.connect(self._set_status)
-        self.checker.error.connect(self._set_error)
-        self.checker.start()
+	def place_bottom_right(self):
+		screen = QtWidgets.QApplication.primaryScreen().availableGeometry()
+		x = screen.x() + screen.width() - self.width() - 20
+		y = screen.y() + screen.height() - self.height() - 40
+		self.move(x, y)
 
-        # position bottom-right
-        QtCore.QTimer.singleShot(50, self.place_bottom_right)
-        QtCore.QTimer.singleShot(100, self.fade_in)
+	def _set_status(self, txt: str):
+		self.status_label.setText(txt)
 
-        # for dragging
-        self._drag_pos = None
+	def _set_error(self, txt: str):
+		self.status_label.setText(f'Error: {txt}')
 
-    # Dragging handling
-    def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            self._drag_pos = event.globalPos() - self.frameGeometry().topLeft()
-            event.accept()
+	def _on_update_found(self, version: str, plataforma: str):
+		"""When checker signals an update, verify on GitHub and prompt accordingly."""
+		self.status_label.setText(f'Versión remota: {version} detectada')
+		self.detail_text.setPlainText('Obteniendo información del release...')
 
-    def mouseMoveEvent(self, event):
-        if self._drag_pos is not None and event.buttons() & QtCore.Qt.LeftButton:
-            self.move(event.globalPos() - self._drag_pos)
-            event.accept()
+		# Ask GitHub: is there a release with that tag? does it contain an asset for our platform?
+		asset_url, release_found = github_get_asset_download_url(version, plataforma)
 
-    def mouseReleaseEvent(self, event):
-        self._drag_pos = None
+		# Always try to send a native notification (best-effort)
+		if self.notify_cb.isChecked():
+			send_native_notification('Packagemaker: actualización disponible', f'Versión {version} detectada')
 
-    def place_bottom_right(self):
-        screen = QtWidgets.QApplication.primaryScreen().geometry()
-        w = self.width()
-        h = self.height()
-        x = screen.width() - w - 20
-        y = screen.height() - h - 40
-        self.move(x, y)
+		# Read remote notes if available
+		try:
+			r = requests.get(REMOTE_XML, timeout=8)
+			if r.status_code == 200:
+				root = ET.fromstring(r.text)
+				notes = root.findtext('notes') or root.findtext('changelog') or ''
+				if notes:
+					self.detail_text.setPlainText(notes)
+				else:
+					self.detail_text.setPlainText(f'Versión {version} disponible para {plataforma}.')
+		except Exception:
+			self.detail_text.setPlainText(f'Versión {version} disponible para {plataforma}.')
 
-    def fade_in(self):
-        self.setWindowOpacity(0.0)
-        self.show()
-        self.anim.stop()
-        self.anim.setStartValue(0.0)
-        self.anim.setEndValue(1.0)
-        self.anim.start()
+		# notify host app
+		if callable(self.on_update_available):
+			try:
+				self.on_update_available(version, plataforma)
+			except Exception:
+				pass
 
-    def fade_out_and_close(self):
-        self.anim.stop()
-        self.anim.setStartValue(self.windowOpacity())
-        self.anim.setEndValue(0.0)
-        self.anim.finished.connect(self.close)
-        self.anim.start()
+		# If GitHub release contains a platform asset -> ask to download and install
+		if asset_url:
+			self.release_url = asset_url
+			self.install_btn.setEnabled(True)
+			# interactive prompt (non-blocking modal) — use QMessageBox to allow action buttons
+			answer = QtWidgets.QMessageBox.question(self, 'Actualizar',
+													f'Se encontró una release binaria para {plataforma}.\n¿Descargar e instalar la versión {version}?',
+													QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+			if answer == QtWidgets.QMessageBox.Yes:
+				if self.auto_cb.isChecked():
+					self._install_clicked()
+				else:
+					self._install_clicked()
+			else:
+				# user declined – keep the button enabled for manual install
+				pass
+			return
 
-    def close_and_stop(self):
-        try:
-            self.checker.stop()
-        except Exception:
-            pass
-        self.fade_out_and_close()
+		# If release exists but no binary for this platform
+		if release_found and not asset_url:
+			answer = QtWidgets.QMessageBox.question(self, 'Release sin binario',
+													'El release existe pero no contiene un binario para tu plataforma.\n¿Instalar la versión de fuente (BETA-DEV)?',
+													QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+			if answer == QtWidgets.QMessageBox.Yes:
+				src = get_source_archive_for_version(version)
+				if src:
+					self.release_url = src
+					self._install_clicked()
+				else:
+					QtWidgets.QMessageBox.information(self, 'No disponible', 'No se pudo localizar el archivo fuente.')
+			return
 
-    # UpdateChecker callbacks
-    def _on_update_found(self, version, plataforma):
-        self.status_label.setText(f"Actualización disponible: {version} ({plataforma})")
-        local_v = leer_version(LOCAL_XML) or "desconocida"
-        self.detail_label.setText(f"Versión instalada: {local_v}\nVersión remota: {version}\nPlataforma: {plataforma}")
-        self.release_url = f"https://github.com/JesusQuijada34/packagemaker/releases/download/{version}/packagemaker-{version}-{plataforma}.zip"
-        self.install_btn.setEnabled(True)
-        # callback for host
-        try:
-            if callable(self.on_update_available):
-                self.on_update_available(version, plataforma)
-        except Exception:
-            pass
-        # if auto-update enabled, start download
-        if self.auto_cb.isChecked():
-            self.install_clicked()
+		# No release tag found at all -> offer source install
+		if not release_found:
+			answer = QtWidgets.QMessageBox.question(self, 'Sin release',
+													'No existe un release en GitHub para esa versión.\n¿Instalar la versión de fuente (BETA-DEV)?',
+													QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+			if answer == QtWidgets.QMessageBox.Yes:
+				src = get_source_archive_for_version(version)
+				if src:
+					self.release_url = src
+					self._install_clicked()
+				else:
+					QtWidgets.QMessageBox.information(self, 'No disponible', 'No se pudo localizar el archivo fuente.')
+			return
 
-    def _set_status(self, text):
-        self.status_label.setText(text)
+	def _install_clicked(self):
+		if not self.release_url:
+			self._set_status('URL de release no encontrada')
+			return
+		self.install_btn.setEnabled(False)
+		if callable(self.on_install_started):
+			try:
+				self.on_install_started()
+			except Exception:
+				pass
 
-    def _set_error(self, text):
-        self.status_label.setText(f"Error: {text}")
+		self.dl = DownloadWorker(self.release_url)
+		self.dl.progress.connect(self._on_progress)
+		self.dl.status.connect(self._set_status)
+		self.dl.finished_ok.connect(self._on_install_success)
+		self.dl.error.connect(self._on_install_error)
+		self.dl.start()
 
-    # switches callbacks
-    def _on_notify_changed(self, state):
-        # this can be used to enable/disable system notifications in the host app
-        # Expose a callback or simply store the value
-        self.notify_enabled = bool(state)
+	def _on_progress(self, pct: int):
+		self.progress.setValue(pct)
 
-    def _on_auto_changed(self, state):
-        self.auto_enabled = bool(state)
+	def _on_install_success(self):
+		self._set_status('Actualización instalada correctamente.')
+		if callable(self.on_install_finished):
+			try:
+				self.on_install_finished(True)
+			except Exception:
+				pass
+		QtCore.QTimer.singleShot(1200, self.close)
 
-    def install_clicked(self):
-        if not self.release_url:
-            self.status_label.setText("URL de release no encontrada")
-            return
-        self.install_btn.setEnabled(False)
-        # callback
-        try:
-            if callable(self.on_install_started):
-                self.on_install_started()
-        except Exception:
-            pass
-
-        self.dl_worker = DownloadWorker(self.release_url)
-        self.dl_worker.progress.connect(self._on_download_progress)
-        self.dl_worker.status.connect(self._set_status)
-        self.dl_worker.finished_ok.connect(self._on_install_success)
-        self.dl_worker.error.connect(self._on_install_error)
-        self.dl_worker.start()
-
-    def _on_download_progress(self, pct):
-        self.progress.setValue(pct)
-
-    def _on_install_success(self):
-        self.status_label.setText("Actualización instalada correctamente.")
-        try:
-            if callable(self.on_install_finished):
-                self.on_install_finished(True)
-        except Exception:
-            pass
-        QtCore.QTimer.singleShot(1500, self.close_and_stop)
-
-    def _on_install_error(self, msg):
-        self.status_label.setText(f"Error instalando: {msg}")
-        try:
-            if callable(self.on_install_finished):
-                self.on_install_finished(False)
-        except Exception:
-            pass
-        self.install_btn.setEnabled(True)
+	def _on_install_error(self, msg: str):
+		self._set_status(f'Error instalando: {msg}')
+		if callable(self.on_install_finished):
+			try:
+				self.on_install_finished(False)
+			except Exception:
+				pass
+		self.install_btn.setEnabled(True)
 
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
-    w = UpdaterWindow()
+	app = QtWidgets.QApplication(sys.argv)
+	# small QSS
+	qss = '''
+	QWidget { background: #071216; color: #dfeee6; }
+	QPushButton { background: #2b6ef6; color: white; border-radius:6px; padding:6px }
+	QProgressBar { background: #0b1220; color:#dbeee6; border: 1px solid #12232b; border-radius:6px; height:10px }
+	QTextEdit { background: #08131a; color:#dbeee6 }
+	'''
+	app.setStyleSheet(qss)
 
-    # Example of registering callbacks
-    def cb_update_available(v, p):
-        print(f"Update available: {v} for {p}")
+	w = UpdaterWindow()
 
-    def cb_install_started():
-        print("Install started")
+	def cb_update_available(v, p):
+		print('Update available', v, p)
 
-    def cb_install_finished(success):
-        print("Install finished", success)
+	def cb_install_started():
+		print('Install started')
 
-    w.on_update_available = cb_update_available
-    w.on_install_started = cb_install_started
-    w.on_install_finished = cb_install_finished
+	def cb_install_finished(success):
+		print('Install finished', success)
 
-    w.show()
-    sys.exit(app.exec_())
+	w.on_update_available = cb_update_available
+	w.on_install_started = cb_install_started
+	w.on_install_finished = cb_install_finished
 
+	# First-run: send a one-time desktop test notification using native library if possible
+	try:
+		test_flag = os.path.join(os.path.expanduser('~'), '.packagemaker_notif_tested')
+		if not os.path.exists(test_flag):
+			# best-effort; do not block startup on failure
+			send_native_notification('Packagemaker', 'Notificación de prueba: escritorio configurado para Packagemaker')
+			try:
+				open(test_flag, 'w').close()
+			except Exception:
+				pass
+	except Exception:
+		pass
 
-if __name__ == "__main__":
-    main()
-import customtkinter as ctk
-import tkinter as tk
-import threading
-import time
-import requests
-import os
-import zipfile
-import shutil
-import sys
-import subprocess
-import xml.etree.ElementTree as ET
-from PIL import Image, ImageTk
-import platform
-from functools import partial
-
-ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("dark-blue")
-
-REMOTE_XML = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/details.xml"
-LOCAL_XML = "details.xml"
-SOUND_PATH = "assets/afterdelay.wav"
-CLOSE_ICON_PATH = "assets/close-btn.png"
-
-# Try to import winsound only on Windows; otherwise set to None
-try:
-    if os.name == "nt":
-        import winsound  # type: ignore
-    else:
-        winsound = None
-except Exception:
-    winsound = None
+	w.show()
+	sys.exit(app.exec_())
 
 
-class PackagemakerUpdater(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        self.title("Packagemaker Updater")
-        self.geometry("460x260")
-        self.overrideredirect(True)
-        self.attributes("-topmost", True)
-        self.configure(fg_color="#0b1220")
-        self.alpha = 0.0
-        self.attributes("-alpha", self.alpha)
-
-        self.stop_event = threading.Event()
-        self.check_thread = None
-
-        # fonts
-        roboto_path = os.path.join(os.getcwd(), "Roboto-Regular.ttf")
-        self.roboto = ctk.CTkFont(family="Roboto", size=13) if os.path.exists(roboto_path) else ctk.CTkFont(family="Segoe UI", size=13)
-
-        # Title bar frame (for drag and close)
-        self.title_bar = tk.Frame(self, bg="#07101a", height=48)
-        self.title_bar.pack(fill="x", side="top")
-        self.title_bar.bind("<ButtonPress-1>", self.start_move)
-        self.title_bar.bind("<B1-Motion>", self.on_move)
-
-        # Close button (image optional)
-        if os.path.exists(CLOSE_ICON_PATH):
-            try:
-                img = Image.open(CLOSE_ICON_PATH).resize((20, 20))
-                self.close_icon = ImageTk.PhotoImage(img)
-                self.close_btn = tk.Button(self.title_bar, image=self.close_icon, bd=0, bg="#07101a", activebackground="#07101a", command=self.close_and_stop)
-            except Exception:
-                self.close_btn = tk.Button(self.title_bar, text="✕", bd=0, bg="#07101a", fg="#d0d0d0", command=self.close_and_stop)
-        else:
-            self.close_btn = tk.Button(self.title_bar, text="✕", bd=0, bg="#07101a", fg="#d0d0d0", command=self.close_and_stop)
-        self.close_btn.pack(side="right", padx=8, pady=8)
-
-        # Title label
-        self.title_label = ctk.CTkLabel(self.title_bar, text="Packagemaker Updater", font=ctk.CTkFont(size=14, weight="bold"), text_color="#7ef5a1", fg_color="#07101a")
-        self.title_label.pack(side="left", padx=12)
-
-        # Main content
-        self.container = ctk.CTkFrame(self, fg_color="#09131a", corner_radius=10)
-        self.container.pack(fill="both", expand=True, padx=12, pady=(8,12))
-
-        self.status_label = ctk.CTkLabel(self.container, text="Iniciando verificación...", font=self.roboto, text_color="#9fe6b9", wraplength=400, justify="left")
-        self.status_label.pack(anchor="w", padx=12, pady=(12,2))
-
-        self.detail_label = ctk.CTkLabel(self.container, text="", font=ctk.CTkFont(size=12), text_color="#bcded2", wraplength=420, justify="left")
-        self.detail_label.pack(anchor="w", padx=12, pady=(0,8))
-
-        # Progress bar and percentage
-        self.progress = ctk.CTkProgressBar(self.container, width=420)
-        self.progress.set(0.0)
-        self.progress.pack(padx=12, pady=(6,4))
-        self.progress_label = ctk.CTkLabel(self.container, text="", font=self.roboto, text_color="#bcded2")
-        self.progress_label.pack(anchor="e", padx=12)
-
-        # Buttons
-        btn_frame = ctk.CTkFrame(self.container, fg_color="#09131a", corner_radius=0)
-        btn_frame.pack(fill="x", pady=(8,6), padx=8)
-
-        self.install_btn = ctk.CTkButton(btn_frame, text="Instalar", command=self.install_clicked, fg_color="#2ecc71", text_color="white", width=120)
-        self.later_btn = ctk.CTkButton(btn_frame, text="Ahora no", command=self.close_and_stop, fg_color="#3c3f44", text_color="#2ecc71", width=120)
-        self.install_btn.pack(side="right", padx=(6,12), pady=6)
-        self.later_btn.pack(side="right", padx=(6,0), pady=6)
-        self.install_btn.configure(state="disabled")  # enabled only when update available
-
-        # place on bottom-right with small slide-in animation
-        self.update_idletasks()
-        self.place_bottom_right()
-        self.slide_in()
-
-        # animated checking dots
-        self.dots = 0
-        self.animating_check = True
-        self.animate_check_label()
-
-        # sound
-        self.play_sound_delayed()
-
-        # start background check
-        self.after(500, self.start_periodic_check)
-
-    # window movement helpers
-    def start_move(self, event):
-        self._x = event.x
-        self._y = event.y
-
-    def on_move(self, event):
-        x = self.winfo_pointerx() - self._x
-        y = self.winfo_pointery() - self._y
-        self.geometry(f"+{x}+{y}")
-
-    def place_bottom_right(self):
-        self.update_idletasks()
-        w = self.winfo_width()
-        h = self.winfo_height()
-        sw = self.winfo_screenwidth()
-        sh = self.winfo_screenheight()
-        self.geometry(f"{w}x{h}+{sw - w - 20}+{sh - h - 40}")
-
-    def slide_in(self):
-        # simple fade + alpha increase
-        def step():
-            if self.alpha < 1.0:
-                self.alpha += 0.08
-                self.attributes("-alpha", min(self.alpha, 1.0))
-                self.after(20, step)
-            else:
-                self.attributes("-alpha", 1.0)
-        step()
-
-    def fade_out_and_hide(self, callback=None):
-        def step():
-            if self.alpha > 0.0:
-                self.alpha -= 0.08
-                self.attributes("-alpha", max(self.alpha, 0.0))
-                self.after(20, step)
-            else:
-                self.withdraw()
-                if callback:
-                    callback()
-        step()
-
-    def close_and_stop(self):
-        # stop background thread gracefully then destroy
-        self.stop_event.set()
-        self.fade_out_and_hide(callback=self.destroy)
-
-    def play_sound_delayed(self, delay_ms=200):
-        if winsound and os.path.exists(SOUND_PATH):
-            # play asynchronously after a tiny delay
-            self.after(delay_ms, lambda: winsound.PlaySound(SOUND_PATH, winsound.SND_FILENAME | winsound.SND_ASYNC))
-
-    def animate_check_label(self):
-        if self.animating_check:
-            self.dots = (self.dots + 1) % 4
-            dots_str = "." * self.dots
-            self.status_label.configure(text=f"Comprobando actualizaciones{dots_str}")
-            self.after(600, self.animate_check_label)
-
-    def start_periodic_check(self, interval=180):
-        # interval in seconds; default 3 minutes (180)
-        if self.check_thread and self.check_thread.is_alive():
-            return
-        self.stop_event.clear()
-        self.check_thread = threading.Thread(target=self._check_loop, args=(interval,), daemon=True)
-        self.check_thread.start()
-
-    def _check_loop(self, interval):
-        # fast first check then wait interval
-        while not self.stop_event.is_set():
-            try:
-                local = leer_version(LOCAL_XML)
-                remote = leer_version_remota()
-                if remote and remote != local:
-                    # decide platform options to try
-                    candidate_platforms = self.detect_platform_names()
-                    for plataforma in candidate_platforms:
-                        if self.stop_event.is_set():
-                            return
-                        existe = self.verify_release(remote, plataforma)
-                        if existe:
-                            # update UI with found release
-                            self.after(0, partial(self.show_update, remote, plataforma))
-                            # stop loop and keep UI for user action
-                            return
-                # nothing new
-                self.after(0, lambda: self.status_label.configure(text="Sin actualizaciones" if remote else "No se pudo comprobar la versión remota"))
-            except Exception as e:
-                self.after(0, lambda: self.status_label.configure(text=f"Error comprobando: {e}"))
-            # wait with cancellation
-            for _ in range(int(interval)):
-                if self.stop_event.is_set():
-                    return
-                time.sleep(1)
-
-    def detect_platform_names(self):
-        # ajusta la lista de nombres que uses en tus releases
-        sysplat = platform.system().lower()
-        arch = platform.machine().lower()
-        names = []
-        if "windows" in sysplat:
-            names.append("windows-x64")
-            names.append("windows")
-        elif "linux" in sysplat:
-            names.append("linux-x64")
-            names.append("linux")
-        elif "darwin" in sysplat or "mac" in sysplat:
-            names.append("macos-x64")
-            names.append("macos")
-        # fallback / previously used names
-        names.extend(["knosthalij", "danenone"])
-        # dedupe while preserving order
-        seen = set()
-        out = []
-        for n in names:
-            if n not in seen:
-                seen.add(n)
-                out.append(n)
-        return out
-
-    def show_update(self, version, plataforma):
-        self.animating_check = False
-        self.status_label.configure(text=f"Actualización disponible: {version} ({plataforma})")
-        local_v = leer_version(LOCAL_XML) or "desconocida"
-        self.detail_label.configure(text=f"Versión instalada: {local_v}\nVersión remota: {version}\nPlataforma: {plataforma}")
-        self.release_url = f"https://github.com/JesusQuijada34/packagemaker/releases/download/{version}/packagemaker-{version}-{plataforma}.zip"
-        self.install_btn.configure(state="normal")
-        # keep window visible and focused with a gentle pop
-        self.deiconify()
-        self.slide_in()
-
-    def verify_release(self, version, plataforma):
-        base = "https://github.com/JesusQuijada34/packagemaker/releases/download"
-        nombre = f"packagemaker-{version}-{plataforma}.zip"
-        url = f"{base}/{version}/{nombre}"
-        try:
-            r = requests.head(url, timeout=6)
-            return r.status_code == 200
-        except Exception:
-            return False
-
-    def install_clicked(self):
-        # launch download/install in background
-        self.install_btn.configure(state="disabled")
-        threading.Thread(target=self._download_and_install, daemon=True).start()
-
-    def _download_and_install(self):
-        url = getattr(self, "release_url", None)
-        if not url:
-            self.after(0, lambda: self.status_label.configure(text="URL de release no encontrada"))
-            self.install_btn.configure(state="normal")
-            return
-
-        destino = "update.zip"
-        backup_dir = "backup_embestido"
-        try:
-            # create backup
-            if not os.path.exists(backup_dir):
-                os.makedirs(backup_dir, exist_ok=True)
-            for f in os.listdir("."):
-                if f in (backup_dir, destino):
-                    continue
-                if os.path.isfile(f):
-                    shutil.copy2(f, os.path.join(backup_dir, f))
-
-            # download with progress
-            self.after(0, lambda: self.status_label.configure(text="Descargando actualización..."))
-            resp = requests.get(url, stream=True, timeout=20)
-            total = int(resp.headers.get("content-length", 0))
-            downloaded = 0
-            chunk_size = 8192
-            with open(destino, "wb") as fh:
-                for chunk in resp.iter_content(chunk_size=chunk_size):
-                    if not chunk:
-                        continue
-                    fh.write(chunk)
-                    downloaded += len(chunk)
-                    if total:
-                        pct = downloaded / total
-                        self.after(0, lambda p=pct: self.progress.set(p))
-                        self.after(0, lambda p=pct: self.progress_label.configure(text=f"{int(p*100)}%"))
-            # extract
-            self.after(0, lambda: self.status_label.configure(text="Instalando actualización..."))
-            with zipfile.ZipFile(destino, "r") as z:
-                z.extractall(".")
-            os.remove(destino)
-
-            # try to launch new binary if present and not running as a script
-            if not sys.argv[0].endswith(".py"):
-                executable = "packagemaker.exe" if os.name == "nt" else "./packagemaker"
-                if os.path.exists(executable):
-                    try:
-                        subprocess.Popen([executable], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    except Exception:
-                        pass
-
-            self.after(0, lambda: self.status_label.configure(text="Actualización instalada correctamente."))
-            self.after(2000, self.close_and_stop)
-        except Exception as e:
-            self.after(0, lambda: self.status_label.configure(text=f"Error instalando: {e}"))
-            # restore backup if failure happens (best-effort)
-            try:
-                for f in os.listdir(backup_dir):
-                    src = os.path.join(backup_dir, f)
-                    if os.path.isfile(src):
-                        shutil.copy2(src, f)
-            except Exception:
-                pass
-            self.after(0, lambda: self.install_btn.configure(state="normal"))
+if __name__ == '__main__':
+	main()
 
 
-# helper functions
-def leer_version(path):
-    try:
-        if not os.path.exists(path):
-            return ""
-        tree = ET.parse(path)
-        return tree.getroot().findtext("version", "")
-    except Exception:
-        return ""
-
-
-def leer_version_remota():
-    try:
-        r = requests.get(REMOTE_XML, timeout=10)
-        if r.status_code != 200:
-            return ""
-        root = ET.fromstring(r.text)
-        return root.findtext("version", "")
-    except Exception:
-        return ""
-
-
-if __name__ == "__main__":
-    app = PackagemakerUpdater()
-    app.mainloop()
