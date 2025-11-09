@@ -1,340 +1,177 @@
-import sys
-import os
-import json
-import platform
-import requests
-import subprocess
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QRadioButton,
-    QPushButton, QGroupBox, QSizePolicy, QSpacerItem, QMessageBox
-)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl, QTimer
-from PyQt5.QtGui import QFont, QDesktopServices
+import sys, os, requests, zipfile, shutil, subprocess, xml.etree.ElementTree as ET
+import threading, time, traceback
+from datetime import datetime
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt
 
-# --- Configuración ---
-# URL base para la verificación de actualizaciones. Esto debe apuntar a un archivo JSON
-# que contenga la información de la última versión.
-# Ejemplo de estructura del JSON remoto:
-# {
-#     "latest_version": "1.0.1",
-#     "release_notes": "Corrección de errores y mejoras de rendimiento.",
-#     "download_links": {
-#         "source": "https://github.com/JesusQuijada34/packagemaker/archive/refs/tags/v1.0.1.zip",
-#         "windows": "https://github.com/JesusQuijada34/packagemaker/releases/download/v1.0.1/packagemaker-win.zip",
-#         "linux": "https://github.com/JesusQuijada34/packagemaker/releases/download/v1.0.1/packagemaker-linux.zip"
-#     }
-# }
-UPDATE_CHECK_URL = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/update_info.json"
-# Leer la versión actual de details.xml
-def get_current_version():
-    try:
-        import xml.etree.ElementTree as ET
-        tree = ET.parse('details.xml')
-        root = tree.getroot()
-        return root.findtext('version', '0.0.0')
-    except Exception:
-        return "0.0.0"
+REMOTE_XML = "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/details.xml"
+LOCAL_XML = "details.xml"
+CHECK_INTERVAL = 60  # segundos
+LOG_PATH = "updater_log.txt"
 
-CURRENT_VERSION = get_current_version()
-APP_NAME = "Packagemaker"
+QSS_STYLE = """
+QWidget {
+    background-color: #0d1117;
+    color: #2ecc71;
+    font-family: "Segoe UI";
+}
+QPushButton {
+    background-color: #2ecc71;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 12px;
+}
+QPushButton:hover {
+    background-color: #27ae60;
+}
+QPushButton#source {
+    background-color: #3c3f44;
+    color: #2ecc71;
+}
+QPushButton#source:hover {
+    background-color: #4b4f55;
+}
+"""
 
-# --- Lógica de Verificación de Actualización (Silenciosa) ---
+def log(msg):
+    timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+    with open(LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(f"{timestamp} {msg}\n")
+    print(f"{timestamp} {msg}")
 
-class UpdateChecker(QThread):
-    """Hilo para verificar actualizaciones en segundo plano."""
-    update_available = pyqtSignal(dict)
-    no_update = pyqtSignal()
-    error = pyqtSignal(str)
-
-    def run(self):
-        try:
-            response = requests.get(UPDATE_CHECK_URL, timeout=10)
-            response.raise_for_status()
-            update_info = response.json()
-
-            latest_version = update_info.get("latest_version")
-            if not latest_version:
-                self.error.emit("Error: No se encontró 'latest_version' en la información de actualización.")
-                return
-
-            # Comparación simple de versiones (asumiendo formato X.Y.Z)
-            def version_to_tuple(v):
-                v = v.lstrip('v') # Eliminar prefijo 'v' si existe
-                try:
-                    return tuple(map(int, v.split('.')))
-                except ValueError:
-                    # Manejar versiones no estándar (ej. "beta", "rc")
-                    print(f"Advertencia: Versión no estándar '{v}'. Usando 0.0.0 para comparación.")
-                    return (0, 0, 0)
-
-            if version_to_tuple(latest_version) > version_to_tuple(CURRENT_VERSION):
-                self.update_available.emit(update_info)
-            else:
-                self.no_update.emit()
-
-        except requests.exceptions.RequestException as e:
-            self.error.emit(f"Error al verificar actualizaciones: {e}")
-        except json.JSONDecodeError:
-            self.error.emit("Error: La respuesta de actualización no es un JSON válido.")
-        except Exception as e:
-            self.error.emit(f"Error inesperado en la verificación: {e}")
-
-# --- Interfaz de Usuario (Estilo GitHub) ---
-
-class UpdateWindow(QWidget):
-    """Ventana principal que se muestra solo si hay una actualización."""
-    def __init__(self, update_info):
+class UpdaterWindow(QWidget):
+    def __init__(self, version, plataforma):
         super().__init__()
-        self.update_info = update_info
-        self.download_links = update_info.get("download_links", {})
-        self.latest_version = update_info.get("latest_version", "Desconocida")
-        self.release_notes = update_info.get("release_notes", "Notas de la versión no disponibles.")
-        self.system_os = platform.system().lower()
+        self.version = version
+        self.plataforma = plataforma
+        self.release_url = f"https://github.com/JesusQuijada34/packagemaker/releases/download/{version}/packagemaker-{version}-{plataforma}.zip"
+        self.source_url = f"https://github.com/JesusQuijada34/packagemaker/archive/refs/tags/{version}.zip"
+        self.init_ui()
 
-        self.setWindowTitle(f"Actualización de {APP_NAME} Disponible")
-        self.setFixedSize(550, 450)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint) # Mantener encima para asegurar visibilidad
-        self.setup_ui()
+    def init_ui(self):
+        self.setWindowTitle("Packagemaker Updater")
+        self.setFixedSize(460, 240)
+        self.setStyleSheet(QSS_STYLE)
 
-    def setup_ui(self):
-        main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(20)
-        main_layout.setContentsMargins(30, 30, 30, 30)
+        layout = QVBoxLayout()
 
-        # 1. Encabezado (Estilo GitHub)
-        header_label = QLabel(f"🎉 ¡Nueva versión de {APP_NAME} disponible!")
-        header_label.setFont(QFont("Segoe UI", 18, QFont.Bold))
-        header_label.setStyleSheet("color: #24292e;")
-        main_layout.addWidget(header_label)
+        title = QLabel("Packagemaker Updater")
+        title.setFont(QFont("Segoe UI", 16, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
 
-        version_label = QLabel(f"Versión actual: {CURRENT_VERSION} → <b>{self.latest_version}</b>")
-        version_label.setFont(QFont("Segoe UI", 12))
-        version_label.setStyleSheet("color: #586069;")
-        main_layout.addWidget(version_label)
+        info = QLabel(f"🧩 Versión actual: {leer_version(LOCAL_XML)}\n🚀 Nueva versión: {self.version}\n🖥️ Plataforma: {self.plataforma}")
+        info.setFont(QFont("Segoe UI", 12))
+        layout.addWidget(info)
 
-        # 2. Notas de la Versión
-        notes_group = QGroupBox("Notas de la Versión")
-        notes_group.setStyleSheet("""
-            QGroupBox { 
-                font-weight: bold; 
-                margin-top: 10px; 
-                border: 1px solid #e1e4e8; 
-                border-radius: 6px; 
-                padding-top: 15px; 
-                background-color: #f6f8fa;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                subcontrol-position: top left;
-                padding: 0 3px;
-            }
-        """)
-        notes_layout = QVBoxLayout(notes_group)
-        notes_label = QLabel(self.release_notes)
-        notes_label.setWordWrap(True)
-        notes_label.setStyleSheet("color: #24292e; background-color: transparent;")
-        notes_layout.addWidget(notes_label)
-        main_layout.addWidget(notes_group)
+        btns = QHBoxLayout()
+        binario_btn = QPushButton("Actualizar binario")
+        source_btn = QPushButton("Descargar source-code")
+        source_btn.setObjectName("source")
+        binario_btn.clicked.connect(self.instalar_binario)
+        source_btn.clicked.connect(self.descargar_source)
+        btns.addWidget(binario_btn)
+        btns.addWidget(source_btn)
+        layout.addLayout(btns)
 
-        # 3. Opciones de Descarga (Radio Buttons)
-        options_group = QGroupBox("Selecciona el tipo de descarga")
-        options_group.setStyleSheet("QGroupBox { font-weight: bold; margin-top: 10px; border: none; }")
-        options_layout = QVBoxLayout(options_group)
+        self.setLayout(layout)
+        self.show()
 
-        self.radio_source = QRadioButton("Código Fuente (Source Code)")
-        self.radio_source.setFont(QFont("Segoe UI", 10))
-        self.radio_source.setChecked(True)
-        options_layout.addWidget(self.radio_source)
+    def instalar_binario(self):
+        destino = "update.zip"
+        try:
+            log("Iniciando respaldo embestido…")
+            if not os.path.exists("backup_embestido"):
+                os.mkdir("backup_embestido")
+            for f in os.listdir("."):
+                if f not in ["backup_embestido", destino] and os.path.isfile(f):
+                    shutil.copy2(f, f"backup_embestido/{f}")
+            log("Respaldo completado.")
 
-        os_name = "Windows" if "win" in self.system_os else "Linux" if "linux" in self.system_os else "Otro OS"
-        self.radio_os = QRadioButton(f"Binario para {os_name} ({self.latest_version})")
-        self.radio_os.setFont(QFont("Segoe UI", 10))
-        options_layout.addWidget(self.radio_os)
+            log(f"Descargando release desde {self.release_url}")
+            r = requests.get(self.release_url, stream=True)
+            with open(destino, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            log("Descarga completada.")
 
-        main_layout.addWidget(options_group)
+            with zipfile.ZipFile(destino, "r") as zip_ref:
+                zip_ref.extractall(".")
+            os.remove(destino)
+            log("Archivos reemplazados.")
 
-        # Espaciador
-        main_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
-
-        # 4. Botones de Acción
-        button_layout = QHBoxLayout()
-        button_layout.setAlignment(Qt.AlignRight)
-
-        # Botón de "Saltar"
-        skip_button = QPushButton("Saltar por ahora")
-        skip_button.setStyleSheet("""
-            QPushButton {
-                background-color: #f6f8fa;
-                border: 1px solid #e1e4e8;
-                border-radius: 6px;
-                padding: 8px 16px;
-                color: #24292e;
-            }
-            QPushButton:hover {
-                background-color: #f3f4f6;
-            }
-        """)
-        skip_button.clicked.connect(self.close)
-        button_layout.addWidget(skip_button)
-
-        # Botón de "Actualizar"
-        update_button = QPushButton("Actualizar Ahora")
-        update_button.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        update_button.setStyleSheet("""
-            QPushButton {
-                background-color: #2ea44f;
-                border: 1px solid #2ea44f;
-                border-radius: 6px;
-                padding: 8px 16px;
-                color: white;
-            }
-            QPushButton:hover {
-                background-color: #2c974b;
-            }
-        """)
-        update_button.clicked.connect(self.start_download)
-        button_layout.addWidget(update_button)
-
-        main_layout.addLayout(button_layout)
-
-    def start_download(self):
-        """Determina el enlace de descarga y lo abre en el navegador (simulación)."""
-        download_url = None
-        download_type = "source"
-
-        if self.radio_source.isChecked():
-            download_url = self.download_links.get("source")
-            download_type = "source"
-        elif self.radio_os.isChecked():
-            if "win" in self.system_os:
-                download_url = self.download_links.get("windows")
-                download_type = "windows"
-            elif "linux" in self.system_os:
-                download_url = self.download_links.get("linux")
-                download_type = "linux"
-
-        if download_url:
-            QMessageBox.information(self, "Iniciando Descarga", 
-                                    f"Se iniciará la descarga de la versión {self.latest_version} ({download_type}).\n\n"
-                                    f"URL: {download_url}\n\n"
-                                    "En un entorno real, la descarga y aplicación se realizaría aquí, seguido del reinicio del actualizador.")
-            
-            # SIMULACIÓN: Abrir el enlace en el navegador y simular el proceso de actualización
-            QDesktopServices.openUrl(QUrl(download_url))
-            
-            # SIMULACIÓN: Establecer variable de entorno para el reinicio
-            os.environ["PACKAGEMAKER_UPDATED"] = "true"
-            
-            # Cerrar la ventana y salir para simular el reinicio del actualizador
+            if not sys.argv[0].endswith(".py"):
+                ejecutable = "packagemaker.exe" if os.name == "nt" else "./packagemaker"
+                if os.path.exists(ejecutable):
+                    log(f"Ejecutando binario: {ejecutable}")
+                    subprocess.Popen(ejecutable)
+            else:
+                log("Reiniciando script embestido…")
+                subprocess.Popen([sys.executable, __file__])
             self.close()
-            QApplication.quit()
-            
-        else:
-            QMessageBox.warning(self, "Error de Descarga", 
-                                "No se encontró un enlace de descarga válido para la selección. Por favor, inténtalo de nuevo o selecciona el código fuente.")
+        except Exception as e:
+            log(f"❌ Error durante instalación: {e}")
+            log(traceback.format_exc())
+            self.close()
 
-# --- Lógica Principal de Ejecución ---
+    def descargar_source(self):
+        log(f"Abriendo source-code: {self.source_url}")
+        subprocess.Popen(["start", self.source_url], shell=True)
+        self.close()
 
-def check_system_updates_background():
-    """Simulación de la verificación de actualizaciones del sistema en segundo plano."""
-    print("--- INICIANDO VERIFICACIÓN DE ACTUALIZACIONES DEL SISTEMA EN SEGUNDO PLANO ---")
-    
-    # En un entorno real, esto podría ser un proceso separado o un servicio.
-    # Aquí, simplemente simulamos la ejecución de un comando de actualización del sistema.
-    
-    if platform.system().lower() == "linux":
-        # Simulación de un comando de actualización de Linux
-        print("Ejecutando simulación de 'sudo apt update && sudo apt upgrade -y'...")
-        # subprocess.Popen(["sudo", "apt", "update", "-y"]) # No ejecutar en el sandbox
-    elif platform.system().lower() == "windows":
-        # Simulación de un comando de actualización de Windows (ej. PowerShell)
-        print("Ejecutando simulación de 'Windows Update'...")
-    
-    print("La verificación de actualizaciones del sistema se está ejecutando en segundo plano.")
-    print("-----------------------------------------------------------------------------")
+def leer_version(path):
+    try:
+        tree = ET.parse(path)
+        return tree.getroot().findtext("version", "").strip()
+    except Exception as e:
+        log(f"Error leyendo versión local: {e}")
+        return ""
 
-def main():
-    """Función principal para ejecutar el actualizador."""
-    
-    # 1. Lógica de reinicio para la verificación de actualizaciones del sistema
-    if os.environ.get("PACKAGEMAKER_UPDATED") == "true":
-        # Limpiar la variable de entorno inmediatamente
-        del os.environ["PACKAGEMAKER_UPDATED"]
-        
-        # Iniciar la verificación de actualizaciones del sistema y salir
-        check_system_updates_background()
-        sys.exit(0)
+def leer_version_remota():
+    try:
+        r = requests.get(REMOTE_XML, timeout=10)
+        root = ET.fromstring(r.text)
+        return root.findtext("version", "").strip()
+    except Exception as e:
+        log(f"Error leyendo versión remota: {e}")
+        return ""
 
-    # 2. Lógica de verificación de actualización de la aplicación
-    app = QApplication(sys.argv)
-    app.setQuitOnLastWindowClosed(False) # No salir automáticamente
+def verificar_release(version, plataforma):
+    url = f"https://github.com/JesusQuijada34/packagemaker/releases/download/{version}/packagemaker-{version}-{plataforma}.zip"
+    try:
+        r = requests.head(url, timeout=5)
+        log(f"Verificando release: {url} → {r.status_code}")
+        return r.status_code == 200
+    except Exception as e:
+        log(f"Error verificando release: {e}")
+        return False
 
-    # Iniciar la verificación de actualización en un hilo
-    checker = UpdateChecker()
-
-    def on_update_available(update_info):
-        """Muestra la ventana si hay una actualización."""
-        checker.quit()
-        print(f"Actualización disponible: {update_info['latest_version']}. Mostrando interfaz.")
-        global update_window
-        update_window = UpdateWindow(update_info)
-        update_window.show()
-
-    def on_no_update():
-        """Sale silenciosamente si no hay actualización."""
-        checker.quit()
-        print("No hay actualizaciones disponibles. Saliendo silenciosamente.")
-        QApplication.quit()
-
-    def on_error(message):
-        """Sale silenciosamente en caso de error."""
-        checker.quit()
-        print(f"Error silencioso en la verificación: {message}")
-        QApplication.quit()
-
-    checker.update_available.connect(on_update_available)
-    checker.no_update.connect(on_no_update)
-    checker.error.connect(on_error)
-
-    checker.start()
-
-    # Usar un QTimer para asegurar que la aplicación no se cierre inmediatamente
-    # si el hilo tarda un poco en terminar.
-    timer = QTimer()
-    timer.timeout.connect(lambda: None)
-    timer.start(100)
-
-    sys.exit(app.exec_())
+def ciclo_silencioso():
+    def verificar():
+        while True:
+            try:
+                local = leer_version(LOCAL_XML)
+                remoto = leer_version_remota()
+                log(f"Versión local: {local} | Versión remota: {remoto}")
+                if remoto and remoto != local:
+                    for plataforma in ["knosthalij", "danenone"]:
+                        if verificar_release(remoto, plataforma):
+                            log(f"Actualización disponible para {plataforma}")
+                            app = QApplication(sys.argv)
+                            ventana = UpdaterWindow(remoto, plataforma)
+                            app.exec_()
+                            return
+                else:
+                    log("No hay actualizaciones.")
+            except Exception as e:
+                log(f"Error en ciclo de verificación: {e}")
+                log(traceback.format_exc())
+            time.sleep(CHECK_INTERVAL)
+    threading.Thread(target=verificar, daemon=True).start()
 
 if __name__ == "__main__":
-    # Asegurarse de que el directorio actual sea el del proyecto para leer details.xml
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    os.chdir("..") # Moverse al directorio packagemaker
-    
-    # Crear un archivo details.xml de prueba si no existe para la simulación
-    if not os.path.exists('details.xml'):
-        with open('details.xml', 'w') as f:
-            f.write('<app><version>1.0.0</version><shortName>packagemaker</shortName></app>')
-            
-    # Crear un archivo update_info.json de prueba para la simulación
-    if not os.path.exists('update_info.json'):
-        with open('update_info.json', 'w') as f:
-            json.dump({
-                "latest_version": "1.0.1",
-                "release_notes": "Se ha mejorado la interfaz de usuario y se corrigieron errores menores.",
-                "download_links": {
-                    "source": "https://github.com/JesusQuijada34/packagemaker/archive/refs/tags/v1.0.1.zip",
-                    "windows": "https://github.com/JesusQuijada34/packagemaker/releases/download/v1.0.1/packagemaker-win.zip",
-                    "linux": "https://github.com/JesusQuijada34/packagemaker/releases/download/v1.0.1/packagemaker-linux.zip"
-                }
-            }, f, indent=4)
-            
-    # La URL de verificación apunta a un archivo remoto, pero para la prueba inicial
-    # usaremos el archivo local. En un entorno real, el archivo remoto es necesario.
-    # Para simular la verificación remota, crearemos un archivo de prueba en el directorio raíz
-    # y lo usaremos como URL de verificación.
-    
-    # Nota: En el código final, la URL remota real debe ser usada.
-    # Para esta simulación, el código usa la URL remota, asumiendo que existe.
-    
-    main()
+    log("Packagemaker Updater iniciado en modo silencioso.")
+    ciclo_silencioso()
+    while True:
+        time.sleep(3600)
