@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
-Name=Influent MAC Address Changer
-Name[es]=Disfrazador de direcciones MAC
-Comment=Disfraza la mac de tu dispositivo
-GenericName=MAC Address Changer for Danenone
-Icon=/usr/share/icons/ifmac.png
-Exec=ifmac
+Name=Influent Package Maker for Danenone OSEnv
+Name[es]=Influent Generador de Paquetes para Danenone Entorno SO
+Comment=Generador de paquetes de Influent para Danenone OSEnv
+GenericName=Influent Package Maker for Danenone OSEnv
+Icon=.\assets\product_logo.png
+Exec=packagemaker
 Terminal=true
 Keywords=appearance;desktop;panel;theme;extension;settings;tweak;layout;cube;sp>
 Categories=GNOME;GTK;Settings;DesktopSettings;

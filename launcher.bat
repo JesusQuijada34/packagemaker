@@ -37,13 +37,13 @@ goto MENU
 
 :RUN_PM_TERM
 echo Iniciando packagemaker-term.py...
-python packagemaker-term.py
+python packagemaker-cli.py
 pause
 goto MENU
 
 :RUN_BM_TERM
 echo Iniciando bundlemaker-term.py...
-python bundlemaker-term.py
+python bundlemaker-cli.py
 pause
 goto MENU
 
