@@ -815,19 +815,19 @@ class PackageTodoGUI(QMainWindow):
         
         # Obtener plataforma seleccionada
         if self.radio_windows.isChecked():
-            plataforma_seleccionada = "Windows"
+            plataforma_seleccionada = "Knosthalij"
         elif self.radio_linux.isChecked():
-            plataforma_seleccionada = "Linux"
+            plataforma_seleccionada = "Danenone"
         else:
-            plataforma_seleccionada = "Multiplataforma"
+            plataforma_seleccionada = "AlphaCube"
         
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         version = self.input_version.text().strip()
         if version == "":
-             version = f"1-{getversion()}-{linkedsys}"
+             version = f"1-{getversion()}-{plataforma_seleccionada}"
         else:
-            version = f"{version}-{getversion()}-{linkedsys}"
+            version = f"{version}-{getversion()}-{plataforma_seleccionada}"
         nombre_completo = self.input_titulo.text() or nombre_logico.strip().upper()
         folder_name = f"{empresa}.{nombre_logico}.v{version}"
         full_path = os.path.join(BASE_DIR, folder_name)
@@ -837,6 +837,7 @@ class PackageTodoGUI(QMainWindow):
             main_script = os.path.join(full_path, f"{nombre_logico}.py")
             cmdwin = os.path.join(full_path, "autorun.bat")
             bashlinux = os.path.join(full_path, "autorun")
+            updator = os.path.join("updater.py")
             lic = os.path.join(full_path, "LICENSE")
             fn = f"{empresa}.{nombre_logico}.v{version}"
             hv = hashlib.sha256(fn.encode()).hexdigest()
@@ -846,6 +847,9 @@ class PackageTodoGUI(QMainWindow):
                 with open(here_file, "w") as f:
                     resultinityy = os.path.join(f"#store (sha256 hash):{folder}/.{hv}")
                     f.write(resultinityy)
+            with open(updator, "w") as f:
+                upd_dest = os.path.join(full_path, "updater.py")
+                shutil.copy(updator, upd_dest)
             with open(storekey, "w") as f:
                 f.write(f"#aiFlatr Store APP DETAIL | Correlation Engine for Influent OS\n#store key protection id:\n{hv}")
             with open(lic, "w") as f:
