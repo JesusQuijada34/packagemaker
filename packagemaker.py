@@ -432,7 +432,7 @@ class PackageTodoGUI(QMainWindow):
             "button_default": "#f96c6c",  # Naranja GitHub
             "button_hover": "#fa4e4e",
             "button_text": "#ffffff",
-            "group_bg": "#e1e4e8",
+            "group_bg": "#ffffff",
         }
         
         # Tema Naranja estilo GitHub - Modo Oscuro
@@ -658,8 +658,8 @@ class PackageTodoGUI(QMainWindow):
                 background-color: transparent;
             }
             QRadioButton:hover {
-                background-color: rgba(249, 130, 108, 0.1);
-                border-color: rgba(249, 130, 108, 0.3);
+                background-color: rgba(108, 249, 237, 0.1);
+                border-color: rgba(108, 249, 230, 0.3);
             }
             QRadioButton::indicator {
                 width: 18px;
@@ -668,8 +668,8 @@ class PackageTodoGUI(QMainWindow):
                 border: 2px solid #d1d5da;
             }
             QRadioButton::indicator:checked {
-                border: 2px solid #f9826c;
-                background-color: #f9826c;
+                border: 2px solid #6cf9e6;
+                background-color: #6ceff9;
             }
         """)
         
@@ -682,8 +682,8 @@ class PackageTodoGUI(QMainWindow):
                 background-color: transparent;
             }
             QRadioButton:hover {
-                background-color: rgba(249, 130, 108, 0.1);
-                border-color: rgba(249, 130, 108, 0.3);
+                background-color: rgba(249, 247, 108, 0.1);
+                border-color: rgba(249, 235, 108, 0.3);
             }
             QRadioButton::indicator {
                 width: 18px;
@@ -692,8 +692,8 @@ class PackageTodoGUI(QMainWindow):
                 border: 2px solid #d1d5da;
             }
             QRadioButton::indicator:checked {
-                border: 2px solid #f9826c;
-                background-color: #f9826c;
+                border: 2px solid #e4f96c;
+                background-color: #f9f76c;
             }
         """)
         
@@ -706,8 +706,8 @@ class PackageTodoGUI(QMainWindow):
                 background-color: transparent;
             }
             QRadioButton:hover {
-                background-color: rgba(249, 130, 108, 0.1);
-                border-color: rgba(249, 130, 108, 0.3);
+                background-color: rgba(108, 249, 108, 0.1);
+                border-color: rgba(108, 249, 115, 0.3);
             }
             QRadioButton::indicator {
                 width: 18px;
@@ -716,8 +716,8 @@ class PackageTodoGUI(QMainWindow):
                 border: 2px solid #d1d5da;
             }
             QRadioButton::indicator:checked {
-                border: 2px solid #f9826c;
-                background-color: #f9826c;
+                border: 2px solid #6cf978;
+                background-color: #83f96c;
             }
         """)
         
@@ -733,7 +733,7 @@ class PackageTodoGUI(QMainWindow):
         form_layout.addWidget(platform_widget, 5, 1)
         
         # Información adicional
-        info_label = QLabel("TELEGRAM: t.me/JesusQuijada34")
+        info_label = QLabel("TELEGRAM:: t.me/JesusQuijada34\nWEBSITE:: https://jesusquijada34.github.io")
         info_label.setStyleSheet("color: #6a737d; font-size: 11px; padding: 5px 0px;")
         form_layout.addWidget(info_label, 6, 0, 1, 2)
         
