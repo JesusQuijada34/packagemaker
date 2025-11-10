@@ -49,7 +49,8 @@ def leer_app_y_version(path):
         root = tree.getroot()
         app = root.findtext("app", "").strip()
         version = root.findtext("version", "").strip()
-        return app, version
+        author = root.findtext("author", "")
+        return app, version, author
     except Exception as e:
         log(f"Error leyendo XML: {e}")
         return "", ""
@@ -187,14 +188,14 @@ class UpdaterWindow(QWidget):
 def ciclo_verificacion():
     def verificar():
         while True:
-            app, version = leer_app_y_version(XML_PATH)
-            if not app or not version:
+            app, version, author = leer_app_y_version(XML_PATH)
+            if not app or not version or not author:
                 log("❌ No se pudo leer app/version del XML.")
                 time.sleep(CHECK_INTERVAL)
                 continue
 
             log(f"App: {app} | Versión: {version}")
-            default_user = "JesusQuijada34"
+            default_user = root.findtext("author")
             for platform in PLATFORMS:
                 ok, url = verificar_release(default_user, app, version, platform)
                 if ok:

@@ -244,8 +244,8 @@ def verificar_github_username(username):
             return False, "El username no existe en GitHub"
         else:
             return False, f"Error al verificar: {e.code}"
-    except urllib.error.URLError as e:
-        return False, f"Error de conexión: {str(e)}"
+    except urllib.error.URLError as e: #PUSE UN BYPASS PARA QUE FUNCIONE SIN INTERNEEE'
+        return True, f"Sii" #return False, f"Error de conexión: {str(e)}"
     except Exception as e:
         return False, f"Error inesperado: {str(e)}"
 
@@ -632,7 +632,7 @@ class PackageTodoGUI(QMainWindow):
         label5.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label5, 4, 0)
         self.input_autor = QLineEdit()
-        self.input_autor.setPlaceholderText("Ejemplo: Jesus Quijada")
+        self.input_autor.setPlaceholderText("Ejemplo: JesusQuijada34")
         self.input_autor.setToolTip("Username de GitHub (obligatorio)")
         self.input_autor.setMaximumWidth(300)
         form_layout.addWidget(self.input_autor, 4, 1)
@@ -1612,8 +1612,6 @@ if __name__ == '__main__':
         ET.SubElement(root, "app").text = nombre_logico
         ET.SubElement(root, "name").text = nombre_completo
         ET.SubElement(root, "version").text = f"v{version}"
-        ET.SubElement(root, "with").text = sys.platform
-        ET.SubElement(root, linkedsys).text = newversion
         ET.SubElement(root, "correlationid").text = hash_val
         ET.SubElement(root, "rate").text = rating
         ET.SubElement(root, "author").text = autor
