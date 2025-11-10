@@ -245,7 +245,7 @@ def verificar_github_username(username):
         else:
             return False, f"Error al verificar: {e.code}"
     except urllib.error.URLError as e: #PUSE UN BYPASS PARA QUE FUNCIONE SIN INTERNEEE'
-        return True, f"Sii" #return False, f"Error de conexión: {str(e)}"
+        return True, "BYPASS DE ANTIBOT ACTIVADO Y RESULTADO ES VERDADERO (MODDED BY: JQ34)" # BEFORE:: return False, f"Error de conexión: {str(e)}"
     except Exception as e:
         return False, f"Error inesperado: {str(e)}"
 
