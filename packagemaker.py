@@ -429,10 +429,10 @@ class PackageTodoGUI(QMainWindow):
             "border": "#e1e4e8",
             "input_bg": "#ffffff",
             "input_border": "#d1d5da",
-            "button_default": "#f9826c",  # Naranja GitHub
-            "button_hover": "#fb7a60",
+            "button_default": "#f96c6c",  # Naranja GitHub
+            "button_hover": "#fa4e4e",
             "button_text": "#ffffff",
-            "group_bg": "#f6f8fa",
+            "group_bg": "#e1e4e8",
         }
         
         # Tema Naranja estilo GitHub - Modo Oscuro
@@ -442,10 +442,10 @@ class PackageTodoGUI(QMainWindow):
             "border": "#30363d",
             "input_bg": "#161b22",
             "input_border": "#21262d",
-            "button_default": "#f9826c",  # Naranja GitHub
-            "button_hover": "#fb7a60",
+            "button_default": "#ff3932",  # Naranja GitHub
+            "button_hover": "#d31e18",
             "button_text": "#ffffff",
-            "group_bg": "#161b22",
+            "group_bg": "#0d1117",
         }
         
         theme = theme_dark if is_dark else theme_light
@@ -493,7 +493,8 @@ class PackageTodoGUI(QMainWindow):
                 color: {theme["fg"]};
                 border: 1px solid {theme["input_border"]};
                 border-radius: 6px;
-                padding: 6px 10px;
+                padding: 6px 30px;
+                width: 50px;
             }}
             QLineEdit:focus {{
                 border: 2px solid {theme["button_default"]};
@@ -509,7 +510,7 @@ class PackageTodoGUI(QMainWindow):
             QRadioButton::indicator {{
                 width: 18px;
                 height: 18px;
-                border-radius: 9px;
+                border-radius: 6px;
                 border: 2px solid {theme["input_border"]};
                 background-color: transparent;
             }}
