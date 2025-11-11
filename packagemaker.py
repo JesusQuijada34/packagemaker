@@ -90,6 +90,7 @@ LGDR_BUILD_MESSAGES = {
     "_LGDR_PUBLISHER_E" : "Nombre del publicador quien hizo el proyecto",
     "_LGDR_NAME_E" : "Nombre corto del proyecto a construir",
     "_LGDR_VERSION_E" : "Versión del proyecto a detectar",
+    "_LGDR_PLATFORM_E" : "Plataforma a compilar",
     "_LGDR_TYPE_DDL" : "Packaged (Programa multiplataforma en código Python)\nBundled (Manifest.xml + Recursos locales o externos + XML Activities)",
     "_LGDR_BUILD_BTN" : "Construir a partir de RAW (Jerodin Packaged/Bundled)"
 }
@@ -244,8 +245,8 @@ def verificar_github_username(username):
             return False, "El username no existe en GitHub"
         else:
             return False, f"Error al verificar: {e.code}"
-    except urllib.error.URLError as e: #PUSE UN BYPASS PARA QUE FUNCIONE SIN INTERNEEE'
-        return True, "BYPASS DE ANTIBOT ACTIVADO Y RESULTADO ES VERDADERO (MODDED BY: JQ34)" # BEFORE:: return False, f"Error de conexión: {str(e)}"
+    except urllib.error.URLError as e:
+        return False, f"Error de conexión: {str(e)}" #True, "BYPASS DE ANTIBOT ACTIVADO Y RESULTADO ES VERDADERO (MODDED BY: JQ34)"
     except Exception as e:
         return False, f"Error inesperado: {str(e)}"
 
@@ -350,19 +351,28 @@ class BuildThread(QThread):
     progress = pyqtSignal(str)
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
-    def __init__(self, empresa, nombre, version, autor, plataforma, parent=None):
+    def __init__(self, empresa, nombre, version, plataforma, parent=None):
         super().__init__(parent)
         self.empresa = empresa
         self.nombre = nombre
         self.version = version
-        self.autor = autor
         self.plataforma = plataforma
 
     def run(self):
-        folder = f"{self.empresa}.{self.nombre}.v{self.version}"
+        if self.plataforma == "Windows":
+            self.plataforma = "Knosthalij"
+        elif self.plataforma == "Linux":
+            self.plataforma = "Danenone"
+        elif self.plataforma == "Multiplataforma":
+            self.plataforma = "AlphaCube"
+        else:
+            self.error.emit("PLATAFORMA DESCONOCIDA")
+            return
+        folder = f"{self.empresa}.{self.nombre}.v{self.version}-{self.plataforma}"
         path = os.path.join(BASE_DIR, folder)
         ext = ".iflapp"
         output_file = os.path.join(BASE_DIR, folder + ext)
+        print(output_file)
         zip_path = output_file.replace(ext, "") + ".zip"
         if not os.path.exists(path):
             self.error.emit("No se encontró la carpeta del paquete.")
@@ -595,7 +605,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_empresa = QLineEdit()
         self.input_empresa.setPlaceholderText("Ejemplo: influent")
         self.input_empresa.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_PUBLISHER_E"])
-        self.input_empresa.setMaximumWidth(300)
+        self.input_empresa.setMaximumWidth(400)
+        self.input_empresa.setMinimumHeight(30)
         form_layout.addWidget(self.input_empresa, 0, 1)
         
         # Fila 2: Nombre interno
@@ -605,7 +616,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_nombre_logico = QLineEdit()
         self.input_nombre_logico.setPlaceholderText("Ejemplo: mycoolapp")
         self.input_nombre_logico.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_NAME_E"])
-        self.input_nombre_logico.setMaximumWidth(300)
+        self.input_nombre_logico.setMaximumWidth(400)
+        self.input_nombre_logico.setMinimumHeight(30)
         form_layout.addWidget(self.input_nombre_logico, 1, 1)
         
         # Fila 3: Título completo
@@ -615,7 +627,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_titulo = QLineEdit()
         self.input_titulo.setPlaceholderText("Ejemplo: MyCoolApp")
         self.input_titulo.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_TITLE_E"])
-        self.input_titulo.setMaximumWidth(300)
+        self.input_titulo.setMaximumWidth(400)
+        self.input_titulo.setMinimumHeight(30)
         form_layout.addWidget(self.input_titulo, 2, 1)
         
         # Fila 4: Versión
@@ -625,7 +638,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_version = QLineEdit()
         self.input_version.setPlaceholderText("Ejemplo: 1.0")
         self.input_version.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_VERSION_E"])
-        self.input_version.setMaximumWidth(300)
+        self.input_version.setMaximumWidth(400)
+        self.input_version.setMinimumHeight(30)
         form_layout.addWidget(self.input_version, 3, 1)
         
         # Fila 5: Autor
@@ -635,7 +649,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_autor = QLineEdit()
         self.input_autor.setPlaceholderText("Ejemplo: JesusQuijada34")
         self.input_autor.setToolTip("Username de GitHub (obligatorio)")
-        self.input_autor.setMaximumWidth(300)
+        self.input_autor.setMaximumWidth(400)
+        self.input_autor.setMinimumHeight(30)
         form_layout.addWidget(self.input_autor, 4, 1)
         
         # Fila 6: Plataforma con radios personalizados
@@ -650,6 +665,7 @@ class PackageTodoGUI(QMainWindow):
         
         self.radio_windows = QRadioButton("Windows")
         self.radio_windows.setChecked(True)
+        self.radio_windows.setMinimumHeight(50)
         self.radio_windows.setStyleSheet("""
             QRadioButton {
                 padding: 6px 10px;
@@ -674,6 +690,7 @@ class PackageTodoGUI(QMainWindow):
         """)
         
         self.radio_linux = QRadioButton("Linux")
+        self.radio_linux.setMinimumHeight(50)
         self.radio_linux.setStyleSheet("""
             QRadioButton {
                 padding: 6px 10px;
@@ -698,6 +715,7 @@ class PackageTodoGUI(QMainWindow):
         """)
         
         self.radio_multiplataforma = QRadioButton("Multiplataforma")
+        self.radio_multiplataforma.setMinimumHeight(50)
         self.radio_multiplataforma.setStyleSheet("""
             QRadioButton {
                 padding: 6px 10px;
@@ -735,6 +753,7 @@ class PackageTodoGUI(QMainWindow):
         # Información adicional
         info_label = QLabel("TELEGRAM:: t.me/JesusQuijada34\nWEBSITE:: https://jesusquijada34.github.io")
         info_label.setStyleSheet("color: #6a737d; font-size: 11px; padding: 5px 0px;")
+        info_label.setMinimumHeight(40)
         form_layout.addWidget(info_label, 6, 0, 1, 2)
         
         self.btn_create = QPushButton("Crear Proyecto")
@@ -843,16 +862,49 @@ class PackageTodoGUI(QMainWindow):
             cmdwin = os.path.join(full_path, "autorun.bat")
             bashlinux = os.path.join(full_path, "autorun")
             updator = os.path.join("updater.py")
-            blockmap = os.path.join(full_path, "jerodinManifest.res")
+            blockmap = os.path.join(full_path, "version.res")
+            blockChain = os.path.join(full_path, "manifest.res")
             lic = os.path.join(full_path, "LICENSE")
             fn = f"{empresa}.{nombre_logico}.v{version}"
             hv = hashlib.sha256(fn.encode()).hexdigest()
             storekey = os.path.join(full_path, ".storedetail")
+
             for folder in DEFAULT_FOLDERS.split(","):
                 here_file = os.path.join(full_path, folder, f".{folder}-container")
                 with open(here_file, "w") as f:
                     resultinityy = os.path.join(f"#store (sha256 hash):{folder}/.{hv}")
                     f.write(resultinityy)
+            if linkedsys == "Knosthalij" or "knosthalij":
+                with open(blockChain, "w") as f:
+                    f.write("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/>
+      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/>
+      <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+    </application>
+  </compatibility>
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
+    </windowsSettings>
+  </application>
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/>
+    </dependentAssembly>
+  </dependency>
+</assembly>""")
             with open(updator, "w") as f:
                 upd_dest = os.path.join(full_path, "updater.py")
                 shutil.copy(updator, upd_dest)
@@ -1591,7 +1643,7 @@ clear
 # script: Python3
 # nocombination
 #
-#  Copyright 2025 Jesus Quijada <@JesusQuijada34>
+#  Copyright 2025 {autor} <@{autor}>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -1619,8 +1671,12 @@ if __name__ == '__main__':
     sys.exit(main(sys.argv))
 """)
             icon_dest = os.path.join(full_path, "app", "app-icon.ico")
+            upd_icon = os.path.join("app", "updater-icon.ico")
+            upd_icn_dst = os.path.join(full_path, "app", "updater-icon.ico")
             if os.path.exists(IPM_ICON_PATH):
                 shutil.copy(IPM_ICON_PATH, icon_dest)
+            if os.path.exists(upd_icon):
+                shutil.copy(upd_icon, upd_icn_dst)
             requirements_path = os.path.join(full_path, "lib", "requirements.txt")
             with open(requirements_path, "w") as f:
                 f.write("# Dependencias del paquete\n")
@@ -1702,6 +1758,15 @@ if __name__ == '__main__':
         self.input_build_version.setMaximumWidth(300)
         form_layout.addWidget(self.input_build_version, 2, 1)
 
+        label4 = QLabel("Plataforma:")
+        label4.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label4, 3, 0)
+        self.input_build_platform = QLineEdit()
+        self.input_build_platform.setPlaceholderText("Ejemplo: Windows")
+        self.input_build_platform.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_PLATFORM_E"])
+        self.input_build_platform.setMaximumWidth(300)
+        form_layout.addWidget(self.input_build_platform, 3, 1)
+
         self.btn_build = QPushButton("Construir paquete .iflapp")
         self.btn_build.setFont(BUTTON_FONT)
         self.btn_build.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_BUILD_BTN"])
@@ -1721,9 +1786,11 @@ if __name__ == '__main__':
         empresa = self.input_build_empresa.text().strip().lower() or "influent"
         nombre = self.input_build_nombre.text().strip().lower() or "mycoolapp"
         version = self.input_build_version.text().strip() or f"1-{version}"
+        platformLineEdit = self.input_build_platform.text() or f"{linkedsys.capitalize()}"
+        
         # Packagemaker solo compila .iflapp
         self.build_status.setText("🔨 Construyendo paquete .iflapp...")
-        self.build_thread = BuildThread(empresa, nombre, version)
+        self.build_thread = BuildThread(empresa, nombre, version, platformLineEdit)
         self.build_thread.progress.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.finished.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.error.connect(lambda msg: self.build_status.setText(f"❌ Error: {msg}"))
