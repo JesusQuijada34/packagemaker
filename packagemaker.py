@@ -57,20 +57,20 @@ plataforma_platform = sys.platform
 plataforma_name = os.name
 if plataforma_platform.startswith("win"):
     BASE_DIR = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Packagemaker Projects")
-    FLATR_APPS = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Flatr Apps")
+    JERODIN_APPS = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Jerodin Apps")
     linkedsys = "knosthalij"
 elif plataforma_platform.startswith("linux"):
     BASE_DIR = os.path.expanduser("~/Documents/Packagemaker Projects")
-    FLATR_APPS = os.path.expanduser("~/Documents/Flatr Apps")
+    JERODIN_APPS = os.path.expanduser("~/Documents/Jerodin Apps")
     linkedsys = "danenone"
 else:
     BASE_DIR = "Packagemaker Projects/"
-    FLATR_APPS = "Flatr Apps/"
+    JERODIN_APPS = "Jerodin Apps/"
     linkedsys = "keystone"
 
 # Crear las carpetas si no existen
 os.makedirs(BASE_DIR, exist_ok=True)
-os.makedirs(FLATR_APPS, exist_ok=True)
+os.makedirs(JERODIN_APPS, exist_ok=True)
 
 IPM_ICON_PATH = "app/app-icon.ico"
 DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
@@ -91,20 +91,20 @@ LGDR_BUILD_MESSAGES = {
     "_LGDR_NAME_E" : "Nombre corto del proyecto a construir",
     "_LGDR_VERSION_E" : "Versión del proyecto a detectar",
     "_LGDR_TYPE_DDL" : "Packaged (Programa multiplataforma en código Python)\nBundled (Manifest.xml + Recursos locales o externos + XML Activities)",
-    "_LGDR_BUILD_BTN" : "Construir a partir de RAW (Flatr Packaged/Bundled)"
+    "_LGDR_BUILD_BTN" : "Construir a partir de RAW (Jerodin Packaged/Bundled)"
 }
 
 LGDR_NAUFRAGIO_MESSAGES = {
     "_LGDR_LOCAL_LV" : "Proyectos locales encontrados en la carpeta predeterminada",
-    "_LGDR_INSTALLED_LV" : "Paquetes instalados desde la RAW (Flatr Packaged/Bundled)",
+    "_LGDR_INSTALLED_LV" : "Paquetes instalados desde la RAW (Jerodin Packaged/Bundled)",
     "_LGDR_REFRESH_BTN" : "Refresca proyectos locales y paquetes instalados",
-    "_LGDR_INSTALL_BTN" : "Instala un paquete Flatr desde ruta",
-    "_LGDR_UNINSTALL_BTN" : "Desinstala un paquete Flatr instalado en el directorio de la tienda",
+    "_LGDR_INSTALL_BTN" : "Instala un paquete Jerodin desde ruta",
+    "_LGDR_UNINSTALL_BTN" : "Desinstala un paquete Jerodin instalado en el directorio de la tienda",
     "_LGDR_RUNPY_BTN" : "Ejecuta o depura el bundle/py seleccionado",
     "_LGDR_INSTALLPROJ_BTN" : "Instala la carpeta del proyecto si se encuentra compilado",
     "_LGDR_UNINSTALLPROJ_BTN" : "Elimina definitivamente el proyecto desde el alamacenamiento",
     "_LGDR_RUNPYAPP_BTN" : "Ejecuta el bundle instalado",
-    "_LGDR_UNINSTALLAPP_BTN" : "Desinstala definitivamente el Flatr Seleccionado",
+    "_LGDR_UNINSTALLAPP_BTN" : "Desinstala definitivamente el Jerodin Seleccionado",
 }
 AGE_RATINGS = {
     "project1" : "NO SEGURO!",
@@ -761,7 +761,7 @@ class PackageTodoGUI(QMainWindow):
         self.statusBar().showMessage("Preparando entorno...")
 
     def create_package_action(self):
-        self.statusBar().showMessage("Creando Proyecto Flatr Packaged...")
+        self.statusBar().showMessage("Creando Proyecto Jerodin Packaged...")
         # Validar autor (obligatorio)
         autor = self.input_autor.text().strip()
         if not autor:
@@ -817,14 +817,18 @@ class PackageTodoGUI(QMainWindow):
         # Obtener plataforma seleccionada
         if self.radio_windows.isChecked():
             plataforma_seleccionada = "Knosthalij"
+            xte = "exe"
         elif self.radio_linux.isChecked():
             plataforma_seleccionada = "Danenone"
+            xte = "appImage"
         else:
             plataforma_seleccionada = "AlphaCube"
+            xte = "nrdPkg"
         
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         version = self.input_version.text().strip()
+        productversion = self.input_version.text().strip()
         if version == "":
              version = f"1-{getversion()}-{plataforma_seleccionada}"
         else:
@@ -839,6 +843,7 @@ class PackageTodoGUI(QMainWindow):
             cmdwin = os.path.join(full_path, "autorun.bat")
             bashlinux = os.path.join(full_path, "autorun")
             updator = os.path.join("updater.py")
+            blockmap = os.path.join(full_path, "jerodinManifest.res")
             lic = os.path.join(full_path, "LICENSE")
             fn = f"{empresa}.{nombre_logico}.v{version}"
             hv = hashlib.sha256(fn.encode()).hexdigest()
@@ -851,8 +856,38 @@ class PackageTodoGUI(QMainWindow):
             with open(updator, "w") as f:
                 upd_dest = os.path.join(full_path, "updater.py")
                 shutil.copy(updator, upd_dest)
+            with open(blockmap, "w") as f:
+                compname = empresa.capitalize()
+                neim = nombre_completo.capitalize()
+                f.write(f"""1 VERSIONINFO
+FILEVERSION {version}
+PRODUCTVERSION {productversion}
+FILEOS 0x4
+FILETYPE 0x2
+{{
+BLOCK "StringFileInfo"
+{{
+	BLOCK "040904B0"
+	{{
+		VALUE "CompanyName", "{compname}"
+		VALUE "FileDescription", "Influent\xAE Kn Library"
+		VALUE "FileVersion", "{version} built by: {autor}"
+		VALUE "InternalName", "{nombre_logico}"
+		VALUE "LegalCopyright", "\xA9 {compname}. All rights reserved."
+		VALUE "OriginalFilename", "{nombre_logico}.{xte}"
+		VALUE "ProductName", "{compname} {neim} {version}"
+		VALUE "ProductVersion", "{productversion}"
+	}}
+}}
+
+BLOCK "VarFileInfo"
+{{
+	VALUE "Translation", 0x0409 0x04B0  
+}}
+}}
+""")
             with open(storekey, "w") as f:
-                f.write(f"#aiFlatr Store APP DETAIL | Correlation Engine for Influent OS\n#store key protection id:\n{hv}")
+                f.write(f"#aiJerodin Store APP DETAIL | Correlation Engine for Influent OS\n#store key protection id:\n{hv}")
             with open(lic, "w") as f:
                 f.write(f"""                   GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -1794,7 +1829,7 @@ if __name__ == '__main__':
             item = QListWidgetItem(icon, text)
             item.setData(QtCore.Qt.UserRole, p)
             self.projects_list.addItem(item)
-        apps = self.get_package_list(FLATR_APPS)
+        apps = self.get_package_list(JERODIN_APPS)
         for a in apps:
             icon = QIcon(a["icon"]) if a["icon"] else self.style().standardIcon(QStyle.SP_DesktopIcon)
             text = a['empresa'].capitalize()
@@ -1864,7 +1899,7 @@ if __name__ == '__main__':
             for ext in [".iflapp", ".iflappb"]:
                 pkg_file = os.path.join(BASE_DIR, pkg["name"] + ext)
                 if os.path.exists(pkg_file):
-                    target_dir = os.path.join(FLATR_APPS, pkg["name"])
+                    target_dir = os.path.join(JERODIN_APPS, pkg["name"])
                     os.makedirs(target_dir, exist_ok=True)
                     try:
                         with zipfile.ZipFile(pkg_file, 'r') as zip_ref:
@@ -1955,12 +1990,12 @@ if __name__ == '__main__':
             if not file_path:
                 continue
             pkg_name = os.path.basename(file_path).replace(".iflapp", "").replace(".iflappb", "")
-            target_dir = os.path.join(FLATR_APPS, pkg_name)
+            target_dir = os.path.join(JERODIN_APPS, pkg_name)
             os.makedirs(target_dir, exist_ok=True)
             try:
                 with zipfile.ZipFile(file_path, 'r') as zip_ref:
                     zip_ref.extractall(target_dir)
-                self.manager_status.setText(f"✅ Instalado: {pkg_name} en Flatr Apps")
+                self.manager_status.setText(f"✅ Instalado: {pkg_name} en Jerodin Apps")
                 # Asociación de extensión y menú inicio en Windows
                 if sys.platform.startswith('win'):
                     self.setup_windows_shortcut(target_dir, pkg_name)
