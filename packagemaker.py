@@ -227,7 +227,7 @@ def getversion():
     return f"{newversion}"
 
 def verificar_github_username(username):
-    """Verifica si un username de GitHub existe"""
+    """Verifica si un username de GitHub existe. Si no hay internet, deja pasar el username."""
     if not username or not username.strip():
         return False, "El username no puede estar vacío"
     username = username.strip()
@@ -246,7 +246,8 @@ def verificar_github_username(username):
         else:
             return False, f"Error al verificar: {e.code}"
     except urllib.error.URLError as e:
-        return False, f"Error de conexión: {str(e)}" #True, "BYPASS DE ANTIBOT ACTIVADO Y RESULTADO ES VERDADERO (MODDED BY: JQ34)"
+        # Si no hay internet, se permite el username
+        return True, "Conexión a internet no disponible, se permite el username"
     except Exception as e:
         return False, f"Error inesperado: {str(e)}"
 
@@ -656,6 +657,7 @@ class PackageTodoGUI(QMainWindow):
         # Fila 6: Plataforma con radios personalizados
         label6 = QLabel("Plataforma:")
         label6.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        label6.setMinimumHeight(50)
         form_layout.addWidget(label6, 5, 0)
         
         self.platform_group = QButtonGroup()
@@ -665,13 +667,14 @@ class PackageTodoGUI(QMainWindow):
         
         self.radio_windows = QRadioButton("Windows")
         self.radio_windows.setChecked(True)
-        self.radio_windows.setMinimumHeight(50)
+        self.radio_windows.setMinimumHeight(40)  # No se achique más allá de 40 px al hacer resize
         self.radio_windows.setStyleSheet("""
             QRadioButton {
                 padding: 6px 10px;
                 border: 2px solid transparent;
                 border-radius: 6px;
                 background-color: transparent;
+                min-height: 40px;  /* Garantiza altura mínima visual */
             }
             QRadioButton:hover {
                 background-color: rgba(108, 249, 237, 0.1);
@@ -690,13 +693,14 @@ class PackageTodoGUI(QMainWindow):
         """)
         
         self.radio_linux = QRadioButton("Linux")
-        self.radio_linux.setMinimumHeight(50)
+        self.radio_linux.setMinimumHeight(40)
         self.radio_linux.setStyleSheet("""
             QRadioButton {
                 padding: 6px 10px;
                 border: 2px solid transparent;
                 border-radius: 6px;
                 background-color: transparent;
+                min-height: 40px;
             }
             QRadioButton:hover {
                 background-color: rgba(249, 247, 108, 0.1);
@@ -715,13 +719,14 @@ class PackageTodoGUI(QMainWindow):
         """)
         
         self.radio_multiplataforma = QRadioButton("Multiplataforma")
-        self.radio_multiplataforma.setMinimumHeight(50)
+        self.radio_multiplataforma.setMinimumHeight(40)
         self.radio_multiplataforma.setStyleSheet("""
             QRadioButton {
                 padding: 6px 10px;
                 border: 2px solid transparent;
                 border-radius: 6px;
                 background-color: transparent;
+                min-height: 40px;
             }
             QRadioButton:hover {
                 background-color: rgba(108, 249, 108, 0.1);
@@ -2243,6 +2248,37 @@ if __name__ == '__main__':
         scroll.setWidget(container_widget)
         scroll.setFrameStyle(0)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # Aplicar estilo MacOSX-like si es posible (QSS)
+        try:
+            scroll.setStyleSheet("""
+                QScrollArea {
+                    border: none;
+                    background: #f5f5f7;
+                    border-radius: 8px;
+                }
+                QScrollBar:vertical, QScrollBar:horizontal {
+                    background: transparent;
+                    width: 8px;
+                    margin: 2px 2px 2px 2px;
+                    border-radius: 4px;
+                }
+                QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+                    background: rgba(0,0,0,0.18);
+                    min-height: 24px;
+                    min-width: 24px;
+                    border-radius: 4px;
+                }
+                QScrollBar::add-line, QScrollBar::sub-line {
+                    background: none;
+                    border: none;
+                    width:0; height:0;
+                }
+                QScrollBar::add-page, QScrollBar::sub-page {
+                    background: none;
+                }
+            """)
+        except Exception:
+            pass
 
         # Limpiamos el layout de la pestaña por si acaso
         if self.tab_about.layout() is not None:
