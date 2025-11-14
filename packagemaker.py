@@ -83,7 +83,8 @@ LGDR_BUILD_MESSAGES = {
     "_LGDR_PUBLISHER_E" : "Empresa quien hizo el proyecto",
     "_LGDR_NAME_E" : "Shortname del proyecto a construir",
     "_LGDR_VERSION_E" : "Versión del proyecto a detectar",
-    "_LGDR_PLATFORM_E" : "Plataforma a compilar"
+    "_LGDR_PLATFORM_E" : "Plataforma a compilar",
+    "_LGDR_BUILD_BTN" : "Compilar proyecto"
 }
 
 LGDR_NAUFRAGIO_MESSAGES = {
