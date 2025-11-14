@@ -1,16 +1,25 @@
-# 📦 Influent Package Maker (IPM)
+# 📦 Packagemaker: Herramienta Modular para Creación y Gestión de Paquetes de Software Distribuible
 
-**Herramienta modular todo-en-uno para crear, empaquetar y gestionar proyectos Influent.**
+**Packagemaker** (anteriormente conocido como Influent Package Maker - IPM) es una **herramienta modular todo-en-uno** diseñada para **simplificar y estandarizar el proceso de empaquetado y distribución de software** multiplataforma. Permite a los desarrolladores crear paquetes de aplicación robustos y estéticos, con un enfoque en la compatibilidad y la autonomía.
 
-Influent Package Maker (IPM), diseñado por Jesús Quijada, es un sistema para **simplificar y estandarizar el desarrollo de software distribuible**, con un enfoque en la estética, la compatibilidad multiplataforma y la autonomía del desarrollador.
+---
+
+## 🌟 Características Principales
+
+*   **Doble Formato de Paquete:** Soporte para dos estructuras de empaquetado optimizadas:
+    *   **Paquete Normal (`.iflapp`):** Ideal para aplicaciones completas y modulares.
+    *   **Paquete Bundle (`.iflappb`):** Estructura avanzada centrada en recursos y actividades, similar a formatos modernos como AppX.
+*   **Interfaz Dual:** Ofrece una **Interfaz Gráfica de Usuario (GUI)** intuitiva construida con **PyQt5** y una **Interfaz de Línea de Comandos (CLI)** para automatización y uso en terminal.
+*   **Multiplataforma:** Diseñado para funcionar de manera consistente en **Linux** y **Windows**, con lanzadores dedicados para cada sistema operativo.
+*   **Arquitectura Consolidada:** La versión 3.1.0+ presenta una arquitectura "Todo en Uno" que consolida la lógica de creación y gestión de paquetes, eliminando la necesidad de múltiples scripts externos.
 
 ---
 
 ## 🚀 Arquitectura Modular (v3.1.0 - Consolidada)
 
-El proyecto ha sido refactorizado para consolidar las herramientas principales en versiones "Todo en Uno", eliminando la necesidad de múltiples scripts de administración y la lógica de asociación de archivos separada.
+El proyecto ha sido refactorizado para consolidar las herramientas principales en versiones "Todo en Uno", mejorando la mantenibilidad y la experiencia del desarrollador.
 
-| Herramienta | Formato | Interfaz | Responsabilidad Principal |
+| Herramienta | Formato de Salida | Interfaz | Responsabilidad Principal |
 | :--- | :--- | :--- | :--- |
 | **Packagemaker** | `.iflapp` | GUI (PyQt5) & CLI (Terminal) | Creación, construcción y gestión de **Paquetes Normales**. |
 | **Bundlemaker** | `.iflappb` | GUI (PyQt5) & CLI (Terminal) | Creación, construcción y gestión de **Bundles Avanzados**. |
@@ -20,11 +29,11 @@ El proyecto ha sido refactorizado para consolidar las herramientas principales e
 ## 🛠️ Estructura de Paquetes
 
 ### Paquete Normal (`.iflapp`)
-El formato `.iflapp` mantiene la estructura de proyecto modular de IPM, ideal para aplicaciones completas:
+El formato `.iflapp` mantiene una estructura de proyecto modular, ideal para aplicaciones completas:
 `app/`, `assets/`, `config/`, `docs/`, `lib/`, `source/`, `details.xml`, `LICENSE`, `{nombre}.py`.
 
 ### Paquete Bundle (`.iflappb`)
-El formato `.iflappb` sigue una estructura más cercana a los paquetes modernos (como AppX o Android Bundles), centrándose en actividades y recursos:
+El formato `.iflappb` sigue una estructura más cercana a los paquetes modernos, centrándose en actividades y recursos:
 `res/`, `data/`, `code/`, `manifest/manifest.json`, `activity/`, `theme/`, `blob/`, `details.xml`.
 
 ---
@@ -52,7 +61,7 @@ pip install -r lib/requirements.txt
 
 ### Ejecución de Herramientas
 
-La forma recomendada de iniciar la aplicación es a través de los lanzadores:
+La forma recomendada de iniciar la aplicación es a través de los lanzadores, que ofrecen un menú interactivo:
 
 | Sistema Operativo | Comando de Ejecución | Descripción |
 | :--- | :--- | :--- |
@@ -68,17 +77,12 @@ La forma recomendada de iniciar la aplicación es a través de los lanzadores:
 | **Bundlemaker** | GUI | `python bundlemaker.py` |
 | **Bundlemaker CLI** | Terminal | `python bundlemaker-term.py` |
 
-**Ejecución Directa (Ejecutables Linux):**
-
-Los ejecutables se encuentran en la carpeta `dist/linux/` y pueden ejecutarse directamente.
-
 ---
 
-## 💡 Filosofía y Futuro
+## 💡 Contribución y Licencia
 
-IPM se construye sobre la **Legibilidad**, **Modularidad** y **Automatización Inteligente**. La refactorización a la **Arquitectura Modular v3.1.0** consolida las herramientas principales, haciendo el ecosistema más fácil de mantener y expandir.
+**Packagemaker** se construye sobre la **Legibilidad**, **Modularidad** y **Automatización Inteligente**. ¡Le invitamos a contribuir y explorar las posibilidades del empaquetado modular!
 
-**¡Contribuya y explore las posibilidades del empaquetado modular!**
-Creador: [Jesús Quijada](https://github.com/JesusQuijada34)
-Licencia: GNU/MIT.
-
+*   **Creador:** [Jesús Quijada](https://github.com/JesusQuijada34)
+*   **Licencia:** GNU/MIT.
+*   **Palabras clave SEO:** `packagemaker`, `bundlemaker`, `creación de paquetes`, `distribución de software`, `PyQt5`, `Python`, `aplicaciones multiplataforma`, `iflapp`, `iflappb`.
