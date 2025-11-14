@@ -79,6 +79,34 @@ def leer_xml(path):
     except Exception:
         return {}
 
+def leer_xml_remoto(author, app):
+    try:
+        # obtener branch por defecto del repo
+        repo_url = f"{GITHUB_API}/repos/{author}/{app}"
+        r = requests.get(repo_url, timeout=10)
+        if r.status_code != 200:
+            # no se pudo obtener info del repo
+            return {}
+        branch = r.json().get("default_branch", "main")
+        raw_url = f"https://raw.githubusercontent.com/{author}/{app}/{branch}/{XML_PATH}"
+        r2 = requests.get(raw_url, timeout=10)
+        if r2.status_code != 200:
+            # probar master por compatibilidad
+            raw_url = f"https://raw.githubusercontent.com/{author}/{app}/master/{XML_PATH}"
+            r2 = requests.get(raw_url, timeout=10)
+            if r2.status_code != 200:
+                return {}
+        # parsear xml desde texto
+        root = ET.fromstring(r2.text)
+        return {
+            "app": root.findtext("app", "").strip(),
+            "version": root.findtext("version", "").strip(),
+            "platform": root.findtext("platform", "").strip(),
+            "author": root.findtext("author", "").strip()
+        }
+    except Exception:
+        return {}
+
 def hay_conexion():
     try:
         requests.get(GITHUB_API, timeout=5)
@@ -93,9 +121,10 @@ def buscar_release(author, app, version, platform):
         if r.status_code != 200:
             return None
         assets = r.json().get("assets", [])
+        expected_name = f"{app}-{version}-{platform}.iflapp"
         for a in assets:
             name = a.get("name", "")
-            if name == f"{app}-{version}-{platform}.iflapp":
+            if name == expected_name:
                 return a.get("browser_download_url")
         return None
     except Exception:
@@ -107,7 +136,7 @@ class UpdaterWindow(QWidget):
         self.app = appname
         self.version = version
         self.platform = platform
-        self.url = url
+        self.url = url or ""
         self.setWindowTitle("Actualizador IPM")
         # Establecer icono, si falla, no inicia
         try:
@@ -161,14 +190,21 @@ class UpdaterWindow(QWidget):
         self.progressBar.setVisible(False)
         layout.addWidget(self.progressBar)
 
-        btn = QPushButton("Actualizar ahora")
-        btn.clicked.connect(self.instalar)
-        layout.addWidget(btn)
+        self.btn = QPushButton("Actualizar ahora")
+        self.btn.clicked.connect(self.instalar)
+        # si no hay url de descarga, desactivar el botón y mostrar aviso
+        if not self.url:
+            self.btn.setEnabled(False)
+            self.statusLabel.setText("ℹ️ Actualización disponible (xml remoto diferente) pero no se encontró paquete descargable.")
+        layout.addWidget(self.btn)
 
         self.setLayout(layout)
         self.show()
 
     def instalar(self):
+        if not self.url:
+            self.statusLabel.setText("❌ No hay URL de descarga disponible.")
+            return
         destino = "update.iflapp"
         try:
             self.statusLabel.setText("⬇️ Descargando actualización…")
@@ -240,22 +276,59 @@ def verificar():
         if not hay_conexion():
             time.sleep(30)
             continue
-        datos = leer_xml(XML_PATH)
-        if not datos:
+        datos_local = leer_xml(XML_PATH)
+        if not datos_local:
             time.sleep(CHECK_INTERVAL)
             continue
-        url = buscar_release(datos["author"], datos["app"], datos["version"], datos["platform"])
-        if url:
-            app = QApplication(sys.argv)
-            ventana = UpdaterWindow(datos["app"], datos["version"], datos["platform"], url)
-            app.exec_()
-            return
+        datos_remoto = leer_xml_remoto(datos_local["author"], datos_local["app"])
+        if not datos_remoto:
+            # no se pudo obtener xml remoto, seguir intentando
+            time.sleep(CHECK_INTERVAL)
+            continue
+        # Si el xml remoto difiere del local -> hay actualización
+        if datos_remoto != datos_local:
+            # Esperar a que exista el release con la versión/plataforma y que contenga el asset esperado.
+            target = datos_remoto.copy()
+            # Bucle de espera: se reintenta buscar el release/asset; si el xml remoto cambia, se reinicia la comprobación
+            while True:
+                if not hay_conexion():
+                    time.sleep(30)
+                    continue
+                url = buscar_release(target["author"], target["app"], target["version"], target["platform"])
+                if url:
+                    # Found the release + asset
+                    break
+                # Reconsultar el xml remoto para ver si ha cambiado la versión/plataforma/autor
+                current_remote = leer_xml_remoto(target["author"], target["app"])
+                if not current_remote:
+                    # no se pudo leer ahora mismo; esperar e intentar de nuevo
+                    time.sleep(CHECK_INTERVAL)
+                    continue
+                if current_remote != target:
+                    # El xml remoto cambió (por ejemplo publicó otra versión); reiniciar la lógica principal
+                    datos_remoto = current_remote
+                    break  # volver al loop principal para evaluar la nueva situación
+                # Si sigue igual pero no existe aún el release/asset, esperar y volver a intentar
+                time.sleep(CHECK_INTERVAL)
+            else:
+                # no-op, por claridad (nunca se ejecuta)
+                pass
+
+            # Si datos_remoto y datos_local aún difieren y encontramos url, abrir ventana de actualización
+            # Aseguramos obtener la última URL en caso de que haya sido encontrada
+            final_url = buscar_release(datos_remoto["author"], datos_remoto["app"], datos_remoto["version"], datos_remoto["platform"])
+            if datos_remoto != datos_local:
+                app = QApplication(sys.argv)
+                ventana = UpdaterWindow(datos_remoto["app"], datos_remoto["version"], datos_remoto["platform"], final_url)
+                app.exec_()
+                return
         time.sleep(CHECK_INTERVAL)
+
 threading.Thread(target=verificar, daemon=True).start()
 
 if __name__ == "__main__":
     datos = leer_xml(XML_PATH)
-    print(f"""searching for a fluthin package...\ngit::{datos["author"]}/{datos["app"]} {datos["version"]}/{datos["platform"]}\nhttps://github.com/{datos["author"]}/{datos["app"]}/""")
+    print(f"""searching for a fluthin package...\ngit::{datos.get("author")}/{datos.get("app")} {datos.get("version")}/{datos.get("platform")}\nhttps://github.com/{datos.get("author")}/{datos.get("app")}/""")
     verificar()
     while True:
         time.sleep(300)
