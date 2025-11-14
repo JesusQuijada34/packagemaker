@@ -910,7 +910,7 @@ class PackageTodoGUI(QMainWindow):
     </dependentAssembly>
   </dependency>
 </assembly>""")
-            with open(updator, "w") as f:
+            if os.path.exists(updator):
                 upd_dest = os.path.join(full_path, "updater.py")
                 shutil.copy(updator, upd_dest)
             with open(blockmap, "w") as f:
