@@ -1,12 +1,5 @@
 #!/usr/bin/env/python
-# COdigo para generar [aquetes]
 # -*- coding: utf-8 -*-
-# Nueva actualización: Se escoje crear un paquete Packaged (Normal) o Bundled (Solo un py lanzador de actividades xml)
-# Tiene el entorno "knosthalij" (Bundle) y "danenone" (Packaged
-# Se crea lo siguiente o se agregan estas variables a un bundle de esta forma:
-# icon = "bundle/bundle-icon.ico"
-# folders = "bundle,res,data,code,bin,manifest,activity,theme,blob"
-#
 import sys
 import os
 import time
@@ -37,7 +30,7 @@ if getattr(sys, 'frozen', False):
 # ----------- CONFIGURABLE VARIABLES -----------
 APP_FONT = QFont('Roboto', 13)
 TAB_FONT = QFont('Roboto', 12) #, QFont.Bold)
-BUTTON_FONT = QFont('Arial', 12, QFont.Bold)
+BUTTON_FONT = QFont('Roboto', 12, QFont.Bold)
 TAB_ICONS = {
     "crear": "./app/package_add.ico",
     "construir": "./app/package_build.ico",
@@ -57,20 +50,20 @@ plataforma_platform = sys.platform
 plataforma_name = os.name
 if plataforma_platform.startswith("win"):
     BASE_DIR = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Packagemaker Projects")
-    JERODIN_APPS = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Jerodin Apps")
+    FLUTHIN_APPS = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "FLUTHIN Apps")
     linkedsys = "knosthalij"
 elif plataforma_platform.startswith("linux"):
     BASE_DIR = os.path.expanduser("~/Documents/Packagemaker Projects")
-    JERODIN_APPS = os.path.expanduser("~/Documents/Jerodin Apps")
+    FLUTHIN_APPS = os.path.expanduser("~/Documents/FLUTHIN Apps")
     linkedsys = "danenone"
 else:
     BASE_DIR = "Packagemaker Projects/"
-    JERODIN_APPS = "Jerodin Apps/"
+    FLUTHIN_APPS = "FLUTHIN Apps/"
     linkedsys = "keystone"
 
 # Crear las carpetas si no existen
 os.makedirs(BASE_DIR, exist_ok=True)
-os.makedirs(JERODIN_APPS, exist_ok=True)
+os.makedirs(FLUTHIN_APPS, exist_ok=True)
 
 IPM_ICON_PATH = "app/app-icon.ico"
 DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
@@ -80,32 +73,30 @@ nombre = plataforma_name.capitalize()
 plataforma = f"{plataforma} in {nombre}"
 
 LGDR_MAKE_MESSAGES = {
-    "_LGDR_PUBLISHER_E" : "Nombre del fabricante de creación. En blanco, Influent",
-    "_LGDR_NAME_E" : "Nombre acortado del proyecto. Se permiten guiones y pisos, no espacios. En blanco, mycoolapp",
-    "_LGDR_VERSION_E" :"Versión del proyecto, como 1 o 1.0, no es permitido guiones ni espacios. En blanco, 1",
-    "_LGDR_TITLE_E" : "Título del proyecto, formato libre. En blanco, My Cool App",
+    "_LGDR_PUBLISHER_E" : "Nombre de la empresa de creación.",
+    "_LGDR_NAME_E" : "Nombre acortado del proyecto. Se permiten guiones y pisos, no espacios",
+    "_LGDR_VERSION_E" :"Versión del proyecto, como 1 o 1.0, no es permitido guiones ni espacios",
+    "_LGDR_TITLE_E" : "Título del proyecto, formato libre",
     "_LGDR_MAKE_BTN" : "Crear proyecto y firmar"
 }
 LGDR_BUILD_MESSAGES = {
-    "_LGDR_PUBLISHER_E" : "Nombre del publicador quien hizo el proyecto",
-    "_LGDR_NAME_E" : "Nombre corto del proyecto a construir",
+    "_LGDR_PUBLISHER_E" : "Empresa quien hizo el proyecto",
+    "_LGDR_NAME_E" : "Shortname del proyecto a construir",
     "_LGDR_VERSION_E" : "Versión del proyecto a detectar",
-    "_LGDR_PLATFORM_E" : "Plataforma a compilar",
-    "_LGDR_TYPE_DDL" : "Packaged (Programa multiplataforma en código Python)\nBundled (Manifest.xml + Recursos locales o externos + XML Activities)",
-    "_LGDR_BUILD_BTN" : "Construir a partir de RAW (Jerodin Packaged/Bundled)"
+    "_LGDR_PLATFORM_E" : "Plataforma a compilar"
 }
 
 LGDR_NAUFRAGIO_MESSAGES = {
     "_LGDR_LOCAL_LV" : "Proyectos locales encontrados en la carpeta predeterminada",
-    "_LGDR_INSTALLED_LV" : "Paquetes instalados desde la RAW (Jerodin Packaged/Bundled)",
+    "_LGDR_INSTALLED_LV" : "Paquetes instalados desde la ROM (Fluthin Packaged)",
     "_LGDR_REFRESH_BTN" : "Refresca proyectos locales y paquetes instalados",
-    "_LGDR_INSTALL_BTN" : "Instala un paquete Jerodin desde ruta",
-    "_LGDR_UNINSTALL_BTN" : "Desinstala un paquete Jerodin instalado en el directorio de la tienda",
-    "_LGDR_RUNPY_BTN" : "Ejecuta o depura el bundle/py seleccionado",
+    "_LGDR_INSTALL_BTN" : "Instala un paquete Fluthin desde ruta",
+    "_LGDR_UNINSTALL_BTN" : "Desinstala un paquete Fluthin instalado en el directorio de la tienda",
+    "_LGDR_RUNPY_BTN" : "Ejecuta/depura el script marcado",
     "_LGDR_INSTALLPROJ_BTN" : "Instala la carpeta del proyecto si se encuentra compilado",
     "_LGDR_UNINSTALLPROJ_BTN" : "Elimina definitivamente el proyecto desde el alamacenamiento",
-    "_LGDR_RUNPYAPP_BTN" : "Ejecuta el bundle instalado",
-    "_LGDR_UNINSTALLAPP_BTN" : "Desinstala definitivamente el Jerodin Seleccionado",
+    "_LGDR_RUNPYAPP_BTN" : "Ejecuta el script instalado",
+    "_LGDR_UNINSTALLAPP_BTN" : "Desinstala definitivamente el Fluthin Seleccionado",
 }
 AGE_RATINGS = {
     "project1" : "NO SEGURO!",
@@ -785,7 +776,7 @@ class PackageTodoGUI(QMainWindow):
         self.statusBar().showMessage("Preparando entorno...")
 
     def create_package_action(self):
-        self.statusBar().showMessage("Creando Proyecto Jerodin Packaged...")
+        self.statusBar().showMessage("Creando Proyecto FLUTHIN Packaged...")
         # Validar autor (obligatorio)
         autor = self.input_autor.text().strip()
         if not autor:
@@ -855,7 +846,9 @@ class PackageTodoGUI(QMainWindow):
         productversion = self.input_version.text().strip()
         if version == "":
              version = f"1-{getversion()}-{plataforma_seleccionada}"
+             vso = f"1-{getversion()}"
         else:
+            vso = f"{version}-{getversion()}"
             version = f"{version}-{getversion()}-{plataforma_seleccionada}"
         nombre_completo = self.input_titulo.text() or nombre_logico.strip().upper()
         folder_name = f"{empresa}.{nombre_logico}.v{version}"
@@ -944,7 +937,7 @@ BLOCK "VarFileInfo"
 }}
 """)
             with open(storekey, "w") as f:
-                f.write(f"#aiJerodin Store APP DETAIL | Correlation Engine for Influent OS\n#store key protection id:\n{hv}")
+                f.write(f"#aiFLUTHIN Store APP DETAIL | Correlation Engine for Influent OS\n#store key protection id:\n{hv}")
             with open(lic, "w") as f:
                 f.write(f"""                   GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -1685,7 +1678,7 @@ if __name__ == '__main__':
             requirements_path = os.path.join(full_path, "lib", "requirements.txt")
             with open(requirements_path, "w") as f:
                 f.write("# Dependencias del paquete\n")
-            self.create_details_xml(full_path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada)
+            self.create_details_xml(full_path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada, vso)
             readme_path = os.path.join(full_path, "README.md")
             readme_text = f"""# {empresa} {nombre_completo}\n\nPaquete generado con Influent Package Maker.\n\n## Ejemplo de uso\npython3 {empresa}.{nombre_logico}.v{version}/{nombre_logico}.py\n\n##"""
             with open(readme_path, "w", encoding="utf-8") as f:
@@ -1698,7 +1691,7 @@ if __name__ == '__main__':
             self.create_status.setText(f"❌ Error: {str(e)}")
             self.statusBar().showMessage(f"Error al crear proyecto: {str(e)}")
 
-    def create_details_xml(self, path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada):
+    def create_details_xml(self, path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada, vso):
         newversion = getversion()
         full_name = f"{empresa}.{nombre_logico}.v{version}"
         hash_val = hashlib.sha256(full_name.encode()).hexdigest()
@@ -1712,7 +1705,7 @@ if __name__ == '__main__':
         ET.SubElement(root, "publisher").text = empresa
         ET.SubElement(root, "app").text = nombre_logico
         ET.SubElement(root, "name").text = nombre_completo
-        ET.SubElement(root, "version").text = f"v{version}"
+        ET.SubElement(root, "version").text = f"v{vso}"
         ET.SubElement(root, "correlationid").text = hash_val
         ET.SubElement(root, "rate").text = rating
         ET.SubElement(root, "author").text = autor
@@ -1901,7 +1894,7 @@ if __name__ == '__main__':
             item = QListWidgetItem(icon, text)
             item.setData(QtCore.Qt.UserRole, p)
             self.projects_list.addItem(item)
-        apps = self.get_package_list(JERODIN_APPS)
+        apps = self.get_package_list(FLUTHIN_APPS)
         for a in apps:
             icon = QIcon(a["icon"]) if a["icon"] else self.style().standardIcon(QStyle.SP_DesktopIcon)
             text = a['empresa'].capitalize()
@@ -1971,7 +1964,7 @@ if __name__ == '__main__':
             for ext in [".iflapp", ".iflappb"]:
                 pkg_file = os.path.join(BASE_DIR, pkg["name"] + ext)
                 if os.path.exists(pkg_file):
-                    target_dir = os.path.join(JERODIN_APPS, pkg["name"])
+                    target_dir = os.path.join(FLUTHIN_APPS, pkg["name"])
                     os.makedirs(target_dir, exist_ok=True)
                     try:
                         with zipfile.ZipFile(pkg_file, 'r') as zip_ref:
@@ -2062,12 +2055,12 @@ if __name__ == '__main__':
             if not file_path:
                 continue
             pkg_name = os.path.basename(file_path).replace(".iflapp", "").replace(".iflappb", "")
-            target_dir = os.path.join(JERODIN_APPS, pkg_name)
+            target_dir = os.path.join(FLUTHIN_APPS, pkg_name)
             os.makedirs(target_dir, exist_ok=True)
             try:
                 with zipfile.ZipFile(file_path, 'r') as zip_ref:
                     zip_ref.extractall(target_dir)
-                self.manager_status.setText(f"✅ Instalado: {pkg_name} en Jerodin Apps")
+                self.manager_status.setText(f"✅ Instalado: {pkg_name} en FLUTHIN Apps")
                 # Asociación de extensión y menú inicio en Windows
                 if sys.platform.startswith('win'):
                     self.setup_windows_shortcut(target_dir, pkg_name)

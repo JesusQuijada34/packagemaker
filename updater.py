@@ -1,3 +1,5 @@
+# Compare remote store detail file, with the local xml for a search new release!
+# Is wrote in this blame file:
 import sys
 import os
 import requests
@@ -233,26 +235,27 @@ class UpdaterWindow(QWidget):
             time.sleep(1.7)
             self.close()
 
-def ciclo_embestido():
-    def verificar():
-        while True:
-            if not hay_conexion():
-                time.sleep(30)
-                continue
-            datos = leer_xml(XML_PATH)
-            if not datos:
-                time.sleep(CHECK_INTERVAL)
-                continue
-            url = buscar_release(datos["author"], datos["app"], datos["version"], datos["platform"])
-            if url:
-                app = QApplication(sys.argv)
-                ventana = UpdaterWindow(datos["app"], datos["version"], datos["platform"], url)
-                app.exec_()
-                return
+def verificar():
+    while True:
+        if not hay_conexion():
+            time.sleep(30)
+            continue
+        datos = leer_xml(XML_PATH)
+        if not datos:
             time.sleep(CHECK_INTERVAL)
-    threading.Thread(target=verificar, daemon=True).start()
+            continue
+        url = buscar_release(datos["author"], datos["app"], datos["version"], datos["platform"])
+        if url:
+            app = QApplication(sys.argv)
+            ventana = UpdaterWindow(datos["app"], datos["version"], datos["platform"], url)
+            app.exec_()
+            return
+        time.sleep(CHECK_INTERVAL)
+threading.Thread(target=verificar, daemon=True).start()
 
 if __name__ == "__main__":
-    ciclo_embestido()
+    datos = leer_xml(XML_PATH)
+    print(f"""searching for a fluthin package...\ngit::{datos["author"]}/{datos["app"]} {datos["version"]}/{datos["platform"]}\nhttps://github.com/{datos["author"]}/{datos["app"]}/""")
+    verificar()
     while True:
-        time.sleep(3600)
+        time.sleep(300)
