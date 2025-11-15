@@ -911,8 +911,8 @@ class PackageTodoGUI(QMainWindow):
                 compname = empresa.capitalize()
                 neim = nombre_completo.capitalize()
                 f.write(f"""1 VERSIONINFO
-FILEVERSION {version}
-PRODUCTVERSION {productversion}
+FILEVERSION 5,15,3,0
+PRODUCTVERSION 5,15,3,0
 FILEOS 0x4
 FILETYPE 0x2
 {{
@@ -921,7 +921,7 @@ BLOCK "StringFileInfo"
 	BLOCK "040904B0"
 	{{
 		VALUE "CompanyName", "{compname}"
-		VALUE "FileDescription", "Influent\xAE Kn Library"
+		VALUE "FileDescription", "{compname}\xAE {neim} by {autor}"
 		VALUE "FileVersion", "{version} built by: {autor}"
 		VALUE "InternalName", "{nombre_logico}"
 		VALUE "LegalCopyright", "\xA9 {compname}. All rights reserved."
