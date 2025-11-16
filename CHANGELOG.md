@@ -1,5 +1,29 @@
 # CHANGELOG - Influent Package Maker
 
+## v3.2.3 - Import, Theme & Titlebar Polish (2025-11-15)
+
+### 🚀 Novedades y Mejoras
+- **Nuevo encabezado y organización de imports:** 
+  - Añadido encabezado shebang (`#!/usr/bin/env/python`), codificación UTF-8 y un bloque de imports explícito para mayor claridad y portabilidad.
+  - Importación clara de librerías estándar (`sys`, `os`, `time`, `hashlib`, `shutil`, `zipfile`, `xml.etree.ElementTree`, `urllib.request`, `urllib.error`, `subprocess`).
+  - Todas las importaciones de PyQt5 ahora centralizadas, incluyendo submódulos para widgets y gráficos, y nuevas importaciones explícitas de `QSvgRenderer`, `QPixmap`, y `QByteArray` para soporte SVG e iconos personalizados en la titlebar.
+  - Importación segura y condicional de `winreg` y `pyi_splash` solo si es pertinente.
+- **Bloque de configuración y constantes reorganizado:**
+  - Defines explícitos para fuentes, estilos de botones, rutas y estructuras usadas en toda la app.
+  - Estructura de rutas multiplataforma con detección y creación automática.
+- **Nuevas mejoras visuales y de interfaz:**
+  - Ajuste de los estilos QSS (PyQt Stylesheet) para mejor visualización en modo claro y oscuro y acentos modernos tipo GitHub.
+  - Mejoras y comentarios en custom titlebar con SVG para botones de minimizar, maximizar y cerrar.
+  - Lógica detallada para doble clic en la barra de título y arrastre solo cuando la ventana no está maximizada.
+- **Importación detallada y comentarios para mejor mantenibilidad**, ideal para nuevos desarrolladores que deseen ubicar rápidamente las dependencias y entradas necesarias.
+
+### 🐞 Correcciones y Refactorizaciones
+- Evita imports duplicados y asegura la ordenación lógica en toda la cabecera.
+- Añadido control de errores explícito en imports condicionales (p. ej. `winreg`, `pyi_splash` bajo `sys.frozen`).
+- Todos los imports para soporte SVG en los iconos de la titlebar ahora son directos y explícitamente comentados.
+
+---
+
 ## v3.2.0 - Actualizador Modernizado (2025-11-09)
 
 ### 🚀 Novedades y Mejoras

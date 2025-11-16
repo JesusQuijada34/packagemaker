@@ -16,17 +16,26 @@ from PyQt5.QtWidgets import (
     QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar
 )
 from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
+from PyQt5.QtSvg import QSvgRenderer # [NEW IMPORT FOR TITLEBAR SVG RENDERING]
+from PyQt5.QtCore import QByteArray  # [NEW IMPORT FOR SVG BUFFER]
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+# The following block handles platform-specific imports.
+# The warning about 'pyi_splash' is expected only when running as a PyInstaller .exe.
+# It's safe to ignore in regular Python editors; it's only meaningful when sys.frozen is set.
+
 if sys.platform.startswith("win"):
     try:
         import winreg
     except ImportError:
         winreg = None
+
+# PyInstaller splash screen support: Optional, only has effect in frozen bundles
 if getattr(sys, 'frozen', False):
     try:
-        import pyi_splash
+        import pyi_splash  # Only needed for PyInstaller splash screen; will not be found otherwise
     except ImportError:
-        pass
+        pass  # Not an error unless running under PyInstaller build
 # ----------- CONFIGURABLE VARIABLES -----------
 APP_FONT = QFont('Roboto', 13)
 TAB_FONT = QFont('Roboto', 12) #, QFont.Bold)
@@ -39,12 +48,83 @@ TAB_ICONS = {
     "instalar": "./app/package_install.ico",
     "desinstalar": "./app/package_uninstall.ico",
 }
+# Windows 11-inspired button styles (rounded, soft shadows, modern accent colors)
+# Note: The 'transition' property is a CSS feature supported by browsers, but it is NOT supported/stable in PyQt5 stylesheets.
+# PyQt5 ignores 'transition' and related CSS3 properties—they have no effect and can be safely omitted.
+# QSS-based stylized button styles using rgba colors, with transparency for blending with the app frame
 BTN_STYLES = {
-    "default": "background-color: #29b6f6;color: #000000;border-radius:5px;padding:10px 18px;font-weight:bold;border: 1px solid #45addc;",
-    "success": "background-color: #43a047;color: #000000;border-radius:5px;padding:10px 18px;font-weight:bold;border: 1px solid #22863a;",
-    "danger":  "background-color: #c62828;color: #000000;border-radius:5px;padding:10px 18px;font-weight:bold;border: 1px solid #B52222;",
-    "warning": "background-color: #ffd54f;color: #212121;border-radius:5px;padding:10px 18px;font-weight:bold;border: 1px solid #E6BD3A;",
-    "info":    "background-color: #5c6bc0;color: #000000;border-radius:5px;padding:10px 18px;font-weight:bold;border: 1px solid #3A4DB9;",
+    "default": (
+        "background-color: rgba(243,246,251,0.85);"
+        "color: rgba(32,33,36,0.96);"
+        "border-radius: 9px;"
+        "padding: 10px 20px;"
+        "font-weight: 600;"
+        "border: 1px solid rgba(209,215,224,0.65);"
+        "background-image: qlineargradient(y1:0, y2:1, stop:0 rgba(60,120,250,0.15), stop:1 rgba(20,20,64,0.10));"
+        # No box-shadow
+    ),
+    "success": (
+        "background-color: rgba(230,244,234,0.82);"
+        "color: rgba(5,98,55,0.99);"
+        "border-radius: 9px;"
+        "padding: 10px 20px;"
+        "font-weight: 600;"
+        "border: 1px solid rgba(199,232,206,0.60);"
+        "background-image: qlineargradient(y1:0, y2:1, stop:0 rgba(5,98,55,0.13), stop:1 rgba(0,80,44,0.06));"
+        # No box-shadow
+    ),
+    "danger": (
+        "background-color: rgba(253,231,231,0.80);"
+        "color: rgba(185,29,29,1.0);"
+        "border-radius: 9px;"
+        "padding: 10px 20px;"
+        "font-weight: 600;"
+        "border: 1px solid rgba(255,180,180,0.68);"
+        "background-image: qlineargradient(y1:0, y2:1, stop:0 rgba(185,29,29,0.15), stop:1 rgba(250,15,15,0.07));"
+        # No box-shadow
+    ),
+    "warning": (
+        "background-color: rgba(255,248,225,0.82);"
+        "color: rgba(168,132,4,0.97);"
+        "border-radius: 9px;"
+        "padding: 10px 20px;"
+        "font-weight: 600;"
+        "border: 1px solid rgba(255,224,149,0.66);"
+        "background-image: qlineargradient(y1:0, y2:1, stop:0 rgba(168,132,4,0.13), stop:1 rgba(255,200,20,0.11));"
+        # No box-shadow
+    ),
+    "info": (
+        "background-color: rgba(230,240,253,0.80);"
+        "color: rgba(9,82,165,1.0);"
+        "border-radius: 9px;"
+        "padding: 10px 20px;"
+        "font-weight: 600;"
+        "border: 1px solid rgba(185,213,253,0.56);"
+        "background-image: qlineargradient(y1:0, y2:1, stop:0 rgba(9,82,165,0.13), stop:1 rgba(30,110,220,0.11));"
+        # No box-shadow
+    ),
+    "best": (
+        "background-color: qlineargradient(y1:0, y2:1, stop:0 #e6f4fa, stop:1 #c4e6fb);"
+        "color: #0853c4;"
+        "border-radius: 11px;"
+        "padding: 12px 22px;"
+        "font-weight: 700;"
+        "border: 2px solid #99d3f7;"
+        "font-size: 15px;"
+        # Designed for best/primary experience action
+        # No box-shadow
+    ),
+    "grayed-black": (
+        "background-color: #292929;"
+        "color: #b9b9b9;"
+        "border-radius: 9px;"
+        "padding: 10px 20px;"
+        "font-weight: 600;"
+        "border: 1px solid #444;"
+        "background-image: none;"
+        # Grayed black button, for alternative or disabled style
+        # No box-shadow
+    ),
 }
 plataforma_platform = sys.platform
 plataforma_name = os.name
@@ -388,32 +468,243 @@ class BuildThread(QThread):
 
 from PyQt5.QtWidgets import QComboBox
 
+# === BEGIN CUSTOM TITLE BAR CLASS ===
+class TitleBar(QWidget):  # [NEW CLASS: FULL CUSTOM TITLE BAR]
+    """Custom non-native title bar with SVG buttons and context menu."""
+
+    def __init__(self, parent=None, app_icon=None, title=""):
+        super().__init__(parent)
+        self._parent = parent
+        self.setFixedHeight(38)
+        self.setObjectName("customTitleBar")
+        self._drag_active = False
+        self._drag_offset = None
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(10, 0, 8, 0)
+        layout.setSpacing(8)
+
+        if app_icon:
+            icon_lbl = QLabel()
+            icon_lbl.setPixmap(app_icon.pixmap(20, 20))
+            icon_lbl.setFixedSize(22, 22)
+            layout.addWidget(icon_lbl)
+
+        self.title_label = QLabel(title)
+        self.title_label.setObjectName("titleLabel")
+        self.title_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+        self.title_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        layout.addWidget(self.title_label)
+
+        self.setMouseTracking(True)  # Necesario para rastrear el mouse para "señalizar" drag
+
+        # Botones de control
+        btnc = QWidget()
+        btnl = QHBoxLayout(btnc)
+        btnl.setContentsMargins(0, 0, 0, 0)
+        btnl.setSpacing(6)
+
+        self.svg_min = b'''
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="12" width="12" height="2" rx="1" fill="#333"/>
+        </svg>
+        '''
+        self.svg_max = b'''
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="#333" stroke-width="2"/>
+        </svg>
+        '''
+        self.svg_close = b'''
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="7" y1="7" x2="17" y2="17" stroke="#E81123" stroke-width="2" stroke-linecap="round"/>
+            <line x1="17" y1="7" x2="7" y2="17" stroke="#E81123" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        '''
+        self.btn_min = self._make_btn(self.svg_min)
+        self.btn_max = self._make_btn(self.svg_max)
+        self.btn_close = self._make_btn(self.svg_close)
+        btnl.addWidget(self.btn_min)
+        btnl.addWidget(self.btn_max)
+        btnl.addWidget(self.btn_close)
+        self.layout().addWidget(btnc)
+
+        # -- Botones --
+        self.btn_min.clicked.connect(lambda: self.window().showMinimized())
+        self.btn_max.clicked.connect(lambda: self.window().showMaximized())
+        self.btn_close.clicked.connect(lambda: self.window().close())
+
+        # MENU
+        self.menu = QtWidgets.QMenu(self)
+        # (Estilos y acciones omitidos... igual que antes)
+
+        # Arrastre: Señales y detención del drag con mouse events
+        # Usaremos mouse event handlers para emitir/gestionar los eventos de mover
+        # El "drag" ocurre sólo si no está maximizado!
+        def is_maximized():
+            return self.window().isMaximized()
+
+        def mousePressEvent(event):
+            if event.button() == Qt.LeftButton and not is_maximized():
+                self._drag_active = True
+                self._drag_offset = event.globalPos() - self.window().frameGeometry().topLeft()
+            event.accept()
+            QWidget.mousePressEvent(self, event)  # Llama base
+
+        def mouseMoveEvent(event):
+            if self._drag_active and not is_maximized():
+                self.window().move(event.globalPos() - self._drag_offset)
+            event.accept()
+            QWidget.mouseMoveEvent(self, event)
+
+        def mouseReleaseEvent(event):
+            if event.button() == Qt.LeftButton:
+                self._drag_active = False
+                self._drag_offset = None
+            event.accept()
+            QWidget.mouseReleaseEvent(self, event)
+
+        self.mousePressEvent = mousePressEvent
+        self.mouseMoveEvent = mouseMoveEvent
+        self.mouseReleaseEvent = mouseReleaseEvent
+
+        # Ahora, para maximizar a cualquier resolución: 
+        # showMaximized() siempre ocupa toda la pantalla disponible, sin importar el tamaño actual, 
+        # y puedes restaurar con showNormal().
+        # Los botones maximizan/restauran según el estado
+        def toggle_maximize():
+            win = self.window()
+            if win.isMaximized():
+                win.showNormal()
+            else:
+                win.showMaximized()
+        self.btn_max.clicked.disconnect()
+        self.btn_max.clicked.connect(toggle_maximize)
+
+        # Opcional: hacer doble click en la barra también maximiza/restaura:
+        def mouseDoubleClickEvent(event):
+            if event.button() == Qt.LeftButton:
+                toggle_maximize()
+            event.accept()
+        self.mouseDoubleClickEvent = mouseDoubleClickEvent
+
+        # Preferible limpiar el cursor siempre (no tamaña ni resize)
+        self.setCursor(Qt.ArrowCursor)
+
+        # QSS uses palette-based colors for auto dark/light support, only override highlight color
+        # Fix for NameError: Use hardcoded color values to avoid missing variables
+        self.menu.setStyleSheet("""
+            QMenu {
+                background: #f8f9fa;
+                border: 1px solid #d4d4d4;
+                color: #212529;
+            }
+            QMenu::item {
+                padding: 6px 28px 6px 28px;
+                background: transparent;
+            }
+            QMenu::item:selected {
+                background: #e5f1fb;
+                color: #212529;
+            }
+        """)
+
+    def _make_btn(self, svg_bytes):
+        icon = self._svg_icon(svg_bytes)
+        b = QPushButton()
+        b.setFlat(True)
+        b.setFixedSize(36, 28)
+        b.setIcon(icon)
+        b.setIconSize(QtCore.QSize(14, 14))
+        # Eliminate (or debug) unwanted background/border issues - ensure no background is set:
+        # Important: default QPushButton *does* show a flat red bg on Windows for QPixmap with alpha, if 'background' property gets brushed by theme/style or if SVGs themselves have no real transparency/white/rect.
+        # Try forcing transparent or explicit background:
+        b.setStyleSheet("""
+            QPushButton {
+                border: none;
+                border-radius: 4px;
+                background: transparent;
+            }
+            QPushButton:pressed, QPushButton:hover {
+                background: #e5e5e5;
+            }
+        """)
+        return b
+
+    def _svg_icon(self, svg_bytes):
+        r = QSvgRenderer(QByteArray(svg_bytes))
+        # Create ARGB pixmap, with full transparency (not default opaque)
+        pix = QPixmap(16, 16)
+        pix.fill(Qt.transparent)  # Explicitly clear to transparent!
+        p = QtGui.QPainter(pix)
+        # Sometimes, SVGs can include a <rect> with no fill, or use white as the background.
+        # If SVG has an explicit fill on the elements with a nontransparent or red color, it will show up.
+        r.render(p)
+        p.end()
+        return QIcon(pix)
+
+    def _toggle_max(self):
+        if self._parent.isMaximized():
+            self._parent.showNormal()
+        else:
+            self._parent.showMaximized()
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            self._press_pos = e.globalPos()
+            self._start_geom = self._parent.geometry()
+
+    def mouseMoveEvent(self, e):
+        if self._press_pos and (e.buttons() & Qt.LeftButton):
+            delta = e.globalPos() - self._press_pos
+            self._parent.setGeometry(self._start_geom.translated(delta))
+
+    def mouseDoubleClickEvent(self, e):
+        self._toggle_max()
+
+    def contextMenuEvent(self, e):
+        self.menu.exec_(e.globalPos())
+# === END CUSTOM TITLE BAR CLASS ===
 class PackageTodoGUI(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground, False)
+
         self.setWindowTitle(f"Influent Package Maker for {plataforma} | QT5 Edition")
         self.resize(1200, 750)
         self.setFont(APP_FONT)
         self.setWindowIcon(QtGui.QIcon(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""))
-        self.statusBar().showMessage("Iniciando...")
+
         self.central = QWidget()
-        self.setCentralWidget(self.central)
-        self.layout = QVBoxLayout(self.central)
+        self.v_layout = QVBoxLayout(self.central)
+        self.v_layout.setContentsMargins(0, 0, 0, 0)
+        self.v_layout.setSpacing(0)
+
+        icon = QtGui.QIcon(IPM_ICON_PATH) if os.path.exists(IPM_ICON_PATH) else None
+        self.titlebar = TitleBar(self, app_icon=icon, title=self.windowTitle())
+        self.v_layout.addWidget(self.titlebar)
+
+        self.main_container = QWidget()
+        self.main_layout = QVBoxLayout(self.main_container)
+        self.main_layout.setContentsMargins(10, 10, 10, 10)
+        self.v_layout.addWidget(self.main_container)
+
         self.tabs = QTabWidget()
         self.tabs.setFont(TAB_FONT)
-        self.tabs.setTabPosition(QTabWidget.North)
-        self.tabs.setMovable(True)
-        self.layout.addWidget(self.tabs)
+        self.main_layout.addWidget(self.tabs)
+
+        self.setCentralWidget(self.central)
+
+        self.layout = self.main_layout
         self.init_tabs()
-        self.setMinimumSize(700, 500)
-        # Aplicar tema naranja estilo GitHub
         self.apply_theme()
-        # Configurar timer para detectar cambios de tema en tiempo real
+
         self.theme_timer = QTimer()
         self.theme_timer.timeout.connect(self.check_theme_change)
-        self.theme_timer.start(1000)  # Verificar cada segundo
+        self.theme_timer.start(1000)
         self.last_theme_mode = detectar_modo_sistema()
-    
+
     def check_theme_change(self):
         """Verifica si el tema del sistema ha cambiado"""
         current_mode = detectar_modo_sistema()
@@ -2148,12 +2439,15 @@ if __name__ == '__main__':
         
         # Descripción
         desc_text = (
-            "<p style='font-size: 14px; line-height: 1.6;'>"
-            "Herramienta completa para crear, empaquetar, instalar y gestionar proyectos Influent "
-            "(.iflapp, .iflappb) con una interfaz moderna y fácil de usar. Diseñada para "
-            "desarrolladores que buscan una solución todo-en-uno para el ciclo de vida completo "
-            "de sus aplicaciones."
-            "</p>"
+            "<div style='font-size: 14px; line-height: 1.6; display: flex; gap:8px;'>"
+            "<span style='vertical-align: middle;'>"
+            "<svg width='24' height='24' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='12' r='10' fill='#f9826c'/><text x='12' y='16' text-anchor='middle' font-size='13' fill='white' font-family='Segoe UI, Arial' font-weight='bold'>IPM</text></svg>"
+            "</span>"
+            "<span>"
+            "Herramienta completa para crear, empaquetar, instalar y <b>gestionar proyectos Influent Flarm Apps</b> "
+            "<span style='color:#f9826c;'>(.iflapp)</span> con una interfaz moderna y fácil de usar. "
+            "Diseñada para desarrolladores que buscan una solución todo-en-uno para el ciclo de vida completo de sus aplicaciones."
+            "</span></div>"
         )
         desc_label = QLabel(desc_text)
         desc_label.setWordWrap(True)
@@ -2161,22 +2455,18 @@ if __name__ == '__main__':
         
         # Características principales
         features_text = (
-            "<h3 style='color: #f9826c;'>✨ Características Principales</h3>"
-            "<ul style='line-height: 1.8;'>"
-            "<li><b>Creación de Proyectos:</b> Genera estructuras de proyectos completas con "
-            "todas las carpetas necesarias (app, assets, config, docs, source, lib)</li>"
-            "<li><b>Verificación de GitHub:</b> Valida automáticamente que el username de GitHub "
-            "exista antes de crear el proyecto</li>"
-            "<li><b>Empaquetado:</b> Construye paquetes .iflapp listos para distribución</li>"
-            "<li><b>Gestor de Proyectos:</b> Visualiza y gestiona todos tus proyectos locales e "
-            "instalados desde una interfaz unificada</li>"
-            "<li><b>Instalación/Desinstalación:</b> Instala paquetes comprimidos o desinstala "
-            "proyectos con un solo clic</li>"
-            "<li><b>Ejecución de Scripts:</b> Ejecuta scripts Python directamente desde la interfaz</li>"
-            "<li><b>Protección SHA256:</b> Cada proyecto incluye protección mediante hash SHA256</li>"
-            "<li><b>Accesos Directos:</b> Crea accesos directos en Windows automáticamente</li>"
-            "<li><b>Interfaz Moderna:</b> Tema oscuro con acentos naranjas, adaptable al modo del sistema</li>"
-            "<li><b>Multiplataforma:</b> Soporte para Windows, Linux y proyectos multiplataforma</li>"
+            "<h3 style='color: #f9826c;'><svg width='22' height='22' style='vertical-align:middle;margin-right:5px;' viewBox='0 0 24 24' fill='none'><path d='M12 17.5l3.09 1.91a1 1 0 0 0 1.45-1.05l-.59-3.47 2.52-2.32a1 1 0 0 0-.55-1.72l-3.49-.32-1.45-3.21a1 1 0 0 0-1.82 0l-1.45 3.21-3.5.32a1 1 0 0 0-.55 1.72l2.53 2.32-.59 3.47A1 1 0 0 0 8.91 19.4L12 17.5z' fill='#f9826c'/><circle cx='12' cy='12' r='10' stroke='#f9826c' stroke-width='1.5' fill='none'/></svg>Características Principales</h3>"
+            "<ul style='line-height: 2; padding-left: 12px;'>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='2' y='4' width='16' height='12' rx='2' fill='#6de075'/></svg> <b>Creación de Proyectos:</b> Genera estructuras de proyectos completas con todas las carpetas necesarias <span style='color: #a371f7;'>(app, assets, config, docs, source, lib)</span></li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#24292e'/><path d='M10 10l3-3-3-3v6z' fill='#fff'/></svg> <b>Verificación de GitHub:</b> Valida automáticamente que el username de GitHub exista antes de crear el proyecto</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='3' y='5' width='14' height='10' rx='2' fill='#58a6ff'/><rect x='7' y='9' width='6' height='2' rx='1' fill='#fff'/></svg> <b>Empaquetado:</b> Construye paquetes <span style='color:#f9826c;'>.iflapp</span> listos para distribución</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='4' width='12' height='12' rx='3' fill='#ffcd38'/></svg> <b>Gestor de Proyectos:</b> Visualiza y gestiona todos tus proyectos locales e instalados desde una interfaz unificada</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><path d='M4 8 L16 8 M4 12 L16 12' stroke='#f9826c' stroke-width='2'/></svg> <b>Instalación/Desinstalación:</b> Instala paquetes comprimidos o desinstala proyectos con un solo clic</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='4' width='12' height='12' rx='3' fill='#a371f7'/><path d='M8 8h4v4H8z' fill='#fff'/></svg> <b>Ejecución de Scripts:</b> Ejecuta scripts Python directamente desde la interfaz</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#24292e'/><text x='10' y='14' text-anchor='middle' font-size='9' fill='#fff' font-family='monospace'>SHA</text></svg> <b>Protección SHA256:</b> Cada proyecto incluye protección mediante hash SHA256</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='9' width='10' height='4' rx='1' fill='#3fb950'/><rect x='8' y='5' width='4' height='4' rx='1' fill='#3fb950'/></svg> <b>Accesos Directos:</b> Crea accesos directos en Windows automáticamente</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='4' width='12' height='12' rx='5' fill='#22272e'/><circle cx='10' cy='10' r='3' fill='#f9826c'/></svg> <b>Interfaz Moderna:</b> Tema oscuro con acentos naranjas, adaptable al modo del sistema</li>"
+            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='2' y='8' width='4' height='4' rx='2' fill='#f9826c'/><rect x='8' y='2' width='4' height='4' rx='2' fill='#58a6ff'/><rect x='14' y='8' width='4' height='4' rx='2' fill='#3fb950'/></svg> <b>Multiplataforma:</b> Soporte para Windows, Linux y proyectos multiplataforma</li>"
             "</ul>"
         )
         features_label = QLabel(features_text)
@@ -2185,13 +2475,13 @@ if __name__ == '__main__':
         
         # Información técnica
         tech_text = (
-            "<h3 style='color: #f9826c;'>🔧 Información Técnica</h3>"
-            "<ul style='line-height: 1.8;'>"
-            "<li><b>Framework:</b> PyQt5</li>"
-            "<li><b>Lenguaje:</b> Python 3</li>"
-            "<li><b>Formato de Paquetes:</b> .iflapp (ZIP comprimido)</li>"
-            "<li><b>Estructura:</b> Basada en el sistema Influent OS</li>"
-            "<li><b>Licencia:</b> GNU General Public License v3</li>"
+            "<h3 style='color: #f9826c;'><svg width='20' height='20' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20' fill='none'><rect x='3' y='3' width='14' height='14' rx='3' fill='#21262d'/><path d='M10 6v4l3 2' stroke='#f9826c' stroke-width='2' stroke-linecap='round'/></svg>Información Técnica</h3>"
+            "<ul style='line-height: 2;'>"
+            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='3' y='3' width='14' height='14' rx='3' fill='#a371f7'/></svg> <b>Framework:</b> PyQt5</li>"
+            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='7' fill='#ffd33d'/></svg> <b>Lenguaje:</b> Python 3</li>"
+            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='5' y='7' width='10' height='6' rx='2' fill='#58a6ff'/></svg> <b>Formato de Paquetes:</b> .iflapp (ZIP comprimido)</li>"
+            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='6' fill='#3fb950'/></svg> <b>Estructura:</b> Basada en el sistema Influent OS</li>"
+            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='4' y='10' width='12' height='3' rx='1' fill='#636e7b'/></svg> <b>Licencia:</b> GNU General Public License v3</li>"
             "</ul>"
         )
         tech_label = QLabel(tech_text)
@@ -2200,19 +2490,19 @@ if __name__ == '__main__':
         
         # Información de contacto y enlaces
         contact_text = (
-            "<h3 style='color: #f9826c;'>📞 Contacto y Enlaces</h3>"
+            "<h3 style='color: #f9826c;'><svg width='20' height='20' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#58a6ff'/><rect x='9' y='6' width='2' height='5' rx='1' fill='#fff'/><rect x='9' y='12' width='2' height='2' rx='1' fill='#fff'/></svg>Contacto y Enlaces</h3>"
             "<p style='line-height: 2;'>"
             "<b>Desarrollador Principal:</b><br>"
-            "👤 <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
+            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='8' r='4' fill='#f9826c'/><rect x='4' y='13' width='12' height='4' rx='2' fill='#8b949e'/></svg> <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
             "Jesus Quijada (@JesusQuijada34)</a><br><br>"
             "<b>Colaborador:</b><br>"
-            "🤝 <a href='https://t.me/MkelCT/' style='color: #58a6ff; text-decoration: none;'>"
+            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='3' y='3' width='14' height='14' rx='3' fill='#a371f7'/><text x='10' y='14' font-size='8' text-anchor='middle' fill='white'>C</text></svg> <a href='https://t.me/MkelCT/' style='color: #58a6ff; text-decoration: none;'>"
             "MkelCT18 (@MkelCT)</a><br><br>"
             "<b>Repositorio GitHub:</b><br>"
-            "🔗 <a href='https://github.com/jesusquijada34/packagemaker/' "
+            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#22272e'/><path d='M7 10c-.6.6-1.6.6-1.6.6s0-1.2 1.6-1.6c.6-.2 1.2.2 1.2.2s.6-.4 1.2-.2c1.6.4 1.6 1.6 1.6 1.6s-1 .0-1.6-.6m-2 .6v1.6m8-1.6v1.6' stroke='#fff' stroke-width='.8' fill='none'/></svg> <a href='https://github.com/jesusquijada34/packagemaker/' "
             "style='color: #58a6ff; text-decoration: none;'>github.com/jesusquijada34/packagemaker</a><br><br>"
             "<b>Telegram:</b><br>"
-            "💬 <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
+            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><polygon points='2,10 18,2 16,18 10,14 6,16' fill='#58a6ff'/></svg> <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
             "t.me/JesusQuijada34</a><br>"
             "</p>"
         )
@@ -2225,8 +2515,11 @@ if __name__ == '__main__':
         version_text = (
             "<p style='text-align: center; color: #8b949e; margin-top: 30px; padding-top: 20px; "
             "border-top: 1px solid #30363d;'>"
+            f"<svg width='15' height='15' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='2' y='5' width='16' height='10' rx='4' fill='#a371f7'/><rect x='7' y='7' width='6' height='6' rx='2' fill='#fff'/></svg> "
             f"Versión: {getversion()}<br>"
+            "<svg width='13' height='13' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='2' y='14' width='16' height='4' rx='2' fill='#8b949e'/><rect x='8' y='2' width='4' height='10' rx='2' fill='#8b949e'/></svg> "
             "Copyright © 2025 Jesus Quijada<br>"
+            "<svg width='15' height='15' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><path d='M6 7h8v6H6z' stroke='#f9826c' stroke-width='1.4' fill='none'/><rect x='4' y='4' width='12' height='12' rx='2' stroke='#f9826c' stroke-width='1.4' fill='none'/></svg> "
             "Bajo licencia GNU GPL v3"
             "</p>"
         )
@@ -2252,23 +2545,37 @@ if __name__ == '__main__':
                 }
                 QScrollBar:vertical, QScrollBar:horizontal {
                     background: transparent;
-                    width: 8px;
-                    margin: 2px 2px 2px 2px;
-                    border-radius: 4px;
+                    width: 10px;
+                    margin: 2px;
+                    border-radius: 6px;
                 }
                 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-                    background: rgba(0,0,0,0.18);
-                    min-height: 24px;
-                    min-width: 24px;
-                    border-radius: 4px;
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                        stop:0 #e2e8f9, stop:0.5 #bacef8, stop:1 #c8d0e7);
+                    min-height: 36px;
+                    min-width: 36px;
+                    border-radius: 6px;
+                    border: 1px solid #d3d6e4;
+                    margin: 2px;
+                }
+                QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover,
+                QScrollBar::handle:vertical:pressed, QScrollBar::handle:horizontal:pressed {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                        stop:0 #b7d7fa, stop:1 #5caefb);
+                    border: 1.1px solid #98c6fa;
                 }
                 QScrollBar::add-line, QScrollBar::sub-line {
                     background: none;
                     border: none;
-                    width:0; height:0;
+                    height: 0px;
+                    width: 0px;
                 }
                 QScrollBar::add-page, QScrollBar::sub-page {
                     background: none;
+                }
+                QScrollBar {
+                    border-radius: 6px;
+                    background: transparent;
                 }
             """)
         except Exception:
