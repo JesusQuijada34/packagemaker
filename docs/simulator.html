@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPM Mobile Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .phone-frame {
+            width: 360px;
+            height: 740px;
+            background: #0d1117;
+            border-radius: 30px;
+            border: 8px solid #333;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(249, 130, 108, 0.2);
+        }
+
+        /* StatusBar */
+        .status-bar {
+            height: 24px;
+            background: #161b22;
+            color: #fff;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+        }
+
+        /* Tabs */
+        .tabs {
+            height: 50px;
+            background: #161b22;
+            display: flex;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b949e;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab.active {
+            color: #f9826c;
+            border-bottom: 2px solid #f9826c;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Content */
+        .content {
+            height: calc(100% - 100px);
+            padding: 20px;
+            overflow-y: auto;
+            color: #c9d1d9;
+        }
+
+        .content-page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Forms */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #8b949e;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #fff;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #f9826c;
+            box-shadow: -4px 0 0 #f9826c;
+            /* UWP Vertical bar simulation */
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #f9826c, #e06c55);
+            color: #fff;
+        }
+
+        .btn-browse {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 11px;
+            background: #1f6feb;
+            color: #fff;
+            float: right;
+            margin-top: -38px;
+            margin-right: 5px;
+            position: relative;
+            z-index: 2;
+            border-radius: 4px;
+        }
+
+        /* List */
+        .list-item {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #30363d;
+        }
+
+        .list-icon {
+            width: 40px;
+            height: 40px;
+            background: #21262d;
+            border-radius: 8px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .toast {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #238636;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: 0.3s;
+            pointer-events: none;
+            width: 80%;
+            text-align: center;
+        }
+
+        /* Footer */
+        .app-footer {
+            height: 26px;
+            background: #0d1117;
+            border-top: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #58a6ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="phone-frame">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>IPM Mobile</span>
+            <span>🔋 100%</span>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('create')">Crear</div>
+            <div class="tab" onclick="switchTab('build')">Build</div>
+            <div class="tab" onclick="switchTab('manager')">Gestor</div>
+        </div>
+
+        <div class="content">
+            <!-- CREATE TAB -->
+            <div id="create" class="content-page active">
+                <h2 style="color:#f9826c">Nuevo Proyecto</h2>
+
+                <div class="input-group">
+                    <label>Empresa</label>
+                    <input type="text" placeholder="Ej: Influent" id="pub">
+                </div>
+                <div class="input-group">
+                    <label>Nombre App</label>
+                    <input type="text" placeholder="Ej: MyApp">
+                </div>
+                <div class="input-group">
+                    <label>Versión</label>
+                    <input type="text" placeholder="1.0">
+                </div>
+                <div class="input-group">
+                    <label>GitHub User</label>
+                    <input type="text" placeholder="JesusQuijada34">
+                </div>
+                <div class="input-group">
+                    <label>Icono</label>
+                    <input type="text" placeholder="app/icon.ico">
+                    <button class="btn btn-browse" onclick="toast('Explorador de archivos simulado...')">Exam.</button>
+                </div>
+
+                <button class="btn btn-primary" onclick="simulateCreate()">CREAR PROYECTO</button>
+
+                <div
+                    style="margin-top: 20px; padding: 10px; background: rgba(88, 166, 255, 0.1); border-radius: 8px; font-size: 11px; color: #79c0ff;">
+                    ℹ️ Esta es una simulación web. Crea el proyecto real en tu PC.
+                </div>
+            </div>
+
+            <!-- BUILD TAB -->
+            <div id="build" class="content-page">
+                <h2 style="color:#e06c55">Compilar</h2>
+                <div class="input-group">
+                    <label>Proyecto (Autocomplete)</label>
+                    <input type="text" placeholder="Escribe para buscar..." oninput="showSuggestions(this)">
+                </div>
+                <div id="suggestions"
+                    style="background:#21262d; border-radius:6px; margin-top:-10px; margin-bottom:10px; display:none; padding:5px;">
+                    <div style="padding:8px; border-bottom:1px solid #30363d; font-size:12px;">Influent MyCoolApp</div>
+                    <div style="padding:8px; font-size:12px;">Influent Demo</div>
+                </div>
+
+                <div class="input-group">
+                    <label>Plataforma</label>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn"
+                            style="background:#21262d; color:#fff; border:1px solid #f9826c">Windows</button>
+                        <button class="btn" style="background:#21262d; color:#fff;">Linux</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="toast('🔨 Compilando .iflapp...')">CONSTRUIR PAQUETE</button>
+            </div>
+
+            <!-- MANAGER TAB -->
+            <div id="manager" class="content-page">
+                <h2>Gestor de Proyectos</h2>
+                <div class="list-item">
+                    <div class="list-icon">💻</div>
+                    <div>
+                        <div style="font-weight:bold; color:#f9826c">Influent Notes</div>
+                        <div style="font-size:11px; color:#8b949e">v1.2 | SHA-256 Valid</div>
+                    </div>
+                </div>
+                <div class="list-item">
+                    <div class="list-icon">🎮</div>
+                    <div>
+                        <div style="font-weight:bold; color:#f9826c">Space Game</div>
+                        <div style="font-size:11px; color:#8b949e">v0.9 | Beta</div>
+                    </div>
+                </div>
+
+                <button class="btn" style="background:#238636; color:white; margin-top:20px;">Instalar Paquete
+                    Local</button>
+            </div>
+        </div>
+
+        <div class="toast" id="toastMsg">Acción realizada</div>
+
+        <div class="app-footer">
+            Packagemaker Simulator &copy; 2025
+        </div>
+    </div>
+
+    <script>
+        function switchTab(id) {
+            document.querySelectorAll('.content-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function toast(msg) {
+            const t = document.getElementById('toastMsg');
+            t.innerText = msg;
+            t.style.opacity = '1';
+            t.style.bottom = '100px';
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.bottom = '80px';
+            }, 2000);
+        }
+
+        function simulateCreate() {
+            const pub = document.getElementById('pub').value;
+            if (!pub) {
+                toast('❌ Faltan datos');
+                return;
+            }
+            toast('✅ Proyecto ' + pub + ' creado!');
+        }
+
+        function showSuggestions(input) {
+            const box = document.getElementById('suggestions');
+            if (input.value.length > 0) box.style.display = 'block';
+            else box.style.display = 'none';
+        }
+    </script>
+
+</body>
+
+</html>

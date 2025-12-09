@@ -1,102 +1,346 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0078d4" />
-  <meta name="description" content="Influent Package Maker - Generador inteligente de paquetes con IA Gemini" />
-  <title>Influent Package Maker — IA Gemini</title>
-  <link rel="icon" href="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" type="image/x-icon" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packagemaker Docs</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --sidebar-bg: rgba(22, 27, 34, 0.95);
+            --text-color: #c9d1d9;
+            --accent-color: #f9826c;
+            --secondary-accent: #58a6ff;
+            --card-bg: rgba(33, 38, 45, 0.7);
+            --header-bg: rgba(13, 17, 23, 0.8);
+            --border-color: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 0%, #1f2937 0%, #0d1117 70%);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+        /* Layout */
+        .container { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 10px 15px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(249, 130, 108, 0.15);
+            color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8b949e;
+            margin: 20px 0 10px 5px;
+            font-weight: 700;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px 60px;
+            max-width: 1200px;
+        }
+
+        h1 { font-size: 42px; margin-bottom: 20px; color: #fff; text-shadow: 0 0 20px rgba(249, 130, 108, 0.3); }
+        h2 { font-size: 28px; margin: 40px 0 20px; color: #fff; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        h3 { font-size: 20px; margin: 25px 0 15px; color: var(--secondary-accent); }
+        p { margin-bottom: 15px; color: #8b949e; }
+        
+        /* Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), var(--secondary-accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .card:hover::before { opacity: 1; }
+
+        /* Code Blocks */
+        pre {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            margin: 15px 0;
+        }
+        code { font-family: 'Consolas', monospace; color: var(--secondary-accent); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .section { animation: fadeIn 0.6s ease forwards; margin-bottom: 60px; }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.05);
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px;
+            color: var(--accent-color);
+        }
+
+        /* Tips */
+        .tip {
+            background: rgba(88, 166, 255, 0.1);
+            border-left: 4px solid var(--secondary-accent);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+
+        .tip strong { color: var(--secondary-accent); display: block; margin-bottom: 5px; }
+
+    </style>
 </head>
 <body>
-  <!-- HEADER -->
-  <header>
-    <div class="logo">
-      <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" alt="IPM Logo" />
+
+<div class="container">
+    <nav class="sidebar">
+        <div class="logo">
+            <span style="color:#fff">I</span>PM <span style="font-size:12px; color:#8b949e; margin-top:5px; margin-left:5px">v2025</span>
+        </div>
+        
+        <div class="section-title">Inicio</div>
+        <a href="#intro" class="nav-item active">Introducción</a>
+        <a href="#install" class="nav-item">Instalación</a>
+        <a href="#interface" class="nav-item">Interfaz</a>
+
+        <div class="section-title">Guía de Uso</div>
+        <a href="#create" class="nav-item">Crear Proyecto</a>
+        <a href="#structure" class="nav-item">Estructura</a>
+        <a href="#scripting" class="nav-item">Scripting</a>
+        <a href="#build" class="nav-item">Compilación</a>
+        
+        <div class="section-title">Gestión</div>
+        <a href="#manager" class="nav-item">Gestor</a>
+        <a href="#distribute" class="nav-item">Distribución</a>
+        <a href="#updates" class="nav-item">Actualizaciones</a>
+
+        <div class="section-title">Avanzado</div>
+        <a href="#metadata" class="nav-item">Metadatos XML</a>
+        <a href="#sha" class="nav-item">Seguridad SHA</a>
+        <a href="#troubleshoot" class="nav-item">Solución Problemas</a>
+    </nav>
+
+    <div class="main">
+        
+        <section id="intro" class="section">
+            <h1>Packagemaker Docs</h1>
+            <p>La suite definitiva para el ecosistema Fluthin/Influent.</p>
+            
+            <div class="grid">
+                <div class="card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Rápido</h3>
+                    <p>Crea esqueletos de proyectos en segundos con estándares profesionales.</p>
+                </div>
+                <div class="card">
+                    <div class="feature-icon">📦</div>
+                    <h3>Potente</h3>
+                    <p>Compila scripts Python a ejecutables nativos optimizados con PyInstaller.</p>
+                </div>
+                <div class="card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Moderno</h3>
+                    <p>Interfaz UWP/Fluent Design, hermosa y responsiva.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="install" class="section">
+            <h2>Instalación y Requisitos</h2>
+            <p>Para usar Packagemaker necesitas tener Python instalado y algunas librerías clave.</p>
+            
+            <pre><code>pip install PyQt5 requests pyinstaller</code></pre>
+            
+            <div class="tip">
+                <strong>Consejo Pro</strong>
+                Asegúrate de marcar "Add Python to PATH" durante la instalación de Python para evitar errores de compilación.
+            </div>
+        </section>
+
+        <section id="create" class="section">
+            <h2>Creando tu Primer Proyecto</h2>
+            <p>El flujo de trabajo comienza en la pestaña "Crear Proyecto".</p>
+            
+            <div class="grid">
+                <div class="card">
+                    <h3>1. Empresa y Nombre</h3>
+                    <p>Define `autor` y el nombre interno. Usa nombres sin espacios para el ID lógico.</p>
+                </div>
+                <div class="card">
+                    <h3>2. Autoría</h3>
+                    <p>Ingresa tu usuario de GitHub. El sistema verificará que existas para garantizar la autoría.</p>
+                </div>
+                <div class="card">
+                    <h3>3. Icono</h3>
+                    <p>Selecciona un archivo .ico personalizado. Packagemaker lo procesará automáticamente.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="structure" class="section">
+            <h2>Estructura Generada</h2>
+            <p>Packagemaker organiza tu código profesionalmente:</p>
+            <ul>
+                <li>📁 <strong>app/</strong>: Recursos gráficos e iconos.</li>
+                <li>📁 <strong>assets/</strong>: Archivos multimedia (imágenes, sonidos).</li>
+                <li>📁 <strong>source/</strong>: Código fuente adicional.</li>
+                <li>📁 <strong>lib/</strong>: Dependencias y requirements.txt.</li>
+                <li>📄 <strong>details.xml</strong>: El corazón de los metadatos.</li>
+                <li>📄 <strong>updater.py</strong>: El actualizador automático "embestido".</li>
+            </ul>
+        </section>
+
+        <section id="build" class="section">
+            <h2>Compilación (.iflapp)</h2>
+            <p>Transforma tu código en un paquete distribuible.</p>
+            
+            <ol>
+                <li>Ve a la pestaña <strong>Construir Paquete</strong>.</li>
+                <li>Escribe el nombre de la empresa y proyecto (¡Usa el autocompletado con TAB!).</li>
+                <li>Selecciona la plataforma (Windows/Linux).</li>
+                <li>Dale a <strong>Construir Paquete</strong>.</li>
+            </ol>
+            
+            <div class="tip">
+                <strong>¿Qué sucede dentro?</strong>
+                Packagemaker invoca PyInstaller en segundo plano, compila tu script a un binario `onefile`, recolecta los assets y lo comprime todo en un archivo `.iflapp` optimizado con protección hash.
+            </div>
+        </section>
+
+        <section id="manager" class="section">
+            <h2>Gestión en Tiempo Real</h2>
+            <p>El Gestor ahora incluye tecnología "Real-time Watcher". Si creas o eliminas una carpeta en tu explorador de archivos, la lista se actualiza instantáneamente.</p>
+            
+            <h3>Funciones del Gestor</h3>
+            <div class="grid">
+                <div class="card">
+                    <h3>Proyectos Locales</h3>
+                    <p>Lista tus proyectos en desarrollo. Doble clic para ver detalles, SHA y opciones de ejecución.</p>
+                </div>
+                <div class="card">
+                    <h3>Apps Instaladas</h3>
+                    <p>Gestiona las aplicaciones que has instalado en tu sistema Influent/Fluthin.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="troubleshoot" class="section">
+            <h2>Solución de Problemas</h2>
+            
+            <h3>Error: "Python no encontrado"</h3>
+            <p>Asegúrate de que puedes correr `python --version` en tu terminal CMD/PowerShell.</p>
+
+            <h3>Error de PyInstaller</h3>
+            <p>Si la compilación falla, prueba reinstalar: `pip uninstall pyinstaller` seguido de `pip install pyinstaller`. A veces los antivirus bloquean la creación de ejecutables.</p>
+        </section>
+
+        <footer style="margin-top: 100px; padding-top: 20px; border-top: 1px solid var(--border-color); text-align: center; color: #6a737d;">
+            <p>Documentación generada para Packagemaker v2025.</p>
+            <p>Hecho con ❤️ por Jesus Quijada.</p>
+        </footer>
+
     </div>
-    <div>
-      <h1>📦 Influent Package Maker</h1>
-      <p class="muted">Generador inteligente de paquetes con IA Gemini</p>
-    </div>
-  </header>
+</div>
 
-  <!-- MAIN CONTENT -->
-  <main>
-    <!-- FORM SECTION -->
-    <section class="card">
-      <h2>🤖 Generar Paquete con IA</h2>
+<script>
+    // Simple script to highlight active section on scroll
+    const sections = document.querySelectorAll('section');
+    const navItems = document.querySelectorAll('.nav-item');
 
-      <!-- FORM GRID -->
-      <div class="form-grid">
-        <div>
-          <label for="inp-fabricante">Fabricante / Publisher</label>
-          <input id="inp-fabricante" type="text" placeholder="ej. influent-labs" />
-        </div>
-        <div>
-          <label for="inp-short">Nombre Corto</label>
-          <input id="inp-short" type="text" placeholder="ej. weatherly" />
-        </div>
-        <div>
-          <label for="inp-version">Versión</label>
-          <input id="inp-version" type="text" placeholder="1.0.0" />
-        </div>
-        <div>
-          <label for="inp-titulo">Título Completo</label>
-          <input id="inp-titulo" type="text" placeholder="Weatherly - App del Clima" />
-        </div>
-      </div>
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (scrollY >= (sectionTop - 200)) {
+                current = section.getAttribute('id');
+            }
+        });
 
-      <!-- DESCRIPTION TEXTAREA -->
-      <div class="full" style="margin-bottom: 16px;">
-        <label for="inp-descripcion">Descripción / Prompt para IA</label>
-        <textarea id="inp-descripcion" placeholder="Describe tu proyecto o aplicación. La IA generará el código Python, README y dependencias..."></textarea>
-      </div>
+        navItems.forEach(li => {
+            li.classList.remove('active');
+            if (li.getAttribute('href').includes(current)) {
+                li.classList.add('active');
+            }
+        });
+    });
+</script>
 
-      <!-- ACTION BUTTONS -->
-      <div class="actions">
-        <button id="btn-generar" class="btn btn-primary">✨ Generar con IA</button>
-        <button id="btn-limpiar" class="btn btn-ghost">🗑️ Limpiar Salida</button>
-      </div>
-
-      <!-- STATUS MESSAGE -->
-      <div id="status" class="status"></div>
-
-      <!-- THINKING ANIMATION -->
-      <div id="thinking" class="thinking hidden">
-        <span>🤖 Pensando...</span>
-        <div class="progress-bar"><div class="progress"></div></div>
-      </div>
-
-      <!-- JSON OUTPUT / PREVIEW -->
-      <pre id="json-output" class="preview"></pre>
-    </section>
-
-    <!-- SIDEBAR - FILE PREVIEW -->
-    <aside class="card">
-      <h2>📄 Vista Previa de Archivos</h2>
-      <div id="preview-files" class="preview"></div>
-      <button id="btn-download" class="btn btn-primary hidden" style="width: 100%; margin-top: 12px;">
-        📦 Descargar .iflapp (ZIP)
-      </button>
-    </aside>
-  </main>
-
-  <!-- FOOTER -->
-  <footer>
-    <p>
-      🔗 <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank">GitHub: packagemaker</a> 
-      | 
-      ⚡ Powered by Gemini 2.5 Flash
-    </p>
-  </footer>
-
-  <!-- EXTERNAL LIBRARIES -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  
-  <!-- APP SCRIPT -->
-  <script src="app.js"></script>
 </body>
 </html>
-

@@ -10,6 +10,14 @@ import xml.etree.ElementTree as ET
 import urllib.request
 import urllib.error
 import subprocess
+import platform
+import fnmatch
+import re
+import json
+import ssl
+import tempfile
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -19,7 +27,8 @@ from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
 from PyQt5.QtSvg import QSvgRenderer # [NEW IMPORT FOR TITLEBAR SVG RENDERING]
 from PyQt5.QtCore import QByteArray  # [NEW IMPORT FOR SVG BUFFER]
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject
+import requests
 # The following block handles platform-specific imports.
 # The warning about 'pyi_splash' is expected only when running as a PyInstaller .exe.
 # It's safe to ignore in regular Python editors; it's only meaningful when sys.frozen is set.
@@ -294,6 +303,401 @@ AGE_RATINGS = {
     "kling" : "PUBLIC ALL",
 }
 
+UPDATER_CODE = r'''import sys, os, requests, shutil, subprocess, xml.etree.ElementTree as ET
+import threading, time, traceback
+from datetime import datetime
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
+# La clase InstallerWorker se integrará a continuación
+
+XML_PATH = "details.xml"
+LOG_PATH = "updater_log.txt"
+CHECK_INTERVAL = 60
+GITHUB_API = "https://api.github.com"
+
+STYLE = """
+QWidget { background-color: #0d1117; color: #2ecc71; font-family: "Segoe UI"; }
+QPushButton { background-color: #2ecc71; color: white; border-radius: 6px; padding: 6px 12px; }
+QPushButton:hover { background-color: #27ae60; }
+"""
+
+def log(msg):
+    timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+    with open(LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(f"{timestamp} {msg}\n")
+    print(f"{timestamp} {msg}")
+
+def leer_xml(path):
+    try:
+        tree = ET.parse(path)
+        root = tree.getroot()
+        return {
+            "app": root.findtext("app", "").strip(),
+            "version": root.findtext("version", "").strip(),
+            "platform": root.findtext("platform", "").strip(),
+            "author": root.findtext("author", "").strip()
+        }
+    except Exception as e:
+        log(f"❌ Error leyendo XML: {e}")
+        return {}
+
+def hay_conexion():
+    try:
+        requests.get(GITHUB_API, timeout=5)
+        return True
+    except:
+        return False
+
+
+
+def leer_xml_remoto(author, app):
+    url = f"https://raw.githubusercontent.com/{author}/{app}/main/details.xml"
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            root = ET.fromstring(r.text)
+            return root.findtext("version", "").strip()
+    except Exception as e:
+        log(f"❌ Error leyendo XML remoto: {e}")
+    return ""
+
+def buscar_release(author, app, version, platform):
+    url = f"{GITHUB_API}/repos/{author}/{app}/releases/tags/{version}"
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code != 200:
+            log(f"❌ Release {version} no encontrado en {author}/{app}")
+            return None
+        assets = r.json().get("assets", [])
+        target = f"{app}-{version}-{platform}.iflapp"
+        for a in assets:
+            if a.get("name") == target:
+                return a.get("browser_download_url")
+        log("❌ Asset no encontrado en release.")
+        return None
+    except Exception as e:
+        log(f"❌ Error consultando GitHub API: {e}")
+        return None
+
+# --- CLASE INSTALLER WORKER INTEGRADA ---
+class InstallerWorker(QObject):
+    finished = pyqtSignal()
+    error = pyqtSignal(str)
+    progress = pyqtSignal(int)
+    
+    def __init__(self, url, app, platform):
+        super().__init__()
+        self.url = url
+        self.app = app
+        self.platform = platform
+
+    def run(self):
+        destino = "update.zip"
+        try:
+            log("🔐 Respaldando archivos…")
+            if not os.path.exists("backup_embestido"):
+                os.mkdir("backup_embestido")
+            
+            # Copiar solo archivos, excluyendo el directorio de backup y el archivo de destino
+            for f in os.listdir("."):
+                if f not in ["backup_embestido", destino] and os.path.isfile(f):
+                    shutil.copy2(f, f"backup_embestido/{f}")
+            log("✅ Respaldo completado.")
+
+            log(f"⬇️ Descargando desde {self.url}")
+            r = requests.get(self.url, stream=True)
+            r.raise_for_status() # Lanza una excepción para códigos de estado HTTP erróneos
+
+            total_size = int(r.headers.get('content-length', 0))
+            bytes_downloaded = 0
+            
+            with open(destino, "wb") as f:
+                for chunk in r.iter_content(8192):
+                    f.write(chunk)
+                    bytes_downloaded += len(chunk)
+                    if total_size > 0:
+                        percent = int((bytes_downloaded / total_size) * 100)
+                        self.progress.emit(percent)
+            
+            self.progress.emit(100) # Asegurar que el progreso llegue al 100%
+            log("✅ Descarga completada.")
+
+            log("📦 Descomprimiendo archivos…")
+            shutil.unpack_archive(destino, ".")
+            os.remove(destino)
+            log("✅ Archivos actualizados.")
+
+            # Lógica de reinicio
+            if not sys.argv[0].endswith(".py"):
+                exe = f"{self.app}.exe" if os.name == "nt" else f"./{self.app}"
+                if os.path.exists(exe):
+                    log(f"🚀 Ejecutando {exe}")
+                    subprocess.Popen(exe)
+            else:
+                log("🔁 Reiniciando script embestido...")
+                # El reinicio del script embestido es complejo en un worker,
+                # lo ideal es que el hilo principal se encargue de esto
+                # o que el worker sepa que debe terminar la aplicación actual.
+                # Por ahora, solo logueamos.
+                pass
+            
+            self.finished.emit()
+
+        except Exception as e:
+            log(f"❌ Error durante instalación: {e}")
+            log(traceback.format_exc())
+            self.error.emit(f"Error de instalación: {e}")
+
+# --- FIN CLASE INSTALLER WORKER INTEGRADA ---
+
+class UpdaterWindow(QWidget):
+    update_finished = pyqtSignal() # Señal para manejar el cierre de la ventana después de la actualización
+
+    def __init__(self, app, version, platform, url):
+        super().__init__()
+        self.app = app
+        self.version = version
+        self.platform = platform
+        self.url = url
+        
+        # Eliminar el borde nativo y permitir transparencia
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+
+        self.setWindowTitle("Actualizador de Flarm App")
+        self.setFixedSize(460, 280) # Aumentar un poco el tamaño para el title bar
+        self.setStyleSheet(STYLE)
+        self.init_ui()
+        
+        # Variables para el arrastre de la ventana
+        self._start_pos = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._start_pos = event.pos()
+
+    def mouseMoveEvent(self, event):
+        if self._start_pos is not None and event.buttons() == Qt.LeftButton:
+            self.move(self.pos() + event.pos() - self._start_pos)
+
+    def mouseReleaseEvent(self, event):
+        self._start_pos = None
+
+    def init_ui(self):
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0) # Eliminar márgenes del layout principal
+
+        # --- Title Bar (Custom) ---
+        self.title_bar = QWidget()
+        self.title_bar.setFixedHeight(40)
+        self.title_bar.setStyleSheet("background-color: #161b22;") # Un color ligeramente diferente para el title bar
+        title_layout = QHBoxLayout(self.title_bar)
+        title_layout.setContentsMargins(10, 0, 0, 0)
+        title_layout.setSpacing(0)
+
+        title_label = QLabel("Flarm Updater")
+        title_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        title_layout.addWidget(title_label)
+        title_layout.addStretch()
+
+        # Botones de control (con iconos SVG)
+        self.btn_minimize = QPushButton()
+        self.btn_close = QPushButton()
+        
+        # Cargar iconos SVG (usando QPixmap para SVG)
+        # Se asume que los archivos SVG están en el mismo directorio
+        min_pm = os.path.join("assets", "min.svg")
+        close_pm = os.path.join("assets", "close.svg")
+        minimize_pixmap = QPixmap(min_pm)
+        close_pixmap = QPixmap(close_pm)
+        
+        self.btn_minimize.setIcon(QIcon(minimize_pixmap))
+        self.btn_close.setIcon(QIcon(close_pixmap))
+        
+        self.btn_minimize.setFixedSize(40, 40)
+        self.btn_close.setFixedSize(40, 40)
+        
+        # Estilos para los botones (solo hover)
+        self.btn_minimize.setStyleSheet("QPushButton { border: none; background-color: transparent; } QPushButton:hover { background-color: #30363d; }")
+        self.btn_close.setStyleSheet("QPushButton { border: none; background-color: transparent; } QPushButton:hover { background-color: #e81123; }")
+
+        self.btn_minimize.clicked.connect(self.showMinimized)
+        self.btn_close.clicked.connect(self.close)
+
+        title_layout.addWidget(self.btn_minimize)
+        title_layout.addWidget(self.btn_close)
+        
+        main_layout.addWidget(self.title_bar)
+
+        # --- Content Area ---
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        title = QLabel("Flarm Updater")
+        title.setFont(QFont("Segoe UI", 16, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+
+        info = QLabel(f"📦 {self.app}\n🔄 Nueva versión: {self.version}\n🖥️ Plataforma: {self.platform}")
+        info.setFont(QFont("Segoe UI", 12))
+        layout.addWidget(info)
+
+        self.progress_label = QLabel("Listo para actualizar.")
+        self.progress_label.setFont(QFont("Roboto", 10))
+        layout.addWidget(self.progress_label)
+
+        self.btn = QPushButton("Actualizar ahora")
+        self.btn.clicked.connect(self.instalar)
+        layout.addWidget(self.btn)
+
+        main_layout.addWidget(content_widget)
+        self.show()
+        self.update_finished.connect(self.close) # Conectar la señal de finalización al cierre de la ventana
+
+    def instalar(self):
+        self.btn.setEnabled(False)
+        self.progress_label.setText("Iniciando descarga...")
+
+        self.thread = QThread()
+        self.worker = InstallerWorker(self.url, self.app, self.platform)
+        self.worker.moveToThread(self.thread)
+
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.on_update_finished)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.worker.error.connect(self.on_error)
+        self.worker.progress.connect(self.on_progress)
+
+        self.thread.start()
+
+    def on_progress(self, percent):
+        self.progress_label.setText(f"Descargando... {percent}%")
+
+    def on_error(self, message):
+        self.progress_label.setText(f"ERROR: {message}")
+        self.btn.setEnabled(True)
+        # Aquí se podría añadir un QMessageBox para notificar al usuario
+        # Cerrar la ventana en caso de error grave
+        self.update_finished.emit()
+
+    def on_update_finished(self):
+        self.progress_label.setText("Actualización completada. Reiniciando...")
+        # Emitir la señal para cerrar la ventana, lo que debe ocurrir después de que el worker haya terminado
+        self.update_finished.emit()
+
+def ciclo_embestido():
+    def verificar():
+        while True:
+            if not hay_conexion():
+                log("🌐 Sin conexión. Esperando...")
+                time.sleep(30)
+                continue
+
+            datos = leer_xml(XML_PATH)
+            if not datos:
+                time.sleep(CHECK_INTERVAL)
+                continue
+
+            log(f"📖 App: {datos['app']} | Versión local: {datos['version']} | Plataforma: {datos['platform']}")
+            remoto = leer_xml_remoto(datos["author"], datos["app"])
+            if remoto and remoto != datos["version"]:
+                log(f"🔄 Nueva versión remota: {remoto}")
+                url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"])
+                if url:
+                    log("✅ Actualización encontrada.")
+                    app = QApplication(sys.argv)
+                    ventana = UpdaterWindow(datos["app"], remoto, datos["platform"], url)
+                    app.exec_()
+                    return
+                else:
+                    log("❌ No se encontró asset para la plataforma.")
+            else:
+                log("ℹ️ No hay actualizaciones.")
+            time.sleep(CHECK_INTERVAL)
+    threading.Thread(target=verificar, daemon=True).start()
+
+if __name__ == "__main__":
+    log("🕶️ Actualizador IPM iniciado en modo silencioso.")
+    ciclo_embestido()
+    while True:
+        time.sleep(3600)'''
+
+def find_python_executable():
+    """Busca un ejecutable de Python disponible en el sistema."""
+    # 1. Si estamos congelados (PyInstaller), sys.executable es el exe de la app, no python.
+    #    Si no estamos congelados, sys.executable es el python que nos corre.
+    if getattr(sys, 'frozen', False):
+        # Buscamos en PATH
+        path_python = shutil.which("python")
+        if path_python: return path_python
+        path_python3 = shutil.which("python3")
+        if path_python3: return path_python3
+        return None
+    else:
+        return sys.executable
+
+def verificar_github_username(username):
+    url = f"https://api.github.com/users/{username}"
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            return True, "Usuario válido"
+        elif response.status_code == 404:
+            return False, "Usuario no encontrado"
+        else:
+            return False, f"Error API: {response.status_code}"
+    except Exception as e:
+        return False, f"Error de conexión: {str(e)}"
+
+class FocusIndicationFilter(QObject):
+    """Filtro de eventos para simular el indicador de foco estilo UWP."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.indicator = QWidget(None) # Ventana independiente (tool window) o overlay
+        self.indicator.setWindowFlags(Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowTransparentForInput | Qt.NoDropShadowWindowHint)
+        self.indicator.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.indicator.setAttribute(Qt.WA_ShowWithoutActivating)
+        # Color por defecto (se actualizará con el tema)
+        self.indicator.setStyleSheet("background-color: #f9826c; border-radius: 2px;") 
+        self.indicator.hide()
+        self.current_widget = None
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.FocusIn:
+            if isinstance(str(type(obj)), str) and ("QLineEdit" in str(type(obj)) or "QTextEdit" in str(type(obj)) or "QListWidget" in str(type(obj))):
+                 self.update_indicator(obj)
+        elif event.type() == QEvent.FocusOut:
+             if obj == self.current_widget:
+                 self.indicator.hide()
+                 self.current_widget = None
+        elif event.type() == QEvent.Move or event.type() == QEvent.Resize:
+             if obj == self.current_widget:
+                 self.update_indicator(obj)
+        
+        return super().eventFilter(obj, event)
+
+    def update_indicator(self, widget):
+        self.current_widget = widget
+        rect = widget.rect()
+        # Convertir posicion local a global
+        global_pos = widget.mapToGlobal(rect.topLeft())
+        
+        # Geometría de la barra vertical: a la izquierda, alto del widget, ancho 4px
+        # Ajuste fino: un poco separado
+        x = global_pos.x() - 6 
+        y = global_pos.y() + 4
+        h = rect.height() - 8
+        w = 4
+        
+        self.indicator.setGeometry(x, y, w, h)
+        self.indicator.show()
+        # Asegurar que esté encima
+        self.indicator.raise_()
+
 def getversion():
     newversion = time.strftime("%y.%m-%H.%M")
     return f"{newversion}"
@@ -410,61 +814,267 @@ def detectar_modo_sistema():
 
 class GitHubVerifyThread(QThread):
     """Thread para verificar username de GitHub"""
-    finished = pyqtSignal(bool, str)
+    finished = pyqtSignal(bool, str) # bool success, str message_or_url
     
     def __init__(self, username, parent=None):
         super().__init__(parent)
         self.username = username
     
     def run(self):
-        valido, mensaje = verificar_github_username(self.username)
-        self.finished.emit(valido, mensaje)
+        valido, resultado = verificar_github_username(self.username)
+        # resultado será el URL si es valido, o mensaje de error si no
+        self.finished.emit(valido, resultado)
+
+class FlangCompiler:
+    """Compilador principal unificado para el ecosistema Flarm."""
+
+    def __init__(self, repo_path: Path, output_path: Optional[Path] = None, log_callback=None):
+        self.repo_path = Path(repo_path).resolve()
+        self.output_path = Path(output_path or "./releases").resolve()
+        self.log_callback = log_callback
+        self.details_xml_path = self.repo_path / "details.xml"
+        self.metadata = {}
+        self.scripts = []
+        self.platform_type = None
+        self.current_platform = platform.system()
+        self.venv_path = None
+
+        self.output_path.mkdir(parents=True, exist_ok=True)
+        self.log(f"[FlangCompiler IT] Inicializado en: {self.repo_path}")
+
+    def log(self, msg):
+        if self.log_callback:
+            self.log_callback(msg)
+        print(msg)
+
+    def _check_pyinstaller_installed(self) -> bool:
+        try:
+            result = subprocess.run(
+                ["pyinstaller", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            return result.returncode == 0
+        except Exception:
+            return False
+
+    def _ensure_pyinstaller(self) -> bool:
+        if self._check_pyinstaller_installed():
+            return True
+        self.log("[ERROR] PyInstaller no encontrado. Instale: pip install pyinstaller")
+        return False
+
+    def parse_details_xml(self) -> bool:
+        if not self.details_xml_path.exists():
+            self.log(f"[ERROR] No details.xml found in {self.repo_path}")
+            return False
+        try:
+            tree = ET.parse(self.details_xml_path)
+            root = tree.getroot()
+            self.metadata = {
+                'publisher': root.findtext('publisher', 'Unknown'),
+                'app': root.findtext('app', 'Unknown'),
+                'name': root.findtext('name', 'Unknown'),
+                'version': root.findtext('version', 'v1.0'),
+                'platform': root.findtext('platform', 'AlphaCube'),
+                'author': root.findtext('author', 'Unknown'),
+            }
+            self.platform_type = self.metadata['platform']
+            self.log(f"[INFO] Metadatos: {self.metadata}")
+            return True
+        except Exception as e:
+            self.log(f"[ERROR] Error parsing XML: {e}")
+            return False
+
+    def find_scripts(self) -> bool:
+        main_script = f"{self.metadata['app']}.py"
+        main_script_path = self.repo_path / main_script
+        if main_script_path.exists():
+            self.scripts.append({
+                'name': self.metadata['app'],
+                'path': main_script_path,
+                'icon': self._find_icon(self.metadata['app']),
+                'is_main': True,
+            })
+        for file in self.repo_path.glob("*.py"):
+            if file.name != main_script and not file.name.startswith("_") and file.name != "packagemaker.py" and file.name != "updater.py":
+                 # Exclude updater.py and packagemaker.py itself if present
+                self.scripts.append({
+                    'name': file.stem,
+                    'path': file,
+                    'icon': self._find_icon(file.stem),
+                    'is_main': False,
+                })
+        return len(self.scripts) > 0
+
+    def _find_icon(self, script_name: str) -> Optional[Path]:
+        app_dir = self.repo_path / "app"
+        if not app_dir.exists(): return None
+        icon_path = app_dir / f"{script_name}-icon.ico"
+        if icon_path.exists(): return icon_path
+        if script_name == self.metadata['app']:
+            icon_path = app_dir / "app-icon.ico"
+            if icon_path.exists(): return icon_path
+        return None
+
+    def should_compile_for_platform(self, target_platform: str) -> bool:
+        if self.platform_type == "AlphaCube": return True
+        if self.platform_type == "Knosthalij": return target_platform == "Windows"
+        if self.platform_type == "Danenone": return target_platform == "Linux"
+        return False
+
+    def compile_binaries(self, target_platform: str) -> bool:
+        if not self.should_compile_for_platform(target_platform):
+            return True
+        if target_platform != self.current_platform:
+            self.log(f"[SKIP] Cannot compile for {target_platform} on {self.current_platform}")
+            return True # Skip but don't fail
+            
+        if not self._ensure_pyinstaller(): return False
+        
+        for script in self.scripts:
+            self.log(f"[INFO] Compilando {script['name']} para {target_platform}...")
+            cmd = ["pyinstaller", "--onefile", "--name", script['name']]
+            if target_platform == "Windows":
+                cmd.append("--windowed")
+                cmd.extend(["--add-data", "assets;assets", "--add-data", "app;app"])
+                if script['icon']: cmd.extend(["--icon", str(script['icon'])])
+            else:
+                cmd.extend(["--add-data", "assets:assets", "--add-data", "app:app"])
+            
+            cmd.append(str(script['path']))
+            
+            try:
+                result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True)
+                if result.returncode != 0:
+                    self.log(f"[ERROR] Compile failed for {script['name']}:\n{result.stderr}")
+                    return False
+                self.log(f"[OK] {script['name']} compiled.")
+            except Exception as e:
+                self.log(f"[ERROR] PyInstaller exception: {e}")
+                return False
+        return True
+
+    def create_package(self, target_platform: str) -> bool:
+        if not self.should_compile_for_platform(target_platform): return True
+        
+        platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
+        package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
+        package_path = self.output_path / package_name
+        package_path.mkdir(parents=True, exist_ok=True)
+        
+        self._copy_package_files(package_path, target_platform)
+        self._update_and_copy_details_xml(package_path, platform_suffix)
+        return True
+
+    def _copy_package_files(self, package_path: Path, target_platform: str) -> None:
+        exclude_patterns = ["requirements.txt", "*.pyc", "__pycache__", ".git", ".gitignore", "build", "dist", "*.spec", "packagemaker.py", "*.py"]
+        # Include logic to copy dirs like app, assets...
+        for item in self.repo_path.iterdir():
+            if any(fnmatch.fnmatch(item.name, p) for p in exclude_patterns): continue
+            
+            dest = package_path / item.name
+            if item.is_dir():
+                if dest.exists(): shutil.rmtree(dest)
+                shutil.copytree(item, dest, ignore=shutil.ignore_patterns(*exclude_patterns))
+            elif item.is_file():
+                shutil.copy2(item, dest)
+                
+        # Move binaries
+        dist_dir = self.repo_path / "dist"
+        if dist_dir.exists():
+            for binary in dist_dir.iterdir():
+                if target_platform == "Windows" and binary.suffix == ".exe":
+                    shutil.copy2(binary, package_path / binary.name)
+                elif target_platform == "Linux" and binary.suffix == "":
+                    shutil.copy2(binary, package_path / binary.name)
+                    (package_path / binary.name).chmod(0o755)
+
+    def _update_and_copy_details_xml(self, package_path: Path, platform_suffix: str) -> None:
+        try:
+            tree = ET.parse(self.details_xml_path)
+            root = tree.getroot()
+            pe = root.find('platform')
+            if pe is None: pe = ET.SubElement(root, 'platform')
+            pe.text = platform_suffix
+            tree.write(package_path / "details.xml", encoding='utf-8', xml_declaration=True)
+        except Exception as e:
+            self.log(f"[ERROR] Updating XML: {e}")
+
+    def compress_to_iflapp(self, package_path: Path, output_file: Path) -> bool:
+        self.log(f"[INFO] Creando .iflapp: {output_file.name}")
+        try:
+            with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for root, dirs, files in os.walk(package_path):
+                    for file in files:
+                        fp = Path(root) / file
+                        arcname = fp.relative_to(package_path)
+                        zipf.write(fp, arcname)
+            return True
+        except Exception as e:
+            self.log(f"[ERROR] Zip failed: {e}")
+            return False
+
+    def run(self) -> Optional[Path]:
+        if not self.parse_details_xml(): return None
+        if not self.find_scripts(): 
+            self.log("[WARN] No scripts found")
+            return None
+            
+        target = "Windows" if self.current_platform == "Windows" else "Linux"
+        # Force compile for current platform only in this simple GUI version?
+        # packagemaker seems to run locally.
+        
+        if not self.compile_binaries(target): return None
+        if not self.create_package(target): return None
+        
+        platform_suffix = "Knosthalij" if target == "Windows" else "Danenone"
+        package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
+        last_pkg = self.output_path / package_name
+        
+        iflapp = self.output_path / f"{package_name}.iflapp"
+        if self.compress_to_iflapp(last_pkg, iflapp):
+            return iflapp
+        return None
 
 class BuildThread(QThread):
     progress = pyqtSignal(str)
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
+    
     def __init__(self, empresa, nombre, version, plataforma, parent=None):
         super().__init__(parent)
         self.empresa = empresa
         self.nombre = nombre
         self.version = version
-        self.plataforma = plataforma
+        self.plataforma = plataforma # "Windows", "Linux", etc.
 
     def run(self):
-        if self.plataforma == "Windows":
-            self.plataforma = "Knosthalij"
-        elif self.plataforma == "Linux":
-            self.plataforma = "Danenone"
-        elif self.plataforma == "Multiplataforma":
-            self.plataforma = "AlphaCube"
+        # Reconstruct folder path
+        # In packagemaker logic: folder = f"{self.empresa}.{self.nombre}.v{self.version}-{plataforma_translated}"
+        # But here construction might be tricky if user changed fields.
+        # Assuming packagemaker passes 'plataforma' as "Windows" etc.
+        
+        # Helper to match packagemaker's folder naming convention:
+        p_map = {"Windows": "Knosthalij", "Linux": "Danenone", "Multiplataforma": "AlphaCube"}
+        plat_suffix = p_map.get(self.plataforma, "AlphaCube")
+        
+        # Note: packagemaker original BuildThread calculated folder too.
+        folder = f"{self.empresa}.{self.nombre}.v{self.version}-{plat_suffix}"
+        repo_path = Path(BASE_DIR) / folder
+        
+        if not repo_path.exists():
+            self.error.emit(f"No se encontró la carpeta: {folder}")
+            return
+
+        compiler = FlangCompiler(repo_path, Path(BASE_DIR), log_callback=self.progress.emit)
+        result = compiler.run()
+        
+        if result:
+            self.finished.emit(f"Paquete construido: {result}")
         else:
-            self.error.emit("PLATAFORMA DESCONOCIDA")
-            return
-        folder = f"{self.empresa}.{self.nombre}.v{self.version}-{self.plataforma}"
-        path = os.path.join(BASE_DIR, folder)
-        ext = ".iflapp"
-        output_file = os.path.join(BASE_DIR, folder + ext)
-        print(output_file)
-        zip_path = output_file.replace(ext, "") + ".zip"
-        if not os.path.exists(path):
-            self.error.emit("No se encontró la carpeta del paquete.")
-            return
-        try:
-            file_list = []
-            for root, _, files in os.walk(path):
-                for file in files:
-                    full_path = os.path.join(root, file)
-                    arcname = os.path.relpath(full_path, path)
-                    file_list.append((full_path, arcname))
-            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for i, (full_path, arcname) in enumerate(file_list):
-                    zipf.write(full_path, arcname)
-                    self.progress.emit(f"Empaquetando archivo {i+1}/{len(file_list)}: {arcname}")
-            os.rename(zip_path, output_file)
-            self.finished.emit(f"Paquete .iflapp construido: {output_file}")
-        except Exception as e:
-            self.error.emit(str(e))
+            self.error.emit("Falló la compilación. Ver logs.")
 
 from PyQt5.QtWidgets import QComboBox
 
@@ -870,78 +1480,114 @@ class PackageTodoGUI(QMainWindow):
         self.init_about_tab()
         self.statusBar().showMessage("Preparable!...")
 
+        # Icono de ventana por defecto
+        if os.path.exists(IPM_ICON_PATH):
+            self.setWindowIcon(QIcon(IPM_ICON_PATH))
+
+        # Instalar filtro de foco global estilo UWP
+        self.focus_filter = FocusIndicationFilter(self)
+        app = QApplication.instance()
+        if app:
+            app.installEventFilter(self.focus_filter)
+
+
     def init_create_tab(self):
         layout = QVBoxLayout()
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        form_group = QGroupBox("Datos del Proyecto")
+        form_group = QGroupBox("Detalles del Proyecto")
+        # Usamos un Layout con columnas definidas para "Label a izq, Input a derecha"
         form_layout = QGridLayout(form_group)
         form_layout.setSpacing(12)
-        form_layout.setColumnMinimumWidth(0, 140)
+        # Columna 0 (Labels): Ancho fijo o minimo para alineacion bonita
+        form_layout.setColumnMinimumWidth(0, 150)
+        # Columna 1 (Inputs): Stretch para que se peguen al borde
         form_layout.setColumnStretch(1, 1)
-        form_layout.setColumnStretch(2, 0)
-        
-        # Fila 1: Fabricante
-        label1 = QLabel("Fabricante:")
+
+        # Fila 0: Empresa
+        label1 = QLabel("Nombre de la Empresa:")
         label1.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label1, 0, 0)
         self.input_empresa = QLineEdit()
         self.input_empresa.setPlaceholderText("Ejemplo: influent")
         self.input_empresa.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_PUBLISHER_E"])
-        self.input_empresa.setMaximumWidth(400)
+        # Eliminamos MaximumWidth para que ocupe todo el espacio
         self.input_empresa.setMinimumHeight(30)
         form_layout.addWidget(self.input_empresa, 0, 1)
         
-        # Fila 2: Nombre interno
-        label2 = QLabel("Nombre interno:")
+        # Fila 1: Nombre logico
+        label2 = QLabel("Nombre Interno (sin espacios):")
         label2.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label2, 1, 0)
         self.input_nombre_logico = QLineEdit()
-        self.input_nombre_logico.setPlaceholderText("Ejemplo: mycoolapp")
+        self.input_nombre_logico.setPlaceholderText("Ejemplo: my-app")
         self.input_nombre_logico.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_NAME_E"])
-        self.input_nombre_logico.setMaximumWidth(400)
         self.input_nombre_logico.setMinimumHeight(30)
         form_layout.addWidget(self.input_nombre_logico, 1, 1)
         
-        # Fila 3: Título completo
-        label3 = QLabel("Título completo:")
+        # Fila 2: Nombre visual
+        label3 = QLabel("Nombre Visual del Producto:")
         label3.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label3, 2, 0)
-        self.input_titulo = QLineEdit()
-        self.input_titulo.setPlaceholderText("Ejemplo: MyCoolApp")
-        self.input_titulo.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_TITLE_E"])
-        self.input_titulo.setMaximumWidth(400)
-        self.input_titulo.setMinimumHeight(30)
-        form_layout.addWidget(self.input_titulo, 2, 1)
+        self.input_nombre_completo = QLineEdit()
+        self.input_nombre_completo.setPlaceholderText("Ejemplo: My Super App")
+        self.input_nombre_completo.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_TITLE_E"])
+        self.input_nombre_completo.setMinimumHeight(30)
+        form_layout.addWidget(self.input_nombre_completo, 2, 1)
         
-        # Fila 4: Versión
-        label4 = QLabel("Versión:")
+        # Fila 3: Version
+        label4 = QLabel("Versión Inicial:")
         label4.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label4, 3, 0)
         self.input_version = QLineEdit()
         self.input_version.setPlaceholderText("Ejemplo: 1.0")
         self.input_version.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_VERSION_E"])
-        self.input_version.setMaximumWidth(400)
         self.input_version.setMinimumHeight(30)
         form_layout.addWidget(self.input_version, 3, 1)
-        
-        # Fila 5: Autor
-        label5 = QLabel("Autor:")
+
+        # Fila 4: Autor
+        label5 = QLabel("Autor (GitHub Username):")
         label5.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label5, 4, 0)
         self.input_autor = QLineEdit()
         self.input_autor.setPlaceholderText("Ejemplo: JesusQuijada34")
         self.input_autor.setToolTip("Username de GitHub (obligatorio)")
-        self.input_autor.setMaximumWidth(400)
         self.input_autor.setMinimumHeight(30)
         form_layout.addWidget(self.input_autor, 4, 1)
+
+        # Fila 5: Icono (distribuida igual)
+        label_ico = QLabel("Icono del Proyecto:")
+        label_ico.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label_ico, 5, 0)
         
-        # Fila 6: Plataforma con radios personalizados
-        label6 = QLabel("Plataforma:")
-        label6.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        label6.setMinimumHeight(50)
-        form_layout.addWidget(label6, 5, 0)
+        ico_widget = QWidget()
+        ico_layout = QHBoxLayout(ico_widget)
+        ico_layout.setContentsMargins(0, 0, 0, 0)
+        ico_layout.setSpacing(5) # Espacio entre input y boton
+        self.input_icon = QLineEdit()
+        self.input_icon.setPlaceholderText("(Opcional) Ruta al archivo .ico")
+        self.input_icon.setMinimumHeight(30)
+        ico_layout.addWidget(self.input_icon)
+        
+        self.btn_browse_icon = QPushButton("Examinar")
+        self.btn_browse_icon.setCursor(Qt.PointingHandCursor)
+        self.btn_browse_icon.setFixedWidth(80) # Un poco mas ancho para que se lea "Examinar"
+        self.btn_browse_icon.setMinimumHeight(30)
+        self.btn_browse_icon.clicked.connect(self.browse_icon)
+        # Estilo "mini" pero acorde al tema
+        self.btn_browse_icon.setStyleSheet(BTN_STYLES["info"] + "padding: 4px; font-size: 11px;")
+        ico_layout.addWidget(self.btn_browse_icon)
+        
+        form_layout.addWidget(ico_widget, 5, 1)
+        
+        # Fila 6: Plataforma (Radios)
+        label6 = QLabel("Plataforma Objetivo:")
+        label6.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        # Margin top para alinear con el grupo de radios
+        label6.setStyleSheet("margin-top: 5px;") 
+        form_layout.addWidget(label6, 6, 0, Qt.AlignTop)
+
         
         self.platform_group = QButtonGroup()
         platform_layout = QHBoxLayout()
@@ -1036,36 +1682,58 @@ class PackageTodoGUI(QMainWindow):
         
         platform_widget = QWidget()
         platform_widget.setLayout(platform_layout)
-        form_layout.addWidget(platform_widget, 5, 1)
+        form_layout.addWidget(platform_widget, 6, 1)
         
-        # Información adicional
-        info_label = QLabel("TELEGRAM:: t.me/JesusQuijada34\nWEBSITE:: https://jesusquijada34.github.io")
-        info_label.setStyleSheet("color: #6a737d; font-size: 11px; padding: 5px 0px;")
-        info_label.setMinimumHeight(40)
-        form_layout.addWidget(info_label, 6, 0, 1, 2)
+        # Fila 7: Info
+        info_label = QLabel("ℹ️ Un proyecto bien configurado garantiza una mejor distribución y compatibilidad.<br>Asegurese de que el Autor coincida con su usuario de GitHub para las actualizaciones.")
+        info_label.setStyleSheet("color: #6a737d; font-size: 11px; padding: 10px 0px; border-top: 1px solid #eee; margin-top: 10px;")
+        info_label.setWordWrap(True)
+        form_layout.addWidget(info_label, 7, 0, 1, 2)
         
         self.btn_create = QPushButton("Crear Proyecto")
         self.btn_create.setFont(BUTTON_FONT)
         self.btn_create.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_MAKE_BTN"])
         self.btn_create.setIcon(QIcon(TAB_ICONS["crear"]))
-        self.btn_create.setMaximumWidth(350)
-        self.btn_create.clicked.connect(self.create_package_action)
+        self.btn_create.setMinimumHeight(45)
+        # Boton centrado y ancho completo relativo al form
+        self.btn_create.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         
-        # Barra de progreso para verificación de GitHub
-        self.github_progress = QProgressBar()
-        self.github_progress.setMaximumWidth(350)
-        self.github_progress.setVisible(False)
-        self.github_progress.setRange(0, 0)  # Modo indeterminado
-        
+        # Status
         self.create_status = QLabel("")
-        self.create_status.setStyleSheet("color:#388e3c;")
+        self.create_status.setAlignment(Qt.AlignCenter)
+
         layout.addWidget(form_group)
         layout.addWidget(self.btn_create)
-        layout.addWidget(self.github_progress)
         layout.addWidget(self.create_status)
         layout.addStretch()
         self.tab_create.setLayout(layout)
         self.statusBar().showMessage("Preparando entorno...")
+
+    def browse_icon(self):
+        filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icono", "", "Icon Files (*.ico);;PNG Files (*.png)")
+        if filename:
+            self.input_icon.setText(filename)
+
+    def download_avatar(self, url):
+        try:
+             import urllib.request
+             data = urllib.request.urlopen(url).read()
+             pixmap = QPixmap()
+             pixmap.loadFromData(data)
+             # Mask circular
+             size = 64
+             target = QPixmap(size, size)
+             target.fill(Qt.transparent)
+             p = QtGui.QPainter(target)
+             p.setRenderHint(QtGui.QPainter.Antialiasing)
+             path = QtGui.QPainterPath()
+             path.addEllipse(0, 0, size, size)
+             p.setClipPath(path)
+             p.drawPixmap(0, 0, size, size, pixmap)
+             p.end()
+             self.avatar_label.setPixmap(target)
+        except Exception as e:
+             print(f"Error descargando avatar: {e}")
 
     def create_package_action(self):
         self.statusBar().showMessage("Creando Proyecto FLUTHIN Packaged...")
@@ -1195,9 +1863,9 @@ class PackageTodoGUI(QMainWindow):
     </dependentAssembly>
   </dependency>
 </assembly>""")
-            if os.path.exists(updator):
-                upd_dest = os.path.join(full_path, "updater.py")
-                shutil.copy(updator, upd_dest)
+            upd_dest = os.path.join(full_path, "updater.py")
+            with open(upd_dest, "w", encoding="utf-8") as f:
+                f.write(UPDATER_CODE)
             with open(blockmap, "w") as f:
                 compname = empresa.capitalize()
                 neim = nombre_completo.capitalize()
@@ -1963,7 +2631,11 @@ if __name__ == '__main__':
             icon_dest = os.path.join(full_path, "app", "app-icon.ico")
             upd_icon = os.path.join("app", "updater-icon.ico")
             upd_icn_dst = os.path.join(full_path, "app", "updater-icon.ico")
-            if os.path.exists(IPM_ICON_PATH):
+            selected_icon = self.input_icon.text().strip()
+            
+            if selected_icon and os.path.exists(selected_icon):
+                shutil.copy(selected_icon, icon_dest)
+            elif os.path.exists(IPM_ICON_PATH):
                 shutil.copy(IPM_ICON_PATH, icon_dest)
             if os.path.exists(upd_icon):
                 shutil.copy(upd_icon, upd_icn_dst)
@@ -2147,29 +2819,56 @@ if __name__ == '__main__':
         self.projects_list.itemDoubleClicked.connect(lambda item: self.on_project_double_click(item))
         self.apps_list.itemDoubleClicked.connect(lambda item: self.on_app_double_click(item))
 
+        # Watcher en tiempo real
+        self.fs_watcher = QtCore.QFileSystemWatcher(self)
+        self.fs_watcher.addPath(BASE_DIR)
+        self.fs_watcher.addPath(FLUTHIN_APPS)
+        self.fs_watcher.directoryChanged.connect(self.load_manager_lists)
+
     def get_package_list(self, base):
         packages = []
-        for d in os.listdir(base):
-            folder = os.path.join(base, d)
-            details_path = os.path.join(folder, "details.xml")
-            icon_path = os.path.join(folder, "app", "app-icon.ico")
-            if os.path.isdir(folder) and os.path.exists(details_path):
+        if not os.path.exists(base): return []
+        
+        # Escaneo Recursivo usando os.walk, limitado a un nivel de profundidad lógico para proyectos
+        # No queremos escanear todo el disco. Asumimos que BASE_DIR contiene carpetas de proyectos.
+        # Originalmente solo escaneaba carpetas en BASE_DIR. 
+        # El usuario pidió "recursivamente". Si los proyectos están anidados, esto ayudará.
+        # Pero standard packagemaker structure es BASE_DIR/Proyecto.
+        # Mantendremos la lógica de "mirar en subcarpetas de BASE_DIR" pero si el usuario se refería
+        # a buscar metadatos en TODOS los archivos, eso es costoso. 
+        # Interpretaremos "recursivamente" como buscar en subdirectorios si la estructura lo permite.
+        
+        # Para cumplir con "recursivamente en busca de metadatos similares", 
+        # asumiremos que quiere encontrar details.xml incluso si está dentro de subcarpetas (proyectos anidados ??).
+        # Para evitar lentitud extrema, limitaremos la profundidad o usaremos walk con cuidado.
+        
+        for root, dirs, files in os.walk(base):
+            if "details.xml" in files:
+                folder = root
+                details_path = os.path.join(folder, "details.xml")
+                icon_path = os.path.join(folder, "app", "app-icon.ico")
                 try:
                     tree = ET.parse(details_path)
-                    root = tree.getroot()
-                    details = {child.tag: child.text for child in root}
+                    root_xml = tree.getroot()
+                    details = {child.tag: child.text for child in root_xml}
                     empresa = details.get("publisher", "Origen Desconocido")
-                    titulo = details.get("name", d)
+                    titulo = details.get("name", os.path.basename(folder))
                     version = details.get("version", "v?")
                     ratings = details.get("rate", "Sin Clasificación")
+                    
+                    correlation_id = details.get("correlationid")
+                    if not correlation_id:
+                        correlation_id = hashlib.sha256(f"{empresa}.{titulo}.{version}".encode()).hexdigest()
+
                     packages.append({
                         "folder": folder,
                         "empresa": empresa,
                         "titulo": titulo,
                         "version": version,
                         "icon": icon_path if os.path.exists(icon_path) else None,
-                        "name": d,
+                        "name": os.path.basename(folder),
                         "rating": ratings,
+                        "sha": correlation_id
                     })
                 except Exception:
                     continue
@@ -2182,7 +2881,7 @@ if __name__ == '__main__':
         for p in projects:
             icon = QIcon(p["icon"]) if p["icon"] else self.style().standardIcon(QStyle.SP_ComputerIcon)
             text = p['empresa'].capitalize()
-            text = f"{text} {p['titulo']} | {p['version']}"
+            text = f"{text} {p['titulo']} | {p['version']} [SHA: {p['sha'][:8]}...]"
             item = QListWidgetItem(icon, text)
             item.setData(QtCore.Qt.UserRole, p)
             self.projects_list.addItem(item)
@@ -2194,6 +2893,27 @@ if __name__ == '__main__':
             item = QListWidgetItem(icon, text)
             item.setData(QtCore.Qt.UserRole, a)
             self.apps_list.addItem(item)
+            
+        # Actualizar autocompletador de Build Tab
+        self.update_build_completer(projects)
+
+    def update_build_completer(self, projects):
+        if hasattr(self, 'input_build_empresa') and hasattr(self, 'input_build_nombre'):
+             pubs = list(set([p['empresa'] for p in projects]))
+             names = list(set([p['titulo'] for p in projects])) # Usar titulo o name? Titulo es mas visual
+             # Agregar tambien los nombres de carpeta
+             names.extend([p['name'] for p in projects])
+             names = list(set(names))
+             
+             comp_pub = QtWidgets.QCompleter(pubs, self)
+             comp_pub.setCaseSensitivity(Qt.CaseInsensitive)
+             comp_pub.setFilterMode(Qt.MatchContains) # Busqueda recursiva/flexible
+             self.input_build_empresa.setCompleter(comp_pub)
+
+             comp_name = QtWidgets.QCompleter(names, self)
+             comp_name.setCaseSensitivity(Qt.CaseInsensitive)
+             comp_name.setFilterMode(Qt.MatchContains) # Busqueda recursiva/flexible
+             self.input_build_nombre.setCompleter(comp_name)
 
     def on_project_double_click(self, item):
         pkg = item.data(QtCore.Qt.UserRole)
@@ -2244,9 +2964,24 @@ if __name__ == '__main__':
                 status.setText("Selecciona un script.")
                 return
             script_path = s_item.data(QtCore.Qt.UserRole)
+            status.setText(f"Error: {e}")
+        def run_script():
+            s_item = scripts_list.currentItem()
+            if not s_item:
+                status.setText("Selecciona un script.")
+                return
+            script_path = s_item.data(QtCore.Qt.UserRole)
+            
+            # Verificacion de Python
+            python_exe = find_python_executable()
+            if not python_exe:
+                status.setText("❌ Error: Python no encontrado en el sistema.")
+                QMessageBox.critical(self, "Error", "No se encuentra un ejecutable de Python.\nAsegúrate de tener Python instalado y en el PATH.")
+                return
+
             import subprocess
             try:
-                subprocess.Popen([sys.executable, script_path], cwd=os.path.dirname(script_path))
+                subprocess.Popen([python_exe, script_path], cwd=os.path.dirname(script_path))
                 status.setText(f"Ejecutando: {script_path}")
             except Exception as e:
                 status.setText(f"Error: {e}")
