@@ -1,4 +1,4 @@
-#!/usr/bin/env/python
+"""!/usr/bin/env/python"""
 # -*- coding: utf-8 -*-
 import sys
 import os
@@ -21,13 +21,13 @@ from typing import Dict, List, Tuple, Optional
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar
+    QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar, QTextEdit
 )
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
 from PyQt5.QtSvg import QSvgRenderer # [NEW IMPORT FOR TITLEBAR SVG RENDERING]
 from PyQt5.QtCore import QByteArray  # [NEW IMPORT FOR SVG BUFFER]
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QProcess
 import requests
 # The following block handles platform-specific imports.
 # The warning about 'pyi_splash' is expected only when running as a PyInstaller .exe.
@@ -1274,6 +1274,363 @@ class TitleBar(QWidget):  # [NEW CLASS: FULL CUSTOM TITLE BAR]
     def contextMenuEvent(self, e):
         self.menu.exec_(e.globalPos())
 # === END CUSTOM TITLE BAR CLASS ===
+
+class OutputTerminalDialog(QDialog):
+    """Dialogo de terminal para mostrar salida de scripts"""
+    def __init__(self, script_path, interpreter, parent=None):
+        super().__init__(parent)
+        self.script_path = script_path
+        self.interpreter = interpreter
+        self.interpreter = interpreter
+        # Fix: Ensure Qt.Dialog flag is present so self.window() in TitleBar returns THIS dialog, not the parent main window
+        self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.resize(900, 600)
+        self.init_ui()
+        self.process = QProcess(self)
+        self.process.readyReadStandardOutput.connect(self.handle_stdout)
+        self.process.readyReadStandardError.connect(self.handle_stderr)
+        self.process.finished.connect(self.handle_finished)
+        self.start_process()
+
+    def init_ui(self):
+        # Fondo y borde
+        self.container = QWidget(self)
+        self.container.setObjectName("TerminalContainer")
+        self.container.setStyleSheet("""
+            #TerminalContainer {
+                background-color: #0d1117;
+                border: 1px solid #30363d;
+                border-radius: 8px;
+            }
+        """)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.container)
+
+        layout = QVBoxLayout(self.container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Barra de titulo
+        self.titlebar = TitleBar(self, title=f"Terminal: {os.path.basename(self.script_path)}")
+        self.titlebar.setStyleSheet("background-color: #161b22; border-top-left-radius: 8px; border-top-right-radius: 8px;")
+        layout.addWidget(self.titlebar)
+
+        # Area de texto de terminal
+        self.terminal_output = QTextEdit()
+        self.terminal_output.setReadOnly(True)
+        self.terminal_output.setFont(QFont("Consolas", 10))
+        self.terminal_output.setStyleSheet("""
+            QTextEdit {
+                background-color: #0d1117;
+                color: #c9d1d9;
+                border: none;
+                padding: 10px;
+                selection-background-color: #58a6ff;
+                selection-color: #0d1117;
+            }
+        """)
+        layout.addWidget(self.terminal_output)
+        
+        # Barra estado inferior
+        self.status_bar = QLabel("Iniciando...")
+        self.status_bar.setStyleSheet("color: #8b949e; padding: 5px 10px; border-top: 1px solid #30363d; font-family: Segoe UI; font-size: 11px;")
+        layout.addWidget(self.status_bar)
+
+    def start_process(self):
+        self.terminal_output.append(f"<span style='color: #8b949e;'>$ {self.interpreter} \"{self.script_path}\"</span><br>")
+        self.status_bar.setText("Ejecutando script...")
+        self.process.start(self.interpreter, [self.script_path])
+        
+        # Setup working directory to script dir
+        self.process.setWorkingDirectory(os.path.dirname(self.script_path))
+
+    def handle_stdout(self):
+        data = self.process.readAllStandardOutput().data().decode('utf-8', errors='replace')
+        self.terminal_output.moveCursor(QtGui.QTextCursor.End)
+        self.terminal_output.insertPlainText(data)
+        self.terminal_output.moveCursor(QtGui.QTextCursor.End)
+
+    def handle_stderr(self):
+        data = self.process.readAllStandardError().data().decode('utf-8', errors='replace')
+        self.terminal_output.moveCursor(QtGui.QTextCursor.End)
+        # Estilo rojo para errores
+        self.terminal_output.insertHtml(f"<span style='color: #ff7b72;'>{data}</span>")
+        self.terminal_output.moveCursor(QtGui.QTextCursor.End)
+
+    def handle_finished(self, exit_code, exit_status):
+        color = "#3fb950" if exit_code == 0 else "#ff7b72"
+        msg = "Completado con éxito" if exit_code == 0 else f"Falló con código {exit_code}"
+        self.terminal_output.append(f"<br><span style='color: {color}; font-weight:bold;'>Process finished: {msg}</span>")
+        self.status_bar.setText(f"Estado: {msg}")
+
+
+class ProjectDetailsDialog(QDialog):
+    """Dialogo detallado para gestión de proyectos/apps"""
+    def __init__(self, parent, pkg_data, is_app=False, manager_ref=None):
+        super().__init__(parent)
+        self.pkg = pkg_data
+        self.is_app = is_app
+        self.manager = manager_ref 
+        # Fix: Ensure Qt.Dialog flag is present
+        self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.resize(550, 450) # Reduced size slightly
+        self.init_ui()
+
+    def init_ui(self):
+        self.container = QWidget(self)
+        self.container.setObjectName("DetailsContainer")
+        # Base container style
+        self.container.setStyleSheet("""
+            #DetailsContainer {
+                background-color: #ffffff;
+                border: 1px solid #d1d5da;
+                border-radius: 8px;
+            }
+        """)
+        
+        is_dark = detect_dark = detectar_modo_sistema()
+        if is_dark:
+             self.container.setStyleSheet("""
+            #DetailsContainer {
+                background-color: #0d1117;
+                border: 1px solid #30363d;
+                border-radius: 8px;
+                color: #c9d1d9;
+            }
+            QLabel { color: #c9d1d9; font-family: 'Segoe UI', sans-serif; }
+            QListWidget { 
+                background-color: #161b22; 
+                border: 1px solid #30363d; 
+                color: #c9d1d9; 
+                border-radius: 6px;
+                padding: 4px;
+            }
+            QListWidget::item { 
+                padding: 5px; 
+            }
+            QListWidget::item:selected {
+                background-color: #1f2428;
+                border: 1px solid #58a6ff;
+                border-radius: 4px;
+            }
+        """)
+        else:
+            # Light mode styles for list
+            self.container.setStyleSheet(self.container.styleSheet() + """
+            QListWidget {
+                background-color: #f6f8fa;
+                border: 1px solid #e1e4e8;
+                color: #24292e;
+                border-radius: 6px;
+                padding: 4px;
+            }
+            QListWidget::item { padding: 5px; }
+            QListWidget::item:selected {
+                background-color: #e1e4e8;
+                border: 1px solid #0366d6;
+                border-radius: 4px;
+            }
+            """)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.container)
+
+        layout = QVBoxLayout(self.container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Title Bar
+        title = f"App: {self.pkg.get('titulo', 'Unknown')}" if self.is_app else f"Proyecto: {self.pkg.get('titulo', 'Unknown')}"
+        icon_path = self.pkg.get("icon")
+        icon_pm = QIcon(icon_path) if icon_path else None
+        
+        self.titlebar = TitleBar(self, app_icon=icon_pm, title=title)
+        # Ajuste de estilo titlebar segun tema
+        bg_tb = "#161b22" if is_dark else "#f6f8fa"
+        fg_tb = "#c9d1d9" if is_dark else "#24292e"
+        self.titlebar.setStyleSheet(f"""
+            QWidget#customTitleBar {{
+                background-color: {bg_tb}; 
+                border-top-left-radius: 8px; 
+                border-top-right-radius: 8px; 
+                border-bottom: 1px solid #d1d5da;
+            }}
+            QLabel {{ color: {fg_tb}; font-weight: bold; }}
+        """)
+        layout.addWidget(self.titlebar)
+
+        # Contenido
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(20, 20, 20, 20)
+        content_layout.setSpacing(15)
+
+        # Info Header
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(15)
+        
+        # Icono grande
+        icon_lbl = QLabel()
+        pm = QPixmap(icon_path) if icon_path else QPixmap(80, 80)
+        if not icon_path: pm.fill(Qt.transparent)
+        icon_lbl.setPixmap(pm.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        icon_lbl.setFixedSize(80, 80)
+        header_layout.addWidget(icon_lbl)
+        
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(4)
+        
+        title_lbl = QLabel(f"<h2 style='margin:0; font-size: 20px;'>{self.pkg.get('titulo')}</h2>")
+        title_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        
+        ver = self.pkg.get('version', '0.0')
+        pub = self.pkg.get('empresa', 'Unknown').capitalize()
+        categ = self.pkg.get('rating', 'Unknown') if not self.is_app else "Instalado"
+        
+        # Determine colors for meta text
+        color_pub = "#58a6ff" if is_dark else "#0366d6"
+        color_meta = "#8b949e" if is_dark else "#586069"
+        
+        meta_html = f"<span style='color:{color_pub}; font-weight:bold;'>{pub}</span> &bull; <span style='color:{color_meta};'>v{ver}</span> &bull; <span style='color:{color_meta};'>{categ}</span>"
+        meta_lbl = QLabel(meta_html)
+        meta_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        
+        folder_path = self.pkg.get('folder', '')
+        # Truncate path if too long for display nicely
+        short_path = (folder_path[:60] + '...') if len(folder_path) > 60 else folder_path
+        
+        folder_lbl = QLabel(short_path)
+        folder_lbl.setToolTip(folder_path)
+        folder_lbl.setStyleSheet(f"color: {color_meta}; font-size: 11px;")
+        folder_lbl.setWordWrap(True)
+        folder_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
+
+        info_layout.addWidget(title_lbl)
+        info_layout.addWidget(meta_lbl)
+        info_layout.addWidget(folder_lbl)
+        info_layout.addStretch()
+        
+        header_layout.addLayout(info_layout)
+        header_layout.addStretch() # Push everything to left
+        content_layout.addLayout(header_layout)
+
+        content_layout.addWidget(QLabel("<b>Scripts ejecutables:</b>"))
+        
+        self.scripts_list = QListWidget()
+        self.scripts_list.setIconSize(QtCore.QSize(20,20))
+        # Populamos
+        if os.path.exists(self.pkg["folder"]):
+            for root, _, files in os.walk(self.pkg["folder"]):
+                for f in files:
+                    if f.endswith(".py"):
+                        full_p = os.path.join(root, f)
+                        rel_p = os.path.relpath(full_p, self.pkg["folder"])
+                        item = QListWidgetItem(QIcon("app/python-icon.png"), rel_p) # Placeholder icon if null
+                        item.setData(QtCore.Qt.UserRole, full_p)
+                        self.scripts_list.addItem(item)
+        
+        # Limit list height to avoid taking too much space
+        self.scripts_list.setFixedHeight(120)
+        content_layout.addWidget(self.scripts_list)
+
+        # Botones de accion
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+        
+        # Helper for button style
+        def mk_btn(text, style_key, icon_key=None):
+            btn = QPushButton(text)
+            btn.setFixedHeight(38)
+            btn.setFont(QFont("Arial", 10, QFont.Bold))
+            if icon_key and icon_key in TAB_ICONS:
+                btn.setIcon(QIcon(TAB_ICONS[icon_key]))
+            btn.setStyleSheet(BTN_STYLES.get(style_key, ""))
+            return btn
+        
+        self.btn_run = mk_btn("Ejecutar", "success", "construir")
+        self.btn_run.clicked.connect(self.run_selected_script)
+        btn_layout.addWidget(self.btn_run)
+        
+        if self.is_app:
+            self.btn_uninstall = mk_btn("Desinstalar", "danger", "desinstalar")
+            self.btn_uninstall.clicked.connect(self.uninstall_action)
+            btn_layout.addWidget(self.btn_uninstall)
+        else:
+            self.btn_install = mk_btn("Instalar", "info", "instalar")
+            self.btn_install.clicked.connect(self.install_action)
+            
+            self.btn_delete = mk_btn("Eliminar", "danger", "desinstalar")
+            self.btn_delete.clicked.connect(self.delete_action)
+            
+            btn_layout.addWidget(self.btn_install)
+            btn_layout.addWidget(self.btn_delete)
+
+        content_layout.addLayout(btn_layout)
+        content_layout.addStretch()
+        layout.addLayout(content_layout)
+
+    def run_selected_script(self):
+        item = self.scripts_list.currentItem()
+        if not item:
+            return
+        script_path = item.data(QtCore.Qt.UserRole)
+        
+        python = find_python_executable()
+        if not python:
+             QtWidgets.QMessageBox.critical(self, "Python no encontrado", "No se detectó una instalación de Python válida para ejecutar el script.")
+             return
+             
+        # Abrir terminal
+        self.terminal = OutputTerminalDialog(script_path, python, self)
+        self.terminal.exec_()
+    
+    def install_action(self):
+        # Logica de buscar .iflapp y descomprimir
+        found = False
+        base_name = self.pkg.get("name", "")
+        # Busqueda laxa
+        valid_file = None
+        for f in os.listdir(BASE_DIR):
+            if (f.endswith(".iflapp") or f.endswith(".iflappb")) and self.pkg['name'] in f:
+                valid_file = os.path.join(BASE_DIR, f)
+                break
+        
+        if valid_file:
+            target_dir = os.path.join(FLUTHIN_APPS, self.pkg['name'])
+            try:
+                os.makedirs(target_dir, exist_ok=True)
+                with zipfile.ZipFile(valid_file, 'r') as zf:
+                    zf.extractall(target_dir)
+                QtWidgets.QMessageBox.information(self, "Exito", "App instalada correctamente.")
+                if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
+            except Exception as e:
+                 QtWidgets.QMessageBox.critical(self, "Error", str(e))
+        else:
+             QtWidgets.QMessageBox.warning(self, "No encontrado", "No se encontró el paquete compilado (.iflapp) en la carpeta de proyectos. Primero compílalo.")
+
+    def uninstall_action(self):
+         reply = QtWidgets.QMessageBox.question(self, "Desinstalar", "¿Estás seguro de eliminar esta app?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+         if reply == QtWidgets.QMessageBox.Yes:
+             try:
+                 shutil.rmtree(self.pkg["folder"])
+                 self.accept()
+                 if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
+             except Exception as e:
+                 QtWidgets.QMessageBox.critical(self, "Error", str(e))
+
+    def delete_action(self):
+         reply = QtWidgets.QMessageBox.question(self, "Eliminar", "¿Estás seguro de eliminar este proyecto y todos sus archivos? Esta acción no se puede deshacer.", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+         if reply == QtWidgets.QMessageBox.Yes:
+             try:
+                 shutil.rmtree(self.pkg["folder"])
+                 self.accept()
+                 if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
+             except Exception as e:
+                 QtWidgets.QMessageBox.critical(self, "Error", str(e))
+
 class PackageTodoGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1513,7 +1870,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_empresa.setPlaceholderText("Ejemplo: influent")
         self.input_empresa.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_PUBLISHER_E"])
         # Eliminamos MaximumWidth para que ocupe todo el espacio
-        self.input_empresa.setMinimumHeight(30)
+        self.input_empresa.setFixedHeight(35)
+        self.input_empresa.setMaximumWidth(450)
         form_layout.addWidget(self.input_empresa, 0, 1)
         
         # Fila 1: Nombre logico
@@ -1523,7 +1881,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_nombre_logico = QLineEdit()
         self.input_nombre_logico.setPlaceholderText("Ejemplo: my-app")
         self.input_nombre_logico.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_NAME_E"])
-        self.input_nombre_logico.setMinimumHeight(30)
+        self.input_nombre_logico.setFixedHeight(35)
+        self.input_nombre_logico.setMaximumWidth(450)
         form_layout.addWidget(self.input_nombre_logico, 1, 1)
         
         # Fila 2: Nombre visual
@@ -1533,7 +1892,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_nombre_completo = QLineEdit()
         self.input_nombre_completo.setPlaceholderText("Ejemplo: My Super App")
         self.input_nombre_completo.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_TITLE_E"])
-        self.input_nombre_completo.setMinimumHeight(30)
+        self.input_nombre_completo.setFixedHeight(35)
+        self.input_nombre_completo.setMaximumWidth(450)
         form_layout.addWidget(self.input_nombre_completo, 2, 1)
         
         # Fila 3: Version
@@ -1543,7 +1903,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_version = QLineEdit()
         self.input_version.setPlaceholderText("Ejemplo: 1.0")
         self.input_version.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_VERSION_E"])
-        self.input_version.setMinimumHeight(30)
+        self.input_version.setFixedHeight(35)
+        self.input_version.setMaximumWidth(450)
         form_layout.addWidget(self.input_version, 3, 1)
 
         # Fila 4: Autor
@@ -1553,7 +1914,8 @@ class PackageTodoGUI(QMainWindow):
         self.input_autor = QLineEdit()
         self.input_autor.setPlaceholderText("Ejemplo: JesusQuijada34")
         self.input_autor.setToolTip("Username de GitHub (obligatorio)")
-        self.input_autor.setMinimumHeight(30)
+        self.input_autor.setFixedHeight(35)
+        self.input_autor.setMaximumWidth(450)
         form_layout.addWidget(self.input_autor, 4, 1)
 
         # Fila 5: Icono (distribuida igual)
@@ -1562,18 +1924,19 @@ class PackageTodoGUI(QMainWindow):
         form_layout.addWidget(label_ico, 5, 0)
         
         ico_widget = QWidget()
+        ico_widget.setMaximumWidth(450)
         ico_layout = QHBoxLayout(ico_widget)
         ico_layout.setContentsMargins(0, 0, 0, 0)
         ico_layout.setSpacing(5) # Espacio entre input y boton
         self.input_icon = QLineEdit()
         self.input_icon.setPlaceholderText("(Opcional) Ruta al archivo .ico")
-        self.input_icon.setMinimumHeight(30)
+        self.input_icon.setFixedHeight(35)
         ico_layout.addWidget(self.input_icon)
         
         self.btn_browse_icon = QPushButton("Examinar")
         self.btn_browse_icon.setCursor(Qt.PointingHandCursor)
         self.btn_browse_icon.setFixedWidth(80) # Un poco mas ancho para que se lea "Examinar"
-        self.btn_browse_icon.setMinimumHeight(30)
+        self.btn_browse_icon.setFixedHeight(35)
         self.btn_browse_icon.clicked.connect(self.browse_icon)
         # Estilo "mini" pero acorde al tema
         self.btn_browse_icon.setStyleSheet(BTN_STYLES["info"] + "padding: 4px; font-size: 11px;")
@@ -1697,6 +2060,15 @@ class PackageTodoGUI(QMainWindow):
         self.btn_create.setMinimumHeight(45)
         # Boton centrado y ancho completo relativo al form
         self.btn_create.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.btn_create.clicked.connect(self.create_package_action)
+        
+        # Progress Bar (Hidden by default)
+        self.github_progress = QProgressBar()
+        self.github_progress.setRange(0, 0) # Indeterminate
+        self.github_progress.setTextVisible(False)
+        self.github_progress.setFixedHeight(4)
+        self.github_progress.setVisible(False)
+        self.github_progress.setStyleSheet("QProgressBar { border: none; background: #e1e4e8; border-radius: 2px; } QProgressBar::chunk { background: #f96c6c; border-radius: 2px; }")
         
         # Status
         self.create_status = QLabel("")
@@ -1704,6 +2076,7 @@ class PackageTodoGUI(QMainWindow):
 
         layout.addWidget(form_group)
         layout.addWidget(self.btn_create)
+        layout.addWidget(self.github_progress)
         layout.addWidget(self.create_status)
         layout.addStretch()
         self.tab_create.setLayout(layout)
@@ -1748,7 +2121,7 @@ class PackageTodoGUI(QMainWindow):
         self.btn_create.setEnabled(False)
         self.input_empresa.setEnabled(False)
         self.input_nombre_logico.setEnabled(False)
-        self.input_titulo.setEnabled(False)
+        self.input_nombre_completo.setEnabled(False)
         self.input_version.setEnabled(False)
         self.input_autor.setEnabled(False)
         self.radio_windows.setEnabled(False)
@@ -1773,7 +2146,7 @@ class PackageTodoGUI(QMainWindow):
         self.btn_create.setEnabled(True)
         self.input_empresa.setEnabled(True)
         self.input_nombre_logico.setEnabled(True)
-        self.input_titulo.setEnabled(True)
+        self.input_nombre_completo.setEnabled(True)
         self.input_version.setEnabled(True)
         self.input_autor.setEnabled(True)
         self.radio_windows.setEnabled(True)
@@ -1810,7 +2183,7 @@ class PackageTodoGUI(QMainWindow):
         else:
             vso = f"{version}-{getversion()}"
             version = f"{version}-{getversion()}-{plataforma_seleccionada}"
-        nombre_completo = self.input_titulo.text() or nombre_logico.strip().upper()
+        nombre_completo = self.input_nombre_completo.text() or nombre_logico.strip().upper()
         folder_name = f"{empresa}.{nombre_logico}.v{version}"
         full_path = os.path.join(BASE_DIR, folder_name)
         try:
@@ -2917,163 +3290,12 @@ if __name__ == '__main__':
 
     def on_project_double_click(self, item):
         pkg = item.data(QtCore.Qt.UserRole)
-        dlg = QDialog(self)
-        dlg.setWindowTitle(f"Proyecto: {pkg['titulo']}")
-        dlg.resize(500, 480)
-        l = QVBoxLayout(dlg)
-        icon = QIcon(pkg["icon"]) if pkg["icon"] else self.style().standardIcon(QStyle.SP_ComputerIcon)
-        empresa_cap = pkg['empresa'].capitalize()
-        ratings = pkg['rating']
-        info = f"<b>Empresa:</b>{empresa_cap}<br><b>Título:</b> {pkg['titulo']}<br><b>Versión:</b> {pkg['version']}<br><b>Carpeta:</b> {pkg['folder']}<br><b>Clase:</b> {ratings}"
-        lbl = QLabel(info)
-        lbl.setAlignment(QtCore.Qt.AlignLeft)
-        l.addWidget(lbl)
-        scripts_list = QListWidget()
-        scripts_list.setIconSize(QtCore.QSize(24,24))
-        l.addWidget(QLabel("Scripts .py disponibles para ejecutar:"))
-        l.addWidget(scripts_list)
-        py_files = []
-        for root, _, files in os.walk(pkg["folder"]):
-            for f in files:
-                if f.endswith(".py"):
-                    py_files.append(os.path.join(root, f))
-        for pyf in py_files:
-            item_script = QListWidgetItem(icon, os.path.relpath(pyf, pkg["folder"]))
-            item_script.setData(QtCore.Qt.UserRole, pyf)
-            scripts_list.addItem(item_script)
-        run_btn = QPushButton("Ejecutar script seleccionado")
-        run_btn.setFont(BUTTON_FONT)
-        run_btn.setStyleSheet(BTN_STYLES["success"])
-        run_btn.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_RUNPY_BTN"])
-        l.addWidget(run_btn)
-        install_btn = QPushButton("Instalar proyecto como app")
-        install_btn.setFont(BUTTON_FONT)
-        install_btn.setStyleSheet(BTN_STYLES["info"])
-        install_btn.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALLPROJ_BTN"])
-        l.addWidget(install_btn)
-        uninstall_btn = QPushButton("Desinstalar proyecto")
-        uninstall_btn.setFont(BUTTON_FONT)
-        uninstall_btn.setStyleSheet(BTN_STYLES["danger"])
-        uninstall_btn.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_UNINSTALLPROJ_BTN"])
-        l.addWidget(uninstall_btn)
-        status = QLabel("")
-        l.addWidget(status)
-        def run_script():
-            s_item = scripts_list.currentItem()
-            if not s_item:
-                status.setText("Selecciona un script.")
-                return
-            script_path = s_item.data(QtCore.Qt.UserRole)
-            status.setText(f"Error: {e}")
-        def run_script():
-            s_item = scripts_list.currentItem()
-            if not s_item:
-                status.setText("Selecciona un script.")
-                return
-            script_path = s_item.data(QtCore.Qt.UserRole)
-            
-            # Verificacion de Python
-            python_exe = find_python_executable()
-            if not python_exe:
-                status.setText("❌ Error: Python no encontrado en el sistema.")
-                QMessageBox.critical(self, "Error", "No se encuentra un ejecutable de Python.\nAsegúrate de tener Python instalado y en el PATH.")
-                return
-
-            import subprocess
-            try:
-                subprocess.Popen([python_exe, script_path], cwd=os.path.dirname(script_path))
-                status.setText(f"Ejecutando: {script_path}")
-            except Exception as e:
-                status.setText(f"Error: {e}")
-        def install_project():
-            # Busca el paquete .iflapp/.iflappb y lo instala como app
-            found = False
-            for ext in [".iflapp", ".iflappb"]:
-                pkg_file = os.path.join(BASE_DIR, pkg["name"] + ext)
-                if os.path.exists(pkg_file):
-                    target_dir = os.path.join(FLUTHIN_APPS, pkg["name"])
-                    os.makedirs(target_dir, exist_ok=True)
-                    try:
-                        with zipfile.ZipFile(pkg_file, 'r') as zip_ref:
-                            zip_ref.extractall(target_dir)
-                        status.setText(f"✅ Proyecto instalado como app")
-                        found = True
-                        self.load_manager_lists()
-                        break
-                    except Exception as e:
-                        status.setText(f"❌ Error al instalar: {e}")
-            if not found:
-                status.setText("❌ No se encontró paquete comprimido (.iflapp/.iflappb) para instalar")
-        def uninstall_project():
-            # Elimina la carpeta del proyecto (sin afectar apps instaladas)
-            try:
-                shutil.rmtree(pkg["folder"])
-                status.setText(f"🗑️ Proyecto desinstalado")
-                self.load_manager_lists()
-            except Exception as e:
-                status.setText(f"❌ Error al desinstalar: {e}")
-        run_btn.clicked.connect(run_script)
-        install_btn.clicked.connect(install_project)
-        uninstall_btn.clicked.connect(uninstall_project)
+        dlg = ProjectDetailsDialog(self, pkg, is_app=False, manager_ref=self)
         dlg.exec_()
 
     def on_app_double_click(self, item):
         pkg = item.data(QtCore.Qt.UserRole)
-        dlg = QDialog(self)
-        dlg.setWindowTitle(f"App instalada: {pkg['titulo']}")
-        dlg.resize(500, 480)
-        l = QVBoxLayout(dlg)
-        icon = QIcon(pkg["icon"]) if pkg["icon"] else self.style().standardIcon(QStyle.SP_DesktopIcon)
-        info = f"<b>Empresa:</b> {pkg['empresa']}<br><b>Título:</b> {pkg['titulo']}<br><b>Versión:</b> {pkg['version']}<br><b>Carpeta:</b> {pkg['folder']}"
-        lbl = QLabel(info)
-        lbl.setAlignment(QtCore.Qt.AlignLeft)
-        l.addWidget(lbl)
-        scripts_list = QListWidget()
-        scripts_list.setIconSize(QtCore.QSize(24,24))
-        l.addWidget(QLabel("Scripts .py disponibles para ejecutar:"))
-        l.addWidget(scripts_list)
-        py_files = []
-        for root, _, files in os.walk(pkg["folder"]):
-            for f in files:
-                if f.endswith(".py"):
-                    py_files.append(os.path.join(root, f))
-        for pyf in py_files:
-            item_script = QListWidgetItem(icon, os.path.relpath(pyf, pkg["folder"]))
-            item_script.setData(QtCore.Qt.UserRole, pyf)
-            scripts_list.addItem(item_script)
-        run_btn = QPushButton("Ejecutar script seleccionado")
-        run_btn.setFont(BUTTON_FONT)
-        run_btn.setStyleSheet(BTN_STYLES["success"])
-        run_btn.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_RUNPYAPP_BTN"])
-        l.addWidget(run_btn)
-        uninstall_btn = QPushButton("Desinstalar app")
-        uninstall_btn.setFont(BUTTON_FONT)
-        uninstall_btn.setStyleSheet(BTN_STYLES["danger"])
-        uninstall_btn.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_UNINSTALLAPP_BTN"])
-        l.addWidget(uninstall_btn)
-        status = QLabel("")
-        l.addWidget(status)
-        def run_script():
-            s_item = scripts_list.currentItem()
-            if not s_item:
-                status.setText("Selecciona un script.")
-                return
-            script_path = s_item.data(QtCore.Qt.UserRole)
-            import subprocess
-            try:
-                subprocess.Popen([sys.executable, script_path], cwd=os.path.dirname(script_path))
-                status.setText(f"Ejecutando: {script_path}")
-            except Exception as e:
-                status.setText(f"Error: {e}")
-        def uninstall_app():
-            try:
-                shutil.rmtree(pkg["folder"])
-                status.setText(f"🗑️ App desinstalada")
-                self.load_manager_lists()
-            except Exception as e:
-                status.setText(f"❌ Error al desinstalar: {e}")
-        run_btn.clicked.connect(run_script)
-        uninstall_btn.clicked.connect(uninstall_app)
+        dlg = ProjectDetailsDialog(self, pkg, is_app=True, manager_ref=self)
         dlg.exec_()
 
     def install_package_action(self):
