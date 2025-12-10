@@ -1494,7 +1494,7 @@ class ProjectDetailsDialog(QDialog):
         color_pub = "#58a6ff" if is_dark else "#0366d6"
         color_meta = "#8b949e" if is_dark else "#586069"
         
-        meta_html = f"<span style='color:{color_pub}; font-weight:bold;'>{pub}</span> &bull; <span style='color:{color_meta};'>v{ver}</span> &bull; <span style='color:{color_meta};'>{categ}</span>"
+        meta_html = f"<span style='color:{color_pub}; font-weight:bold;'>{pub}</span> &bull; <span style='color:{color_meta};'>{ver}</span> &bull; <span style='color:{color_meta};'>{categ}</span>"
         meta_lbl = QLabel(meta_html)
         meta_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
         
