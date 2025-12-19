@@ -4,7 +4,6 @@ from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout
 from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
-# La clase InstallerWorker se integrará a continuación
 
 XML_PATH = "details.xml"
 LOG_PATH = "updater_log.txt"
@@ -40,39 +39,55 @@ def leer_xml(path):
 
 def hay_conexion():
     try:
+        # Usamos la API solo como "ping"
         requests.get(GITHUB_API, timeout=5)
         return True
     except:
         return False
 
 def leer_xml_remoto(author, app):
+    """
+    Lee el details.xml remoto desde la rama main del repo:
+    https://raw.githubusercontent.com/{author}/{app}/main/details.xml
+    Devuelve solo la versión remota (string) o "" en caso de error.
+    """
     url = f"https://raw.githubusercontent.com/{author}/{app}/main/details.xml"
     try:
+        log(f"🌐 Leyendo details.xml remoto en: {url}")
         r = requests.get(url, timeout=10)
         if r.status_code == 200:
             root = ET.fromstring(r.text)
-            return root.findtext("version", "").strip()
+            version_remota = root.findtext("version", "").strip()
+            log(f"✅ Versión remota encontrada: {version_remota}")
+            return version_remota
+        else:
+            log(f"❌ No se pudo leer details.xml remoto (status {r.status_code})")
     except Exception as e:
         log(f"❌ Error leyendo XML remoto: {e}")
     return ""
 
 def buscar_release(author, app, version, platform, publisher):
-    url = f"{GITHUB_API}/repos/{author}/{app}/releases/tags/{version}"
+    """
+    Construye la URL directa de descarga del instalador:
+    https://github.com/{author}/{app}/releases/download/{version}/{publisher}.{app}.{version}-{platform}.iflapp
+
+    Comprueba si existe (status 200). Si existe, devuelve la URL.
+    Si no, devuelve None.
+    """
+    filename = f"{publisher}.{app}.{version}-{platform}.iflapp"
+    url = f"https://github.com/{author}/{app}/releases/download/{version}/{filename}"
+    log(f"🔍 Comprobando asset remoto: {url}")
     try:
-        r = requests.get(url, timeout=10)
-        if r.status_code != 200:
-            log(f"❌ Release {version} no encontrado en {author}/{app}")
+        # Usamos HEAD para no descargar todo el archivo solo para comprobar existencia
+        r = requests.head(url, timeout=15, allow_redirects=True)
+        if r.status_code == 200:
+            log(f"✅ Asset encontrado: {filename}")
+            return url
+        else:
+            log(f"❌ Asset no encontrado (status {r.status_code}). Esperado: {filename}")
             return None
-        assets = r.json().get("assets", [])
-        target = f"{publisher}.{app}.{version}-{platform}.iflapp"
-        log(f"🔍 Buscando asset: {target}")
-        for a in assets:
-            if a.get("name") == target:
-                return a.get("browser_download_url")
-        log(f"❌ Asset no encontrado en release. Esperado: {target}")
-        return None
     except Exception as e:
-        log(f"❌ Error consultando GitHub API: {e}")
+        log(f"❌ Error comprobando release remoto: {e}")
         return None
 
 # --- CLASE INSTALLER WORKER INTEGRADA ---
@@ -97,25 +112,27 @@ class InstallerWorker(QObject):
             # Copiar solo archivos, excluyendo el directorio de backup y el archivo de destino
             for f in os.listdir("."):
                 if f not in ["backup_embestido", destino] and os.path.isfile(f):
-                    shutil.copy2(f, f"backup_embestido/{f}")
+                    shutil.copy2(f, os.path.join("backup_embestido", f))
             log("✅ Respaldo completado.")
 
             log(f"⬇️ Descargando desde {self.url}")
             r = requests.get(self.url, stream=True)
-            r.raise_for_status() # Lanza una excepción para códigos de estado HTTP erróneos
+            r.raise_for_status()  # Lanza excepción para códigos HTTP no exitosos
 
-            total_size = int(r.headers.get('content-length', 0))
+            total_size = int(r.headers.get("content-length", 0))
             bytes_downloaded = 0
             
             with open(destino, "wb") as f:
                 for chunk in r.iter_content(8192):
+                    if not chunk:
+                        continue
                     f.write(chunk)
                     bytes_downloaded += len(chunk)
                     if total_size > 0:
                         percent = int((bytes_downloaded / total_size) * 100)
                         self.progress.emit(percent)
             
-            self.progress.emit(100) # Asegurar que el progreso llegue al 100%
+            self.progress.emit(100)
             log("✅ Descarga completada.")
 
             log("📦 Descomprimiendo archivos…")
@@ -129,14 +146,11 @@ class InstallerWorker(QObject):
                 if os.path.exists(exe):
                     log(f"🚀 Ejecutando {exe}")
                     subprocess.Popen(exe)
+                else:
+                    log(f"⚠️ Ejecutable no encontrado: {exe}")
             else:
-                log("🔁 Reiniciando script embestido...")
-                # El reinicio del script embestido es complejo en un worker,
-                # lo ideal es que el hilo principal se encargue de esto
-                # o que el worker sepa que debe terminar la aplicación actual.
-                # Por ahora, solo logueamos.
-                pass
-            
+                log("🔁 Script en modo .py, no se relanza automáticamente.")
+
             self.finished.emit()
 
         except Exception as e:
@@ -147,7 +161,7 @@ class InstallerWorker(QObject):
 # --- FIN CLASE INSTALLER WORKER INTEGRADA ---
 
 class UpdaterWindow(QWidget):
-    update_finished = pyqtSignal() # Señal para manejar el cierre de la ventana después de la actualización
+    update_finished = pyqtSignal()  # Señal para manejar el cierre de la ventana después de la actualización
 
     def __init__(self, app, version, platform, url):
         super().__init__()
@@ -161,7 +175,7 @@ class UpdaterWindow(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground)
 
         self.setWindowTitle("Actualizador de Flarm App")
-        self.setFixedSize(460, 280) # Aumentar un poco el tamaño para el title bar
+        self.setFixedSize(460, 280)
         self.setStyleSheet(STYLE)
         self.init_ui()
         
@@ -181,12 +195,12 @@ class UpdaterWindow(QWidget):
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0) # Eliminar márgenes del layout principal
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
         # --- Title Bar (Custom) ---
         self.title_bar = QWidget()
         self.title_bar.setFixedHeight(40)
-        self.title_bar.setStyleSheet("background-color: #161b22;") # Un color ligeramente diferente para el title bar
+        self.title_bar.setStyleSheet("background-color: #161b22;")
         title_layout = QHBoxLayout(self.title_bar)
         title_layout.setContentsMargins(10, 0, 0, 0)
         title_layout.setSpacing(0)
@@ -196,12 +210,10 @@ class UpdaterWindow(QWidget):
         title_layout.addWidget(title_label)
         title_layout.addStretch()
 
-        # Botones de control (con iconos SVG)
+        # Botones de control (iconos SVG)
         self.btn_minimize = QPushButton()
         self.btn_close = QPushButton()
         
-        # Cargar iconos SVG (usando QPixmap para SVG)
-        # Se asume que los archivos SVG están en el mismo directorio
         min_pm = os.path.join("assets", "min.svg")
         close_pm = os.path.join("assets", "close.svg")
         minimize_pixmap = QPixmap(min_pm)
@@ -213,9 +225,14 @@ class UpdaterWindow(QWidget):
         self.btn_minimize.setFixedSize(40, 40)
         self.btn_close.setFixedSize(40, 40)
         
-        # Estilos para los botones (solo hover)
-        self.btn_minimize.setStyleSheet("QPushButton { border: none; background-color: transparent; } QPushButton:hover { background-color: #30363d; }")
-        self.btn_close.setStyleSheet("QPushButton { border: none; background-color: transparent; } QPushButton:hover { background-color: #e81123; }")
+        self.btn_minimize.setStyleSheet(
+            "QPushButton { border: none; background-color: transparent; } "
+            "QPushButton:hover { background-color: #30363d; }"
+        )
+        self.btn_close.setStyleSheet(
+            "QPushButton { border: none; background-color: transparent; } "
+            "QPushButton:hover { background-color: #e81123; }"
+        )
 
         self.btn_minimize.clicked.connect(self.showMinimized)
         self.btn_close.clicked.connect(self.close)
@@ -249,7 +266,7 @@ class UpdaterWindow(QWidget):
 
         main_layout.addWidget(content_widget)
         self.show()
-        self.update_finished.connect(self.close) # Conectar la señal de finalización al cierre de la ventana
+        self.update_finished.connect(self.close)
 
     def instalar(self):
         self.btn.setEnabled(False)
@@ -275,13 +292,11 @@ class UpdaterWindow(QWidget):
     def on_error(self, message):
         self.progress_label.setText(f"ERROR: {message}")
         self.btn.setEnabled(True)
-        # Aquí se podría añadir un QMessageBox para notificar al usuario
         # Cerrar la ventana en caso de error grave
         self.update_finished.emit()
 
     def on_update_finished(self):
         self.progress_label.setText("Actualización completada. Reiniciando...")
-        # Emitir la señal para cerrar la ventana, lo que debe ocurrir después de que el worker haya terminado
         self.update_finished.emit()
 
 def ciclo_embestido():
@@ -297,26 +312,36 @@ def ciclo_embestido():
                 time.sleep(CHECK_INTERVAL)
                 continue
 
-            log(f"📖 App: {datos['app']} | Versión local: {datos['version']} | Plataforma: {datos['platform']} | Publisher: {datos.get('publisher', 'N/A')}")
+            log(
+                f"📖 App: {datos['app']} | Versión local: {datos['version']} | "
+                f"Plataforma: {datos['platform']} | Publisher: {datos.get('publisher', 'N/A')}"
+            )
             remoto = leer_xml_remoto(datos["author"], datos["app"])
             if remoto and remoto != datos["version"]:
                 log(f"🔄 Nueva versión remota: {remoto}")
-                url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"], datos.get("publisher", ""))
+                url = buscar_release(
+                    datos["author"],
+                    datos["app"],
+                    remoto,
+                    datos["platform"],
+                    datos.get("publisher", "")
+                )
                 if url:
-                    log("✅ Actualización encontrada.")
+                    log("✅ Actualización encontrada. Lanzando UpdaterWindow.")
                     app = QApplication(sys.argv)
                     ventana = UpdaterWindow(datos["app"], remoto, datos["platform"], url)
                     app.exec_()
                     return
                 else:
-                    log("❌ No se encontró asset para la plataforma.")
+                    log("❌ No se encontró asset para la plataforma/version indicada.")
             else:
                 log("ℹ️ No hay actualizaciones.")
             time.sleep(CHECK_INTERVAL)
+
     threading.Thread(target=verificar, daemon=True).start()
 
 if __name__ == "__main__":
-    log("🕶️ Actualizador IPM iniciado en modo silencioso.")
+    log("🕶️ Actualizador de paquetes iniciado en modo silencioso.")
     ciclo_embestido()
     while True:
-        time.sleep(3600)
+        time.sleep(500)
