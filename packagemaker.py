@@ -1193,7 +1193,7 @@ pyinstaller --version
             package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
             last_package_path = self.output_path / package_name
             
-            iflapp_name = f"{self.metadata['publisher']}-{self.metadata['app']}-{self.metadata['version']}-{platform_suffix}.iflapp"
+            iflapp_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}-{platform_suffix}.iflapp"
             iflapp_path = self.output_path / iflapp_name
             
             if self.compress_to_iflapp(last_package_path, iflapp_path):
