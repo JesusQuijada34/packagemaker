@@ -343,7 +343,8 @@ def leer_xml(path):
             "app": root.findtext("app", "").strip(),
             "version": root.findtext("version", "").strip(),
             "platform": root.findtext("platform", "").strip(),
-            "author": root.findtext("author", "").strip()
+            "author": root.findtext("author", "").strip(),
+            "publisher": root.findtext("publisher", "").strip()
         }
     except Exception as e:
         log(f"❌ Error leyendo XML: {e}")
@@ -356,8 +357,6 @@ def hay_conexion():
     except:
         return False
 
-
-
 def leer_xml_remoto(author, app):
     url = f"https://raw.githubusercontent.com/{author}/{app}/main/details.xml"
     try:
@@ -369,7 +368,7 @@ def leer_xml_remoto(author, app):
         log(f"❌ Error leyendo XML remoto: {e}")
     return ""
 
-def buscar_release(author, app, version, platform):
+def buscar_release(author, app, version, platform, publisher):
     url = f"{GITHUB_API}/repos/{author}/{app}/releases/tags/{version}"
     try:
         r = requests.get(url, timeout=10)
@@ -377,11 +376,12 @@ def buscar_release(author, app, version, platform):
             log(f"❌ Release {version} no encontrado en {author}/{app}")
             return None
         assets = r.json().get("assets", [])
-        target = f"{app}-{version}-{platform}.iflapp"
+        target = f"{publisher}.{app}.{version}-{platform}.iflapp"
+        log(f"🔍 Buscando asset: {target}")
         for a in assets:
             if a.get("name") == target:
                 return a.get("browser_download_url")
-        log("❌ Asset no encontrado en release.")
+        log(f"❌ Asset no encontrado en release. Esperado: {target}")
         return None
     except Exception as e:
         log(f"❌ Error consultando GitHub API: {e}")
@@ -472,7 +472,7 @@ class UpdaterWindow(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        self.setWindowTitle("Actualizador de Fluthin App")
+        self.setWindowTitle("Actualizador de Flarm App")
         self.setFixedSize(460, 280) # Aumentar un poco el tamaño para el title bar
         self.setStyleSheet(STYLE)
         self.init_ui()
@@ -503,7 +503,7 @@ class UpdaterWindow(QWidget):
         title_layout.setContentsMargins(10, 0, 0, 0)
         title_layout.setSpacing(0)
 
-        title_label = QLabel("Fluthin Updater")
+        title_label = QLabel("Flarm Updater")
         title_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
         title_layout.addWidget(title_label)
         title_layout.addStretch()
@@ -542,7 +542,7 @@ class UpdaterWindow(QWidget):
         layout = QVBoxLayout(content_widget)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        title = QLabel("Fluthin Updater")
+        title = QLabel("Flarm Updater")
         title.setFont(QFont("Segoe UI", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -609,11 +609,11 @@ def ciclo_embestido():
                 time.sleep(CHECK_INTERVAL)
                 continue
 
-            log(f"📖 App: {datos['app']} | Versión local: {datos['version']} | Plataforma: {datos['platform']}")
+            log(f"📖 App: {datos['app']} | Versión local: {datos['version']} | Plataforma: {datos['platform']} | Publisher: {datos.get('publisher', 'N/A')}")
             remoto = leer_xml_remoto(datos["author"], datos["app"])
             if remoto and remoto != datos["version"]:
                 log(f"🔄 Nueva versión remota: {remoto}")
-                url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"])
+                url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"], datos.get("publisher", ""))
                 if url:
                     log("✅ Actualización encontrada.")
                     app = QApplication(sys.argv)

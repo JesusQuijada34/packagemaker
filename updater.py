@@ -31,7 +31,8 @@ def leer_xml(path):
             "app": root.findtext("app", "").strip(),
             "version": root.findtext("version", "").strip(),
             "platform": root.findtext("platform", "").strip(),
-            "author": root.findtext("author", "").strip()
+            "author": root.findtext("author", "").strip(),
+            "publisher": root.findtext("publisher", "").strip()
         }
     except Exception as e:
         log(f"❌ Error leyendo XML: {e}")
@@ -55,7 +56,7 @@ def leer_xml_remoto(author, app):
         log(f"❌ Error leyendo XML remoto: {e}")
     return ""
 
-def buscar_release(author, app, version, platform):
+def buscar_release(author, app, version, platform, publisher):
     url = f"{GITHUB_API}/repos/{author}/{app}/releases/tags/{version}"
     try:
         r = requests.get(url, timeout=10)
@@ -63,11 +64,12 @@ def buscar_release(author, app, version, platform):
             log(f"❌ Release {version} no encontrado en {author}/{app}")
             return None
         assets = r.json().get("assets", [])
-        target = f"{app}-{version}-{platform}.iflapp"
+        target = f"{publisher}.{app}.{version}-{platform}.iflapp"
+        log(f"🔍 Buscando asset: {target}")
         for a in assets:
             if a.get("name") == target:
                 return a.get("browser_download_url")
-        log("❌ Asset no encontrado en release.")
+        log(f"❌ Asset no encontrado en release. Esperado: {target}")
         return None
     except Exception as e:
         log(f"❌ Error consultando GitHub API: {e}")
@@ -295,11 +297,11 @@ def ciclo_embestido():
                 time.sleep(CHECK_INTERVAL)
                 continue
 
-            log(f"📖 App: {datos['app']} | Versión local: {datos['version']} | Plataforma: {datos['platform']}")
+            log(f"📖 App: {datos['app']} | Versión local: {datos['version']} | Plataforma: {datos['platform']} | Publisher: {datos.get('publisher', 'N/A')}")
             remoto = leer_xml_remoto(datos["author"], datos["app"])
             if remoto and remoto != datos["version"]:
                 log(f"🔄 Nueva versión remota: {remoto}")
-                url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"])
+                url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"], datos.get("publisher", ""))
                 if url:
                     log("✅ Actualización encontrada.")
                     app = QApplication(sys.argv)
