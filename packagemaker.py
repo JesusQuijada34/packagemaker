@@ -138,21 +138,28 @@ BTN_STYLES = {
 plataforma_platform = sys.platform
 plataforma_name = os.name
 if plataforma_platform.startswith("win"):
-    BASE_DIR = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "Packagemaker Projects")
-    FLUTHIN_APPS = os.path.join(os.environ.get("USERPROFILE", ""), "Documents", "FLUTHIN Apps")
+    user_profile = os.environ.get("USERPROFILE", "")
+    doc_folder = "Documents"
+    if os.path.exists(os.path.join(user_profile, "Documentos")):
+        doc_folder = "Documentos"
+    elif os.path.exists(os.path.join(user_profile, "Documents")):
+        doc_folder = "Documents"
+        
+    BASE_DIR = os.path.join(user_profile, doc_folder, "Packagemaker Projects")
+    Fluthin_APPS = os.path.join(user_profile, doc_folder, "Fluthin Apps")
     linkedsys = "knosthalij"
 elif plataforma_platform.startswith("linux"):
     BASE_DIR = os.path.expanduser("~/Documents/Packagemaker Projects")
-    FLUTHIN_APPS = os.path.expanduser("~/Documents/FLUTHIN Apps")
+    Fluthin_APPS = os.path.expanduser("~/Documents/Fluthin Apps")
     linkedsys = "danenone"
 else:
     BASE_DIR = "Packagemaker Projects/"
-    FLUTHIN_APPS = "FLUTHIN Apps/"
+    Fluthin_APPS = "Fluthin Apps/"
     linkedsys = "keystone"
 
 # Crear las carpetas si no existen
 os.makedirs(BASE_DIR, exist_ok=True)
-os.makedirs(FLUTHIN_APPS, exist_ok=True)
+os.makedirs(Fluthin_APPS, exist_ok=True)
 
 IPM_ICON_PATH = "app/app-icon.ico"
 DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
@@ -465,7 +472,7 @@ class UpdaterWindow(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        self.setWindowTitle("Actualizador de Flarm App")
+        self.setWindowTitle("Actualizador de Fluthin App")
         self.setFixedSize(460, 280) # Aumentar un poco el tamaño para el title bar
         self.setStyleSheet(STYLE)
         self.init_ui()
@@ -496,7 +503,7 @@ class UpdaterWindow(QWidget):
         title_layout.setContentsMargins(10, 0, 0, 0)
         title_layout.setSpacing(0)
 
-        title_label = QLabel("Flarm Updater")
+        title_label = QLabel("Fluthin Updater")
         title_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
         title_layout.addWidget(title_label)
         title_layout.addStretch()
@@ -535,7 +542,7 @@ class UpdaterWindow(QWidget):
         layout = QVBoxLayout(content_widget)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        title = QLabel("Flarm Updater")
+        title = QLabel("Fluthin Updater")
         title.setFont(QFont("Segoe UI", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -826,7 +833,7 @@ class GitHubVerifyThread(QThread):
         self.finished.emit(valido, resultado)
 
 class FlangCompiler:
-    """Compilador principal unificado para el ecosistema Flarm."""
+    """Compilador principal unificado para el ecosistema Fluthin (Version Robusta)."""
 
     def __init__(self, repo_path: Path, output_path: Optional[Path] = None, log_callback=None):
         self.repo_path = Path(repo_path).resolve()
@@ -841,6 +848,7 @@ class FlangCompiler:
 
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.log(f"[FlangCompiler IT] Inicializado en: {self.repo_path}")
+        self.log(f"[FlangCompiler IT] Plataforma actual: {self.current_platform}")
 
     def log(self, msg):
         if self.log_callback:
@@ -853,17 +861,85 @@ class FlangCompiler:
                 ["pyinstaller", "--version"],
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=20
             )
-            return result.returncode == 0
-        except Exception:
+            if result.returncode == 0:
+                self.log(f"[INFO] PyInstaller encontrado: {result.stdout.strip()}")
+                return True
+            return False
+        except Exception as e:
+            self.log(f"[INFO] PyInstaller no encontrado (check simple): {e}")
+            return False
+
+    def _install_pyinstaller_linux(self) -> bool:
+        self.log("[INFO] 🔧 Instalando PyInstaller en Linux...")
+        install_script = """#!/bin/bash
+echo "🔧 Instalando python3-full, python3-venv y pipx..."
+sudo apt install -y python3-full python3-venv pipx
+
+echo "🔧 Configurando pipx..."
+pipx ensurepath
+
+VENV_DIR="$HOME/venv-pyinstaller"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "🧪 Creando entorno virtual en $VENV_DIR..."
+    python3 -m venv "$VENV_DIR"
+else
+    echo "🔁 El entorno virtual ya existe en $VENV_DIR."
+fi
+
+echo "🚀 Activando entorno virtual..."
+source "$VENV_DIR/bin/activate"
+
+echo "📦 Instalando PyInstaller..."
+pip install --upgrade pip
+pip install pyinstaller
+
+echo "✅ PyInstaller instalado. Versión:"
+pyinstaller --version
+"""
+        try:
+            script_path = Path(tempfile.gettempdir()) / "install_pyinstaller.sh"
+            with open(script_path, 'w', newline='\n') as f:
+                f.write(install_script)
+            os.chmod(script_path, 0o755)
+            
+            self.log(f"[INFO] Ejecutando script de instalación: {script_path}")
+            result = subprocess.run(["bash", str(script_path)], capture_output=False, text=True)
+            
+            try: script_path.unlink()
+            except: pass
+            
+            if result.returncode != 0:
+                self.log(f"[ERROR] Error durante la instalación de PyInstaller")
+                return False
+            
+            venv_dir = Path.home() / "venv-pyinstaller"
+            self.venv_path = venv_dir
+            if not venv_dir.exists():
+                self.log(f"[ERROR] El entorno virtual no fue creado en {venv_dir}")
+                return False
+                
+            pyinstaller_path = venv_dir / "bin" / "pyinstaller"
+            if not pyinstaller_path.exists():
+                self.log(f"[ERROR] PyInstaller no fue instalado en {pyinstaller_path}")
+                return False
+                
+            self.log(f"[OK] ✅ PyInstaller instalado correctamente en {venv_dir}")
+            return True
+        except Exception as e:
+            self.log(f"[ERROR] Excepción durante la instalación de PyInstaller: {e}")
             return False
 
     def _ensure_pyinstaller(self) -> bool:
         if self._check_pyinstaller_installed():
             return True
-        self.log("[ERROR] PyInstaller no encontrado. Instale: pip install pyinstaller")
-        return False
+        if self.current_platform == "Linux":
+            self.log("[INFO] PyInstaller no encontrado. Iniciando instalación automática...")
+            return self._install_pyinstaller_linux()
+        else:
+            self.log("[ERROR] PyInstaller no encontrado. Instale: pip install pyinstaller")
+            return False
 
     def parse_details_xml(self) -> bool:
         if not self.details_xml_path.exists():
@@ -872,51 +948,76 @@ class FlangCompiler:
         try:
             tree = ET.parse(self.details_xml_path)
             root = tree.getroot()
+            
+            # Extraer metadatos con fallbacks robustos
             self.metadata = {
-                'publisher': root.findtext('publisher', 'Unknown'),
-                'app': root.findtext('app', 'Unknown'),
-                'name': root.findtext('name', 'Unknown'),
-                'version': root.findtext('version', 'v1.0'),
-                'platform': root.findtext('platform', 'AlphaCube'),
-                'author': root.findtext('author', 'Unknown'),
+                'publisher': root.findtext('publisher') or root.findtext('empresa') or 'Unknown',
+                'app': root.findtext('app') or root.findtext('name') or 'Unknown',
+                'name': root.findtext('name') or root.findtext('titulo') or 'Unknown',
+                'version': root.findtext('version') or 'v1.0',
+                'platform': root.findtext('platform') or root.findtext('plataforma') or 'AlphaCube',
+                'author': root.findtext('author') or root.findtext('autor') or 'Unknown',
             }
             self.platform_type = self.metadata['platform']
-            self.log(f"[INFO] Metadatos: {self.metadata}")
+            self.log(f"[INFO] Metadatos cargados: {self.metadata}")
             return True
         except Exception as e:
-            self.log(f"[ERROR] Error parsing XML: {e}")
+            self.log(f"[ERROR] Error al parsear details.xml: {e}")
             return False
+
+    def _find_icon(self, script_name: str) -> Optional[Path]:
+        """
+        Busca el icono para un script.
+        Reglas:
+        1. Script Main puede usar 'app-icon.ico' (default) o '{appname}-icon.ico'.
+        2. Otros scripts DEBEN usar '{scriptname}-icon.ico'.
+        """
+        app_dir = self.repo_path / "app"
+        if not app_dir.exists(): return None
+        
+        # 1. Buscar icono específico: {nombre_script}-icon.ico
+        # Prioridad alta para todos
+        specific_icon = app_dir / f"{script_name}-icon.ico"
+        if specific_icon.exists():
+            return specific_icon
+            
+        # 2. Fallback SOLO para el script principal
+        if script_name == self.metadata['app']:
+            default_icon = app_dir / "app-icon.ico"
+            if default_icon.exists():
+                return default_icon
+                
+        return None
 
     def find_scripts(self) -> bool:
         main_script = f"{self.metadata['app']}.py"
         main_script_path = self.repo_path / main_script
+        
         if main_script_path.exists():
+            icon_path = self._find_icon(self.metadata['app'])
             self.scripts.append({
                 'name': self.metadata['app'],
                 'path': main_script_path,
-                'icon': self._find_icon(self.metadata['app']),
+                'icon': icon_path,
                 'is_main': True,
             })
+            self.log(f"[INFO] Main script: {main_script} | Icon: {icon_path.name if icon_path else 'None'}")
+        
         for file in self.repo_path.glob("*.py"):
-            if file.name != main_script and not file.name.startswith("_") and file.name != "packagemaker.py" and file.name != "updater.py":
-                 # Exclude updater.py and packagemaker.py itself if present
+            # Exclude main script, system scripts, and internal tools
+            if file.name != main_script and not file.name.startswith("_") and file.name not in ["packagemaker.py"]:
+                icon_path = self._find_icon(file.stem)
+                
                 self.scripts.append({
                     'name': file.stem,
                     'path': file,
-                    'icon': self._find_icon(file.stem),
+                    'icon': icon_path,
                     'is_main': False,
                 })
+                icon_name = icon_path.name if icon_path else 'None'
+                self.log(f"[INFO] Secondary script: {file.name} | Icon: {icon_name}")
+        
         return len(self.scripts) > 0
-
-    def _find_icon(self, script_name: str) -> Optional[Path]:
-        app_dir = self.repo_path / "app"
-        if not app_dir.exists(): return None
-        icon_path = app_dir / f"{script_name}-icon.ico"
-        if icon_path.exists(): return icon_path
-        if script_name == self.metadata['app']:
-            icon_path = app_dir / "app-icon.ico"
-            if icon_path.exists(): return icon_path
-        return None
 
     def should_compile_for_platform(self, target_platform: str) -> bool:
         if self.platform_type == "AlphaCube": return True
@@ -927,34 +1028,78 @@ class FlangCompiler:
     def compile_binaries(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):
             return True
-        if target_platform != self.current_platform:
-            self.log(f"[SKIP] Cannot compile for {target_platform} on {self.current_platform}")
-            return True # Skip but don't fail
-            
+        if target_platform == "Windows" and self.current_platform != "Windows":
+             self.log(f"[SKIP] Cannot compile Windows on {self.current_platform}")
+             return True
+        if target_platform == "Linux" and self.current_platform != "Linux":
+             self.log(f"[SKIP] Cannot compile Linux on {self.current_platform}")
+             return True
+
         if not self._ensure_pyinstaller(): return False
-        
+
+        self.log(f"--- / --- - WORKING FOR SQUAREROOM - --- / ---")
+        self.log(f"[INFO] Iniciando compilación para {target_platform}...")
         for script in self.scripts:
-            self.log(f"[INFO] Compilando {script['name']} para {target_platform}...")
-            cmd = ["pyinstaller", "--onefile", "--name", script['name']]
+            self.log(f"[INFO] Compilando script: {script['name']}...")
             if target_platform == "Windows":
-                cmd.append("--windowed")
-                cmd.extend(["--add-data", "assets;assets", "--add-data", "app;app"])
-                if script['icon']: cmd.extend(["--icon", str(script['icon'])])
-            else:
-                cmd.extend(["--add-data", "assets:assets", "--add-data", "app:app"])
-            
-            cmd.append(str(script['path']))
-            
-            try:
-                result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True)
-                if result.returncode != 0:
-                    self.log(f"[ERROR] Compile failed for {script['name']}:\n{result.stderr}")
-                    return False
-                self.log(f"[OK] {script['name']} compiled.")
-            except Exception as e:
-                self.log(f"[ERROR] PyInstaller exception: {e}")
-                return False
+                if not self._compile_windows_binary(script): return False
+            elif target_platform == "Linux":
+                if not self._compile_linux_binary(script): return False
         return True
+
+    def _compile_windows_binary(self, script: Dict) -> bool:
+        script_path = script['path']
+        script_name = script['name']
+        
+        pyinstaller_cmd = "pyinstaller"
+        if self.venv_path and self.current_platform == "Linux":
+            pyinstaller_cmd = str(self.venv_path / "bin" / "pyinstaller")
+            
+        cmd = [
+            pyinstaller_cmd, "--onefile", "--windowed", "--name", script_name,
+            "--add-data", "assets;assets", "--add-data", "app;app",
+        ]
+        if script['icon']:
+            cmd.extend(["--icon", str(script['icon'])])
+        cmd.append(str(script_path))
+
+        try:
+            self.log(f"[DEBUG] Ejecutando PyInstaller para {script_name}...")
+            result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True)
+            if result.returncode != 0:
+                self.log(f"[ERROR] Falló PyInstaller:\n{result.stderr}")
+                return False
+            self.log(f"[OK] {script_name} compilado.")
+            return True
+        except Exception as e:
+            self.log(f"[ERROR] Excepción PyInstaller: {e}")
+            return False
+
+    def _compile_linux_binary(self, script: Dict) -> bool:
+        script_path = script['path']
+        script_name = script['name']
+        
+        pyinstaller_cmd = "pyinstaller"
+        if self.venv_path: # Linux venv
+            pyinstaller_cmd = str(self.venv_path / "bin" / "pyinstaller")
+
+        cmd = [
+            pyinstaller_cmd, "--onefile", "--name", script_name,
+            "--add-data", "assets:assets", "--add-data", "app:app",
+            str(script_path)
+        ]
+        
+        try:
+            self.log(f"[DEBUG] Ejecutando PyInstaller para {script_name}...")
+            result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True)
+            if result.returncode != 0:
+                self.log(f"[ERROR] Falló PyInstaller:\n{result.stderr}")
+                return False
+            self.log(f"[OK] {script_name} compilado.")
+            return True
+        except Exception as e:
+            self.log(f"[ERROR] Excepción PyInstaller: {e}")
+            return False
 
     def create_package(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform): return True
@@ -964,12 +1109,13 @@ class FlangCompiler:
         package_path = self.output_path / package_name
         package_path.mkdir(parents=True, exist_ok=True)
         
+        self.log(f"[INFO] Creando paquete en: {package_path}")
         self._copy_package_files(package_path, target_platform)
         self._update_and_copy_details_xml(package_path, platform_suffix)
         return True
 
     def _copy_package_files(self, package_path: Path, target_platform: str) -> None:
-        exclude_patterns = ["requirements.txt", "*.pyc", "__pycache__", ".git", ".gitignore", "build", "dist", "*.spec", "packagemaker.py", "*.py"]
+        exclude_patterns = ["requirements.txt", "*.pyc", "__pycache__", ".git", ".gitignore", "build", "dist", "*.spec", "*.py"]
         # Include logic to copy dirs like app, assets...
         for item in self.repo_path.iterdir():
             if any(fnmatch.fnmatch(item.name, p) for p in exclude_patterns): continue
@@ -977,9 +1123,13 @@ class FlangCompiler:
             dest = package_path / item.name
             if item.is_dir():
                 if dest.exists(): shutil.rmtree(dest)
-                shutil.copytree(item, dest, ignore=shutil.ignore_patterns(*exclude_patterns))
+                try:
+                    shutil.copytree(item, dest, ignore=shutil.ignore_patterns(*exclude_patterns))
+                except Exception as e:
+                     self.log(f"[WARN] Error copiando {item.name}: {e}")
             elif item.is_file():
-                shutil.copy2(item, dest)
+                try: shutil.copy2(item, dest)
+                except: pass
                 
         # Move binaries
         dist_dir = self.repo_path / "dist"
@@ -989,7 +1139,8 @@ class FlangCompiler:
                     shutil.copy2(binary, package_path / binary.name)
                 elif target_platform == "Linux" and binary.suffix == "":
                     shutil.copy2(binary, package_path / binary.name)
-                    (package_path / binary.name).chmod(0o755)
+                    try: (package_path / binary.name).chmod(0o755)
+                    except: pass
 
     def _update_and_copy_details_xml(self, package_path: Path, platform_suffix: str) -> None:
         try:
@@ -1016,65 +1167,112 @@ class FlangCompiler:
             self.log(f"[ERROR] Zip failed: {e}")
             return False
 
-    def run(self) -> Optional[Path]:
+    def run(self, build_mode="portable") -> Optional[Path]:
         if not self.parse_details_xml(): return None
         if not self.find_scripts(): 
             self.log("[WARN] No scripts found")
             return None
+        
+        platforms_to_compile = []
+        if self.current_platform == "Windows":
+             if self.should_compile_for_platform("Windows"): platforms_to_compile.append("Windows")
+        elif self.current_platform == "Linux":
+             if self.should_compile_for_platform("Linux"): platforms_to_compile.append("Linux")
+        
+        if not platforms_to_compile:
+            self.log("[WARN] Nothing to compile for this platform/config.")
+            return None
             
-        target = "Windows" if self.current_platform == "Windows" else "Linux"
-        # Force compile for current platform only in this simple GUI version?
-        # packagemaker seems to run locally.
+        final_iflapp = None
         
-        if not self.compile_binaries(target): return None
-        if not self.create_package(target): return None
-        
-        platform_suffix = "Knosthalij" if target == "Windows" else "Danenone"
-        package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
-        last_pkg = self.output_path / package_name
-        
-        iflapp = self.output_path / f"{package_name}.iflapp"
-        if self.compress_to_iflapp(last_pkg, iflapp):
-            return iflapp
-        return None
+        for platform_name in platforms_to_compile:
+            if not self.compile_binaries(platform_name): return None
+            if not self.create_package(platform_name): return None
+            
+            platform_suffix = "Knosthalij" if platform_name == "Windows" else "Danenone"
+            package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
+            last_package_path = self.output_path / package_name
+            
+            iflapp_name = f"{self.metadata['publisher']}-{self.metadata['app']}-{self.metadata['version']}-{platform_suffix}.iflapp"
+            iflapp_path = self.output_path / iflapp_name
+            
+            if self.compress_to_iflapp(last_package_path, iflapp_path):
+                final_iflapp = iflapp_path
+                self.log(f"[SUCCESS] Package created: {iflapp_path}")
+                
+        return final_iflapp
 
 class BuildThread(QThread):
     progress = pyqtSignal(str)
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
     
-    def __init__(self, empresa, nombre, version, plataforma, parent=None):
+    def __init__(self, empresa, nombre, version, plataforma, parent=None, custom_path=None, build_mode="portable"):
         super().__init__(parent)
         self.empresa = empresa
         self.nombre = nombre
         self.version = version
         self.plataforma = plataforma # "Windows", "Linux", etc.
+        self.custom_path = custom_path
+        self.build_mode = build_mode
+        self.curiosity_phrases = [
+            "Sabías que el primer error de software fue causado por una polilla real atrapada en una computadora?",
+            "Sabías que Python lleva el nombre de la serie de televisión Monty Python's Flying Circus?",
+            "Sabías que el modo oscuro consume menos energía en pantallas OLED?",
+            "Sabías que el código de la misión Apolo 11 contenía chistes escondidos?",
+            "Sabías que 'Hello World' se convirtió en tradición gracias a Brian Kernighan?",
+            "Sabías que el primer lenguaje de programación fue creado por Ada Lovelace?",
+            "Sabías que el 90% del código de los coches modernos es software?",
+            "Sabías que Linux está presente en el 100% de las 500 supercomputadoras más potentes?",
+            "Sabías que el primer dominio registrado fue symbolics.com en 1985?",
+            "Sabías que se estima que hay más de 20 millones de desarrolladores en el mundo?"
+        ]
+        self._curiosity_timer = None
+
+    def emit_random_curiosity(self):
+        import random
+        phrase = random.choice(self.curiosity_phrases)
+        self.progress.emit(f"💡 {phrase}")
 
     def run(self):
-        # Reconstruct folder path
-        # In packagemaker logic: folder = f"{self.empresa}.{self.nombre}.v{self.version}-{plataforma_translated}"
-        # But here construction might be tricky if user changed fields.
-        # Assuming packagemaker passes 'plataforma' as "Windows" etc.
+        # Iniciar con una frase de curiosidad
+        self.emit_random_curiosity()
         
-        # Helper to match packagemaker's folder naming convention:
+        # Reconstruct folder path
         p_map = {"Windows": "Knosthalij", "Linux": "Danenone", "Multiplataforma": "AlphaCube"}
         plat_suffix = p_map.get(self.plataforma, "AlphaCube")
         
-        # Note: packagemaker original BuildThread calculated folder too.
-        folder = f"{self.empresa}.{self.nombre}.v{self.version}-{plat_suffix}"
-        repo_path = Path(BASE_DIR) / folder
-        
-        if not repo_path.exists():
-            self.error.emit(f"No se encontró la carpeta: {folder}")
-            return
+        repo_path = None
+        if self.custom_path:
+             repo_path = Path(self.custom_path)
+             if not repo_path.exists():
+                 self.error.emit(f"No se encontró la carpeta personalizada: {self.custom_path}")
+                 return
+        else:
+            folder = f"{self.empresa}.{self.nombre}.v{self.version}-{plat_suffix}"
+            repo_path = Path(BASE_DIR) / folder
+            
+            if not repo_path.exists():
+                self.error.emit(f"No se encontró la carpeta: {folder}")
+                return
 
-        compiler = FlangCompiler(repo_path, Path(BASE_DIR), log_callback=self.progress.emit)
-        result = compiler.run()
+        compiler = FlangCompiler(repo_path, Path(BASE_DIR), log_callback=self.handle_compiler_log)
+        result = compiler.run(build_mode=self.build_mode)
         
         if result:
-            self.finished.emit(f"Paquete construido: {result}")
+            self.finished.emit(f"✅ Paquete construido con éxito: {result.name}")
         else:
-            self.error.emit("Falló la compilación. Ver logs.")
+            self.error.emit("Falló la compilación. Verifique los logs y los iconos .ico")
+
+    def handle_compiler_log(self, msg):
+        # Cada vez que hay un log del compilador, damos la oportunidad de soltar una curiosidad
+        # si ha pasado suficiente tiempo (ej. 10 segundos)
+        self.progress.emit(msg)
+        if not hasattr(self, '_last_phrase_time'): self._last_phrase_time = time.time()
+        if time.time() - self._last_phrase_time > 8:
+            import random
+            self.progress.emit(f"💡 {random.choice(self.curiosity_phrases)}")
+            self._last_phrase_time = time.time()
 
 from PyQt5.QtWidgets import QComboBox
 
@@ -1366,6 +1564,93 @@ class OutputTerminalDialog(QDialog):
         self.status_bar.setText(f"Estado: {msg}")
 
 
+def get_github_style(is_dark):
+    """Genera estilos CSS para botones al estilo GitHub (Action Naranja, Normal B/W)"""
+    if is_dark:
+        # Action (Orange) - Dark
+        action_style = """
+            QPushButton {
+                background-color: #d2691e;
+                color: #ffffff;
+                border: 1px solid #c15c1d;
+                border-radius: 6px;
+                padding: 5px 16px;
+                font-family: 'Segoe UI', sans-serif;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #e07b3e;
+                border-color: #d96d27;
+            }
+            QPushButton:pressed {
+                background-color: #bd5a17;
+            }
+        """
+        # Normal (Black/Dark Grey) - Dark
+        normal_style = """
+            QPushButton {
+                background-color: #21262d;
+                color: #c9d1d9;
+                border: 1px solid rgba(240, 246, 252, 0.1);
+                border-radius: 6px;
+                padding: 5px 16px;
+                font-family: 'Segoe UI', sans-serif;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                color: #d96d27; 
+                border: 1px solid #d96d27;
+                background-color: transparent;
+            }
+            QPushButton:pressed {
+                background-color: rgba(217, 109, 39, 0.1);
+            }
+        """
+    else:
+        # Action (Orange) - Light
+        action_style = """
+            QPushButton {
+                background-color: #f9826c;
+                color: #ffffff;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                border-radius: 6px;
+                padding: 5px 16px;
+                font-family: 'Segoe UI', sans-serif;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #fa9e8e;
+            }
+            QPushButton:pressed {
+                background-color: #eb715b;
+            }
+        """
+        # Normal (White) - Light
+        normal_style = """
+            QPushButton {
+                background-color: #f6f8fa;
+                color: #24292e;
+                border: 1px solid rgba(27, 31, 35, 0.15);
+                border-radius: 6px;
+                padding: 5px 16px;
+                font-family: 'Segoe UI', sans-serif;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: transparent;
+                color: #d96d27;
+                border: 1px solid #f9826c;
+            }
+            QPushButton:pressed {
+                 background-color: #ffe3d0;
+            }
+        """
+    return action_style, normal_style
+
 class ProjectDetailsDialog(QDialog):
     """Dialogo detallado para gestión de proyectos/apps"""
     def __init__(self, parent, pkg_data, is_app=False, manager_ref=None):
@@ -1536,39 +1821,63 @@ class ProjectDetailsDialog(QDialog):
         self.scripts_list.setFixedHeight(120)
         content_layout.addWidget(self.scripts_list)
 
+        content_layout.addWidget(self.scripts_list)
+
         # Botones de accion
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(10)
-        
-        # Helper for button style
-        def mk_btn(text, style_key, icon_key=None):
+        # Obtener estilos GitHub
+        action_style, normal_style = get_github_style(is_dark)
+
+        # Helper/Closure para botones
+        def mk_btn(text, is_primary=False, icon_str=None):
             btn = QPushButton(text)
-            btn.setFixedHeight(38)
-            btn.setFont(QFont("Arial", 10, QFont.Bold))
-            if icon_key and icon_key in TAB_ICONS:
-                btn.setIcon(QIcon(TAB_ICONS[icon_key]))
-            btn.setStyleSheet(BTN_STYLES.get(style_key, ""))
+            btn.setFixedHeight(36)
+            # No establecemos font aquí porque el stylesheet lo maneja mejor para coherencia
+            if icon_str and icon_str in TAB_ICONS:
+                # Opcional: Podríamos no usar iconos para ser mas fiel al estilo "limpio" de GitHub, 
+                # pero los conservamos por usabilidad.
+                btn.setIcon(QIcon(TAB_ICONS[icon_str]))
+            
+            btn.setStyleSheet(action_style if is_primary else normal_style)
             return btn
         
-        self.btn_run = mk_btn("Ejecutar", "success", "construir")
+        self.btn_run = mk_btn("Ejecutar", is_primary=False, icon_str="construir")
         self.btn_run.clicked.connect(self.run_selected_script)
-        btn_layout.addWidget(self.btn_run)
         
+        # Layout principal de botones
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)
+
+        # Botones izquierdos
+        btn_layout.addWidget(self.btn_run)
+
         if self.is_app:
-            self.btn_uninstall = mk_btn("Desinstalar", "danger", "desinstalar")
+            self.btn_uninstall = mk_btn("Desinstalar", is_primary=False, icon_str="desinstalar")
             self.btn_uninstall.clicked.connect(self.uninstall_action)
             btn_layout.addWidget(self.btn_uninstall)
         else:
-            self.btn_install = mk_btn("Instalar", "info", "instalar")
+            self.btn_install = mk_btn("Instalar", is_primary=False, icon_str="instalar")
             self.btn_install.clicked.connect(self.install_action)
             
-            self.btn_delete = mk_btn("Eliminar", "danger", "desinstalar")
+            self.btn_delete = mk_btn("Eliminar", is_primary=False, icon_str="desinstalar")
             self.btn_delete.clicked.connect(self.delete_action)
             
             btn_layout.addWidget(self.btn_install)
             btn_layout.addWidget(self.btn_delete)
-
+        
         content_layout.addLayout(btn_layout)
+
+        # Boton de compilar (Solo para proyectos locales)
+        if not self.is_app:
+            content_layout.addSpacing(10)
+            self.btn_compile = mk_btn("Compilar Proyecto", is_primary=True, icon_str="construir")
+            self.btn_compile.setFixedHeight(40) 
+            self.btn_compile.clicked.connect(self.compile_action)
+            content_layout.addWidget(self.btn_compile)
+        
+        self.lbl_status = QLabel("")
+        self.lbl_status.setAlignment(Qt.AlignCenter)
+        
+        content_layout.addWidget(self.lbl_status) # Add status label below buttons
         content_layout.addStretch()
         layout.addLayout(content_layout)
 
@@ -1599,7 +1908,7 @@ class ProjectDetailsDialog(QDialog):
                 break
         
         if valid_file:
-            target_dir = os.path.join(FLUTHIN_APPS, self.pkg['name'])
+            target_dir = os.path.join(Fluthin_APPS, self.pkg['name'])
             try:
                 os.makedirs(target_dir, exist_ok=True)
                 with zipfile.ZipFile(valid_file, 'r') as zf:
@@ -1630,6 +1939,29 @@ class ProjectDetailsDialog(QDialog):
                  if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
              except Exception as e:
                  QtWidgets.QMessageBox.critical(self, "Error", str(e))
+
+    def compile_action(self):
+        # Trigger compilation using BuildThread
+        self.btn_compile.setEnabled(False)
+        self.lbl_status.setText("Compilando...")
+        
+        # Extract metadata
+        empresa = self.pkg.get('empresa', 'influent')
+        nombre = self.pkg.get('app', self.pkg.get('name', 'unknown')) # Try internal name first
+        version = self.pkg.get('version', '1.0').replace("v", "").split("-")[0]
+        plataforma = self.pkg.get('platform', 'Windows')
+        
+        # Build Mode Dialog? Assume Portable default for Manager quick compile
+        self.build_thread = BuildThread(empresa, nombre, version, plataforma, parent=self, custom_path=self.pkg.get('folder'), build_mode="portable")
+        self.build_thread.progress.connect(lambda msg: self.lbl_status.setText(msg))
+        self.build_thread.finished.connect(self.on_compile_finished)
+        self.build_thread.error.connect(lambda msg: self.lbl_status.setText(f"Error: {msg}"))
+        self.build_thread.start()
+
+    def on_compile_finished(self, msg):
+        self.lbl_status.setText(msg)
+        self.btn_compile.setEnabled(True)
+        QtWidgets.QMessageBox.information(self, "Compilación", msg)
 
 class PackageTodoGUI(QMainWindow):
     def __init__(self):
@@ -1809,18 +2141,68 @@ class PackageTodoGUI(QMainWindow):
                 color: {theme["fg"]};
                 border-top: 1px solid {theme["border"]};
             }}
-            QProgressBar {{
-                border: 1px solid {theme["border"]};
-                border-radius: 6px;
-                text-align: center;
-                background-color: {theme["input_bg"]};
-                color: {theme["fg"]};
-            }}
             QProgressBar::chunk {{
                 background-color: {theme["button_default"]};
                 border-radius: 5px;
             }}
-        """)
+
+        /* MODERN SCROLLBAR STYLE */
+        QScrollBar:vertical {{
+            border: none;
+            background: {theme["bg"]};
+            width: 10px;
+            margin: 0px 0px 0px 0px;
+        }}
+        QScrollBar::handle:vertical {{
+            background: {theme["input_border"]};
+            min-height: 20px;
+            border-radius: 5px;
+        }}
+        QScrollBar::handle:vertical:hover {{
+            background: {theme["button_default"]};
+        }}
+        QScrollBar::add-line:vertical {{
+            height: 0px;
+            subcontrol-position: bottom;
+            subcontrol-origin: margin;
+        }}
+        QScrollBar::sub-line:vertical {{
+            height: 0px;
+            subcontrol-position: top;
+            subcontrol-origin: margin;
+        }}
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+            background: none;
+        }}
+        
+        QScrollBar:horizontal {{
+            border: none;
+            background: {theme["bg"]};
+            height: 10px;
+            margin: 0px 0px 0px 0px;
+        }}
+        QScrollBar::handle:horizontal {{
+            background: {theme["input_border"]};
+            min-width: 20px;
+            border-radius: 5px;
+        }}
+        QScrollBar::handle:horizontal:hover {{
+            background: {theme["button_default"]};
+        }}
+        QScrollBar::add-line:horizontal {{
+            width: 0px;
+            subcontrol-position: right;
+            subcontrol-origin: margin;
+        }}
+        QScrollBar::sub-line:horizontal {{
+            width: 0px;
+            subcontrol-position: left;
+            subcontrol-origin: margin;
+        }}
+        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+            background: none;
+        }}
+    """)
 
     def init_tabs(self):
         self.tab_create = QWidget()
@@ -1850,15 +2232,15 @@ class PackageTodoGUI(QMainWindow):
 
     def init_create_tab(self):
         layout = QVBoxLayout()
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
         
         form_group = QGroupBox("Detalles del Proyecto")
         # Usamos un Layout con columnas definidas para "Label a izq, Input a derecha"
         form_layout = QGridLayout(form_group)
-        form_layout.setSpacing(12)
+        form_layout.setSpacing(8)
         # Columna 0 (Labels): Ancho fijo o minimo para alineacion bonita
-        form_layout.setColumnMinimumWidth(0, 150)
+        form_layout.setColumnMinimumWidth(0, 140)
         # Columna 1 (Inputs): Stretch para que se peguen al borde
         form_layout.setColumnStretch(1, 1)
 
@@ -1929,17 +2311,17 @@ class PackageTodoGUI(QMainWindow):
         ico_layout.setContentsMargins(0, 0, 0, 0)
         ico_layout.setSpacing(5) # Espacio entre input y boton
         self.input_icon = QLineEdit()
-        self.input_icon.setPlaceholderText("(Opcional) Ruta al archivo .ico")
+        self.input_icon.setPlaceholderText("Ruta .ico local o URL de imagen (https://...)")
         self.input_icon.setFixedHeight(35)
         ico_layout.addWidget(self.input_icon)
         
         self.btn_browse_icon = QPushButton("Examinar")
         self.btn_browse_icon.setCursor(Qt.PointingHandCursor)
-        self.btn_browse_icon.setFixedWidth(80) # Un poco mas ancho para que se lea "Examinar"
+        self.btn_browse_icon.setFixedWidth(120)
         self.btn_browse_icon.setFixedHeight(35)
         self.btn_browse_icon.clicked.connect(self.browse_icon)
         # Estilo "mini" pero acorde al tema
-        self.btn_browse_icon.setStyleSheet(BTN_STYLES["info"] + "padding: 4px; font-size: 11px;")
+        # self.btn_browse_icon.setStyleSheet(BTN_STYLES["info"] + "padding: 4px; font-size: 11px;")
         ico_layout.addWidget(self.btn_browse_icon)
         
         form_layout.addWidget(ico_widget, 5, 1)
@@ -2058,6 +2440,7 @@ class PackageTodoGUI(QMainWindow):
         self.btn_create.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_MAKE_BTN"])
         self.btn_create.setIcon(QIcon(TAB_ICONS["crear"]))
         self.btn_create.setMinimumHeight(45)
+        self.btn_create.setMinimumWidth(300)
         # Boton centrado y ancho completo relativo al form
         self.btn_create.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.btn_create.clicked.connect(self.create_package_action)
@@ -2083,7 +2466,7 @@ class PackageTodoGUI(QMainWindow):
         self.statusBar().showMessage("Preparando entorno...")
 
     def browse_icon(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icono", "", "Icon Files (*.ico);;PNG Files (*.png)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icono", "", "Icon Files (*.ico)")
         if filename:
             self.input_icon.setText(filename)
 
@@ -2109,7 +2492,7 @@ class PackageTodoGUI(QMainWindow):
              print(f"Error descargando avatar: {e}")
 
     def create_package_action(self):
-        self.statusBar().showMessage("Creando Proyecto FLUTHIN Packaged...")
+        self.statusBar().showMessage("Creando Proyecto Fluthin Packaged...")
         # Validar autor (obligatorio)
         autor = self.input_autor.text().strip()
         if not autor:
@@ -2270,7 +2653,7 @@ BLOCK "VarFileInfo"
 }}
 """)
             with open(storekey, "w") as f:
-                f.write(f"#aiFLUTHIN Store APP DETAIL | Correlation Engine for Influent OS\n#store key protection id:\n{hv}")
+                f.write(f"#aiFluthin Store APP DETAIL | Correlation Engine for Influent OS\n#store key protection id:\n{hv}")
             with open(lic, "w") as f:
                 f.write(f"""                   GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -3006,6 +3389,25 @@ if __name__ == '__main__':
             upd_icn_dst = os.path.join(full_path, "app", "updater-icon.ico")
             selected_icon = self.input_icon.text().strip()
             
+            if selected_icon.startswith("http"):
+                  try:
+                       self.create_status.setText("Descargando icono...")
+                       QApplication.processEvents()
+                       # AÑADIR USER-AGENT (Importante para evitar bloqueos)
+                       headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+                       r_icon = requests.get(selected_icon, timeout=10, headers=headers)
+                       if r_icon.status_code == 200:
+                           # Guardar en temp
+                           tmp_icon = os.path.join(tempfile.gettempdir(), "downloaded_icon.ico")
+                           with open(tmp_icon, "wb") as f:
+                               f.write(r_icon.content)
+                           selected_icon = tmp_icon
+                       else:
+                           self.statusBar().showMessage(f"Warning: No se pudo descargar icono (HTTP {r_icon.status_code})")
+                  except Exception as ex_icon:
+                       print(f"Error descargando icono: {ex_icon}")
+                       self.statusBar().showMessage("Warning: Error en descarga de icono.")
+            
             if selected_icon and os.path.exists(selected_icon):
                 shutil.copy(selected_icon, icon_dest)
             elif os.path.exists(IPM_ICON_PATH):
@@ -3053,58 +3455,141 @@ if __name__ == '__main__':
 
     def init_build_tab(self):
         layout = QVBoxLayout()
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
         
         form_group = QGroupBox("Construir Paquete")
         form_layout = QGridLayout(form_group)
-        form_layout.setSpacing(12)
+        form_layout.setSpacing(8)
         form_layout.setColumnMinimumWidth(0, 140)
         form_layout.setColumnStretch(1, 1)
-        form_layout.setColumnStretch(2, 0)
         
-        # Fila 1: Fabricante
+        # Fila 0: Fabricante
         label1 = QLabel("Fabricante:")
         label1.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label1, 0, 0)
         self.input_build_empresa = QLineEdit()
         self.input_build_empresa.setPlaceholderText("Ejemplo: influent")
-        self.input_build_empresa.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_PUBLISHER_E"])
-        self.input_build_empresa.setMaximumWidth(300)
+        self.input_build_empresa.setMaximumWidth(450)
+        self.input_build_empresa.setFixedHeight(35)
         form_layout.addWidget(self.input_build_empresa, 0, 1)
 
-        # Fila 2: Nombre interno
+        # Fila 1: Nombre interno
         label2 = QLabel("Nombre interno:")
         label2.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label2, 1, 0)
         self.input_build_nombre = QLineEdit()
         self.input_build_nombre.setPlaceholderText("Ejemplo: mycoolapp")
-        self.input_build_nombre.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_NAME_E"])
-        self.input_build_nombre.setMaximumWidth(300)
+        self.input_build_nombre.setMaximumWidth(450)
+        self.input_build_nombre.setFixedHeight(35)
         form_layout.addWidget(self.input_build_nombre, 1, 1)
 
-        # Fila 3: Versión
+        # Fila 2: Versión
         label3 = QLabel("Versión:")
         label3.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label3, 2, 0)
         self.input_build_version = QLineEdit()
         self.input_build_version.setPlaceholderText("Ejemplo: 1.0")
-        self.input_build_version.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_VERSION_E"])
-        self.input_build_version.setMaximumWidth(300)
+        self.input_build_version.setMaximumWidth(450)
+        self.input_build_version.setFixedHeight(35)
         form_layout.addWidget(self.input_build_version, 2, 1)
 
-        label4 = QLabel("Plataforma:")
+        # Fila 3: Plataforma (AUTOMATIZADO)
+        label4 = QLabel("Entorno de compilación:")
         label4.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         form_layout.addWidget(label4, 3, 0)
         self.input_build_platform = QLineEdit()
-        self.input_build_platform.setPlaceholderText("Ejemplo: Windows")
-        self.input_build_platform.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_PLATFORM_E"])
-        self.input_build_platform.setMaximumWidth(300)
+        self.input_build_platform.setReadOnly(True)
+        # Auto-detectar plataforma actual
+        detected_plat = "Windows" if sys.platform.startswith("win") else "Linux"
+        self.input_build_platform.setText(detected_plat)
+        self.input_build_platform.setToolTip("Detectado automáticamente según el sistema operativo actual")
+        self.input_build_platform.setMaximumWidth(450)
+        self.input_build_platform.setFixedHeight(35)
+        self.input_build_platform.setStyleSheet("background-color: rgba(128, 128, 128, 0.1); border-style: dashed;")
         form_layout.addWidget(self.input_build_platform, 3, 1)
+
+        # Fila 4: Modo (Radios)
+        label5 = QLabel("Modo:")
+        label5.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        label5.setStyleSheet("margin-top: 5px;")
+        form_layout.addWidget(label5, 4, 0, Qt.AlignTop)
+        
+        self.build_mode_group = QButtonGroup()
+        mode_layout = QHBoxLayout()
+        mode_layout.setSpacing(12)
+        mode_layout.setContentsMargins(0,0,0,0)
+        
+        self.radio_portable = QRadioButton("Portable (All-in-one)")
+        self.radio_portable.setChecked(True)
+        self.radio_portable.setMinimumHeight(40)
+        self.radio_lite = QRadioButton("Lite (Single File)") 
+        self.radio_lite.setMinimumHeight(40)
+        
+        # Apply same style as create tab
+        radio_style = """
+            QRadioButton {
+                padding: 6px 10px;
+                border: 2px solid transparent;
+                border-radius: 6px;
+                background-color: transparent;
+                min-height: 40px;
+            }
+            QRadioButton:hover {
+                background-color: rgba(108, 249, 237, 0.1);
+                border-color: rgba(108, 249, 230, 0.3);
+            }
+            QRadioButton::indicator {
+                width: 18px;
+                height: 18px;
+                border: 2px solid #d1d5da;
+                border-radius: 9px;
+            }
+            QRadioButton::indicator:checked {
+                border: 2px solid #6cf9e6;
+                background-color: #6ceff9;
+            }
+        """
+        self.radio_portable.setStyleSheet(radio_style)
+        self.radio_lite.setStyleSheet(radio_style)
+        
+        self.build_mode_group.addButton(self.radio_portable)
+        self.build_mode_group.addButton(self.radio_lite)
+        
+        mode_layout.addWidget(self.radio_portable)
+        mode_layout.addWidget(self.radio_lite)
+        mode_widget = QWidget()
+        mode_widget.setLayout(mode_layout)
+        
+        form_layout.addWidget(mode_widget, 4, 1)
+
+        # Fila 5: Carpeta Custom
+        label6 = QLabel("Carpeta Externa:")
+        label6.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        form_layout.addWidget(label6, 5, 0)
+        
+        custom_widget = QWidget()
+        custom_widget.setMaximumWidth(450)
+        cw_layout = QHBoxLayout(custom_widget)
+        cw_layout.setContentsMargins(0,0,0,0)
+        cw_layout.setSpacing(5)
+        
+        self.input_custom_path = QLineEdit()
+        self.input_custom_path.setPlaceholderText("(Opcional) Seleccionar carpeta externa a compilar")
+        self.input_custom_path.setReadOnly(True)
+        self.input_custom_path.setFixedHeight(35)
+        cw_layout.addWidget(self.input_custom_path)
+        
+        self.btn_select_folder = QPushButton("...")
+        self.btn_select_folder.setFixedWidth(40)
+        self.btn_select_folder.setFixedHeight(35)
+        self.btn_select_folder.clicked.connect(self.select_custom_folder)
+        cw_layout.addWidget(self.btn_select_folder)
+        
+        form_layout.addWidget(custom_widget, 5, 1)
 
         self.btn_build = QPushButton("Construir paquete .iflapp")
         self.btn_build.setFont(BUTTON_FONT)
-        self.btn_build.setToolTip(LGDR_BUILD_MESSAGES["_LGDR_BUILD_BTN"])
         self.btn_build.setIcon(QIcon(TAB_ICONS["construir"]))
         self.btn_build.setMaximumWidth(350)
         self.btn_build.clicked.connect(self.build_package_action)
@@ -3116,21 +3601,44 @@ if __name__ == '__main__':
         layout.addStretch()
         self.tab_build.setLayout(layout)
 
+    def select_custom_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta del Proyecto")
+        if folder:
+            self.input_custom_path.setText(folder)
+            # Try to parse details.xml to fill fields?
+            details = os.path.join(folder, "details.xml")
+            if os.path.exists(details):
+                 try:
+                     tree = ET.parse(details)
+                     root = tree.getroot()
+                     self.input_build_empresa.setText(root.findtext("publisher", ""))
+                     self.input_build_nombre.setText(root.findtext("app", ""))
+                     self.input_build_version.setText(root.findtext("version", "").replace("v", "").split("-")[0]) 
+                 except: pass
+
     def build_package_action(self):
         version = getversion()
         empresa = self.input_build_empresa.text().strip().lower() or "influent"
         nombre = self.input_build_nombre.text().strip().lower() or "mycoolapp"
-        version = self.input_build_version.text().strip() or f"1-{version}"
+        version_input = self.input_build_version.text().strip()
+        version_full = version_input or f"1-{version}"
         platformLineEdit = self.input_build_platform.text() or f"{linkedsys.capitalize()}"
         
-        # Packagemaker solo compila .iflapp
+        custom_path = self.input_custom_path.text().strip()
+        if not custom_path: custom_path = None
+        
+        # Read from radios
+        build_mode = "portable"
+        if hasattr(self, 'radio_lite') and self.radio_lite.isChecked():
+            build_mode = "lite"
+
         self.build_status.setText("🔨 Construyendo paquete .iflapp...")
-        self.build_thread = BuildThread(empresa, nombre, version, platformLineEdit)
+        self.build_thread = BuildThread(empresa, nombre, version_full, platformLineEdit, parent=self, custom_path=custom_path, build_mode=build_mode)
         self.build_thread.progress.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.finished.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.error.connect(lambda msg: self.build_status.setText(f"❌ Error: {msg}"))
         self.build_thread.start()
-        self.statusBar().showMessage(f"Paquete .iflapp armado como {empresa}.{nombre}.v{version}!")
+        self.statusBar().showMessage(f"Iniciando compilación...")
 
     def init_manager_tab(self):
         layout = QVBoxLayout()
@@ -3139,9 +3647,11 @@ if __name__ == '__main__':
         proj_layout = QVBoxLayout(proj_group)
         self.projects_list = QListWidget()
         self.projects_list.setIconSize(QtCore.QSize(32, 32))
-        self.projects_list.setAlternatingRowColors(True)
+        self.projects_list.setAlternatingRowColors(False)
         self.projects_list.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.projects_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_LOCAL_LV"])
+        # Ensure expandable policy
+        self.projects_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         proj_layout.addWidget(self.projects_list)
         splitter.addWidget(proj_group)
 
@@ -3149,36 +3659,50 @@ if __name__ == '__main__':
         apps_layout = QVBoxLayout(apps_group)
         self.apps_list = QListWidget()
         self.apps_list.setIconSize(QtCore.QSize(32, 32))
-        self.apps_list.setAlternatingRowColors(True)
+        self.apps_list.setAlternatingRowColors(False)
         self.apps_list.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.apps_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALLED_LV"])
+        # Ensure expandable policy
+        self.apps_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         apps_layout.addWidget(self.apps_list)
         splitter.addWidget(apps_group)
 
         splitter.setSizes([1, 1])
-        layout.addWidget(splitter)
+        # Add splitter with Stretch Factor 1 to take all available vertical space
+        layout.addWidget(splitter, 1)
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+        btn_row.setContentsMargins(0, 5, 0, 0)
+        
+        # Obtener estilos github
+        is_dark = detectar_modo_sistema()
+        action_style, normal_style = get_github_style(is_dark)
+
         btn_refresh = QPushButton("Refrescar listas")
-        btn_refresh.setFont(BUTTON_FONT)
-        btn_refresh.setStyleSheet(BTN_STYLES["info"])
+        # No establecemos font aquí porque el stylesheet lo maneja mejor para coherencia
+        #btn_refresh.setFont(BUTTON_FONT) 
+        btn_refresh.setStyleSheet(normal_style)
         btn_refresh.setIcon(QIcon(IPM_ICON_PATH))
         btn_refresh.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_REFRESH_BTN"])
+        btn_refresh.setMinimumHeight(38)
         btn_refresh.clicked.connect(self.load_manager_lists)
         btn_row.addWidget(btn_refresh)
 
         btn_install = QPushButton("Instalar paquete")
-        btn_install.setFont(BUTTON_FONT)
-        btn_install.setStyleSheet(BTN_STYLES["success"])
+        #btn_install.setFont(BUTTON_FONT)
+        btn_install.setStyleSheet(normal_style) # Usamos normal en vez de "success" para mantener consistencia GW/BW requested
         btn_install.setIcon(QIcon(TAB_ICONS["instalar"]))
         btn_install.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALL_BTN"])
+        btn_install.setMinimumHeight(38)
         btn_install.clicked.connect(self.install_package_action)
         btn_row.addWidget(btn_install)
 
         btn_uninstall = QPushButton("Desinstalar paquete")
-        btn_uninstall.setFont(BUTTON_FONT)
-        btn_uninstall.setStyleSheet(BTN_STYLES["danger"])
+        #btn_uninstall.setFont(BUTTON_FONT)
+        btn_uninstall.setStyleSheet(normal_style) # Usamos normal en vez de "danger" para mantener consistencia GW/BW requested
         btn_uninstall.setIcon(QIcon(TAB_ICONS["desinstalar"]))
         btn_uninstall.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_UNINSTALL_BTN"])
+        btn_uninstall.setMinimumHeight(38)
         btn_uninstall.clicked.connect(self.uninstall_package_action)
         btn_row.addWidget(btn_uninstall)
         layout.addLayout(btn_row)
@@ -3195,7 +3719,7 @@ if __name__ == '__main__':
         # Watcher en tiempo real
         self.fs_watcher = QtCore.QFileSystemWatcher(self)
         self.fs_watcher.addPath(BASE_DIR)
-        self.fs_watcher.addPath(FLUTHIN_APPS)
+        self.fs_watcher.addPath(Fluthin_APPS)
         self.fs_watcher.directoryChanged.connect(self.load_manager_lists)
 
     def get_package_list(self, base):
@@ -3258,7 +3782,7 @@ if __name__ == '__main__':
             item = QListWidgetItem(icon, text)
             item.setData(QtCore.Qt.UserRole, p)
             self.projects_list.addItem(item)
-        apps = self.get_package_list(FLUTHIN_APPS)
+        apps = self.get_package_list(Fluthin_APPS)
         for a in apps:
             icon = QIcon(a["icon"]) if a["icon"] else self.style().standardIcon(QStyle.SP_DesktopIcon)
             text = a['empresa'].capitalize()
@@ -3299,17 +3823,17 @@ if __name__ == '__main__':
         dlg.exec_()
 
     def install_package_action(self):
-        files = QFileDialog.getOpenFileNames(self, "Selecciona paquetes para instalar", BASE_DIR, "Paquetes (*.iflapp *.iflappb)")[0]
+        files = QFileDialog.getOpenFileNames(self, "Selecciona paquetes para instalar", BASE_DIR, "Paquetes (*.iflapp)")[0]
         for file_path in files:
             if not file_path:
                 continue
-            pkg_name = os.path.basename(file_path).replace(".iflapp", "").replace(".iflappb", "")
-            target_dir = os.path.join(FLUTHIN_APPS, pkg_name)
+            pkg_name = os.path.basename(file_path).replace(".iflapp", "")
+            target_dir = os.path.join(Fluthin_APPS, pkg_name)
             os.makedirs(target_dir, exist_ok=True)
             try:
                 with zipfile.ZipFile(file_path, 'r') as zip_ref:
                     zip_ref.extractall(target_dir)
-                self.manager_status.setText(f"✅ Instalado: {pkg_name} en FLUTHIN Apps")
+                self.manager_status.setText(f"✅ Instalado: {pkg_name} en Fluthin Apps")
                 # Asociación de extensión y menú inicio en Windows
                 if sys.platform.startswith('win'):
                     self.setup_windows_shortcut(target_dir, pkg_name)
@@ -3359,9 +3883,9 @@ if __name__ == '__main__':
                     shortcut.Description = f"Influent App: {nombre}"
                     shortcut.Save()
             except Exception as e:
-                self.manager_status.setText(self.manager_status.text() + f"\n⚠️ Error acceso directo: {str(e)}")
+                self.manager_status.setText(self.manager_status.text() + f"\n⚠️ Error instalando accesos directos: {str(e)}")
         except Exception as e:
-            self.manager_status.setText(self.manager_status.text() + f"\n⚠️ Error detalles.xml: {str(e)}")
+            self.manager_status.setText(self.manager_status.text() + f"\n⚠️ Error a llamada a XML/meta: {str(e)}")
 
     def uninstall_package_action(self):
         item = self.apps_list.currentItem()
@@ -3401,7 +3925,7 @@ if __name__ == '__main__':
             "<svg width='24' height='24' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='12' r='10' fill='#f9826c'/><text x='12' y='16' text-anchor='middle' font-size='13' fill='white' font-family='Segoe UI, Arial' font-weight='bold'>IPM</text></svg>"
             "</span>"
             "<span>"
-            "Herramienta completa para crear, empaquetar, instalar y <b>gestionar proyectos Influent Flarm Apps</b> "
+            "Herramienta completa para crear, empaquetar, instalar y <b>gestionar proyectos Influent Fluthin Apps</b> "
             "<span style='color:#f9826c;'>(.iflapp)</span> con una interfaz moderna y fácil de usar. "
             "Diseñada para desarrolladores que buscan una solución todo-en-uno para el ciclo de vida completo de sus aplicaciones."
             "</span></div>"
@@ -3478,6 +4002,10 @@ if __name__ == '__main__':
             "Copyright © 2025 Jesus Quijada<br>"
             "<svg width='15' height='15' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><path d='M6 7h8v6H6z' stroke='#f9826c' stroke-width='1.4' fill='none'/><rect x='4' y='4' width='12' height='12' rx='2' stroke='#f9826c' stroke-width='1.4' fill='none'/></svg> "
             "Bajo licencia GNU GPL v3"
+            "<p>"
+            "POWERED BY FLUTHIN ARMADILLO ENGINE (FLARM)"
+            "</p>"
+            "SERVER DEDICATED IN FLARM STORE"
             "</p>"
         )
         version_label = QLabel(version_text)

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2025-12-09
+## [3.2.5-25.12-17.44] - 2025-12-17
 
 ### Added
 - **Real-time Project Watcher**: The project manager list now updates automatically when files change in the directory.

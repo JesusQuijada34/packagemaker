@@ -1,4 +1,4 @@
-# Release Notes - Packagemaker Build 2025.12.09
+# Release Notes - Packagemaker Build 3.2.5-25.12-17.44
 
 We are excited to announce a major update to **Packagemaker**, bringing professional-grade packaging and a revamped user experience.
 
