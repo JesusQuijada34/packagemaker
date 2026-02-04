@@ -1,24 +1,28 @@
-# Changelog
+# Historial de Cambios - Package Maker
 
-All notable changes to this project will be documented in this file.
+## [v3.2.6] - 2026-01-25
+Esta versión expande el ecosistema hacia dispositivos móviles y fortalece la integridad de los paquetes mediante la nueva Suite MoonFix.
 
-## [3.2.5-25.12-17.44] - 2025-12-17
+### ✨ Nuevas Características
+*   **Android Mobile Replica**: Lanzamiento de la interfaz móvil premium en `android/index.html`. Una réplica exacta con diseño adaptativo, animaciones fluidas y navegación por gestos para dispositivos Android.
+*   **MoonFix Suite**: Nueva herramienta de diagnóstico profundo que escanea, detecta y repara automáticamente inconsistencias en la estructura de carpetas, archivos XML y activos visuales.
+*   **Priorización de Recursos Remotos**: El sistema de previsualización ahora prioriza las URLs `raw.githubusercontent.com` para cargar splash screens y logos, garantizando que la documentación web siempre sea funcional independientemente de la ubicación local.
 
-### Added
-- **Real-time Project Watcher**: The project manager list now updates automatically when files change in the directory.
-- **UWP-style Focus**: Input fields now show a vertical accent bar when focused.
-- **Icon Selection**: Added a file browser to select custom `.ico` files during project creation.
-- **Autocomplete**: Added recursive, partial-match autocomplete for Publisher and Project Name fields in the Build tab.
-- **Window Icon**: The application now sets a default window/taskbar icon (`app-icon.ico`).
-- **Python Verification**: Added robust checks (including `shutil.which`) to find a valid Python interpreter before running scripts.
+### 🚀 Mejoras
+*   **Unificación de Documentación**: La generación de `docs/index.html` ahora está centralizada y automatiza la inyección de metadatos (Autor, Repositorio, Versión) en cada proyecto.
+*   **Efectos Visuales Premium**: Aplicación de `GhostBlur` y `WipeWindow` de Leviathan-UI para una estética acrílica de alta gama.
+*   **Optimización de Red**: Implementación de User-Agents personalizados para las descargas de iconos via `requests` para evitar bloqueos por parte de CDNs.
 
-### Changed
-- **Compilation Engine**: Replaced simple zipping with `FlangCompiler` class (PyInstaller based).
-- **Updater Logic**: `updater.py` is now embedded directly into the script and written dynamically, removing the dependency on an external file.
-- **UI Layout**: Optimized "Crear Proyecto" tab for better alignment and responsiveness. Inputs now stretch to the right edge.
-- **GitHub Verification**: Removed avatar preview to cleaner verification logic. API call now only checks existence.
-- **Folder List**: `get_package_list` now scans recursively (using `os.walk`) to find projects in subdirectories.
+---
 
-### Fixed
-- **NameError**: Fixed `FocusIndicationFilter` scope issue.
-- **Layout**: Fixed "Examinar" button spacing and alignment.
+## [v3.2.0] - 2026-01-17
+*   **Integración con Leviathan-UI v1.1.0**: Actualización de dependencias críticas.
+*   **Barra de Progreso Marquee**: Feedback visual mejorado durante la compilación.
+*   **Diálogos Modernos**: Reemplazo total de diálogos nativos por `LeviathanDialog`.
+
+---
+
+## [3.1.5] - 2025-12-17
+*   **Real-time Project Watcher**: Actualización dinámica de listas de proyectos.
+*   **Icon Selection**: Selector de archivos `.ico` integrado.
+*   **Autocomplete**: Autocompletado recursivo en campos de construcción.

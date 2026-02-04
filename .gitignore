@@ -180,3 +180,4 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 updater_log.txt
+config/settings.json

@@ -21,7 +21,8 @@ from typing import Dict, List, Tuple, Optional
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar, QTextEdit
+    QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar, QTextEdit, QStackedWidget,
+    QCheckBox, QMessageBox, QInputDialog
 )
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
@@ -29,6 +30,14 @@ from PyQt5.QtSvg import QSvgRenderer # [NEW IMPORT FOR TITLEBAR SVG RENDERING]
 from PyQt5.QtCore import QByteArray  # [NEW IMPORT FOR SVG BUFFER]
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QProcess
 import requests
+from leviathan_ui import InmersiveSplash, LightsOff, LeviathanDialog, WipeWindow, LeviathanProgressBar, CustomTitleBar, get_accent_color
+
+# [MONKEYPATCH] Fix for LeviathanUI < v1.0.4 where LeviathanProgressBar is missing setValue()
+# referencing the installed library issue without modifying it.
+if not hasattr(LeviathanProgressBar, 'setValue'):
+    def set_value_patch(self, val):
+        self.value = val
+    LeviathanProgressBar.setValue = set_value_patch
 # The following block handles platform-specific imports.
 # The warning about 'pyi_splash' is expected only when running as a PyInstaller .exe.
 # It's safe to ignore in regular Python editors; it's only meaningful when sys.frozen is set.
@@ -47,16 +56,23 @@ if getattr(sys, 'frozen', False):
         pass  # Not an error unless running under PyInstaller build
 # ----------- CONFIGURABLE VARIABLES -----------
 APP_FONT = QFont('Roboto', 13)
-TAB_FONT = QFont('Roboto', 12) #, QFont.Bold)
-BUTTON_FONT = QFont('Roboto', 12, QFont.Bold)
+TAB_FONT = QFont('Roboto', 12) # Icons (SVGs are handled as strings here for "one-file" convenience or resource paths)
 TAB_ICONS = {
-    "crear": "./app/package_add.ico",
-    "construir": "./app/package_build.ico",
-    "gestor": "./app/package_fm.ico",
-    "about": "./app/package_about.ico",
-    "instalar": "./app/package_install.ico",
-    "desinstalar": "./app/package_uninstall.ico",
+    "crear": "app/package_add.ico",  # Placeholder, will use text if not found or system icons
+    "construir": "app/package_build.ico",
+    "gestor": "app/package_fm.ico",
+    "config": "app/app_settings.ico",
+    "moonfix": "app/moonfix.ico",
+    "reparar": "app/package_install.ico",
+    "about": "app/package_About.ico",
+    "instalar": "app/package_install.ico",
+    "desinstalar": "app/package_uninstall.ico"
 }
+
+# SVG Definitions for "About" Page and Sidebar (Inline for robustness)
+SVG_ABOUT = """<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#f9826c" stroke-width="2"/><path d="M12 7V13M12 17H12.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+SVG_SETTINGS = """<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.4 15A1.65 1.65 0 0 0 20 12A1.65 1.65 0 0 0 19.4 9M12 3A1.65 1.65 0 0 0 9 3M12 21A1.65 1.65 0 0 0 15 21M4.6 15A1.65 1.65 0 0 0 4 12A1.65 1.65 0 0 0 4.6 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
+
 # Windows 11-inspired button styles (rounded, soft shadows, modern accent colors)
 # Note: The 'transition' property is a CSS feature supported by browsers, but it is NOT supported/stable in PyQt5 stylesheets.
 # PyQt5 ignores 'transition' and related CSS3 properties—they have no effect and can be safely omitted.
@@ -135,6 +151,7 @@ BTN_STYLES = {
         # No box-shadow
     ),
 }
+
 plataforma_platform = sys.platform
 plataforma_name = os.name
 if plataforma_platform.startswith("win"):
@@ -144,7 +161,6 @@ if plataforma_platform.startswith("win"):
         doc_folder = "Documentos"
     elif os.path.exists(os.path.join(user_profile, "Documents")):
         doc_folder = "Documents"
-        
     BASE_DIR = os.path.join(user_profile, doc_folder, "Packagemaker Projects")
     Fluthin_APPS = os.path.join(user_profile, doc_folder, "Fluthin Apps")
     linkedsys = "knosthalij"
@@ -157,12 +173,46 @@ else:
     Fluthin_APPS = "Fluthin Apps/"
     linkedsys = "keystone"
 
+# --- GLOBAL CONFIG SYSTEM ---
+IPM_ICON_PATH = os.path.join("app", "app-icon.ico")
+DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
+CONFIG_DIR = os.path.join(os.getcwd(), "config")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "settings.json")
+DEFAULT_CONFIG = {
+    "BASE_DIR": BASE_DIR,
+    "Fluthin_APPS": Fluthin_APPS,
+    "GLOBAL_VARS": "",
+    "DISPLAY_MODE": "GhostBlur (Cristal)"
+}
+
+def load_app_config():
+    if not os.path.exists(CONFIG_DIR):
+        os.makedirs(CONFIG_DIR, exist_ok=True)
+    if not os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(DEFAULT_CONFIG, f, indent=4)
+        return DEFAULT_CONFIG
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return DEFAULT_CONFIG
+
+APP_CONFIG = load_app_config()
+BASE_DIR = APP_CONFIG.get("BASE_DIR", BASE_DIR)
+Fluthin_APPS = APP_CONFIG.get("Fluthin_APPS", Fluthin_APPS)
+
 # Crear las carpetas si no existen
 os.makedirs(BASE_DIR, exist_ok=True)
 os.makedirs(Fluthin_APPS, exist_ok=True)
 
-IPM_ICON_PATH = "app/app-icon.ico"
-DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
+def save_app_config(config):
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=4)
+        return True
+    except:
+        return False
 
 plataforma = plataforma_platform.capitalize()
 nombre = plataforma_name.capitalize()
@@ -310,29 +360,34 @@ AGE_RATINGS = {
     "kling" : "PUBLIC ALL",
 }
 
-UPDATER_CODE = r'''import sys, os, requests, shutil, subprocess, xml.etree.ElementTree as ET
-import threading, time, traceback
+UPDATER_CODE = r'''import sys, os, time, shutil, zipfile, subprocess, traceback, threading
+import requests
+import xml.etree.ElementTree as ET
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout
-from PyQt5.QtGui import QFont, QIcon, QPixmap
-from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
+from PyQt5.QtGui import QFont, QIcon, QPixmap, QColor
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QObject
 
+# --- LEVIATHAN UI CHECK ---
+try:
+    from leviathan_ui import LeviathanDialog, WipeWindow, LeviathanProgressBar, CustomTitleBar
+    HAS_LEVIATHAN = True
+except ImportError:
+    HAS_LEVIATHAN = False
+
+# --- CONFIG ---
 XML_PATH = "details.xml"
 LOG_PATH = "updater_log.txt"
 CHECK_INTERVAL = 60
 GITHUB_API = "https://api.github.com"
 
-STYLE = """
-QWidget { background-color: #0d1117; color: #2ecc71; font-family: "Segoe UI"; }
-QPushButton { background-color: #2ecc71; color: white; border-radius: 6px; padding: 6px 12px; }
-QPushButton:hover { background-color: #27ae60; }
-"""
-
 def log(msg):
-    timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-    with open(LOG_PATH, "a", encoding="utf-8") as f:
-        f.write(f"{timestamp} {msg}\n")
-    print(f"{timestamp} {msg}")
+    ts = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+    try:
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"{ts} {msg}\n")
+    except: pass
+    print(f"{ts} {msg}")
 
 def leer_xml(path):
     try:
@@ -345,319 +400,653 @@ def leer_xml(path):
             "author": root.findtext("author", "").strip(),
             "publisher": root.findtext("publisher", "").strip()
         }
-    except Exception as e:
-        log(f"❌ Error leyendo XML: {e}")
-        return {}
-
-def hay_conexion():
-    try:
-        # Usamos la API solo como "ping"
-        requests.get(GITHUB_API, timeout=5)
-        return True
-    except:
-        return False
+    except: return {}
 
 def leer_xml_remoto(author, app):
-    """
-    Lee el details.xml remoto desde la rama main del repo:
-    https://raw.githubusercontent.com/{author}/{app}/main/details.xml
-    Devuelve solo la versión remota (string) o "" en caso de error.
-    """
     url = f"https://raw.githubusercontent.com/{author}/{app}/main/details.xml"
     try:
-        log(f"🌐 Leyendo details.xml remoto en: {url}")
         r = requests.get(url, timeout=10)
         if r.status_code == 200:
-            root = ET.fromstring(r.text)
-            version_remota = root.findtext("version", "").strip()
-            log(f"✅ Versión remota encontrada: {version_remota}")
-            return version_remota
-        else:
-            log(f"❌ No se pudo leer details.xml remoto (status {r.status_code})")
-    except Exception as e:
-        log(f"❌ Error leyendo XML remoto: {e}")
+            return ET.fromstring(r.text).findtext("version", "").strip()
+    except: pass
     return ""
 
 def buscar_release(author, app, version, platform, publisher):
-    """
-    Construye la URL directa de descarga del instalador:
-    https://github.com/{author}/{app}/releases/download/{version}/{publisher}.{app}.{version}-{platform}.iflapp
-
-    Comprueba si existe (status 200). Si existe, devuelve la URL.
-    Si no, devuelve None.
-    """
     filename = f"{publisher}.{app}.{version}-{platform}.iflapp"
     url = f"https://github.com/{author}/{app}/releases/download/{version}/{filename}"
-    log(f"🔍 Comprobando asset remoto: {url}")
     try:
-        # Usamos HEAD para no descargar todo el archivo solo para comprobar existencia
-        r = requests.head(url, timeout=15, allow_redirects=True)
-        if r.status_code == 200:
-            log(f"✅ Asset encontrado: {filename}")
+        if requests.head(url, timeout=15, allow_redirects=True).status_code == 200:
             return url
-        else:
-            log(f"❌ Asset no encontrado (status {r.status_code}). Esperado: {filename}")
-            return None
-    except Exception as e:
-        log(f"❌ Error comprobando release remoto: {e}")
-        return None
+    except: pass
+    return None
 
-# --- CLASE INSTALLER WORKER INTEGRADA ---
+class KillerLogic:
+    @staticmethod
+    def kill_target(target_name):
+        log(f"Matando procesos de: {target_name}")
+        try:
+            if sys.platform == "win32":
+                subprocess.call(f"taskkill /F /IM {target_name}.exe", shell=True)
+                subprocess.call(f"taskkill /F /IM {target_name}", shell=True) 
+            else:
+                subprocess.call(f"pkill -9 -f {target_name}", shell=True)
+        except Exception as e:
+            log(f"Kill error: {e}")
+
 class InstallerWorker(QObject):
-    finished = pyqtSignal()
-    error = pyqtSignal(str)
+    finished = pyqtSignal(bool, str)
     progress = pyqtSignal(int)
-    
-    def __init__(self, url, app, platform):
+    status = pyqtSignal(str)
+
+    def __init__(self, url, app_data):
         super().__init__()
         self.url = url
-        self.app = app
-        self.platform = platform
+        self.app = app_data["app"]
+        self._running = True
 
     def run(self):
-        destino = "update.zip"
+        temp_zip = "pending_update.zip"
+        ext_dir = "update_temp_extracted"
         try:
-            log("🔐 Respaldando archivos…")
-            if not os.path.exists("backup_embestido"):
-                os.mkdir("backup_embestido")
-            
-            # Copiar solo archivos, excluyendo el directorio de backup y el archivo de destino
-            for f in os.listdir("."):
-                if f not in ["backup_embestido", destino] and os.path.isfile(f):
-                    shutil.copy2(f, os.path.join("backup_embestido", f))
-            log("✅ Respaldo completado.")
-
-            log(f"⬇️ Descargando desde {self.url}")
+            self.status.emit("Conectando con el servidor...")
             r = requests.get(self.url, stream=True)
-            r.raise_for_status()  # Lanza excepción para códigos HTTP no exitosos
-
-            total_size = int(r.headers.get("content-length", 0))
-            bytes_downloaded = 0
-            
-            with open(destino, "wb") as f:
+            total = int(r.headers.get("content-length", 0))
+            down = 0
+            with open(temp_zip, "wb") as f:
                 for chunk in r.iter_content(8192):
-                    if not chunk:
-                        continue
+                    if not self._running: return
                     f.write(chunk)
-                    bytes_downloaded += len(chunk)
-                    if total_size > 0:
-                        percent = int((bytes_downloaded / total_size) * 100)
-                        self.progress.emit(percent)
+                    down += len(chunk)
+                    if total: self.progress.emit(int(down * 100 / total))
+
+            self.status.emit("Descomprimiendo actualización...")
+            if os.path.exists(ext_dir): shutil.rmtree(ext_dir)
+            with zipfile.ZipFile(temp_zip, "r") as z:
+                z.extractall(ext_dir)
+
+            self.status.emit("Cerrando aplicación principal...")
+            KillerLogic.kill_target(self.app)
+            time.sleep(2) 
+
+            self.status.emit("Sobrescribiendo sistema...")
+            for root, dirs, files in os.walk(ext_dir):
+                rel = os.path.relpath(root, ext_dir)
+                dest_fold = rel if rel != "." else "."
+                if dest_fold != "." and not os.path.exists(dest_fold):
+                    os.makedirs(dest_fold)
+                for file in files:
+                    src = os.path.join(root, file)
+                    dst = os.path.join(dest_fold, file)
+                    if os.path.abspath(dst) == os.path.abspath(sys.argv[0]): continue 
+                    if os.path.exists(dst):
+                        try: os.remove(dst)
+                        except: # Rename strategy for locked files
+                            try: os.rename(dst, dst + f".old.{int(time.time())}")
+                            except: continue
+                    try: shutil.move(src, dst)
+                    except: pass
+
+            try: shutil.rmtree(ext_dir)
+            except: pass
+            try: os.remove(temp_zip)
+            except: pass
             
-            self.progress.emit(100)
-            log("✅ Descarga completada.")
-
-            log("📦 Descomprimiendo archivos…")
-            shutil.unpack_archive(destino, ".")
-            os.remove(destino)
-            log("✅ Archivos actualizados.")
-
-            # Lógica de reinicio
-            if not sys.argv[0].endswith(".py"):
-                exe = f"{self.app}.exe" if os.name == "nt" else f"./{self.app}"
-                if os.path.exists(exe):
-                    log(f"🚀 Ejecutando {exe}")
-                    subprocess.Popen(exe)
-                else:
-                    log(f"⚠️ Ejecutable no encontrado: {exe}")
-            else:
-                log("🔁 Script en modo .py, no se relanza automáticamente.")
-
-            self.finished.emit()
+            self.status.emit("Finalizando...")
+            self.finished.emit(True, "OK")
 
         except Exception as e:
-            log(f"❌ Error durante instalación: {e}")
             log(traceback.format_exc())
-            self.error.emit(f"Error de instalación: {e}")
+            self.finished.emit(False, str(e))
 
-# --- FIN CLASE INSTALLER WORKER INTEGRADA ---
-
-class UpdaterWindow(QWidget):
-    update_finished = pyqtSignal()  # Señal para manejar el cierre de la ventana después de la actualización
-
-    def __init__(self, app, version, platform, url):
+class ModernUpdaterWindow(QMainWindow):
+    def __init__(self, app_data, url):
         super().__init__()
-        self.app = app
-        self.version = version
-        self.platform = platform
+        self.app_data = app_data
         self.url = url
-        
-        # Eliminar el borde nativo y permitir transparencia
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-
-        self.setWindowTitle("Actualizador de Flarm App")
-        self.setFixedSize(460, 280)
-        self.setStyleSheet(STYLE)
+        self.resize(480, 320)
+        if HAS_LEVIATHAN:
+            WipeWindow.create().set_mode("ghostBlur").apply(self)
         self.init_ui()
-        
-        # Variables para el arrastre de la ventana
-        self._start_pos = None
+        self.center()
+        QTimer.singleShot(500, self.start_install)
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._start_pos = event.pos()
-
-    def mouseMoveEvent(self, event):
-        if self._start_pos is not None and event.buttons() == Qt.LeftButton:
-            self.move(self.pos() + event.pos() - self._start_pos)
-
-    def mouseReleaseEvent(self, event):
-        self._start_pos = None
+    def center(self):
+        self.move(QApplication.desktop().availableGeometry().center() - self.rect().center())
 
     def init_ui(self):
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-
-        # --- Title Bar (Custom) ---
-        self.title_bar = QWidget()
-        self.title_bar.setFixedHeight(40)
-        self.title_bar.setStyleSheet("background-color: #161b22;")
-        title_layout = QHBoxLayout(self.title_bar)
-        title_layout.setContentsMargins(10, 0, 0, 0)
-        title_layout.setSpacing(0)
-
-        title_label = QLabel("Flarm Updater")
-        title_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        title_layout.addWidget(title_label)
-        title_layout.addStretch()
-
-        # Botones de control (iconos SVG)
-        self.btn_minimize = QPushButton()
-        self.btn_close = QPushButton()
+        central = QWidget()
+        central.setObjectName("Central")
+        central.setStyleSheet("QWidget#Central { background: rgba(18, 24, 34, 0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }")
+        self.setCentralWidget(central)
+        layout = QVBoxLayout(central)
+        layout.setContentsMargins(0, 0, 0, 0)
         
-        min_pm = os.path.join("assets", "min.svg")
-        close_pm = os.path.join("assets", "close.svg")
-        minimize_pixmap = QPixmap(min_pm)
-        close_pixmap = QPixmap(close_pm)
+        if HAS_LEVIATHAN:
+            self.title_bar = CustomTitleBar(self, title="System Updater", is_main=True)
+            self.title_bar.set_color(QColor(0,0,0,0))
+            layout.addWidget(self.title_bar)
+
+        content = QWidget()
+        c_lay = QVBoxLayout(content)
+        c_lay.setContentsMargins(30, 10, 30, 30)
+        c_lay.setSpacing(15)
         
-        self.btn_minimize.setIcon(QIcon(minimize_pixmap))
-        self.btn_close.setIcon(QIcon(close_pixmap))
+        self.icon_lbl = QLabel("🔄")
+        self.icon_lbl.setStyleSheet("font-size: 48px; color: #2486ff;")
+        self.icon_lbl.setAlignment(Qt.AlignCenter)
+        c_lay.addWidget(self.icon_lbl)
         
-        self.btn_minimize.setFixedSize(40, 40)
-        self.btn_close.setFixedSize(40, 40)
+        self.lbl_main = QLabel(f"Actualizando {self.app_data['app']}")
+        self.lbl_main.setAlignment(Qt.AlignCenter)
+        self.lbl_main.setStyleSheet("font-family: 'Segoe UI'; font-weight: 700; font-size: 18px; color: white;")
+        c_lay.addWidget(self.lbl_main)
         
-        self.btn_minimize.setStyleSheet(
-            "QPushButton { border: none; background-color: transparent; } "
-            "QPushButton:hover { background-color: #30363d; }"
-        )
-        self.btn_close.setStyleSheet(
-            "QPushButton { border: none; background-color: transparent; } "
-            "QPushButton:hover { background-color: #e81123; }"
-        )
-
-        self.btn_minimize.clicked.connect(self.showMinimized)
-        self.btn_close.clicked.connect(self.close)
-
-        title_layout.addWidget(self.btn_minimize)
-        title_layout.addWidget(self.btn_close)
+        self.lbl_status = QLabel("Preparando...")
+        self.lbl_status.setAlignment(Qt.AlignCenter)
+        self.lbl_status.setStyleSheet("color: #aaa; font-size: 13px;")
+        c_lay.addWidget(self.lbl_status)
         
-        main_layout.addWidget(self.title_bar)
-
-        # --- Content Area ---
-        content_widget = QWidget()
-        layout = QVBoxLayout(content_widget)
-        layout.setContentsMargins(20, 20, 20, 20)
+        if HAS_LEVIATHAN:
+            self.pbar = LeviathanProgressBar(self)
+        else:
+            self.pbar = QProgressBar()
+            self.pbar.setStyleSheet("QProgressBar { background: #333; border: none; height: 6px; } QProgressBar::chunk { background: #2486ff; }")
+            self.pbar.setTextVisible(False)
+        c_lay.addWidget(self.pbar)
         
-        title = QLabel("Flarm Updater")
-        title.setFont(QFont("Segoe UI", 16, QFont.Bold))
-        title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title)
+        layout.addWidget(content)
 
-        info = QLabel(f"📦 {self.app}\n🔄 Nueva versión: {self.version}\n🖥️ Plataforma: {self.platform}")
-        info.setFont(QFont("Segoe UI", 12))
-        layout.addWidget(info)
-
-        self.progress_label = QLabel("Listo para actualizar.")
-        self.progress_label.setFont(QFont("Roboto", 10))
-        layout.addWidget(self.progress_label)
-
-        self.btn = QPushButton("Actualizar ahora")
-        self.btn.clicked.connect(self.instalar)
-        layout.addWidget(self.btn)
-
-        main_layout.addWidget(content_widget)
-        self.show()
-        self.update_finished.connect(self.close)
-
-    def instalar(self):
-        self.btn.setEnabled(False)
-        self.progress_label.setText("Iniciando descarga...")
-
+    def start_install(self):
         self.thread = QThread()
-        self.worker = InstallerWorker(self.url, self.app, self.platform)
+        self.worker = InstallerWorker(self.url, self.app_data)
         self.worker.moveToThread(self.thread)
-
         self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.worker.finished.connect(self.on_update_finished)
-        self.thread.finished.connect(self.thread.deleteLater)
-        self.worker.error.connect(self.on_error)
-        self.worker.progress.connect(self.on_progress)
-
+        self.worker.progress.connect(self.pbar.setValue)
+        self.worker.status.connect(self.lbl_status.setText)
+        self.worker.finished.connect(self.on_fin)
         self.thread.start()
 
-    def on_progress(self, percent):
-        self.progress_label.setText(f"Descargando... {percent}%")
-
-    def on_error(self, message):
-        self.progress_label.setText(f"ERROR: {message}")
-        self.btn.setEnabled(True)
-        # Cerrar la ventana en caso de error grave
-        self.update_finished.emit()
-
-    def on_update_finished(self):
-        self.progress_label.setText("Actualización completada. Reiniciando...")
-        self.update_finished.emit()
+    def on_fin(self, ok, msg):
+        self.thread.quit()
+        if ok:
+            self.lbl_status.setText("¡Actualización completada!")
+            # Relaunch
+            exe = f"{self.app_data['app']}.exe"
+            if os.path.exists(exe): subprocess.Popen(exe)
+            QTimer.singleShot(1500, self.close)
+        else:
+            self.lbl_status.setText(f"Error: {msg}")
+            self.lbl_status.setStyleSheet("color: #ff5252;")
 
 def ciclo_embestido():
     def verificar():
         while True:
-            if not hay_conexion():
-                log("🌐 Sin conexión. Esperando...")
-                time.sleep(30)
-                continue
-
             datos = leer_xml(XML_PATH)
-            if not datos:
-                time.sleep(CHECK_INTERVAL)
-                continue
-
-            log(
-                f"📖 App: {datos['app']} | Versión local: {datos['version']} | "
-                f"Plataforma: {datos['platform']} | Publisher: {datos.get('publisher', 'N/A')}"
-            )
-            remoto = leer_xml_remoto(datos["author"], datos["app"])
-            if remoto and remoto != datos["version"]:
-                log(f"🔄 Nueva versión remota: {remoto}")
-                url = buscar_release(
-                    datos["author"],
-                    datos["app"],
-                    remoto,
-                    datos["platform"],
-                    datos.get("publisher", "")
-                )
-                if url:
-                    log("✅ Actualización encontrada. Lanzando UpdaterWindow.")
-                    app = QApplication(sys.argv)
-                    ventana = UpdaterWindow(datos["app"], remoto, datos["platform"], url)
-                    app.exec_()
-                    return
-                else:
-                    log("❌ No se encontró asset para la plataforma/version indicada.")
-            else:
-                log("ℹ️ No hay actualizaciones.")
+            if datos:
+                remoto = leer_xml_remoto(datos["author"], datos["app"])
+                if remoto and remoto != datos["version"]:
+                    url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"], datos["publisher"])
+                    if url:
+                        # Find main app if running to allow modal usage? No, separate process.
+                        app = QApplication(sys.argv)
+                        w = ModernUpdaterWindow(datos, url)
+                        w.show()
+                        app.exec_()
+                        # Si se actualizó, el updater debe terminar
+                        return 
             time.sleep(CHECK_INTERVAL)
-
     threading.Thread(target=verificar, daemon=True).start()
 
 if __name__ == "__main__":
-    log("🕶️ Actualizador de paquetes iniciado en modo silencioso.")
     ciclo_embestido()
-    while True:
-        time.sleep(500)
+    while True: time.sleep(100)
 '''
+
+DOCS_TEMPLATE = r'''<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cargando…</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/__OWNER__/__REPO__/main/app/app-icon.ico" type="image/x-icon" />
+  <style>
+    :root {
+      --accent: #2486ff;
+      --bg-start: rgba(34,74,186,0.78);
+      --bg-end: rgba(12,30,60,0.93);
+      --card-bg: rgba(255,255,255,0.55);
+      --text: #07203a;
+      --muted: rgba(7,32,58,0.7);
+      --glass-blur: 12px;
+      --glass-saturation: 140%;
+      --glass-border: rgba(255,255,255,0.22);
+      --radius: 14px;
+      --shadow: 0 8px 30px rgba(2,8,23,0.45);
+      font-family: "Segoe UI", "Segoe UI Variable", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --accent: #1e6fe8;
+        --bg-start: rgba(20,28,56,0.9);
+        --bg-end: rgba(7,14,38,0.97);
+        --card-bg: rgba(12,14,16,0.45);
+        --text: #e6eef9;
+        --muted: rgba(230,238,249,0.75);
+        --glass-border: rgba(255,255,255,0.06);
+        --shadow: 0 12px 30px rgba(0,0,0,0.7);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body,#app{height:100%}
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      /* BG FIX: no repeat, partial, non-white, layered gradient */
+      background:
+        radial-gradient(ellipse 650px 320px at 65% 20%, rgba(36,134,255,0.15) 0%, rgba(30,50,130, 0.08) 60%, transparent 100%) no-repeat,
+        radial-gradient(circle 430px at 20% 80%, rgba(36,134,255,0.10) 0%, rgba(10,24,55,0.07) 60%, transparent 100%) no-repeat,
+        linear-gradient(120deg, var(--bg-start) 0%, var(--bg-end) 80%, #0b182f 100%) no-repeat;
+      background-size: cover, cover, cover;
+      background-attachment: fixed;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 36px;
+      transition: background 450ms ease;
+    }
+    .banner{
+      width:100%;
+      max-width:1300px;
+      border-radius:18px;
+      overflow:hidden;
+      position:relative;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(6px) saturate(var(--glass-saturation));
+      border: 1px solid var(--glass-border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      animation: fadeInUp 600ms cubic-bezier(.2,.9,.25,1);
+    }
+    .splash{
+      height:360px;
+      width:100%;
+      position:relative;
+      background-size:cover;
+      background-position:center;
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      padding:28px 36px;
+      gap:24px;
+      transition: background-image 420ms ease;
+    }
+    .splash::after{
+      content:"";
+      position:absolute;
+      left:0; top:0; bottom:0;
+      width:56%;
+      pointer-events:none;
+      background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.00) 40%);
+      filter: blur(20px);
+      mix-blend-mode: screen;
+      transition:opacity 350ms ease;
+    }
+    .appcard{
+      position:relative;
+      display:flex;
+      gap:20px;
+      align-items:flex-start;
+      background: var(--card-bg);
+      border-radius:12px;
+      padding:18px;
+      max-width:720px;
+      width:720px;
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 6px 20px rgba(2,8,23,0.12);
+      transform: translateY(12px);
+      transition: transform 420ms cubic-bezier(.2,.9,.25,1), box-shadow 220ms ease;
+    }
+    .appcard:hover{ transform: translateY(6px); box-shadow: 0 18px 40px rgba(2,8,23,0.18); }
+    .logo{
+      width:96px; height:96px; flex:0 0 96px;
+      border-radius:18px;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 6px 18px rgba(2,8,23,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .logo img{ width:86px; height:86px; object-fit:contain; display:block; }
+    .app-right{ flex:1 1 auto; display:flex; flex-direction:column; gap:12px; min-width:0; }
+    .meta{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .title-row{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+    .app-title{ font-size:20px; font-weight:700; letter-spacing: -0.01em; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .meta-info{ font-size:13px; color:var(--muted); margin-top:2px; }
+    .meta-author a{ color:var(--accent); text-decoration:none; font-weight:600; }
+    .meta-author a:hover{ text-decoration:underline; }
+    .meta-rate{ font-size:13px; color:var(--muted);}
+    .app-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
+    .actions{ margin:0; display:flex; flex-direction:row; gap:10px; align-items:center; }
+    .btn{ -webkit-appearance:none; appearance:none; border:0; outline:0; cursor:pointer; font-weight:600; font-size:14px; padding:10px 16px; border-radius:10px; color:white; background: linear-gradient(180deg, var(--accent), calc(var(--accent) - 10%)); box-shadow: 0 6px 18px rgba(36,134,255,0.22), inset 0 -2px 0 rgba(0,0,0,0.12); transition: transform 160ms ease, box-shadow 160ms ease, opacity 200ms ease; transform: translateY(0); display:inline-flex; gap:10px; align-items:center; }
+    .btn.secondary{ background: transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.06); box-shadow:none; font-weight:600; backdrop-filter: blur(6px); }
+    .btn:active{ transform: translateY(2px); } .btn[disabled]{ opacity:0.45; cursor:not-allowed; transform:none; }
+    .support-badge{ font-size:12px; color:var(--muted); margin-top:6px; text-align:right; }
+    .unsupported{ color:#ff6b6b; font-weight:700; } .warn{ color:#ffb657; font-weight:700; }
+    .readme{ padding:28px 36px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)); border-top: 1px solid rgba(255,255,255,0.03); }
+    .readme-inner{ max-width:1100px; margin:0 auto; padding:18px; border-radius:12px; background:rgba(255,255,255,0.02); backdrop-filter: blur(6px); color:var(--text); }
+    .readme-inner h1,.readme-inner h2{ color:var(--text); } .readme-inner a{ color:var(--accent); text-decoration:underline; }
+    @keyframes fadeInUp{ from{ opacity:0; transform: translateY(12px) } to{ opacity:1; transform: translateY(0) } }
+    @media (max-width:880px){
+      body{ padding:18px; } .splash{ padding:18px; height:520px; align-items:flex-end; flex-direction:column; gap:12px; justify-content:flex-end; }
+      .appcard{ width:100%; transform:none; flex-direction:row; } .app-right{ gap:8px; } .actions{ width:100%; justify-content:flex-end; }
+      .logo{ width:80px; height:80px; } .app-title{ font-size:18px; } .readme{ padding:18px; } .banner{ border-radius:14px; } .appcard{ padding:14px; }
+    }
+    @media (min-width:1400px){
+      body{ padding:60px; background-position: center 10%; } .banner{ max-width:1600px; } .splash{ height:420px; padding:44px 56px; } .appcard{ padding:22px; gap:28px; max-width:820px; width:820px; } .logo{ width:128px; height:128px; flex:0 0 128px; border-radius:20px; } .logo img{ width:112px; height:112px; } .app-title{ font-size:24px; } .actions{ gap:14px; } .btn{ padding:12px 18px; font-size:15px; border-radius:12px; } .readme-inner{ padding:28px; max-width:1200px; }
+    }
+    a,button{ -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body>
+  <div id="app" aria-live="polite">
+    <div class="banner" role="region" aria-label="Ficha de la aplicación">
+      <div id="splash" class="splash">
+        <div id="left-area" style="position:relative; z-index:2; display:flex; align-items:center;">
+          <div class="appcard" id="appcard" aria-hidden="true">
+            <div class="logo" id="logoWrap" aria-hidden="true" title="Logotipo">
+              <img id="logoImg" alt="Logo de la aplicación" src="" width="86" height="86" style="opacity:0; transform:scale(.98); transition:opacity 320ms ease, transform 420ms cubic-bezier(.2,.9,.25,1); display:block;">
+            </div>
+            <div class="app-right">
+              <div class="meta">
+                <div class="title-row">
+                  <h1 class="app-title" id="appTitle">Cargando…</h1>
+                </div>
+                <div class="meta-info" id="metaInfo">…</div>
+                <div class="meta-author" id="metaAuthor"></div>
+                <div class="meta-rate" id="metaRate"></div>
+              </div>
+              <div class="app-footer">
+                <div style="flex:1"></div>
+                <div class="actions" id="actions" aria-hidden="true">
+                  <button class="btn" id="handlerBtn" title="Instalar vía handler">Instalar vía handler</button>
+                  <button class="btn secondary" id="directBtn" title="Descarga directa">Descarga directa</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <svg style="position:absolute; right:16%; top:18%; width:40%; height:50%; filter: blur(36px); opacity:0.25; z-index:1; pointer-events:none">
+          <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#2486ff"/><stop offset="1" stop-color="#8ecbff" /></linearGradient></defs>
+          <rect x="0" y="0" width="100%" height="100%" fill="url(#g)" rx="36"></rect>
+        </svg>
+      </div>
+      <div class="readme" id="readmeWrap" aria-label="README">
+        <div class="readme-inner" id="readmeContent">
+          <p style="color:var(--muted); margin:0">README cargando…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function(){
+      const FALLBACK_OWNER = 'JesusQuijada34';
+      const FALLBACK_REPO  = 'packagemaker';
+      const LOCAL = {
+        splash: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/assets/splash.png',
+        logo: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/assets/product_logo.png',
+        details: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/details.xml',
+        readme: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/README.md',
+      };
+      // App UI
+      const splashEl = document.getElementById('splash');
+      const logoImg = document.getElementById('logoImg');
+      const appTitle = document.getElementById('appTitle');
+      const metaInfo = document.getElementById('metaInfo');
+      const metaAuthor = document.getElementById('metaAuthor');
+      const metaRate = document.getElementById('metaRate');
+      const handlerBtn = document.getElementById('handlerBtn');
+      const directBtn = document.getElementById('directBtn');
+      const actions = document.getElementById('actions');
+      const readmeContent = document.getElementById('readmeContent');
+      // OS
+      function detectOS(){
+        const ua = navigator.userAgent || navigator.vendor || '';
+        const platform = (navigator.platform || '').toLowerCase();
+        if (/android/i.test(ua)) return 'android';
+        if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+        if (/windows nt|win32|wow64/i.test(ua) || /win/i.test(platform)) return 'windows';
+        if (/macintosh|mac os x/i.test(ua) || /mac/i.test(platform)) return 'mac';
+        if (/linux/i.test(ua) && !/android/i.test(ua)) return 'linux';
+        return 'unknown';
+      }
+      const detected = detectOS();
+      if (detected === 'android') {
+        const ov = document.createElement('div');
+        ov.style.position = 'fixed';
+        ov.style.inset = '0';
+        ov.style.display = 'flex';
+        ov.style.alignItems = 'center';
+        ov.style.justifyContent = 'center';
+        ov.style.background = 'linear-gradient(180deg, rgba(2,8,23,0.85), rgba(2,8,23,0.7))';
+        ov.style.color = 'white';
+        ov.style.zIndex = 9999;
+        ov.style.flexDirection = 'column';
+        ov.innerHTML = '<div style="font-weight:700; font-size:18px; margin-bottom:12px">Incompatible: Android no soportado</div><div style="max-width:70ch; text-align:center; opacity:0.95">La instalación y la descarga de paquetes no son compatibles en Android. La página ha sido bloqueada por seguridad.</div>';
+        document.body.appendChild(ov);
+        return;
+      }
+      // helpers
+      function githubRaw(owner, repo, branch, filepath){
+        branch = branch || 'main';
+        return `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${filepath}`;
+      }
+      async function fetchTextWithFallbackSafe(candidates){
+        for(const url of candidates){
+          try{
+            const res = await fetch(url, {cache: "reload"});
+            if(res.ok) return await res.text();
+          }catch(e){}
+        }
+        return null;
+      }
+      async function fetchBlobWithFallbackSafe(candidates){
+        for(const url of candidates){
+          try{
+            const res = await fetch(url, {cache: "reload"});
+            if(res.ok) return URL.createObjectURL(await res.blob());
+          }catch(e){}
+        }
+        return null;
+      }
+      function renderMarkdown(md){
+        if(!md) return '<p>(README vacío)</p>';
+        const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        md = md.replace(/\r\n/g,'\n');
+        md = md.replace(/```([\s\S]*?)```/g, (m, code) => '<pre><code>' + esc(code) + '</code></pre>');
+        md = md.replace(/^###### (.*$)/gim, '<h6>$1</h6>');
+        md = md.replace(/^##### (.*$)/gim, '<h5>$1</h5>');
+        md = md.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+        md = md.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        md = md.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        md = md.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        md = md.replace(/^\s*-\s+(.*)/gim, '<li>$1</li>');
+        md = md.replace(/(<li>[\s\S]*?<\/li>)/gim, '<ul>$1</ul>');
+        md = md.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+        md = md.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+        md = md.replace(/`([^`]+)`/gim, '<code>$1</code>');
+        md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+        return md.split('\n').map(line => /^<h|^<ul|^<pre|^<li|^<blockquote/.test(line)||/^\s*$/.test(line) ? line : '<p>'+line+'</p>').join('\n');
+      }
+      function appendSupportNotice(type, text){
+        let support = document.querySelector('.support-badge');
+        if(!support){
+          support = document.createElement('div');
+          support.className = 'support-badge';
+          const appFooter = document.querySelector('.app-footer');
+          if(appFooter) appFooter.parentNode.insertBefore(support, appFooter.nextSibling);
+          else document.getElementById('appcard').appendChild(support);
+        }
+        if(type === 'unsupported') support.innerHTML = '<span class="unsupported">' + escapeHtml(text) + '</span>';
+        else if(type === 'warn') support.innerHTML = '<span class="warn">' + escapeHtml(text) + '</span>';
+        else support.textContent = text;
+      }
+      function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      // --- DATA LOAD & UI SYNC ---
+      (async function(){
+        appTitle.textContent = 'Cargando…';
+        metaInfo.textContent = '';
+        metaAuthor.textContent = '';
+        metaRate.textContent = '';
+        document.title = 'Cargando…';
+        // PRIORITIZE REMOTE GITHUB RAW
+        const detailsCandidates = [
+          LOCAL.details
+        ];
+        let detailsText = await fetchTextWithFallbackSafe(detailsCandidates);
+        let metadata = {};
+        if(detailsText){
+          try{
+            const xml = new window.DOMParser().parseFromString(detailsText, 'application/xml');
+            if(!xml.querySelector('parsererror') && xml.documentElement){
+              Array.from(xml.documentElement.children).forEach(child => {
+                const k = child.tagName ? child.tagName.toLowerCase() : '';
+                const v = (child.textContent || '').trim();
+                if(k) metadata[k] = v;
+              });
+            } else appendSupportNotice('warn', 'details.xml malformado. Datos limitados.');
+          }catch(e){
+            appendSupportNotice('warn', 'Error details.xml.');
+          }
+        }else{
+          appendSupportNotice('warn', 'No se encontró details.xml.');
+        }
+        const displayTitle = metadata.name || metadata.app || 'Nombre de la app';
+        document.title = displayTitle;
+        appTitle.textContent = displayTitle;
+        const publisher = metadata.publisher || '';
+        const version = metadata.version || '';
+        const platformSpec = (metadata.platform || '').trim();
+        function packagePlatformToHuman(p){
+          if(!p) return '';
+          if(/Knosthalij/i.test(p)) return 'Windows';
+          if(/Danenone/i.test(p)) return 'Linux';
+          if(/AlphaCube/i.test(p)){
+            if(detected === 'windows') return 'Windows';
+            if(detected === 'linux') return 'Linux';
+            return '';
+          }
+          if(/win/i.test(p)) return 'Windows';
+          if(/linux|lin/i.test(p)) return 'Linux';
+          return p;
+        }
+        const humanPlatform = packagePlatformToHuman(platformSpec);
+        const infoParts = [publisher, displayTitle, version].filter(Boolean).join(' ');
+        metaInfo.textContent = (infoParts ? infoParts + ' ' : '') + (humanPlatform ? 'para ' + humanPlatform : '');
+        // Author link
+        if(metadata.author){
+          const a = document.createElement('a');
+          const repoName = metadata.app || FALLBACK_REPO;
+          a.href = `https://github.com/${encodeURIComponent(metadata.author)}/${encodeURIComponent(repoName)}`;
+          a.target = '_blank'; a.rel = 'noopener noreferrer';
+          a.textContent = metadata.author;
+          metaAuthor.innerHTML = '';
+          metaAuthor.appendChild(a);
+        }else{ metaAuthor.textContent = ''; }
+        metaRate.textContent = metadata.rate || '';
+        // Logic for handler/descarga
+        const missingDownloadFields = ['author','app','publisher','version','platform'].filter(k => !metadata[k]);
+        const downloadsHaveAllFields = missingDownloadFields.length === 0;
+        let allowedOS = [];
+        if(/^AlphaCube$/i.test(platformSpec)) allowedOS = ['windows','linux'];
+        else if(/^Danenone$/i.test(platformSpec)) allowedOS = ['linux'];
+        else if(/^Knosthalij$/i.test(platformSpec)) allowedOS = ['windows'];
+        else allowedOS = [];
+        const platformSupported = allowedOS.includes(detected);
+        let handlerURL = null, directURL = null;
+        if(metadata.author && metadata.app) handlerURL = `flarmstore://${encodeURIComponent(metadata.author)}.${encodeURIComponent(metadata.app)}/`;
+        if(downloadsHaveAllFields){
+          const chosenPackagePlatform =
+            (/^AlphaCube$/i.test(platformSpec) && detected === 'windows') ? 'Knosthalij' :
+            (/^AlphaCube$/i.test(platformSpec) && detected === 'linux') ? 'Danenone' :
+            platformSpec;
+          const vid = encodeURIComponent(metadata.version);
+          directURL = `https://github.com/${encodeURIComponent(metadata.author)}/${encodeURIComponent(metadata.app)}/releases/download/${vid}/${encodeURIComponent(metadata.publisher)}.${encodeURIComponent(metadata.app)}.${vid}-${encodeURIComponent(chosenPackagePlatform)}.iflapp`;
+        }
+        handlerBtn.onclick = () => { if(!handlerBtn.disabled && handlerURL) window.location.href = handlerURL; };
+        directBtn.onclick = () => { if(!directBtn.disabled && directURL) window.open(directURL, '_blank', 'noopener'); };
+        if(detected === 'unknown'){
+          handlerBtn.disabled = true; directBtn.disabled = true;
+          appendSupportNotice('warn', 'Sistema no identificado — descargas deshabilitadas');
+        } else if(!platformSupported){
+          handlerBtn.disabled = true; directBtn.disabled = true;
+          appendSupportNotice('unsupported', 'No soportado por tu sistema operativo');
+        } else if(!downloadsHaveAllFields){
+          handlerBtn.disabled = true; directBtn.disabled = true;
+          appendSupportNotice('warn', 'Metadatos incompletos — descargas deshabilitadas ('+missingDownloadFields.join(', ')+')');
+        } else {
+          handlerBtn.disabled = false; directBtn.disabled = false;
+          directBtn.textContent = `Descarga directa (${packagePlatformToHuman(platformSpec) || platformSpec})`;
+          handlerBtn.textContent = 'Instalar vía handler';
+          appendSupportNotice('', 'Compatible con ' + (packagePlatformToHuman(platformSpec) || detected));
+        }
+        // Visuals: prioritize remote URLs
+        const owner = metadata.author || FALLBACK_OWNER;
+        const repo  = metadata.app || FALLBACK_REPO;
+        const branches = ['main','master'];
+        function candidates(localPath, repoPath){
+          return [localPath];
+        }
+        fetchBlobWithFallbackSafe(candidates(LOCAL.splash, 'assets/splash.png')).then(splashBlob => {
+          if(splashBlob){
+            splashEl.style.backgroundImage =
+              `linear-gradient(180deg,rgba(40,80,200,0.33),rgba(18,36,80,0.77) 85%,rgba(11,24,47,0.95)), url("${splashBlob}")`;
+          }
+        });
+        fetchBlobWithFallbackSafe(candidates(LOCAL.logo, 'assets/product_logo.png')).then(logoBlob => {
+          if(logoBlob){
+            logoImg.style.display = 'block';
+            logoImg.src = logoBlob;
+            logoImg.onload = () => { logoImg.style.opacity = 1; logoImg.style.transform = 'scale(1)'; };
+          }else{
+            logoImg.style.display = 'none';
+            const wrap = document.getElementById('logoWrap');
+            if(wrap && !wrap.querySelector('.placeholder')){
+              const placeholder = document.createElement('div');
+              placeholder.className = 'placeholder';
+              placeholder.style.width = '86px';
+              placeholder.style.height = '86px';
+              placeholder.style.display = 'flex';
+              placeholder.style.alignItems = 'center';
+              placeholder.style.justifyContent = 'center';
+              placeholder.style.background = 'linear-gradient(135deg, rgba(36,134,255,0.16), rgba(30,43,60,0.27))';
+              placeholder.style.borderRadius = '12px';
+              placeholder.style.color = 'white';
+              placeholder.style.fontWeight = '700';
+              placeholder.style.letterSpacing = '-0.02em';
+              const initials = (displayTitle||'').split(/\s+/).map(s=>s[0]||'').slice(0,2).join('').toUpperCase() || 'PK';
+              placeholder.textContent = initials;
+              wrap.appendChild(placeholder);
+            }
+          }
+        });
+        fetchTextWithFallbackSafe(candidates(LOCAL.readme, 'README.md')).then(readmeText => {
+          if(readmeText) readmeContent.innerHTML = renderMarkdown(readmeText);
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>'''
+
+
 
 def find_python_executable():
     """Busca un ejecutable de Python disponible en el sistema."""
@@ -713,6 +1102,8 @@ class FocusIndicationFilter(QObject):
         
         return super().eventFilter(obj, event)
 
+
+
     def update_indicator(self, widget):
         self.current_widget = widget
         rect = widget.rect()
@@ -734,6 +1125,883 @@ class FocusIndicationFilter(QObject):
 def getversion():
     newversion = time.strftime("%y.%m-%H.%M")
     return f"{newversion}"
+
+class MoonFixWizard(QDialog):
+    """Asistente de reparación estilo Setup que procesa múltiples proyectos en una sola ventana."""
+    def __init__(self, parent, projects_with_issues):
+        super().__init__(parent)
+        self.projects = projects_with_issues
+        self.current_project_index = 0
+        self.results = {} # Store modified data per project index
+        
+        # Configuración de Ventana - REMOVED WindowStaysOnTopHint to avoid 'zombie' modal issues
+        self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        
+        # Responsive sizing: requested even more compact (-30px from 390 = 360)
+        self.resize(720, 360)
+        
+        # Ensure it cleans up properly
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        
+        # Initial position: centered horizontally, slightly higher vertically
+        screen = QtWidgets.QApplication.primaryScreen().geometry()
+        start_x = (screen.width() - self.width()) // 2
+        start_y = (screen.height() - self.height()) // 2 - 20
+        self.move(max(0, start_x), max(0, start_y))
+        
+        # State for dragging
+        self._dragging = False
+        self._drag_pos = QtCore.QPoint()
+        
+        # Keyboard focus removal - more aggressive
+        self.setFocusPolicy(Qt.NoFocus)
+        self.setStyleSheet("""
+            * { outline: none; }
+            QWidget:focus { border: none; outline: none; }
+            QPushButton:focus { outline: none; border: none; }
+            QLineEdit:focus { border: 1px solid #1e88e5; background: rgba(0,0,0,0.2); }
+            QPushButton#uwp_next {
+                background-color: #0078d4;
+                color: white;
+                border-radius: 4px;
+                font-weight: 600;
+                font-size: 13px;
+                border: 1px solid rgba(255,255,255,0.1);
+                padding: 0 15px;
+            }
+            QPushButton#uwp_next:hover { background-color: #106ebe; }
+            QPushButton#uwp_next:pressed { background-color: #005a9e; }
+            QPushButton#uwp_next:disabled { background-color: #333; color: #777; }
+        """)
+        
+        # Entrance state
+        self.setWindowOpacity(0)
+        
+        # Animation references to prevent GC
+        self._active_anims = []
+        
+        # Efecto de ventana Leviathan
+        self.window_effects = WipeWindow.create().set_mode("ghostBlur").set_radius(20).apply(self)
+        
+        # Support for Asset Packs
+        self.setAcceptDrops(True)
+        self._temp_assets = {} # Store extracted paths temporarily
+
+        self.init_ui()
+        
+    def showEvent(self, event):
+        """Smooth entrance animation."""
+        # Ensure it starts at 0 opacity and slightly offset before super() makes it visible
+        self.setWindowOpacity(0)
+        target_pos = self.pos()
+        self.move(target_pos.x(), target_pos.y() + 40)
+        
+        super().showEvent(event)
+        
+        # Fade in + Slide Up
+        self.anim_fade = QtCore.QPropertyAnimation(self, b"windowOpacity")
+        self.anim_fade.setDuration(600)
+        self.anim_fade.setStartValue(0)
+        self.anim_fade.setEndValue(1)
+        self.anim_fade.setEasingCurve(QtCore.QEasingCurve.OutCubic)
+        
+        self.anim_pos = QtCore.QPropertyAnimation(self, b"pos")
+        self.anim_pos.setDuration(600)
+        self.anim_pos.setStartValue(self.pos())
+        self.anim_pos.setEndValue(target_pos)
+        self.anim_pos.setEasingCurve(QtCore.QEasingCurve.OutCubic)
+        
+        # Store to prevent GC
+        self._active_anims = [self.anim_fade, self.anim_pos]
+        
+        self.anim_fade.start()
+        self.anim_pos.start()
+        
+    def init_ui(self):
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
+
+        # Barra de título personalizada
+        self.title_bar = QWidget()
+        self.title_bar.setFixedHeight(45)
+        self.title_bar.setStyleSheet("background: transparent; border-bottom: 1px solid rgba(255,255,255,0.05);")
+        t_layout = QHBoxLayout(self.title_bar)
+        t_layout.setContentsMargins(20, 0, 10, 0)
+        
+        t_icon = QLabel("🌙")
+        t_icon.setStyleSheet("font-size: 18px;")
+        t_layout.addWidget(t_icon)
+        
+        self.t_title = QLabel("MoonFix Setup Wizard")
+        self.t_title.setStyleSheet("color: white; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px;")
+        t_layout.addWidget(self.t_title)
+        t_layout.addStretch()
+        
+        btn_close = QPushButton("✕")
+        btn_close.setFixedSize(32, 32)
+        btn_close.setStyleSheet("QPushButton { background: transparent; color: #888; border-radius: 16px; font-size: 16px; } QPushButton:hover { background: #e81123; color: white; }")
+        btn_close.clicked.connect(self.reject)
+        t_layout.addWidget(btn_close)
+        
+        self.main_layout.addWidget(self.title_bar)
+        
+        # Drag Logic for custom title bar
+        def title_press(event):
+            if event.button() == Qt.LeftButton:
+                self._dragging = True
+                self._drag_pos = event.globalPos() - self.pos()
+                event.accept()
+
+        def title_move(event):
+            if self._dragging and event.buttons() & Qt.LeftButton:
+                self.move(event.globalPos() - self._drag_pos)
+                event.accept()
+
+        def title_release(event):
+            self._dragging = False
+
+        self.title_bar.mousePressEvent = title_press
+        self.title_bar.mouseMoveEvent = title_move
+        self.title_bar.mouseReleaseEvent = title_release
+
+        # Stack de Páginas
+        self.stack = QStackedWidget()
+        self.stack.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.addWidget(self.stack)
+
+        # 1. Página de Introducción
+        self.page_intro = self.create_page_intro()
+        self.stack.addWidget(self.page_intro)
+
+        # 2. Páginas de Proyectos
+        for i, proj in enumerate(self.projects):
+            page = self.create_project_page(i, proj)
+            self.stack.addWidget(page)
+
+        # 3. Página Final
+        self.page_done = self.create_page_done()
+        self.stack.addWidget(self.page_done)
+
+        # Barra de navegación inferior
+        self.nav_bar = QWidget()
+        self.nav_bar.setFixedHeight(60)
+        self.nav_bar.setStyleSheet("background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05);")
+        nav_layout = QHBoxLayout(self.nav_bar)
+        nav_layout.setContentsMargins(40, 0, 40, 0)
+        
+        self.lbl_step = QLabel(f"Página 1 de {len(self.projects) + 2}")
+        self.lbl_step.setStyleSheet("background: transparent; color: #888; font-size: 11px; font-family: 'Segoe UI Variable Text';")
+        nav_layout.addWidget(self.lbl_step)
+        nav_layout.addStretch()
+        
+        self.btn_next = QPushButton("Empezar")
+        self.btn_next.setObjectName("uwp_next")
+        self.btn_next.setFixedSize(120, 36)
+        self.btn_next.setCursor(Qt.PointingHandCursor)
+        self.btn_next.clicked.connect(self.go_next)
+        nav_layout.addWidget(self.btn_next)
+        
+        self.main_layout.addWidget(self.nav_bar)
+
+    def create_page_intro(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(40, 25, 40, 25)
+        layout.setSpacing(15)
+
+        title = QLabel("Optimización de Proyectos")
+        title.setStyleSheet("font-size: 26px; font-weight: bold; color: white; font-family: 'Segoe UI Variable Display';")
+        layout.addWidget(title)
+
+        desc = QLabel(
+            f"Se han detectado <b>{len(self.projects)}</b> proyectos que requieren atención inmediata.\n\n"
+            "MoonFix corregirá automáticamente las claves inválidas y normalizará las versiones."
+        )
+        desc.setStyleSheet("color: #bbb; font-size: 14px; line-height: 1.5;")
+        desc.setWordWrap(True)
+        layout.addWidget(desc)
+        
+        layout.addStretch()
+        
+        warning_box = QWidget()
+        warning_box.setStyleSheet("background: transparent; border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 8px;")
+        w_layout = QHBoxLayout(warning_box)
+        w_icon = QLabel("⚠️")
+        w_text = QLabel("Asegúrate de tener conexión a internet si necesitas verificar perfiles de GitHub.")
+        w_text.setStyleSheet("color: #ffb74d; font-size: 13px;")
+        w_layout.addWidget(w_icon)
+        w_layout.addWidget(w_text)
+        layout.addWidget(warning_box)
+        
+        return page
+
+    # --- DRAG & DROP FOR ASSET PACKS ---
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            for url in event.mimeData().urls():
+                f = url.toLocalFile().lower()
+                if f.endswith(".ipm-assetpck") or f.endswith(".ipm-iconpck"):
+                    event.acceptProposedAction()
+                    return
+        super().dragEnterEvent(event)
+
+    def dropEvent(self, event):
+        for url in event.mimeData().urls():
+            path = url.toLocalFile()
+            if path.lower().endswith(".ipm-assetpck"):
+                self.process_ipm_assetpck(path)
+            elif path.lower().endswith(".ipm-iconpck"):
+                self.process_ipm_iconpck(path)
+        super().dropEvent(event)
+
+    def process_ipm_iconpck(self, file_path):
+        """Parser for *.ipm-iconpck (ZIP containing multiple .ico files)"""
+        try:
+            temp_dir = tempfile.mkdtemp(prefix="ipm_icons_")
+            with zipfile.ZipFile(file_path, 'r') as z:
+                z.extractall(temp_dir)
+                
+                proj_idx = self.stack.currentIndex() - 1
+                if proj_idx < 0: return
+
+                applied = 0
+                # Mapping: filename in zip -> ui field
+                mapping = {
+                    "app-icon.ico": "extra_icon",
+                    "updater-icon.ico": "extra_icon_updater",
+                    "product_logo.png": "extra_icon" # Fallback
+                }
+                
+                for zip_fn, ui_key in mapping.items():
+                    full_p = os.path.join(temp_dir, zip_fn)
+                    if os.path.exists(full_p):
+                        target = self.results[proj_idx]["inputs"].get(ui_key)
+                        if target:
+                            target.setText(full_p)
+                            applied += 1
+                
+                if applied > 0:
+                    self.statusBar().showMessage(f"Icon Pack aplicado: {applied} iconos vinculados.")
+                else:
+                    self.statusBar().showMessage("Icon Pack cargado, pero no se encontraron nombres de archivos válidos.")
+        except Exception as e:
+            LeviathanDialog.launch(self, "Error de Icon Pack", str(e), mode="error")
+
+    def process_ipm_assetpck(self, file_path):
+        """Binary parser for *.ipm-assetpck (ZIP format with internal JSON)"""
+        try:
+            temp_dir = tempfile.mkdtemp(prefix="ipm_assets_")
+            with zipfile.ZipFile(file_path, 'r') as z:
+                if 'metadata.json' not in z.namelist():
+                    LeviathanDialog.launch(self, "Asset Pack", "El paquete no contiene metadata.json válida.", mode="error")
+                    return
+                
+                z.extractall(temp_dir)
+                meta_path = os.path.join(temp_dir, 'metadata.json')
+                with open(meta_path, 'r', encoding='utf-8') as f:
+                    meta = json.load(f)
+                
+                # Mapping: json_key -> ui_field_suffix
+                mapping = {
+                    "splash": "extra_splash",
+                    "storelogo": "extra_icon",
+                    "setuplabel": "extra_splash_setup"
+                }
+
+                current_idx = self.stack.currentIndex()
+                proj_idx = current_idx - 1 
+                
+                if proj_idx < 0 or proj_idx >= len(self.projects):
+                    return
+
+                applied_count = 0
+                for json_key, ui_key in mapping.items():
+                    filename = meta.get(json_key)
+                    if filename:
+                        src_img_p = os.path.join(temp_dir, filename)
+                        if os.path.exists(src_img_p):
+                            # Convert to standard PNG and Rename
+                            ext_map = {"extra_splash": "splash.png", "extra_icon": "product_logo.png", "extra_splash_setup": "splash_Setup.png"}
+                            dest_name = ext_map[ui_key]
+                            dest_path = os.path.join(temp_dir, f"converted_{dest_name}")
+                            
+                            # Conversion Engine (Supports any format Qt supports)
+                            pix = QPixmap(src_img_p)
+                            if not pix.isNull():
+                                pix.save(dest_path, "PNG")
+                                
+                                # Update UI field
+                                target_edit = self.results[proj_idx]["inputs"].get(ui_key)
+                                if target_edit:
+                                    target_edit.setText(dest_path)
+                                    applied_count += 1
+                
+                if applied_count > 0:
+                    self.statusBar().showMessage(f"Asset Pack aplicado: {applied_count} imágenes convertidas y vinculadas.")
+                else:
+                    self.statusBar().showMessage("Asset Pack cargado, pero no hay campos faltantes compatibles.")
+        except Exception as e:
+            LeviathanDialog.launch(self, "Error de Pack", f"No se pudo parsear el Asset Pack: {str(e)}", mode="error")
+
+    def create_project_page(self, index, proj_data):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(30, 20, 30, 20)
+        layout.setSpacing(10)
+        
+        path = proj_data["path"]
+        name = os.path.basename(path)
+        
+        # Header with Icon
+        header = QHBoxLayout()
+        icon_lbl = QLabel()
+        icon_lbl.setFixedSize(60, 60)
+        
+        icon_path = os.path.join(path, "app", "app-icon.ico")
+        if not os.path.exists(icon_path):
+            icon_path = os.path.join(os.getcwd(), "app", "app-icon.ico")
+            
+        if os.path.exists(icon_path):
+            icon_lbl.setPixmap(QPixmap(icon_path).scaled(60, 60, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            icon_lbl.setStyleSheet("background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 24px;")
+            icon_lbl.setText("")
+            icon_lbl.setAlignment(Qt.AlignCenter)
+        
+        title_vbox = QVBoxLayout()
+        t_name = QLabel(name)
+        t_name.setStyleSheet("font-size: 24px; font-weight: 600; color: white; font-family: 'Segoe UI Variable Display';")
+        t_path = QLabel(path)
+        t_path.setStyleSheet("font-size: 11px; color: rgba(255,255,255,0.5); font-family: 'Segoe UI Variable Text';")
+        t_path.setWordWrap(True)
+        title_vbox.addWidget(t_name)
+        title_vbox.addWidget(t_path)
+        
+        header.addWidget(icon_lbl)
+        header.addSpacing(15)
+        header.addLayout(title_vbox)
+        header.addStretch()
+        
+        # Issues Summary Badge - UWP Card Style
+        issues_box = QWidget()
+        issues_box.setStyleSheet("background: rgba(255, 255, 255, 0.04); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);")
+        i_layout = QVBoxLayout(issues_box)
+        i_layout.setContentsMargins(15, 10, 15, 10)
+        i_layout.setSpacing(4)
+        
+        i_title = QLabel("INCONSISTENCIAS")
+        i_title.setStyleSheet("color: #ff9800; font-size: 9px; font-weight: bold; letter-spacing: 1.5px; font-family: 'Segoe UI Variable Text';")
+        i_layout.addWidget(i_title)
+        
+        # Restore full issue list for "learning"
+        for issue in proj_data["issues"]:
+            desc = issue.get("desc", issue.get("type", "Error"))
+            if issue["type"] == "missing_dir": desc = f"Falta directorio: {issue['path']}"
+            elif issue["type"] == "missing_xml": desc = "Archivo details.xml ausente"
+            elif issue["type"] == "missing_script": desc = "Script principal no encontrado"
+            elif issue["type"] == "missing_icon": desc = "Icono de app (*.ico) faltante"
+            elif issue["type"] == "missing_logo": desc = "Logotipo product_logo.png faltante"
+            elif issue["type"] == "missing_icon_updater": desc = "Icono de updater (*.ico) faltante"
+            elif issue["type"] == "dirty_version": desc = f"Versión '{issue.get('val','')}' no normalizada"
+            elif issue["type"] == "missing_splash": desc = "Splash PNG faltante"
+            elif issue["type"] == "missing_splash_setup": desc = "Banner de Setup faltante"
+            
+            i_lbl = QLabel(f"• {desc}")
+            i_lbl.setStyleSheet("color: #bbb; font-size: 11px; font-family: 'Segoe UI Variable Text';")
+            i_lbl.setWordWrap(True)
+            i_layout.addWidget(i_lbl)
+        
+        header.addWidget(issues_box)
+        
+        layout.addLayout(header)
+        layout.addSpacing(5)
+        
+        # Form Container
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("background: transparent; border: none;")
+        form_content = QWidget()
+        form_layout = QGridLayout(form_content)
+        form_layout.setColumnStretch(1, 1)
+        form_layout.setContentsMargins(5, 5, 5, 5)
+        form_layout.setVerticalSpacing(10)
+        
+        # XML Data Extraction
+        xml_path = os.path.join(path, "details.xml")
+        xml_data = {}
+        if os.path.exists(xml_path):
+            try:
+                tree = ET.parse(xml_path)
+                root = tree.getroot()
+                xml_data = {child.tag: child.text for child in root if child.text}
+            except: pass
+
+        self.results[index] = {"inputs": {}, "is_invalid": any(i["type"] == "invalid_package" for i in proj_data["issues"])}
+        
+        EDIT_QSS = """
+            QLineEdit { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.4); border-radius: 4px; color: white; padding: 0 12px; font-family: 'Segoe UIVariable Text'; font-size: 13px; }
+            QLineEdit:hover { background: rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.6); }
+            QLineEdit:focus { border: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid #0078D4; background: rgba(0,0,0,0.3); }
+        """
+        
+        RADIO_QSS = """
+            QRadioButton { color: white; spacing: 8px; font-size: 11px; }
+            QRadioButton::indicator { width: 14px; height: 14px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.1); }
+            QRadioButton::indicator:checked { background: #0078d4; border: 2px solid #0078d4; }
+            QRadioButton::indicator:hover { border: 2px solid rgba(255,255,255,0.5); }
+        """
+
+        fields_def = [
+            ("publisher", "Organización:"), ("app", "ID Interno (Slug):"), 
+            ("name", "Nombre Público:"), ("version", "Versión:"), 
+            ("author", "Autor (GitHub):"), ("platform", "Plataforma Base:")
+        ]
+
+        current_row = 0
+        for key, label_text in fields_def:
+            value = str(xml_data.get(key, "")).strip()
+            is_generic = value.lower() in ["1.0", "myorg", "appid", "public name", "unknown", "none", ""]
+            is_invalid_v = key == "version" and "-" in value 
+            
+            should_show = self.results[index]["is_invalid"] or is_generic or is_invalid_v
+            
+            if key == "platform":
+                if should_show:
+                    lbl = QLabel(label_text)
+                    lbl.setStyleSheet("color: #aaa; font-weight: 500;")
+                    form_layout.addWidget(lbl, current_row, 0)
+                    
+                    p_box = QHBoxLayout()
+                    p_group = QButtonGroup(page)
+                    rad_win = QRadioButton("Windows")
+                    rad_lin = QRadioButton("Linux")
+                    rad_multi = QRadioButton("Multi")
+                    for r in [rad_win, rad_lin, rad_multi]:
+                        r.setStyleSheet(RADIO_QSS)
+                        p_group.addButton(r)
+                        p_box.addWidget(r)
+                    
+                    if "win" in value.lower(): rad_win.setChecked(True)
+                    elif "lin" in value.lower(): rad_lin.setChecked(True)
+                    else: rad_multi.setChecked(True)
+                    form_layout.addLayout(p_box, current_row, 1)
+                    
+                    class PlatformProxy:
+                        def __init__(self, w, l, m): self.w, self.l, self.m = w, l, m
+                        def text(self):
+                            if self.w.isChecked(): return "Windows"
+                            if self.l.isChecked(): return "Linux"
+                            return "Multiplataforma"
+                        def setText(self, t):
+                            if "win" in t.lower(): self.w.setChecked(True)
+                            elif "lin" in t.lower(): self.l.setChecked(True)
+                            else: self.m.setChecked(True)
+                    self.results[index]["inputs"][key] = PlatformProxy(rad_win, rad_lin, rad_multi)
+                    current_row += 1
+                else:
+                    class FixedProxy:
+                        def __init__(self, v): self.v = v
+                        def text(self): return self.v
+                        def setText(self, t): self.v = t
+                    self.results[index]["inputs"][key] = FixedProxy(value)
+                continue
+
+            if should_show:
+                lbl = QLabel(label_text)
+                lbl.setStyleSheet("color: #aaa; font-weight: 500;")
+                edit = QLineEdit(value)
+                edit.setFixedHeight(30)
+                edit.setStyleSheet(EDIT_QSS)
+                if not value or is_generic:
+                    edit.setPlaceholderText("Campo obligatorio...")
+                    edit.setStyleSheet(edit.styleSheet() + "QLineEdit { border-left: 3px solid #f44336; }")
+                
+                form_layout.addWidget(lbl, current_row, 0)
+                form_layout.addWidget(edit, current_row, 1)
+                self.results[index]["inputs"][key] = edit
+                
+                if key == "version":
+                    def on_v_change(txt, idx=index):
+                        v_cl = self.clean_version_str(txt)
+                        inputs = self.results[idx]["inputs"]
+                        if "author" in inputs and not inputs["author"].text(): inputs["author"].setText("JesusQuijada34")
+                        if "publisher" in inputs and not inputs["publisher"].text(): inputs["publisher"].setText("Influent")
+                        if "app" in inputs and (not inputs["app"].text() or "appid" in inputs["app"].text().lower()):
+                             inputs["app"].setText(f"app-v{v_cl.replace('.','')}")
+                    edit.textChanged.connect(on_v_change)
+                current_row += 1
+            else:
+                class FixedProxy:
+                    def __init__(self, v): self.v = v
+                    def text(self): return self.v
+                    def setText(self, t): self.v = t
+                self.results[index]["inputs"][key] = FixedProxy(value)
+
+        missing_icons = [i for i in proj_data["issues"] if "icon" in i["type"] or "logo" in i["type"]]
+        missing_assets = [i for i in proj_data["issues"] if "splash" in i["type"]]
+        
+        if missing_icons or missing_assets:
+            pack_box = QHBoxLayout()
+            pack_box.setSpacing(10)
+            btn_pack_css = "QPushButton { background: #0078d4; color: white; border-radius: 4px; padding: 6px 15px; font-weight: 600; font-family: 'Segoe UI Variable Text'; font-size: 11px; border: 1px solid rgba(255,255,255,0.1); } QPushButton:hover { background: #106ebe; border-color: rgba(255,255,255,0.2); }"
+            
+            if missing_icons:
+                btn_i = QPushButton("Subir Icon Pack")
+                btn_i.setStyleSheet(btn_pack_css)
+                btn_i.setCursor(Qt.PointingHandCursor)
+                btn_i.clicked.connect(lambda: self.upload_icon_pack(index))
+                pack_box.addWidget(btn_i)
+            if missing_assets:
+                btn_a = QPushButton("Subir Asset Pack")
+                btn_a.setStyleSheet(btn_pack_css.replace("#0078d4", "#28a745"))
+                btn_a.setCursor(Qt.PointingHandCursor)
+                btn_a.clicked.connect(lambda: self.upload_asset_pack(index))
+                pack_box.addWidget(btn_a)
+            pack_box.addStretch()
+            form_layout.addLayout(pack_box, current_row, 1)
+            current_row += 1
+
+        # Hidden Proxies for assets (handled via Pack Uploads)
+        for i in proj_data["issues"]:
+            if i["type"] in ["missing_icon", "missing_icon_updater", "missing_logo", "missing_splash", "missing_splash_setup"]:
+                key_map = {"missing_icon": "icon", "missing_icon_updater": "icon_updater", "missing_logo": "logo", "missing_splash": "splash", "missing_splash_setup": "splash_setup"}
+                k = key_map[i["type"]]
+                
+                class HiddenProxy:
+                    def __init__(self): self.val = ""
+                    def text(self): return self.val
+                    def setText(self, t): self.val = t
+                
+                # Only Create if it doesn't exist
+                if f"extra_{k}" not in self.results[index]["inputs"]:
+                    self.results[index]["inputs"][f"extra_{k}"] = HiddenProxy()
+
+        scroll.setWidget(form_content)
+        layout.addWidget(scroll)
+        
+        # GitHub Verification row
+        gh_btn = QPushButton("Verificar GitHub")
+        gh_btn.setFixedHeight(30)
+        gh_btn.setStyleSheet("QPushButton { background: #333; color: white; border-radius: 5px; font-size: 11px; }")
+        gh_status = QLabel("Pendiente")
+        gh_status.setStyleSheet("color: #777; font-size: 10px;")
+        def verify_gh(idx=index, status_lbl=gh_status):
+            user = self.results[idx]["inputs"]["author"].text().strip()
+            ok, msg = verificar_github_username(user)
+            status_lbl.setText("✅ OK" if ok else f"❌ {msg}")
+            status_lbl.setStyleSheet(f"color: {'#4caf50' if ok else '#f44336'}; font-size: 10px;")
+        gh_btn.clicked.connect(verify_gh)
+        layout.addSpacing(5)
+        gh_row = QHBoxLayout()
+        gh_row.addWidget(gh_btn)
+        gh_row.addWidget(gh_status)
+        gh_row.addStretch()
+        layout.addLayout(gh_row)
+        
+        return page
+
+    def create_page_done(self):
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(40, 20, 40, 20)
+        layout.setSpacing(15)
+        layout.setAlignment(Qt.AlignCenter)
+
+        icon = QLabel("✨")
+        icon.setStyleSheet("font-size: 60px;")
+        layout.addWidget(icon)
+
+        title = QLabel("Ecosistema Sanado")
+        title.setStyleSheet("font-size: 24px; font-weight: bold; color: white;")
+        layout.addWidget(title)
+
+        self.done_desc = QLabel("Se han procesado todos los proyectos exitosamente y sus configuraciones han sido normalizadas.")
+        self.done_desc.setStyleSheet("color: #aaa; font-size: 15px;")
+        self.done_desc.setWordWrap(True)
+        self.done_desc.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.done_desc)
+        
+        return page
+
+    def clean_version_str(self, v):
+        if not v: return "1.0.0"
+        prohibited = ["danenone", "knosthalij", "keystone", "windows", "linux", "darwin", "macos", "win", "nix"]
+        parts = re.split(r'([-_])', v)
+        new_parts = []
+        for p in parts:
+            if p.lower() in prohibited:
+                continue
+            new_parts.append(p)
+        res = "".join(new_parts)
+        res = re.sub(r'[-_]{2,}', '-', res)
+        res = res.strip('-_')
+        return res if res else "1.0.0"
+
+    def go_next(self):
+        curr = self.stack.currentIndex()
+        
+        # Validation for project pages
+        if 0 < curr < self.stack.count() - 1:
+            idx = curr - 1
+            # Check mandatory fields (Skip extra_ assets as they are hidden/optional-via-pack)
+            inputs = self.results[idx]["inputs"]
+            for k, edit in inputs.items():
+                if k.startswith("extra_"): continue # Skip asset validation here
+                if not edit.text().strip():
+                    LeviathanDialog.launch(self, "Campo Requerido", f"El campo '{k}' es obligatorio para continuar.", mode="warning")
+                    return
+            
+            # Apply fixes for this project
+            self.apply_project_fixes(idx)
+
+        if curr < self.stack.count() - 1:
+            self.fade_to_page(curr + 1)
+            self.update_nav()
+        else:
+            self.accept()
+
+    def fade_to_page(self, index):
+        """Transición suave con opacidad y desplazamiento lateral (W11 Inspired)."""
+        old_widget = self.stack.currentWidget()
+        new_widget = self.stack.widget(index)
+        
+        # Clean previous page anims
+        for a in self._active_anims:
+            if a.state() == QtCore.QAbstractAnimation.Running:
+                a.stop()
+        self._active_anims.clear()
+        
+        # Setup opacity effect for both to avoid flickering
+        eff_new = QtWidgets.QGraphicsOpacityEffect(new_widget)
+        new_widget.setGraphicsEffect(eff_new)
+        
+        self.stack.setCurrentIndex(index)
+        new_widget.show() # Ensure it's active
+        new_widget.raise_()
+        
+        anim = QtCore.QPropertyAnimation(eff_new, b"opacity")
+        anim.setDuration(450)
+        anim.setStartValue(0)
+        anim.setEndValue(1)
+        anim.setEasingCurve(QtCore.QEasingCurve.OutQuart)
+        
+        # Slide for the new page
+        final_pos = QtCore.QPoint(0, 0)
+        new_widget.move(20, 0) 
+        anim_pos = QtCore.QPropertyAnimation(new_widget, b"pos")
+        anim_pos.setDuration(450)
+        anim_pos.setStartValue(new_widget.pos())
+        anim_pos.setEndValue(final_pos)
+        anim_pos.setEasingCurve(QtCore.QEasingCurve.OutQuart)
+        
+        # Store references and start
+        self._active_anims.extend([anim, anim_pos])
+        anim.start()
+        anim_pos.start()
+        
+        # Ensure all controls are repainted
+        new_widget.update()
+        QtWidgets.QApplication.processEvents()
+
+    def update_nav(self):
+        curr = self.stack.currentIndex()
+        total = self.stack.count()
+        self.lbl_step.setText(f"Página {curr + 1} de {total}")
+        
+        # Reset to UWP accent for all states, changing only text/icons
+        if curr == 0:
+            self.btn_next.setText("Empezar")
+        elif curr == total - 1:
+            self.btn_next.setText("Finalizar")
+        else:
+            self.btn_next.setText("Siguiente →")
+
+    def apply_project_fixes(self, idx):
+        proj = self.projects[idx]
+        path = proj["path"]
+        inputs = self.results[idx]["inputs"]
+        
+        # Extract metadata from inputs
+        publisher = inputs.get("publisher").text().strip() or "Influent"
+        app_id = inputs.get("app").text().strip() or os.path.basename(path)
+        name_public = inputs.get("name").text().strip() or app_id.capitalize()
+        version_raw = inputs.get("version").text().strip() or "1.0.0"
+        author = inputs.get("author").text().strip() or "Unknown"
+        platform_sel = inputs.get("platform").text().strip() or "Knosthalij"
+
+        # Auto-Versioning Logic (Sync with requested -YY.MM-HH.MM format)
+        v_clean = self.clean_version_str(version_raw)
+        
+        # Calculate timestamp: YY.MM-HH.MM
+        now = time.localtime()
+        ts = time.strftime("%y.%m-%H.%M", now)
+        
+        v_so = f"{v_clean}-{ts}"
+        v_final = f"{v_so}-{platform_sel}"
+
+        # 1. Folders Reconstruction
+        required_dirs = ["app", "assets", "config", "docs", "source", "lib"]
+        for d in required_dirs:
+            os.makedirs(os.path.join(path, d), exist_ok=True)
+            # Create container markers
+            marker = os.path.join(path, d, f".{d}-container")
+            if not os.path.exists(marker):
+                hv = hashlib.sha256(f"{publisher}.{app_id}.v{v_final}".encode()).hexdigest()
+                with open(marker, "w") as f:
+                    f.write(f"#store (sha256 hash):{d}/.{hv}")
+
+        # 2. XML Reconstruction
+        xml_data = {
+            "publisher": publisher,
+            "app": app_id,
+            "name": name_public,
+            "version": f"v{v_so}",
+            "author": author,
+            "platform": platform_sel,
+            "correlationid": hashlib.sha256(f"{publisher}.{app_id}.v{v_final}".encode()).hexdigest(),
+            "rate": "PERSONAL USE"
+        }
+        
+        root = ET.Element("app")
+        for k, v in xml_data.items():
+            ET.SubElement(root, k).text = str(v)
+            
+        from xml.dom import minidom
+        try:
+            xml_str = ET.tostring(root, 'utf-8')
+            pretty = minidom.parseString(xml_str).toprettyxml(indent="  ")
+            pretty = "\n".join([line for line in pretty.split('\n') if line.strip()])
+            with open(os.path.join(path, "details.xml"), "w", encoding="utf-8") as f:
+                f.write(pretty)
+        except Exception as e: print(f"Error saving XML: {e}")
+
+        # 3. Structural Files Reconstruction (The "Núcleo" Connection)
+        
+        # Main Script
+        main_script = os.path.join(path, f"{app_id}.py")
+        if not os.path.exists(main_script):
+            with open(main_script, "w", encoding="utf-8") as f:
+                f.write(f"#!/usr/bin/env python\n# -*- coding: utf-8 -*-\n# App: {name_public}\n# publisher: {publisher}\n# name: {app_id}\n# version: IO-{v_final}\n\ndef main(args):\n    print('Hello from {name_public}')\n    return 0\n\nif __name__ == '__main__':\n    import sys\n    sys.exit(main(sys.argv))\n")
+
+        # README.md
+        readme_path = os.path.join(path, "README.md")
+        if not os.path.exists(readme_path):
+            with open(readme_path, "w", encoding="utf-8") as f:
+                f.write(f"# {publisher} {name_public}\n\nReconstruido por MoonFix Suite.\n\n## Uso\npython {app_id}.py\n")
+
+        # LICENSE (GPLv3)
+        lic_path = os.path.join(path, "LICENSE")
+        if not os.path.exists(lic_path):
+            with open(lic_path, "w", encoding="utf-8") as f:
+                f.write("GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\n\n(Licencia restaurada por MoonFix)\n")
+
+        # Docs Index
+        docs_idx = os.path.join(path, "docs", "index.html")
+        if not os.path.exists(docs_idx) or os.path.getsize(docs_idx) < 500:
+            with open(docs_idx, "w", encoding="utf-8") as f:
+                f.write(DOCS_TEMPLATE.replace("const FALLBACK_OWNER = 'JesusQuijada34';", f"const FALLBACK_OWNER = '{author}';").replace("const FALLBACK_REPO  = 'packagemaker';", f"const FALLBACK_REPO  = '{app_id}';"))
+
+        # Resource placeholders
+        for res_f in ["version.res", "manifest.res", ".storedetail"]:
+            res_p = os.path.join(path, res_f)
+            if not os.path.exists(res_p):
+                with open(res_p, "w") as f: f.write(f"# MoonFix Resource: {res_f}")
+
+        # Requirements
+        req_p = os.path.join(path, "lib", "requirements.txt")
+        if not os.path.exists(req_p):
+            with open(req_p, "w") as f: f.write("# Dependencias\n")
+
+        # 4. Asset Restoration
+        # App Icon & Logo
+        icon_src = inputs.get("extra_icon").text().strip() if inputs.get("extra_icon") else ""
+        logo_src = inputs.get("extra_logo").text().strip() if inputs.get("extra_logo") else ""
+        
+        if icon_src and os.path.exists(icon_src):
+            shutil.copy(icon_src, os.path.join(path, "app", "app-icon.ico"))
+        
+        if logo_src and os.path.exists(logo_src):
+            shutil.copy(logo_src, os.path.join(path, "app", "product_logo.png"))
+        elif icon_src and os.path.exists(icon_src):
+            # Fallback if logo is missing but icon is provided (convert or just copy as placeholder)
+            shutil.copy(icon_src, os.path.join(path, "app", "product_logo.png"))
+        
+        # Updater Icon
+        upd_icon_src = inputs.get("extra_icon_updater").text().strip() if inputs.get("extra_icon_updater") else ""
+        if upd_icon_src and os.path.exists(upd_icon_src):
+            shutil.copy(upd_icon_src, os.path.join(path, "app", "updater-icon.ico"))
+        
+        splash_src = inputs.get("extra_splash").text().strip() if inputs.get("extra_splash") else ""
+        if splash_src and os.path.exists(splash_src):
+            shutil.copy(splash_src, os.path.join(path, "assets", "splash.png"))
+
+        splash_setup_src = inputs.get("extra_splash_setup").text().strip() if inputs.get("extra_splash_setup") else ""
+        if splash_setup_src and os.path.exists(splash_setup_src):
+            shutil.copy(splash_setup_src, os.path.join(path, "assets", "splash_Setup.png"))
+
+    def upload_icon_pack(self, index):
+        f, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icon Pack", "", "Icon Pack (*.ipm-iconpck)")
+        if f: self.process_ipm_iconpck(f)
+
+    def upload_asset_pack(self, index):
+        f, _ = QFileDialog.getOpenFileName(self, "Seleccionar Asset Pack", "", "Asset Pack (*.ipm-assetpck)")
+        if f: self.process_ipm_assetpck(f)
+
+    def reject(self):
+        """Slide down exit animation (Windows 11 style)."""
+        if hasattr(self, "_closing") and self._closing: return
+        self._closing = True
+        
+        self.exit_group = QtCore.QParallelAnimationGroup(self)
+        target_y = self.pos().y() + 100
+        
+        self.exit_anim_pos = QtCore.QPropertyAnimation(self, b"pos")
+        self.exit_anim_pos.setDuration(350)
+        self.exit_anim_pos.setStartValue(self.pos())
+        self.exit_anim_pos.setEndValue(QtCore.QPoint(self.pos().x(), target_y))
+        self.exit_anim_pos.setEasingCurve(QtCore.QEasingCurve.InBack)
+        
+        self.exit_anim_fade = QtCore.QPropertyAnimation(self, b"windowOpacity")
+        self.exit_anim_fade.setDuration(300)
+        self.exit_anim_fade.setStartValue(self.windowOpacity())
+        self.exit_anim_fade.setEndValue(0.0)
+        
+        self.exit_group.addAnimation(self.exit_anim_pos)
+        self.exit_group.addAnimation(self.exit_anim_fade)
+        self.exit_group.finished.connect(super().reject)
+        self.exit_group.finished.connect(self.deleteLater) # Explicit memory cleanup
+        self.exit_group.start()
+
+    def accept(self):
+        """Slide down exit animation for success (Windows 11 style)."""
+        if hasattr(self, "_closing") and self._closing: return
+        self._closing = True
+        
+        self.exit_group = QtCore.QParallelAnimationGroup(self)
+        target_y = self.pos().y() + 100
+        
+        self.exit_anim_pos = QtCore.QPropertyAnimation(self, b"pos")
+        self.exit_anim_pos.setDuration(350)
+        self.exit_anim_pos.setStartValue(self.pos())
+        self.exit_anim_pos.setEndValue(QtCore.QPoint(self.pos().x(), target_y))
+        self.exit_anim_pos.setEasingCurve(QtCore.QEasingCurve.InBack)
+        
+        self.exit_anim_fade = QtCore.QPropertyAnimation(self, b"windowOpacity")
+        self.exit_anim_fade.setDuration(300)
+        self.exit_anim_fade.setStartValue(self.windowOpacity())
+        self.exit_anim_fade.setEndValue(0.0)
+        
+        self.exit_group.addAnimation(self.exit_anim_pos)
+        self.exit_group.addAnimation(self.exit_anim_fade)
+        self.exit_group.finished.connect(super().accept)
+        self.exit_group.finished.connect(self.deleteLater) # Explicit memory cleanup
+        self.exit_group.start()
+
+# Aliases to satisfy the user request for QSetup/QInstaller names
+QSetup = MoonFixWizard
+QInstaller = MoonFixWizard
 
 def verificar_github_username(username):
     """Verifica si un username de GitHub existe. Si no hay internet, deja pasar el username."""
@@ -1303,201 +2571,170 @@ class BuildThread(QThread):
 from PyQt5.QtWidgets import QComboBox
 
 # === BEGIN CUSTOM TITLE BAR CLASS ===
-class TitleBar(QWidget):  # [NEW CLASS: FULL CUSTOM TITLE BAR]
-    """Custom non-native title bar with SVG buttons and context menu."""
+class AnimTitleButton(QPushButton):
+    """Boton de titulo con animación de fondo suave (UWP Style)"""
+    def __init__(self, icon_svg, hover_color, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(46, 32)
+        self.setIconSize(QtCore.QSize(16, 16))
+        self.setFlat(True)
+        self.hover_color = hover_color
+        self.default_color = QtGui.QColor(0, 0, 0, 0) # Transparent
+        
+        # Load SVG to QIcon
+        pm = QtGui.QPixmap()
+        pm.loadFromData(icon_svg)
+        self.setIcon(QIcon(pm))
+        
+        # Animación background
+        self._bg_color = self.default_color
+        self.anim = QtCore.QVariantAnimation(self)
+        self.anim.setDuration(150)
+        self.anim.setStartValue(self.default_color)
+        self.anim.setEndValue(QtGui.QColor(self.hover_color))
+        self.anim.valueChanged.connect(self._update_bg)
+
+    def _update_bg(self, color):
+        self._bg_color = color
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        painter.fillRect(self.rect(), self._bg_color)
+        super().paintEvent(event)
+
+    def enterEvent(self, event):
+        self.anim.setDirection(QtCore.QAbstractAnimation.Forward)
+        self.anim.start()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.anim.setDirection(QtCore.QAbstractAnimation.Backward)
+        self.anim.start()
+        super().leaveEvent(event)
+
+
+class TitleBar(QWidget):  # [Refactored: UWP Animated TitleBar]
+    """Custom non-native title bar with UWP-style animated buttons."""
 
     def __init__(self, parent=None, app_icon=None, title=""):
         super().__init__(parent)
         self._parent = parent
-        self.setFixedHeight(38)
+        self.setFixedHeight(40) # Slightly taller for UWP feel
         self.setObjectName("customTitleBar")
         self._drag_active = False
         self._drag_offset = None
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 0, 8, 0)
-        layout.setSpacing(8)
+        layout.setContentsMargins(15, 0, 0, 0)
+        layout.setSpacing(10)
 
+        # Icon
         if app_icon:
             icon_lbl = QLabel()
             icon_lbl.setPixmap(app_icon.pixmap(20, 20))
-            icon_lbl.setFixedSize(22, 22)
+            icon_lbl.setFixedSize(20, 20)
             layout.addWidget(icon_lbl)
 
+        # Title
         self.title_label = QLabel(title)
         self.title_label.setObjectName("titleLabel")
         self.title_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
-        self.title_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        # Font will be inherited from main window or set by stylesheet
+        self.title_label.setStyleSheet("font-size: 13px; font-weight: 500; font-family: 'Segoe UI'; color: #eeeeee;")
         layout.addWidget(self.title_label)
+        
+        layout.addStretch()
 
-        self.setMouseTracking(True)  # Necesario para rastrear el mouse para "señalizar" drag
+        self.setMouseTracking(True)
 
-        # Botones de control
+        # Botones de control (UWP Style: Min, Max/Restore, Close)
         btnc = QWidget()
         btnl = QHBoxLayout(btnc)
         btnl.setContentsMargins(0, 0, 0, 0)
-        btnl.setSpacing(6)
+        btnl.setSpacing(0) # Attached buttons
 
+        # SVGs (White/Light Gray for Dark Mode)
+        # Minimize (Line at bottom)
         self.svg_min = b'''
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="6" y="12" width="12" height="2" rx="1" fill="#333"/>
+            <line x1="7" y1="12" x2="17" y2="12" stroke="#ffffff" stroke-width="1"/>
         </svg>
         '''
+        # Maximize (Square)
         self.svg_max = b'''
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="6" y="6" width="12" height="12" rx="2" fill="none" stroke="#333" stroke-width="2"/>
+            <rect x="7.5" y="7.5" width="9" height="9" stroke="#ffffff" stroke-width="1" fill="none"/>
         </svg>
         '''
+        # Close (X)
         self.svg_close = b'''
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="7" y1="7" x2="17" y2="17" stroke="#E81123" stroke-width="2" stroke-linecap="round"/>
-            <line x1="17" y1="7" x2="7" y2="17" stroke="#E81123" stroke-width="2" stroke-linecap="round"/>
+            <path d="M7 7L17 17M17 7L7 17" stroke="#ffffff" stroke-width="1.2"/>
         </svg>
         '''
-        self.btn_min = self._make_btn(self.svg_min)
-        self.btn_max = self._make_btn(self.svg_max)
-        self.btn_close = self._make_btn(self.svg_close)
+        
+        # Buttons
+        self.btn_min = AnimTitleButton(self.svg_min, "rgba(255, 255, 255, 0.1)")
+        self.btn_max = AnimTitleButton(self.svg_max, "rgba(255, 255, 255, 0.1)")
+        self.btn_close = AnimTitleButton(self.svg_close, "#e81123") # Standard Red Close
+        
         btnl.addWidget(self.btn_min)
         btnl.addWidget(self.btn_max)
         btnl.addWidget(self.btn_close)
-        self.layout().addWidget(btnc)
+        layout.addWidget(btnc)
 
-        # -- Botones --
+        # Logic
         self.btn_min.clicked.connect(lambda: self.window().showMinimized())
-        self.btn_max.clicked.connect(lambda: self.window().showMaximized())
         self.btn_close.clicked.connect(lambda: self.window().close())
+        
+        # Maximize/Restore Toggle Logic
+        def toggle_maximize():
+            win = self.window()
+            if win.isMaximized():
+                win.showNormal()
+                # Update icon to Maximize
+                # (For simplicity we keep same icon or could toggle svg)
+            else:
+                win.showMaximized()
+                # Update icon to Restore (Overlapping squares)
 
-        # MENU
-        self.menu = QtWidgets.QMenu(self)
-        # (Estilos y acciones omitidos... igual que antes)
+        self.btn_max.clicked.connect(toggle_maximize)
 
-        # Arrastre: Señales y detención del drag con mouse events
-        # Usaremos mouse event handlers para emitir/gestionar los eventos de mover
-        # El "drag" ocurre sólo si no está maximizado!
+        # Drag Logic
         def is_maximized():
             return self.window().isMaximized()
 
         def mousePressEvent(event):
             if event.button() == Qt.LeftButton and not is_maximized():
+                # Check if click is not on buttons (handled by their own events, but QWidget consumes?)
+                # Since buttons are children, they get events first.
                 self._drag_active = True
                 self._drag_offset = event.globalPos() - self.window().frameGeometry().topLeft()
             event.accept()
-            QWidget.mousePressEvent(self, event)  # Llama base
 
         def mouseMoveEvent(event):
             if self._drag_active and not is_maximized():
                 self.window().move(event.globalPos() - self._drag_offset)
             event.accept()
-            QWidget.mouseMoveEvent(self, event)
 
         def mouseReleaseEvent(event):
             if event.button() == Qt.LeftButton:
                 self._drag_active = False
                 self._drag_offset = None
             event.accept()
-            QWidget.mouseReleaseEvent(self, event)
+            
+        def mouseDoubleClickEvent(event):
+             if event.button() == Qt.LeftButton:
+                toggle_maximize()
 
         self.mousePressEvent = mousePressEvent
         self.mouseMoveEvent = mouseMoveEvent
         self.mouseReleaseEvent = mouseReleaseEvent
-
-        # Ahora, para maximizar a cualquier resolución: 
-        # showMaximized() siempre ocupa toda la pantalla disponible, sin importar el tamaño actual, 
-        # y puedes restaurar con showNormal().
-        # Los botones maximizan/restauran según el estado
-        def toggle_maximize():
-            win = self.window()
-            if win.isMaximized():
-                win.showNormal()
-            else:
-                win.showMaximized()
-        self.btn_max.clicked.disconnect()
-        self.btn_max.clicked.connect(toggle_maximize)
-
-        # Opcional: hacer doble click en la barra también maximiza/restaura:
-        def mouseDoubleClickEvent(event):
-            if event.button() == Qt.LeftButton:
-                toggle_maximize()
-            event.accept()
         self.mouseDoubleClickEvent = mouseDoubleClickEvent
 
-        # Preferible limpiar el cursor siempre (no tamaña ni resize)
-        self.setCursor(Qt.ArrowCursor)
 
-        # QSS uses palette-based colors for auto dark/light support, only override highlight color
-        # Fix for NameError: Use hardcoded color values to avoid missing variables
-        self.menu.setStyleSheet("""
-            QMenu {
-                background: #f8f9fa;
-                border: 1px solid #d4d4d4;
-                color: #212529;
-            }
-            QMenu::item {
-                padding: 6px 28px 6px 28px;
-                background: transparent;
-            }
-            QMenu::item:selected {
-                background: #e5f1fb;
-                color: #212529;
-            }
-        """)
-
-    def _make_btn(self, svg_bytes):
-        icon = self._svg_icon(svg_bytes)
-        b = QPushButton()
-        b.setFlat(True)
-        b.setFixedSize(36, 28)
-        b.setIcon(icon)
-        b.setIconSize(QtCore.QSize(14, 14))
-        # Eliminate (or debug) unwanted background/border issues - ensure no background is set:
-        # Important: default QPushButton *does* show a flat red bg on Windows for QPixmap with alpha, if 'background' property gets brushed by theme/style or if SVGs themselves have no real transparency/white/rect.
-        # Try forcing transparent or explicit background:
-        b.setStyleSheet("""
-            QPushButton {
-                border: none;
-                border-radius: 4px;
-                background: transparent;
-            }
-            QPushButton:pressed, QPushButton:hover {
-                background: #e5e5e5;
-            }
-        """)
-        return b
-
-    def _svg_icon(self, svg_bytes):
-        r = QSvgRenderer(QByteArray(svg_bytes))
-        # Create ARGB pixmap, with full transparency (not default opaque)
-        pix = QPixmap(16, 16)
-        pix.fill(Qt.transparent)  # Explicitly clear to transparent!
-        p = QtGui.QPainter(pix)
-        # Sometimes, SVGs can include a <rect> with no fill, or use white as the background.
-        # If SVG has an explicit fill on the elements with a nontransparent or red color, it will show up.
-        r.render(p)
-        p.end()
-        return QIcon(pix)
-
-    def _toggle_max(self):
-        if self._parent.isMaximized():
-            self._parent.showNormal()
-        else:
-            self._parent.showMaximized()
-
-    def mousePressEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            self._press_pos = e.globalPos()
-            self._start_geom = self._parent.geometry()
-
-    def mouseMoveEvent(self, e):
-        if self._press_pos and (e.buttons() & Qt.LeftButton):
-            delta = e.globalPos() - self._press_pos
-            self._parent.setGeometry(self._start_geom.translated(delta))
-
-    def mouseDoubleClickEvent(self, e):
-        self._toggle_max()
-
-    def contextMenuEvent(self, e):
-        self.menu.exec_(e.globalPos())
-# === END CUSTOM TITLE BAR CLASS ===
 
 class OutputTerminalDialog(QDialog):
     """Dialogo de terminal para mostrar salida de scripts"""
@@ -1759,19 +2996,9 @@ class ProjectDetailsDialog(QDialog):
         icon_path = self.pkg.get("icon")
         icon_pm = QIcon(icon_path) if icon_path else None
         
-        self.titlebar = TitleBar(self, app_icon=icon_pm, title=title)
-        # Ajuste de estilo titlebar segun tema
-        bg_tb = "#161b22" if is_dark else "#f6f8fa"
-        fg_tb = "#c9d1d9" if is_dark else "#24292e"
-        self.titlebar.setStyleSheet(f"""
-            QWidget#customTitleBar {{
-                background-color: {bg_tb}; 
-                border-top-left-radius: 8px; 
-                border-top-right-radius: 8px; 
-                border-bottom: 1px solid #d1d5da;
-            }}
-            QLabel {{ color: {fg_tb}; font-weight: bold; }}
-        """)
+        self.titlebar = CustomTitleBar(self, title=title, icon=icon_path or "")
+        # Usamos el estilo nativo de LeviathanUI
+        # self.titlebar.setStyleSheet(...)
         layout.addWidget(self.titlebar)
 
         # Contenido
@@ -1915,7 +3142,7 @@ class ProjectDetailsDialog(QDialog):
         
         python = find_python_executable()
         if not python:
-             QtWidgets.QMessageBox.critical(self, "Python no encontrado", "No se detectó una instalación de Python válida para ejecutar el script.")
+             LeviathanDialog.launch(self, "Python no encontrado", "No se detectó una instalación de Python válida para ejecutar el script.", mode="error")
              return
              
         # Abrir terminal
@@ -1939,32 +3166,36 @@ class ProjectDetailsDialog(QDialog):
                 os.makedirs(target_dir, exist_ok=True)
                 with zipfile.ZipFile(valid_file, 'r') as zf:
                     zf.extractall(target_dir)
-                QtWidgets.QMessageBox.information(self, "Exito", "App instalada correctamente.")
+                LeviathanDialog.launch(self, "Éxito", "App instalada correctamente.", mode="success")
                 if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
             except Exception as e:
-                 QtWidgets.QMessageBox.critical(self, "Error", str(e))
-        else:
-             QtWidgets.QMessageBox.warning(self, "No encontrado", "No se encontró el paquete compilado (.iflapp) en la carpeta de proyectos. Primero compílalo.")
+                LeviathanDialog.launch(self, "Error", str(e), mode="error")
+            else:
+                LeviathanDialog.launch(self, "No encontrado", "No se encontró el paquete compilado (.iflapp) en la carpeta de proyectos. Primero compílalo.", mode="warning")
 
     def uninstall_action(self):
-         reply = QtWidgets.QMessageBox.question(self, "Desinstalar", "¿Estás seguro de eliminar esta app?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-         if reply == QtWidgets.QMessageBox.Yes:
-             try:
-                 shutil.rmtree(self.pkg["folder"])
-                 self.accept()
-                 if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
-             except Exception as e:
-                 QtWidgets.QMessageBox.critical(self, "Error", str(e))
+         def do_uninstall(res):
+             if res == "SÍ":
+                 try:
+                     shutil.rmtree(self.pkg["folder"])
+                     self.accept()
+                     if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
+                 except Exception as e:
+                     LeviathanDialog.launch(self, "Error", str(e), mode="error")
+         
+         LeviathanDialog.launch(self, "Desinstalar", "¿Estás seguro de eliminar esta app?", mode="warning", buttons=["SÍ", "NO"], callback=do_uninstall)
 
     def delete_action(self):
-         reply = QtWidgets.QMessageBox.question(self, "Eliminar", "¿Estás seguro de eliminar este proyecto y todos sus archivos? Esta acción no se puede deshacer.", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-         if reply == QtWidgets.QMessageBox.Yes:
-             try:
-                 shutil.rmtree(self.pkg["folder"])
-                 self.accept()
-                 if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
-             except Exception as e:
-                 QtWidgets.QMessageBox.critical(self, "Error", str(e))
+         def do_delete(res):
+             if res == "SÍ":
+                 try:
+                     shutil.rmtree(self.pkg["folder"])
+                     self.accept()
+                     if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
+                 except Exception as e:
+                     LeviathanDialog.launch(self, "Error", str(e), mode="error")
+
+         LeviathanDialog.launch(self, "Eliminar", "¿Estás seguro de eliminar este proyecto y todos sus archivos? Esta acción no se puede deshacer.", mode="error", buttons=["SÍ", "NO"], callback=do_delete)
 
     def compile_action(self):
         # Trigger compilation using BuildThread
@@ -1987,509 +3218,714 @@ class ProjectDetailsDialog(QDialog):
     def on_compile_finished(self, msg):
         self.lbl_status.setText(msg)
         self.btn_compile.setEnabled(True)
-        QtWidgets.QMessageBox.information(self, "Compilación", msg)
+        LeviathanDialog.launch(self, "Compilación", msg, mode="info")
+
+class SidebarItem(QPushButton):
+    """Boton de navegación lateral estilo Start11"""
+    def __init__(self, text, icon_path, parent=None):
+        super().__init__(text, parent)
+        self.setFixedHeight(50)
+        self.setIconSize(QtCore.QSize(24, 24))
+        if icon_path and os.path.exists(icon_path):
+            self.setIcon(QIcon(icon_path))
+        self.setCheckable(True)
+        self.setAutoExclusive(True)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #b0b0b0;
+                text-align: left;
+                padding-left: 17px; /* Compensate for border */
+                border: none;
+                border-left: 3px solid transparent; /* Anti-jump reserve */
+                outline: none;
+                border-radius: 8px;
+                font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
+                font-size: 15px;
+                font-weight: 500;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+                color: #ffffff;
+            }
+            QPushButton:checked {
+                background-color: rgba(255, 255, 255, 0.08);
+                color: #ffffff;
+                border-left: 3px solid #ff5722; /* Start11 Orange Accent */
+            }
+            QPushButton:focus {
+                border: none;
+                outline: none;
+            }
+        """)
+
+SIDEBAR_DESC = {
+    0: "### Crear Proyecto\nDiseña aplicaciones desde cero. Establece identidades únicas, versiones y metadatos para el ecosistema **Influent OS** de forma guiada.",
+    1: "### Construir Paquete\nEmpaqueta tu trabajo. Transforma carpetas de desarrollo en archivos `.iflapp` comprimidos y listos para su distribución global.",
+    2: "### Gestor de Aplicaciones\nTu centro de control. Administra proyectos locales y aplicaciones instaladas. Ejecuta, depura o elimina con absoluta precisión.",
+    3: "### Configuración\nAjusta el motor del programa. Controla rutas de almacenamiento, previsualización de temas y variables globales del sistema.",
+    4: "### MoonFix Suite\nSanación profunda. Escanea, detecta y repara inconsistencias en tus paquetes. Asegura que cada asset y etiqueta XML sea perfecta.",
+    5: "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**."
+}
 
 class PackageTodoGUI(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowFlag(Qt.FramelessWindowHint)
-        self.setAttribute(Qt.WA_TranslucentBackground, False)
+        # --- VERSION UPDATE 3.2.6 ---
+        self.current_version = "3.2.6"
+        
+        # Aplicar estética Premium de LeviathanUI (WipeWindow)
+        # Usamos ghostBlur como solicitado
+        self.window_effects = WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(self)
 
-        self.setWindowTitle(f"Influent Package Maker for {plataforma} | QT5 Edition")
-        self.resize(1200, 750)
+        self.setWindowTitle(f"Influent Package Maker v{self.current_version}")
+        self.resize(1100, 720)
         self.setFont(APP_FONT)
         self.setWindowIcon(QtGui.QIcon(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""))
 
+        # Central Widget & Main Layout
         self.central = QWidget()
+        self.central.setObjectName("CentralWidget")
+        self.central.setStyleSheet("background-color: transparent;") 
+        self.setCentralWidget(self.central)
+        
+        # Layout principal vertical (TitleBar + ContentArea)
         self.v_layout = QVBoxLayout(self.central)
         self.v_layout.setContentsMargins(0, 0, 0, 0)
         self.v_layout.setSpacing(0)
 
-        icon = QtGui.QIcon(IPM_ICON_PATH) if os.path.exists(IPM_ICON_PATH) else None
-        self.titlebar = TitleBar(self, app_icon=icon, title=self.windowTitle())
+        # Title Bar Custom (LeviathanUI)
+        self.titlebar = CustomTitleBar(self, title=self.windowTitle(), icon=(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""))
+        self.titlebar.setStyleSheet("background-color: transparent;") # Dejar que el blur del fondo actue o poner un semi-transparente
         self.v_layout.addWidget(self.titlebar)
 
-        self.main_container = QWidget()
-        self.main_layout = QVBoxLayout(self.main_container)
-        self.main_layout.setContentsMargins(10, 10, 10, 10)
-        self.v_layout.addWidget(self.main_container)
+        # Content Container (Sidebar + Stack)
+        self.content_container = QWidget()
+        self.content_layout = QHBoxLayout(self.content_container)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setSpacing(0)
+        
+        # --- SIDEBAR (Left) ---
+        self.sidebar = QWidget()
+        self.sidebar.setFixedWidth(260)
+        self.sidebar.setStyleSheet("background-color: rgba(20, 20, 20, 0.6); border-right: 1px solid rgba(255,255,255,0.08);")
+        self.sidebar_layout = QVBoxLayout(self.sidebar)
+        self.sidebar_layout.setContentsMargins(15, 20, 15, 20)
+        self.sidebar_layout.setSpacing(8)
 
-        self.tabs = QTabWidget()
-        self.tabs.setFont(TAB_FONT)
-        self.main_layout.addWidget(self.tabs)
+        # Header Sidebar (Optional, maybe "Menú Inicio" text style)
+        lbl_menu = QLabel("Menú Principal")
+        lbl_menu.setStyleSheet("color: #ffffff; font-size: 22px; font-weight: bold; font-family: 'Segoe UI'; margin-bottom: 10px;")
+        self.sidebar_layout.addWidget(lbl_menu)
 
-        self.setCentralWidget(self.central)
+        # Navigation Buttons
+        self.btn_create = SidebarItem("Crear Proyecto", TAB_ICONS["crear"])
+        self.btn_build = SidebarItem("Construir Paquete", TAB_ICONS["construir"])
+        self.btn_manager = SidebarItem("Gestor (Apps)", TAB_ICONS["gestor"])
+        self.btn_config = SidebarItem("Configuración", TAB_ICONS.get("config"))
+        self.btn_moonfix = SidebarItem("MoonFix", TAB_ICONS["moonfix"])
+        self.btn_about = SidebarItem("Acerca de", TAB_ICONS["about"])
+        
+        self.sidebar_group = QButtonGroup(self)
+        self.sidebar_group.addButton(self.btn_create, 0)
+        self.sidebar_group.addButton(self.btn_build, 1)
+        self.sidebar_group.addButton(self.btn_manager, 2)
+        self.sidebar_group.addButton(self.btn_config, 3)
+        self.sidebar_group.addButton(self.btn_moonfix, 4)
+        self.sidebar_group.addButton(self.btn_about, 5)
+        self.sidebar_group.idClicked.connect(self.switch_page)
 
-        self.layout = self.main_layout
-        self.init_tabs()
-        self.apply_theme()
+        self.sidebar_layout.addWidget(self.btn_create)
+        self.sidebar_layout.addWidget(self.btn_build)
+        self.sidebar_layout.addWidget(self.btn_manager)
+        self.sidebar_layout.addWidget(self.btn_config)
+        self.sidebar_layout.addWidget(self.btn_moonfix)
+        
+        # Area de Contexto/Descripcion (Estilo Nota UWP)
+        self.sidebar_layout.addStretch()
+        
+        self.desc_card = QWidget()
+        self.desc_card.setStyleSheet("""
+            QWidget {
+                background-color: rgba(255, 255, 255, 0.04);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 8px;
+                margin-top: 10px;
+            }
+        """)
+        desc_vbox = QVBoxLayout(self.desc_card)
+        desc_vbox.setContentsMargins(12, 12, 12, 12)
+        
+        desc_header = QHBoxLayout()
+        info_icon = QLabel("ℹ️")
+        info_icon.setStyleSheet("border:none; background:transparent; font-size: 14px;")
+        desc_header.addWidget(info_icon)
+        
+        ctx_lbl = QLabel("Contexto")
+        ctx_lbl.setStyleSheet("border:none; background:transparent; color: #888; font-weight: bold; font-size: 11px; text-transform: uppercase;")
+        desc_header.addWidget(ctx_lbl)
+        desc_header.addStretch()
+        desc_vbox.addLayout(desc_header)
+        
+        self.sidebar_desc_text = QTextEdit()
+        self.sidebar_desc_text.setReadOnly(True)
+        self.sidebar_desc_text.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.sidebar_desc_text.setStyleSheet("background: transparent; color: #bbb; font-size: 12px; line-height: 1.4; border:none;")
+        self.sidebar_desc_text.setMaximumHeight(120)
+        desc_vbox.addWidget(self.sidebar_desc_text)
+        
+        self.sidebar_layout.addWidget(self.desc_card)
+        self.sidebar_layout.addSpacing(10)
+        self.sidebar_layout.addWidget(self.btn_about)
 
+        self.content_layout.addWidget(self.sidebar)
+
+        # --- MAIN CONTENT AREA (Right) ---
+        self.stack = QStackedWidget()
+        self.stack.setStyleSheet("background-color: transparent;")
+        
+        # Pages
+        self.page_create = QWidget()
+        self.init_create_tab(self.page_create) # Refactorized logic below
+        
+        self.page_build = QWidget()
+        self.init_build_tab(self.page_build)
+        
+        self.page_manager = QWidget()
+        self.init_manager_tab(self.page_manager)
+        
+        self.page_config = QWidget()
+        self.init_config_tab(self.page_config)
+        
+        self.page_moonfix = QWidget()
+        self.init_moonfix_tab(self.page_moonfix)
+        
+        self.page_about = QWidget()
+        self.init_about_tab(self.page_about)
+
+        self.stack.addWidget(self.page_create)
+        self.stack.addWidget(self.page_build)
+        self.stack.addWidget(self.page_manager)
+        self.stack.addWidget(self.page_config)
+        self.stack.addWidget(self.page_moonfix)
+        self.stack.addWidget(self.page_about)
+
+        self.content_layout.addWidget(self.stack)
+        self.v_layout.addWidget(self.content_container)
+
+        # Set default
+        self.btn_create.setChecked(True)
+        self.stack.setCurrentIndex(0)
+        
+        # Initialize Theme Check
         self.theme_timer = QTimer()
         self.theme_timer.timeout.connect(self.check_theme_change)
         self.theme_timer.start(1000)
         self.last_theme_mode = detectar_modo_sistema()
 
+        # Apply Global Styles
+        self.apply_theme()
+        
+        # Startup Animation
+        self.animate_startup()
+        
+        # Initial description
+        self.update_sidebar_description(0)
+
+    def update_sidebar_description(self, index):
+        if index in SIDEBAR_DESC:
+            # Simple markdown-to-html like formatting for headings
+            text = SIDEBAR_DESC[index]
+            html = text.replace("### ", "<b style='color:white; font-size:14px;'>").replace("\n", "</b><br>")
+            self.sidebar_desc_text.setHtml(html)
+
+    def animate_startup(self):
+        """Animación de desplazamiento hacia arriba y opacidad al abrir"""
+        # Center on screen first
+        screen_geo = QApplication.desktop().screenGeometry()
+        x = (screen_geo.width() - self.width()) // 2
+        y = (screen_geo.height() - self.height()) // 2
+        
+        start_y = y + 50
+        end_y = y
+
+        self.move(x, start_y)
+        self.setWindowOpacity(0.0)
+
+        # Animacion de geometria (Posicion)
+        self.anim_pos = QtCore.QPropertyAnimation(self, b"pos")
+        self.anim_pos.setDuration(800)
+        self.anim_pos.setStartValue(QtCore.QPoint(x, start_y))
+        self.anim_pos.setEndValue(QtCore.QPoint(x, end_y))
+        self.anim_pos.setEasingCurve(QtCore.QEasingCurve.OutExpo)
+        
+        # Animacion de opacidad
+        self.anim_fade = QtCore.QPropertyAnimation(self, b"windowOpacity")
+        self.anim_fade.setDuration(800)
+        self.anim_fade.setStartValue(0.0)
+        self.anim_fade.setEndValue(1.0)
+        
+        self.anim_group = QtCore.QParallelAnimationGroup(self)
+        self.anim_group.addAnimation(self.anim_pos)
+        self.anim_group.addAnimation(self.anim_fade)
+        self.anim_group.start()
+
+    def switch_page(self, index):
+        """Cambia la página con una sutil animación de fade/slide"""
+        # Actualizar descripcion del sidebar
+        self.update_sidebar_description(index)
+        
+        # Simple fade transition for stack
+        current_widget = self.stack.currentWidget()
+        next_widget = self.stack.widget(index)
+        
+        if current_widget == next_widget:
+            return
+
+        # Slide effect logic could go here, for now direct switch with opacity effect on content could be complex 
+        # without custom paint events. We'll stick to direct switch but maybe animate layout 
+        self.stack.setCurrentIndex(index)
+        
+        # Slide-Left Animation Logic
+        # 1. Position the next widget outside to the right
+        width = self.stack.width()
+        height = self.stack.height()
+        next_widget.setGeometry(width, 0, width, height)
+        
+        # 2. Reset opacity for next widget
+        next_widget.setWindowOpacity(1.0)
+        
+        # 3. Create parallel animation group
+        self.slide_anim = QtCore.QParallelAnimationGroup(self)
+        
+        # Current widget slides out to left
+        anim_current = QtCore.QPropertyAnimation(current_widget, b"pos")
+        anim_current.setDuration(450)
+        anim_current.setStartValue(QtCore.QPoint(0, 0))
+        anim_current.setEndValue(QtCore.QPoint(-width // 3, 0)) # Slight parallax feel
+        anim_current.setEasingCurve(QtCore.QEasingCurve.OutQuint)
+        
+        # Next widget slides in from right
+        anim_next = QtCore.QPropertyAnimation(next_widget, b"pos")
+        anim_next.setDuration(450)
+        anim_next.setStartValue(QtCore.QPoint(width, 0))
+        anim_next.setEndValue(QtCore.QPoint(0, 0))
+        anim_next.setEasingCurve(QtCore.QEasingCurve.OutQuint)
+        
+        # Fade out current
+        fade_out = QtCore.QPropertyAnimation(current_widget, b"windowOpacity")
+        fade_out.setDuration(300)
+        fade_out.setStartValue(1.0)
+        fade_out.setEndValue(0.0)
+        
+        # Fade in next
+        fade_in = QtCore.QPropertyAnimation(next_widget, b"windowOpacity")
+        fade_in.setDuration(300)
+        fade_in.setStartValue(0.0)
+        fade_in.setEndValue(1.0)
+
+        self.slide_anim.addAnimation(anim_current)
+        self.slide_anim.addAnimation(anim_next)
+        self.slide_anim.addAnimation(fade_out)
+        self.slide_anim.addAnimation(fade_in)
+        
+        def on_anim_finished():
+            self.stack.setCurrentIndex(index)
+            # Reset geometries/opacity for safety (though stack handles layout usually)
+            current_widget.move(0, 0)
+            current_widget.setWindowOpacity(1.0)
+            next_widget.move(0,0)
+            next_widget.setWindowOpacity(1.0)
+            
+        self.slide_anim.finished.connect(on_anim_finished)
+        
+        # We must manually raise next_widget to be visible during anim? 
+        # StackedWidget only shows one. So we might need to be tricky.
+        # However, simplistic slide in StackedWidget is messy without overriding paint.
+        # Workaround: just set index and animate opacity for now to be safe and robust, 
+        # or use the simple opacity transition requested earlier but made smoother.
+        
+        # Let's stick to a premium fade transition as "Slide" in QStackedWidget without custom container is buggy.
+        # But user explicitly asked for "animación de slide left".
+        # We will simulate it by manipulating the widget geometry *after* setting current index? No.
+        # Best bet: Just Opacity + Slight Translate Y (Move Up)
+        
+        anim_group = QtCore.QParallelAnimationGroup(self)
+        
+        # Next widget slide up + fade in
+        self.stack.setCurrentIndex(index)
+        next_widget.setWindowOpacity(0)
+        
+        anim_fade = QtCore.QPropertyAnimation(next_widget, b"windowOpacity")
+        anim_fade.setDuration(400)
+        anim_fade.setStartValue(0.0)
+        anim_fade.setEndValue(1.0)
+        
+        anim_slide = QtCore.QPropertyAnimation(next_widget, b"pos")
+        anim_slide.setDuration(500)
+        anim_slide.setStartValue(QtCore.QPoint(40, 0)) # Start slightly right
+        anim_slide.setEndValue(QtCore.QPoint(0, 0))
+        anim_slide.setEasingCurve(QtCore.QEasingCurve.OutExpo)
+        
+        anim_group.addAnimation(anim_fade)
+        anim_group.addAnimation(anim_slide)
+        anim_group.start(QtCore.QAbstractAnimation.DeleteWhenStopped)
+
+
+    def apply_lights_off_to_children(self):
+        """Aplica el efecto LightsOff de LeviathanUI a todos los botones del programa"""
+        # Se puede optimizar aplicando a clases especificas
+        # Actualmente LightsOff es estatico
+        pass 
+        
+    def change_display_mode(self, index):
+        """Cambia el modo de visualización de la ventana usando LeviathanUI"""
+        # index comes from ComboBox: 0=Polished, 1=Ghost, 2=GhostBlur
+        modes = ["polished", "ghost", "ghostBlur"]
+        if 0 <= index < len(modes):
+            mode = modes[index]
+            if hasattr(self, "window_effects"):
+                self.window_effects.set_mode(mode).apply(self)
+                # Re-apply theme if needed (transparency changes)
+                self.apply_theme()
+
     def check_theme_change(self):
-        """Verifica si el tema del sistema ha cambiado"""
         current_mode = detectar_modo_sistema()
         if current_mode != self.last_theme_mode:
             self.last_theme_mode = current_mode
             self.apply_theme()
     
     def apply_theme(self):
-        """Aplica el tema naranja estilo GitHub con modo claro/oscuro automático"""
-        is_dark = detectar_modo_sistema()
+        # Start11 Style is predominantly Dark/Acrylic. We force a dark-ish theme but respect light mode contrast if needed.
+        # But user requested Start11 look which is dark UI. 
         
-        # Tema Naranja estilo GitHub - Modo Claro
-        theme_light = {
-            "bg": "#ffffff",
-            "fg": "#24292e",
-            "border": "#e1e4e8",
-            "input_bg": "#ffffff",
-            "input_border": "#d1d5da",
-            "button_default": "#f96c6c",  # Naranja GitHub
-            "button_hover": "#fa4e4e",
-            "button_text": "#ffffff",
-            "group_bg": "#ffffff",
-        }
+        is_dark = True # Forzamos estética Dark "Premium" como Start11 config
         
-        # Tema Naranja estilo GitHub - Modo Oscuro
-        theme_dark = {
-            "bg": "#0d1117",
-            "fg": "#c9d1d9",
-            "border": "#30363d",
-            "input_bg": "#161b22",
-            "input_border": "#21262d",
-            "button_default": "#ff3932",  # Naranja GitHub
-            "button_hover": "#d31e18",
-            "button_text": "#ffffff",
-            "group_bg": "#0d1117",
-        }
+        base_bg = "rgba(30, 30, 30, 0.6)" if is_dark else "rgba(245, 245, 245, 0.85)"
+        text_col = "#ffffff" if is_dark else "#000000"
         
-        theme = theme_dark if is_dark else theme_light
-        
-        self.setStyleSheet(f"""
-            QMainWindow {{
-                background-color: {theme["bg"]};
-                color: {theme["fg"]};
-            }}
+        self.central.setStyleSheet(f"""
             QWidget {{
-                background-color: {theme["bg"]};
-                color: {theme["fg"]};
-            }}
-            QTabWidget::pane {{
-                border: 1px solid {theme["border"]};
-                background-color: {theme["bg"]};
-            }}
-            QTabBar::tab {{
-                background-color: {theme["group_bg"]};
-                color: {theme["fg"]};
-                padding: 10px;
-                border: 1px solid {theme["border"]};
-                border-bottom: none;
-                border-radius: 6px 6px 0 0;
-            }}
-            QTabBar::tab:selected {{
-                background-color: {theme["bg"]};
-                border-bottom: 2px solid {theme["button_default"]};
+                color: {text_col};
+                font-family: 'Segoe UI', sans-serif;
             }}
             QGroupBox {{
-                background-color: {theme["group_bg"]};
-                color: {theme["fg"]};
-                border: 1px solid {theme["border"]};
-                border-radius: 6px;
-                padding: 10px;
-                margin-top: 10px;
+                background-color: rgba(20, 20, 25, 0.92); /* Higher opacity for better readability */
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 8px;
+                margin-top: 1.5em;
                 font-weight: bold;
+                color: {text_col};
             }}
-            QLabel {{
-                color: {theme["fg"]};
-                font-size: 15px;
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 5px;
+                color: {text_col}; 
+                background-color: transparent;
             }}
             QLineEdit {{
-                background-color: transparent;
-                color: {theme["fg"]};
-                border: 1px solid {theme["input_border"]};
-                border-radius: 6px;
-                padding: 6px 30px;
-                width: 50px;
+                background-color: rgba(0, 0, 0, 0.5); /* Higher contrast input background */
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 5px;
+                padding: 8px;
+                color: white;
+                selection-background-color: #ff5722;
             }}
             QLineEdit:focus {{
-                border: 2px solid {theme["button_default"]};
-                background-color: transparent;
+                border: 1px solid #ff5722; 
+                background-color: rgba(0, 0, 0, 0.7);
             }}
-            QLineEdit:hover {{
-                background-color: transparent;
+            QLabel {{
+                color: #dddddd;
             }}
-            QRadioButton {{
-                color: {theme["fg"]};
-                spacing: 8px;
-            }}
-            QRadioButton::indicator {{
-                width: 18px;
-                height: 18px;
-                border-radius: 6px;
-                border: 2px solid {theme["input_border"]};
-                background-color: transparent;
-            }}
-            QRadioButton::indicator:hover {{
-                border: 2px solid {theme["button_default"]};
-                background-color: {theme["group_bg"]};
-            }}
-            QRadioButton::indicator:checked {{
-                border: 2px solid {theme["button_default"]};
-                background-color: {theme["button_default"]};
-            }}
-            QRadioButton::indicator:checked:hover {{
-                background-color: {theme["button_hover"]};
-            }}
-            QPushButton {{
-                background-color: {theme["button_default"]};
-                color: {theme["button_text"]};
+            /* Scrollbars UWP Style */
+            QScrollBar:vertical {{
                 border: none;
+                background: transparent;
+                width: 12px;
+                margin: 0;
+            }}
+            QScrollBar::handle:vertical {{
+                background-color: rgba(255, 255, 255, 0.2);
+                min-height: 20px;
                 border-radius: 6px;
-                padding: 10px 18px;
-                font-weight: bold;
+                margin: 2px;
+                border: 1px solid transparent;
+                background-clip: content-box;
             }}
-            QPushButton:hover {{
-                background-color: {theme["button_hover"]};
+            QScrollBar::handle:vertical:hover {{
+                background-color: rgba(255, 255, 255, 0.4);
             }}
-            QListWidget {{
-                background-color: {theme["input_bg"]};
-                color: {theme["fg"]};
-                font-size: 12px;
-                border-radius: 5px;
-                border: 1px solid {theme["border"]};
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+                background: none;
             }}
-            QStatusBar {{
-                background-color: {theme["group_bg"]};
-                color: {theme["fg"]};
-                border-top: 1px solid {theme["border"]};
+            QScrollBar:horizontal {{
+                border: none;
+                background: transparent;
+                height: 12px;
+                margin: 0;
             }}
-            QProgressBar::chunk {{
-                background-color: {theme["button_default"]};
-                border-radius: 5px;
+            QScrollBar::handle:horizontal {{
+                background-color: rgba(255, 255, 255, 0.2);
+                min-width: 20px;
+                border-radius: 6px;
+                margin: 2px;
+                border: 1px solid transparent;
+                background-clip: content-box;
             }}
-
-        /* MODERN SCROLLBAR STYLE */
-        QScrollBar:vertical {{
-            border: none;
-            background: {theme["bg"]};
-            width: 10px;
-            margin: 0px 0px 0px 0px;
-        }}
-        QScrollBar::handle:vertical {{
-            background: {theme["input_border"]};
-            min-height: 20px;
-            border-radius: 5px;
-        }}
-        QScrollBar::handle:vertical:hover {{
-            background: {theme["button_default"]};
-        }}
-        QScrollBar::add-line:vertical {{
-            height: 0px;
-            subcontrol-position: bottom;
-            subcontrol-origin: margin;
-        }}
-        QScrollBar::sub-line:vertical {{
-            height: 0px;
-            subcontrol-position: top;
-            subcontrol-origin: margin;
-        }}
-        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
-            background: none;
-        }}
+            QScrollBar::handle:horizontal:hover {{
+                background-color: rgba(255, 255, 255, 0.4);
+            }}
+            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+                background: none;
+            }}
+        """)
         
-        QScrollBar:horizontal {{
-            border: none;
-            background: {theme["bg"]};
-            height: 10px;
-            margin: 0px 0px 0px 0px;
-        }}
-        QScrollBar::handle:horizontal {{
-            background: {theme["input_border"]};
-            min-width: 20px;
-            border-radius: 5px;
-        }}
-        QScrollBar::handle:horizontal:hover {{
-            background: {theme["button_default"]};
-        }}
-        QScrollBar::add-line:horizontal {{
-            width: 0px;
-            subcontrol-position: right;
-            subcontrol-origin: margin;
-        }}
-        QScrollBar::sub-line:horizontal {{
-            width: 0px;
-            subcontrol-position: left;
-            subcontrol-origin: margin;
-        }}
-        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
-            background: none;
-        }}
-    """)
+        # Actualizar titlebar colors
+        self.titlebar.title_lbl.setStyleSheet(f"color: {text_col}; font-weight: 600;")
+        
+        # Refresh specific styles
+        if hasattr(self, "btn_create"): self.btn_create.setStyleSheet(self.btn_create.styleSheet()) # Refresh
 
-    def init_tabs(self):
-        self.tab_create = QWidget()
-        self.tabs.addTab(self.tab_create, QIcon(TAB_ICONS["crear"]), "Crear Proyecto")
-        self.init_create_tab()
-        self.tab_build = QWidget()
-        self.tabs.addTab(self.tab_build, QIcon(TAB_ICONS["construir"]), "Construir Paquete")
-        self.init_build_tab()
-        self.tab_manager = QWidget()
-        self.tabs.addTab(self.tab_manager, QIcon(TAB_ICONS["gestor"]), "Gestor de Proyectos")
-        self.init_manager_tab()
-        self.tab_about = QWidget()
-        self.tabs.addTab(self.tab_about, QIcon(TAB_ICONS["about"]), "Acerca de")
-        self.init_about_tab()
-        self.statusBar().showMessage("Preparable!...")
+    # --- Refactored Init Methods to accept a parent widget instead of using self.tabs ---
 
-        # Icono de ventana por defecto
-        if os.path.exists(IPM_ICON_PATH):
-            self.setWindowIcon(QIcon(IPM_ICON_PATH))
-
-        # Instalar filtro de foco global estilo UWP
-        self.focus_filter = FocusIndicationFilter(self)
-        app = QApplication.instance()
-        if app:
-            app.installEventFilter(self.focus_filter)
-
-
-    def init_create_tab(self):
-        layout = QVBoxLayout()
+    def init_create_tab(self, parent_widget):
+        target = parent_widget
+        layout = QVBoxLayout(target)
         layout.setSpacing(10)
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setContentsMargins(25, 25, 25, 25)
         
-        form_group = QGroupBox("Detalles del Proyecto")
-        # Usamos un Layout con columnas definidas para "Label a izq, Input a derecha"
-        form_layout = QGridLayout(form_group)
-        form_layout.setSpacing(8)
-        # Columna 0 (Labels): Ancho fijo o minimo para alineacion bonita
-        form_layout.setColumnMinimumWidth(0, 140)
-        # Columna 1 (Inputs): Stretch para que se peguen al borde
-        form_layout.setColumnStretch(1, 1)
+        # Header "Crear Nuevo Proyecto" as main title, no GroupBox title
+        # UWP Design: Big bold headers, content below.
+        title_lbl = QLabel("Crear Nuevo Proyecto")
+        title_lbl.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 10px;")
+        layout.addWidget(title_lbl)
 
-        # Fila 0: Empresa
-        label1 = QLabel("Nombre de la Empresa:")
-        label1.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label1, 0, 0)
-        self.input_empresa = QLineEdit()
-        self.input_empresa.setPlaceholderText("Ejemplo: influent")
-        self.input_empresa.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_PUBLISHER_E"])
-        # Eliminamos MaximumWidth para que ocupe todo el espacio
-        self.input_empresa.setFixedHeight(35)
-        self.input_empresa.setMaximumWidth(450)
+        # Container for form elements - Transparent GroupBox for layout structure only
+        form_group = QGroupBox()
+        form_group.setStyleSheet("""
+            QGroupBox {
+                border: none;
+                margin-top: 0px;
+                background: transparent;
+            }
+        """)
+        
+        form_layout = QGridLayout(form_group)
+        form_layout.setSpacing(15) # Comfortable spacing
+        form_layout.setColumnMinimumWidth(0, 160)
+        
+        # UWP Style Definition for Controls
+        # Labels: Segoe UI, 14px, #e0e0e0
+        # Inputs: Dark background, light border on hover, accent bottom border or glow on focus.
+        
+        def uwp_label(text):
+            l = QLabel(text)
+            l.setStyleSheet("font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #cccccc; font-weight: 500;")
+            l.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            return l
+            
+        def uwp_input(placeholder):
+            line = QLineEdit()
+            line.setPlaceholderText(placeholder)
+            line.setFixedHeight(35)
+            # UWP Style:
+            # Normal: Bg #2d2d2d, Border 1px #3d3d3d (bottom border 1px #888)
+            # Hover: Bg #323232, Border 1px #444
+            # Focus: Bg #1f1f1f, Border-bottom 2px #ff5722 (Accent)
+            line.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+                    border-radius: 4px;
+                    padding: 0 10px;
+                    color: white;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 14px;
+                    selection-background-color: #ff5722;
+                }
+                QLineEdit:hover {
+                    background-color: rgba(255, 255, 255, 0.08);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+                }
+                QLineEdit:focus {
+                    background-color: black;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-bottom: 2px solid #ff5722;
+                }
+            """)
+            return line
+
+        # Fila 0
+        form_layout.addWidget(uwp_label("Empresa / Publisher:"), 0, 0)
+        self.input_empresa = uwp_input("Ej. influent")
         form_layout.addWidget(self.input_empresa, 0, 1)
-        
-        # Fila 1: Nombre logico
-        label2 = QLabel("Nombre Interno (sin espacios):")
-        label2.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label2, 1, 0)
-        self.input_nombre_logico = QLineEdit()
-        self.input_nombre_logico.setPlaceholderText("Ejemplo: my-app")
-        self.input_nombre_logico.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_NAME_E"])
-        self.input_nombre_logico.setFixedHeight(35)
-        self.input_nombre_logico.setMaximumWidth(450)
+
+        # Fila 1
+        form_layout.addWidget(uwp_label("ID Interno (Slug):"), 1, 0)
+        self.input_nombre_logico = uwp_input("Ej. my-app-tool")
         form_layout.addWidget(self.input_nombre_logico, 1, 1)
-        
-        # Fila 2: Nombre visual
-        label3 = QLabel("Nombre Visual del Producto:")
-        label3.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label3, 2, 0)
-        self.input_nombre_completo = QLineEdit()
-        self.input_nombre_completo.setPlaceholderText("Ejemplo: My Super App")
-        self.input_nombre_completo.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_TITLE_E"])
-        self.input_nombre_completo.setFixedHeight(35)
-        self.input_nombre_completo.setMaximumWidth(450)
+
+        # Fila 2
+        form_layout.addWidget(uwp_label("Nombre Visible:"), 2, 0)
+        self.input_nombre_completo = uwp_input("Ej. My Super App")
         form_layout.addWidget(self.input_nombre_completo, 2, 1)
-        
-        # Fila 3: Version
-        label4 = QLabel("Versión Inicial:")
-        label4.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label4, 3, 0)
-        self.input_version = QLineEdit()
-        self.input_version.setPlaceholderText("Ejemplo: 1.0")
-        self.input_version.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_VERSION_E"])
-        self.input_version.setFixedHeight(35)
-        self.input_version.setMaximumWidth(450)
+
+        # Fila 3
+        form_layout.addWidget(uwp_label("Versión Inicial:"), 3, 0)
+        self.input_version = uwp_input("1.0.0")
         form_layout.addWidget(self.input_version, 3, 1)
 
-        # Fila 4: Autor
-        label5 = QLabel("Autor (GitHub Username):")
-        label5.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label5, 4, 0)
-        self.input_autor = QLineEdit()
-        self.input_autor.setPlaceholderText("Ejemplo: JesusQuijada34")
-        self.input_autor.setToolTip("Username de GitHub (obligatorio)")
-        self.input_autor.setFixedHeight(35)
-        self.input_autor.setMaximumWidth(450)
+        # Fila 4
+        form_layout.addWidget(uwp_label("Autor (GitHub User):"), 4, 0)
+        self.input_autor = uwp_input("GitHub Username")
         form_layout.addWidget(self.input_autor, 4, 1)
 
-        # Fila 5: Icono (distribuida igual)
-        label_ico = QLabel("Icono del Proyecto:")
-        label_ico.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label_ico, 5, 0)
+        # Fila 5 Icon
+        form_layout.addWidget(uwp_label("Icono (.ico):"), 5, 0)
         
-        ico_widget = QWidget()
-        ico_widget.setMaximumWidth(450)
-        ico_layout = QHBoxLayout(ico_widget)
-        ico_layout.setContentsMargins(0, 0, 0, 0)
-        ico_layout.setSpacing(5) # Espacio entre input y boton
-        self.input_icon = QLineEdit()
-        self.input_icon.setPlaceholderText("Ruta .ico local o URL de imagen (https://...)")
-        self.input_icon.setFixedHeight(35)
-        ico_layout.addWidget(self.input_icon)
+        icon_box = QHBoxLayout()
+        icon_box.setSpacing(8)
+        self.input_icon = uwp_input("Ruta al archivo .ico")
+        icon_box.addWidget(self.input_icon)
         
-        self.btn_browse_icon = QPushButton("Examinar")
+        self.btn_browse_icon = QPushButton("...")
         self.btn_browse_icon.setCursor(Qt.PointingHandCursor)
-        self.btn_browse_icon.setFixedWidth(120)
-        self.btn_browse_icon.setFixedHeight(35)
+        self.btn_browse_icon.setFixedSize(40, 35)
+        self.btn_browse_icon.setToolTip("Examinar...")
+        # UWP Button Style: Clean, borderless until hover? Or standard button.
+        self.btn_browse_icon.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 4px;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+            QPushButton:pressed {
+                background-color: rgba(255, 255, 255, 0.04);
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+        """)
         self.btn_browse_icon.clicked.connect(self.browse_icon)
-        # Estilo "mini" pero acorde al tema
-        # self.btn_browse_icon.setStyleSheet(BTN_STYLES["info"] + "padding: 4px; font-size: 11px;")
-        ico_layout.addWidget(self.btn_browse_icon)
+        icon_box.addWidget(self.btn_browse_icon)
         
-        form_layout.addWidget(ico_widget, 5, 1)
-        
-        # Fila 6: Plataforma (Radios)
-        label6 = QLabel("Plataforma Objetivo:")
-        label6.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        # Margin top para alinear con el grupo de radios
-        label6.setStyleSheet("margin-top: 5px;") 
-        form_layout.addWidget(label6, 6, 0, Qt.AlignTop)
+        # Wrap icon box in widget since grid layout expects widget or layout
+        # (addLayout works too, but we are consistent)
+        form_layout.addLayout(icon_box, 5, 1)
 
+        # Fila 6 Platform
+        l_plat = uwp_label("Plataforma Destino:")
+        l_plat.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        l_plat.setStyleSheet(l_plat.styleSheet() + "margin-top: 8px;")
+        form_layout.addWidget(l_plat, 6, 0)
         
+        # Radios
         self.platform_group = QButtonGroup()
-        platform_layout = QHBoxLayout()
-        platform_layout.setSpacing(12)
-        platform_layout.setContentsMargins(0, 0, 0, 0)
+        plat_layout = QHBoxLayout()
+        plat_layout.setSpacing(20)
+        plat_layout.setContentsMargins(0, 5, 0, 0) # Top margin to align with label text vertically if needed
         
-        self.radio_windows = QRadioButton("Windows")
+        def uwp_radio(text):
+            r = QRadioButton(text)
+            r.setMinimumHeight(30)
+            # UWP Radio: Circle with dot. 
+            r.setStyleSheet("""
+                QRadioButton {
+                    color: #ddd;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 14px;
+                    spacing: 8px;
+                }
+                QRadioButton::indicator {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 10px;
+                    border: 2px solid #999;
+                    background: transparent;
+                }
+                QRadioButton::indicator:hover {
+                    border-color: white;
+                }
+                QRadioButton::indicator:checked {
+                    border-color: #ff5722;
+                    background-color: #ff5722;
+                }
+                /* Inner dot is handled by checking mechanism or image usually, 
+                   but Qt unchecked/checked bg works for simple flat style */
+            """)
+            return r
+
+        self.radio_windows = uwp_radio("Windows")
         self.radio_windows.setChecked(True)
-        self.radio_windows.setMinimumHeight(40)  # No se achique más allá de 40 px al hacer resize
-        self.radio_windows.setStyleSheet("""
-            QRadioButton {
-                padding: 6px 10px;
-                border: 2px solid transparent;
-                border-radius: 6px;
-                background-color: transparent;
-                min-height: 40px;  /* Garantiza altura mínima visual */
-            }
-            QRadioButton:hover {
-                background-color: rgba(108, 249, 237, 0.1);
-                border-color: rgba(108, 249, 230, 0.3);
-            }
-            QRadioButton::indicator {
-                width: 18px;
-                height: 18px;
-                border-radius: 9px;
-                border: 2px solid #d1d5da;
-            }
-            QRadioButton::indicator:checked {
-                border: 2px solid #6cf9e6;
-                background-color: #6ceff9;
-            }
-        """)
-        
-        self.radio_linux = QRadioButton("Linux")
-        self.radio_linux.setMinimumHeight(40)
-        self.radio_linux.setStyleSheet("""
-            QRadioButton {
-                padding: 6px 10px;
-                border: 2px solid transparent;
-                border-radius: 6px;
-                background-color: transparent;
-                min-height: 40px;
-            }
-            QRadioButton:hover {
-                background-color: rgba(249, 247, 108, 0.1);
-                border-color: rgba(249, 235, 108, 0.3);
-            }
-            QRadioButton::indicator {
-                width: 18px;
-                height: 18px;
-                border-radius: 9px;
-                border: 2px solid #d1d5da;
-            }
-            QRadioButton::indicator:checked {
-                border: 2px solid #e4f96c;
-                background-color: #f9f76c;
-            }
-        """)
-        
-        self.radio_multiplataforma = QRadioButton("Multiplataforma")
-        self.radio_multiplataforma.setMinimumHeight(40)
-        self.radio_multiplataforma.setStyleSheet("""
-            QRadioButton {
-                padding: 6px 10px;
-                border: 2px solid transparent;
-                border-radius: 6px;
-                background-color: transparent;
-                min-height: 40px;
-            }
-            QRadioButton:hover {
-                background-color: rgba(108, 249, 108, 0.1);
-                border-color: rgba(108, 249, 115, 0.3);
-            }
-            QRadioButton::indicator {
-                width: 18px;
-                height: 18px;
-                border-radius: 9px;
-                border: 2px solid #d1d5da;
-            }
-            QRadioButton::indicator:checked {
-                border: 2px solid #6cf978;
-                background-color: #83f96c;
-            }
-        """)
+        self.radio_linux = uwp_radio("Linux")
+        self.radio_multiplataforma = uwp_radio("Multiplataforma")
         
         self.platform_group.addButton(self.radio_windows)
         self.platform_group.addButton(self.radio_linux)
         self.platform_group.addButton(self.radio_multiplataforma)
-        platform_layout.addWidget(self.radio_windows)
-        platform_layout.addWidget(self.radio_linux)
-        platform_layout.addWidget(self.radio_multiplataforma)
         
-        platform_widget = QWidget()
-        platform_widget.setLayout(platform_layout)
-        form_layout.addWidget(platform_widget, 6, 1)
+        plat_layout.addWidget(self.radio_windows)
+        plat_layout.addWidget(self.radio_linux)
+        plat_layout.addWidget(self.radio_multiplataforma)
+        plat_layout.addStretch()
         
-        # Fila 7: Info
-        info_label = QLabel("ℹ️ Un proyecto bien configurado garantiza una mejor distribución y compatibilidad.<br>Asegurese de que el Autor coincida con su usuario de GitHub para las actualizaciones.")
-        info_label.setStyleSheet("color: #6a737d; font-size: 11px; padding: 10px 0px; border-top: 1px solid #eee; margin-top: 10px;")
-        info_label.setWordWrap(True)
-        form_layout.addWidget(info_label, 7, 0, 1, 2)
-        
-        self.btn_create = QPushButton("Crear Proyecto")
-        self.btn_create.setFont(BUTTON_FONT)
-        self.btn_create.setToolTip(LGDR_MAKE_MESSAGES["_LGDR_MAKE_BTN"])
-        self.btn_create.setIcon(QIcon(TAB_ICONS["crear"]))
-        self.btn_create.setMinimumHeight(45)
-        self.btn_create.setMinimumWidth(300)
-        # Boton centrado y ancho completo relativo al form
-        self.btn_create.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.btn_create.clicked.connect(self.create_package_action)
-        
-        # Progress Bar (Hidden by default)
-        self.github_progress = QProgressBar()
-        self.github_progress.setRange(0, 0) # Indeterminate
-        self.github_progress.setTextVisible(False)
-        self.github_progress.setFixedHeight(4)
-        self.github_progress.setVisible(False)
-        self.github_progress.setStyleSheet("QProgressBar { border: none; background: #e1e4e8; border-radius: 2px; } QProgressBar::chunk { background: #f96c6c; border-radius: 2px; }")
-        
-        # Status
-        self.create_status = QLabel("")
-        self.create_status.setAlignment(Qt.AlignCenter)
+        form_layout.addLayout(plat_layout, 6, 1)
 
         layout.addWidget(form_group)
-        layout.addWidget(self.btn_create)
-        layout.addWidget(self.github_progress)
-        layout.addWidget(self.create_status)
+
+        # Action Area
+        layout.addSpacing(20)
+        action_layout = QHBoxLayout()
+        
+        self.create_status = QLabel("")
+        self.create_status.setStyleSheet("color: #aaa; margin-left: 10px;")
+        action_layout.addWidget(self.create_status)
+        
+        action_layout.addStretch()
+        
+        self.github_progress = QProgressBar()
+        self.github_progress.setRange(0,0)
+        self.github_progress.setVisible(False)
+        self.github_progress.setFixedWidth(150)
+        self.github_progress.setFixedHeight(4)
+        self.github_progress.setStyleSheet("QProgressBar { background: #333; border: none; border-radius: 2px; } QProgressBar::chunk { background: #ff5722; }")
+        action_layout.addWidget(self.github_progress)
+        
+        self.btn_create_action = QPushButton("Crear Proyecto")
+        self.btn_create_action.setCursor(Qt.PointingHandCursor)
+        self.btn_create_action.setFixedSize(160, 40)
+        # UWP Accent Button
+        self.btn_create_action.setStyleSheet("""
+            QPushButton {
+                background-color: #ff5722; 
+                color: white; 
+                font-weight: 600; 
+                font-size: 14px; 
+                border-radius: 4px;
+                border: none;
+                font-family: 'Segoe UI', sans-serif;
+            }
+            QPushButton:hover { background-color: #ff7043; }
+            QPushButton:pressed { background-color: #e64a19; }
+            QPushButton:disabled { background-color: #333; color: #666; }
+        """)
+        self.btn_create_action.clicked.connect(self.create_package_action)
+        action_layout.addWidget(self.btn_create_action)
+        
+        layout.addLayout(action_layout)
         layout.addStretch()
-        self.tab_create.setLayout(layout)
-        self.statusBar().showMessage("Preparando entorno...")
+        
+        # Link alias for compatibility with existing methods
+        # self.btn_create = self.btn_create_action # REMOVED to avoid conflict with sidebar button 
+
 
     def browse_icon(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icono", "", "Icon Files (*.ico)")
@@ -2527,7 +3963,7 @@ class PackageTodoGUI(QMainWindow):
             return
         
         # Deshabilitar controles y mostrar barra de progreso
-        self.btn_create.setEnabled(False)
+        self.btn_create_action.setEnabled(False)
         self.input_empresa.setEnabled(False)
         self.input_nombre_logico.setEnabled(False)
         self.input_nombre_completo.setEnabled(False)
@@ -2552,7 +3988,7 @@ class PackageTodoGUI(QMainWindow):
         self.github_progress.setVisible(False)
         
         # Rehabilitar controles
-        self.btn_create.setEnabled(True)
+        self.btn_create_action.setEnabled(True)
         self.input_empresa.setEnabled(True)
         self.input_nombre_logico.setEnabled(True)
         self.input_nombre_completo.setEnabled(True)
@@ -2614,6 +4050,14 @@ class PackageTodoGUI(QMainWindow):
                 with open(here_file, "w") as f:
                     resultinityy = os.path.join(f"#store (sha256 hash):{folder}/.{hv}")
                     f.write(resultinityy)
+            
+            # --- [DOCS GENERATION] Write embedded docs/index.html with metadata ---
+            docs_index = os.path.join(full_path, "docs", "index.html")
+            os.makedirs(os.path.dirname(docs_index), exist_ok=True)
+            with open(docs_index, "w", encoding="utf-8") as f:
+                f.write(DOCS_TEMPLATE.replace("__OWNER__", autor).replace("__REPO__", nombre_logico))
+            # ----------------------------------------------------------------------
+            
             if linkedsys == "Knosthalij" or "knosthalij":
                 with open(blockChain, "w") as f:
                     f.write("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -3443,6 +4887,8 @@ if __name__ == '__main__':
             requirements_path = os.path.join(full_path, "lib", "requirements.txt")
             with open(requirements_path, "w") as f:
                 f.write("# Dependencias del paquete\n")
+            # [Unified doc gen handled above]
+
             self.create_details_xml(full_path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada, vso)
             readme_path = os.path.join(full_path, "README.md")
             readme_text = f"""# {empresa} {nombre_completo}\n\nPaquete generado con Influent Package Maker.\n\n## Ejemplo de uso\npython3 {empresa}.{nombre_logico}.v{version}/{nombre_logico}.py\n\n##"""
@@ -3458,174 +4904,269 @@ if __name__ == '__main__':
 
     def create_details_xml(self, path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada, vso):
         newversion = getversion()
-        full_name = f"{empresa}.{nombre_logico}.v{version}"
-        hash_val = hashlib.sha256(full_name.encode()).hexdigest()
+        # Generate hash based on full name string to ensure uniqueness
+        full_name_str = f"{empresa}.{nombre_logico}.v{version}"
+        hash_val = hashlib.sha256(full_name_str.encode()).hexdigest()
+        
+        # Determine rating
         rating = "Todas las edades"
         for keyword, rate in AGE_RATINGS.items():
             if keyword in nombre_logico.lower() or keyword in nombre_completo.lower():
                 rating = rate
                 break
-        empresa = empresa.capitalize().replace("-", " ")
+                
+        empresa_fmt = empresa.capitalize().replace("-", " ")
+        
+        # Pretty XML Construction
         root = ET.Element("app")
-        ET.SubElement(root, "publisher").text = empresa
-        ET.SubElement(root, "app").text = nombre_logico
-        ET.SubElement(root, "name").text = nombre_completo
-        ET.SubElement(root, "version").text = f"v{vso}"
-        ET.SubElement(root, "correlationid").text = hash_val
-        ET.SubElement(root, "rate").text = rating
-        ET.SubElement(root, "author").text = autor
-        ET.SubElement(root, "platform").text = plataforma_seleccionada
-        tree = ET.ElementTree(root)
-        tree.write(os.path.join(path, "details.xml"))
+        
+        # Helper to create proper structure
+        def add_elem(parent, tag, text):
+            e = ET.SubElement(parent, tag)
+            e.text = text
+            return e
+
+        add_elem(root, "publisher", empresa_fmt)
+        add_elem(root, "app", nombre_logico)
+        add_elem(root, "name", nombre_completo)
+        add_elem(root, "version", f"v{vso}")
+        add_elem(root, "correlationid", hash_val)
+        add_elem(root, "rate", rating)
+        add_elem(root, "author", autor)
+        add_elem(root, "platform", plataforma_seleccionada)
+        
+        # Pretty printing hack for minidom
+        from xml.dom import minidom
+        rough_string = ET.tostring(root, 'utf-8')
+        reparsed = minidom.parseString(rough_string)
+        pretty_xml_as_string = reparsed.toprettyxml(indent="  ")
+        
+        # Strip empty lines if minidom adds too many
+        pretty_xml_as_string = "\n".join([line for line in pretty_xml_as_string.split('\n') if line.strip()])
+
+        with open(os.path.join(path, "details.xml"), "w", encoding="utf-8") as f:
+            f.write(pretty_xml_as_string)
+            
         self.statusBar().showMessage(f"Proyecto creado como {empresa}.{nombre_logico}.v{version}!")
 
-    def init_build_tab(self):
-        layout = QVBoxLayout()
+    def init_build_tab(self, parent_widget=None):
+        target = parent_widget if parent_widget else self.tab_build
+        layout = QVBoxLayout(target)
         layout.setSpacing(10)
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setContentsMargins(25, 25, 25, 25)
         
-        form_group = QGroupBox("Construir Paquete")
+        # Header "Construir Paquete"
+        title_lbl = QLabel("Construir Paquete")
+        title_lbl.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 10px;")
+        layout.addWidget(title_lbl)
+        
+        # Container for form elements - Transparent GroupBox for layout structure only
+        form_group = QGroupBox()
+        form_group.setStyleSheet("""
+            QGroupBox {
+                border: none;
+                margin-top: 0px;
+                background: transparent;
+            }
+        """)
+        
         form_layout = QGridLayout(form_group)
-        form_layout.setSpacing(8)
-        form_layout.setColumnMinimumWidth(0, 140)
+        form_layout.setSpacing(15)
+        form_layout.setColumnMinimumWidth(0, 160)
         form_layout.setColumnStretch(1, 1)
         
+        # UWP Style Definition for Controls
+        # Labels: Segoe UI, 14px, #cccccc
+        def uwp_label(text):
+            l = QLabel(text)
+            l.setStyleSheet("font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #cccccc; font-weight: 500;")
+            l.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            return l
+            
+        def uwp_input(placeholder, read_only=False):
+            line = QLineEdit()
+            line.setPlaceholderText(placeholder)
+            line.setReadOnly(read_only)
+            line.setFixedHeight(35)
+            # UWP Style (Shared with Create Tab)
+            line.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+                    border-radius: 4px;
+                    padding: 0 10px;
+                    color: white;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 14px;
+                    selection-background-color: #ff5722;
+                }
+                QLineEdit:hover {
+                    background-color: rgba(255, 255, 255, 0.08);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+                }
+                QLineEdit:focus {
+                    background-color: black;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-bottom: 2px solid #ff5722;
+                }
+            """)
+            if read_only and placeholder.startswith("Detectado"): # Special styling for platform
+                 line.setStyleSheet(line.styleSheet() + "QLineEdit { color: #888; font-style: italic; }")
+            return line
+        
         # Fila 0: Fabricante
-        label1 = QLabel("Fabricante:")
-        label1.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label1, 0, 0)
-        self.input_build_empresa = QLineEdit()
-        self.input_build_empresa.setPlaceholderText("Ejemplo: influent")
-        self.input_build_empresa.setMaximumWidth(450)
-        self.input_build_empresa.setFixedHeight(35)
+        form_layout.addWidget(uwp_label("Fabricante:"), 0, 0)
+        self.input_build_empresa = uwp_input("Ejemplo: influent")
         form_layout.addWidget(self.input_build_empresa, 0, 1)
 
         # Fila 1: Nombre interno
-        label2 = QLabel("Nombre interno:")
-        label2.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label2, 1, 0)
-        self.input_build_nombre = QLineEdit()
-        self.input_build_nombre.setPlaceholderText("Ejemplo: mycoolapp")
-        self.input_build_nombre.setMaximumWidth(450)
-        self.input_build_nombre.setFixedHeight(35)
+        form_layout.addWidget(uwp_label("Nombre interno:"), 1, 0)
+        self.input_build_nombre = uwp_input("Ejemplo: mycoolapp")
         form_layout.addWidget(self.input_build_nombre, 1, 1)
 
         # Fila 2: Versión
-        label3 = QLabel("Versión:")
-        label3.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label3, 2, 0)
-        self.input_build_version = QLineEdit()
-        self.input_build_version.setPlaceholderText("Ejemplo: 1.0")
-        self.input_build_version.setMaximumWidth(450)
-        self.input_build_version.setFixedHeight(35)
+        form_layout.addWidget(uwp_label("Versión:"), 2, 0)
+        self.input_build_version = uwp_input("Ejemplo: 1.0")
         form_layout.addWidget(self.input_build_version, 2, 1)
 
         # Fila 3: Plataforma (AUTOMATIZADO)
-        label4 = QLabel("Entorno de compilación:")
-        label4.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label4, 3, 0)
-        self.input_build_platform = QLineEdit()
-        self.input_build_platform.setReadOnly(True)
+        form_layout.addWidget(uwp_label("Entorno de compilación:"), 3, 0)
+        self.input_build_platform = uwp_input("Detectando...", read_only=True)
         # Auto-detectar plataforma actual
         detected_plat = "Windows" if sys.platform.startswith("win") else "Linux"
         self.input_build_platform.setText(detected_plat)
         self.input_build_platform.setToolTip("Detectado automáticamente según el sistema operativo actual")
-        self.input_build_platform.setMaximumWidth(450)
-        self.input_build_platform.setFixedHeight(35)
-        self.input_build_platform.setStyleSheet("background-color: rgba(128, 128, 128, 0.1); border-style: dashed;")
         form_layout.addWidget(self.input_build_platform, 3, 1)
 
         # Fila 4: Modo (Radios)
-        label5 = QLabel("Modo:")
-        label5.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        label5.setStyleSheet("margin-top: 5px;")
-        form_layout.addWidget(label5, 4, 0, Qt.AlignTop)
+        l_mode = uwp_label("Modo:")
+        l_mode.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        l_mode.setStyleSheet(l_mode.styleSheet() + "margin-top: 8px;")
+        form_layout.addWidget(l_mode, 4, 0)
         
         self.build_mode_group = QButtonGroup()
         mode_layout = QHBoxLayout()
-        mode_layout.setSpacing(12)
-        mode_layout.setContentsMargins(0,0,0,0)
+        mode_layout.setSpacing(20)
+        mode_layout.setContentsMargins(0, 5, 0, 0)
         
-        self.radio_portable = QRadioButton("Portable (All-in-one)")
+        def uwp_radio(text):
+            r = QRadioButton(text)
+            r.setMinimumHeight(30)
+            r.setStyleSheet("""
+                QRadioButton {
+                    color: #ddd;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 14px;
+                    spacing: 8px;
+                }
+                QRadioButton::indicator {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 10px;
+                    border: 2px solid #999;
+                    background: transparent;
+                }
+                QRadioButton::indicator:hover {
+                    border-color: white;
+                }
+                QRadioButton::indicator:checked {
+                    border-color: #ff5722;
+                    background-color: #ff5722;
+                }
+            """)
+            return r
+        
+        self.radio_portable = uwp_radio("Portable (All-in-one)")
         self.radio_portable.setChecked(True)
-        self.radio_portable.setMinimumHeight(40)
-        self.radio_lite = QRadioButton("Lite (Single File)") 
-        self.radio_lite.setMinimumHeight(40)
-        
-        # Apply same style as create tab
-        radio_style = """
-            QRadioButton {
-                padding: 6px 10px;
-                border: 2px solid transparent;
-                border-radius: 6px;
-                background-color: transparent;
-                min-height: 40px;
-            }
-            QRadioButton:hover {
-                background-color: rgba(108, 249, 237, 0.1);
-                border-color: rgba(108, 249, 230, 0.3);
-            }
-            QRadioButton::indicator {
-                width: 18px;
-                height: 18px;
-                border: 2px solid #d1d5da;
-                border-radius: 9px;
-            }
-            QRadioButton::indicator:checked {
-                border: 2px solid #6cf9e6;
-                background-color: #6ceff9;
-            }
-        """
-        self.radio_portable.setStyleSheet(radio_style)
-        self.radio_lite.setStyleSheet(radio_style)
+        self.radio_lite = uwp_radio("Lite (Single File)") 
         
         self.build_mode_group.addButton(self.radio_portable)
         self.build_mode_group.addButton(self.radio_lite)
         
         mode_layout.addWidget(self.radio_portable)
         mode_layout.addWidget(self.radio_lite)
-        mode_widget = QWidget()
-        mode_widget.setLayout(mode_layout)
+        mode_layout.addStretch()
         
-        form_layout.addWidget(mode_widget, 4, 1)
+        form_layout.addLayout(mode_layout, 4, 1) # Use addLayout directly for cleaner code
 
         # Fila 5: Carpeta Custom
-        label6 = QLabel("Carpeta Externa:")
-        label6.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        form_layout.addWidget(label6, 5, 0)
+        form_layout.addWidget(uwp_label("Carpeta Externa:"), 5, 0)
         
-        custom_widget = QWidget()
-        custom_widget.setMaximumWidth(450)
-        cw_layout = QHBoxLayout(custom_widget)
-        cw_layout.setContentsMargins(0,0,0,0)
-        cw_layout.setSpacing(5)
+        custom_box = QHBoxLayout()
+        custom_box.setSpacing(8)
         
-        self.input_custom_path = QLineEdit()
-        self.input_custom_path.setPlaceholderText("(Opcional) Seleccionar carpeta externa a compilar")
-        self.input_custom_path.setReadOnly(True)
-        self.input_custom_path.setFixedHeight(35)
-        cw_layout.addWidget(self.input_custom_path)
+        self.input_custom_path = uwp_input("(Opcional) Seleccionar carpeta externa a compilar", read_only=True)
+        custom_box.addWidget(self.input_custom_path)
         
         self.btn_select_folder = QPushButton("...")
-        self.btn_select_folder.setFixedWidth(40)
-        self.btn_select_folder.setFixedHeight(35)
+        self.btn_select_folder.setCursor(Qt.PointingHandCursor)
+        self.btn_select_folder.setFixedSize(40, 35)
+        self.btn_select_folder.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 4px;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+            QPushButton:pressed {
+                background-color: rgba(255, 255, 255, 0.04);
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+        """)
         self.btn_select_folder.clicked.connect(self.select_custom_folder)
-        cw_layout.addWidget(self.btn_select_folder)
+        custom_box.addWidget(self.btn_select_folder)
         
-        form_layout.addWidget(custom_widget, 5, 1)
+        form_layout.addLayout(custom_box, 5, 1)
 
-        self.btn_build = QPushButton("Construir paquete .iflapp")
-        self.btn_build.setFont(BUTTON_FONT)
-        self.btn_build.setIcon(QIcon(TAB_ICONS["construir"]))
-        self.btn_build.setMaximumWidth(350)
-        self.btn_build.clicked.connect(self.build_package_action)
-
-        self.build_status = QLabel("")
         layout.addWidget(form_group)
-        layout.addWidget(self.btn_build)
-        layout.addWidget(self.build_status)
+        
+        layout.addSpacing(20)
+
+        # Action Area
+        action_layout = QHBoxLayout()
+        
+        self.build_status = QLabel("")
+        self.build_status.setStyleSheet("color: #aaa; margin-left: 10px;")
+        action_layout.addWidget(self.build_status)
+        
+        self.build_progress = LeviathanProgressBar()
+        self.build_progress.setVisible(False)
+        self.build_progress.setFixedWidth(200)
+        self.build_progress.setFixedHeight(4) # Slim progress bar
+        # Override paint if needed or rely on default style? 
+        # LeviathanProgressBar handles its own painting but let's ensure it fits context
+        # We'll just add it to layout.
+        action_layout.addWidget(self.build_progress)
+        
+        action_layout.addStretch()
+
+        self.btn_build = QPushButton("Construir Paquete")
+        self.btn_build.setCursor(Qt.PointingHandCursor)
+        self.btn_build.setFixedSize(180, 40)
+        self.btn_build.setStyleSheet("""
+            QPushButton {
+                background-color: #ff5722; 
+                color: white; 
+                font-weight: 600; 
+                font-size: 14px; 
+                border-radius: 4px;
+                border: none;
+                font-family: 'Segoe UI', sans-serif;
+            }
+            QPushButton:hover { background-color: #ff7043; }
+            QPushButton:pressed { background-color: #e64a19; }
+            QPushButton:disabled { background-color: #333; color: #666; }
+        """)
+        self.btn_build.clicked.connect(self.build_package_action)
+        action_layout.addWidget(self.btn_build)
+        
+        layout.addLayout(action_layout)
         layout.addStretch()
-        self.tab_build.setLayout(layout)
 
     def select_custom_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta del Proyecto")
@@ -3659,85 +5200,154 @@ if __name__ == '__main__':
             build_mode = "lite"
 
         self.build_status.setText("🔨 Construyendo paquete .iflapp...")
+        self.build_progress.setVisible(True)
+        self.build_progress.setMarquee(True)
+        
         self.build_thread = BuildThread(empresa, nombre, version_full, platformLineEdit, parent=self, custom_path=custom_path, build_mode=build_mode)
         self.build_thread.progress.connect(lambda msg: self.build_status.setText(msg))
-        self.build_thread.finished.connect(lambda msg: self.build_status.setText(msg))
-        self.build_thread.error.connect(lambda msg: self.build_status.setText(f"❌ Error: {msg}"))
+        self.build_thread.finished.connect(lambda msg: [self.build_status.setText(msg), self.build_progress.setVisible(False)])
+        self.build_thread.error.connect(lambda msg: [self.build_status.setText(f"❌ Error: {msg}"), self.build_progress.setVisible(False)])
         self.build_thread.start()
         self.statusBar().showMessage(f"Iniciando compilación...")
 
-    def init_manager_tab(self):
-        layout = QVBoxLayout()
-        splitter = QSplitter(Qt.Horizontal)
-        proj_group = QGroupBox("Proyectos locales")
-        proj_layout = QVBoxLayout(proj_group)
-        self.projects_list = QListWidget()
-        self.projects_list.setIconSize(QtCore.QSize(32, 32))
-        self.projects_list.setAlternatingRowColors(False)
-        self.projects_list.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.projects_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_LOCAL_LV"])
-        # Ensure expandable policy
-        self.projects_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        proj_layout.addWidget(self.projects_list)
-        splitter.addWidget(proj_group)
-
-        apps_group = QGroupBox("Apps instaladas")
-        apps_layout = QVBoxLayout(apps_group)
-        self.apps_list = QListWidget()
-        self.apps_list.setIconSize(QtCore.QSize(32, 32))
-        self.apps_list.setAlternatingRowColors(False)
-        self.apps_list.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.apps_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALLED_LV"])
-        # Ensure expandable policy
-        self.apps_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        apps_layout.addWidget(self.apps_list)
-        splitter.addWidget(apps_group)
-
-        splitter.setSizes([1, 1])
-        # Add splitter with Stretch Factor 1 to take all available vertical space
-        layout.addWidget(splitter, 1)
-        btn_row = QHBoxLayout()
-        btn_row.setSpacing(10)
-        btn_row.setContentsMargins(0, 5, 0, 0)
+    def init_manager_tab(self, parent_widget=None):
+        target = parent_widget if parent_widget else self.tab_manager
+        layout = QVBoxLayout(target)
+        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setSpacing(20)
         
-        # Obtener estilos github
-        is_dark = detectar_modo_sistema()
-        action_style, normal_style = get_github_style(is_dark)
+        # Header
+        title_lbl = QLabel("Gestor de Aplicaciones")
+        title_lbl.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 5px;")
+        layout.addWidget(title_lbl)
+        
+        # Main Splitter
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.setHandleWidth(2)
+        splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+        """)
+        
+        def create_section(title, list_widget):
+            container = QWidget()
+            vbox = QVBoxLayout(container)
+            vbox.setContentsMargins(0, 0, 0, 0)
+            vbox.setSpacing(10)
+            
+            lbl = QLabel(title)
+            lbl.setStyleSheet("font-family: 'Segoe UI'; font-size: 16px; font-weight: 600; color: #e0e0e0;")
+            vbox.addWidget(lbl)
+            
+            # Styled ListWidget
+            list_widget.setIconSize(QtCore.QSize(36, 36))
+            list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            list_widget.setFocusPolicy(Qt.NoFocus)
+            list_widget.setStyleSheet("""
+                QListWidget {
+                    background-color: rgba(0, 0, 0, 0.2); 
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 8px;
+                    padding: 5px;
+                    outline: none;
+                }
+                QListWidget::item {
+                    background-color: transparent;
+                    border-radius: 6px;
+                    padding: 8px;
+                    margin-bottom: 2px;
+                    color: #ddd;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 14px;
+                }
+                QListWidget::item:hover {
+                    background-color: rgba(255, 255, 255, 0.05);
+                }
+                QListWidget::item:selected {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    border-left: 3px solid #ff5722;
+                    color: white;
+                }
+            """)
+            vbox.addWidget(list_widget)
+            return container
 
-        btn_refresh = QPushButton("Refrescar listas")
-        # No establecemos font aquí porque el stylesheet lo maneja mejor para coherencia
-        #btn_refresh.setFont(BUTTON_FONT) 
-        btn_refresh.setStyleSheet(normal_style)
-        btn_refresh.setIcon(QIcon(IPM_ICON_PATH))
-        btn_refresh.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_REFRESH_BTN"])
-        btn_refresh.setMinimumHeight(38)
+        self.projects_list = QListWidget()
+        self.projects_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_LOCAL_LV"])
+        
+        self.apps_list = QListWidget()
+        self.apps_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALLED_LV"])
+        
+        splitter.addWidget(create_section("Proyectos Locales", self.projects_list))
+        splitter.addWidget(create_section("Aplicaciones Instaladas", self.apps_list))
+        splitter.setSizes([500, 500]) # Equal start
+        
+        layout.addWidget(splitter, 1) # Stretch
+        
+        # Action Bar
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
+        
+        # UWP Button Generator
+        def uwp_btn(text, icon_key=None, is_primary=False):
+            btn = QPushButton(text)
+            btn.setFixedHeight(38)
+            btn.setCursor(Qt.PointingHandCursor)
+            
+            # Clean style
+            base_bg = "#ff5722" if is_primary else "rgba(255, 255, 255, 0.06)"
+            hover_bg = "#ff7043" if is_primary else "rgba(255, 255, 255, 0.1)"
+            text_col = "white"
+            border = "none" if is_primary else "1px solid rgba(255, 255, 255, 0.08)"
+            
+            btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {base_bg};
+                    color: {text_col};
+                    border: {border};
+                    border-radius: 4px;
+                    font-weight: 600;
+                    font-size: 13px;
+                    font-family: 'Segoe UI', sans-serif;
+                    padding: 0 15px;
+                }}
+                QPushButton:hover {{
+                    background-color: {hover_bg};
+                }}
+                QPushButton:pressed {{
+                    background-color: {base_bg};
+                    opacity: 0.8;
+                }}
+            """)
+            if icon_key and icon_key in TAB_ICONS:
+                 btn.setIcon(QIcon(TAB_ICONS[icon_key]))
+            elif icon_key == "refresh":
+                 btn.setIcon(QIcon(IPM_ICON_PATH))
+            return btn
+
+        btn_refresh = uwp_btn("Refrescar Listas", "refresh")
         btn_refresh.clicked.connect(self.load_manager_lists)
         btn_row.addWidget(btn_refresh)
-
-        btn_install = QPushButton("Instalar paquete")
-        #btn_install.setFont(BUTTON_FONT)
-        btn_install.setStyleSheet(normal_style) # Usamos normal en vez de "success" para mantener consistencia GW/BW requested
-        btn_install.setIcon(QIcon(TAB_ICONS["instalar"]))
-        btn_install.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALL_BTN"])
-        btn_install.setMinimumHeight(38)
+        
+        btn_row.addStretch() # Spacer
+        
+        btn_install = uwp_btn("Instalar App", "instalar")
         btn_install.clicked.connect(self.install_package_action)
         btn_row.addWidget(btn_install)
 
-        btn_uninstall = QPushButton("Desinstalar paquete")
-        #btn_uninstall.setFont(BUTTON_FONT)
-        btn_uninstall.setStyleSheet(normal_style) # Usamos normal en vez de "danger" para mantener consistencia GW/BW requested
-        btn_uninstall.setIcon(QIcon(TAB_ICONS["desinstalar"]))
-        btn_uninstall.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_UNINSTALL_BTN"])
-        btn_uninstall.setMinimumHeight(38)
+        btn_uninstall = uwp_btn("Desinstalar", "desinstalar")
         btn_uninstall.clicked.connect(self.uninstall_package_action)
         btn_row.addWidget(btn_uninstall)
+        
         layout.addLayout(btn_row)
-
+        
         self.manager_status = QLabel("")
+        self.manager_status.setStyleSheet("color: #aaa; margin-top: 5px;")
+        layout.addWidget(self.manager_status)
         self.manager_status.setWordWrap(True)
         self.manager_status.setToolTip("Estado de la app")
-        layout.addWidget(self.manager_status)
-        self.tab_manager.setLayout(layout)
+        # self.tab_manager.setLayout(layout)
         self.load_manager_lists()
         self.projects_list.itemDoubleClicked.connect(lambda item: self.on_project_double_click(item))
         self.apps_list.itemDoubleClicked.connect(lambda item: self.on_app_double_click(item))
@@ -3919,6 +5529,10 @@ if __name__ == '__main__':
             self.manager_status.setText("Selecciona un paquete instalado para desinstalar.")
             return
         pkg = item.data(QtCore.Qt.UserRole)
+        # Confirmación
+        L = LeviathanDialog.launch(self, "Desinstalar", f"¿Estás seguro de desinstalar {pkg['name']}?", mode="confirm")
+        if not L: return
+        
         try:
             shutil.rmtree(pkg["folder"])
             self.manager_status.setText(f"🗑️ Desinstalado: {pkg['titulo']}")
@@ -3926,197 +5540,442 @@ if __name__ == '__main__':
             self.manager_status.setText(f"❌ Error al desinstalar: {e}")
         self.load_manager_lists()
 
-    def init_about_tab(self):
-        # Creamos un widget contenedor y le ponemos el layout como antes
-        container_widget = QWidget()
-        layout = QVBoxLayout(container_widget)
+    def init_config_tab(self, parent_widget=None):
+        """Pestaña de Configuración con controles UWP"""
+        target = parent_widget
+        layout = QVBoxLayout(target)
+        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setSpacing(15)
+        
+        header = QLabel("Configuración")
+        header.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 10px;")
+        layout.addWidget(header)
+        
+        # Scroll Area for settings
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
+        
+        content = QWidget()
+        vbox = QVBoxLayout(content)
+        vbox.setSpacing(20)
+        vbox.setContentsMargins(0,0,0,30) # Bottom padding
+        
+        # Helper for sections
+        def add_section(title, desc=None):
+            lbl = QLabel(title)
+            lbl.setStyleSheet("font-family: 'Segoe UI'; font-size: 16px; font-weight: bold; color: #ff5722; margin-top: 10px;")
+            vbox.addWidget(lbl)
+            if desc:
+                d = QLabel(desc)
+                d.setStyleSheet("color: #aaa; font-size: 13px; margin-bottom: 5px;")
+                d.setWordWrap(True)
+                vbox.addWidget(d)
+                
+        def uwp_edit(text=""):
+            e = QLineEdit(text)
+            e.setFixedHeight(35)
+            e.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-bottom: 2px solid #555;
+                    border-radius: 4px;
+                    color: white;
+                    padding: 0 10px;
+                }
+                QLineEdit:focus { border-bottom-color: #ff5722; background-color: black; }
+            """)
+            return e
+
+        # --- Rutas ---
+        add_section("Rutas del Sistema", "Configura donde se guardan los proyectos y donde busca las apps.")
+        
+        h_path = QHBoxLayout()
+        self.conf_base_dir = uwp_edit(BASE_DIR)
+        self.conf_base_dir.setPlaceholderText("Directorio de Proyectos")
+        btn_browse = QPushButton("...")
+        btn_browse.setFixedSize(40, 35)
+        btn_browse.setStyleSheet("QPushButton { background-color: rgba(255,255,255,0.1);border-radius:4px;color:white; }")
+        h_path.addWidget(self.conf_base_dir)
+        h_path.addWidget(btn_browse)
+        vbox.addLayout(h_path)
+        
+        # --- Variables ---
+        add_section("Variables de Entorno Globales", "Define variables predeterminadas para los scripts de tus paquetes (ej. API_KEYS, PATHS).")
+        
+        self.conf_vars = QtWidgets.QPlainTextEdit(APP_CONFIG.get("GLOBAL_VARS", ""))
+        self.conf_vars.setPlaceholderText("KEY=VALUE\nANOTHER_KEY=123")
+        self.conf_vars.setFixedHeight(120)
+        self.conf_vars.setStyleSheet("""
+            QPlainTextEdit {
+                background-color: rgba(0,0,0,0.3);
+                border: 1px solid #333;
+                border-radius: 6px;
+                color: #ddd;
+                font-family: Consolas, monospace;
+            }
+        """)
+        vbox.addWidget(self.conf_vars)
+        
+        # --- Save Config Logic ---
+        def save_config_action():
+            new_config = {
+                "BASE_DIR": self.conf_base_dir.text().strip(),
+                "Fluthin_APPS": Fluthin_APPS, # Mantener actual
+                "GLOBAL_VARS": self.conf_vars.toPlainText().strip(),
+                "DISPLAY_MODE": APP_CONFIG.get("DISPLAY_MODE", "GhostBlur (Cristal)")
+            }
+            if save_app_config(new_config):
+                # Update global BASE_DIR
+                global BASE_DIR
+                BASE_DIR = new_config["BASE_DIR"]
+                LeviathanDialog.launch(self, "Configuración", "Los cambios han sido guardados en config\\settings.json exitosamente.", mode="success")
+            else:
+                LeviathanDialog.launch(self, "Configuración", "Error al escribir el archivo de configuración.", mode="error")
+
+        # Save Button
+        vbox.addSpacing(20)
+        btn_save = QPushButton("Guardar Configuración")
+        btn_save.setFixedHeight(40)
+        btn_save.setCursor(Qt.PointingHandCursor)
+        btn_save.setStyleSheet("""
+            QPushButton {
+                background-color: #0078d4; color: white; border-radius: 4px; font-weight: bold; border: none;
+            }
+            QPushButton:hover { background-color: #106ebe; }
+        """)
+        btn_save.clicked.connect(save_config_action)
+        vbox.addWidget(btn_save)
+        
+        vbox.addStretch()
+        scroll.setWidget(content)
+        layout.addWidget(scroll)
+
+    def init_moonfix_tab(self, parent_widget=None):
+        target = parent_widget
+        layout = QVBoxLayout(target)
+        layout.setContentsMargins(25, 25, 25, 25)
         layout.setSpacing(20)
-        layout.setContentsMargins(30, 30, 30, 30)
         
-        # Título principal
-        title_label = QLabel("<h1 style='color: #f9826c;'>Influent Package Maker</h1>")
-        title_label.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(title_label)
+        header = QLabel("MoonFix - Suite de Reparación")
+        header.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 5px;")
+        layout.addWidget(header)
         
-        # Subtítulo
-        subtitle_label = QLabel("<h3>Suite Todo en Uno para Creación y Gestión de Paquetes</h3>")
-        subtitle_label.setAlignment(QtCore.Qt.AlignCenter)
-        subtitle_label.setStyleSheet("color: #8b949e; margin-bottom: 20px;")
-        layout.addWidget(subtitle_label)
+        desc = QLabel("Escanea carpetas que contengan proyectos para arreglar inconsistencias, assets faltantes y metadatos.")
+        desc.setWordWrap(True)
+        desc.setStyleSheet("color: #ccc; font-size: 14px; margin-bottom: 10px;")
+        layout.addWidget(desc)
         
-        # Descripción
-        desc_text = (
-            "<div style='font-size: 14px; line-height: 1.6; display: flex; gap:8px;'>"
-            "<span style='vertical-align: middle;'>"
-            "<svg width='24' height='24' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 24 24' fill='none'><circle cx='12' cy='12' r='10' fill='#f9826c'/><text x='12' y='16' text-anchor='middle' font-size='13' fill='white' font-family='Segoe UI, Arial' font-weight='bold'>IPM</text></svg>"
-            "</span>"
-            "<span>"
-            "Herramienta completa para crear, empaquetar, instalar y <b>gestionar proyectos Influent Fluthin Apps</b> "
-            "<span style='color:#f9826c;'>(.iflapp)</span> con una interfaz moderna y fácil de usar. "
-            "Diseñada para desarrolladores que buscan una solución todo-en-uno para el ciclo de vida completo de sus aplicaciones."
-            "</span></div>"
-        )
-        desc_label = QLabel(desc_text)
-        desc_label.setWordWrap(True)
-        layout.addWidget(desc_label)
+        # Mode selector
+        self.mf_batch_mode = QCheckBox("Escanear Carpeta de Proyectos (Modo Batch)")
+        self.mf_batch_mode.setStyleSheet("color: white;")
+        self.mf_batch_mode.setChecked(True)
+        layout.addWidget(self.mf_batch_mode)
         
-        # Características principales
-        features_text = (
-            "<h3 style='color: #f9826c;'><svg width='22' height='22' style='vertical-align:middle;margin-right:5px;' viewBox='0 0 24 24' fill='none'><path d='M12 17.5l3.09 1.91a1 1 0 0 0 1.45-1.05l-.59-3.47 2.52-2.32a1 1 0 0 0-.55-1.72l-3.49-.32-1.45-3.21a1 1 0 0 0-1.82 0l-1.45 3.21-3.5.32a1 1 0 0 0-.55 1.72l2.53 2.32-.59 3.47A1 1 0 0 0 8.91 19.4L12 17.5z' fill='#f9826c'/><circle cx='12' cy='12' r='10' stroke='#f9826c' stroke-width='1.5' fill='none'/></svg>Características Principales</h3>"
-            "<ul style='line-height: 2; padding-left: 12px;'>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='2' y='4' width='16' height='12' rx='2' fill='#6de075'/></svg> <b>Creación de Proyectos:</b> Genera estructuras de proyectos completas con todas las carpetas necesarias <span style='color: #a371f7;'>(app, assets, config, docs, source, lib)</span></li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#24292e'/><path d='M10 10l3-3-3-3v6z' fill='#fff'/></svg> <b>Verificación de GitHub:</b> Valida automáticamente que el username de GitHub exista antes de crear el proyecto</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='3' y='5' width='14' height='10' rx='2' fill='#58a6ff'/><rect x='7' y='9' width='6' height='2' rx='1' fill='#fff'/></svg> <b>Empaquetado:</b> Construye paquetes <span style='color:#f9826c;'>.iflapp</span> listos para distribución</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='4' width='12' height='12' rx='3' fill='#ffcd38'/></svg> <b>Gestor de Proyectos:</b> Visualiza y gestiona todos tus proyectos locales e instalados desde una interfaz unificada</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><path d='M4 8 L16 8 M4 12 L16 12' stroke='#f9826c' stroke-width='2'/></svg> <b>Instalación/Desinstalación:</b> Instala paquetes comprimidos o desinstala proyectos con un solo clic</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='4' width='12' height='12' rx='3' fill='#a371f7'/><path d='M8 8h4v4H8z' fill='#fff'/></svg> <b>Ejecución de Scripts:</b> Ejecuta scripts Python directamente desde la interfaz</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#24292e'/><text x='10' y='14' text-anchor='middle' font-size='9' fill='#fff' font-family='monospace'>SHA</text></svg> <b>Protección SHA256:</b> Cada proyecto incluye protección mediante hash SHA256</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='9' width='10' height='4' rx='1' fill='#3fb950'/><rect x='8' y='5' width='4' height='4' rx='1' fill='#3fb950'/></svg> <b>Accesos Directos:</b> Crea accesos directos en Windows automáticamente</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='4' y='4' width='12' height='12' rx='5' fill='#22272e'/><circle cx='10' cy='10' r='3' fill='#f9826c'/></svg> <b>Interfaz Moderna:</b> Tema oscuro con acentos naranjas, adaptable al modo del sistema</li>"
-            "<li><svg width='16' height='16' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='2' y='8' width='4' height='4' rx='2' fill='#f9826c'/><rect x='8' y='2' width='4' height='4' rx='2' fill='#58a6ff'/><rect x='14' y='8' width='4' height='4' rx='2' fill='#3fb950'/></svg> <b>Multiplataforma:</b> Soporte para Windows, Linux y proyectos multiplataforma</li>"
-            "</ul>"
-        )
-        features_label = QLabel(features_text)
-        features_label.setWordWrap(True)
-        layout.addWidget(features_label)
+        # Folder selection
+        s_box = QHBoxLayout()
+        self.mf_input = QLineEdit()
+        self.mf_input.setPlaceholderText("Selecciona la carpeta...")
+        self.mf_input.setFixedHeight(40)
+        self.mf_input.setStyleSheet("""
+            QLineEdit {
+                background-color: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 4px;
+                color: white;
+                padding: 0 10px;
+            }
+        """)
         
-        # Información técnica
-        tech_text = (
-            "<h3 style='color: #f9826c;'><svg width='20' height='20' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20' fill='none'><rect x='3' y='3' width='14' height='14' rx='3' fill='#21262d'/><path d='M10 6v4l3 2' stroke='#f9826c' stroke-width='2' stroke-linecap='round'/></svg>Información Técnica</h3>"
-            "<ul style='line-height: 2;'>"
-            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='3' y='3' width='14' height='14' rx='3' fill='#a371f7'/></svg> <b>Framework:</b> PyQt5</li>"
-            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='7' fill='#ffd33d'/></svg> <b>Lenguaje:</b> Python 3</li>"
-            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='5' y='7' width='10' height='6' rx='2' fill='#58a6ff'/></svg> <b>Formato de Paquetes:</b> .iflapp (ZIP comprimido)</li>"
-            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='6' fill='#3fb950'/></svg> <b>Estructura:</b> Basada en el sistema Influent OS</li>"
-            "<li><svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='4' y='10' width='12' height='3' rx='1' fill='#636e7b'/></svg> <b>Licencia:</b> GNU General Public License v3</li>"
-            "</ul>"
-        )
-        tech_label = QLabel(tech_text)
-        tech_label.setWordWrap(True)
-        layout.addWidget(tech_label)
+        btn_sel = QPushButton("Examinar")
+        btn_sel.setFixedHeight(40)
+        btn_sel.setCursor(Qt.PointingHandCursor)
+        btn_sel.setStyleSheet("QPushButton { background-color: rgba(255,255,255,0.1); color: white; border-radius: 4px; } QPushButton:hover { background-color: rgba(255,255,255,0.2); }")
+        btn_sel.clicked.connect(self.mf_browse)
         
-        # Información de contacto y enlaces
-        contact_text = (
-            "<h3 style='color: #f9826c;'><svg width='20' height='20' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#58a6ff'/><rect x='9' y='6' width='2' height='5' rx='1' fill='#fff'/><rect x='9' y='12' width='2' height='2' rx='1' fill='#fff'/></svg>Contacto y Enlaces</h3>"
-            "<p style='line-height: 2;'>"
-            "<b>Desarrollador Principal:</b><br>"
-            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='8' r='4' fill='#f9826c'/><rect x='4' y='13' width='12' height='4' rx='2' fill='#8b949e'/></svg> <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
-            "Jesus Quijada (@JesusQuijada34)</a><br><br>"
-            "<b>Colaborador:</b><br>"
-            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='3' y='3' width='14' height='14' rx='3' fill='#a371f7'/><text x='10' y='14' font-size='8' text-anchor='middle' fill='white'>C</text></svg> <a href='https://t.me/MkelCT/' style='color: #58a6ff; text-decoration: none;'>"
-            "MkelCT18 (@MkelCT)</a><br><br>"
-            "<b>Repositorio GitHub:</b><br>"
-            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><circle cx='10' cy='10' r='8' fill='#22272e'/><path d='M7 10c-.6.6-1.6.6-1.6.6s0-1.2 1.6-1.6c.6-.2 1.2.2 1.2.2s.6-.4 1.2-.2c1.6.4 1.6 1.6 1.6 1.6s-1 .0-1.6-.6m-2 .6v1.6m8-1.6v1.6' stroke='#fff' stroke-width='.8' fill='none'/></svg> <a href='https://github.com/jesusquijada34/packagemaker/' "
-            "style='color: #58a6ff; text-decoration: none;'>github.com/jesusquijada34/packagemaker</a><br><br>"
-            "<b>Telegram:</b><br>"
-            "<svg width='14' height='14' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><polygon points='2,10 18,2 16,18 10,14 6,16' fill='#58a6ff'/></svg> <a href='https://t.me/JesusQuijada34/' style='color: #58a6ff; text-decoration: none;'>"
-            "t.me/JesusQuijada34</a><br>"
-            "</p>"
-        )
-        contact_label = QLabel(contact_text)
-        contact_label.setWordWrap(True)
-        contact_label.setOpenExternalLinks(True)
-        layout.addWidget(contact_label)
-        
-        # Versión y copyright
-        version_text = (
-            "<p style='text-align: center; color: #8b949e; margin-top: 30px; padding-top: 20px; "
-            "border-top: 1px solid #30363d;'>"
-            f"<svg width='15' height='15' style='vertical-align:middle;margin-right:4px;' viewBox='0 0 20 20'><rect x='2' y='5' width='16' height='10' rx='4' fill='#a371f7'/><rect x='7' y='7' width='6' height='6' rx='2' fill='#fff'/></svg> "
-            f"Versión: {getversion()}<br>"
-            "<svg width='13' height='13' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><rect x='2' y='14' width='16' height='4' rx='2' fill='#8b949e'/><rect x='8' y='2' width='4' height='10' rx='2' fill='#8b949e'/></svg> "
-            "Copyright © 2025 Jesus Quijada<br>"
-            "<svg width='15' height='15' style='vertical-align:middle;margin-right:3px;' viewBox='0 0 20 20'><path d='M6 7h8v6H6z' stroke='#f9826c' stroke-width='1.4' fill='none'/><rect x='4' y='4' width='12' height='12' rx='2' stroke='#f9826c' stroke-width='1.4' fill='none'/></svg> "
-            "Bajo licencia GNU GPL v3"
-            "<p>"
-            "POWERED BY FLUTHIN ARMADILLO ENGINE (FLARM)"
-            "</p>"
-            "SERVER DEDICATED IN FLARM STORE"
-            "</p>"
-        )
-        version_label = QLabel(version_text)
-        version_label.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(version_label)
+        s_box.addWidget(self.mf_input)
+        s_box.addWidget(btn_sel)
+        layout.addLayout(s_box)
         
         layout.addStretch()
         
-        # Hacemos desplazable el contenido con QScrollArea
-        scroll = QtWidgets.QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(container_widget)
-        scroll.setFrameStyle(0)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # Aplicar estilo MacOSX-like si es posible (QSS)
-        try:
-            scroll.setStyleSheet("""
-                QScrollArea {
-                    border: none;
-                    background: #f5f5f7;
-                    border-radius: 8px;
-                }
-                QScrollBar:vertical, QScrollBar:horizontal {
-                    background: transparent;
-                    width: 10px;
-                    margin: 2px;
-                    border-radius: 6px;
-                }
-                QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                        stop:0 #e2e8f9, stop:0.5 #bacef8, stop:1 #c8d0e7);
-                    min-height: 36px;
-                    min-width: 36px;
-                    border-radius: 6px;
-                    border: 1px solid #d3d6e4;
-                    margin: 2px;
-                }
-                QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover,
-                QScrollBar::handle:vertical:pressed, QScrollBar::handle:horizontal:pressed {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #b7d7fa, stop:1 #5caefb);
-                    border: 1.1px solid #98c6fa;
-                }
-                QScrollBar::add-line, QScrollBar::sub-line {
-                    background: none;
-                    border: none;
-                    height: 0px;
-                    width: 0px;
-                }
-                QScrollBar::add-page, QScrollBar::sub-page {
-                    background: none;
-                }
-                QScrollBar {
-                    border-radius: 6px;
-                    background: transparent;
-                }
-            """)
-        except Exception:
-            pass
-
-        # Limpiamos el layout de la pestaña por si acaso
-        if self.tab_about.layout() is not None:
-            # Remove the old layout and widgets
-            old_layout = self.tab_about.layout()
-            while old_layout.count():
-                item = old_layout.takeAt(0)
-                widget = item.widget()
-                if widget is not None:
-                    widget.setParent(None)
-            QtWidgets.QWidget().setLayout(old_layout)
+        # Action Button
+        btn_scan = QPushButton("Iniciar Diagnóstico de MoonFix")
+        btn_scan.setFixedHeight(45)
+        btn_scan.setCursor(Qt.PointingHandCursor)
+        btn_scan.setStyleSheet("""
+            QPushButton {
+                background-color: #a371f7; color: white; font-weight: bold; font-size: 15px; border-radius: 6px;
+            }
+            QPushButton:hover { background-color: #b084f9; }
+        """)
+        btn_scan.clicked.connect(self.mf_start_scan)
+        layout.addWidget(btn_scan)
         
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(scroll)
-        self.tab_about.setLayout(main_layout)
+    def mf_browse(self):
+        d = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta")
+        if d: self.mf_input.setText(d)
+        
+    def mf_start_scan(self):
+        path = self.mf_input.text().strip()
+        if not path or not os.path.exists(path):
+            LeviathanDialog.launch(self, "MoonFix", "La carpeta seleccionada no existe.", mode="warning")
+            return
+            
+        potential_projects = []
+        if self.mf_batch_mode.isChecked():
+            for item in os.listdir(path):
+                full_item = os.path.join(path, item)
+                if os.path.isdir(full_item):
+                    potential_projects.append(full_item)
+        else:
+            potential_projects = [path]
+                    
+        if not potential_projects:
+            LeviathanDialog.launch(self, "MoonFix", "No se encontraron subcarpetas para procesar.", mode="info")
+            return
+
+        projects_with_issues = []
+        
+        # We perform a quiet pre-scan to identify projects that need attention
+        for proj_path in potential_projects:
+            issues = self.check_project_issues(proj_path)
+            if issues:
+                projects_with_issues.append({
+                    "path": proj_path,
+                    "issues": issues
+                })
+
+        if not projects_with_issues:
+            LeviathanDialog.launch(self, "MoonFix", "Todos los proyectos están optimizados. No se requieren acciones.", mode="info")
+            return
+
+        # Launch the single Wizard window
+        wizard = MoonFixWizard(self, projects_with_issues)
+        if wizard.exec_() == QDialog.Accepted:
+            # Tiny delay to let the event loop process the wizard's destruction and avoid 'zombie' block
+            QtCore.QTimer.singleShot(100, lambda: LeviathanDialog.launch(
+                self, "MoonFix", 
+                f"Reparación completada.\nProyectos sanados: {len(projects_with_issues)}", 
+                mode="confirm"
+            ))
+
+    def check_project_issues(self, project_path):
+        issues = []
+        # 1. Check folders
+        required_dirs = ["app", "assets", "config", "docs", "source", "lib"]
+        missing_dirs = [d for d in required_dirs if not os.path.exists(os.path.join(project_path, d))]
+        
+        is_completely_invalid = (len(missing_dirs) == len(required_dirs))
+        if is_completely_invalid:
+            issues.append({"type": "invalid_package", "desc": "Faltan todos los recursos estructurales"})
+        else:
+            for d in missing_dirs:
+                issues.append({"type": "missing_dir", "path": d})
+
+        # 2. Check XML & Vital Files
+        xml_path = os.path.join(project_path, "details.xml")
+        requires_wizard = False
+        
+        if not os.path.exists(xml_path):
+            issues.append({"type": "missing_xml"})
+            requires_wizard = True
+        else:
+            try:
+                tree = ET.parse(xml_path)
+                root = tree.getroot()
+                data = {child.tag: (child.text or "").strip() for child in root}
+                
+                # Check Main Script based on <app> tag
+                app_id = data.get("app")
+                if app_id:
+                    script_path = os.path.join(project_path, f"{app_id}.py")
+                    if not os.path.exists(script_path):
+                        issues.append({"type": "missing_script", "name": f"{app_id}.py"})
+                        requires_wizard = True
+                
+                # Check Version Formatting
+                version = data.get("version", "")
+                if version:
+                    prohibited = ["danenone", "knosthalij", "keystone", "windows", "linux", "darwin", "macos"]
+                    if any(p in version.lower() for p in prohibited) or "-" not in version:
+                        issues.append({"type": "dirty_version", "old": version})
+                        requires_wizard = True
+                
+                # OPTIONAL ASSETS (Only flagged if we are ALREADY in the wizard or if explicitly missing)
+                # But to satisfy "healthy projects shouldn't show up", we only trigger if structural issues exist
+                # OR if the user expects MoonFix to find them. 
+                # Decision: Only README, License and Splash issues will NOT trigger the wizard alone.
+                if not os.path.exists(os.path.join(project_path, "README.md")):
+                    issues.append({"type": "missing_readme"})
+                if not os.path.exists(os.path.join(project_path, "LICENSE")):
+                    issues.append({"type": "missing_license"})
+                
+                # ICONS (Main and Updater)
+                if not os.path.exists(os.path.join(project_path, "app", "app-icon.ico")):
+                    issues.append({"type": "missing_icon"})
+                
+                if not os.path.exists(os.path.join(project_path, "app", "product_logo.png")):
+                    issues.append({"type": "missing_logo"})
+
+                if os.path.exists(os.path.join(project_path, "updater.py")):
+                    if not os.path.exists(os.path.join(project_path, "app", "updater-icon.ico")):
+                        issues.append({"type": "missing_icon_updater"})
+
+                # SPLASHES
+                if not os.path.exists(os.path.join(project_path, "assets", "splash.png")):
+                    issues.append({"type": "missing_splash"})
+                if not os.path.exists(os.path.join(project_path, "assets", "splash_Setup.png")):
+                    issues.append({"type": "missing_splash_setup"})
+
+            except:
+                issues.append({"type": "corrupt_xml"})
+                requires_wizard = True
+
+        # If it ONLY has optional missing files and NO structural issues, we return empty list 
+        # so MoonFix scan doesn't flag it as "incomplete".
+        # Logic Update: Missing Icons are now considered structural enough to trigger if structural issues exist,
+        # but to satisfy "3 assets or less" rule, we must allow the wizard to report them.
+        
+        critical_structural = ["missing_dir", "invalid_package", "missing_xml", "missing_script", "dirty_version"]
+        has_critical = any(i["type"] in critical_structural for i in issues)
+        
+        # If there are <= 3 assets missing (even if optional), and NO structural damage, 
+        # normally we'd skip, BUT if an icon is missing for a script, we SHOULD trigger.
+        has_missing_icons = any(i["type"] in ["missing_icon", "missing_icon_updater"] for i in issues)
+        
+        if not requires_wizard and not has_critical and not has_missing_icons:
+            return []
+
+        return issues
+
+
+    def init_about_tab(self, parent_widget=None):
+        target = parent_widget if parent_widget else self.tab_about
+        layout = QVBoxLayout(target)
+        layout.setSpacing(20)
+        layout.setContentsMargins(40, 40, 40, 40)
+        
+        # Clean layout
+        
+        # Logo/Title Area
+        # Use SVG rendering if possible, otherwise text.
+        header_box = QHBoxLayout()
+        
+        # SVG Logo display (using QLabel hack or QSvgWidget if imported, staying safe with standard widgets)
+        logo_lbl = QLabel()
+        logo_lbl.setFixedSize(64, 64)
+        # Draw a simple circle or use icon
+        if os.path.exists(IPM_ICON_PATH):
+            logo_lbl.setPixmap(QIcon(IPM_ICON_PATH).pixmap(64, 64))
+        else:
+            logo_lbl.setStyleSheet("background-color: #ff5722; border-radius: 32px; color: white; font-weight: bold; font-size: 24px;")
+            logo_lbl.setText("PM")
+            logo_lbl.setAlignment(Qt.AlignCenter)
+            
+        title_box = QVBoxLayout()
+        t_main = QLabel("Influent Package Maker")
+        t_main.setStyleSheet("font-size: 28px; font-weight: bold; color: white; font-family: 'Segoe UI Variable Display';")
+        t_ver = QLabel(f"Versión {self.current_version}")
+        t_ver.setStyleSheet("font-size: 16px; color: #aaa;")
+        title_box.addWidget(t_main)
+        title_box.addWidget(t_ver)
+        
+        header_box.addWidget(logo_lbl)
+        header_box.addSpacing(15)
+        header_box.addLayout(title_box)
+        header_box.addStretch()
+        
+        layout.addLayout(header_box)
+        
+        # Content Card
+        card = QLabel()
+        card.setWordWrap(True)
+        card.setStyleSheet("color: #ddd; font-size: 14px; line-height: 1.5;")
+        card.setText("""
+            <p><b>Package Maker</b> es la suite definitiva para el ecosistema Influent OS.</p>
+            <p>Diseñada para permitir a los desarrolladores crear, compilar y distribuir aplicaciones de manera eficiente.</p>
+            <br>
+            <p>Utiliza el motor <b>FLARM (Fluthin Armadillo)</b> para garantizar integridad y seguridad.</p>
+        """)
+        layout.addWidget(card)
+        
+        # Tech Specs grid
+        grid = QGridLayout()
+        grid.setSpacing(10)
+        
+        def spec_item(label, value):
+            l = QLabel(label)
+            l.setStyleSheet("color: #888; font-weight: bold;")
+            v = QLabel(value)
+            v.setStyleSheet("color: white;")
+            return l, v
+            
+        l1, v1 = spec_item("Motor:", "FLARM v2.1")
+        l2, v2 = spec_item("Licencia:", "GNU GPL v3")
+        l3, v3 = spec_item("Framework:", f"Qt {QtCore.qVersion()} (PyQt5)")
+        l4, v4 = spec_item("Desarrollador:", "Jesus Quijada")
+        
+        grid.addWidget(l1, 0, 0); grid.addWidget(v1, 0, 1)
+        grid.addWidget(l2, 1, 0); grid.addWidget(v2, 1, 1)
+        grid.addWidget(l3, 2, 0); grid.addWidget(v3, 2, 1)
+        grid.addWidget(l4, 3, 0); grid.addWidget(v4, 3, 1)
+        
+        layout.addLayout(grid)
+        
+        layout.addStretch()
+        
+        # Footer Buttons
+        footer = QHBoxLayout()
+        
+        btn_github = QPushButton("GitHub")
+        btn_github.setStyleSheet("background-color: #333; color: white; border: none; border-radius: 4px; padding: 8px 16px;")
+        btn_github.setCursor(Qt.PointingHandCursor)
+        # Open URL logic
+        
+        btn_telegram = QPushButton("Telegram")
+        btn_telegram.setStyleSheet("background-color: #0088cc; color: white; border: none; border-radius: 4px; padding: 8px 16px;")
+        btn_telegram.setCursor(Qt.PointingHandCursor)
+        
+        footer.addWidget(btn_github)
+        footer.addWidget(btn_telegram)
+        footer.addStretch()
+        
+        layout.addLayout(footer)
+
 
 def main():
     app = QApplication(sys.argv)
     app.setFont(APP_FONT)
-    w = PackageTodoGUI()
-    w.show()
-    if getattr(sys, 'frozen', False):
-        try:
-            pyi_splash.close()
-        except ImportError:
-            pass
+    
+    # Splash Screen Inmersivo de LeviathanUI
+    # User requested app/app-icon.ico and marquee progress
+    splash = InmersiveSplash(title="Package Maker", logo="app/app-icon.ico" if os.path.exists("app/app-icon.ico") else "")
+    
+    # Configure phrases
+    splash.set_phrases([None])
+    
+    # Configure output splash
+    # marquee=True makes the progress bar indeterminate/animated
+    splash.set_progress_mode(marquee=True) 
+
+    def start_app():
+        w = PackageTodoGUI()
+        # Adjuntar splash de salida
+        splash.attach_to_window(w, exit_phrases=[None])
+        w.show()
+        if getattr(sys, 'frozen', False):
+            try:
+                import pyi_splash
+                pyi_splash.close()
+            except ImportError:
+                pass
+                
+    splash.on_finish(start_app)
+    splash.launch()
+    
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
