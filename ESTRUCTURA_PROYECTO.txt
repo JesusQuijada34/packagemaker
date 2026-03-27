@@ -1,0 +1,325 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  ESTRUCTURA DEL PROYECTO - SHELL INTEGRATION                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+packagemaker/
+│
+├── 📄 packagemaker.py                    [MODIFICADO] Archivo principal con CLI
+│
+├── 🆕 ARCHIVOS NUEVOS - MÓDULOS PYTHON
+│   ├── shell_integration.py              Integración con Windows Shell
+│   ├── cli_handler.py                    Manejador de argumentos CLI
+│   ├── install_integration.py            Script de instalación
+│   ├── uninstall_integration.py          Script de desinstalación
+│   └── test_shell_integration.py         Tests unitarios
+│
+├── 🆕 ARCHIVOS NUEVOS - CONFIGURACIÓN
+│   ├── example.mexf                      Ejemplo de archivo MEXF
+│   ├── install_shell_integration.reg     Claves del registro (instalación)
+│   └── uninstall_shell_integration.reg   Claves del registro (desinstalación)
+│
+├── 🆕 ARCHIVOS NUEVOS - SCRIPTS BATCH
+│   ├── INSTALL_SHELL.bat                 Instalador fácil
+│   └── UNINSTALL_SHELL.bat               Desinstalador fácil
+│
+└── 🆕 ARCHIVOS NUEVOS - DOCUMENTACIÓN
+    ├── SHELL_INTEGRATION.md              Documentación completa
+    ├── DEBUG_GUIDE.md                    Guía de debugging
+    ├── IMPLEMENTACION_COMPLETA.md        Resumen de implementación
+    ├── QUICK_START.md                    Guía de inicio rápido
+    └── ESTRUCTURA_PROYECTO.txt           Este archivo
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           MENÚS CONTEXTUALES                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📁 CARPETAS (Clic derecho en carpeta)
+├── 🆕 Crear Proyecto Aquí
+├── 📦 Instalar como Fluthin Package
+├── 🔨 Compilar Proyecto
+└── 🔧 Reparar Proyecto (MoonFix)
+
+📄 ARCHIVOS .iflapp (Clic derecho en archivo)
+├── 📥 Instalar Paquete
+└── 📂 Abrir con IPM
+
+📄 ARCHIVOS .mexf (Clic derecho en archivo)
+├── ⚙️ Instalar Extensiones
+└── ✏️ Editar con IPM
+
+🖼️ FONDO DE CARPETA (Clic derecho en espacio vacío)
+├── 🆕 Nuevo Proyecto IPM
+└── 📝 Crear Archivo de Extensiones (.mexf)
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          COMANDOS CLI DISPONIBLES                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+GESTIÓN DE PROYECTOS
+├── --create-project PATH         Crear nuevo proyecto
+├── --compile-project PATH        Compilar proyecto
+└── --repair-project PATH         Reparar con MoonFix
+
+GESTIÓN DE PAQUETES
+├── --install-folder PATH         Instalar carpeta como paquete
+├── --install-package FILE        Instalar archivo .iflapp
+└── --open-package FILE           Abrir paquete en IPM
+
+GESTIÓN DE EXTENSIONES
+├── --install-mexf FILE           Instalar extensiones desde .mexf
+├── --edit-mexf FILE              Editar archivo .mexf
+└── --create-mexf PATH            Crear nuevo archivo .mexf
+
+GESTIÓN DE INTEGRACIÓN
+├── --install-shell               Instalar integración shell
+├── --uninstall-shell             Desinstalar integración shell
+└── --create-shortcuts            Crear accesos directos
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        SISTEMA MOONFIX (REPARACIÓN)                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+[1/5] ESTRUCTURA DE CARPETAS
+      ├── Verifica: app, assets, config, docs, source, lib
+      └── Crea carpetas faltantes
+
+[2/5] ARCHIVOS DE CONFIGURACIÓN
+      ├── Verifica: details.xml
+      └── Crea archivo con valores por defecto
+
+[3/5] DEPENDENCIAS
+      ├── Verifica: lib/requirements.txt
+      └── Crea archivo de dependencias
+
+[4/5] ARCHIVOS PRINCIPALES
+      ├── Busca archivos .py
+      └── Reporta archivos encontrados
+
+[5/5] FINALIZACIÓN
+      ├── Genera reporte completo
+      └── Confirma proyecto listo
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      ESTRUCTURA DE ARCHIVO .mexf                             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+{
+  "version": "1.0",
+  "app_name": "Nombre de la Aplicación",
+  "app_id": "com.empresa.app",
+  
+  "extensions": [
+    {
+      "extension": ".ext",
+      "description": "Descripción",
+      "icon": "ruta/icono.ico",
+      "mime_type": "application/x-ext"
+    }
+  ],
+  
+  "context_menus": [
+    {
+      "target": "file|folder|background",
+      "label": "Etiqueta del Menú",
+      "command": "comando.exe \"%1\"",
+      "icon": "ruta/icono.ico"
+    }
+  ],
+  
+  "file_associations": [
+    {
+      "extension": ".ext",
+      "prog_id": "App.Document",
+      "description": "Tipo de Archivo",
+      "default_icon": "ruta/icono.ico",
+      "open_command": "app.exe \"%1\""
+    }
+  ]
+}
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        UBICACIONES DE INSTALACIÓN                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PAQUETES INSTALADOS
+└── %USERPROFILE%\Documents\Fluthin Apps\
+    └── [nombre-paquete-original]/
+        ├── app/
+        ├── assets/
+        ├── config/
+        ├── docs/
+        ├── source/
+        ├── lib/
+        ├── details.xml
+        └── main.py
+
+PROYECTOS LOCALES
+└── %USERPROFILE%\Documents\Packagemaker Projects\
+    └── [proyectos]/
+
+CONFIGURACIÓN IPM
+└── %APPDATA%\InfluentPackageMaker\
+    ├── config/
+    └── logs/
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         CLAVES DEL REGISTRO                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+HKEY_CLASSES_ROOT\
+├── .iflapp
+│   └── → InfluentPackage
+├── InfluentPackage\
+│   ├── DefaultIcon
+│   └── shell\
+│       ├── install\command
+│       └── open\command
+├── .mexf
+│   └── → MarkedExtensionsFile
+├── MarkedExtensionsFile\
+│   ├── DefaultIcon
+│   └── shell\
+│       ├── install\command
+│       └── edit\command
+└── Directory\
+    ├── shell\
+    │   ├── IPM_CreateProject\command
+    │   ├── IPM_InstallFolder\command
+    │   ├── IPM_CompileProject\command
+    │   └── IPM_RepairProject\command
+    └── Background\shell\
+        ├── IPM_CreateProjectHere\command
+        └── IPM_CreateMEXF\command
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          FLUJO DE INSTALACIÓN                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. Usuario ejecuta INSTALL_SHELL.bat
+   ↓
+2. Script llama a install_integration.py
+   ↓
+3. ShellIntegration.install_context_menus()
+   ├── Crea claves para carpetas
+   ├── Crea claves para .iflapp
+   └── Crea claves para fondo
+   ↓
+4. ShellIntegration.install_mexf_support()
+   ├── Registra extensión .mexf
+   └── Crea menús contextuales
+   ↓
+5. ShellIntegration.create_shortcuts()
+   ├── Crea acceso en escritorio
+   └── Crea acceso en menú inicio
+   ↓
+6. MEXFHandler.create_example_mexf()
+   └── Crea example.mexf
+   ↓
+7. ✓ Instalación completa
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            FLUJO DE USO                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. Usuario hace clic derecho en carpeta
+   ↓
+2. Windows muestra menú contextual con opciones IPM
+   ↓
+3. Usuario selecciona "Crear Proyecto Aquí"
+   ↓
+4. Windows ejecuta: packagemaker.exe --create-project "C:\Ruta"
+   ↓
+5. packagemaker.py detecta argumento CLI
+   ↓
+6. CLIHandler.parse() procesa argumentos
+   ↓
+7. handle_cli_action() determina acción
+   ↓
+8. Se lanza QApplication con PackageTodoGUI
+   ↓
+9. PackageTodoGUI.show_create_project_dialog()
+   ↓
+10. Usuario completa formulario
+    ↓
+11. Proyecto se crea en ubicación especificada
+    ↓
+12. ✓ Acción completada
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         TESTING Y DEBUGGING                                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+EJECUTAR TESTS
+└── python test_shell_integration.py
+    ├── TestShellIntegration (8 tests)
+    ├── TestMEXFHandler (8 tests)
+    └── TestCLIIntegration (9 tests)
+    Total: 25 tests
+
+VERIFICAR INSTALACIÓN
+├── 1. Abrir regedit.exe
+├── 2. Navegar a HKEY_CLASSES_ROOT
+├── 3. Buscar claves IPM_*
+└── 4. Verificar comandos
+
+DEBUGGING
+├── 1. Revisar DEBUG_GUIDE.md
+├── 2. Verificar logs en %APPDATA%\InfluentPackageMaker\logs\
+├── 3. Usar Process Monitor (Sysinternals)
+└── 4. Ejecutar con python -v para verbose
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          REQUISITOS DEL SISTEMA                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+SOFTWARE
+├── Windows 7 o superior
+├── Python 3.7+
+├── PyQt5
+├── leviathan-ui
+└── Permisos de administrador (instalación)
+
+HARDWARE
+├── Espacio en disco: ~50 MB
+└── RAM: 256 MB mínimo
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              RESUMEN                                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+✓ 10 archivos nuevos creados
+✓ 1 archivo modificado (packagemaker.py)
+✓ 4 menús contextuales para carpetas
+✓ 2 menús contextuales para .iflapp
+✓ 2 menús contextuales para .mexf
+✓ 2 menús contextuales para fondo
+✓ 11 comandos CLI implementados
+✓ Sistema MoonFix completo
+✓ Soporte para archivos .mexf
+✓ 25 tests unitarios
+✓ Documentación completa
+✓ Scripts de instalación/desinstalación
+✓ Guías de debugging y troubleshooting
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         PRÓXIMOS PASOS                                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. Leer QUICK_START.md para inicio rápido
+2. Ejecutar INSTALL_SHELL.bat para instalar
+3. Probar menús contextuales en explorador
+4. Leer SHELL_INTEGRATION.md para detalles
+5. Revisar DEBUG_GUIDE.md si hay problemas
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              AUTOR                                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Implementado por: Jesus Quijada
+Fecha: Marzo 2026
+Licencia: GNU GPL v3
+Versión: 1.0.0
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          FIN DEL DOCUMENTO                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝

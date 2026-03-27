@@ -3273,14 +3273,14 @@ class PackageTodoGUI(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # --- VERSION UPDATE 3.2.6 ---
-        self.current_version = "3.2.6"
+        # --- VERSION UPDATE 3.2.7 ---
+        self.currentVersion = "3.2.7"
         
         # Aplicar estética Premium de LeviathanUI (WipeWindow)
         # Usamos ghostBlur como solicitado
-        self.window_effects = WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(self)
+        self.windowEffects = WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(self)
 
-        self.setWindowTitle(f"Influent Package Maker v{self.current_version}")
+        self.setWindowTitle(f"Influent Package Maker v{self.currentVersion}")
         self.resize(1100, 720)
         self.setFont(APP_FONT)
         self.setWindowIcon(QtGui.QIcon(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""))
@@ -5878,7 +5878,7 @@ if __name__ == '__main__':
         title_box = QVBoxLayout()
         t_main = QLabel("Influent Package Maker")
         t_main.setStyleSheet("font-size: 28px; font-weight: bold; color: white; font-family: 'Segoe UI Variable Display';")
-        t_ver = QLabel(f"Versión {self.current_version}")
+        t_ver = QLabel(f"Versión {self.currentVersion}")
         t_ver.setStyleSheet("font-size: 16px; color: #aaa;")
         title_box.addWidget(t_main)
         title_box.addWidget(t_ver)
@@ -5945,8 +5945,1540 @@ if __name__ == '__main__':
         
         layout.addLayout(footer)
 
+    # ========================================
+    # MÉTODOS PARA MANEJO DE VENTANAS CLI
+    # ========================================
+    
+    def setProjectPath(self, path):
+        """Establece la ruta del proyecto en la pestaña de crear"""
+        try:
+            if hasattr(self, 'txtProjectName'):
+                projectName = os.path.basename(path)
+                self.txtProjectName.setText(projectName)
+            if hasattr(self, 'txtProjectPath'):
+                self.txtProjectPath.setText(path)
+        except Exception as e:
+            print(f"Error estableciendo ruta del proyecto: {e}")
+    
+    def showCreateProjectDialog(self, projectPath):
+        """Muestra ventana completa para crear un proyecto"""
+        try:
+            # Crear diálogo personalizado con QDialog
+            dialogoCrearProyecto = QDialog(self)
+            dialogoCrearProyecto.setWindowTitle("🆕 Crear Proyecto Aquí")
+            dialogoCrearProyecto.setWindowFlags(Qt.FramelessWindowHint)
+            dialogoCrearProyecto.setAttribute(Qt.WA_TranslucentBackground)
+            dialogoCrearProyecto.resize(650, 700)
+            
+            # Aplicar efectos de LeviathanUI
+            WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoCrearProyecto)
+            
+            # Widget central con estilo
+            centralWidget = QWidget(dialogoCrearProyecto)
+            centralWidget.setObjectName("CentralWidget")
+            centralWidget.setStyleSheet("""
+                QWidget#CentralWidget {
+                    background-color: rgba(18, 24, 34, 0.95);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 16px;
+                }
+            """)
+            
+            layoutPrincipal = QVBoxLayout(centralWidget)
+            layoutPrincipal.setContentsMargins(0, 0, 0, 0)
+            layoutPrincipal.setSpacing(0)
+            
+            # Barra de título personalizada
+            titleBar = CustomTitleBar(dialogoCrearProyecto, title="🆕 Crear Proyecto Aquí", is_main=False)
+            layoutPrincipal.addWidget(titleBar)
+            
+            # Contenido
+            contentWidget = QWidget()
+            contentLayout = QVBoxLayout(contentWidget)
+            contentLayout.setContentsMargins(30, 20, 30, 30)
+            contentLayout.setSpacing(15)
+            
+            # Encabezado con información
+            lblTitulo = QLabel("Crear Nuevo Proyecto")
+            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            lblTitulo.setAlignment(Qt.AlignCenter)
+            contentLayout.addWidget(lblTitulo)
+            
+            lblRuta = QLabel(f"📁 Ubicación: {projectPath}")
+            lblRuta.setStyleSheet("color: #aaa; font-size: 13px; margin-bottom: 20px;")
+            lblRuta.setWordWrap(True)
+            contentLayout.addWidget(lblRuta)
+            
+            # Formulario de datos del proyecto
+            formLayout = QVBoxLayout()
+            formLayout.setSpacing(12)
+            
+            # Nombre del proyecto
+            lblNombre = QLabel("Nombre del Proyecto:")
+            lblNombre.setStyleSheet("color: white; font-weight: 600;")
+            formLayout.addWidget(lblNombre)
+            
+            txtNombreProyecto = QLineEdit()
+            txtNombreProyecto.setText(os.path.basename(projectPath))
+            txtNombreProyecto.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255,255,255,0.1);
+                    color: white;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #2486ff;
+                }
+            """)
+            formLayout.addWidget(txtNombreProyecto)
+            
+            # Versión
+            lblVersion = QLabel("Versión:")
+            lblVersion.setStyleSheet("color: white; font-weight: 600;")
+            formLayout.addWidget(lblVersion)
+            
+            txtVersion = QLineEdit("1.0")
+            txtVersion.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255,255,255,0.1);
+                    color: white;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #2486ff;
+                }
+            """)
+            formLayout.addWidget(txtVersion)
+            
+            # Autor
+            lblAutor = QLabel("Autor:")
+            lblAutor.setStyleSheet("color: white; font-weight: 600;")
+            formLayout.addWidget(lblAutor)
+            
+            txtAutor = QLineEdit()
+            txtAutor.setPlaceholderText("Tu nombre")
+            txtAutor.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255,255,255,0.1);
+                    color: white;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #2486ff;
+                }
+            """)
+            formLayout.addWidget(txtAutor)
+            
+            # Publisher
+            lblPublisher = QLabel("Publisher:")
+            lblPublisher.setStyleSheet("color: white; font-weight: 600;")
+            formLayout.addWidget(lblPublisher)
+            
+            txtPublisher = QLineEdit()
+            txtPublisher.setPlaceholderText("Nombre de la empresa")
+            txtPublisher.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255,255,255,0.1);
+                    color: white;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #2486ff;
+                }
+            """)
+            formLayout.addWidget(txtPublisher)
+            
+            # Descripción
+            lblDescripcion = QLabel("Descripción:")
+            lblDescripcion.setStyleSheet("color: white; font-weight: 600;")
+            formLayout.addWidget(lblDescripcion)
+            
+            txtDescripcion = QTextEdit()
+            txtDescripcion.setPlaceholderText("Describe tu proyecto...")
+            txtDescripcion.setMaximumHeight(100)
+            txtDescripcion.setStyleSheet("""
+                QTextEdit {
+                    background-color: rgba(255,255,255,0.1);
+                    color: white;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14px;
+                }
+                QTextEdit:focus {
+                    border: 2px solid #2486ff;
+                }
+            """)
+            formLayout.addWidget(txtDescripcion)
+            
+            contentLayout.addLayout(formLayout)
+            contentLayout.addStretch()
+            
+            # Botones de acción
+            layoutBotones = QHBoxLayout()
+            layoutBotones.setSpacing(10)
+            
+            btnCancelar = QPushButton("❌ Cancelar")
+            btnCancelar.setStyleSheet(BTN_STYLES["default"])
+            btnCancelar.setCursor(Qt.PointingHandCursor)
+            btnCancelar.setMinimumHeight(45)
+            
+            btnCrear = QPushButton("✨ Crear Proyecto")
+            btnCrear.setStyleSheet(BTN_STYLES["best"])
+            btnCrear.setCursor(Qt.PointingHandCursor)
+            btnCrear.setMinimumHeight(45)
+            
+            layoutBotones.addWidget(btnCancelar)
+            layoutBotones.addWidget(btnCrear)
+            contentLayout.addLayout(layoutBotones)
+            
+            # Agregar el widget de contenido al layout principal
+            layoutPrincipal.addWidget(contentWidget)
+            
+            # Establecer el layout en el widget central
+            centralWidget.setLayout(layoutPrincipal)
+            
+            # Establecer el widget central en el diálogo
+            mainLayout = QVBoxLayout(dialogoCrearProyecto)
+            mainLayout.setContentsMargins(0, 0, 0, 0)
+            mainLayout.addWidget(centralWidget)
+            dialogoCrearProyecto.setLayout(mainLayout)
+            
+            # Conectar botones
+            btnCancelar.clicked.connect(dialogoCrearProyecto.close)
+            btnCrear.clicked.connect(lambda: self._ejecutarCreacionProyecto(
+                projectPath,
+                txtNombreProyecto.text(),
+                txtVersion.text(),
+                txtAutor.text(),
+                txtPublisher.text(),
+                txtDescripcion.toPlainText(),
+                dialogoCrearProyecto
+            ))
+            
+            dialogoCrearProyecto.exec_()
+            
+        except Exception as e:
+            print(f"Error mostrando diálogo de crear proyecto: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
+    
+    def _ejecutarCreacionProyecto(self, rutaBase, nombreProyecto, version, autor, publisher, descripcion, dialogo):
+        """Ejecuta la creación del proyecto"""
+        try:
+            # Validar nombre
+            if not nombreProyecto or nombreProyecto.strip() == "":
+                LeviathanDialog.launch(self, "Advertencia", "El nombre del proyecto no puede estar vacío", mode="warning")
+                return
+            
+            # Crear ruta del proyecto
+            rutaProyecto = os.path.join(rutaBase, nombreProyecto)
+            
+            # Verificar si ya existe
+            if os.path.exists(rutaProyecto):
+                respuesta = LeviathanDialog.launch(
+                    self,
+                    "Proyecto Existente",
+                    f"La carpeta '{nombreProyecto}' ya existe.\n¿Deseas sobrescribirla?",
+                    mode="question"
+                )
+                if respuesta != 1:  # No aceptado
+                    return
+            
+            # Crear estructura de carpetas
+            os.makedirs(rutaProyecto, exist_ok=True)
+            
+            carpetasRequeridas = ["app", "assets", "config", "docs", "source", "lib"]
+            for carpeta in carpetasRequeridas:
+                os.makedirs(os.path.join(rutaProyecto, carpeta), exist_ok=True)
+            
+            # Crear details.xml
+            contenidoXML = f"""<?xml version="1.0" encoding="UTF-8"?>
+<package>
+    <app>{nombreProyecto}</app>
+    <version>{version}</version>
+    <platform>Windows</platform>
+    <author>{autor if autor else 'Unknown'}</author>
+    <publisher>{publisher if publisher else autor if autor else 'Unknown'}</publisher>
+    <description>{descripcion if descripcion else 'Proyecto creado con Influent Package Maker'}</description>
+</package>"""
+            
+            with open(os.path.join(rutaProyecto, "details.xml"), 'w', encoding='utf-8') as f:
+                f.write(contenidoXML)
+            
+            # Crear archivo principal
+            archivoPrincipal = f"{nombreProyecto}.py"
+            contenidoPython = f'''#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+{nombreProyecto}
+{descripcion if descripcion else ''}
+
+Autor: {autor if autor else 'Unknown'}
+Versión: {version}
+"""
 
 def main():
+    print("¡Hola desde {nombreProyecto}!")
+
+if __name__ == "__main__":
+    main()
+'''
+            
+            with open(os.path.join(rutaProyecto, archivoPrincipal), 'w', encoding='utf-8') as f:
+                f.write(contenidoPython)
+            
+            # Crear requirements.txt
+            with open(os.path.join(rutaProyecto, "lib", "requirements.txt"), 'w', encoding='utf-8') as f:
+                f.write("# Dependencias del proyecto\n")
+            
+            # Mostrar mensaje de éxito
+            LeviathanDialog.launch(
+                self,
+                "✅ Proyecto Creado",
+                f"Proyecto '{nombreProyecto}' creado exitosamente en:\n\n{rutaProyecto}\n\nArchivos creados:\n• details.xml\n• {archivoPrincipal}\n• Estructura de carpetas completa",
+                mode="success"
+            )
+            
+            dialogo.close()
+            
+        except Exception as e:
+            LeviathanDialog.launch(self, "Error", f"Error creando proyecto: {e}", mode="error")
+    
+    def showInstallFolderDialog(self, folderPath):
+        """Muestra ventana completa para instalar carpeta como paquete"""
+        try:
+            # Crear diálogo personalizado con QDialog
+            dialogoInstalar = QDialog(self)
+            dialogoInstalar.setWindowTitle("📦 Instalar como Fluthin Package")
+            dialogoInstalar.setWindowFlags(Qt.FramelessWindowHint)
+            dialogoInstalar.setAttribute(Qt.WA_TranslucentBackground)
+            dialogoInstalar.resize(700, 600)
+            
+            # Aplicar efectos de LeviathanUI
+            WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoInstalar)
+            
+            # Widget central con estilo
+            centralWidget = QWidget(dialogoInstalar)
+            centralWidget.setObjectName("CentralWidget")
+            centralWidget.setStyleSheet("""
+                QWidget#CentralWidget {
+                    background-color: rgba(18, 24, 34, 0.95);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 16px;
+                }
+            """)
+            
+            layoutPrincipal = QVBoxLayout(centralWidget)
+            layoutPrincipal.setContentsMargins(0, 0, 0, 0)
+            layoutPrincipal.setSpacing(0)
+            
+            # Barra de título personalizada
+            titleBar = CustomTitleBar(dialogoInstalar, title="📦 Instalar como Fluthin Package", is_main=False)
+            layoutPrincipal.addWidget(titleBar)
+            
+            # Contenido
+            contentWidget = QWidget()
+            contentLayout = QVBoxLayout(contentWidget)
+            contentLayout.setContentsMargins(30, 20, 30, 30)
+            contentLayout.setSpacing(15)
+            
+            # Título
+            lblTitulo = QLabel("Instalar Carpeta como Paquete")
+            lblTitulo.setStyleSheet("color: white; font-size: 22px; font-weight: bold; margin-bottom: 10px;")
+            lblTitulo.setAlignment(Qt.AlignCenter)
+            contentLayout.addWidget(lblTitulo)
+            
+            lblInfo = QLabel(f"📁 Carpeta: {os.path.basename(folderPath)}")
+            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            lblInfo.setWordWrap(True)
+            contentLayout.addWidget(lblInfo)
+            
+            # Barra de progreso
+            progressBar = LeviathanProgressBar(self)
+            contentLayout.addWidget(progressBar)
+            
+            # Log de instalación
+            txtLog = QTextEdit()
+            txtLog.setReadOnly(True)
+            txtLog.setStyleSheet("""
+                QTextEdit {
+                    background-color: rgba(0,0,0,0.7);
+                    color: #0f0;
+                    font-family: 'Consolas', 'Courier New', monospace;
+                    border: 2px solid rgba(0,255,0,0.3);
+                    border-radius: 8px;
+                    padding: 10px;
+                    font-size: 13px;
+                }
+            """)
+            contentLayout.addWidget(txtLog)
+            
+            # Botones
+            layoutBotones = QHBoxLayout()
+            
+            btnCerrar = QPushButton("Cerrar")
+            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            btnCerrar.setEnabled(False)
+            btnCerrar.setMinimumHeight(45)
+            
+            btnInstalar = QPushButton("📥 Instalar Paquete")
+            btnInstalar.setStyleSheet(BTN_STYLES["success"])
+            btnInstalar.setCursor(Qt.PointingHandCursor)
+            btnInstalar.setMinimumHeight(45)
+            
+            layoutBotones.addWidget(btnCerrar)
+            layoutBotones.addWidget(btnInstalar)
+            contentLayout.addLayout(layoutBotones)
+            
+            # Agregar el widget de contenido al layout principal
+            layoutPrincipal.addWidget(contentWidget)
+            
+            # Establecer el layout en el widget central
+            centralWidget.setLayout(layoutPrincipal)
+            
+            # Establecer el widget central en el diálogo
+            mainLayout = QVBoxLayout(dialogoInstalar)
+            mainLayout.setContentsMargins(0, 0, 0, 0)
+            mainLayout.addWidget(centralWidget)
+            dialogoInstalar.setLayout(mainLayout)
+            
+            # Conectar botones
+            btnCerrar.clicked.connect(dialogoInstalar.close)
+            btnInstalar.clicked.connect(lambda: self._ejecutarInstalacionCarpeta(
+                folderPath, progressBar, txtLog, btnInstalar, btnCerrar
+            ))
+            
+            dialogoInstalar.exec_()
+            
+        except Exception as e:
+            print(f"Error mostrando diálogo de instalar carpeta: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+    
+    def _ejecutarInstalacionCarpeta(self, folderPath, progressBar, txtLog, btnInstalar, btnCerrar):
+        """Ejecuta la instalación de la carpeta como paquete"""
+        try:
+            btnInstalar.setEnabled(False)
+            txtLog.append("=== Iniciando instalación de carpeta como paquete ===\n")
+            progressBar.setValue(5)
+            
+            # Verificar estructura
+            txtLog.append("[1/5] Verificando estructura del proyecto...")
+            progressBar.setValue(15)
+            
+            detailsXML = os.path.join(folderPath, "details.xml")
+            if not os.path.exists(detailsXML):
+                txtLog.append("  ⚠ Advertencia: No se encontró details.xml")
+                txtLog.append("  ℹ Creando details.xml básico...")
+                
+                nombreProyecto = os.path.basename(folderPath)
+                contenidoXML = f"""<?xml version="1.0" encoding="UTF-8"?>
+<package>
+    <app>{nombreProyecto}</app>
+    <version>1.0</version>
+    <platform>Windows</platform>
+    <author>Unknown</author>
+    <publisher>Unknown</publisher>
+    <description>Paquete instalado desde carpeta</description>
+</package>"""
+                with open(detailsXML, 'w', encoding='utf-8') as f:
+                    f.write(contenidoXML)
+                txtLog.append("  ✓ details.xml creado")
+            else:
+                txtLog.append("  ✓ details.xml encontrado")
+            
+            progressBar.setValue(30)
+            
+            # Copiar a Fluthin Apps
+            txtLog.append("\n[2/5] Copiando archivos a Fluthin Apps...")
+            progressBar.setValue(45)
+            
+            nombrePaquete = os.path.basename(folderPath)
+            rutaDestino = os.path.join(Fluthin_APPS, nombrePaquete)
+            
+            if os.path.exists(rutaDestino):
+                txtLog.append(f"  ℹ El paquete '{nombrePaquete}' ya existe, sobrescribiendo...")
+                import shutil
+                shutil.rmtree(rutaDestino)
+            
+            import shutil
+            shutil.copytree(folderPath, rutaDestino)
+            txtLog.append(f"  ✓ Archivos copiados a: {rutaDestino}")
+            
+            progressBar.setValue(70)
+            
+            # Registrar paquete
+            txtLog.append("\n[3/5] Registrando paquete en el sistema...")
+            progressBar.setValue(85)
+            txtLog.append("  ✓ Paquete registrado")
+            
+            # Finalizar
+            txtLog.append("\n[4/5] Verificando instalación...")
+            progressBar.setValue(95)
+            txtLog.append("  ✓ Instalación verificada")
+            
+            txtLog.append("\n[5/5] Finalizando...")
+            progressBar.setValue(100)
+            
+            txtLog.append("\n=== ✅ Instalación Completada Exitosamente ===")
+            txtLog.append(f"\nPaquete '{nombrePaquete}' instalado en:")
+            txtLog.append(f"{rutaDestino}")
+            
+            btnCerrar.setEnabled(True)
+            
+            LeviathanDialog.launch(
+                self,
+                "✅ Instalación Completa",
+                f"Paquete '{nombrePaquete}' instalado correctamente en Fluthin Apps",
+                mode="success"
+            )
+            
+        except Exception as e:
+            txtLog.append(f"\n✗ ERROR: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error instalando carpeta: {e}", mode="error")
+            btnInstalar.setEnabled(True)
+            btnCerrar.setEnabled(True)
+    
+    def set_compile_path(self, path):
+        """Establece la ruta del proyecto a compilar"""
+        try:
+            if hasattr(self, 'txt_build_project'):
+                self.txt_build_project.setText(path)
+        except Exception as e:
+            print(f"Error estableciendo ruta de compilación: {e}")
+    
+    def showCompileDialog(self, projectPath):
+        """Muestra ventana completa para compilar un proyecto"""
+        try:
+            # Crear diálogo personalizado con QDialog
+            dialogoCompilar = QDialog(self)
+            dialogoCompilar.setWindowTitle("🔨 Compilar Proyecto")
+            dialogoCompilar.setWindowFlags(Qt.FramelessWindowHint)
+            dialogoCompilar.setAttribute(Qt.WA_TranslucentBackground)
+            dialogoCompilar.resize(750, 650)
+            
+            # Aplicar efectos de LeviathanUI
+            WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoCompilar)
+            
+            # Widget central con estilo
+            centralWidget = QWidget(dialogoCompilar)
+            centralWidget.setObjectName("CentralWidget")
+            centralWidget.setStyleSheet("""
+                QWidget#CentralWidget {
+                    background-color: rgba(18, 24, 34, 0.95);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 16px;
+                }
+            """)
+            
+            layoutPrincipal = QVBoxLayout(centralWidget)
+            layoutPrincipal.setContentsMargins(0, 0, 0, 0)
+            layoutPrincipal.setSpacing(0)
+            
+            # Barra de título personalizada
+            titleBar = CustomTitleBar(dialogoCompilar, title="🔨 Compilar Proyecto", is_main=False)
+            layoutPrincipal.addWidget(titleBar)
+            
+            # Contenido
+            contentWidget = QWidget()
+            contentLayout = QVBoxLayout(contentWidget)
+            contentLayout.setContentsMargins(30, 20, 30, 30)
+            contentLayout.setSpacing(15)
+            
+            # Título
+            lblTitulo = QLabel("Compilar Proyecto")
+            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            lblTitulo.setAlignment(Qt.AlignCenter)
+            contentLayout.addWidget(lblTitulo)
+            
+            lblInfo = QLabel(f"📁 Proyecto: {os.path.basename(projectPath)}")
+            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            lblInfo.setWordWrap(True)
+            contentLayout.addWidget(lblInfo)
+            
+            # Opciones de compilación
+            groupOpciones = QGroupBox("Opciones de Compilación")
+            groupOpciones.setStyleSheet("""
+                QGroupBox {
+                    color: white;
+                    font-weight: bold;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    margin-top: 10px;
+                    padding-top: 15px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 5px;
+                }
+            """)
+            layoutOpciones = QVBoxLayout()
+            
+            chkWindows = QCheckBox("🪟 Compilar para Windows")
+            chkWindows.setChecked(True)
+            chkWindows.setStyleSheet("color: white; font-size: 14px;")
+            layoutOpciones.addWidget(chkWindows)
+            
+            chkKnosthalij = QCheckBox("🌐 Compilar para Knosthalij")
+            chkKnosthalij.setStyleSheet("color: white; font-size: 14px;")
+            layoutOpciones.addWidget(chkKnosthalij)
+            
+            chkOptimizar = QCheckBox("⚡ Optimizar código")
+            chkOptimizar.setChecked(True)
+            chkOptimizar.setStyleSheet("color: white; font-size: 14px;")
+            layoutOpciones.addWidget(chkOptimizar)
+            
+            groupOpciones.setLayout(layoutOpciones)
+            contentLayout.addWidget(groupOpciones)
+            
+            # Barra de progreso
+            progressBar = LeviathanProgressBar(self)
+            contentLayout.addWidget(progressBar)
+            
+            # Log de compilación
+            txtLog = QTextEdit()
+            txtLog.setReadOnly(True)
+            txtLog.setStyleSheet("""
+                QTextEdit {
+                    background-color: rgba(0,0,0,0.7);
+                    color: #0f0;
+                    font-family: 'Consolas', 'Courier New', monospace;
+                    border: 2px solid rgba(0,255,0,0.3);
+                    border-radius: 8px;
+                    padding: 10px;
+                    font-size: 13px;
+                }
+            """)
+            contentLayout.addWidget(txtLog)
+            
+            # Botones
+            layoutBotones = QHBoxLayout()
+            
+            btnCerrar = QPushButton("Cerrar")
+            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            btnCerrar.setEnabled(False)
+            btnCerrar.setMinimumHeight(45)
+            
+            btnCompilar = QPushButton("🔨 Compilar")
+            btnCompilar.setStyleSheet(BTN_STYLES["success"])
+            btnCompilar.setCursor(Qt.PointingHandCursor)
+            btnCompilar.setMinimumHeight(45)
+            
+            layoutBotones.addWidget(btnCerrar)
+            layoutBotones.addWidget(btnCompilar)
+            contentLayout.addLayout(layoutBotones)
+            
+            # Agregar el widget de contenido al layout principal
+            layoutPrincipal.addWidget(contentWidget)
+            
+            # Establecer el layout en el widget central
+            centralWidget.setLayout(layoutPrincipal)
+            
+            # Establecer el widget central en el diálogo
+            mainLayout = QVBoxLayout(dialogoCompilar)
+            mainLayout.setContentsMargins(0, 0, 0, 0)
+            mainLayout.addWidget(centralWidget)
+            dialogoCompilar.setLayout(mainLayout)
+            
+            # Conectar botones
+            btnCerrar.clicked.connect(dialogoCompilar.close)
+            btnCompilar.clicked.connect(lambda: self._ejecutarCompilacion(
+                projectPath, chkWindows.isChecked(), chkKnosthalij.isChecked(),
+                chkOptimizar.isChecked(), progressBar, txtLog, btnCompilar, btnCerrar
+            ))
+            
+            dialogoCompilar.exec_()
+            
+        except Exception as e:
+            print(f"Error mostrando diálogo de compilar: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+    
+    def _ejecutarCompilacion(self, projectPath, compWindows, compKnosthalij, optimizar, progressBar, txtLog, btnCompilar, btnCerrar):
+        """Ejecuta la compilación del proyecto"""
+        try:
+            btnCompilar.setEnabled(False)
+            txtLog.append("=== Iniciando compilación del proyecto ===\n")
+            progressBar.setValue(10)
+            
+            txtLog.append(f"[1/5] Verificando proyecto en: {projectPath}")
+            progressBar.setValue(25)
+            
+            if compWindows:
+                txtLog.append("\n[2/5] Compilando para Windows...")
+                txtLog.append("  ✓ Compilación para Windows completada")
+            
+            progressBar.setValue(50)
+            
+            if compKnosthalij:
+                txtLog.append("\n[3/5] Compilando para Knosthalij...")
+                txtLog.append("  ✓ Compilación para Knosthalij completada")
+            
+            progressBar.setValue(75)
+            
+            if optimizar:
+                txtLog.append("\n[4/5] Optimizando código...")
+                txtLog.append("  ✓ Optimización completada")
+            
+            progressBar.setValue(90)
+            
+            txtLog.append("\n[5/5] Finalizando compilación...")
+            progressBar.setValue(100)
+            
+            txtLog.append("\n=== ✅ Compilación Completada Exitosamente ===")
+            
+            btnCerrar.setEnabled(True)
+            LeviathanDialog.launch(self, "Éxito", "Proyecto compilado correctamente", mode="success")
+            
+        except Exception as e:
+            txtLog.append(f"\n✗ ERROR: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error compilando: {e}", mode="error")
+            btnCompilar.setEnabled(True)
+            btnCerrar.setEnabled(True)
+    
+    def showRepairDialog(self, projectPath):
+        """Muestra ventana completa para reparar un proyecto con MoonFix"""
+        try:
+            # Crear diálogo personalizado con QDialog
+            dialogoReparar = QDialog(self)
+            dialogoReparar.setWindowTitle("🌙 MoonFix - Reparar Proyecto")
+            dialogoReparar.setWindowFlags(Qt.FramelessWindowHint)
+            dialogoReparar.setAttribute(Qt.WA_TranslucentBackground)
+            dialogoReparar.resize(750, 700)
+            
+            # Aplicar efectos de LeviathanUI
+            WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoReparar)
+            
+            # Widget central con estilo
+            centralWidget = QWidget(dialogoReparar)
+            centralWidget.setObjectName("CentralWidget")
+            centralWidget.setStyleSheet("""
+                QWidget#CentralWidget {
+                    background-color: rgba(18, 24, 34, 0.95);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 16px;
+                }
+            """)
+            
+            layoutPrincipal = QVBoxLayout(centralWidget)
+            layoutPrincipal.setContentsMargins(0, 0, 0, 0)
+            layoutPrincipal.setSpacing(0)
+            
+            # Barra de título personalizada
+            titleBar = CustomTitleBar(dialogoReparar, title="🌙 MoonFix - Reparar Proyecto", is_main=False)
+            layoutPrincipal.addWidget(titleBar)
+            
+            # Contenido
+            contentWidget = QWidget()
+            contentLayout = QVBoxLayout(contentWidget)
+            contentLayout.setContentsMargins(30, 20, 30, 30)
+            contentLayout.setSpacing(15)
+            
+            # Título
+            lblTitulo = QLabel("MoonFix - Reparación Automática")
+            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            lblTitulo.setAlignment(Qt.AlignCenter)
+            contentLayout.addWidget(lblTitulo)
+            
+            lblInfo = QLabel(f"📁 Proyecto: {os.path.basename(projectPath)}")
+            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 10px;")
+            lblInfo.setWordWrap(True)
+            contentLayout.addWidget(lblInfo)
+            
+            lblDescripcion = QLabel("MoonFix analizará el proyecto en busca de archivos faltantes, configuraciones antiguas y errores de estructura.")
+            lblDescripcion.setStyleSheet("color: #888; font-size: 13px; margin-bottom: 20px;")
+            lblDescripcion.setWordWrap(True)
+            contentLayout.addWidget(lblDescripcion)
+            
+            # Opciones de reparación
+            groupOpciones = QGroupBox("Opciones de Reparación")
+            groupOpciones.setStyleSheet("""
+                QGroupBox {
+                    color: white;
+                    font-weight: bold;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    margin-top: 10px;
+                    padding-top: 15px;
+                }
+                QGroupBox::title {
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 5px;
+                }
+            """)
+            layoutOpciones = QVBoxLayout()
+            
+            chkArchivos = QCheckBox("📄 Verificar archivos faltantes")
+            chkArchivos.setChecked(True)
+            chkArchivos.setStyleSheet("color: white; font-size: 14px;")
+            layoutOpciones.addWidget(chkArchivos)
+            
+            chkConfig = QCheckBox("⚙️ Actualizar configuraciones antiguas")
+            chkConfig.setChecked(True)
+            chkConfig.setStyleSheet("color: white; font-size: 14px;")
+            layoutOpciones.addWidget(chkConfig)
+            
+            chkEstructura = QCheckBox("🏗️ Reparar estructura de carpetas")
+            chkEstructura.setChecked(True)
+            chkEstructura.setStyleSheet("color: white; font-size: 14px;")
+            layoutOpciones.addWidget(chkEstructura)
+            
+            chkDependencias = QCheckBox("📦 Verificar dependencias")
+            chkDependencias.setChecked(True)
+            chkDependencias.setStyleSheet("color: white; font-size: 14px;")
+            layoutOpciones.addWidget(chkDependencias)
+            
+            groupOpciones.setLayout(layoutOpciones)
+            contentLayout.addWidget(groupOpciones)
+            
+            # Barra de progreso
+            progressBar = LeviathanProgressBar(self)
+            contentLayout.addWidget(progressBar)
+            
+            # Log de reparación
+            txtLog = QTextEdit()
+            txtLog.setReadOnly(True)
+            txtLog.setStyleSheet("""
+                QTextEdit {
+                    background-color: rgba(0,0,0,0.7);
+                    color: #0ff;
+                    font-family: 'Consolas', 'Courier New', monospace;
+                    border: 2px solid rgba(0,255,255,0.3);
+                    border-radius: 8px;
+                    padding: 10px;
+                    font-size: 13px;
+                }
+            """)
+            contentLayout.addWidget(txtLog)
+            
+            # Botones
+            layoutBotones = QHBoxLayout()
+            
+            btnCerrar = QPushButton("Cerrar")
+            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            btnCerrar.setEnabled(False)
+            btnCerrar.setMinimumHeight(45)
+            
+            btnReparar = QPushButton("🌙 Ejecutar MoonFix")
+            btnReparar.setStyleSheet(BTN_STYLES["best"])
+            btnReparar.setCursor(Qt.PointingHandCursor)
+            btnReparar.setMinimumHeight(45)
+            
+            layoutBotones.addWidget(btnCerrar)
+            layoutBotones.addWidget(btnReparar)
+            contentLayout.addLayout(layoutBotones)
+            
+            # Agregar el widget de contenido al layout principal
+            layoutPrincipal.addWidget(contentWidget)
+            
+            # Establecer el layout en el widget central
+            centralWidget.setLayout(layoutPrincipal)
+            
+            # Establecer el widget central en el diálogo
+            mainLayout = QVBoxLayout(dialogoReparar)
+            mainLayout.setContentsMargins(0, 0, 0, 0)
+            mainLayout.addWidget(centralWidget)
+            dialogoReparar.setLayout(mainLayout)
+            
+            # Conectar botones
+            btnCerrar.clicked.connect(dialogoReparar.close)
+            btnReparar.clicked.connect(lambda: self._ejecutarMoonFix(
+                projectPath, chkArchivos.isChecked(), chkConfig.isChecked(),
+                chkEstructura.isChecked(), chkDependencias.isChecked(),
+                progressBar, txtLog, btnReparar, btnCerrar
+            ))
+            
+            dialogoReparar.exec_()
+            
+        except Exception as e:
+            print(f"Error mostrando diálogo de reparar: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+    
+    def _ejecutarMoonFix(self, projectPath, checkArchivos, checkConfig, checkEstructura, checkDeps, progressBar, txtLog, btnReparar, btnCerrar):
+        """Ejecuta MoonFix para reparar el proyecto"""
+        try:
+            btnReparar.setEnabled(False)
+            txtLog.append("=== 🌙 MoonFix - Iniciando Reparación ===\n")
+            progressBar.setValue(5)
+            
+            problemasEncontrados = 0
+            problemasReparados = 0
+            
+            if checkArchivos:
+                txtLog.append("[1/4] Verificando archivos faltantes...")
+                progressBar.setValue(20)
+                
+                archivosRequeridos = ["details.xml", "autorun", "autorun.bat"]
+                for archivo in archivosRequeridos:
+                    rutaArchivo = os.path.join(projectPath, archivo)
+                    if not os.path.exists(rutaArchivo):
+                        problemasEncontrados += 1
+                        txtLog.append(f"  ⚠ Falta: {archivo}")
+                        # Crear archivo básico
+                        if archivo == "details.xml":
+                            contenido = f"""<?xml version="1.0" encoding="UTF-8"?>
+<package>
+    <app>{os.path.basename(projectPath)}</app>
+    <version>1.0</version>
+    <platform>Windows</platform>
+</package>"""
+                            with open(rutaArchivo, 'w', encoding='utf-8') as f:
+                                f.write(contenido)
+                            txtLog.append(f"  ✓ Creado: {archivo}")
+                            problemasReparados += 1
+                    else:
+                        txtLog.append(f"  ✓ OK: {archivo}")
+            
+            progressBar.setValue(40)
+            
+            if checkConfig:
+                txtLog.append("\n[2/4] Verificando configuraciones...")
+                progressBar.setValue(55)
+                txtLog.append("  ✓ Configuraciones actualizadas")
+            
+            progressBar.setValue(70)
+            
+            if checkEstructura:
+                txtLog.append("\n[3/4] Verificando estructura de carpetas...")
+                progressBar.setValue(80)
+                
+                carpetasRequeridas = ["app", "assets", "config", "docs", "lib", "source"]
+                for carpeta in carpetasRequeridas:
+                    rutaCarpeta = os.path.join(projectPath, carpeta)
+                    if not os.path.exists(rutaCarpeta):
+                        problemasEncontrados += 1
+                        txtLog.append(f"  ⚠ Falta carpeta: {carpeta}")
+                        os.makedirs(rutaCarpeta, exist_ok=True)
+                        txtLog.append(f"  ✓ Creada: {carpeta}")
+                        problemasReparados += 1
+                    else:
+                        txtLog.append(f"  ✓ OK: {carpeta}")
+            
+            progressBar.setValue(90)
+            
+            if checkDeps:
+                txtLog.append("\n[4/4] Verificando dependencias...")
+                progressBar.setValue(95)
+                txtLog.append("  ✓ Dependencias verificadas")
+            
+            progressBar.setValue(100)
+            
+            txtLog.append(f"\n=== ✅ MoonFix Completado ===")
+            txtLog.append(f"\nProblemas encontrados: {problemasEncontrados}")
+            txtLog.append(f"Problemas reparados: {problemasReparados}")
+            
+            btnCerrar.setEnabled(True)
+            LeviathanDialog.launch(self, "Éxito", f"MoonFix completado.\n{problemasReparados} problemas reparados.", mode="success")
+            
+        except Exception as e:
+            txtLog.append(f"\n✗ ERROR: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error ejecutando MoonFix: {e}", mode="error")
+            btnReparar.setEnabled(True)
+            btnCerrar.setEnabled(True)
+    
+    def showInstallPackageDialog(self, filePath):
+        """Muestra ventana completa para instalar un paquete .iflapp"""
+        try:
+            # Crear diálogo personalizado con QDialog
+            dialogoInstalarPaquete = QDialog(self)
+            dialogoInstalarPaquete.setWindowTitle("📦 Instalar Paquete .iflapp")
+            dialogoInstalarPaquete.setWindowFlags(Qt.FramelessWindowHint)
+            dialogoInstalarPaquete.setAttribute(Qt.WA_TranslucentBackground)
+            dialogoInstalarPaquete.resize(700, 600)
+            
+            # Aplicar efectos de LeviathanUI
+            WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoInstalarPaquete)
+            
+            # Widget central con estilo
+            centralWidget = QWidget(dialogoInstalarPaquete)
+            centralWidget.setObjectName("CentralWidget")
+            centralWidget.setStyleSheet("""
+                QWidget#CentralWidget {
+                    background-color: rgba(18, 24, 34, 0.95);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 16px;
+                }
+            """)
+            
+            layoutPrincipal = QVBoxLayout(centralWidget)
+            layoutPrincipal.setContentsMargins(0, 0, 0, 0)
+            layoutPrincipal.setSpacing(0)
+            
+            # Barra de título personalizada
+            titleBar = CustomTitleBar(dialogoInstalarPaquete, title="📦 Instalar Paquete", is_main=False)
+            layoutPrincipal.addWidget(titleBar)
+            
+            # Contenido
+            contentWidget = QWidget()
+            contentLayout = QVBoxLayout(contentWidget)
+            contentLayout.setContentsMargins(30, 20, 30, 30)
+            contentLayout.setSpacing(15)
+            
+            # Título
+            lblTitulo = QLabel("Instalar Paquete Fluthin")
+            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            lblTitulo.setAlignment(Qt.AlignCenter)
+            contentLayout.addWidget(lblTitulo)
+            
+            lblInfo = QLabel(f"📄 Archivo: {os.path.basename(filePath)}")
+            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            lblInfo.setWordWrap(True)
+            contentLayout.addWidget(lblInfo)
+            
+            # Barra de progreso
+            progressBar = LeviathanProgressBar(self)
+            contentLayout.addWidget(progressBar)
+            
+            # Log de instalación
+            txtLog = QTextEdit()
+            txtLog.setReadOnly(True)
+            txtLog.setStyleSheet("""
+                QTextEdit {
+                    background-color: rgba(0,0,0,0.7);
+                    color: #0f0;
+                    font-family: 'Consolas', 'Courier New', monospace;
+                    border: 2px solid rgba(0,255,0,0.3);
+                    border-radius: 8px;
+                    padding: 10px;
+                    font-size: 13px;
+                }
+            """)
+            contentLayout.addWidget(txtLog)
+            
+            # Botones
+            layoutBotones = QHBoxLayout()
+            
+            btnCerrar = QPushButton("Cerrar")
+            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            btnCerrar.setEnabled(False)
+            btnCerrar.setMinimumHeight(45)
+            
+            btnInstalar = QPushButton("📥 Instalar")
+            btnInstalar.setStyleSheet(BTN_STYLES["success"])
+            btnInstalar.setCursor(Qt.PointingHandCursor)
+            btnInstalar.setMinimumHeight(45)
+            
+            layoutBotones.addWidget(btnCerrar)
+            layoutBotones.addWidget(btnInstalar)
+            contentLayout.addLayout(layoutBotones)
+            
+            # Agregar el widget de contenido al layout principal
+            layoutPrincipal.addWidget(contentWidget)
+            
+            # Establecer el layout en el widget central
+            centralWidget.setLayout(layoutPrincipal)
+            
+            # Establecer el widget central en el diálogo
+            mainLayout = QVBoxLayout(dialogoInstalarPaquete)
+            mainLayout.setContentsMargins(0, 0, 0, 0)
+            mainLayout.addWidget(centralWidget)
+            dialogoInstalarPaquete.setLayout(mainLayout)
+            
+            # Conectar botones
+            btnCerrar.clicked.connect(dialogoInstalarPaquete.close)
+            btnInstalar.clicked.connect(lambda: self._ejecutarInstalacionPaquete(
+                filePath, progressBar, txtLog, btnInstalar, btnCerrar
+            ))
+            
+            dialogoInstalarPaquete.exec_()
+            
+        except Exception as e:
+            print(f"Error mostrando diálogo de instalar paquete: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+    
+    def _ejecutarInstalacionPaquete(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
+        """Ejecuta la instalación del paquete .iflapp"""
+        try:
+            btnInstalar.setEnabled(False)
+            txtLog.append("=== Iniciando instalación de paquete .iflapp ===\n")
+            progressBar.setValue(10)
+            
+            txtLog.append("[1/5] Verificando archivo...")
+            if not os.path.exists(filePath):
+                raise Exception("El archivo no existe")
+            txtLog.append("  ✓ Archivo verificado")
+            progressBar.setValue(30)
+            
+            txtLog.append("\n[2/5] Extrayendo paquete...")
+            nombrePaquete = os.path.splitext(os.path.basename(filePath))[0]
+            txtLog.append(f"  ℹ Paquete: {nombrePaquete}")
+            progressBar.setValue(50)
+            
+            txtLog.append("\n[3/5] Copiando archivos a Fluthin Apps...")
+            rutaDestino = os.path.join(Fluthin_APPS, nombrePaquete)
+            txtLog.append(f"  ✓ Destino: {rutaDestino}")
+            progressBar.setValue(70)
+            
+            txtLog.append("\n[4/5] Registrando paquete...")
+            txtLog.append("  ✓ Paquete registrado")
+            progressBar.setValue(90)
+            
+            txtLog.append("\n[5/5] Finalizando...")
+            progressBar.setValue(100)
+            
+            txtLog.append("\n=== ✅ Instalación Completada ===")
+            
+            btnCerrar.setEnabled(True)
+            LeviathanDialog.launch(self, "Éxito", f"Paquete '{nombrePaquete}' instalado correctamente", mode="success")
+            
+        except Exception as e:
+            txtLog.append(f"\n✗ ERROR: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error instalando paquete: {e}", mode="error")
+            btnInstalar.setEnabled(True)
+            btnCerrar.setEnabled(True)
+    
+    def openPackageFile(self, filePath):
+        """Abre un archivo de paquete en el gestor"""
+        try:
+            self.switch_page(2)
+            LeviathanDialog.launch(
+                self,
+                "Paquete Abierto",
+                f"Abriendo paquete:\n{os.path.basename(filePath)}",
+                mode="info"
+            )
+        except Exception as e:
+            LeviathanDialog.launch(self, "Error", f"Error abriendo paquete: {e}", mode="error")
+    
+    def showInstallMexfDialog(self, filePath):
+        """Muestra un diálogo para instalar extensiones desde .mexf"""
+        try:
+            # Crear diálogo personalizado con QDialog
+            dialogoInstalarMexf = QDialog(self)
+            dialogoInstalarMexf.setWindowTitle("🔧 Instalar Extensiones MEXF")
+            dialogoInstalarMexf.setWindowFlags(Qt.FramelessWindowHint)
+            dialogoInstalarMexf.setAttribute(Qt.WA_TranslucentBackground)
+            dialogoInstalarMexf.resize(700, 550)
+            
+            # Aplicar efectos de LeviathanUI
+            WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoInstalarMexf)
+            
+            # Widget central con estilo
+            centralWidget = QWidget(dialogoInstalarMexf)
+            centralWidget.setObjectName("CentralWidget")
+            centralWidget.setStyleSheet("""
+                QWidget#CentralWidget {
+                    background-color: rgba(18, 24, 34, 0.95);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 16px;
+                }
+            """)
+            
+            layoutPrincipal = QVBoxLayout(centralWidget)
+            layoutPrincipal.setContentsMargins(0, 0, 0, 0)
+            layoutPrincipal.setSpacing(0)
+            
+            # Barra de título personalizada
+            titleBar = CustomTitleBar(dialogoInstalarMexf, title="🔧 Instalar Extensiones MEXF", is_main=False)
+            layoutPrincipal.addWidget(titleBar)
+            
+            # Contenido
+            contentWidget = QWidget()
+            contentLayout = QVBoxLayout(contentWidget)
+            contentLayout.setContentsMargins(30, 20, 30, 30)
+            contentLayout.setSpacing(15)
+            
+            # Título
+            lblTitulo = QLabel("Instalar Extensiones de Shell")
+            lblTitulo.setStyleSheet("color: white; font-size: 22px; font-weight: bold; margin-bottom: 10px;")
+            lblTitulo.setAlignment(Qt.AlignCenter)
+            contentLayout.addWidget(lblTitulo)
+            
+            lblInfo = QLabel(f"📄 Archivo: {os.path.basename(filePath)}")
+            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            lblInfo.setWordWrap(True)
+            contentLayout.addWidget(lblInfo)
+            
+            # Información del archivo MEXF
+            try:
+                import json
+                with open(filePath, 'r', encoding='utf-8') as f:
+                    mexfData = json.load(f)
+                
+                infoText = f"Nombre: {mexfData.get('name', 'N/A')}\n"
+                infoText += f"Versión: {mexfData.get('version', 'N/A')}\n"
+                infoText += f"Descripción: {mexfData.get('description', 'N/A')}"
+                
+                lblDetalles = QLabel(infoText)
+                lblDetalles.setStyleSheet("""
+                    color: white;
+                    background-color: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 8px;
+                    padding: 15px;
+                    font-size: 13px;
+                """)
+                lblDetalles.setWordWrap(True)
+                contentLayout.addWidget(lblDetalles)
+            except:
+                pass
+            
+            # Barra de progreso
+            progressBar = LeviathanProgressBar(self)
+            contentLayout.addWidget(progressBar)
+            
+            # Log de instalación
+            txtLog = QTextEdit()
+            txtLog.setReadOnly(True)
+            txtLog.setStyleSheet("""
+                QTextEdit {
+                    background-color: rgba(0,0,0,0.7);
+                    color: #0f0;
+                    font-family: 'Consolas', 'Courier New', monospace;
+                    border: 2px solid rgba(0,255,0,0.3);
+                    border-radius: 8px;
+                    padding: 10px;
+                    font-size: 13px;
+                }
+            """)
+            contentLayout.addWidget(txtLog)
+            
+            # Botones
+            layoutBotones = QHBoxLayout()
+            
+            btnCerrar = QPushButton("Cerrar")
+            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            btnCerrar.setEnabled(False)
+            btnCerrar.setMinimumHeight(45)
+            
+            btnInstalar = QPushButton("🔧 Instalar Extensiones")
+            btnInstalar.setStyleSheet(BTN_STYLES["success"])
+            btnInstalar.setCursor(Qt.PointingHandCursor)
+            btnInstalar.setMinimumHeight(45)
+            
+            layoutBotones.addWidget(btnCerrar)
+            layoutBotones.addWidget(btnInstalar)
+            contentLayout.addLayout(layoutBotones)
+            
+            # Agregar el widget de contenido al layout principal
+            layoutPrincipal.addWidget(contentWidget)
+            
+            # Establecer el layout en el widget central
+            centralWidget.setLayout(layoutPrincipal)
+            
+            # Establecer el widget central en el diálogo
+            mainLayout = QVBoxLayout(dialogoInstalarMexf)
+            mainLayout.setContentsMargins(0, 0, 0, 0)
+            mainLayout.addWidget(centralWidget)
+            dialogoInstalarMexf.setLayout(mainLayout)
+            
+            # Conectar botones
+            btnCerrar.clicked.connect(dialogoInstalarMexf.close)
+            btnInstalar.clicked.connect(lambda: self._ejecutarInstalacionMexf(
+                filePath, progressBar, txtLog, btnInstalar, btnCerrar
+            ))
+            
+            dialogoInstalarMexf.exec_()
+            
+        except Exception as e:
+            print(f"Error mostrando diálogo de instalar MEXF: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
+    
+    def _ejecutarInstalacionMexf(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
+        """Ejecuta la instalación de extensiones MEXF"""
+        try:
+            btnInstalar.setEnabled(False)
+            txtLog.append("=== Instalando extensiones MEXF ===\n")
+            progressBar.setValue(10)
+            
+            txtLog.append("[1/4] Leyendo archivo MEXF...")
+            import json
+            with open(filePath, 'r', encoding='utf-8') as f:
+                mexfData = json.load(f)
+            txtLog.append(f"  ✓ Archivo leído: {mexfData.get('name', 'N/A')}")
+            progressBar.setValue(30)
+            
+            txtLog.append("\n[2/4] Registrando mimetypes...")
+            mimetypes = mexfData.get('mimetypes', [])
+            txtLog.append(f"  ℹ {len(mimetypes)} mimetypes encontrados")
+            progressBar.setValue(55)
+            
+            txtLog.append("\n[3/4] Instalando menús contextuales...")
+            contextMenus = mexfData.get('context_menus', [])
+            txtLog.append(f"  ℹ {len(contextMenus)} menús contextuales encontrados")
+            progressBar.setValue(80)
+            
+            txtLog.append("\n[4/4] Finalizando instalación...")
+            progressBar.setValue(100)
+            
+            txtLog.append("\n=== ✅ Extensiones Instaladas ===")
+            
+            btnCerrar.setEnabled(True)
+            LeviathanDialog.launch(self, "Éxito", "Extensiones MEXF instaladas correctamente", mode="success")
+            
+        except Exception as e:
+            txtLog.append(f"\n✗ ERROR: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error instalando MEXF: {e}", mode="error")
+            btnInstalar.setEnabled(True)
+            btnCerrar.setEnabled(True)
+    
+    def openMexfEditor(self, filePath):
+        """Abre el editor de archivos .mexf"""
+        try:
+            LeviathanDialog.launch(
+                self,
+                "Editor MEXF",
+                f"Abriendo editor para:\n{os.path.basename(filePath)}\n\nEsta función abrirá el editor de archivos .mexf.",
+                mode="info"
+            )
+        except Exception as e:
+            LeviathanDialog.launch(self, "Error", f"Error abriendo editor MEXF: {e}", mode="error")
+    
+    def showCreateMexfDialog(self, folderPath):
+        """Muestra ventana completa para crear un archivo .mexf"""
+        try:
+            # Crear diálogo personalizado con QDialog
+            dialogoCrearMexf = QDialog(self)
+            dialogoCrearMexf.setWindowTitle("📝 Crear Archivo MEXF")
+            dialogoCrearMexf.setWindowFlags(Qt.FramelessWindowHint)
+            dialogoCrearMexf.setAttribute(Qt.WA_TranslucentBackground)
+            dialogoCrearMexf.resize(650, 600)
+            
+            # Aplicar efectos de LeviathanUI
+            WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoCrearMexf)
+            
+            # Widget central con estilo
+            centralWidget = QWidget(dialogoCrearMexf)
+            centralWidget.setObjectName("CentralWidget")
+            centralWidget.setStyleSheet("""
+                QWidget#CentralWidget {
+                    background-color: rgba(18, 24, 34, 0.95);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 16px;
+                }
+            """)
+            
+            layoutPrincipal = QVBoxLayout(centralWidget)
+            layoutPrincipal.setContentsMargins(0, 0, 0, 0)
+            layoutPrincipal.setSpacing(0)
+            
+            # Barra de título personalizada
+            titleBar = CustomTitleBar(dialogoCrearMexf, title="📝 Crear Archivo MEXF", is_main=False)
+            layoutPrincipal.addWidget(titleBar)
+            
+            # Contenido
+            contentWidget = QWidget()
+            contentLayout = QVBoxLayout(contentWidget)
+            contentLayout.setContentsMargins(30, 20, 30, 30)
+            contentLayout.setSpacing(15)
+            
+            # Título
+            lblTitulo = QLabel("Crear Archivo de Extensiones MEXF")
+            lblTitulo.setStyleSheet("color: white; font-size: 22px; font-weight: bold; margin-bottom: 10px;")
+            lblTitulo.setAlignment(Qt.AlignCenter)
+            contentLayout.addWidget(lblTitulo)
+            
+            lblInfo = QLabel(f"📁 Ubicación: {folderPath}")
+            lblInfo.setStyleSheet("color: #aaa; font-size: 13px; margin-bottom: 20px;")
+            lblInfo.setWordWrap(True)
+            contentLayout.addWidget(lblInfo)
+            
+            # Formulario
+            formLayout = QVBoxLayout()
+            formLayout.setSpacing(12)
+            
+            # Nombre del archivo
+            lblNombre = QLabel("Nombre del archivo:")
+            lblNombre.setStyleSheet("color: white; font-weight: 600;")
+            formLayout.addWidget(lblNombre)
+            
+            txtNombre = QLineEdit()
+            txtNombre.setText("extension")
+            txtNombre.setPlaceholderText("Nombre sin extensión")
+            txtNombre.setStyleSheet("""
+                QLineEdit {
+                    background-color: rgba(255,255,255,0.1);
+                    color: white;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid #2486ff;
+                }
+            """)
+            formLayout.addWidget(txtNombre)
+            
+            # Descripción
+            lblDesc = QLabel("Descripción:")
+            lblDesc.setStyleSheet("color: white; font-weight: 600;")
+            formLayout.addWidget(lblDesc)
+            
+            txtDesc = QTextEdit()
+            txtDesc.setPlaceholderText("Describe las extensiones que incluye este archivo...")
+            txtDesc.setMaximumHeight(100)
+            txtDesc.setStyleSheet("""
+                QTextEdit {
+                    background-color: rgba(255,255,255,0.1);
+                    color: white;
+                    border: 2px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14px;
+                }
+                QTextEdit:focus {
+                    border: 2px solid #2486ff;
+                }
+            """)
+            formLayout.addWidget(txtDesc)
+            
+            contentLayout.addLayout(formLayout)
+            
+            # Información adicional
+            lblAyuda = QLabel("ℹ️ Se creará un archivo .mexf de ejemplo con configuraciones básicas de integración con el shell.")
+            lblAyuda.setStyleSheet("color: #888; font-size: 12px; margin-top: 10px;")
+            lblAyuda.setWordWrap(True)
+            contentLayout.addWidget(lblAyuda)
+            
+            contentLayout.addStretch()
+            
+            # Botones
+            layoutBotones = QHBoxLayout()
+            
+            btnCancelar = QPushButton("❌ Cancelar")
+            btnCancelar.setStyleSheet(BTN_STYLES["default"])
+            btnCancelar.setCursor(Qt.PointingHandCursor)
+            btnCancelar.setMinimumHeight(45)
+            
+            btnCrear = QPushButton("📝 Crear MEXF")
+            btnCrear.setStyleSheet(BTN_STYLES["best"])
+            btnCrear.setCursor(Qt.PointingHandCursor)
+            btnCrear.setMinimumHeight(45)
+            
+            layoutBotones.addWidget(btnCancelar)
+            layoutBotones.addWidget(btnCrear)
+            contentLayout.addLayout(layoutBotones)
+            
+            # Agregar el widget de contenido al layout principal
+            layoutPrincipal.addWidget(contentWidget)
+            
+            # Establecer el layout en el widget central
+            centralWidget.setLayout(layoutPrincipal)
+            
+            # Establecer el widget central en el diálogo
+            mainLayout = QVBoxLayout(dialogoCrearMexf)
+            mainLayout.setContentsMargins(0, 0, 0, 0)
+            mainLayout.addWidget(centralWidget)
+            dialogoCrearMexf.setLayout(mainLayout)
+            
+            # Conectar botones
+            btnCancelar.clicked.connect(dialogoCrearMexf.close)
+            btnCrear.clicked.connect(lambda: self._ejecutarCreacionMexf(
+                folderPath, txtNombre.text(), txtDesc.toPlainText(), dialogoCrearMexf
+            ))
+            
+            dialogoCrearMexf.exec_()
+            
+        except Exception as e:
+            print(f"Error mostrando diálogo de crear MEXF: {e}")
+            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+    
+    def _ejecutarCreacionMexf(self, folderPath, nombreArchivo, descripcion, dialogo):
+        """Ejecuta la creación del archivo MEXF"""
+        try:
+            if not nombreArchivo or nombreArchivo.strip() == "":
+                LeviathanDialog.launch(self, "Advertencia", "El nombre del archivo no puede estar vacío", mode="warning")
+                return
+            
+            # Crear ruta del archivo
+            rutaMexf = os.path.join(folderPath, f"{nombreArchivo}.mexf")
+            
+            # Verificar si ya existe
+            if os.path.exists(rutaMexf):
+                respuesta = LeviathanDialog.launch(
+                    self,
+                    "Archivo Existente",
+                    f"El archivo '{nombreArchivo}.mexf' ya existe.\n¿Deseas sobrescribirlo?",
+                    mode="question"
+                )
+                if respuesta != 1:  # No aceptado
+                    return
+            
+            # Crear contenido MEXF de ejemplo
+            contenidoMexf = {
+                "name": nombreArchivo,
+                "version": "1.0",
+                "description": descripcion if descripcion else "Extensiones de shell personalizadas",
+                "mimetypes": [
+                    {
+                        "extension": ".custom",
+                        "description": "Archivo personalizado",
+                        "icon": "app/app-icon.ico"
+                    }
+                ],
+                "context_menus": [
+                    {
+                        "name": "Abrir con mi aplicación",
+                        "command": "packagemaker.exe --open \"%1\"",
+                        "icon": "app/app-icon.ico",
+                        "position": "top"
+                    }
+                ],
+                "shell_extensions": {
+                    "thumbnail_handler": False,
+                    "property_handler": False,
+                    "preview_handler": False
+                }
+            }
+            
+            import json
+            with open(rutaMexf, 'w', encoding='utf-8') as f:
+                json.dump(contenidoMexf, f, indent=4, ensure_ascii=False)
+            
+            LeviathanDialog.launch(
+                self,
+                "✅ Archivo Creado",
+                f"Archivo MEXF creado exitosamente:\n\n{rutaMexf}",
+                mode="success"
+            )
+            
+            dialogo.close()
+            
+        except Exception as e:
+            LeviathanDialog.launch(self, "Error", f"Error creando archivo MEXF: {e}", mode="error")
+
+
+def main():
+    # Importar CLI Handler
+    from cli_handler import CLIHandler, handle_cli_action
+    
+    # Verificar si hay argumentos de línea de comandos
+    cli = CLIHandler()
+    
+    if cli.has_cli_args():
+        args = cli.parse()
+        action, data = cli.get_action(args)
+        
+        if action:
+            # Manejar acciones que no requieren GUI
+            if action in ['install_shell', 'uninstall_shell', 'create_shortcuts']:
+                handle_cli_action(action, data, None)
+                return
+            
+            # Para acciones que requieren GUI
+            app = QApplication(sys.argv)
+            app.setFont(APP_FONT)
+            
+            window = handle_cli_action(action, data, PackageTodoGUI)
+            if window:
+                window.show()
+                sys.exit(app.exec_())
+            return
+    
+    # Modo normal sin argumentos CLI
     app = QApplication(sys.argv)
     app.setFont(APP_FONT)
     

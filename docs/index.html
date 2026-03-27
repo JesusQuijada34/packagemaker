@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cargando…</title>
-  <link rel="icon" href="../app/app-icon.ico" type="image/x-icon" />
+  <title>Cargando...</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico" type="image/x-icon" />
   <style>
     :root {
       --accent: #2486ff;
@@ -160,9 +160,9 @@
             <div class="app-right">
               <div class="meta">
                 <div class="title-row">
-                  <h1 class="app-title" id="appTitle">Cargando…</h1>
+                  <h1 class="app-title" id="appTitle">Cargando...</h1>
                 </div>
-                <div class="meta-info" id="metaInfo">…</div>
+                <div class="meta-info" id="metaInfo">...</div>
                 <div class="meta-author" id="metaAuthor"></div>
                 <div class="meta-rate" id="metaRate"></div>
               </div>
@@ -183,7 +183,7 @@
       </div>
       <div class="readme" id="readmeWrap" aria-label="README">
         <div class="readme-inner" id="readmeContent">
-          <p style="color:var(--muted); margin:0">README cargando…</p>
+          <p style="color:var(--muted); margin:0">README cargando...</p>
         </div>
       </div>
     </div>
@@ -193,10 +193,10 @@
       const FALLBACK_OWNER = 'JesusQuijada34';
       const FALLBACK_REPO  = 'packagemaker';
       const LOCAL = {
-        splash: '../assets/splash.png',
-        logo: '../assets/product_logo.png',
-        details: '../details.xml',
-        readme: '../README.md',
+        splash: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/splash.png',
+        logo: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png',
+        details: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/details.xml',
+        readme: 'https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/README.md',
       };
       // App UI
       const splashEl = document.getElementById('splash');
@@ -295,17 +295,14 @@
 
       // --- DATA LOAD & UI SYNC ---
       (async function(){
-        appTitle.textContent = 'Cargando…';
+        appTitle.textContent = 'Cargando...';
         metaInfo.textContent = '';
         metaAuthor.textContent = '';
         metaRate.textContent = '';
-        document.title = 'Cargando…';
-        // load details.xml as soon as possible (not blocking UI, just updating as ready)
+        document.title = 'Cargando...';
+        // PRIORITIZE REMOTE GITHUB RAW
         const detailsCandidates = [
-          LOCAL.details,
-          '/details.xml',
-          githubRaw(FALLBACK_OWNER, FALLBACK_REPO, 'main', 'details.xml'),
-          githubRaw(FALLBACK_OWNER, FALLBACK_REPO, 'master', 'details.xml')
+          LOCAL.details
         ];
         let detailsText = await fetchTextWithFallbackSafe(detailsCandidates);
         let metadata = {};
@@ -394,16 +391,12 @@
           handlerBtn.textContent = 'Instalar vía handler';
           appendSupportNotice('', 'Compatible con ' + (packagePlatformToHuman(platformSpec) || detected));
         }
-        // Visuals: segunda capa, nunca repite y sin finales blancos, siempre con degradado azul/oscuro
+        // Visuals: prioritize remote URLs
         const owner = metadata.author || FALLBACK_OWNER;
         const repo  = metadata.app || FALLBACK_REPO;
         const branches = ['main','master'];
         function candidates(localPath, repoPath){
-          const arr = [];
-          if(localPath) arr.push(localPath);
-          if(localPath && localPath.startsWith('../')) arr.push(localPath.replace(/^\.\.\//, '/'));
-          for(const b of branches) arr.push(githubRaw(owner, repo, b, repoPath));
-          return arr;
+          return [localPath];
         }
         fetchBlobWithFallbackSafe(candidates(LOCAL.splash, 'assets/splash.png')).then(splashBlob => {
           if(splashBlob){

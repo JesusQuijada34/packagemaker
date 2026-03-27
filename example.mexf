@@ -1,0 +1,124 @@
+{
+    "version": "1.0",
+    "app_name": "Influent Package Maker",
+    "app_id": "com.fluthin.packagemaker",
+    "description": "Archivo de extensiones para Influent Package Maker",
+    "extensions": [
+        {
+            "extension": ".iflapp",
+            "description": "Fluthin Package Application",
+            "icon": "app/app-icon.ico",
+            "mime_type": "application/x-fluthin-package",
+            "prog_id": "InfluentPackage"
+        },
+        {
+            "extension": ".mexf",
+            "description": "Marked Extensions File",
+            "icon": "app/app-icon.ico",
+            "mime_type": "application/json",
+            "prog_id": "MarkedExtensionsFile"
+        }
+    ],
+    "context_menus": [
+        {
+            "target": "file",
+            "extensions": [".iflapp"],
+            "label": "Instalar Paquete",
+            "command": "packagemaker.exe --install-package \"%1\"",
+            "icon": "app/app-icon.ico"
+        },
+        {
+            "target": "file",
+            "extensions": [".mexf"],
+            "label": "Instalar Extensiones",
+            "command": "packagemaker.exe --install-mexf \"%1\"",
+            "icon": "app/app-icon.ico"
+        },
+        {
+            "target": "folder",
+            "label": "Crear Proyecto Aquí",
+            "command": "packagemaker.exe --create-project \"%1\"",
+            "icon": "app/app-icon.ico"
+        },
+        {
+            "target": "folder",
+            "label": "Instalar como Fluthin Package",
+            "command": "packagemaker.exe --install-folder \"%1\"",
+            "icon": "app/app-icon.ico"
+        },
+        {
+            "target": "folder",
+            "label": "Compilar Proyecto",
+            "command": "packagemaker.exe --compile-project \"%1\"",
+            "icon": "app/app-icon.ico"
+        },
+        {
+            "target": "folder",
+            "label": "Reparar Proyecto (MoonFix)",
+            "command": "packagemaker.exe --repair-project \"%1\"",
+            "icon": "app/app-icon.ico"
+        },
+        {
+            "target": "background",
+            "label": "Nuevo Proyecto IPM",
+            "command": "packagemaker.exe --create-project \"%V\"",
+            "icon": "app/app-icon.ico"
+        },
+        {
+            "target": "background",
+            "label": "Crear Archivo de Extensiones (.mexf)",
+            "command": "packagemaker.exe --create-mexf \"%V\"",
+            "icon": "app/app-icon.ico"
+        }
+    ],
+    "shell_commands": [
+        {
+            "name": "ipm",
+            "description": "Influent Package Maker CLI",
+            "path": "packagemaker.exe"
+        },
+        {
+            "name": "packagemaker",
+            "description": "Influent Package Maker",
+            "path": "packagemaker.exe"
+        }
+    ],
+    "file_associations": [
+        {
+            "extension": ".iflapp",
+            "prog_id": "InfluentPackage",
+            "description": "Fluthin Package",
+            "default_icon": "app/app-icon.ico",
+            "open_command": "packagemaker.exe --open-package \"%1\""
+        },
+        {
+            "extension": ".mexf",
+            "prog_id": "MarkedExtensionsFile",
+            "description": "Archivo de Extensiones Marcadas",
+            "default_icon": "app/app-icon.ico",
+            "open_command": "packagemaker.exe --edit-mexf \"%1\""
+        }
+    ],
+    "shortcuts": {
+        "desktop": true,
+        "start_menu": true,
+        "taskbar": false
+    },
+    "registry_keys": [
+        {
+            "root": "HKEY_CLASSES_ROOT",
+            "path": ".iflapp",
+            "values": {
+                "": "InfluentPackage"
+            }
+        },
+        {
+            "root": "HKEY_CLASSES_ROOT",
+            "path": "InfluentPackage",
+            "values": {
+                "": "Fluthin Package",
+                "DefaultIcon": "app/app-icon.ico"
+            }
+        }
+    ]
+}
