@@ -74,9 +74,9 @@ UPDATER_CODE = r'''import sys, os, time, shutil, zipfile, subprocess, traceback,
 import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
-from PyQt5.QtGui import QFont, QIcon, QPixmap, QColor
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QObject
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
+from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QObject
 
 # --- LEVIATHAN UI CHECK ---
 try:
