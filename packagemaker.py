@@ -23,22 +23,8 @@ from typing import Dict, List, Tuple, Optional
 import importlib
 import importlib.util
 
-# Limpiar caché de leviathan-ui si existe
-if 'leviathan_ui' in sys.modules:
-    del sys.modules['leviathan_ui']
-if 'leviathan_ui.title_bar' in sys.modules:
-    del sys.modules['leviathan_ui.title_bar']
-
-ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
-LOCAL_LEVIATHAN_UI = os.path.abspath(os.path.join(ROOT_DIR, os.pardir, "leviathan-ui"))
-
-# Insertar ruta local al INICIO para prioridad máxima
-if LOCAL_LEVIATHAN_UI in sys.path:
-    sys.path.remove(LOCAL_LEVIATHAN_UI)
-sys.path.insert(0, LOCAL_LEVIATHAN_UI)
-
-print(f"[DEBUG] Usando leviathan-ui local: {LOCAL_LEVIATHAN_UI}")
-print(f"[DEBUG] sys.path[0]: {sys.path[0]}")
+# Usar leviathan-ui desde pip (remoto) - instalar con: pip install leviathan-ui
+print(f"[INFO] Usando leviathan-ui desde PyPI (pip install leviathan-ui)")
 
 from PyQt6 import QtWidgets, QtGui, QtCore
 from PyQt6.QtWidgets import (
