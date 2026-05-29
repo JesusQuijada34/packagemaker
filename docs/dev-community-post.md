@@ -89,7 +89,7 @@ Packagemaker introduce switches estilo UWP para configurar compilación:
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/tuusuario/packagemaker.git
+git clone https://github.com/JesusQuijada34/packagemaker.git
 cd packagemaker
 
 # Instalar dependencias
@@ -195,7 +195,7 @@ Buscamos colaboradores en:
 
 ## 📞 Soporte y Comunidad
 
-- **GitHub**: [github.com/tuusuario/packagemaker](https://github.com/tuusuario/packagemaker)
+- **GitHub**: [github.com/JesusQuijada34/packagemaker](https://github.com/JesusQuijada34/packagemaker)
 - **Issues**: Reporta bugs o solicita features
 - **Discussions**: Preguntas y ayuda de la comunidad
 

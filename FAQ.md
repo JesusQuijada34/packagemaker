@@ -11,7 +11,7 @@
 
 **Instalación:**
 ```bash
-git clone https://github.com/tuusuario/packagemaker.git
+git clone https://github.com/JesusQuijada34/packagemaker.git
 cd packagemaker
 pip install -r requirements.txt
 python packagemaker.py

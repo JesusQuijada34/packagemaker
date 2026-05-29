@@ -305,4 +305,4 @@ Si usaste la beta (v0.9.x):
 
 **¡Gracias por usar Packagemaker! 🐉📦**
 
-[GitHub](https://github.com/tuusuario/packagemaker) | [Issues](https://github.com/tuusuario/packagemaker/issues) | [Releases](https://github.com/tuusuario/packagemaker/releases)
+[GitHub](https://github.com/JesusQuijada34/packagemaker) | [Issues](https://github.com/JesusQuijada34/packagemaker/issues) | [Releases](https://github.com/JesusQuijada34/packagemaker/releases)
