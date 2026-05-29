@@ -1,0 +1,12 @@
+{
+  "installations": {
+    "3.12": {
+      "path": "C:\\Users\\gat\\Documents\\GitHub\\packagemaker\\data\\pmCodeEditor\\python\\python312",
+      "python_exe": "C:\\Users\\gat\\Documents\\GitHub\\packagemaker\\data\\pmCodeEditor\\python\\python312\\python.exe",
+      "pip_exe": "C:\\Users\\gat\\Documents\\GitHub\\packagemaker\\data\\pmCodeEditor\\python\\python312\\Scripts\\pip.exe",
+      "is_installed": true,
+      "size_mb": 31.918293952941895
+    }
+  },
+  "default_version": "3.12"
+}

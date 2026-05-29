@@ -1,0 +1,26 @@
+1 VERSIONINFO
+FILEVERSION 5,15,3,0
+PRODUCTVERSION 5,15,3,0
+FILEOS 0x4
+FILETYPE 0x2
+{
+BLOCK "StringFileInfo"
+{
+	BLOCK "040904B0"
+	{
+		VALUE "CompanyName", "__COMPANY__"
+		VALUE "FileDescription", "__FILE_DESCRIPTION__"
+		VALUE "FileVersion", "__FILE_VERSION__ built by: __AUTHOR__"
+		VALUE "InternalName", "__INTERNAL_NAME__"
+		VALUE "LegalCopyright", "__LEGAL_COPYRIGHT__"
+		VALUE "OriginalFilename", "__ORIGINAL_FILENAME__"
+		VALUE "ProductName", "__PRODUCT_NAME__"
+		VALUE "ProductVersion", "__PRODUCT_VERSION__"
+	}
+}}
+
+BLOCK "VarFileInfo"
+{
+	VALUE "Translation", 0x0409 0x04B0
+}
+}

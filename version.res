@@ -1,6 +1,6 @@
 1 VERSIONINFO
-FILEVERSION 5,15,3,0
-PRODUCTVERSION 5,15,3,0
+FILEVERSION 3,2,7,0
+PRODUCTVERSION 3,2,7,0
 FILEOS 0x4
 FILETYPE 0x2
 {
@@ -9,13 +9,13 @@ BLOCK "StringFileInfo"
 	BLOCK "040904B0"
 	{
 		VALUE "CompanyName", "Influent"
-		VALUE "FileDescription", "Influent® Package Maker by JesusQuijada34"
-		VALUE "FileVersion", "3.2.2-25.11-15.28-AlphaCube built by: JesusQuijada34"
+		VALUE "FileDescription", "InfluentÂ® Package Maker by JesusQuijada34"
+		VALUE "FileVersion", "3.2.7-26.05-20.13-AlphaCube built by: JesusQuijada34"
 		VALUE "InternalName", "packagemaker"
-		VALUE "LegalCopyright", "© Influent. All rights reserved."
+		VALUE "LegalCopyright", "Â© Influent. All rights reserved."
 		VALUE "OriginalFilename", "packagemaker.nrdPkg"
-		VALUE "ProductName", "Influent Package maker 3.2.2-25.11-15.28-AlphaCube"
-		VALUE "ProductVersion", "3.2.2"
+		VALUE "ProductName", "Influent Package Maker 3.2.7-26.05-20.13-AlphaCube"
+		VALUE "ProductVersion", "3.2.7"
 	}
 }
 

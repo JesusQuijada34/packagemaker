@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import zipfile
 from PyQt6.QtCore import Qt
@@ -9,10 +10,23 @@ from leviathan_ui import CustomTitleBar, LeviathanDialog
 from lib.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.moonFixWizard import detectar_modo_sistema
+from lib.notificationSystem import info, warning, error, success, NotificationAction
 
-# These need to be imported from the main module or defined here
-# For now, I'll assume they are available or need to be moved
-# get_github_style, find_python_executable, BASE_DIR, Fluthin_APPS, TAB_ICONS
+# Default empty - icons should be passed from caller if needed
+TAB_ICONS = {}
+
+def find_python_executable():
+    """Busca un ejecutable de Python disponible en el sistema."""
+    if getattr(sys, 'frozen', False):
+        path_python = shutil.which("python")
+        if path_python:
+            return path_python
+        path_python3 = shutil.which("python3")
+        if path_python3:
+            return path_python3
+        return None
+    else:
+        return sys.executable
 
 def get_github_style(is_dark):
     """Genera estilos CSS para botones al estilo GitHub (Action Naranja, Normal B/W)"""
@@ -97,12 +111,14 @@ def get_github_style(is_dark):
 
 
 class ProjectDetailsDialog(QDialog):
-    """Dialogo detallado para gestión de proyectos/apps"""
-    def __init__(self, parent, pkg_data, is_app=False, manager_ref=None):
+    """Dialogo detallado para gestion de proyectos/apps"""
+    def __init__(self, parent, pkg_data, is_app=False, manager_ref=None, base_dir=None, fluthin_apps=None):
         super().__init__(parent)
         self.pkg = pkg_data
         self.is_app = is_app
         self.manager = manager_ref
+        self.base_dir = base_dir or os.path.expanduser("~/Documents/Packagemaker Projects")
+        self.fluthin_apps = fluthin_apps or os.path.expanduser("~/Documents/Fluthin Apps")
         # Fix: Ensure Qt.WindowType.Dialog flag is present
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -121,7 +137,7 @@ class ProjectDetailsDialog(QDialog):
             }
         """)
 
-        is_dark = detect_dark = detectar_modo_sistema()
+        is_dark = detectar_modo_sistema() == "dark"
         if is_dark:
              self.container.setStyleSheet("""
             #DetailsContainer {
@@ -195,7 +211,7 @@ class ProjectDetailsDialog(QDialog):
         # Icono grande
         icon_lbl = QLabel()
         pm = QPixmap(icon_path) if icon_path else QPixmap(80, 80)
-        if not icon_path: pm.fill(Qt.transparent)
+        if not icon_path: pm.fill(Qt.GlobalColor.transparent)
         icon_lbl.setPixmap(pm.scaled(80, 80, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         icon_lbl.setFixedSize(80, 80)
         header_layout.addWidget(icon_lbl)
@@ -266,9 +282,9 @@ class ProjectDetailsDialog(QDialog):
         def mk_btn(text, is_primary=False, icon_str=None):
             btn = QPushButton(text)
             btn.setFixedHeight(36)
-            # No establecemos font aquí porque el stylesheet lo maneja mejor para coherencia
+            # No establecemos font aqui porque el stylesheet lo maneja mejor para coherencia
             if icon_str and icon_str in TAB_ICONS:
-                # Opcional: Podríamos no usar iconos para ser mas fiel al estilo "limpio" de GitHub,
+                # Opcional: Podriamos no usar iconos para ser mas fiel al estilo "limpio" de GitHub,
                 # pero los conservamos por usabilidad.
                 btn.setIcon(QIcon(TAB_ICONS[icon_str]))
 
@@ -324,7 +340,7 @@ class ProjectDetailsDialog(QDialog):
 
         python = find_python_executable()
         if not python:
-             LeviathanDialog.launch(self, "Python no encontrado", "No se detectó una instalación de Python válida para ejecutar el script.", mode="error")
+             LeviathanDialog.launch(self, "Python no encontrado", "No se detecto una instalacion de Python valida para ejecutar el script.", mode="error")
              return
 
         # Abrir terminal
@@ -332,36 +348,116 @@ class ProjectDetailsDialog(QDialog):
         self.terminal.exec()
 
     def install_action(self):
-        # Logica de buscar .iflapp y descomprimir
+        """Compila primero, luego instala como paquete Fluthin. Muestra consola de progreso."""
+        from lib.installConsoleDialog import InstallConsoleDialog
+        
+        # Abrir consola de instalacion para mostrar progreso
+        self.install_console = InstallConsoleDialog(self)
+        self.install_console.show()
+        self.install_console.log("Iniciando proceso de compilacion e instalacion...")
+        
+        # Primero compilar
+        self.install_console.log("Paso 1/2: Compilando proyecto...")
+        self._compile_then_install()
+    
+    def _compile_then_install(self):
+        """Compila y luego instala el paquete"""
+        empresa = self.pkg.get('empresa', 'influent')
+        nombre = self.pkg.get('app', self.pkg.get('name', 'unknown'))
+        version = self.pkg.get('version', '1.0').replace("v", "").split("-")[0]
+        plataforma = self.pkg.get('platform', 'Windows')
+        
+        self.build_thread = BuildThread(
+            empresa,
+            nombre,
+            version,
+            plataforma,
+            parent=self,
+            custom_path=self.pkg.get('folder'),
+            base_dir=self.base_dir,
+            build_mode="portable"
+        )
+        
+        # Conectar senales a la consola
+        self.build_thread.progress.connect(lambda msg: self.install_console.log(f"[BUILD] {msg}"))
+        self.build_thread.finished.connect(self._on_compile_finished_for_install)
+        self.build_thread.error.connect(self._on_compile_error_for_install)
+        self.build_thread.start()
+    
+    def _on_compile_finished_for_install(self, msg):
+        """Cuando termina compilacion, proceder a instalar"""
+        self.install_console.log(f"Compilacion exitosa: {msg}")
+        self.install_console.log("Paso 2/2: Instalando paquete Fluthin...")
+        
+        # Buscar el .iflapp generado (en base_dir y en releases/)
         base_name = self.pkg.get("name", "")
         valid_file = None
-        for f in os.listdir(BASE_DIR):
-            if (f.endswith(".iflapp") or f.endswith(".iflappb")) and base_name in f:
-                valid_file = os.path.join(BASE_DIR, f)
-                break
-
-        if not valid_file:
-            LeviathanDialog.launch(
-                self,
-                "No encontrado",
-                "No se encontró el paquete compilado (.iflapp) en la carpeta de proyectos. Primero compílalo.",
-                mode="warning"
-            )
-            return
-
-        target_dir = os.path.join(Fluthin_APPS, self.pkg['name'])
+        
+        search_paths = [
+            self.base_dir,
+            os.path.join(self.base_dir, "releases"),
+            os.path.dirname(self.pkg.get("folder", "")),
+        ]
+        
         try:
+            for search_path in search_paths:
+                if search_path and os.path.exists(search_path):
+                    self.install_console.log(f"Buscando en: {search_path}")
+                    for f in os.listdir(search_path):
+                        if (f.endswith(".iflapp") or f.endswith(".iflappb")) and base_name in f:
+                            valid_file = os.path.join(search_path, f)
+                            self.install_console.log(f"Encontrado: {f}")
+                            break
+                    if valid_file:
+                        break
+        except Exception as e:
+            self.install_console.log(f"Error buscando paquete: {e}")
+            return
+        
+        if not valid_file:
+            self.install_console.log("No se encontro el paquete compilado (.iflapp)")
+            self.install_console.log("Tip: Verifica que la compilacion haya generado el archivo")
+            return
+        
+        # Instalar
+        try:
+            target_dir = os.path.join(self.fluthin_apps, self.pkg['name'])
             os.makedirs(target_dir, exist_ok=True)
+            
+            self.install_console.log(f"Extrayendo a: {target_dir}")
             with zipfile.ZipFile(valid_file, 'r') as zf:
                 zf.extractall(target_dir)
-            LeviathanDialog.launch(self, "Éxito", "App instalada correctamente.", mode="success")
-            if hasattr(self.manager, "load_manager_lists"): self.manager.load_manager_lists()
+            
+            self.install_console.log("Instalacion completada exitosamente!")
+            if hasattr(self.manager, "load_manager_lists"): 
+                self.manager.load_manager_lists()
+            # Notificacion de exito Windows 11
+            success(
+                "Instalación completada",
+                f"'{self.pkg.get('name', 'Unknown')}' ha sido instalado correctamente en Fluthin Apps.",
+                duration=6000,
+                actions=[
+                    NotificationAction("Ejecutar", self._run_installed_app),
+                    NotificationAction("Ver en carpeta", lambda: self._open_folder(target_dir))
+                ]
+            )
         except Exception as e:
-            LeviathanDialog.launch(self, "Error", str(e), mode="error")
+            self.install_console.log(f"Error en instalacion: {e}")
+            # Notificacion de error
+            error(
+                "Error de instalación",
+                f"No se pudo instalar el proyecto: {str(e)}",
+                duration=0  # Persistente
+            )
+    
+    def _on_compile_error_for_install(self, msg):
+        """Error durante compilacion"""
+        self.install_console.log(f"Error en compilacion: {msg}")
+        self.install_console.log("Instalacion cancelada.")
 
     def uninstall_action(self):
          def do_uninstall(res):
-             if res == "SÍ":
+             if res == "SI":
                  try:
                      shutil.rmtree(self.pkg["folder"])
                      self.accept()
@@ -369,11 +465,11 @@ class ProjectDetailsDialog(QDialog):
                  except Exception as e:
                      LeviathanDialog.launch(self, "Error", str(e), mode="error")
 
-         LeviathanDialog.launch(self, "Desinstalar", "¿Estás seguro de eliminar esta app?", mode="warning", buttons=["SÍ", "NO"], callback=do_uninstall)
+         LeviathanDialog.launch(self, "Desinstalar", "Estas seguro de eliminar esta app?", mode="warning", buttons=["SI", "NO"], callback=do_uninstall)
 
     def delete_action(self):
          def do_delete(res):
-             if res == "SÍ":
+             if res == "SI":
                  try:
                      shutil.rmtree(self.pkg["folder"])
                      self.accept()
@@ -381,7 +477,7 @@ class ProjectDetailsDialog(QDialog):
                  except Exception as e:
                      LeviathanDialog.launch(self, "Error", str(e), mode="error")
 
-         LeviathanDialog.launch(self, "Eliminar", "¿Estás seguro de eliminar este proyecto y todos sus archivos? Esta acción no se puede deshacer.", mode="error", buttons=["SÍ", "NO"], callback=do_delete)
+         LeviathanDialog.launch(self, "Eliminar", "Estas seguro de eliminar este proyecto y todos sus archivos? Esta accion no se puede deshacer.", mode="error", buttons=["SI", "NO"], callback=do_delete)
 
     def compile_action(self):
         # Trigger compilation using BuildThread
@@ -401,7 +497,7 @@ class ProjectDetailsDialog(QDialog):
             plataforma,
             parent=self,
             custom_path=self.pkg.get('folder'),
-            base_dir=BASE_DIR,
+            base_dir=self.base_dir,
             build_mode="portable"
         )
         self.build_thread.progress.connect(lambda msg: self.lbl_status.setText(msg))
@@ -412,9 +508,63 @@ class ProjectDetailsDialog(QDialog):
     def on_compile_finished(self, msg):
         self.lbl_status.setText(msg)
         self.btn_compile.setEnabled(True)
-        LeviathanDialog.launch(self, "Compilación", msg, mode="info")
+        # Mostrar notificacion Windows 11
+        success(
+            "Compilación exitosa",
+            f"El proyecto '{self.pkg.get('name', 'Unknown')}' se ha compilado correctamente.",
+            duration=5000,
+            actions=[
+                NotificationAction("Abrir carpeta", self._open_project_folder)
+            ]
+        )
 
     def on_compile_error(self, msg):
         self.lbl_status.setText(f"Error: {msg}")
         self.btn_compile.setEnabled(True)
-        LeviathanDialog.launch(self, "Error de compilación", msg, mode="error")
+        # Mostrar notificacion de error
+        error(
+            "Error de compilación",
+            f"No se pudo compilar el proyecto: {msg}",
+            duration=8000,
+            actions=[
+                NotificationAction("Ver detalles", lambda: LeviathanDialog.launch(self, "Error", msg, mode="error"), "primary")
+            ]
+        )
+        
+    def _open_project_folder(self):
+        """Abrir carpeta del proyecto en el explorador"""
+        import subprocess
+        folder = self.pkg.get("folder", "")
+        if folder and os.path.exists(folder):
+            subprocess.Popen(f'explorer "{folder}"')
+        else:
+            warning("Carpeta no encontrada", "No se pudo abrir la carpeta del proyecto.")
+            
+    def _run_installed_app(self):
+        """Ejecutar la aplicacion instalada"""
+        import subprocess
+        target_dir = os.path.join(self.fluthin_apps, self.pkg.get('name', ''))
+        # Buscar ejecutable o script principal
+        if os.path.exists(target_dir):
+            # Buscar .exe o .py
+            for f in os.listdir(target_dir):
+                if f.endswith('.exe') and not f.startswith('python'):
+                    subprocess.Popen([os.path.join(target_dir, f)], cwd=target_dir)
+                    return
+            # Si no hay exe, buscar main.py o app.py
+            for main_file in ['main.py', 'app.py', f"{self.pkg.get('name', 'app')}.py"]:
+                if os.path.exists(os.path.join(target_dir, main_file)):
+                    python = sys.executable
+                    subprocess.Popen([python, os.path.join(target_dir, main_file)], cwd=target_dir)
+                    return
+            warning("No se encontró ejecutable", "No se encontró un archivo ejecutable para iniciar.")
+        else:
+            warning("Aplicación no encontrada", "La carpeta de instalación no existe.")
+            
+    def _open_folder(self, folder):
+        """Abrir carpeta especificada en el explorador"""
+        import subprocess
+        if folder and os.path.exists(folder):
+            subprocess.Popen(f'explorer "{folder}"')
+        else:
+            warning("Carpeta no encontrada", "No se pudo abrir la carpeta especificada.")

@@ -1,0 +1,73 @@
+{
+  "_meta": { "lang": "es", "name": "Español" },
+  "app": {
+    "title": "Influent Package Maker",
+    "main_menu": "Menú Principal",
+    "context": "Contexto"
+  },
+  "sidebar": {
+    "create": "Crear Proyecto",
+    "build": "Construir Paquete",
+    "manager": "Gestor (Apps)",
+    "config": "Configuración",
+    "moonfix": "MoonFix",
+    "about": "Acerca de"
+  },
+  "sidebar_desc": {
+    "0": "### Crear Proyecto\nDiseña aplicaciones desde cero. Establece identidades únicas, versiones y metadatos para el ecosistema **Influent OS** de forma guiada.",
+    "1": "### Construir Paquete\nEmpaqueta tu trabajo. Transforma carpetas de desarrollo en archivos `.iflapp` comprimidos y listos para su distribución global.",
+    "2": "### Gestor de Aplicaciones\nTu centro de control. Administra proyectos locales y aplicaciones instaladas. Ejecuta, depura o elimina con absoluta precisión.",
+    "3": "### Configuración\nAjusta el motor del programa. Controla rutas, idioma, apariencia y opciones guardadas en data/pm.data.",
+    "4": "### MoonFix Suite\nSanación profunda. Escanea, detecta y repara inconsistencias en tus paquetes. Asegura que cada asset y etiqueta XML sea perfecta.",
+    "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**."
+  },
+  "config": {
+    "title": "Configuración",
+    "section_general": "General",
+    "section_language": "Idioma",
+    "section_appearance": "Apariencia",
+    "section_system": "Información del sistema",
+    "projects_path": "Carpeta de proyectos",
+    "fluthin_path": "Carpeta Fluthin Apps",
+    "browse": "Examinar",
+    "save": "Guardar",
+    "language": "Idioma de la interfaz",
+    "auto_translate": "Traducción automática si falta un texto",
+    "auto_translate_hint": "Usa traducción en línea y guarda el resultado en data/pm.data.",
+    "display_mode": "Modo de ventana",
+    "touch_mode": "Modo táctil",
+    "dpi_scale": "Escala DPI",
+    "device_sim": "Simulación de dispositivo",
+    "interface_color": "Color de interfaz",
+    "auto_color": "Color automático según el sistema",
+    "notifications": "Notificaciones",
+    "accent_color": "Color de acento",
+    "blur_intensity": "Intensidad de desenfoque",
+    "window_radius": "Radio de esquinas",
+    "sidebar_accent": "Grosor borde activo (sidebar)",
+    "card_opacity": "Opacidad tarjetas UI",
+    "ui_density": "Densidad de interfaz",
+    "density_normal": "Normal",
+    "density_compact": "Compacta",
+    "locked_hint": "Bloqueado en la versión compilada. Personaliza antes de generar el ejecutable.",
+    "personalization_hint": "No modifica el título de la ventana ni el nombre de la empresa (Influent).",
+    "saved_ok": "Configuración guardada en data/pm.data.",
+    "saved_error": "No se pudo guardar la configuración.",
+    "saved_restart": "Guardado. Algunos cambios requieren reiniciar la aplicación.",
+    "readonly_compiled": "Solo lectura (ejecutable compilado)",
+    "restart_banner": "Hay cambios pendientes que requieren reiniciar PackageMaker.",
+    "restart_btn": "Reiniciar ahora",
+    "dpi_restart_hint": "La escala DPI completa se aplica al reiniciar.",
+    "display_applied": "Modo de ventana Leviathan aplicado.",
+    "reset": "Restablecer",
+    "reset_confirm": "¿Estás seguro de que deseas restablecer la configuración a los valores por defecto?",
+    "reset_success": "Configuración restablecida a los valores por defecto."
+  },
+  "create": {
+    "sandbox": "Sandbox seguro"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "ok": "Aceptar"
+  }
+}

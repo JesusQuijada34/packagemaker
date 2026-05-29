@@ -1,0 +1,73 @@
+{
+  "_meta": { "lang": "en", "name": "English" },
+  "app": {
+    "title": "Influent Package Maker",
+    "main_menu": "Main Menu",
+    "context": "Context"
+  },
+  "sidebar": {
+    "create": "Create Project",
+    "build": "Build Package",
+    "manager": "Manager (Apps)",
+    "config": "Settings",
+    "moonfix": "MoonFix",
+    "about": "About"
+  },
+  "sidebar_desc": {
+    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
+    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
+    "2": "### Application Manager\nYour control center. Manage local projects and installed apps. Run, debug, or remove with precision.",
+    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
+    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+  },
+  "config": {
+    "title": "Settings",
+    "section_general": "General",
+    "section_language": "Language",
+    "section_appearance": "Appearance",
+    "section_system": "System information",
+    "projects_path": "Projects folder",
+    "fluthin_path": "Fluthin Apps folder",
+    "browse": "Browse",
+    "save": "Save",
+    "language": "Interface language",
+    "auto_translate": "Automatic translation when text is missing",
+    "auto_translate_hint": "Uses online translation and saves results to data/pm.data.",
+    "display_mode": "Window mode",
+    "touch_mode": "Touch mode",
+    "dpi_scale": "DPI scale",
+    "device_sim": "Device simulation",
+    "interface_color": "Interface color",
+    "auto_color": "Automatic color from system theme",
+    "notifications": "Notifications",
+    "accent_color": "Accent color",
+    "blur_intensity": "Blur intensity",
+    "window_radius": "Corner radius",
+    "sidebar_accent": "Active sidebar border width",
+    "card_opacity": "UI card opacity",
+    "ui_density": "Interface density",
+    "density_normal": "Normal",
+    "density_compact": "Compact",
+    "locked_hint": "Locked in compiled build. Customize before building the executable.",
+    "personalization_hint": "Does not change the window title or company name (Influent).",
+    "saved_ok": "Settings saved to data/pm.data.",
+    "saved_error": "Could not save settings.",
+    "saved_restart": "Saved. Some changes require restarting the application.",
+    "readonly_compiled": "Read-only (compiled executable)",
+    "restart_banner": "Pending changes require restarting PackageMaker.",
+    "restart_btn": "Restart now",
+    "dpi_restart_hint": "Full DPI scaling is applied after restart.",
+    "display_applied": "Leviathan window mode applied.",
+    "reset": "Reset",
+    "reset_confirm": "Are you sure you want to reset settings to default values?",
+    "reset_success": "Settings reset to default values."
+  },
+  "create": {
+    "sandbox": "Secure sandbox"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "ok": "OK"
+  }
+}

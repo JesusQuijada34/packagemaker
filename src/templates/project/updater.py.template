@@ -1,0 +1,164 @@
+import sys, os, time, shutil, zipfile, subprocess, traceback, threading
+import requests
+import xml.etree.ElementTree as ET
+from datetime import datetime
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
+from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QObject
+
+# --- LEVIATHAN UI CHECK ---
+try:
+    from leviathan_ui import LeviathanDialog, WipeWindow, LeviathanProgressBar, CustomTitleBar
+    HAS_LEVIATHAN = True
+except ImportError:
+    HAS_LEVIATHAN = False
+
+# --- CONFIG ---
+XML_PATH = "details.xml"
+LOG_PATH = "updater_log.txt"
+CHECK_INTERVAL = 60
+GITHUB_API = "https://api.github.com"
+
+def log(msg):
+    ts = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+    try:
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"{ts} {msg}\n")
+    except: pass
+    print(f"{ts} {msg}")
+
+def leer_xml(path):
+    try:
+        tree = ET.parse(path)
+        root = tree.getroot()
+        return {
+            "app": root.findtext("app", "").strip(),
+            "version": root.findtext("version", "").strip(),
+            "platform": root.findtext("platform", "").strip(),
+            "author": root.findtext("author", "").strip(),
+            "publisher": root.findtext("publisher", "").strip()
+        }
+    except: return {}
+
+def leer_xml_remoto(author, app):
+    url = f"https://raw.githubusercontent.com/{author}/{app}/main/details.xml"
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            return ET.fromstring(r.text).findtext("version", "").strip()
+    except: pass
+    return ""
+
+def buscar_release(author, app, version, platform, publisher):
+    filename = f"{publisher}.{app}.{version}-{platform}.iflapp"
+    url = f"https://github.com/{author}/{app}/releases/download/{version}/{filename}"
+    try:
+        if requests.head(url, timeout=15, allow_redirects=True).status_code == 200:
+            return url
+    except: pass
+    return None
+
+# Updater classes moved to lib/Updater.py
+    def __init__(self, app_data, url):
+        super().__init__()
+        self.app_data = app_data
+        self.url = url
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.resize(480, 320)
+        if HAS_LEVIATHAN:
+            WipeWindow.create().set_mode("ghostBlur").apply(self)
+        self.init_ui()
+        self.center()
+        QTimer.singleShot(500, self.start_install)
+
+    def center(self):
+        self.move(QApplication.primaryScreen().availableGeometry().center() - self.rect().center())
+
+    def init_ui(self):
+        central = QWidget()
+        central.setObjectName("Central")
+        central.setStyleSheet("QWidget#Central { background: rgba(18, 24, 34, 0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }")
+        self.setCentralWidget(central)
+        layout = QVBoxLayout(central)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        if HAS_LEVIATHAN:
+            self.title_bar = CustomTitleBar(self, title="System Updater", is_main=True)
+            self.title_bar.set_color(QColor(0,0,0,0))
+            layout.addWidget(self.title_bar)
+
+        content = QWidget()
+        c_lay = QVBoxLayout(content)
+        c_lay.setContentsMargins(30, 10, 30, 30)
+        c_lay.setSpacing(15)
+        
+        self.icon_lbl = QLabel("🔄")
+        self.icon_lbl.setStyleSheet("font-size: 48px; color: #2486ff;")
+        self.icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        c_lay.addWidget(self.icon_lbl)
+        
+        self.lbl_main = QLabel(f"Actualizando {self.app_data['app']}")
+        self.lbl_main.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_main.setStyleSheet("font-family: 'Segoe UI'; font-weight: 700; font-size: 18px; color: white;")
+        c_lay.addWidget(self.lbl_main)
+        
+        self.lbl_status = QLabel("Preparando...")
+        self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_status.setStyleSheet("color: #aaa; font-size: 13px;")
+        c_lay.addWidget(self.lbl_status)
+        
+        if HAS_LEVIATHAN:
+            self.pbar = LeviathanProgressBar(self)
+        else:
+            self.pbar = QProgressBar()
+            self.pbar.setStyleSheet("QProgressBar { background: #333; border: none; height: 6px; } QProgressBar::chunk { background: #2486ff; }")
+            self.pbar.setTextVisible(False)
+        c_lay.addWidget(self.pbar)
+        
+        layout.addWidget(content)
+
+    def start_install(self):
+        self.thread = QThread()
+        self.worker = InstallerWorker(self.url, self.app_data)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.progress.connect(self.pbar.setValue)
+        self.worker.status.connect(self.lbl_status.setText)
+        self.worker.finished.connect(self.on_fin)
+        self.thread.start()
+
+    def on_fin(self, ok, msg):
+        self.thread.quit()
+        if ok:
+            self.lbl_status.setText("¡Actualización completada!")
+            # Relaunch
+            exe = f"{self.app_data['app']}.exe"
+            if os.path.exists(exe): subprocess.Popen(exe)
+            QTimer.singleShot(1500, self.close)
+        else:
+            self.lbl_status.setText(f"Error: {msg}")
+            self.lbl_status.setStyleSheet("color: #ff5252;")
+
+def ciclo_embestido():
+    def verificar():
+        while True:
+            datos = leer_xml(XML_PATH)
+            if datos:
+                remoto = leer_xml_remoto(datos["author"], datos["app"])
+                if remoto and remoto != datos["version"]:
+                    url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"], datos["publisher"])
+                    if url:
+                        # Find main app if running to allow modal usage? No, separate process.
+                        app = QApplication(sys.argv)
+                        w = ModernUpdaterWindow(datos, url)
+                        w.show()
+                        app.exec()
+                        # Si se actualizó, el updater debe terminar
+                        return 
+            time.sleep(CHECK_INTERVAL)
+    threading.Thread(target=verificar, daemon=True).start()
+
+if __name__ == "__main__":
+    ciclo_embestido()
+    while True: time.sleep(100)

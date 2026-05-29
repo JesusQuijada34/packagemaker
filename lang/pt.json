@@ -1,0 +1,74 @@
+{
+  "_meta": { "lang": "pt", "name": "Português" },
+  "app": {
+    "title": "Influent Package Maker",
+    "main_menu": "Menu Principal",
+    "context": "Contexto"
+  },
+  "sidebar": {
+    "create": "Criar Projeto",
+    "build": "Construir Pacote",
+    "manager": "Gestor (Apps)",
+    "config": "Configuração",
+    "moonfix": "MoonFix",
+    "about": "Sobre"
+  },
+  "sidebar_desc": {
+    "0": "### Criar Projeto\nCrie aplicações do zero. Defina identidades, versões e metadados para o ecossistema **Influent OS**.",
+    "1": "### Construir Pacote\nEmpacote seu trabalho em arquivos `.iflapp` prontos para distribuição.",
+    "2": "### Gestor de Aplicações\nGerencie projetos locais e apps instalados.",
+    "3": "### Configuração\nAjuste caminhos, idioma e opções em data/pm.data.",
+    "4": "### MoonFix Suite\nRepare inconsistências nos seus pacotes.",
+    "5": "### Sobre\nDetalhes técnicos e licença do **Package Maker**."
+  },
+  "config": {
+    "title": "Configuração",
+    "section_general": "Geral",
+    "section_language": "Idioma",
+    "section_appearance": "Aparência",
+    "section_personalization": "Personalização (somente desenvolvimento)",
+    "section_system": "Informação do sistema",
+    "projects_path": "Pasta de projetos",
+    "fluthin_path": "Pasta Fluthin Apps",
+    "browse": "Procurar",
+    "save": "Salvar",
+    "language": "Idioma da interface",
+    "auto_translate": "Tradução automática quando faltar texto",
+    "auto_translate_hint": "Usa tradução online e salva em data/pm.data.",
+    "display_mode": "Modo da janela",
+    "touch_mode": "Modo touch",
+    "dpi_scale": "Escala DPI",
+    "device_sim": "Simulação de dispositivo",
+    "interface_color": "Cor da interface",
+    "auto_color": "Cor automática do sistema",
+    "notifications": "Notificações",
+    "accent_color": "Cor de destaque",
+    "blur_intensity": "Intensidade do desfoque",
+    "window_radius": "Raio das cantos",
+    "sidebar_accent": "Borda ativa da barra lateral",
+    "card_opacity": "Opacidade dos cartões",
+    "ui_density": "Densidade da interface",
+    "density_normal": "Normal",
+    "density_compact": "Compacta",
+    "personalization_hint": "Não altera o título da janela nem o nome da empresa (Influent).",
+    "locked_hint": "Bloqueado na versão compilada.",
+    "saved_ok": "Configuração salva em data/pm.data.",
+    "saved_error": "Não foi possível salvar.",
+    "saved_restart": "Salvo. Algumas alterações exigem reiniciar o aplicativo.",
+    "readonly_compiled": "Somente leitura (executável compilado)",
+    "restart_banner": "Alterações pendentes exigem reiniciar o PackageMaker.",
+    "restart_btn": "Reiniciar agora",
+    "dpi_restart_hint": "A escala DPI completa é aplicada após reiniciar.",
+    "display_applied": "Modo de janela Leviathan aplicado.",
+    "reset": "Restaurar",
+    "reset_confirm": "Tem certeza de que deseja restaurar as configurações para os valores padrão?",
+    "reset_success": "Configurações restauradas para os valores padrão."
+  },
+  "create": {
+    "sandbox": "Sandbox seguro"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "ok": "OK"
+  }
+}

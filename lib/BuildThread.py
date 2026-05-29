@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Dict, Optional
 from PyQt6.QtCore import QThread, pyqtSignal
 
+from lib.pyinstaller_embedded import get_pyinstaller, ensure_pyinstaller
+
 class FlangCompiler:
     """Compilador principal unificado para el ecosistema Fluthin (Version Robusta)."""
 
@@ -26,7 +28,7 @@ class FlangCompiler:
         self.scripts = []
         self.platform_type = None
         self.current_platform = platform.system()
-        self.venv_path = None
+        self.scripts_to_compile = None
         self.last_error = ""
 
         self.output_path.mkdir(parents=True, exist_ok=True)
@@ -36,95 +38,23 @@ class FlangCompiler:
     def log(self, msg):
         if self.log_callback:
             self.log_callback(msg)
-        print(msg)
 
     def _check_pyinstaller_installed(self) -> bool:
-        try:
-            result = subprocess.run(
-                ["pyinstaller", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=20
-            )
-            if result.returncode == 0:
-                self.log(f"[INFO] PyInstaller encontrado: {result.stdout.strip()}")
-                return True
-            return False
-        except Exception as e:
-            self.log(f"[INFO] PyInstaller no encontrado (check simple): {e}")
-            return False
-
-    def _install_pyinstaller_linux(self) -> bool:
-        self.log("[INFO] 🔧 Instalando PyInstaller en Linux...")
-        install_script = """#!/bin/bash
- echo "🔧 Instalando python3-full, python3-venv y pipx..."
- sudo apt install -y python3-full python3-venv pipx
-
- echo "🔧 Configurando pipx..."
- pipx ensurepath
-
- VENV_DIR="$HOME/venv-pyinstaller"
- if [ ! -d "$VENV_DIR" ]; then
-     echo "🧪 Creando entorno virtual en $VENV_DIR..."
-     python3 -m venv "$VENV_DIR"
- else
-     echo "🔁 El entorno virtual ya existe en $VENV_DIR."
- fi
-
- echo "🚀 Activando entorno virtual..."
- source "$VENV_DIR/bin/activate"
-
- echo "📦 Instalando PyInstaller..."
- pip install --upgrade pip
- pip install pyinstaller
-
- echo "✅ PyInstaller instalado. Versión:"
- pyinstaller --version
- """
-        try:
-            script_path = Path(tempfile.gettempdir()) / "install_pyinstaller.sh"
-            with open(script_path, 'w', newline='\n') as f:
-                f.write(install_script)
-            os.chmod(script_path, 0o755)
-
-            self.log(f"[INFO] Ejecutando script de instalación: {script_path}")
-            result = subprocess.run(["bash", str(script_path)], capture_output=False, text=True)
-
-            try:
-                script_path.unlink()
-            except:
-                pass
-
-            if result.returncode != 0:
-                self.log("[ERROR] Error durante la instalación de PyInstaller")
-                return False
-
-            venv_dir = Path.home() / "venv-pyinstaller"
-            self.venv_path = venv_dir
-            if not venv_dir.exists():
-                self.log(f"[ERROR] El entorno virtual no fue creado en {venv_dir}")
-                return False
-
-            pyinstaller_path = venv_dir / "bin" / "pyinstaller"
-            if not pyinstaller_path.exists():
-                self.log(f"[ERROR] PyInstaller no fue instalado en {pyinstaller_path}")
-                return False
-
-            self.log(f"[OK] ✅ PyInstaller instalado correctamente en {venv_dir}")
+        pyi = get_pyinstaller()
+        if pyi.is_available():
+            self.log(f"[INFO] PyInstaller embebido: {pyi.get_version()}")
             return True
-        except Exception as e:
-            self.log(f"[ERROR] Excepción durante la instalación de PyInstaller: {e}")
-            return False
+        return False
 
     def _ensure_pyinstaller(self) -> bool:
         if self._check_pyinstaller_installed():
             return True
-        if self.current_platform == "Linux":
-            self.log("[INFO] PyInstaller no encontrado. Iniciando instalación automática...")
-            return self._install_pyinstaller_linux()
-        else:
-            self.log("[ERROR] PyInstaller no encontrado. Instale: pip install pyinstaller")
-            return False
+        self.log("[INFO] PyInstaller no encontrado. Iniciando instalación automática...")
+        if ensure_pyinstaller(log_callback=self.log):
+            return True
+        self.last_error = "No se pudo instalar PyInstaller automáticamente."
+        self.log("[ERROR] No se pudo instalar PyInstaller automáticamente")
+        return False
 
     def parse_details_xml(self) -> bool:
         if not self.details_xml_path.exists():
@@ -162,9 +92,48 @@ class FlangCompiler:
                 return default_icon
         return None
 
+    def _detect_hidden_imports(self, script_path: Path) -> list:
+        hidden_imports = []
+        try:
+            content = script_path.read_text(encoding="utf-8")
+            if "PyQt6" in content:
+                hidden_imports.append("PyQt6")
+            if "leviathan_ui" in content:
+                hidden_imports.append("leviathan_ui")
+            if "requests" in content:
+                hidden_imports.append("requests")
+        except OSError:
+            pass
+        return hidden_imports
+
     def find_scripts(self) -> bool:
+        if self.scripts_to_compile:
+            self.scripts = []
+            app_dir = self.repo_path / "app"
+            for script_name in self.scripts_to_compile:
+                script_path = self.repo_path / f"{script_name}.py"
+                if not script_path.exists() and app_dir.exists():
+                    script_path = app_dir / f"{script_name}.py"
+                if script_path.exists():
+                    icon_path = self._find_icon(script_name)
+                    self.scripts.append({
+                        "name": script_name,
+                        "path": script_path,
+                        "icon": icon_path,
+                        "is_main": script_name == self.metadata.get("app"),
+                    })
+                    self.log(f"[INFO] Script seleccionado: {script_name}")
+            if not self.scripts:
+                self.last_error = "No se encontraron los scripts indicados en scripts_to_compile."
+                self.log("[ERROR] No se encontraron scripts para compilar.")
+            return len(self.scripts) > 0
+
         main_script = f"{self.metadata['app']}.py"
         main_script_path = self.repo_path / main_script
+        # Also check in app/ subdirectory
+        app_dir = self.repo_path / "app"
+        if not main_script_path.exists() and app_dir.exists():
+            main_script_path = app_dir / main_script
         if main_script_path.exists():
             icon_path = self._find_icon(self.metadata['app'])
             self.scripts.append({
@@ -174,17 +143,25 @@ class FlangCompiler:
                 'is_main': True,
             })
             self.log(f"[INFO] Main script: {main_script} | Icon: {icon_path.name if icon_path else 'None'}")
-        for file in self.repo_path.glob("*.py"):
-            if file.name != main_script and not file.name.startswith("_") and file.name not in ["packagemaker.py"]:
-                icon_path = self._find_icon(file.stem)
-                self.scripts.append({
-                    'name': file.stem,
-                    'path': file,
-                    'icon': icon_path,
-                    'is_main': False,
-                })
-                icon_name = icon_path.name if icon_path else 'None'
-                self.log(f"[INFO] Secondary script: {file.name} | Icon: {icon_name}")
+        # Search for secondary scripts in root and app/ subdirectory
+        search_paths = [self.repo_path]
+        if app_dir.exists():
+            search_paths.append(app_dir)
+        for search_path in search_paths:
+            for file in search_path.glob("*.py"):
+                if file.name != main_script and not file.name.startswith("_") and file.name not in ["packagemaker.py"]:
+                    # Avoid duplicates if same file found in both locations
+                    if any(s['path'] == file for s in self.scripts):
+                        continue
+                    icon_path = self._find_icon(file.stem)
+                    self.scripts.append({
+                        'name': file.stem,
+                        'path': file,
+                        'icon': icon_path,
+                        'is_main': False,
+                    })
+                    icon_name = icon_path.name if icon_path else 'None'
+                    self.log(f"[INFO] Secondary script: {file.name} | Icon: {icon_name}")
         if not self.scripts:
             self.last_error = "No se encontraron scripts .py para compilar en el proyecto."
             self.log("[ERROR] No se encontraron scripts para compilar.")
@@ -222,57 +199,70 @@ class FlangCompiler:
                     return False
         return True
 
+    def _prepare_pyinstaller_data_dirs(self):
+        assets_dir = self.repo_path / "assets"
+        app_dir = self.repo_path / "app"
+        assets_dir.mkdir(exist_ok=True)
+        app_dir.mkdir(exist_ok=True)
+        (assets_dir / ".assets-container").touch(exist_ok=True)
+        (app_dir / ".app-container").touch(exist_ok=True)
+        return assets_dir, app_dir
+
     def _compile_windows_binary(self, script: Dict) -> bool:
-        script_path = script['path']
-        script_name = script['name']
-        pyinstaller_cmd = "pyinstaller"
-        if self.venv_path and self.current_platform == "Linux":
-            pyinstaller_cmd = str(self.venv_path / "bin" / "pyinstaller")
-        cmd = [
-            pyinstaller_cmd, "--onefile", "--windowed", "--name", script_name,
-            "--add-data", "assets;assets", "--add-data", "app;app",
-        ]
-        if script['icon']:
-            cmd.extend(["--icon", str(script['icon'])])
-        cmd.append(str(script_path))
-        try:
-            self.log(f"[DEBUG] Ejecutando PyInstaller para {script_name}...")
-            result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True)
-            if result.returncode != 0:
-                self.last_error = result.stderr.strip() or result.stdout.strip() or "PyInstaller falló sin mensaje de error."
-                self.log(f"[ERROR] Falló PyInstaller:\n{result.stderr}")
-                return False
-            self.log(f"[OK] {script_name} compilado.")
-            return True
-        except Exception as e:
-            self.last_error = str(e)
-            self.log(f"[ERROR] Excepción PyInstaller: {e}")
-            return False
+        return self._compile_binary(script, windowed=True)
 
     def _compile_linux_binary(self, script: Dict) -> bool:
-        script_path = script['path']
-        script_name = script['name']
-        pyinstaller_cmd = "pyinstaller"
-        if self.venv_path:
-            pyinstaller_cmd = str(self.venv_path / "bin" / "pyinstaller")
-        cmd = [
-            pyinstaller_cmd, "--onefile", "--name", script_name,
-            "--add-data", "assets:assets", "--add-data", "app:app",
-            str(script_path)
-        ]
+        return self._compile_binary(script, windowed=False)
+
+    def _compile_binary(self, script: Dict, windowed: bool) -> bool:
+        script_path = script["path"]
+        script_name = script["name"]
+        assets_dir, app_dir = self._prepare_pyinstaller_data_dirs()
+        add_data = [(str(assets_dir), "assets"), (str(app_dir), "app")]
+        hidden_imports = self._detect_hidden_imports(script_path)
+
+        pyi = get_pyinstaller()
+        if not pyi.is_available():
+            self.last_error = "PyInstaller no disponible"
+            self.log("[ERROR] PyInstaller no disponible")
+            return False
+
+        dist_dir = self.repo_path / "dist"
+        dist_dir.mkdir(exist_ok=True)
+        build_dir = tempfile.mkdtemp(prefix="pyi_build_")
+
         try:
-            self.log(f"[DEBUG] Ejecutando PyInstaller para {script_name}...")
-            result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True)
-            if result.returncode != 0:
-                self.last_error = result.stderr.strip() or result.stdout.strip() or "PyInstaller falló sin mensaje de error."
-                self.log(f"[ERROR] Falló PyInstaller:\n{result.stderr}")
-                return False
-            self.log(f"[OK] {script_name} compilado.")
-            return True
+            self.log(f"[DEBUG] Compilando {script_name} con PyInstaller embebido...")
+            exe_path = pyi.compile_to_exe(
+                script_path=str(script_path),
+                output_name=script_name,
+                output_dir=str(dist_dir),
+                icon_path=str(script["icon"]) if script["icon"] else None,
+                windowed=windowed,
+                onefile=True,
+                add_data=add_data,
+                hidden_imports=hidden_imports,
+                build_dir=build_dir,
+                cwd=str(self.repo_path),
+            )
+            if exe_path and os.path.exists(exe_path):
+                if not windowed:
+                    try:
+                        os.chmod(exe_path, 0o755)
+                    except OSError:
+                        pass
+                self.log(f"[OK] {script_name} compilado.")
+                return True
+            self.last_error = pyi.get_last_error()
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         except Exception as e:
             self.last_error = str(e)
             self.log(f"[ERROR] Excepción PyInstaller: {e}")
             return False
+        finally:
+            pyi.cleanup()
+            shutil.rmtree(build_dir, ignore_errors=True)
 
     def create_package(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):
@@ -317,6 +307,7 @@ class FlangCompiler:
                         pass
 
     def _update_and_copy_details_xml(self, package_path: Path, platform_suffix: str) -> None:
+        """Actualiza y copia details.xml con formateo correcto."""
         try:
             tree = ET.parse(self.details_xml_path)
             root = tree.getroot()
@@ -324,9 +315,26 @@ class FlangCompiler:
             if pe is None:
                 pe = ET.SubElement(root, 'platform')
             pe.text = platform_suffix
-            tree.write(package_path / "details.xml", encoding='utf-8', xml_declaration=True)
+            
+            # Formatear y guardar XML
+            self._save_pretty_xml(tree, package_path / "details.xml")
         except Exception as e:
             self.log(f"[ERROR] Updating XML: {e}")
+    
+    def _save_pretty_xml(self, tree, filepath):
+        """Guarda un XML formateado con indentación."""
+        from xml.dom import minidom
+        
+        root = tree.getroot() if hasattr(tree, 'getroot') else tree
+        rough_string = ET.tostring(root, 'utf-8')
+        reparsed = minidom.parseString(rough_string)
+        pretty = reparsed.toprettyxml(indent="  ")
+        
+        # Eliminar líneas vacías
+        lines = [line for line in pretty.split('\n') if line.strip()]
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(lines))
 
     def compress_to_iflapp(self, package_path: Path, output_file: Path) -> bool:
         self.log(f"[INFO] Creando .iflapp: {output_file.name}")

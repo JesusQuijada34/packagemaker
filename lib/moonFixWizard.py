@@ -6,7 +6,6 @@ MoonFix Wizard - Asistente de reparación para proyectos PackageMaker
 
 import os
 import time
-import hashlib
 import shutil
 import zipfile
 import tempfile
@@ -29,7 +28,6 @@ from PyQt6 import QtCore, QtWidgets, QtGui
 
 # XML handling
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
 
 # Optional Windows registry
 try:
@@ -40,450 +38,7 @@ except ImportError:
 # Leviathan UI imports
 from leviathan_ui import WipeWindow
 from leviathan_ui.dialogs import LeviathanDialog
-
-# Constants
-DOCS_TEMPLATE = r'''<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cargando…</title>
-  <link rel="icon" href="https://raw.githubusercontent.com/__OWNER__/__REPO__/main/app/app-icon.ico" type="image/x-icon" />
-  <style>
-    :root {
-      --accent: #2486ff;
-      --bg-start: rgba(34,74,186,0.78);
-      --bg-end: rgba(12,30,60,0.93);
-      --card-bg: rgba(255,255,255,0.55);
-      --text: #07203a;
-      --muted: rgba(7,32,58,0.7);
-      --glass-blur: 12px;
-      --glass-saturation: 140%;
-      --glass-border: rgba(255,255,255,0.22);
-      --radius: 14px;
-      --shadow: 0 8px 30px rgba(2,8,23,0.45);
-      font-family: "Segoe UI", "Segoe UI Variable", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --accent: #1e6fe8;
-        --bg-start: rgba(20,28,56,0.9);
-        --bg-end: rgba(7,14,38,0.97);
-        --card-bg: rgba(12,14,16,0.45);
-        --text: #e6eef9;
-        --muted: rgba(230,238,249,0.75);
-        --glass-border: rgba(255,255,255,0.06);
-        --shadow: 0 12px 30px rgba(0,0,0,0.7);
-      }
-    }
-    *{box-sizing:border-box}
-    html,body,#app{height:100%}
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      /* BG FIX: no repeat, partial, non-white, layered gradient */
-      background:
-        radial-gradient(ellipse 650px 320px at 65% 20%, rgba(36,134,255,0.15) 0%, rgba(30,50,130, 0.08) 60%, transparent 100%) no-repeat,
-        radial-gradient(circle 430px at 20% 80%, rgba(36,134,255,0.10) 0%, rgba(10,24,55,0.07) 60%, transparent 100%) no-repeat,
-        linear-gradient(120deg, var(--bg-start) 0%, var(--bg-end) 80%, #0b182f 100%) no-repeat;
-      background-size: cover, cover, cover;
-      background-attachment: fixed;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 36px;
-      transition: background 450ms ease;
-    }
-    .banner{
-      width:100%;
-      max-width:1300px;
-      border-radius:18px;
-      overflow:hidden;
-      position:relative;
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(6px) saturate(var(--glass-saturation));
-      border: 1px solid var(--glass-border);
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      animation: fadeInUp 600ms cubic-bezier(.2,.9,.25,1);
-    }
-    .splash{
-      height:360px;
-      width:100%;
-      position:relative;
-      background-size:cover;
-      background-position:center;
-      display:flex;
-      align-items:flex-start;
-      justify-content:flex-start;
-      padding:28px 36px;
-      gap:24px;
-      transition: background-image 420ms ease;
-    }
-    .splash::after{
-      content:"";
-      position:absolute;
-      left:0; top:0; bottom:0;
-      width:56%;
-      pointer-events:none;
-      background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.00) 40%);
-      filter: blur(20px);
-      mix-blend-mode: screen;
-      transition:opacity 350ms ease;
-    }
-    .appcard{
-      position:relative;
-      display:flex;
-      gap:20px;
-      align-items:flex-start;
-      background: var(--card-bg);
-      border-radius:12px;
-      padding:18px;
-      max-width:720px;
-      width:720px;
-      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 6px 20px rgba(2,8,23,0.12);
-      transform: translateY(12px);
-      transition: transform 420ms cubic-bezier(.2,.9,.25,1), box-shadow 220ms ease;
-    }
-    .appcard:hover{ transform: translateY(6px); box-shadow: 0 18px 40px rgba(2,8,23,0.18); }
-    .logo{
-      width:96px; height:96px; flex:0 0 96px;
-      border-radius:18px;
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 6px 18px rgba(2,8,23,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
-    }
-    .logo img{ width:86px; height:86px; object-fit:contain; display:block; }
-    .app-right{ flex:1 1 auto; display:flex; flex-direction:column; gap:12px; min-width:0; }
-    .meta{ display:flex; flex-direction:column; gap:6px; min-width:0; }
-    .title-row{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
-    .app-title{ font-size:20px; font-weight:700; letter-spacing: -0.01em; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .meta-info{ font-size:13px; color:var(--muted); margin-top:2px; }
-    .meta-author a{ color:var(--accent); text-decoration:none; font-weight:600; }
-    .meta-author a:hover{ text-decoration:underline; }
-    .meta-rate{ font-size:13px; color:var(--muted);}
-    .app-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
-    .actions{ margin:0; display:flex; flex-direction:row; gap:10px; align-items:center; }
-    .btn{ -webkit-appearance:none; appearance:none; border:0; outline:0; cursor:pointer; font-weight:600; font-size:14px; padding:10px 16px; border-radius:10px; color:white; background: linear-gradient(180deg, var(--accent), calc(var(--accent) - 10%)); box-shadow: 0 6px 18px rgba(36,134,255,0.22), inset 0 -2px 0 rgba(0,0,0,0.12); transition: transform 160ms ease, box-shadow 160ms ease, opacity 200ms ease; transform: translateY(0); display:inline-flex; gap:10px; align-items:center; }
-    .btn.secondary{ background: transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.06); box-shadow:none; font-weight:600; backdrop-filter: blur(6px); }
-    .btn:active{ transform: translateY(2px); } .btn[disabled]{ opacity:0.45; cursor:not-allowed; transform:none; }
-    .support-badge{ font-size:12px; color:var(--muted); margin-top:6px; text-align:right; }
-    .unsupported{ color:#ff6b6b; font-weight:700; } .warn{ color:#ffb657; font-weight:700; }
-    .readme{ padding:28px 36px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)); border-top: 1px solid rgba(255,255,255,0.03); }
-    .readme-inner{ max-width:1100px; margin:0 auto; padding:18px; border-radius:12px; background:rgba(255,255,255,0.02); backdrop-filter: blur(6px); color:var(--text); }
-    .readme-inner h1,.readme-inner h2{ color:var(--text); } .readme-inner a{ color:var(--accent); text-decoration:underline; }
-    @keyframes fadeInUp{ from{ opacity:0; transform: translateY(12px) } to{ opacity:1; transform: translateY(0) } }
-    @media (max-width:880px){
-      body{ padding:18px; } .splash{ padding:18px; height:520px; align-items:flex-end; flex-direction:column; gap:12px; justify-content:flex-end; }
-      .appcard{ width:100%; transform:none; flex-direction:row; } .app-right{ gap:8px; } .actions{ width:100%; justify-content:flex-end; }
-      .logo{ width:80px; height:80px; } .app-title{ font-size:18px; } .readme{ padding:18px; } .banner{ border-radius:14px; } .appcard{ padding:14px; }
-    }
-    @media (min-width:1400px){
-      body{ padding:60px; background-position: center 10%; } .banner{ max-width:1600px; } .splash{ height:420px; padding:44px 56px; } .appcard{ padding:22px; gap:28px; max-width:820px; width:820px; } .logo{ width:128px; height:128px; flex:0 0 128px; border-radius:20px; } .logo img{ width:112px; height:112px; } .app-title{ font-size:24px; } .actions{ gap:14px; } .btn{ padding:12px 18px; font-size:15px; border-radius:12px; } .readme-inner{ padding:28px; max-width:1200px; }
-    }
-    a,button{ -webkit-tap-highlight-color: transparent; }
-  </style>
-</head>
-<body>
-  <div id="app" aria-live="polite">
-    <div class="banner" role="region" aria-label="Ficha de la aplicación">
-      <div id="splash" class="splash">
-        <div id="left-area" style="position:relative; z-index:2; display:flex; align-items:center;">
-          <div class="appcard" id="appcard" aria-hidden="true">
-            <div class="logo" id="logoWrap" aria-hidden="true" title="Logotipo">
-              <img id="logoImg" alt="Logo de la aplicación" src="" width="86" height="86" style="opacity:0; transform:scale(.98); transition:opacity 320ms ease, transform 420ms cubic-bezier(.2,.9,.25,1); display:block;">
-            </div>
-            <div class="app-right">
-              <div class="meta">
-                <div class="title-row">
-                  <h1 class="app-title" id="appTitle">Cargando…</h1>
-                </div>
-                <div class="meta-info" id="metaInfo">…</div>
-                <div class="meta-author" id="metaAuthor"></div>
-                <div class="meta-rate" id="metaRate"></div>
-              </div>
-              <div class="app-footer">
-                <div style="flex:1"></div>
-                <div class="actions" id="actions" aria-hidden="true">
-                  <button class="btn" id="handlerBtn" title="Instalar vía handler">Instalar vía handler</button>
-                  <button class="btn secondary" id="directBtn" title="Descarga directa">Descarga directa</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <svg style="position:absolute; right:16%; top:18%; width:40%; height:50%; filter: blur(36px); opacity:0.25; z-index:1; pointer-events:none">
-          <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#2486ff"/><stop offset="1" stop-color="#8ecbff" /></linearGradient></defs>
-          <rect x="0" y="0" width="100%" height="100%" fill="url(#g)" rx="36"></rect>
-        </svg>
-      </div>
-      <div class="readme" id="readmeWrap" aria-label="README">
-        <div class="readme-inner" id="readmeContent">
-          <p style="color:var(--muted); margin:0">README cargando…</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script>
-    (function(){
-      const FALLBACK_OWNER = '__OWNER__';
-      const FALLBACK_REPO  = '__REPO__';
-      const LOCAL = {
-        splash: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/assets/splash.png',
-        logo: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/assets/product_logo.png',
-        details: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/details.xml',
-        readme: 'https://raw.githubusercontent.com/__OWNER__/__REPO__/main/README.md',
-      };
-      // App UI
-      const splashEl = document.getElementById('splash');
-      const logoImg = document.getElementById('logoImg');
-      const appTitle = document.getElementById('appTitle');
-      const metaInfo = document.getElementById('metaInfo');
-      const metaAuthor = document.getElementById('metaAuthor');
-      const metaRate = document.getElementById('metaRate');
-      const handlerBtn = document.getElementById('handlerBtn');
-      const directBtn = document.getElementById('directBtn');
-      const actions = document.getElementById('actions');
-      const readmeContent = document.getElementById('readmeContent');
-      // OS
-      function detectOS(){
-        const ua = navigator.userAgent || navigator.vendor || '';
-        const platform = (navigator.platform || '').toLowerCase();
-        if (/android/i.test(ua)) return 'android';
-        if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
-        if (/windows nt|win32|wow64/i.test(ua) || /win/i.test(platform)) return 'windows';
-        if (/macintosh|mac os x/i.test(ua) || /mac/i.test(platform)) return 'mac';
-        if (/linux/i.test(ua) && !/android/i.test(ua)) return 'linux';
-        return 'unknown';
-      }
-      const detected = detectOS();
-      if (detected === 'android') {
-        const ov = document.createElement('div');
-        ov.style.position = 'fixed';
-        ov.style.inset = '0';
-        ov.style.display = 'flex';
-        ov.style.alignItems = 'center';
-        ov.style.justifyContent = 'center';
-        ov.style.background = 'linear-gradient(180deg, rgba(2,8,23,0.85), rgba(2,8,23,0.7))';
-        ov.style.color = 'white';
-        ov.style.zIndex = 9999;
-        ov.style.flexDirection = 'column';
-        ov.innerHTML = '<div style="font-weight:700; font-size:18px; margin-bottom:12px">Incompatible: Android no soportado</div><div style="max-width:70ch; text-align:center; opacity:0.95">La instalación y la descarga de paquetes no son compatibles en Android. La página ha sido bloqueada por seguridad.</div>';
-        document.body.appendChild(ov);
-        return;
-      }
-      // helpers
-      function githubRaw(owner, repo, branch, filepath){
-        branch = branch || 'main';
-        return `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${filepath}`;
-      }
-      async function fetchTextWithFallbackSafe(candidates){
-        for(const url of candidates){
-          try{
-            const res = await fetch(url, {cache: "reload"});
-            if(res.ok) return await res.text();
-          }catch(e){}
-        }
-        return null;
-      }
-      async function fetchBlobWithFallbackSafe(candidates){
-        for(const url of candidates){
-          try{
-            const res = await fetch(url, {cache: "reload"});
-            if(res.ok) return URL.createObjectURL(await res.blob());
-          }catch(e){}
-        }
-        return null;
-      }
-      function renderMarkdown(md){
-        if(!md) return '<p>(README vacío)</p>';
-        const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        md = md.replace(/\r\n/g,'\n');
-        md = md.replace(/```([\s\S]*?)```/g, (m, code) => '<pre><code>' + esc(code) + '</code></pre>');
-        md = md.replace(/^###### (.*$)/gim, '<h6>$1</h6>');
-        md = md.replace(/^##### (.*$)/gim, '<h5>$1</h5>');
-        md = md.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
-        md = md.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-        md = md.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-        md = md.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-        md = md.replace(/^\s*-\s+(.*)/gim, '<li>$1</li>');
-        md = md.replace(/(<li>[\s\S]*?<\/li>)/gim, '<ul>$1</ul>');
-        md = md.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
-        md = md.replace(/\*(.*?)\*/gim, '<em>$1</em>');
-        md = md.replace(/`([^`]+)`/gim, '<code>$1</code>');
-        md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-        return md.split('\n').map(line => /^<h|^<ul|^<pre|^<li|^<blockquote/.test(line)||/^\s*$/.test(line) ? line : '<p>'+line+'</p>').join('\n');
-      }
-      function appendSupportNotice(type, text){
-        let support = document.querySelector('.support-badge');
-        if(!support){
-          support = document.createElement('div');
-          support.className = 'support-badge';
-          const appFooter = document.querySelector('.app-footer');
-          if(appFooter) appFooter.parentNode.insertBefore(support, appFooter.nextSibling);
-          else document.getElementById('appcard').appendChild(support);
-        }
-        if(type === 'unsupported') support.innerHTML = '<span class="unsupported">' + escapeHtml(text) + '</span>';
-        else if(type === 'warn') support.innerHTML = '<span class="warn">' + escapeHtml(text) + '</span>';
-        else support.textContent = text;
-      }
-      function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-      // --- DATA LOAD & UI SYNC ---
-      (async function(){
-        appTitle.textContent = 'Cargando…';
-        metaInfo.textContent = '';
-        metaAuthor.textContent = '';
-        metaRate.textContent = '';
-        document.title = 'Cargando…';
-        // PRIORITIZE REMOTE GITHUB RAW
-        const detailsCandidates = [
-          LOCAL.details
-        ];
-        let detailsText = await fetchTextWithFallbackSafe(detailsCandidates);
-        let metadata = {};
-        if(detailsText){
-          try{
-            const xml = new window.DOMParser().parseFromString(detailsText, 'application/xml');
-            if(!xml.querySelector('parsererror') && xml.documentElement){
-              Array.from(xml.documentElement.children).forEach(child => {
-                const k = child.tagName ? child.tagName.toLowerCase() : '';
-                const v = (child.textContent || '').trim();
-                if(k) metadata[k] = v;
-              });
-            } else appendSupportNotice('warn', 'details.xml malformado. Datos limitados.');
-          }catch(e){
-            appendSupportNotice('warn', 'Error details.xml.');
-          }
-        }else{
-          appendSupportNotice('warn', 'No se encontró details.xml.');
-        }
-        const displayTitle = metadata.name || metadata.app || 'Nombre de la app';
-        document.title = displayTitle;
-        appTitle.textContent = displayTitle;
-        const publisher = metadata.publisher || '';
-        const version = metadata.version || '';
-        const platformSpec = (metadata.platform || '').trim();
-        function packagePlatformToHuman(p){
-          if(!p) return '';
-          if(/Knosthalij/i.test(p)) return 'Windows';
-          if(/Danenone/i.test(p)) return 'Linux';
-          if(/AlphaCube/i.test(p)){
-            if(detected === 'windows') return 'Windows';
-            if(detected === 'linux') return 'Linux';
-            return '';
-          }
-          if(/win/i.test(p)) return 'Windows';
-          if(/linux|lin/i.test(p)) return 'Linux';
-          return p;
-        }
-        const humanPlatform = packagePlatformToHuman(platformSpec);
-        const infoParts = [publisher, displayTitle, version].filter(Boolean).join(' ');
-        metaInfo.textContent = (infoParts ? infoParts + ' ' : '') + (humanPlatform ? 'para ' + humanPlatform : '');
-        // Author link
-        if(metadata.author){
-          const a = document.createElement('a');
-          const repoName = metadata.app || FALLBACK_REPO;
-          a.href = `https://github.com/${encodeURIComponent(metadata.author)}/${encodeURIComponent(repoName)}`;
-          a.target = '_blank'; a.rel = 'noopener noreferrer';
-          a.textContent = metadata.author;
-          metaAuthor.innerHTML = '';
-          metaAuthor.appendChild(a);
-        }else{ metaAuthor.textContent = ''; }
-        metaRate.textContent = metadata.rate || '';
-        // Logic for handler/descarga
-        const missingDownloadFields = ['author','app','publisher','version','platform'].filter(k => !metadata[k]);
-        const downloadsHaveAllFields = missingDownloadFields.length === 0;
-        let allowedOS = [];
-        if(/^AlphaCube$/i.test(platformSpec)) allowedOS = ['windows','linux'];
-        else if(/^Danenone$/i.test(platformSpec)) allowedOS = ['linux'];
-        else if(/^Knosthalij$/i.test(platformSpec)) allowedOS = ['windows'];
-        else allowedOS = [];
-        const platformSupported = allowedOS.includes(detected);
-        let handlerURL = null, directURL = null;
-        if(metadata.author && metadata.app) handlerURL = `flarmstore://${encodeURIComponent(metadata.author)}.${encodeURIComponent(metadata.app)}/`;
-        if(downloadsHaveAllFields){
-          const chosenPackagePlatform =
-            (/^AlphaCube$/i.test(platformSpec) && detected === 'windows') ? 'Knosthalij' :
-            (/^AlphaCube$/i.test(platformSpec) && detected === 'linux') ? 'Danenone' :
-            platformSpec;
-          const vid = encodeURIComponent(metadata.version);
-          directURL = `https://github.com/${encodeURIComponent(metadata.author)}/${encodeURIComponent(metadata.app)}/releases/download/${vid}/${encodeURIComponent(metadata.publisher)}.${encodeURIComponent(metadata.app)}.${vid}-${encodeURIComponent(chosenPackagePlatform)}.iflapp`;
-        }
-        handlerBtn.onclick = () => { if(!handlerBtn.disabled && handlerURL) window.location.href = handlerURL; };
-        directBtn.onclick = () => { if(!directBtn.disabled && directURL) window.open(directURL, '_blank', 'noopener'); };
-        if(detected === 'unknown'){
-          handlerBtn.disabled = true; directBtn.disabled = true;
-          appendSupportNotice('warn', 'Sistema no identificado — descargas deshabilitadas');
-        } else if(!platformSupported){
-          handlerBtn.disabled = true; directBtn.disabled = true;
-          appendSupportNotice('unsupported', 'No soportado por tu sistema operativo');
-        } else if(!downloadsHaveAllFields){
-          handlerBtn.disabled = true; directBtn.disabled = true;
-          appendSupportNotice('warn', 'Metadatos incompletos — descargas deshabilitadas ('+missingDownloadFields.join(', ')+')');
-        } else {
-          handlerBtn.disabled = false; directBtn.disabled = false;
-          directBtn.textContent = `Descarga directa (${packagePlatformToHuman(platformSpec) || platformSpec})`;
-          handlerBtn.textContent = 'Instalar vía handler';
-          appendSupportNotice('', 'Compatible con ' + (packagePlatformToHuman(platformSpec) || detected));
-        }
-        // Visuals: prioritize remote URLs
-        const owner = metadata.author || FALLBACK_OWNER;
-        const repo  = metadata.app || FALLBACK_REPO;
-        const branches = ['main','master'];
-        function candidates(localPath, repoPath){
-          return [localPath];
-        }
-        fetchBlobWithFallbackSafe(candidates(LOCAL.splash, 'assets/splash.png')).then(splashBlob => {
-          if(splashBlob){
-            splashEl.style.backgroundImage =
-              `linear-gradient(180deg,rgba(40,80,200,0.33),rgba(18,36,80,0.77) 85%,rgba(11,24,47,0.95)), url("${splashBlob}")`;
-          }
-        });
-        fetchBlobWithFallbackSafe(candidates(LOCAL.logo, 'assets/product_logo.png')).then(logoBlob => {
-          if(logoBlob){
-            logoImg.style.display = 'block';
-            logoImg.src = logoBlob;
-            logoImg.onload = () => { logoImg.style.opacity = 1; logoImg.style.transform = 'scale(1)'; };
-          }else{
-            logoImg.style.display = 'none';
-            const wrap = document.getElementById('logoWrap');
-            if(wrap && !wrap.querySelector('.placeholder')){
-              const placeholder = document.createElement('div');
-              placeholder.className = 'placeholder';
-              placeholder.style.width = '86px';
-              placeholder.style.height = '86px';
-              placeholder.style.display = 'flex';
-              placeholder.style.alignItems = 'center';
-              placeholder.style.justifyContent = 'center';
-              placeholder.style.background = 'linear-gradient(135deg, rgba(36,134,255,0.16), rgba(30,43,60,0.27))';
-              placeholder.style.borderRadius = '12px';
-              placeholder.style.color = 'white';
-              placeholder.style.fontWeight = '700';
-              placeholder.style.letterSpacing = '-0.02em';
-              const initials = (displayTitle||'').split(/\s+/).map(s=>s[0]||'').slice(0,2).join('').toUpperCase() || 'PK';
-              placeholder.textContent = initials;
-              wrap.appendChild(placeholder);
-            }
-          }
-        });
-        fetchTextWithFallbackSafe(candidates(LOCAL.readme, 'README.md')).then(readmeText => {
-          if(readmeText) readmeContent.innerHTML = renderMarkdown(readmeText);
-        });
-      })();
-    })();
-  </script>
-</body>
-</html>'''
-
+from lib.uwp_animations import play_bounce_down_close
 
 class MoonFixWizard(QDialog):
     """Asistente de reparación estilo Setup que procesa múltiples proyectos en una sola ventana."""
@@ -578,7 +133,15 @@ class MoonFixWizard(QDialog):
         self.anim_pos.start()
 
     def closeEvent(self, event):
-        super().closeEvent(event)
+        if getattr(self, "_force_close", False):
+            super().closeEvent(event)
+            return
+        event.ignore()
+        play_bounce_down_close(self, on_finished=lambda: self._force_finish_close(), drop_px=72)
+
+    def _force_finish_close(self):
+        self._force_close = True
+        super().close()
         
     def init_ui(self):
         self.main_layout = QVBoxLayout(self)
@@ -648,10 +211,10 @@ class MoonFixWizard(QDialog):
 
         # Barra de navegación inferior
         self.nav_bar = QWidget()
-        self.nav_bar.setFixedHeight(60)
+        self.nav_bar.setFixedHeight(48)
         self.nav_bar.setStyleSheet("background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05);")
         nav_layout = QHBoxLayout(self.nav_bar)
-        nav_layout.setContentsMargins(40, 0, 40, 0)
+        nav_layout.setContentsMargins(24, 0, 24, 0)
         
         self.lbl_step = QLabel(f"Página 1 de {len(self.projects) + 2}")
         self.lbl_step.setStyleSheet("background: transparent; color: #888; font-size: 11px; font-family: 'Segoe UI Variable Text';")
@@ -660,7 +223,7 @@ class MoonFixWizard(QDialog):
         
         self.btn_next = QPushButton("Empezar")
         self.btn_next.setObjectName("uwp_next")
-        self.btn_next.setFixedSize(120, 36)
+        self.btn_next.setFixedSize(100, 32)
         self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_next.clicked.connect(self.go_next)
         nav_layout.addWidget(self.btn_next)
@@ -1007,7 +570,11 @@ class MoonFixWizard(QDialog):
         if missing_icons or missing_assets:
             pack_box = QHBoxLayout()
             pack_box.setSpacing(10)
-            btn_pack_css = "QPushButton { background: #0078d4; color: white; border-radius: 4px; padding: 6px 15px; font-weight: 600; font-family: 'Segoe UI Variable Text'; font-size: 11px; border: 1px solid rgba(255,255,255,0.1); } QPushButton:hover { background: #106ebe; border-color: rgba(255,255,255,0.2); }"
+            btn_pack_css = (
+                "QPushButton { background: #0078d4; color: white; border-radius: 4px;"
+                " padding: 4px 10px; font-weight: 600; font-size: 11px; min-height: 28px; }"
+                " QPushButton:hover { background: #106ebe; }"
+            )
             
             if missing_icons:
                 btn_i = QPushButton("Subir Icon Pack")
@@ -1184,99 +751,30 @@ class MoonFixWizard(QDialog):
         proj = self.projects[idx]
         path = proj["path"]
         inputs = self.results[idx]["inputs"]
-        
-        # Extract metadata from inputs
-        publisher = inputs.get("publisher").text().strip() or "Influent"
+
+        publisher = inputs.get("publisher").text().strip() or "influent"
         app_id = inputs.get("app").text().strip() or os.path.basename(path)
         name_public = inputs.get("name").text().strip() or app_id.capitalize()
         version_raw = inputs.get("version").text().strip() or "1.0.0"
         author = inputs.get("author").text().strip() or "Unknown"
         platform_sel = inputs.get("platform").text().strip() or "Knosthalij"
+        version_base = self.clean_version_str(version_raw)
 
-        # Auto-Versioning Logic (Sync with requested -YY.MM-HH.MM format)
-        v_clean = self.clean_version_str(version_raw)
-        
-        # Calculate timestamp: YY.MM-HH.MM
-        now = time.localtime()
-        ts = time.strftime("%y.%m-%H.%M", now)
-        
-        v_so = f"{v_clean}-{ts}"
-        v_final = f"{v_so}-{platform_sel}"
+        from pathlib import Path
+        from lib.template_engine import normalize_platform, repair_project_from_templates
 
-        # 1. Folders Reconstruction
-        required_dirs = ["app", "assets", "config", "docs", "source", "lib"]
-        for d in required_dirs:
-            os.makedirs(os.path.join(path, d), exist_ok=True)
-            # Create container markers
-            marker = os.path.join(path, d, f".{d}-container")
-            if not os.path.exists(marker):
-                hv = hashlib.sha256(f"{publisher}.{app_id}.v{v_final}".encode()).hexdigest()
-                with open(marker, "w") as f:
-                    f.write(f"#store (sha256 hash):{d}/.{hv}")
+        repair_project_from_templates(
+            Path(path),
+            publisher,
+            app_id.lower().replace(" ", "-"),
+            name_public,
+            author,
+            normalize_platform(platform_sel),
+            version_base=version_base,
+            description="Proyecto reparado por MoonFix Suite",
+        )
 
-        # 2. XML Reconstruction
-        xml_data = {
-            "publisher": publisher,
-            "app": app_id,
-            "name": name_public,
-            "version": f"v{v_so}",
-            "author": author,
-            "platform": platform_sel,
-            "correlationid": hashlib.sha256(f"{publisher}.{app_id}.v{v_final}".encode()).hexdigest(),
-            "rate": "PERSONAL USE"
-        }
-        
-        root = ET.Element("app")
-        for k, v in xml_data.items():
-            ET.SubElement(root, k).text = str(v)
-            
-        from xml.dom import minidom
-        try:
-            xml_str = ET.tostring(root, 'utf-8')
-            pretty = minidom.parseString(xml_str).toprettyxml(indent="  ")
-            pretty = "\n".join([line for line in pretty.split('\n') if line.strip()])
-            with open(os.path.join(path, "details.xml"), "w", encoding="utf-8") as f:
-                f.write(pretty)
-        except Exception as e: print(f"Error saving XML: {e}")
-
-        # 3. Structural Files Reconstruction (The "Núcleo" Connection)
-        
-        # Main Script
-        main_script = os.path.join(path, f"{app_id}.py")
-        if not os.path.exists(main_script):
-            with open(main_script, "w", encoding="utf-8") as f:
-                f.write(f"#!/usr/bin/env python\n# -*- coding: utf-8 -*-\n# App: {name_public}\n# publisher: {publisher}\n# name: {app_id}\n# version: IO-{v_final}\n\ndef main(args):\n    print('Hello from {name_public}')\n    return 0\n\nif __name__ == '__main__':\n    import sys\n    sys.exit(main(sys.argv))\n")
-
-        # README.md
-        readme_path = os.path.join(path, "README.md")
-        if not os.path.exists(readme_path):
-            with open(readme_path, "w", encoding="utf-8") as f:
-                f.write(f"# {publisher} {name_public}\n\nReconstruido por MoonFix Suite.\n\n## Uso\npython {app_id}.py\n")
-
-        # LICENSE (GPLv3)
-        lic_path = os.path.join(path, "LICENSE")
-        if not os.path.exists(lic_path):
-            with open(lic_path, "w", encoding="utf-8") as f:
-                f.write("GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\n\n(Licencia restaurada por MoonFix)\n")
-
-        # Docs Index
-        docs_idx = os.path.join(path, "docs", "index.html")
-        if not os.path.exists(docs_idx) or os.path.getsize(docs_idx) < 500:
-            with open(docs_idx, "w", encoding="utf-8") as f:
-                f.write(DOCS_TEMPLATE.replace("const FALLBACK_OWNER = 'JesusQuijada34';", f"const FALLBACK_OWNER = '{author}';").replace("const FALLBACK_REPO  = 'packagemaker';", f"const FALLBACK_REPO  = '{app_id}';"))
-
-        # Resource placeholders
-        for res_f in ["version.res", "manifest.res", ".storedetail"]:
-            res_p = os.path.join(path, res_f)
-            if not os.path.exists(res_p):
-                with open(res_p, "w") as f: f.write(f"# MoonFix Resource: {res_f}")
-
-        # Requirements
-        req_p = os.path.join(path, "lib", "requirements.txt")
-        if not os.path.exists(req_p):
-            with open(req_p, "w") as f: f.write("# Dependencias\n")
-
-        # 4. Asset Restoration
+        # Asset Restoration
         # App Icon & Logo
         icon_src = inputs.get("extra_icon").text().strip() if inputs.get("extra_icon") else ""
         logo_src = inputs.get("extra_logo").text().strip() if inputs.get("extra_logo") else ""
@@ -1311,55 +809,22 @@ class MoonFixWizard(QDialog):
         f, _ = QFileDialog.getOpenFileName(self, "Seleccionar Asset Pack", "", "Asset Pack (*.ipm-assetpck)")
         if f: self.process_ipm_assetpck(f)
 
-    def reject(self):
-        """Slide down exit animation (Windows 11 style)."""
-        if hasattr(self, "_closing") and self._closing: return
+    def _uwp_close_then(self, callback):
+        if getattr(self, "_closing", False):
+            return
         self._closing = True
-        
-        self.exit_group = QtCore.QParallelAnimationGroup(self)
-        target_y = self.pos().y() + 100
-        
-        self.exit_anim_pos = QtCore.QPropertyAnimation(self, b"pos")
-        self.exit_anim_pos.setDuration(350)
-        self.exit_anim_pos.setStartValue(self.pos())
-        self.exit_anim_pos.setEndValue(QtCore.QPoint(self.pos().x(), target_y))
-        self.exit_anim_pos.setEasingCurve(QtCore.QEasingCurve.Type.InBack)
-        
-        self.exit_anim_fade = QtCore.QPropertyAnimation(self, b"windowOpacity")
-        self.exit_anim_fade.setDuration(300)
-        self.exit_anim_fade.setStartValue(self.windowOpacity())
-        self.exit_anim_fade.setEndValue(0.0)
-        
-        self.exit_group.addAnimation(self.exit_anim_pos)
-        self.exit_group.addAnimation(self.exit_anim_fade)
-        self.exit_group.finished.connect(super().reject)
-        self.exit_group.finished.connect(self.deleteLater) # Explicit memory cleanup
-        self.exit_group.start()
+
+        def done():
+            callback()
+            self.deleteLater()
+
+        play_bounce_down_close(self, on_finished=done, drop_px=72)
+
+    def reject(self):
+        self._uwp_close_then(super().reject)
 
     def accept(self):
-        """Slide down exit animation for success (Windows 11 style)."""
-        if hasattr(self, "_closing") and self._closing: return
-        self._closing = True
-        
-        self.exit_group = QtCore.QParallelAnimationGroup(self)
-        target_y = self.pos().y() + 100
-        
-        self.exit_anim_pos = QtCore.QPropertyAnimation(self, b"pos")
-        self.exit_anim_pos.setDuration(350)
-        self.exit_anim_pos.setStartValue(self.pos())
-        self.exit_anim_pos.setEndValue(QtCore.QPoint(self.pos().x(), target_y))
-        self.exit_anim_pos.setEasingCurve(QtCore.QEasingCurve.Type.InBack)
-        
-        self.exit_anim_fade = QtCore.QPropertyAnimation(self, b"windowOpacity")
-        self.exit_anim_fade.setDuration(300)
-        self.exit_anim_fade.setStartValue(self.windowOpacity())
-        self.exit_anim_fade.setEndValue(0.0)
-        
-        self.exit_group.addAnimation(self.exit_anim_pos)
-        self.exit_group.addAnimation(self.exit_anim_fade)
-        self.exit_group.finished.connect(super().accept)
-        self.exit_group.finished.connect(self.deleteLater) # Explicit memory cleanup
-        self.exit_group.start()
+        self._uwp_close_then(super().accept)
 
 
 # Aliases to satisfy the user request for QSetup/QInstaller names
@@ -1477,3 +942,131 @@ def detectar_modo_sistema():
             palette = app.palette()
             return palette.color(QtGui.QPalette.Window).lightness() < 128
         return False
+
+# =============================================================================
+# FUNCIONES FALTANTES - MoonFix
+# =============================================================================
+
+def verificar_github_username(username):
+    """Verifica si un username de GitHub existe. Si no hay internet, deja pasar el username."""
+    if not username or not username.strip():
+        return False, "El username no puede estar vacío"
+    username = username.strip()
+    url = f"https://api.github.com/users/{username}"
+    try:
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0')
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                return True, "Username válido"
+            else:
+                return False, f"Username no encontrado (código: {response.status})"
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return False, "El username no existe en GitHub"
+        else:
+            return False, f"Error al verificar: {e.code}"
+    except urllib.error.URLError as e:
+        # Si no hay internet, se permite el username
+        return True, "Conexión a internet no disponible, se permite el username"
+    except Exception as e:
+        return False, f"Error inesperado: {str(e)}"
+
+
+def detectar_modo_sistema():
+    """Detecta el modo claro/oscuro del sistema operativo. Retorna 'dark' o 'light'."""
+    is_dark = False
+    
+    if sys.platform.startswith("win"):
+        # Windows: leer del registro
+        try:
+            import winreg
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+            )
+            try:
+                value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+                winreg.CloseKey(key)
+                is_dark = (value == 0)  # 0 = oscuro, 1 = claro
+            except FileNotFoundError:
+                is_dark = False
+        except Exception:
+            # Fallback: usar la paleta de Qt
+            app = QApplication.instance()
+            if app:
+                palette = app.palette()
+                is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
+    
+    elif sys.platform.startswith("linux"):
+        # Linux: intentar con gsettings (GNOME) o xfconf (XFCE)
+        try:
+            result = subprocess.run(
+                ["gsettings", "get", "org.gnome.desktop.interface", "gtk-theme"],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+            if result.returncode == 0:
+                theme = result.stdout.strip().lower()
+                is_dark = "dark" in theme
+        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+            pass
+        
+        if not is_dark:
+            try:
+                result = subprocess.run(
+                    ["xfconf-query", "-c", "xsettings", "-p", "/Net/ThemeName"],
+                    capture_output=True,
+                    text=True,
+                    timeout=2
+                )
+                if result.returncode == 0:
+                    theme = result.stdout.strip().lower()
+                    is_dark = "dark" in theme
+            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+                pass
+        
+        if not is_dark:
+            # Fallback: usar la paleta de Qt
+            app = QApplication.instance()
+            if app:
+                palette = app.palette()
+                is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
+    
+    elif sys.platform.startswith("darwin"):
+        # macOS: usar defaults
+        try:
+            result = subprocess.run(
+                ["defaults", "read", "-g", "AppleInterfaceStyle"],
+                capture_output=True,
+                text=True,
+                timeout=2
+            )
+            if result.returncode == 0:
+                is_dark = "dark" in result.stdout.lower()
+        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+            pass
+        
+        if not is_dark:
+            app = QApplication.instance()
+            if app:
+                palette = app.palette()
+                is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
+    
+    else:
+        # Otros sistemas: usar la paleta de Qt
+        app = QApplication.instance()
+        if app:
+            palette = app.palette()
+            is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
+    
+    return "dark" if is_dark else "light"
+
+
+# =============================================================================
+# ALIASES PARA COMPATIBILIDAD (QSetup, QInstaller)
+# =============================================================================
+
+QSetup = MoonFixWizard
+QInstaller = MoonFixWizard

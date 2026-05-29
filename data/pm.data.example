@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "user": {
+    "language": "es",
+    "auto_translate": true,
+    "base_dir": "C:\\Users\\YOU\\Documents\\Packagemaker Projects",
+    "fluthin_apps": "C:\\Users\\YOU\\Documents\\Fluthin Apps",
+    "display_mode": "GhostBlur (Cristal)",
+    "touch_mode": false,
+    "dpi_scale": 1.0,
+    "device_simulation": "laptop",
+    "interface_color": "#0d1117",
+    "auto_color": true,
+    "notifications_enabled": false,
+    "custom_accent_color": "#ff5722",
+    "blur_intensity": 14,
+    "window_radius": 12,
+    "sidebar_accent_width": 3,
+    "card_opacity": 0.08,
+    "ui_density": "normal",
+    "applied_dpi_scale": 1.0
+  },
+  "readonly": {},
+  "translation_cache": {}
+}

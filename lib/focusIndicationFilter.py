@@ -5,7 +5,7 @@ Focus Indication Filter for Package Maker
 """
 
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtCore import QObject, QEvent, QPoint, QRect
+from PyQt6.QtCore import QObject, QEvent, QPoint, QRect, Qt
 from PyQt6.QtGui import QColor, QPainter
 
 

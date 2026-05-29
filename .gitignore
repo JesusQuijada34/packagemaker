@@ -180,3 +180,7 @@ cython_debug/
 .cursorindexingignore
 updater_log.txt
 config/settings.json
+data/pm.data
+
+# pmCodeEditor - Python portables descargados (no versionar)
+data/pmCodeEditor/python/

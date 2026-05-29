@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Autorun script for __APP__
+/usr/bin/python3 ./__APP__.py

@@ -1,0 +1,7 @@
+{
+  "app": "__APP__",
+  "publisher": "__PUBLISHER__",
+  "version": "__VERSION__",
+  "author": "__AUTHOR__",
+  "platform": "__PLATFORM__"
+}

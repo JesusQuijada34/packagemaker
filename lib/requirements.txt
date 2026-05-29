@@ -1,3 +1,4 @@
 PyQt6
 Requests==2.32.5
 leviathan-ui
+pyinstaller

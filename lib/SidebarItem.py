@@ -5,12 +5,14 @@ from PyQt6.QtGui import QIcon
 
 class SidebarItem(QPushButton):
     """Boton de navegación lateral estilo Start11"""
-    def __init__(self, text, icon_path, parent=None):
+    def __init__(self, text, icon=None, parent=None):
         super().__init__(text, parent)
         self.setFixedHeight(50)
         self.setIconSize(QSize(24, 24))
-        if icon_path and os.path.exists(icon_path):
-            self.setIcon(QIcon(icon_path))
+        if isinstance(icon, QIcon):
+            self.setIcon(icon)
+        elif icon and os.path.exists(str(icon)):
+            self.setIcon(QIcon(str(icon)))
         self.setCheckable(True)
         self.setAutoExclusive(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -29,11 +31,11 @@ class SidebarItem(QPushButton):
                 font-weight: 500;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.05);
+                background-color: transparent;
                 color: #ffffff;
             }
             QPushButton:checked {
-                background-color: rgba(255, 255, 255, 0.08);
+                background-color: transparent;
                 color: #ffffff;
                 border-left: 3px solid #ff5722;
             }

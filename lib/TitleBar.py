@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QPushButton, QWidget, QHBoxLayout, QLabel
 from PyQt6.QtGui import QIcon, QPixmap, QColor, QPainter
 from PyQt6.QtCore import Qt, QSize, QVariantAnimation, QAbstractAnimation, QPoint
+from PyQt6.QtGui import QShowEvent
 
 class AnimTitleButton(QPushButton):
     """Boton de titulo con animación de fondo suave (UWP Style)"""
@@ -11,10 +12,10 @@ class AnimTitleButton(QPushButton):
         self.setFlat(True)
         self.hover_color = hover_color
         self.default_color = QColor(0, 0, 0, 0)
-
-        pm = QPixmap()
-        pm.loadFromData(icon_svg)
-        self.setIcon(QIcon(pm))
+        
+        # Guardar el SVG para crear el QPixmap más tarde
+        self.icon_svg = icon_svg
+        self._icon_created = False
 
         self._bg_color = self.default_color
         self.anim = QVariantAnimation(self)
@@ -22,11 +23,29 @@ class AnimTitleButton(QPushButton):
         self.anim.setStartValue(self.default_color)
         self.anim.setEndValue(QColor(self.hover_color))
         self.anim.valueChanged.connect(self._update_bg)
+    
+    def _create_icon(self):
+        """Crea el icono solo cuando sea necesario y seguro"""
+        if not self._icon_created:
+            try:
+                pm = QPixmap()
+                pm.loadFromData(self.icon_svg)
+                self.setIcon(QIcon(pm))
+                self._icon_created = True
+            except Exception as e:
+                print(f"Warning: Could not create icon: {e}")
+                # Crear un icono vacío como fallback
+                self.setIcon(QIcon())
 
     def _update_bg(self, color):
         self._bg_color = color
         self.update()
 
+    def showEvent(self, event):
+        """Asegurar que el icono se cree cuando el widget se muestra"""
+        super().showEvent(event)
+        self._create_icon()
+    
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
