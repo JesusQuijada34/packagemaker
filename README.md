@@ -118,28 +118,6 @@ Cuando compilas un proyecto, Packagemaker:
 
 ---
 
-## 📝 Estructura de Proyecto
-
-```
-mi-proyecto/
-├── app/
-│   ├── main.py              # Script candidato original
-│   └── icon.ico
-├── lib/
-│   ├── _class/
-│   │   └── main/
-│   │       ├── __init__.py
-│   │       └── MiClase.py   # Clase extraída
-│   ├── _bundle_main.py      # Importador de clases
-│   └── __init__.py          # Consolidado
-├── manifest.yaml            # Metadatos del proyecto
-├── manifest.relx            # Binario precompilado
-└── dist/
-    └── mi-app-v1.0.iflappb  # Paquete final
-```
-
----
-
 ## 🔧 Configuración Avanzada
 
 ### manifest.yaml
