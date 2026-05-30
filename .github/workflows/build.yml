@@ -1,40 +1,143 @@
-name: Build and Release
+name: Build and Release IFLAPP
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+    paths:
+      - 'details.xml'
   workflow_dispatch:
 
 jobs:
+  parse-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      app_name: ${{ steps.extract.outputs.app_name }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract version from details.xml
+        id: extract
+        run: |
+          if [ -f details.xml ]; then
+            VERSION=$(grep -oP '<version>\K[^<]+' details.xml | head -1)
+            APP_NAME=$(grep -oP '<app>\K[^<]+' details.xml | head -1)
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "app_name=${APP_NAME}" >> $GITHUB_OUTPUT
+            echo "✅ Version extracted: $VERSION"
+            echo "✅ App name extracted: $APP_NAME"
+          else
+            echo "❌ details.xml not found"
+            exit 1
+          fi
+
   build:
+    needs: parse-version
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
         include:
           - os: ubuntu-latest
             os_name: linux
-            binary_name: packagemaker
             extension: ''
           - os: windows-latest
             os_name: windows
-            binary_name: packagemaker
             extension: '.exe'
-
+    
     runs-on: ${{ matrix.os }}
-
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyQt6 pyinstaller leviathan-ui
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        shell: bash
+      
+      - name: Compile with PackageMaker CLI
+        run: |
+          python -m packagemaker compile \
+            --project . \
+            --output ./dist \
+            --format iflapp
+        shell: bash
+        continue-on-error: true
+      
+      - name: Build IFLAPP package (Fallback)
+        run: |
+          mkdir -p dist
+          python << 'EOF'
+          import zipfile
+          from pathlib import Path
+          
+          output_dir = Path('dist')
+          iflapp_path = output_dir / '${{ needs.parse-version.outputs.app_name }}.iflapp'
+          
+          with zipfile.ZipFile(iflapp_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+            root = Path('.')
+            for file in root.rglob('*'):
+              if file.is_file() and not str(file).startswith('.git'):
+                arcname = file.relative_to(root)
+                zf.write(file, arcname)
+          
+          print(f'✅ IFLAPP created: {iflapp_path}')
+          EOF
+        shell: bash
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iflapp-${{ matrix.os_name }}
+          path: dist/${{ needs.parse-version.outputs.app_name }}.iflapp
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
+  release:
+    needs: [parse-version, build]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      
+      - name: Read RELEASE_NOTES
+        id: release_notes
+        run: |
+          if [ -f RELEASE_NOTES.md ]; then
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            echo "No release notes available" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.parse-version.outputs.version }}
+          name: "Release ${{ needs.parse-version.outputs.version }}"
+          files: artifacts/**/*.iflapp
+          body: ${{ steps.release_notes.outputs.notes }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        python -m pip install --upgrade pip
         pip install PyQt6 pyinstaller leviathan-ui
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       shell: bash
