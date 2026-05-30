@@ -27,7 +27,7 @@
 
 ### 🔒 Métodos de Blindado
 | Método | Descripción | Seguridad |
-|--------|-------------|-----------|
+|--------|-------------|----------|
 | **Simple Blind** | Empaqueta todo en `.iflappb` | 🔒🔒 |
 | **Super Blind** | Clases separadas por script + encriptación | 🔒🔒🔒🔒 |
 
@@ -41,22 +41,98 @@
 ## 🎉 Novedades en v3.2.7
 
 ### 🎨 Mejoras Visuales
-- **Eliminación de gradientes**: Interfaz más limpia y consistente sin gradientes
-- **Fondos sólidos optimizados**: Color #3a3f4b en todos los widgets principales
-- **Botones transparentes**: Mejor integración con el tema oscuro
-- **Consistencia visual**: Unificación de fondos en toda la aplicación
+
+**EditorListItem Widget (lib/openWithDialog.py líneas 78-183):**
+- Icono del editor: 40x40 px con escalado suave (`Qt.AspectRatioMode.KeepAspectRatio`)
+- Nombre del editor: Fuente Segoe UI 12px, peso Medium, color blanco
+- Indicador "Predeterminado": Etiqueta verde #4CAF50 (línea 134)
+- Radio button visual: Círculo de selección interactivo (○/●)
+- Estilos de hover y selected integrados (líneas 456-469)
+
+**Cambios en packagemaker.py:**
+```python
+# Línea ~615-620: Central Widget
+self.central.setStyleSheet("background: #3a3f4b;")  # Antes: transparent
+
+# Línea ~640-645: Content Container
+self.content_container.setStyleSheet("background: #3a3f4b;")  # Antes: transparent
+
+# Línea ~735-740: Stack
+self.stack.setStyleSheet("background: #3a3f4b;")  # Antes: transparent
+
+# Línea ~628-635: Titlebar
+self.titlebar.setStyleSheet("background-color: #3a3f4b; border: none;")
+
+# BTN_STYLES - Eliminación de gradientes (línea ~126-194)
+BTN_STYLES = {
+    'default': (
+        "background-color: transparent;"
+        "color: rgba(32,33,36,0.96);"
+        "border: 1px solid rgba(209,215,224,0.65);"
+    ),
+    # ... más estilos
+}
+```
+
+- ✅ **Eliminación de gradientes**: Interfaz más limpia y consistente sin gradientes
+- ✅ **Fondos sólidos optimizados**: Color #3a3f4b en todos los widgets principales
+- ✅ **Botones transparentes**: Mejor integración con el tema oscuro
+- ✅ **Consistencia visual**: Unificación de fondos en toda la aplicación
 
 ### 🐛 Correcciones Críticas
-- **Bug de fondo blanco al maximizar**: Corregido el problema donde aparecía un área blanca al maximizar
-- **Error en EditorInfo**: Corregido TypeError al abrir proyectos con editor externo
-- **Iconos de editores**: Eliminado gradiente radial en iconos por defecto
 
-### 🔧 Optimizaciones
-- Central widget, content container, sidebar, stack y titlebar con fondos sólidos
-- Estilos de QListWidget, QLineEdit, QTextEdit optimizados
-- Mejor manejo de editores externos
+**1. Error en EditorInfo - TypeError**
+```python
+# lib/openWithDialog.py - Línea 417-423 (OpenWithDialog._detect_editors)
+# ANTES:
+pm_info = EditorInfo(
+    name=pm_editor.name,
+    display_name=pm_editor.display_name,
+    # ❌ FALTA: executable=pm_editor.exe_path
+    icon_path=pm_editor.icon_path,
+    priority=200,
+)
 
-Para más detalles, ver [CHANGELOG.md](CHANGELOG.md) y [RELEASE_NOTES.md](RELEASE_NOTES.md).
+# DESPUÉS:
+pm_info = EditorInfo(
+    name=pm_editor.name,
+    display_name=pm_editor.display_name,
+    executable=pm_editor.exe_path,  # ✅ AGREGADO
+    icon_path=pm_editor.icon_path,
+    priority=200,
+)
+```
+
+**2. Bug de Fondo Blanco al Maximizar**
+- **Causa**: Fondos transparentes permitían que el fondo blanco predeterminado de Qt se mostrara
+- **Solución**: Cambiados todos los fondos de widgets principales a color sólido `#3a3f4b`
+- **Impacto**: Ventana maximizable sin artifacts visuales
+
+**3. Iconos de Editores - Gradiente Radial**
+```python
+# lib/openWithDialog.py - Línea 96-99 (EditorListItem._setup_ui)
+# ANTES:
+self.icon_label.setStyleSheet("""
+    background: qradialgradient(...);  # ❌ Gradiente innecesario
+    border: none;
+""")
+
+# DESPUÉS:
+self.icon_label.setStyleSheet("""
+    background-color: transparent;  # ✅ Sin gradiente
+    border: none;
+""")
+```
+
+### 🔧 Optimizaciones Técnicas
+
+| Componente | Antes | Después |
+|-----------|-------|----------|
+| **Central Widget** | transparent | **#3a3f4b** |
+| **Content Container** | transparent | **#3a3f4b** |
+| **Sidebar** | transparent | **transparent + border** |
+| **Stack** | transparent | **#3a3f4b** |
+| **Titlebar** | transparent | **#3a3f4b** |
 
 ---
 
@@ -75,36 +151,89 @@ python packagemaker.py
 ```
 
 ### Requisitos
-- Python 3.8+
-- PyQt6 6.5+
-- Windows 10/11 (Linux/macOS parcial)
+- **Python 3.8+** 🐍
+- **PyQt6 6.5+** 🎨
+- **Windows 10/11** (Linux/macOS parcial) 💻
 
 ---
 
 ## 🎯 Uso Básico
 
-### 1. Crear Nuevo Proyecto
+### 1️⃣ Crear Nuevo Proyecto
 ```
 Archivo → Nuevo Proyecto → Seleccionar carpeta
 ```
 
-### 2. Configurar Compilación
+### 2️⃣ Configurar Compilación
 - **Modo Bundle**: Switch para cambiar entre "Empaquetar" y "Compilar Bundle"
 - **Método de Blindado**: Simple vs Super Blind
 - **Opciones adicionales**: Firma digital, compresión, icono personalizado
 
-### 3. Compilar
+### 3️⃣ Compilar
 ```
 Click en "Compilar" (verde) o "Compilar Bundle y Firmar" (azul)
 ```
 
-### 4. Distribuir
+### 4️⃣ Distribuir
 - Output en `dist/`
 - Listo para subir a GitHub Releases
 
 ---
 
-## 🛠️ Flujo de Compilación Detallado
+## 🛠️ EditorDetector y OpenWithDialog
+
+### Flujo de Detección (lib/openWithDialog.py líneas 28-75)
+
+```python
+class PackageMakerEditor:
+    """Editor integrado pmCodeEditor (siempre disponible)."""
+    
+    def __init__(self):
+        self.name = "pmcodeeditor"
+        self.display_name = "pmCodeEditor"
+        self.icon_path = self._find_icon()
+        self.exe_path = self._find_executable()
+    
+    def _find_icon(self) -> str:
+        """Busca el icono del editor en la carpeta app/."""
+        possible_paths = [
+            Path(__file__).parent.parent / "app" / "pmCodeEditor-icon.ico",
+            Path(__file__).parent.parent / "assets" / "pmCodeEditor-icon.ico",
+            Path(__file__).parent.parent / "pmCodeEditor-icon.ico",
+        ]
+        for path in possible_paths:
+            if path.exists():
+                return str(path)
+        return ""
+```
+
+### Colores y Estilos (lib/openWithDialog.py)
+
+```css
+/* Contenedor del diálogo (línea 215-222) */
+QFrame {
+    background-color: #252526;
+    border: none;
+    border-radius: 8px;
+}
+
+/* Header (línea 228-236) */
+background-color: rgba(255, 255, 255, 0.02);
+border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+/* Item pmCodeEditor seleccionado (línea 524-529) */
+background-color: rgba(255, 87, 34, 0.12);
+border: 1px solid rgba(255, 87, 34, 0.55);
+
+/* Botones (línea 374-394) */
+#0078d4 (background)
+#006cbd (hover)
+#005a9e (pressed)
+```
+
+---
+
+## 🔄 Flujo de Compilación Detallado
 
 Cuando compilas un proyecto, Packagemaker:
 
@@ -118,57 +247,16 @@ Cuando compilas un proyecto, Packagemaker:
 
 ---
 
-## 🔧 Configuración Avanzada
-
-### manifest.yaml
-```yaml
-project:
-  name: "Mi Aplicación"
-  version: "1.0.0"
-  author: "Tu Nombre"
-  
-build:
-  mode: "bundle"              # o "standalone"
-  blind_method: "simple"      # o "super"
-  compress: true
-  sign: true
-  
-android:
-  api_level: 33
-  permissions:
-    - INTERNET
-    - STORAGE
-```
-
----
-
-## 🐛 Solución de Problemas
-
-### "No se detectan scripts candidatos"
-Asegúrate de que tus scripts tengan el bloque:
-```python
-if __name__ == '__main__':
-    main()
-```
-
-### "Error al extraer clases"
-Verifica que las clases estén definidas en el nivel superior del archivo, no dentro de funciones.
-
-### "El bundle no ejecuta"
-Revisa que `lib/__init__.py` incluya todos los imports necesarios sin duplicados.
-
----
-
 ## 🤝 Integración con Leviathan-UI
 
 Packagemaker utiliza **Leviathan-UI** como base visual:
 
-| Componente | Uso |
-|------------|-----|
-| `CustomTitleBar` | Barra de título unificada |
-| `WipeWindow` | Efectos visuales consistentes |
-| `LeviathanProgressBar` | Indicadores de progreso |
-| `InmersiveSplash` | Pantallas de carga |
+| Componente | Uso | Versión |
+|------------|-----|----------|
+| `CustomTitleBar` | Barra de título unificada | ✅ |
+| `WipeWindow` | Efectos visuales consistentes | ✅ |
+| `LeviathanProgressBar` | Indicadores de progreso | ✅ |
+| `InmersiveSplash` | Pantallas de carga | ✅ |
 
 ---
 
@@ -178,12 +266,14 @@ Packagemaker utiliza **Leviathan-UI** como base visual:
 - `docs/build-system.md` - Sistema de compilación
 - `docs/android-deployment.md` - Despliegue Android
 - `FAQ.md` - Preguntas frecuentes
+- `CHANGELOG.md` - Historial de cambios
+- `RELEASE_NOTES.md` - Notas de versión
 
 ---
 
 ## 📝 Licencia
 
-MIT License - Libre para uso personal y comercial.
+GNU GPL v3 - Libre para uso personal y comercial.
 
 ---
 
