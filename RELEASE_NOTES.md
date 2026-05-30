@@ -1,4 +1,6 @@
-# 🚀 Notas de Publicación - Packagemaker v3.2.7
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/fd69a347-88c6-42ce-a767-68e42c4052d0" />
+
+# 🚀 Notas de Publicación - Packagemaker v3.2.7 Surface Edition
 
 ## 🎉 Versión de Estabilidad Visual
 
@@ -63,25 +65,7 @@ Packagemaker v3.2.7 es una actualización importante enfocada en la estabilidad 
 - Corregido error en EditorInfo agregando argumento 'executable' (líneas 417 y 610)
 - Eliminado gradiente radial en icon_label
 
----
-
-## 🔄 Actualización desde Versiones Anteriores
-
-### Pasos para Actualizar
-1. Backup de tus proyectos existentes
-2. Cerrar Packagemaker completamente
-3. Reemplazar archivos con la nueva versión
-4. Ejecutar packagemaker.py
-5. Verificar que la interfaz se vea correctamente
-
-### Compatibilidad
-- **Proyectos existentes**: 100% compatible, no requiere cambios
-- **Configuraciones**: Preservadas automáticamente
-- **Plugins**: Compatibles sin modificaciones
-
----
-
-## 🎨 Mejoras de Experiencia de Usuario
+##   Mejoras de Experiencia de Usuario
 
 ### Visual
 - Interfaz más limpia sin gradientes
@@ -121,41 +105,3 @@ Esta versión fue posible gracias a:
 - **Comunidad** - Feedback y reportes de bugs
 - **Leviathan-UI** - Framework visual base
 - **PyQt6** - Bindings Qt para Python
-
----
-
-## 🚀 Próximos Pasos
-
-### v3.3.0 (Planeado)
-- Mejoras en el editor de código integrado
-- Optimización de rendimiento
-- Nuevos temas de colores
-- Mejoras en accesibilidad
-
-### v4.0.0 (Roadmap)
-- Editor de código mejorado con syntax highlighting
-- Debugger visual integrado
-- Soporte para TypeScript
-- Integración CI/CD mejorada
-
----
-
-## 📝 Notas Técnicas
-
-### Cambios de Estilo
-- Todos los gradientes han sido eliminados en favor de colores sólidos
-- El color #3a3f4b (cast iron gray) se usa como fondo principal
-- Los botones usan fondos transparentes para mejor integración
-- Los widgets de texto usan fondos transparentes
-
-### Compatibilidad
-- Python 3.8+
-- PyQt6 6.5+
-- Windows 10/11
-- Linux/macOS (parcial)
-
----
-
-**¡Gracias por usar Packagemaker! 🐉📦**
-
-[GitHub](https://github.com/JesusQuijada34/packagemaker) | [Issues](https://github.com/JesusQuijada34/packagemaker/issues) | [Releases](https://github.com/JesusQuijada34/packagemaker/releases)
