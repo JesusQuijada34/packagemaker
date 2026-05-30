@@ -62,7 +62,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install PyQt6 pyinstaller leviathan-ui
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
         shell: bash
       
       - name: Compile with PackageMaker CLI
@@ -82,7 +84,8 @@ jobs:
           from pathlib import Path
           
           output_dir = Path('dist')
-          iflapp_path = output_dir / '${{ needs.parse-version.outputs.app_name }}.iflapp'
+          app_name = "${{ needs.parse-version.outputs.app_name }}"
+          iflapp_path = output_dir / f'{app_name}.iflapp'
           
           with zipfile.ZipFile(iflapp_path, 'w', zipfile.ZIP_DEFLATED) as zf:
             root = Path('.')
