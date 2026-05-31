@@ -1,7 +1,29 @@
-from PyQt6.QtWidgets import QPushButton, QWidget, QHBoxLayout, QLabel
-from PyQt6.QtGui import QIcon, QPixmap, QColor, QPainter
-from PyQt6.QtCore import Qt, QSize, QVariantAnimation, QAbstractAnimation, QPoint
-from PyQt6.QtGui import QShowEvent
+try:
+    from PyQt6.QtWidgets import QPushButton, QWidget, QHBoxLayout, QLabel
+    from PyQt6.QtGui import QIcon, QPixmap, QColor, QPainter
+    from PyQt6.QtCore import Qt, QSize, QVariantAnimation, QAbstractAnimation, QPoint
+    from PyQt6.QtGui import QShowEvent
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QPushButton:
+        def __init__(self, *args, **kwargs): pass
+    class QWidget:
+        def __init__(self, *args, **kwargs): pass
+    class QSize:
+        def __init__(self, *args, **kwargs): pass
+    class QColor:
+        def __init__(self, *args, **kwargs): pass
+    class QPoint:
+        def __init__(self, *args, **kwargs): pass
+    class QVariantAnimation:
+        def __init__(self, *args, **kwargs): pass
+        def setDuration(self, *args): pass
+        def setStartValue(self, *args): pass
+        def setEndValue(self, *args): pass
+        class valueChanged:
+            @staticmethod
+            def connect(func): pass
 
 class AnimTitleButton(QPushButton):
     """Boton de titulo con animación de fondo suave (UWP Style)"""

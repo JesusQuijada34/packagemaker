@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 """Iconos SVG a medida para PackageMaker."""
 
-from PyQt6.QtCore import Qt, QByteArray, QSize
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtGui import QIcon, QPixmap, QPainter
-from PyQt6.QtSvg import QSvgRenderer
+try:
+    from PyQt6.QtCore import Qt, QByteArray, QSize
+    from PyQt6.QtWidgets import QPushButton
+    from PyQt6.QtGui import QIcon, QPixmap, QPainter
+    from PyQt6.QtSvg import QSvgRenderer
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QIcon:
+        def __init__(self, *args, **kwargs): pass
+    class QPushButton:
+        def __init__(self, *args, **kwargs): pass
 
 ACCENT = "#ff5722"
 ACCENT_LIGHT = "#ff8a65"

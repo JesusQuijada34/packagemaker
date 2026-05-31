@@ -5,12 +5,19 @@ Consola aparte para registro/debug de compilación e instalación.
 """
 
 import sys
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
-    QDialog, QWidget, QVBoxLayout, QHBoxLayout, 
-    QTextEdit, QPushButton, QLabel
-)
-from leviathan_ui import CustomTitleBar
+try:
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtWidgets import (
+        QDialog, QWidget, QVBoxLayout, QHBoxLayout, 
+        QTextEdit, QPushButton, QLabel
+    )
+    from leviathan_ui import CustomTitleBar
+    PYQT6_AVAILABLE = True
+except (ImportError, SyntaxError):
+    PYQT6_AVAILABLE = False
+    class QDialog:
+        def __init__(self, *args, **kwargs): pass
+    class QWidget: pass
 
 
 class InstallConsoleDialog(QDialog):

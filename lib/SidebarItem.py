@@ -1,7 +1,15 @@
 import os
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtGui import QIcon
+try:
+    from PyQt6.QtWidgets import QPushButton
+    from PyQt6.QtCore import QSize, Qt
+    from PyQt6.QtGui import QIcon
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QPushButton:
+        def __init__(self, *args, **kwargs): pass
+    class QIcon:
+        def __init__(self, *args, **kwargs): pass
 
 class SidebarItem(QPushButton):
     """Boton de navegación lateral estilo Start11"""

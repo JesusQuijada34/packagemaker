@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """Animaciones de cierre estilo UWP (bounce down)."""
 
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup, QPoint
-from PyQt6.QtWidgets import QWidget
+try:
+    from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup, QPoint
+    from PyQt6.QtWidgets import QWidget
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QWidget: pass
 
 
 def play_bounce_down_close(widget: QWidget, on_finished=None, drop_px: int = 72, duration_ms: int = 420):

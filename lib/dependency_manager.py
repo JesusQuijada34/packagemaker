@@ -10,7 +10,16 @@ import sys
 from pathlib import Path
 from typing import Callable, List, Optional, Set
 
-from PyQt6.QtCore import QThread, pyqtSignal
+try:
+    from PyQt6.QtCore import QThread, pyqtSignal
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QThread: pass
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, func): pass
+        def emit(self, *args): pass
 
 IMPORT_TO_PIP = {
     "PIL": "Pillow",

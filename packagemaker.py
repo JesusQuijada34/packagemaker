@@ -26,22 +26,49 @@ import importlib.util
 # Usar leviathan-ui desde pip (remoto) - instalar con: pip install leviathan-ui
 print(f"[INFO] Usando leviathan-ui desde PyPI (pip install leviathan-ui)")
 
-from PyQt6 import QtWidgets, QtGui, QtCore
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar, QTextEdit, QStackedWidget,
-    QCheckBox, QMessageBox, QInputDialog, QSwipeGesture, QSlider, QFrame
-)
-from PyQt6.QtGui import QFont, QIcon
-from PyQt6.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
-from PyQt6.QtSvg import QSvgRenderer # [NEW IMPORT FOR TITLEBAR SVG RENDERING]
-from PyQt6.QtCore import QByteArray  # [NEW IMPORT FOR SVG BUFFER]
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QProcess, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve, QPoint, QSize
+try:
+    from PyQt6 import QtWidgets, QtGui, QtCore
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+        QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar, QTextEdit, QStackedWidget,
+        QCheckBox, QMessageBox, QInputDialog, QSwipeGesture, QSlider, QFrame
+    )
+    from PyQt6.QtGui import QFont, QIcon
+    from PyQt6.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
+    from PyQt6.QtSvg import QSvgRenderer # [NEW IMPORT FOR TITLEBAR SVG RENDERING]
+    from PyQt6.QtCore import QByteArray  # [NEW IMPORT FOR SVG BUFFER]
+    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QProcess, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve, QPoint, QSize
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    # Mocking basic classes if needed for type hints or minimal logic
+    class QObject: pass
+    class QThread: pass
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, func): pass
+        def emit(self, *args): pass
+    class QFont:
+        def __init__(self, *args): pass
+    class QIcon:
+        def __init__(self, *args): pass
 import requests
-import winreg  # Para guardar en registro de Windows
+try:
+    import winreg
+except ImportError:
+    winreg = None
 
-from leviathan_ui import InmersiveSplash, LightsOff, LeviathanDialog, WipeWindow, LeviathanProgressBar, CustomTitleBar, get_accent_color
-from leviathan_ui.touchscreen import TouchScreen
+try:
+    from leviathan_ui import InmersiveSplash, LightsOff, LeviathanDialog, WipeWindow, LeviathanProgressBar, CustomTitleBar, get_accent_color
+    from leviathan_ui.touchscreen import TouchScreen
+    LEVIATHAN_AVAILABLE = True
+except (ImportError, SyntaxError) as e:
+    LEVIATHAN_AVAILABLE = False
+    print(f"[WARN] Leviathan UI no disponible o error de sintaxis: {e}")
+    class LeviathanDialog:
+        @staticmethod
+        def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")
+    class LeviathanProgressBar: pass
 from lib.Updater import KillerLogic, InstallerWorker, ModernUpdaterWindow
 from lib.BuildThread import BuildThread, FlangCompiler
 from lib.TitleBar import AnimTitleButton, TitleBar
@@ -88,8 +115,12 @@ if getattr(sys, 'frozen', False):
     except ImportError:
         pass  # Not an error unless running under PyInstaller build
 # ----------- CONFIGURABLE VARIABLES -----------
-APP_FONT = QFont('Segoe UI Variable', 11)
-TAB_FONT = QFont('Segoe UI Variable', 12) # Icons (SVGs are handled as strings here for "one-file" convenience or resource paths)
+if PYQT6_AVAILABLE:
+    APP_FONT = QFont('Segoe UI Variable', 11)
+    TAB_FONT = QFont('Segoe UI Variable', 12)
+else:
+    APP_FONT = None
+    TAB_FONT = None # Icons (SVGs are handled as strings here for "one-file" convenience or resource paths)
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
 TAB_ICON_KEYS = {
@@ -5044,22 +5075,33 @@ def main():
     if cli.has_cli_args():
         args = cli.parse()
         
-        if args.version:
-            version = get_app_version()
+        if hasattr(args, 'version') and args.version:
+            # Intentar obtener versión de varias fuentes
+            try:
+                from version import VERSION
+                version = VERSION
+            except ImportError:
+                version = "3.2.7" # Fallback
             print(f"Influent Package Maker v{version}")
             sys.exit(0)
         
         action, data, action_options = cli.get_action(args)
         
         if action:
-            if action in ['shellpatch_install', 'shellpatch_remove', 'shellpatch_shortcuts']:
-                handle_cli_action(action, data, None)
+            # Acciones que no requieren GUI ni QApplication
+            if action in ['shellpatch_install', 'shellpatch_remove', 'shellpatch_shortcuts'] or action_options.get('headless'):
+                handle_cli_action(action, data, None, **action_options)
                 return
             
-            app = QApplication(sys.argv)
-            app.setFont(APP_FONT)
-            
-            window = handle_cli_action(action, data, PackageTodoGUI, **action_options)
+            if PYQT6_AVAILABLE:
+                app = QApplication(sys.argv)
+                app.setFont(APP_FONT)
+                window = handle_cli_action(action, data, PackageTodoGUI, **action_options)
+            else:
+                print("❌ Error: PyQt6 no está disponible para esta acción GUI.")
+                sys.exit(1)
+            if window is None: # Si es headless o acción de shell ya terminada
+                return
             if window:
                 window.show()
                 main_window = window

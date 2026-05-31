@@ -8,21 +8,31 @@ import shutil
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from PyQt6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QPushButton,
-    QMessageBox,
-    QProgressBar,
-    QGroupBox,
-    QComboBox,
-    QCheckBox,
-)
-from PyQt6.QtCore import Qt, pyqtSignal
+try:
+    from PyQt6.QtWidgets import (
+        QDialog,
+        QVBoxLayout,
+        QHBoxLayout,
+        QLabel,
+        QListWidget,
+        QListWidgetItem,
+        QPushButton,
+        QMessageBox,
+        QProgressBar,
+        QGroupBox,
+        QComboBox,
+        QCheckBox,
+    )
+    from PyQt6.QtCore import Qt, pyqtSignal
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QDialog:
+        def __init__(self, *args, **kwargs): pass
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, func): pass
+        def emit(self, *args): pass
 
 from lib.python_portable_manager import get_python_manager
 

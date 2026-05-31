@@ -15,7 +15,14 @@ import urllib.parse
 import urllib.request
 from typing import Any, Dict, Optional
 
-from PyQt6.QtCore import QCoreApplication, QLocale, QTranslator
+try:
+    from PyQt6.QtCore import QCoreApplication, QLocale, QTranslator
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QCoreApplication:
+        @staticmethod
+        def translate(*args): return args[1] if len(args) > 1 else ""
 
 SUPPORTED_LANGUAGES = {
     "es": "Español",

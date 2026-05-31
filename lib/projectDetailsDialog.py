@@ -2,11 +2,19 @@ import os
 import sys
 import shutil
 import zipfile
-from PyQt6.QtCore import Qt
-from PyQt6 import QtCore
-from PyQt6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton
-from PyQt6.QtGui import QPixmap, QIcon
-from leviathan_ui import CustomTitleBar, LeviathanDialog
+try:
+    from PyQt6.QtCore import Qt
+    from PyQt6 import QtCore
+    from PyQt6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton
+    from PyQt6.QtGui import QPixmap, QIcon
+    from leviathan_ui import CustomTitleBar, LeviathanDialog
+    PYQT6_AVAILABLE = True
+except (ImportError, SyntaxError):
+    PYQT6_AVAILABLE = False
+    class QDialog:
+        def __init__(self, *args, **kwargs): pass
+    class QWidget: pass
+    class LeviathanDialog: pass
 from lib.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.moonFixWizard import detectar_modo_sistema

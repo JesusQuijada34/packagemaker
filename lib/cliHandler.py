@@ -20,6 +20,9 @@ class CLIHandler:
         self.parser.add_argument('--create-project', metavar='PATH', help='Crear un nuevo proyecto en la ruta especificada')
         self.parser.add_argument('--install-folder', metavar='PATH', help='Instalar una carpeta como Fluthin Package')
         self.parser.add_argument('--compile-project', metavar='PATH', help='Compilar un proyecto existente')
+        self.parser.add_argument('--headless', action='store_true', help='Ejecutar compilación en modo headless (sin GUI)')
+        self.parser.add_argument('--output', metavar='PATH', help='Carpeta de salida para el modo headless')
+        self.parser.add_argument('--platform', metavar='PLATFORM', choices=['Windows', 'Linux'], help='Plataforma objetivo para el modo headless')
         self.parser.add_argument('--repair-project', metavar='PATH', help='Reparar un proyecto usando MoonFix')
         self.parser.add_argument('--install-package', metavar='FILE', help='Instalar un archivo .iflapp')
         self.parser.add_argument('--open-package', metavar='FILE', help='Abrir un paquete con IPM')
@@ -31,6 +34,7 @@ class CLIHandler:
         self.parser.add_argument('--create-shortcuts', action='store_true', help='Crear accesos directos en el sistema')
         self.parser.add_argument('--compact', action='store_true', help='Ejecutar en modo compacto para invocaciones de shell')
         self.parser.add_argument('--shell-mode', action='store_true', help='Ejecutar en modo shell integrado')
+        self.parser.add_argument('--version', action='store_true', help='Mostrar la versión de la aplicación')
 
     def parse(self):
         return self.parser.parse_args()
@@ -44,7 +48,13 @@ class CLIHandler:
         elif args.install_folder:
             return ('install_folder', args.install_folder, {'compact': args.compact, 'shell_mode': args.shell_mode})
         elif args.compile_project:
-            return ('compile_project', args.compile_project, {'compact': args.compact, 'shell_mode': args.shell_mode})
+            return ('compile_project', args.compile_project, {
+                'compact': args.compact, 
+                'shell_mode': args.shell_mode,
+                'headless': args.headless,
+                'output': args.output,
+                'platform': args.platform
+            })
         elif args.repair_project:
             return ('repair_project', args.repair_project, {'compact': args.compact, 'shell_mode': args.shell_mode})
         elif args.install_package:
@@ -67,14 +77,17 @@ class CLIHandler:
             return (None, None, {'compact': False, 'shell_mode': False})
 
 
-def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False):
-    from PyQt6.QtWidgets import QApplication
+def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, **kwargs):
+    if kwargs.get('headless') or action in ['shellpatch_install', 'shellpatch_remove', 'shellpatch_shortcuts', 'install_shell', 'uninstall_shell', 'create_shortcuts']:
+        # No instanciar GUI para estas acciones
+        pass
+    else:
+        from PyQt6.QtWidgets import QApplication
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication(sys.argv)
 
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication(sys.argv)
-
-    window = gui_class(compact_mode=compact, shell_mode=shell_mode)
+    window = gui_class(compact_mode=compact, shell_mode=shell_mode) if gui_class else None
 
     if action == 'create_project':
         window.switch_page(0)
@@ -87,6 +100,37 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False):
             window.showInstallFolderDialog(data)
 
     elif action == 'compile_project':
+        if kwargs.get('headless'):
+            # Lógica headless sin necesidad de GUI
+            from lib.BuildThread import FlangCompiler
+            from pathlib import Path
+            project_path = Path(data).resolve()
+            output_path = Path(kwargs.get('output') or './dist').resolve()
+            target_platform = kwargs.get('platform') or ("Windows" if sys.platform.startswith('win') else "Linux")
+            
+            print(f"🚀 Iniciando compilación headless...")
+            compiler = FlangCompiler(project_path, output_path, log_callback=print)
+            if not compiler.parse_details_xml():
+                sys.exit(1)
+            if not compiler.find_scripts():
+                sys.exit(1)
+            if not compiler.compile_binaries(target_platform):
+                sys.exit(1)
+            if not compiler.create_package(target_platform):
+                sys.exit(1)
+            
+            publisher = compiler.metadata['publisher']
+            app = compiler.metadata['app']
+            version = compiler.metadata['version']
+            platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
+            package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
+            iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
+            
+            if not compiler.compress_to_iflapp(package_path, iflapp_file):
+                sys.exit(1)
+            print(f"✨ Proceso completado con éxito: {iflapp_file}")
+            return None
+
         window.switch_page(1)
         if data:
             window.showCompileDialog(data)

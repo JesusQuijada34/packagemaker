@@ -10,28 +10,39 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Callable
 
-from PyQt6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QFileDialog,
-    QMessageBox,
-    QDialog,
-    QLineEdit,
-    QStatusBar,
-    QGroupBox,
-    QGridLayout,
-    QListWidget,
-    QListWidgetItem,
-    QComboBox,
-    QFormLayout,
-    QGraphicsDropShadowEffect,
-)
-from PyQt6.QtGui import QColor
-from PyQt6.QtCore import Qt, pyqtSignal
+try:
+    from PyQt6.QtWidgets import (
+        QMainWindow,
+        QWidget,
+        QVBoxLayout,
+        QHBoxLayout,
+        QLabel,
+        QPushButton,
+        QFileDialog,
+        QMessageBox,
+        QDialog,
+        QLineEdit,
+        QStatusBar,
+        QGroupBox,
+        QGridLayout,
+        QListWidget,
+        QListWidgetItem,
+        QComboBox,
+        QFormLayout,
+        QGraphicsDropShadowEffect,
+    )
+    from PyQt6.QtGui import QColor
+    from PyQt6.QtCore import Qt, pyqtSignal
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QMainWindow: pass
+    class QWidget: pass
+    class QDialog: pass
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, func): pass
+        def emit(self, *args): pass
 
 EDITOR_CONFIG_PATH = Path(__file__).resolve().parent.parent / "data" / "pmCodeEditor" / "editor_config.json"
 

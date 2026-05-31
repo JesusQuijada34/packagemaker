@@ -17,14 +17,28 @@ import subprocess
 import sys
 
 # PyQt6 imports
-from PyQt6.QtWidgets import (
-    QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QLineEdit, QStackedWidget, QScrollArea, QGridLayout, QFileDialog,
-    QRadioButton, QButtonGroup, QApplication
-)
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtCore import Qt, QThread, QTimer
-from PyQt6 import QtCore, QtWidgets, QtGui
+try:
+    from PyQt6.QtWidgets import (
+        QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+        QLineEdit, QStackedWidget, QScrollArea, QGridLayout, QFileDialog,
+        QRadioButton, QButtonGroup, QApplication
+    )
+    from PyQt6.QtGui import QPixmap
+    from PyQt6.QtCore import Qt, QThread, QTimer
+    from PyQt6 import QtCore, QtWidgets, QtGui
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QDialog: pass
+    class QWidget: pass
+    class QThread: pass
+    class QTimer:
+        def __init__(self, *args, **kwargs): pass
+        def start(self, *args): pass
+        def stop(self): pass
+        class timeout:
+            @staticmethod
+            def connect(func): pass
 
 # XML handling
 import xml.etree.ElementTree as ET
@@ -36,8 +50,12 @@ except ImportError:
     winreg = None
 
 # Leviathan UI imports
-from leviathan_ui import WipeWindow
-from leviathan_ui.dialogs import LeviathanDialog
+try:
+    from leviathan_ui import WipeWindow
+    from leviathan_ui.dialogs import LeviathanDialog
+except (ImportError, SyntaxError):
+    class WipeWindow: pass
+    class LeviathanDialog: pass
 from lib.uwp_animations import play_bounce_down_close
 
 class MoonFixWizard(QDialog):

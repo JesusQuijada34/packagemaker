@@ -12,16 +12,30 @@ import traceback
 import subprocess
 import requests
 from pathlib import Path
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
-from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QObject
+try:
+    from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
+    from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor
+    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QObject
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QThread: pass
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, func): pass
+        def emit(self, *args): pass
+    class QObject: pass
 
 # Leviathan UI
 try:
     from leviathan_ui import WipeWindow, CustomTitleBar, LeviathanProgressBar, LeviathanDialog
     HAS_LEVIATHAN = True
-except ImportError:
+except (ImportError, SyntaxError):
     HAS_LEVIATHAN = False
+    class LeviathanDialog:
+        @staticmethod
+        def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")
+    class LeviathanProgressBar: pass
 
 # Notificaciones nativas de Windows
 try:

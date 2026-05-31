@@ -14,7 +14,17 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 import requests
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
+try:
+    from PyQt6.QtCore import QObject, QThread, pyqtSignal
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QObject: pass
+    class QThread: pass
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, func): pass
+        def emit(self, *args): pass
 
 # =============================================================================
 # CONSTANTES

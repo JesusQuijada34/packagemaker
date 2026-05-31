@@ -1,9 +1,15 @@
 import os
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QDialog, QWidget, QVBoxLayout, QLabel, QTextEdit
-from PyQt6.QtGui import QFont
-from PyQt6 import QtGui
-from PyQt6.QtCore import QProcess
+try:
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtWidgets import QDialog, QWidget, QVBoxLayout, QLabel, QTextEdit
+    from PyQt6.QtGui import QFont
+    from PyQt6 import QtGui
+    from PyQt6.QtCore import QProcess
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QDialog:
+        def __init__(self, *args, **kwargs): pass
 from lib.TitleBar import TitleBar
 
 

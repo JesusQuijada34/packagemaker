@@ -6,15 +6,25 @@ import os
 import sys
 from typing import Optional, List, Callable, Dict, Any
 from dataclasses import dataclass, field
-from PyQt6.QtCore import (
-    Qt, QTimer, QPropertyAnimation, QEasingCurve, QPoint, QSize,
-    pyqtSignal, QObject, QParallelAnimationGroup, QSequentialAnimationGroup
-)
-from PyQt6.QtWidgets import (
-    QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
-    QGraphicsDropShadowEffect, QApplication, QFrame, QSizePolicy
-)
-from PyQt6.QtGui import QColor, QIcon, QPixmap, QPainter, QFont, QFontMetrics
+try:
+    from PyQt6.QtCore import (
+        Qt, QTimer, QPropertyAnimation, QEasingCurve, QPoint, QSize,
+        pyqtSignal, QObject, QParallelAnimationGroup, QSequentialAnimationGroup
+    )
+    from PyQt6.QtWidgets import (
+        QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
+        QGraphicsDropShadowEffect, QApplication, QFrame, QSizePolicy
+    )
+    from PyQt6.QtGui import QColor, QIcon, QPixmap, QPainter, QFont, QFontMetrics
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QObject: pass
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, func): pass
+        def emit(self, *args): pass
+    class QWidget: pass
 
 
 @dataclass

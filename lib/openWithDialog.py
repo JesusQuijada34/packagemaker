@@ -9,12 +9,18 @@ import sys
 from pathlib import Path
 from typing import List, Tuple, Optional, Callable
 
-from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
-    QPushButton, QLabel, QWidget, QFrame, QScrollArea, QSizePolicy
-)
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon, QPixmap, QFont
+try:
+    from PyQt6.QtWidgets import (
+        QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
+        QPushButton, QLabel, QWidget, QFrame, QScrollArea, QSizePolicy
+    )
+    from PyQt6.QtCore import Qt, QSize
+    from PyQt6.QtGui import QIcon, QPixmap, QFont
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QDialog: pass
+    class QWidget: pass
 
 # Importar detector de editores y utilidades de i18n
 try:

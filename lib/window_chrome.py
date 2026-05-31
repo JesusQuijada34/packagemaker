@@ -7,11 +7,18 @@ import os
 import sys
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
-from PyQt6.QtCore import QRect, Qt
-from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QApplication, QWidget
-
-from leviathan_ui import WipeWindow
+try:
+    from PyQt6.QtCore import QRect, Qt
+    from PyQt6.QtGui import QFont
+    from PyQt6.QtWidgets import QApplication, QWidget
+    from leviathan_ui import WipeWindow
+    PYQT6_AVAILABLE = True
+except (ImportError, SyntaxError):
+    PYQT6_AVAILABLE = False
+    class QWidget: pass
+    class QApplication:
+        @staticmethod
+        def instance(): return None
 
 if TYPE_CHECKING:
     from PyQt6.QtWidgets import QMainWindow
