@@ -36,9 +36,12 @@ try:
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
-    class QMainWindow: pass
-    class QWidget: pass
-    class QDialog: pass
+    class QMainWindow:
+        def __init__(self, *args, **kwargs): pass
+    class QWidget:
+        def __init__(self, *args, **kwargs): pass
+    class QDialog:
+        def __init__(self, *args, **kwargs): pass
     class pyqtSignal:
         def __init__(self, *args): pass
         def connect(self, func): pass

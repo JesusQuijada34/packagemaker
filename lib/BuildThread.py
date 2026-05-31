@@ -12,7 +12,17 @@ import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, Optional
-from PyQt6.QtCore import QThread, pyqtSignal
+try:
+    from PyQt6.QtCore import QThread, pyqtSignal
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QThread:
+        def __init__(self, *args, **kwargs): pass
+    class pyqtSignal:
+        def __init__(self, *args, **kwargs): pass
+        def connect(self, func): pass
+        def emit(self, *args, **kwargs): pass
 
 from lib.pyinstaller_embedded import get_pyinstaller, ensure_pyinstaller
 

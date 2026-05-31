@@ -11,6 +11,8 @@ except ImportError:
     PYQT6_AVAILABLE = False
     class QIcon:
         def __init__(self, *args, **kwargs): pass
+    class QPixmap:
+        def __init__(self, *args, **kwargs): pass
     class QPushButton:
         def __init__(self, *args, **kwargs): pass
 

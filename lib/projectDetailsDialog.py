@@ -13,7 +13,11 @@ except (ImportError, SyntaxError):
     PYQT6_AVAILABLE = False
     class QDialog:
         def __init__(self, *args, **kwargs): pass
-    class QWidget: pass
+        def setWindowFlags(self, *args): pass
+        def setAttribute(self, *args): pass
+        def resize(self, *args, **kwargs): pass
+    class QWidget:
+        def __init__(self, *args, **kwargs): pass
     class LeviathanDialog: pass
 from lib.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog

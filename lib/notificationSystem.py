@@ -24,7 +24,14 @@ except ImportError:
         def __init__(self, *args): pass
         def connect(self, func): pass
         def emit(self, *args): pass
-    class QWidget: pass
+    class QWidget:
+        def __init__(self, *args, **kwargs): pass
+    class QPushButton:
+        def __init__(self, *args, **kwargs): pass
+    class QPixmap:
+        def __init__(self, *args, **kwargs): pass
+    class QPoint:
+        def __init__(self, *args, **kwargs): pass
 
 
 @dataclass

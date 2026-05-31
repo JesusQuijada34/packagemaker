@@ -4,9 +4,19 @@
 Focus Indication Filter for Package Maker
 """
 
-from PyQt6.QtWidgets import QWidget
-from PyQt6.QtCore import QObject, QEvent, QPoint, QRect, Qt
-from PyQt6.QtGui import QColor, QPainter
+try:
+    from PyQt6.QtWidgets import QWidget
+    from PyQt6.QtCore import QObject, QEvent, QPoint, QRect, Qt
+    from PyQt6.QtGui import QColor, QPainter
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    class QObject:
+        def __init__(self, *args, **kwargs): pass
+    class QWidget:
+        def __init__(self, *args, **kwargs): pass
+        def setWindowFlags(self, *args): pass
+        def setAttribute(self, *args): pass
 
 
 class FocusIndicationFilter(QObject):

@@ -25,6 +25,12 @@ except ImportError:
         def connect(self, func): pass
         def emit(self, *args): pass
     class QObject: pass
+    class QMainWindow:
+        def __init__(self, *args, **kwargs): pass
+    class QWidget:
+        def __init__(self, *args, **kwargs): pass
+    class QProgressBar:
+        def __init__(self, *args, **kwargs): pass
 
 # Leviathan UI
 try:

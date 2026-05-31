@@ -8,8 +8,17 @@ except ImportError:
     PYQT6_AVAILABLE = False
     class QPushButton:
         def __init__(self, *args, **kwargs): pass
+        def setFixedSize(self, *args): pass
+        def setIconSize(self, *args): pass
+        def setFlat(self, *args): pass
+        def setIcon(self, *args): pass
+        def update(self): pass
     class QWidget:
         def __init__(self, *args, **kwargs): pass
+        def setFixedHeight(self, *args): pass
+        def setLayout(self, *args): pass
+        def setContentsMargins(self, *args): pass
+        def setStyleSheet(self, *args): pass
     class QSize:
         def __init__(self, *args, **kwargs): pass
     class QColor:

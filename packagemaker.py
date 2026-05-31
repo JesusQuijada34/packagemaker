@@ -52,6 +52,23 @@ except ImportError:
         def __init__(self, *args): pass
     class QIcon:
         def __init__(self, *args): pass
+    class QPixmap:
+        def __init__(self, *args, **kwargs): pass
+    class QMainWindow:
+        def __init__(self, *args, **kwargs): pass
+        def setWindowFlags(self, *args): pass
+        def setAttribute(self, *args): pass
+        def resize(self, *args, **kwargs): pass
+        def move(self, *args, **kwargs): pass
+        def setStyleSheet(self, *args): pass
+        def show(self): pass
+    class QWidget:
+        def __init__(self, *args, **kwargs): pass
+        def setFixedHeight(self, *args): pass
+        def setLayout(self, *args): pass
+        def setContentsMargins(self, *args): pass
+        def setStyleSheet(self, *args): pass
+        def hide(self): pass
 import requests
 try:
     import winreg
