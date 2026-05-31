@@ -14,21 +14,26 @@ jobs:
     outputs:
       version: ${{ steps.extract.outputs.version }}
       app_name: ${{ steps.extract.outputs.app_name }}
+      publisher: ${{ steps.extract.outputs.publisher }}
       
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Extract version from details.xml
+      - name: Extract metadata from details.xml
         id: extract
         run: |
           if [ -f details.xml ]; then
             VERSION=$(grep -oP '<version>\K[^<]+' details.xml | head -1)
             APP_NAME=$(grep -oP '<app>\K[^<]+' details.xml | head -1)
+            PUBLISHER=$(grep -oP '<publisher>\K[^<]+' details.xml | head -1)
+            if [ -z "$PUBLISHER" ]; then
+              PUBLISHER=$(grep -oP '<empresa>\K[^<]+' details.xml | head -1)
+            fi
             echo "version=${VERSION}" >> $GITHUB_OUTPUT
             echo "app_name=${APP_NAME}" >> $GITHUB_OUTPUT
-            echo "✅ Version extracted: $VERSION"
-            echo "✅ App name extracted: $APP_NAME"
+            echo "publisher=${PUBLISHER}" >> $GITHUB_OUTPUT
+            echo "✅ Metadata extracted: $PUBLISHER.$APP_NAME v$VERSION"
           else
             echo "❌ details.xml not found"
             exit 1
@@ -42,10 +47,12 @@ jobs:
         include:
           - os: ubuntu-latest
             os_name: linux
-            extension: ''
+            target_platform: Linux
+            platform_suffix: Danenone
           - os: windows-latest
             os_name: windows
-            extension: '.exe'
+            target_platform: Windows
+            platform_suffix: Knosthalij
     
     runs-on: ${{ matrix.os }}
     
@@ -58,55 +65,39 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils
+      
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install PyQt6 pyinstaller leviathan-ui
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+          pip install pyinstaller requests
+          # Nota: No instalamos PyQt6 ni leviathan-ui para ahorrar tiempo y evitar errores de sintaxis en el build
         shell: bash
       
-      - name: Compile with PackageMaker CLI
+      - name: Compile with PackageMaker CLI (Headless)
         run: |
-          python -m packagemaker compile \
-            --project . \
+          # Usamos la nueva CLI integrada en packagemaker.py
+          python packagemaker.py \
+            --compile-project . \
+            --headless \
             --output ./dist \
-            --format iflapp
-        shell: bash
-        continue-on-error: true
-      
-      - name: Build IFLAPP package (Fallback)
-        run: |
-          mkdir -p dist
-          python << 'EOF'
-          import zipfile
-          from pathlib import Path
-          
-          output_dir = Path('dist')
-          app_name = "${{ needs.parse-version.outputs.app_name }}"
-          iflapp_path = output_dir / f'{app_name}.iflapp'
-          
-          with zipfile.ZipFile(iflapp_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-            root = Path('.')
-            for file in root.rglob('*'):
-              if file.is_file() and not str(file).startswith('.git'):
-                arcname = file.relative_to(root)
-                zf.write(file, arcname)
-          
-          print(f'✅ IFLAPP created: {iflapp_path}')
-          EOF
+            --platform ${{ matrix.target_platform }}
         shell: bash
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: iflapp-${{ matrix.os_name }}
-          path: dist/${{ needs.parse-version.outputs.app_name }}.iflapp
+          path: dist/*.iflapp
 
   release:
     needs: [parse-version, build]
     runs-on: ubuntu-latest
+    # Se ejecuta en push a tags o manualmente vía workflow_dispatch
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     
     steps:
