@@ -1,0 +1,56 @@
+name: Compile Package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.py'
+      - 'details.xml'
+      - 'src/**'
+      - 'lib/**'
+      - 'packagemaker.py'
+      - 'cli_handler.py'
+      - 'shell/**'
+      - '.github/workflows/**'
+  workflow_dispatch: {}
+
+jobs:
+  compile:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: Linux
+          - os: windows-latest
+            target: Windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller requests
+
+      - name: Compile package with Packagemaker
+        run: |
+          python packagemaker.py compile . --output ./dist --target ${{ matrix.target }} --headless
+
+      - name: Upload compiled package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iflapp-${{ matrix.target }}
+          path: dist/*.iflapp
