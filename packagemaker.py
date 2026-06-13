@@ -105,6 +105,7 @@ from lib.SidebarItem import SidebarItem
 from lib.moonFixWizard import MoonFixWizard, QSetup, QInstaller, verificar_github_username, detectar_modo_sistema
 from lib.gitHubVerifyThread import GitHubVerifyThread
 from lib.i18n import i18n, tr, system_default_language, get_available_languages
+from lib.linux_icon_handler import get_linux_icon_path, ensure_linux_icon_support
 from lib.pm_data import get_pm_data, load_merged_app_config, is_compiled_build, COMPILED_LOCKED_USER_KEYS
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.projectDetailsDialog import ProjectDetailsDialog
@@ -266,7 +267,13 @@ _PLATFORM_BASE_DIR = BASE_DIR
 _PLATFORM_FLUTHIN_APPS = Fluthin_APPS
 
 # --- GLOBAL CONFIG SYSTEM ---
-IPM_ICON_PATH = os.path.join("app", "app-icon.ico")
+# Manejar icono según la plataforma (PNG para Linux, ICO para Windows)
+if sys.platform.startswith("linux"):
+    _ico_fallback = os.path.join("app", "app-icon.ico")
+    _png_path = os.path.join("app", "app-icon.png")
+    IPM_ICON_PATH = _png_path if os.path.exists(_png_path) else _ico_fallback
+else:
+    IPM_ICON_PATH = os.path.join("app", "app-icon.ico")
 DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
 CONFIG_DIR = os.path.join(os.getcwd(), "config")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "settings.json")
@@ -658,7 +665,23 @@ class PackageTodoGUI(QMainWindow):
         height = min(default_height, int(screen_geo.height() * 0.85))
         self.resize(width, height)
         self.setFont(APP_FONT)
-        self.setWindowIcon(QtGui.QIcon(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""))
+        
+        # Cargar icono con soporte para Linux
+        icon_to_load = IPM_ICON_PATH
+        if os.path.exists(icon_to_load):
+            try:
+                self.setWindowIcon(QtGui.QIcon(icon_to_load))
+            except Exception as e:
+                print(f"[WARNING] No se pudo cargar icono: {e}")
+        else:
+            # Intenta convertir ICO a PNG en Linux si el PNG no existe
+            if sys.platform.startswith("linux"):
+                try:
+                    icon_path = ensure_linux_icon_support(os.getcwd())
+                    if icon_path and os.path.exists(icon_path):
+                        self.setWindowIcon(QtGui.QIcon(icon_path))
+                except Exception as e:
+                    print(f"[WARNING] Error al preparar icono en Linux: {e}")
 
         # Central Widget & Main Layout
         self.central = QWidget()
@@ -2108,8 +2131,24 @@ class PackageTodoGUI(QMainWindow):
             
             if selected_icon and os.path.exists(selected_icon):
                 shutil.copy(selected_icon, icon_dest)
+                # En Linux, también convertir a PNG
+                if sys.platform.startswith("linux"):
+                    try:
+                        png_dest = os.path.join(full_path, "app", "app-icon.png")
+                        from lib.linux_icon_handler import convert_ico_to_png
+                        convert_ico_to_png(icon_dest, png_dest)
+                    except Exception:
+                        pass
             elif os.path.exists(IPM_ICON_PATH):
                 shutil.copy(IPM_ICON_PATH, icon_dest)
+                # En Linux, también convertir a PNG
+                if sys.platform.startswith("linux"):
+                    try:
+                        png_dest = os.path.join(full_path, "app", "app-icon.png")
+                        from lib.linux_icon_handler import convert_ico_to_png
+                        convert_ico_to_png(icon_dest, png_dest)
+                    except Exception:
+                        pass
             if os.path.exists(upd_icon):
                 shutil.copy(upd_icon, upd_icn_dst)
             self.create_status.setStyleSheet("color:#388e3c;")

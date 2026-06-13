@@ -243,11 +243,24 @@ class FlangCompiler:
 
         try:
             self.log(f"[DEBUG] Compilando {script_name} con PyInstaller embebido...")
+            
+            # Preparar icono: convertir ICO a PNG en Linux si es necesario
+            icon_to_use = script["icon"]
+            if icon_to_use and sys.platform.startswith("linux") and str(icon_to_use).endswith(".ico"):
+                try:
+                    from lib.linux_icon_handler import convert_ico_to_png
+                    png_icon = str(icon_to_use).replace(".ico", ".png")
+                    if convert_ico_to_png(str(icon_to_use), png_icon):
+                        icon_to_use = Path(png_icon)
+                        self.log(f"[INFO] Icono convertido a PNG: {png_icon}")
+                except Exception as e:
+                    self.log(f"[WARNING] Error al convertir icono a PNG: {e}")
+            
             exe_path = pyi.compile_to_exe(
                 script_path=str(script_path),
                 output_name=script_name,
                 output_dir=str(dist_dir),
-                icon_path=str(script["icon"]) if script["icon"] else None,
+                icon_path=str(icon_to_use) if icon_to_use else None,
                 windowed=windowed,
                 onefile=True,
                 add_data=add_data,

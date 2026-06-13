@@ -799,6 +799,14 @@ class MoonFixWizard(QDialog):
         
         if icon_src and os.path.exists(icon_src):
             shutil.copy(icon_src, os.path.join(path, "app", "app-icon.ico"))
+            # En Linux, también convertir a PNG
+            if sys.platform.startswith("linux"):
+                try:
+                    from lib.linux_icon_handler import convert_ico_to_png
+                    png_path = os.path.join(path, "app", "app-icon.png")
+                    convert_ico_to_png(os.path.join(path, "app", "app-icon.ico"), png_path)
+                except Exception:
+                    pass
         
         if logo_src and os.path.exists(logo_src):
             shutil.copy(logo_src, os.path.join(path, "app", "product_logo.png"))
@@ -897,8 +905,8 @@ def detectar_modo_sistema():
                 # Fallback: usar la paleta de Qt
                 app = QApplication.instance()
                 if app:
-                    palette = app.palette()
-                    return palette.color(QtGui.QPalette.Window).lightness() < 128
+                      palette = app.palette()
+                      return palette.color(QtGui.QPalette.ColorRole.Window).lightness() < 128
                 return False
         except Exception:
             # Fallback: usar la paleta de Qt
@@ -968,7 +976,7 @@ def detectar_modo_sistema():
 def verificar_github_username(username):
     """Verifica si un username de GitHub existe. Si no hay internet, deja pasar el username."""
     if not username or not username.strip():
-        return False, "El username no puede estar vacío"
+            return False, "El username no puede estar vacío"
     username = username.strip()
     url = f"https://api.github.com/users/{username}"
     try:
@@ -991,95 +999,7 @@ def verificar_github_username(username):
         return False, f"Error inesperado: {str(e)}"
 
 
-def detectar_modo_sistema():
-    """Detecta el modo claro/oscuro del sistema operativo. Retorna 'dark' o 'light'."""
-    is_dark = False
-    
-    if sys.platform.startswith("win"):
-        # Windows: leer del registro
-        try:
-            import winreg
-            key = winreg.OpenKey(
-                winreg.HKEY_CURRENT_USER,
-                r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
-            )
-            try:
-                value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
-                winreg.CloseKey(key)
-                is_dark = (value == 0)  # 0 = oscuro, 1 = claro
-            except FileNotFoundError:
-                is_dark = False
-        except Exception:
-            # Fallback: usar la paleta de Qt
-            app = QApplication.instance()
-            if app:
-                palette = app.palette()
-                is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
-    
-    elif sys.platform.startswith("linux"):
-        # Linux: intentar con gsettings (GNOME) o xfconf (XFCE)
-        try:
-            result = subprocess.run(
-                ["gsettings", "get", "org.gnome.desktop.interface", "gtk-theme"],
-                capture_output=True,
-                text=True,
-                timeout=2
-            )
-            if result.returncode == 0:
-                theme = result.stdout.strip().lower()
-                is_dark = "dark" in theme
-        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-            pass
-        
-        if not is_dark:
-            try:
-                result = subprocess.run(
-                    ["xfconf-query", "-c", "xsettings", "-p", "/Net/ThemeName"],
-                    capture_output=True,
-                    text=True,
-                    timeout=2
-                )
-                if result.returncode == 0:
-                    theme = result.stdout.strip().lower()
-                    is_dark = "dark" in theme
-            except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-                pass
-        
-        if not is_dark:
-            # Fallback: usar la paleta de Qt
-            app = QApplication.instance()
-            if app:
-                palette = app.palette()
-                is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
-    
-    elif sys.platform.startswith("darwin"):
-        # macOS: usar defaults
-        try:
-            result = subprocess.run(
-                ["defaults", "read", "-g", "AppleInterfaceStyle"],
-                capture_output=True,
-                text=True,
-                timeout=2
-            )
-            if result.returncode == 0:
-                is_dark = "dark" in result.stdout.lower()
-        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-            pass
-        
-        if not is_dark:
-            app = QApplication.instance()
-            if app:
-                palette = app.palette()
-                is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
-    
-    else:
-        # Otros sistemas: usar la paleta de Qt
-        app = QApplication.instance()
-        if app:
-            palette = app.palette()
-            is_dark = palette.color(QtGui.QPalette.Window).lightness() < 128
-    
-    return "dark" if is_dark else "light"
+
 
 
 # =============================================================================

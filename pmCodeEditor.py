@@ -19,11 +19,34 @@ from typing import Optional, List, Dict, Any, Tuple
 
 EDITOR_CONFIG_PATH = Path(__file__).resolve().parent / "data" / "pmCodeEditor" / "editor_config.json"
 
+# --- Logging de la aplicación pmCodeEditor (archivo de trazas)
+import logging
+import traceback
+LOG_FILE = Path(__file__).resolve().parent / "pmcode_app.log"
+logging.basicConfig(
+    filename=str(LOG_FILE),
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(name)s: %(message)s'
+)
+
+def _log_exception(exc_type, exc_value, exc_tb):
+    logging.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_tb))
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write("\n--- Uncaught exception ---\n")
+            traceback.print_exception(exc_type, exc_value, exc_tb, file=f)
+    except Exception:
+        pass
+    # Delegar a hook por defecto para que también aparezca en stderr si procede
+    sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+sys.excepthook = _log_exception
+
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QPlainTextEdit, QWidget, QVBoxLayout,
     QHBoxLayout, QLabel, QPushButton, QFileDialog, QMessageBox,
     QDialog, QTextEdit, QLineEdit, QSplitter, QStatusBar,
-    QTreeView, QFrame, QMenuBar, QMenu, QGroupBox, QScrollArea, QGridLayout,
+    QTreeView, QFrame, QSizePolicy, QMenuBar, QMenu, QGroupBox, QScrollArea, QGridLayout,
     QInputDialog, QRadioButton, QListWidget, QListWidgetItem, QProgressBar,
 )
 from PyQt6.QtGui import (

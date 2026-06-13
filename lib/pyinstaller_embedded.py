@@ -102,7 +102,22 @@ class EmbeddedPyInstaller:
             args.append("--windowed")
         else:
             args.append("--console")
+            # En Linux, optimizar búsqueda de libpython
+            if sys.platform.startswith("linux"):
+                args.extend([
+                    "--bootloader-ignore-signals",
+                    "--copy-metadata=PyInstaller",
+                ])
         if icon_path and os.path.isfile(icon_path):
+            # Convertir ICO a PNG en Linux si es necesario
+            if sys.platform.startswith("linux") and icon_path.endswith(".ico"):
+                try:
+                    from lib.linux_icon_handler import convert_ico_to_png
+                    png_path = icon_path.replace(".ico", ".png")
+                    if convert_ico_to_png(icon_path, png_path):
+                        icon_path = png_path
+                except Exception:
+                    pass
             args.extend(["--icon", os.path.abspath(icon_path)])
         if add_data:
             for src, dst in add_data:
@@ -110,9 +125,17 @@ class EmbeddedPyInstaller:
         if hidden_imports:
             for imp in hidden_imports:
                 args.extend(["--hidden-import", imp])
-        if excludes:
-            for exc in excludes:
-                args.extend(["--exclude-module", exc])
+        
+        # Agregar excludes por defecto para acelerar compilación
+        default_excludes = ["matplotlib", "numpy", "scipy", "pandas", "sklearn", "tf", "keras"]
+        if excludes is None:
+            excludes = default_excludes
+        else:
+            excludes.extend(default_excludes)
+        
+        for exc in set(excludes):  # Usar set para evitar duplicados
+            args.extend(["--exclude-module", exc])
+        
         args.append(script_path)
 
         old_argv = sys.argv[:]

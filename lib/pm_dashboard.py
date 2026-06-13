@@ -434,7 +434,7 @@ class DashboardWindow(QMainWindow):
                 if main_script:
                     break
 
-        self._launch_editor(main_script, path)
+        self._launch_editor(main_script, path, self.python_path)
 
     def _open_as_generic_project(self, path: str):
         main_script = None
@@ -442,7 +442,7 @@ class DashboardWindow(QMainWindow):
             if fname.endswith(".py"):
                 main_script = os.path.join(path, fname)
                 break
-        self._launch_editor(main_script, path)
+        self._launch_editor(main_script, path, self.python_path)
 
     def _launch_editor(self, file_path: Optional[str], project_path: str):
         self.current_project = project_path
