@@ -20,6 +20,7 @@ from lib.github import get_latest_release, get_release_downloads
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config.from_object(config.get(os.environ.get('FLASK_ENV', 'default'), Config))
+app.secret_key = os.environ.get('SECRET_KEY', 'pm-secret-key-12345')
 
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -222,18 +223,32 @@ def index():
 @app.route('/create', methods=['GET', 'POST'])
 def create():
     if request.method == 'POST':
-        data = request.json
-        for field in ['publisher', 'name', 'version', 'title', 'author', 'platform']:
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.json
+        else:
+            data = request.form.to_dict()
+        
+        required = ['publisher', 'name', 'title', 'author', 'platform']
+        for field in required:
             if not data.get(field):
                 return jsonify({'success': False, 'error': f'Missing: {field}'}), 400
         
-        zip_bytes = create_project_zip(data)
-        return send_file(
-            io.BytesIO(zip_bytes),
-            mimetype='application/zip',
-            as_attachment=True,
-            download_name=f"{data['name']}.zip"
-        )
+        # Use default version if not provided
+        if not data.get('version'):
+            data['version'] = 'v1.0.0'
+        
+        try:
+            zip_bytes = create_project_zip(data)
+            return send_file(
+                io.BytesIO(zip_bytes),
+                mimetype='application/zip',
+                as_attachment=True,
+                download_name=f"{data['name']}.zip"
+            )
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
     return render_template('create.html', metadata=get_metadata())
 
 

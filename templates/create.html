@@ -65,31 +65,38 @@
 <script>
 document.getElementById('createForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const data = {
-        publisher: document.getElementById('publisher').value,
-        name: document.getElementById('name').value,
-        title: document.getElementById('title').value,
-        version: document.getElementById('version').value,
-        author: document.getElementById('author').value,
-        platform: document.getElementById('platform').value,
-        description: document.getElementById('description').value
-    };
+    
+    const formData = new FormData();
+    formData.append('publisher', document.getElementById('publisher').value);
+    formData.append('name', document.getElementById('name').value);
+    formData.append('title', document.getElementById('title').value);
+    formData.append('version', document.getElementById('version').value);
+    formData.append('author', document.getElementById('author').value);
+    formData.append('platform', document.getElementById('platform').value);
+    formData.append('description', document.getElementById('description').value);
+    
     try {
-        const res = await fetch('/create', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        const res = await fetch('/create', {
+            method: 'POST',
+            body: formData
+        });
+        
         if (res.ok) {
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${data.name}.zip`;
+            a.download = document.getElementById('name').value + '.zip';
             a.click();
             URL.revokeObjectURL(url);
-            showToast('Project downloaded!', 'success');
+            showToast('Project downloaded successfully!', 'success');
         } else {
             const d = await res.json();
-            showToast(d.error || 'Error', 'error');
+            showToast(d.error || 'Error creating project', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
+    } catch (err) {
+        showToast('Network error: ' + err.message, 'error');
+    }
 });
 </script>
 {% endblock %}

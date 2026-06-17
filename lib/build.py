@@ -45,47 +45,68 @@ def build_project(project_path, target_platform='Linux', log_callback=None):
         return None
 
 def create_project_zip(project_data):
+    """Create a complete project structure as a ZIP file in memory"""
+    # Normalize field names (form sends 'name', code expects 'app')
+    app_name = project_data.get('app') or project_data.get('name', 'app')
+    title = project_data.get('title') or project_data.get('name', 'App')
+    
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Main Python script
         main_script = f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-{project_data['name']} - {project_data['title']}
-Version: {project_data['version']}
-Author: {project_data['author']}
+{title}
+Version: {project_data.get('version', 'v1.0.0')}
+Author: {project_data.get('author', 'Unknown')}
 """
+
 def main():
-    print("Hello from {project_data['name']}!")
+    print("Hello from {title}!")
+    # Your code here
+
 if __name__ == "__main__":
     main()
 '''
-        zf.writestr(f"{project_data['app']}.py", main_script)
+        zf.writestr(f"{app_name}.py", main_script)
+        
+        # details.xml
         details_xml = f'''<?xml version="1.0" encoding="UTF-8"?>
 <app>
-    <publisher>{project_data['publisher']}</publisher>
-    <app>{project_data['app']}</app>
-    <name>{project_data['title']}</name>
-    <version>{project_data['version']}</version>
-    <correlationid>{hashlib.md5(str(datetime.now()).encode()).hexdigest()}</correlationid>
+    <publisher>{project_data.get('publisher', 'Unknown')}</publisher>
+    <app>{app_name}</app>
+    <name>{title}</name>
+    <version>{project_data.get('version', 'v1.0.0')}</version>
+    <correlationid>{hashlib.md5(str(datetime.now().isoformat()).encode()).hexdigest()[:16]}</correlationid>
     <rate>Todas las edades</rate>
-    <author>{project_data['author']}</author>
-    <platform>{project_data['platform']}</platform>
+    <author>{project_data.get('author', 'Unknown')}</author>
+    <platform>{project_data.get('platform', 'AlphaCube')}</platform>
     <description>{project_data.get('description', '')}</description>
     <year>{datetime.now().year}</year>
 </app>
 '''
         zf.writestr('details.xml', details_xml)
-        readme = f'''# {project_data['title']}
+        
+        # README.md
+        readme = f'''# {title}
+
 {project_data.get('description', 'A Fluthin application')}
+
 ## Information
-- Publisher: {project_data['publisher']}
-- Author: {project_data['author']}
-- Version: {project_data['version']}
-- Platform: {project_data['platform']}
+- **Publisher:** {project_data.get('publisher', 'Unknown')}
+- **Author:** {project_data.get('author', 'Unknown')}
+- **Version:** {project_data.get('version', 'v1.0.0')}
+- **Platform:** {project_data.get('platform', 'AlphaCube')}
+
+## Installation
+Download the `.iflapp` file and install using Package Maker or Fluthin Store.
 '''
         zf.writestr('README.md', readme)
+        
+        # Create directory structure
         for d in ['app', 'assets', 'config', 'docs', 'source', 'lib']:
             zf.writestr(f'{d}/.gitkeep', '')
+    
     zip_buffer.seek(0)
     return zip_buffer.getvalue()
 
