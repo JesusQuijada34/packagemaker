@@ -1,1 +1,1 @@
-# Package Maker Web - Core Library
+# Package Maker Web

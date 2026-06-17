@@ -328,6 +328,16 @@ def get_uploaded_files():
     return jsonify({'files': files})
 
 
+@app.route('/build')
+def build_page():
+    return render_template('build.html', metadata=get_metadata())
+
+
+@app.route('/moonfix')
+def moonfix():
+    return render_template('moonfix.html', metadata=get_metadata())
+
+
 @app.route('/download')
 def download():
     return render_template('download.html', metadata=get_metadata())
