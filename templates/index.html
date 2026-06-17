@@ -1,48 +1,412 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Download Package Maker{% endblock %}
 {% block title_bar %}Package Maker{% endblock %}
 {% block app_content %}
-<div class="main-content">
-    {% include 'sidebar.html' %}
-    <div class="content-area">
-        <div class="content-header">
-            <h1 class="content-title">Welcome to Package Maker</h1>
-            <p class="content-subtitle">The ultimate suite for creating and distributing Fluthin applications</p>
-        </div>
-        <div class="content-body">
-            <div class="card" style="text-align:center;padding:48px;background:linear-gradient(135deg,rgba(255,87,34,0.1) 0%,rgba(255,87,34,0.05) 100%);border-color:rgba(255,87,34,0.3);">
-                <div style="width:80px;height:80px;background:var(--accent);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+<div class="main-content" style="justify-content:center;align-items:center;">
+    <div class="content-area" style="overflow-y:auto;">
+        <div class="download-landing">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <div class="hero-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                 </div>
-                <h2 style="font-size:28px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">{{ metadata.get('name', 'Package Maker') }}</h2>
-                <p style="font-size:16px;color:var(--text-secondary);max-width:500px;margin:0 auto 24px;">{{ metadata.get('description', 'Suite definitiva para el ecosistema Influent OS') }}</p>
-                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-                    <a href="{{ url_for('create') }}" class="btn btn-primary btn-lg">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Get Started
-                    </a>
-                    <a href="{{ url_for('download') }}" class="btn btn-secondary btn-lg">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Download App
-                    </a>
+                <h1 class="hero-title">{{ metadata.get('name', 'Package Maker') }}</h1>
+                <p class="hero-description">{{ metadata.get('description', 'Suite definitiva para el ecosistema Influent OS') }}</p>
+                <div class="hero-version" id="heroVersion">
+                    <span class="badge badge-primary">Version {{ metadata.get('version', 'v3.2.7') }}</span>
                 </div>
-                <div style="margin-top:24px;"><span class="badge badge-primary">Version {{ metadata.get('version', 'v3.2.7') }}</span></div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:24px;">
-                <div class="card">
-                    <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Create Projects</h3>
-                    <p style="font-size:14px;color:var(--text-secondary);">Design applications from scratch with guided setup.</p>
+
+            <!-- Download Section -->
+            <div class="download-section" id="downloadSection">
+                <h2 class="section-title">Download for Your Platform</h2>
+                <p class="section-subtitle">Choose your operating system to download the latest version</p>
+                
+                <div class="platform-buttons">
+                    <a href="#" id="dlWindows" class="platform-btn" style="display:none;">
+                        <div class="platform-icon windows">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                        </div>
+                        <div class="platform-info">
+                            <span class="platform-name">Windows</span>
+                            <span class="platform-sub">Knosthalij Platform</span>
+                        </div>
+                        <div class="platform-arrow">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </div>
+                    </a>
+                    
+                    <a href="#" id="dlLinux" class="platform-btn" style="display:none;">
+                        <div class="platform-icon linux">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
+                        </div>
+                        <div class="platform-info">
+                            <span class="platform-name">Linux</span>
+                            <span class="platform-sub">Danenone Platform</span>
+                        </div>
+                        <div class="platform-arrow">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </div>
+                    </a>
                 </div>
-                <div class="card">
-                    <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Build Packages</h3>
-                    <p style="font-size:14px;color:var(--text-secondary);">Compile to .iflapp format ready for distribution.</p>
+
+                <!-- Loading State -->
+                <div id="loadingPlatforms" class="loading-platforms">
+                    <div class="spinner"></div>
+                    <p>Loading download links...</p>
                 </div>
-                <div class="card">
-                    <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">MoonFix Repair</h3>
-                    <p style="font-size:14px;color:var(--text-secondary);">Scan and fix package inconsistencies automatically.</p>
+
+                <!-- Fallback Info -->
+                <div id="platformFallback" class="platform-fallback" style="display:none;">
+                    <p>Platform downloads not available. <a href="https://github.com/JesusQuijada34/packagemaker/releases" target="_blank">View releases on GitHub</a></p>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="features-section">
+                <h2 class="section-title">Powerful Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        </div>
+                        <h3>Project Creation</h3>
+                        <p>Design applications from scratch with guided setup and templates</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <h3>Package Building</h3>
+                        <p>Compile to portable .iflapp format ready for distribution</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                        </div>
+                        <h3>MoonFix Repair</h3>
+                        <p>Scan and fix package inconsistencies automatically</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <h3>Fluthin Store</h3>
+                        <p>One-click installation via Fluthin Store ecosystem</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="about-section">
+                <h2 class="section-title">About</h2>
+                <div class="about-content">
+                    <p><strong>Influent Package Maker</strong> is the ultimate suite for creating and distributing applications in the Influent OS ecosystem. Build professional packages with ease.</p>
+                    <div class="about-meta">
+                        <span>Author: <strong>{{ metadata.get('author', 'JesusQuijada34') }}</strong></span>
+                        <span>Publisher: <strong>{{ metadata.get('publisher', 'Influent') }}</strong></span>
+                        <span>Platform: <strong>{{ metadata.get('platform', 'AlphaCube') }}</strong></span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_styles %}
+<style>
+.download-landing {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 32px;
+    text-align: center;
+}
+
+.hero-section {
+    margin-bottom: 48px;
+}
+
+.hero-icon {
+    width: 96px;
+    height: 96px;
+    background: linear-gradient(135deg, var(--accent) 0%, #ff7043 100%);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 12px 40px rgba(255, 87, 34, 0.4);
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 12px 40px rgba(255, 87, 34, 0.4); }
+    50% { box-shadow: 0 12px 60px rgba(255, 87, 34, 0.6); }
+}
+
+.hero-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+
+.hero-description {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 500px;
+    margin: 0 auto 20px;
+    line-height: 1.6;
+}
+
+.hero-version {
+    margin-top: 16px;
+}
+
+.download-section {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 48px;
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.section-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+}
+
+.platform-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.platform-btn {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.platform-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent);
+    transform: translateX(8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.platform-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.platform-icon.windows {
+    background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+}
+
+.platform-icon.linux {
+    background: linear-gradient(135deg, #107c10 0%, #0b5c0b 100%);
+}
+
+.platform-info {
+    flex: 1;
+    text-align: left;
+}
+
+.platform-name {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.platform-sub {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.platform-arrow {
+    color: var(--text-tertiary);
+    transition: all 0.2s;
+}
+
+.platform-btn:hover .platform-arrow {
+    color: var(--accent);
+    transform: translateX(4px);
+}
+
+.loading-platforms {
+    padding: 24px;
+    color: var(--text-secondary);
+}
+
+.loading-platforms .spinner {
+    margin: 0 auto 12px;
+}
+
+.platform-fallback {
+    padding: 24px;
+    color: var(--text-secondary);
+}
+
+.platform-fallback a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.platform-fallback a:hover {
+    text-decoration: underline;
+}
+
+.features-section {
+    margin-bottom: 48px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.feature-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.feature-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--accent-light);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: var(--accent);
+}
+
+.feature-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.feature-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.about-section {
+    text-align: left;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 32px;
+    border: 1px solid var(--border-color);
+}
+
+.about-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.about-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+.about-meta strong {
+    color: var(--text-primary);
+}
+</style>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadPlatformDownloads() {
+    const dlW = document.getElementById('dlWindows');
+    const dlL = document.getElementById('dlLinux');
+    const lp = document.getElementById('loadingPlatforms');
+    const pf = document.getElementById('platformFallback');
+    const hv = document.getElementById('heroVersion');
+    
+    try {
+        const res = await fetch('/api/release');
+        if (res.ok) {
+            const d = await res.json();
+            
+            // Update version badge
+            if (d.version) {
+                hv.innerHTML = `<span class="badge badge-primary">Version ${d.version}</span>`;
+            }
+            
+            let hasPlatform = false;
+            
+            // Windows button
+            if (d.downloads && d.downloads.windows) {
+                dlW.href = d.downloads.windows;
+                dlW.style.display = 'flex';
+                hasPlatform = true;
+            }
+            
+            // Linux button
+            if (d.downloads && d.downloads.linux) {
+                dlL.href = d.downloads.linux;
+                dlL.style.display = 'flex';
+                hasPlatform = true;
+            }
+            
+            lp.style.display = 'none';
+            
+            if (!hasPlatform) {
+                pf.style.display = 'block';
+            }
+        } else {
+            lp.innerHTML = '<p>Could not load release information</p>';
+        }
+    } catch (e) {
+        lp.innerHTML = '<p>Error loading downloads. Please try again later.</p>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadPlatformDownloads);
+</script>
 {% endblock %}
