@@ -21,7 +21,7 @@ from lib.github import get_latest_release, get_release_downloads
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config.from_object(config.get(os.environ.get('FLASK_ENV', 'default'), Config))
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # =============================================================================
 # MICA STYLES - Full Windows 11 / UWP
