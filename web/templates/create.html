@@ -1,16 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Create Project{% endblock %}
-{% block title_bar %}Create Project{% endblock %}
 {% block app_content %}
 <div class="main-content">
     {% include 'sidebar.html' %}
     <div class="content-area">
         <div class="content-header">
             <h1 class="content-title">Create New Project</h1>
-            <p class="content-subtitle">Fill in the project details to get started</p>
+            <p class="content-subtitle">Fill in the details to generate your project</p>
         </div>
         <div class="content-body">
-            <div class="card" style="max-width:700px;">
+            <div class="card" style="max-width:600px;">
                 <form id="createForm">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
@@ -20,42 +19,40 @@
                         <div class="form-group">
                             <label class="form-label">App Name *</label>
                             <input type="text" class="form-input" id="name" placeholder="e.g., myapp" required pattern="[a-zA-Z0-9-_]+">
-                            <small style="color:var(--text-tertiary);font-size:11px;">No spaces, use hyphens</small>
                         </div>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">Title *</label>
-                            <input type="text" class="form-input" id="title" placeholder="e.g., My Application" required>
+                            <input type="text" class="form-input" id="title" placeholder="My Application" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Version *</label>
-                            <input type="text" class="form-input" id="version" placeholder="e.g., v1.0.0" value="v1.0.0" required>
+                            <input type="text" class="form-input" id="version" value="v1.0.0" required>
                         </div>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group">
                             <label class="form-label">Author *</label>
-                            <input type="text" class="form-input" id="author" placeholder="e.g., John Doe" required>
+                            <input type="text" class="form-input" id="author" placeholder="Your Name" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Platform *</label>
                             <select class="form-input form-select" id="platform" required>
                                 <option value="AlphaCube">Multiplatform</option>
-                                <option value="Knosthalij">Windows only</option>
-                                <option value="Danenone">Linux only</option>
+                                <option value="Knosthalij">Windows</option>
+                                <option value="Danenone">Linux</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <textarea class="form-input form-textarea" id="description" placeholder="Brief description..." rows="3"></textarea>
+                        <textarea class="form-input" id="description" placeholder="Brief description..." rows="3"></textarea>
                     </div>
                     <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
-                        <button type="button" class="btn btn-secondary" onclick="history.back()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
-                            Create & Edit
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download ZIP
                         </button>
                     </div>
                 </form>
@@ -65,9 +62,8 @@
 </div>
 {% endblock %}
 {% block scripts %}
-{{ super() }}
 <script>
-document.getElementById('createForm').addEventListener('submit', async (e) => {
+document.getElementById('createForm').addEventListener('submit', async e => {
     e.preventDefault();
     const data = {
         publisher: document.getElementById('publisher').value,
@@ -79,10 +75,20 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
         description: document.getElementById('description').value
     };
     try {
-        const res = await fetch('/api/create-project', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-        const d = await res.json();
-        if (d.success) { showToast('Project created!', 'success'); window.location.href = `/editor/${d.project_name}`; }
-        else showToast(d.error || 'Failed', 'error');
+        const res = await fetch('/create', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        if (res.ok) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${data.name}.zip`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Project downloaded!', 'success');
+        } else {
+            const d = await res.json();
+            showToast(d.error || 'Error', 'error');
+        }
     } catch (err) { showToast(err.message, 'error'); }
 });
 </script>

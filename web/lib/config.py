@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Configuration module for Package Maker Web
+No persistent disks required - uses temp directories
 """
 
 import os
+import tempfile
 
 class Config:
     # Flask settings
@@ -17,22 +19,18 @@ class Config:
     GITHUB_REPO = os.environ.get('GITHUB_REPO', 'JesusQuijada34/packagemaker')
     
     # File upload settings
-    MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB
+    MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max upload
     ALLOWED_EXTENSIONS = {'zip', 'iflapp'}
     
-    # Paths (relative to web/)
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
-    PROJECTS_FOLDER = os.path.join(BASE_DIR, 'projects')
-    RELEASES_FOLDER = os.path.join(BASE_DIR, 'releases')
+    # Repo root (parent of web/)
+    REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    # Temp directories (no persistent disks needed)
+    TEMP_DIR = tempfile.gettempdir()
     
     # Server settings
     PORT = int(os.environ.get('PORT', 5000))
     DEBUG = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
-    
-    # Ensure directories exist
-    for _dir in [UPLOAD_FOLDER, PROJECTS_FOLDER, RELEASES_FOLDER]:
-        os.makedirs(_dir, exist_ok=True)
 
 
 class DevelopmentConfig(Config):

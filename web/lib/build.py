@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Build module - Integrates FlangCompiler for web-based builds
+Build module - Uses FlangCompiler from lib/BuildThread.py
 """
 
 import os
 import sys
+import io
 import zipfile
-import shutil
-import tempfile
 import hashlib
+import tempfile
+import shutil
 from pathlib import Path
 from datetime import datetime
 
-# Add parent directory to path for FlangCompiler import
+# Add repo root to path for FlangCompiler import
 _parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _repo_root = os.path.dirname(_parent_dir)
 if _repo_root not in sys.path:
@@ -50,22 +51,6 @@ def parse_details_xml(xml_path):
         }
 
 
-def extract_project_from_zip(zip_path, extract_to):
-    """Extract uploaded project zip"""
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_to)
-    
-    # Find the project root (contains details.xml)
-    for item in os.listdir(extract_to):
-        item_path = os.path.join(extract_to, item)
-        if os.path.isdir(item_path) and os.path.exists(os.path.join(item_path, 'details.xml')):
-            return item_path
-        if os.path.isfile(item_path) and item == 'details.xml':
-            return extract_to
-    
-    return extract_to
-
-
 def build_project(project_path, target_platform='Linux', log_callback=None):
     """Build project using FlangCompiler (headless mode)"""
     def log(msg):
@@ -77,8 +62,8 @@ def build_project(project_path, target_platform='Linux', log_callback=None):
     try:
         from lib.BuildThread import FlangCompiler
         
-        output_path = Path(_parent_dir) / 'releases'
-        output_path.mkdir(parents=True, exist_ok=True)
+        # Use temp directory for output
+        output_path = Path(tempfile.mkdtemp(prefix='pm_build_'))
         
         compiler = FlangCompiler(
             repo_path=Path(project_path),
@@ -96,18 +81,13 @@ def build_project(project_path, target_platform='Linux', log_callback=None):
         return None
 
 
-def create_project_structure(base_path, project_data):
-    """Create project directory structure"""
-    project_name = project_data['name']
-    project_path = os.path.join(base_path, project_name)
+def create_project_zip(project_data):
+    """Create project structure in memory and return as zip bytes"""
+    zip_buffer = io.BytesIO()
     
-    # Create directories
-    dirs = ['app', 'assets', 'config', 'docs', 'source', 'lib']
-    for d in dirs:
-        os.makedirs(os.path.join(project_path, d), exist_ok=True)
-    
-    # Create main script
-    main_script = f'''#!/usr/bin/env python3
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Main script
+        main_script = f'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 {project_data['name']} - {project_data['title']}
@@ -121,12 +101,10 @@ def main():
 if __name__ == "__main__":
     main()
 '''
-    
-    with open(os.path.join(project_path, f"{project_data['app']}.py"), 'w') as f:
-        f.write(main_script)
-    
-    # Create details.xml
-    details_xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+        zf.writestr(f"{project_data['app']}.py", main_script)
+        
+        # details.xml
+        details_xml = f'''<?xml version="1.0" encoding="UTF-8"?>
 <app>
     <publisher>{project_data['publisher']}</publisher>
     <app>{project_data['app']}</app>
@@ -140,12 +118,10 @@ if __name__ == "__main__":
     <year>{datetime.now().year}</year>
 </app>
 '''
-    
-    with open(os.path.join(project_path, 'details.xml'), 'w') as f:
-        f.write(details_xml)
-    
-    # Create README.md
-    readme = f'''# {project_data['title']}
+        zf.writestr('details.xml', details_xml)
+        
+        # README.md
+        readme = f'''# {project_data['title']}
 
 {project_data.get('description', 'A Fluthin application')}
 
@@ -158,23 +134,67 @@ if __name__ == "__main__":
 ## Installation
 Download the `.iflapp` file and install using Package Maker or Fluthin Store.
 '''
+        zf.writestr('README.md', readme)
+        
+        # Create directory structure
+        dirs = ['app', 'assets', 'config', 'docs', 'source', 'lib']
+        for d in dirs:
+            zf.writestr(f'{d}/.gitkeep', '')
     
-    with open(os.path.join(project_path, 'README.md'), 'w') as f:
-        f.write(readme)
-    
-    return project_path
+    zip_buffer.seek(0)
+    return zip_buffer.getvalue()
 
 
-def package_to_zip(project_path, output_path=None):
-    """Package a project folder to zip"""
-    if output_path is None:
-        output_path = str(Path(project_path).parent / f"{Path(project_path).name}.zip")
+def extract_project_from_zip(zip_bytes, project_name):
+    """Extract project from zip bytes to temp directory"""
+    temp_dir = Path(tempfile.mkdtemp(prefix=f'pm_{project_name}_'))
+    zip_buffer = io.BytesIO(zip_bytes)
     
-    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(zip_buffer, 'r') as zf:
+        zf.extractall(temp_dir)
+    
+    # Find project root
+    for item in temp_dir.iterdir():
+        if item.is_dir() and (item / 'details.xml').exists():
+            return str(item)
+        if item.name == 'details.xml':
+            return str(temp_dir)
+    
+    return str(temp_dir)
+
+
+def list_project_files(project_path):
+    """List all files in a project"""
+    files = []
+    for root, dirs, filenames in os.walk(project_path):
+        for filename in filenames:
+            full_path = os.path.join(root, filename)
+            rel_path = os.path.relpath(full_path, project_path)
+            try:
+                with open(full_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            except:
+                content = '[Binary file]'
+            files.append({'path': rel_path, 'name': filename, 'content': content})
+    return files
+
+
+def save_file(project_path, file_path, content):
+    """Save a file in the project"""
+    full_path = os.path.join(project_path, file_path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+
+def project_to_zip(project_path):
+    """Convert project directory to zip bytes"""
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk(project_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, project_path)
-                zipf.write(file_path, arcname)
-    
-    return output_path
+                zf.write(file_path, arcname)
+    zip_buffer.seek(0)
+    return zip_buffer.getvalue()
