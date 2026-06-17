@@ -360,10 +360,8 @@ def download():
 
 @app.route('/api/release')
 def api_release():
-    token = app.config.get('GITHUB_TOKEN')
-    repo = app.config.get('GITHUB_REPO')
-    if not token:
-        return jsonify({'error': 'Token not configured'}), 500
+    token = app.config.get('GITHUB_TOKEN', '')
+    repo = app.config.get('GITHUB_REPO', 'JesusQuijada34/packagemaker')
     try:
         release = get_latest_release(token, repo)
         if release:
