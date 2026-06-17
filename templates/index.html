@@ -2,9 +2,9 @@
 {% block title %}Download Package Maker{% endblock %}
 {% block title_bar %}Package Maker{% endblock %}
 {% block app_content %}
-<div class="main-content" style="justify-content:center;align-items:center;">
+<div class="main-content" style="justify-content:center;align-items:flex-start;">
     <div class="content-area" style="overflow-y:auto;">
-        <div class="download-landing">
+        <div class="download-landing" style="padding:48px 32px;">
             <!-- Hero Section -->
             <div class="hero-section">
                 <div class="hero-icon">
@@ -23,7 +23,7 @@
                 <p class="section-subtitle">Choose your operating system to download the latest version</p>
                 
                 <div class="platform-buttons">
-                    <a href="#" id="dlWindows" class="platform-btn" style="display:none;">
+                    <a href="https://github.com/JesusQuijada34/packagemaker/releases/latest" id="dlWindows" class="platform-btn" target="_blank">
                         <div class="platform-icon windows">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                         </div>
@@ -36,7 +36,7 @@
                         </div>
                     </a>
                     
-                    <a href="#" id="dlLinux" class="platform-btn" style="display:none;">
+                    <a href="https://github.com/JesusQuijada34/packagemaker/releases/latest" id="dlLinux" class="platform-btn" target="_blank">
                         <div class="platform-icon linux">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
                         </div>
@@ -50,8 +50,8 @@
                     </a>
                 </div>
 
-                <!-- Loading State -->
-                <div id="loadingPlatforms" class="loading-platforms">
+                <!-- Hidden loading state (only shows if JS fails) -->
+                <div id="loadingPlatforms" class="loading-platforms" style="display:none;">
                     <div class="spinner"></div>
                     <p>Loading download links...</p>
                 </div>
@@ -118,7 +118,6 @@
 .download-landing {
     max-width: 800px;
     margin: 0 auto;
-    padding: 48px 32px;
     text-align: center;
 }
 
@@ -364,7 +363,6 @@
 async function loadPlatformDownloads() {
     const dlW = document.getElementById('dlWindows');
     const dlL = document.getElementById('dlLinux');
-    const lp = document.getElementById('loadingPlatforms');
     const pf = document.getElementById('platformFallback');
     const hv = document.getElementById('heroVersion');
     
@@ -378,32 +376,30 @@ async function loadPlatformDownloads() {
                 hv.innerHTML = `<span class="badge badge-primary">Version ${d.version}</span>`;
             }
             
-            let hasPlatform = false;
-            
             // Windows button
             if (d.downloads && d.downloads.windows) {
                 dlW.href = d.downloads.windows;
-                dlW.style.display = 'flex';
-                hasPlatform = true;
+            } else {
+                dlW.style.display = 'none';
             }
             
             // Linux button
             if (d.downloads && d.downloads.linux) {
                 dlL.href = d.downloads.linux;
-                dlL.style.display = 'flex';
-                hasPlatform = true;
+            } else {
+                dlL.style.display = 'none';
             }
             
-            lp.style.display = 'none';
+            // Check if at least one platform is available
+            const windowsOk = d.downloads && d.downloads.windows;
+            const linuxOk = d.downloads && d.downloads.linux;
             
-            if (!hasPlatform) {
+            if (!windowsOk && !linuxOk) {
                 pf.style.display = 'block';
             }
-        } else {
-            lp.innerHTML = '<p>Could not load release information</p>';
         }
     } catch (e) {
-        lp.innerHTML = '<p>Error loading downloads. Please try again later.</p>';
+        // Keep default fallback links on error
     }
 }
 
