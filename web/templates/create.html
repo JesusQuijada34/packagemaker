@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Create Project{% endblock %}
+{% block title_bar %}Create Project{% endblock %}
+{% block app_content %}
+<div class="main-content">
+    {% include 'sidebar.html' %}
+    <div class="content-area">
+        <div class="content-header">
+            <h1 class="content-title">Create New Project</h1>
+            <p class="content-subtitle">Fill in the project details to get started</p>
+        </div>
+        <div class="content-body">
+            <div class="card" style="max-width:700px;">
+                <form id="createForm">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">Publisher *</label>
+                            <input type="text" class="form-input" id="publisher" placeholder="e.g., Influent" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">App Name *</label>
+                            <input type="text" class="form-input" id="name" placeholder="e.g., myapp" required pattern="[a-zA-Z0-9-_]+">
+                            <small style="color:var(--text-tertiary);font-size:11px;">No spaces, use hyphens</small>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-input" id="title" placeholder="e.g., My Application" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Version *</label>
+                            <input type="text" class="form-input" id="version" placeholder="e.g., v1.0.0" value="v1.0.0" required>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label class="form-label">Author *</label>
+                            <input type="text" class="form-input" id="author" placeholder="e.g., John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Platform *</label>
+                            <select class="form-input form-select" id="platform" required>
+                                <option value="AlphaCube">Multiplatform</option>
+                                <option value="Knosthalij">Windows only</option>
+                                <option value="Danenone">Linux only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input form-textarea" id="description" placeholder="Brief description..." rows="3"></textarea>
+                    </div>
+                    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:24px;">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
+                            Create & Edit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+document.getElementById('createForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        publisher: document.getElementById('publisher').value,
+        name: document.getElementById('name').value,
+        title: document.getElementById('title').value,
+        version: document.getElementById('version').value,
+        author: document.getElementById('author').value,
+        platform: document.getElementById('platform').value,
+        description: document.getElementById('description').value
+    };
+    try {
+        const res = await fetch('/api/create-project', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        const d = await res.json();
+        if (d.success) { showToast('Project created!', 'success'); window.location.href = `/editor/${d.project_name}`; }
+        else showToast(d.error || 'Failed', 'error');
+    } catch (err) { showToast(err.message, 'error'); }
+});
+</script>
+{% endblock %}

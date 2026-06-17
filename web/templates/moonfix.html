@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}MoonFix{% endblock %}
+{% block title_bar %}MoonFix Suite{% endblock %}
+{% block app_content %}
+<div class="main-content">
+    {% include 'sidebar.html' %}
+    <div class="content-area">
+        <div class="content-header">
+            <h1 class="content-title">MoonFix Suite</h1>
+            <p class="content-subtitle">Deep repair and optimization for your packages</p>
+        </div>
+        <div class="content-body">
+            <div class="card">
+                <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:16px;">Upload Package for Analysis</h3>
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div>
+                    <p class="drop-zone-text">Drop .iflapp or .zip file here</p>
+                    <p class="drop-zone-hint">Click or drag to upload</p>
+                    <input type="file" id="fileInput" accept=".zip,.iflapp" style="display:none;">
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:16px;">Features</h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+                    <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--border-radius);">
+                        <h4 style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">XML Validation</h4>
+                        <p style="font-size:13px;color:var(--text-secondary);">Check details.xml for missing tags.</p>
+                    </div>
+                    <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--border-radius);">
+                        <h4 style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Icon Verification</h4>
+                        <p style="font-size:13px;color:var(--text-secondary);">Ensure all icons exist and are valid.</p>
+                    </div>
+                    <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--border-radius);">
+                        <h4 style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Metadata Repair</h4>
+                        <p style="font-size:13px;color:var(--text-secondary);">Fix version, author info.</p>
+                    </div>
+                    <div style="padding:16px;background:var(--bg-tertiary);border-radius:var(--border-radius);">
+                        <h4 style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Integrity Check</h4>
+                        <p style="font-size:13px;color:var(--text-secondary);">Verify all referenced files exist.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) showToast('Analysis coming soon!', 'info'); });
+</script>
+{% endblock %}

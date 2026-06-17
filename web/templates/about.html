@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+{% block title_bar %}About{% endblock %}
+{% block app_content %}
+<div class="main-content">
+    {% include 'sidebar.html' %}
+    <div class="content-area">
+        <div class="content-header">
+            <h1 class="content-title">About</h1>
+            <p class="content-subtitle">Technical details and information</p>
+        </div>
+        <div class="content-body">
+            <div class="card" style="text-align:center;padding:40px;">
+                <div style="width:100px;height:100px;background:var(--accent);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 32px rgba(255,87,34,0.3);">
+                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <h2 style="font-size:28px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">{{ metadata.get('name', 'Package Maker') }}</h2>
+                <p style="font-size:16px;color:var(--text-secondary);margin-bottom:16px;">{{ metadata.get('version', 'v3.2.7') }}</p>
+                <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:20px;">
+                    <span class="badge badge-primary">{{ metadata.get('publisher', 'Influent') }}</span>
+                    <span class="badge badge-info">{{ metadata.get('platform', 'AlphaCube') }}</span>
+                    <span class="badge badge-success">GPL License</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:16px;">Details</h3>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border-color);"><span style="color:var(--text-secondary);">Publisher</span><span style="color:var(--text-primary);font-weight:500;">{{ metadata.get('publisher', 'Influent') }}</span></div>
+                    <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border-color);"><span style="color:var(--text-secondary);">Author</span><span style="color:var(--text-primary);font-weight:500;">{{ metadata.get('author', 'JesusQuijada34') }}</span></div>
+                    <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border-color);"><span style="color:var(--text-secondary);">Version</span><span style="color:var(--text-primary);font-weight:500;">{{ metadata.get('version', 'v3.2.7') }}</span></div>
+                    <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border-color);"><span style="color:var(--text-secondary);">Platform</span><span style="color:var(--text-primary);font-weight:500;">{{ metadata.get('platform', 'AlphaCube') }}</span></div>
+                    <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);">Year</span><span style="color:var(--text-primary);font-weight:500;">{{ metadata.get('year', '2025') }}</span></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:16px;">Description</h3>
+                <p style="color:var(--text-secondary);line-height:1.7;">{{ metadata.get('description', 'Suite definitiva para el ecosistema Influent OS. Package Maker permite a los desarrolladores crear, compilar y distribuir aplicaciones en el ecosistema Fluthin.') }}</p>
+            </div>
+            <div class="card" style="margin-top:16px;">
+                <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:16px;">License</h3>
+                <p style="color:var(--text-secondary);line-height:1.7;">GNU General Public License (GPL). You are free to use, modify, and distribute this software.</p>
+                <p style="color:var(--text-tertiary);font-size:13px;margin-top:16px;">© {{ metadata.get('year', '2025') }} {{ metadata.get('publisher', 'Influent') }}. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

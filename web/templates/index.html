@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block title_bar %}Package Maker{% endblock %}
+{% block app_content %}
+<div class="main-content">
+    {% include 'sidebar.html' %}
+    <div class="content-area">
+        <div class="content-header">
+            <h1 class="content-title">Welcome to Package Maker</h1>
+            <p class="content-subtitle">The ultimate suite for creating and distributing Fluthin applications</p>
+        </div>
+        <div class="content-body">
+            <div class="card" style="text-align:center;padding:48px;background:linear-gradient(135deg,rgba(255,87,34,0.1) 0%,rgba(255,87,34,0.05) 100%);border-color:rgba(255,87,34,0.3);">
+                <div style="width:80px;height:80px;background:var(--accent);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <h2 style="font-size:28px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">{{ metadata.get('name', 'Package Maker') }}</h2>
+                <p style="font-size:16px;color:var(--text-secondary);max-width:500px;margin:0 auto 24px;">{{ metadata.get('description', 'Suite definitiva para el ecosistema Influent OS') }}</p>
+                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                    <a href="{{ url_for('create') }}" class="btn btn-primary btn-lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Get Started
+                    </a>
+                    <a href="{{ url_for('download') }}" class="btn btn-secondary btn-lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download App
+                    </a>
+                </div>
+                <div style="margin-top:24px;"><span class="badge badge-primary">Version {{ metadata.get('version', 'v3.2.7') }}</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:24px;">
+                <div class="card">
+                    <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Create Projects</h3>
+                    <p style="font-size:14px;color:var(--text-secondary);">Design applications from scratch with guided setup.</p>
+                </div>
+                <div class="card">
+                    <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Build Packages</h3>
+                    <p style="font-size:14px;color:var(--text-secondary);">Compile to .iflapp format ready for distribution.</p>
+                </div>
+                <div class="card">
+                    <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">MoonFix Repair</h3>
+                    <p style="font-size:14px;color:var(--text-secondary);">Scan and fix package inconsistencies automatically.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

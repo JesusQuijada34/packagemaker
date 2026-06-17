@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Download{% endblock %}
+{% block title_bar %}Download{% endblock %}
+{% block app_content %}
+<div class="main-content" style="justify-content:center;">
+    <div class="content-area" style="overflow-y:auto;">
+        <div class="download-page">
+            <div class="download-header">
+                <div class="download-icon" style="width:80px;height:80px;background:var(--accent);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 24px rgba(255,87,34,0.3);">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <h1 class="download-title">{{ metadata.get('name', 'Package Maker') }}</h1>
+                <p class="download-version">{{ metadata.get('version', 'v3.2.7') }}</p>
+                <p style="color:var(--text-secondary);margin-top:8px;max-width:500px;margin-left:auto;margin-right:auto;">{{ metadata.get('description', 'Suite for Influent OS ecosystem') }}</p>
+            </div>
+            <div class="download-buttons">
+                <a href="#" id="dlWindows" class="download-btn" style="display:none;">
+                    <div class="download-btn-text">
+                        <div class="download-btn-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+                        <div><div class="download-btn-label">Download for Windows</div><div class="download-btn-sub">Knosthalij platform</div></div>
+                    </div>
+                    <div class="download-btn-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                </a>
+                <a href="#" id="dlLinux" class="download-btn" style="display:none;">
+                    <div class="download-btn-text">
+                        <div class="download-btn-icon" style="background:#107c10;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/></svg></div>
+                        <div><div class="download-btn-label">Download for Linux</div><div class="download-btn-sub">Danenone platform</div></div>
+                    </div>
+                    <div class="download-btn-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                </a>
+                <a href="flarmstore://JesusQuijada34.packagemaker/" class="download-btn">
+                    <div class="download-btn-text">
+                        <div class="download-btn-icon" style="background:#6200ea;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+                        <div><div class="download-btn-label">Install via Fluthin Store</div><div class="download-btn-sub">One-click installation</div></div>
+                    </div>
+                    <div class="download-btn-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+                </a>
+            </div>
+            <div id="loadingState" style="text-align:center;padding:24px;"><div class="spinner" style="margin:0 auto 16px;"></div><p style="color:var(--text-secondary);">Loading release info...</p></div>
+            <div id="releaseNotes" class="readme-content" style="display:none;"></div>
+            <div id="localReadme" class="readme-content">
+                <h2>About Package Maker</h2>
+                <p><strong>Influent Package Maker</strong> is the ultimate suite for creating and distributing applications in the Influent OS ecosystem.</p>
+                <h3>Features</h3>
+                <ul>
+                    <li><strong>Project Creation</strong> - Design applications with guided setup</li>
+                    <li><strong>Package Building</strong> - Compile to portable .iflapp files</li>
+                    <li><strong>MoonFix</strong> - Repair package inconsistencies</li>
+                    <li><strong>Multi-platform</strong> - Windows (Knosthalij) and Linux (Danenone)</li>
+                </ul>
+                <h3>Platforms</h3>
+                <ul>
+                    <li><strong>AlphaCube</strong> - Cross-platform applications</li>
+                    <li><strong>Knosthalij</strong> - Windows-specific</li>
+                    <li><strong>Danenone</strong> - Linux-specific</li>
+                </ul>
+                <h3>License</h3>
+                <p>GNU General Public License (GPL)</p>
+                <p style="margin-top:16px;"><strong>{{ metadata.get('author', 'JesusQuijada34') }}</strong><br>{{ metadata.get('publisher', 'Influent') }} © {{ metadata.get('year', '2025') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+async function loadReleaseInfo() {
+    const ls = document.getElementById('loadingState');
+    const dlW = document.getElementById('dlWindows');
+    const dlL = document.getElementById('dlLinux');
+    const rn = document.getElementById('releaseNotes');
+    const lr = document.getElementById('localReadme');
+    try {
+        const res = await fetch('/api/github-release');
+        if (res.ok) {
+            const d = await res.json();
+            if (d.downloads.windows) { dlW.href = d.downloads.windows; dlW.style.display = 'flex'; }
+            if (d.downloads.linux) { dlL.href = d.downloads.linux; dlL.style.display = 'flex'; }
+            if (d.body) { rn.innerHTML = `<h2>Release Notes</h2><p>${d.body.replace(/\n/g, '<br>')}</p>`; rn.style.display = 'block'; }
+        } else { lr.style.display = 'block'; }
+    } catch { lr.style.display = 'block'; }
+    ls.style.display = 'none';
+}
+document.addEventListener('DOMContentLoaded', loadReleaseInfo);
+</script>
+{% endblock %}

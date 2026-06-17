@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ metadata.get('name', 'Package Maker') }}{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>{{ base_qss | safe }}{% block extra_styles %}{% endblock %}</style>
+</head>
+<body>
+    <div class="title-bar">
+        <div class="title-bar-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#ff5722"/><path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>{% block title_bar %}Package Maker{% endblock %}</span>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn minimize" onclick="window.minimize && window.minimize()"><svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.5"/></svg></button>
+            <button class="title-bar-btn maximize" onclick="window.maximize && window.maximize()"><svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
+            <button class="title-bar-btn close" onclick="window.close && window.close()"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5"/></svg></button>
+        </div>
+    </div>
+    <div class="app-container">
+        {% block app_content %}
+        <div class="main-content">
+            {% include 'sidebar.html' %}
+            <div class="content-area">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+        {% endblock %}
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        function showToast(m, t = 'info') {
+            const c = document.getElementById('toastContainer');
+            const to = document.createElement('div');
+            to.className = `toast toast-${t}`;
+            to.innerHTML = `<span>${m}</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;margin-left:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
+            c.appendChild(to);
+            setTimeout(() => { to.style.animation = 'slideIn 0.3s ease reverse'; setTimeout(() => to.remove(), 300); }, 5000);
+        }
+        window.minimize = () => window.electronAPI && window.electronAPI.minimize();
+        window.maximize = () => window.electronAPI && window.electronAPI.maximize();
+        window.close = () => window.electronAPI && window.electronAPI.close();
+        {% block scripts %}{% endblock %}
+    </script>
+</body>
+</html>

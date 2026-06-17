@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Build{% endblock %}
+{% block title_bar %}Build Package{% endblock %}
+{% block app_content %}
+<div class="main-content">
+    {% include 'sidebar.html' %}
+    <div class="content-area">
+        <div class="content-header">
+            <h1 class="content-title">Build Package</h1>
+            <p class="content-subtitle">Compile your project into a distributable .iflapp file</p>
+        </div>
+        <div class="content-body">
+            {% if projects %}
+            {% for p in projects %}
+            <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <div style="width:48px;height:48px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                        </div>
+                        <div>
+                            <h4 style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">{{ p.metadata.name }}</h4>
+                            <p style="font-size:13px;color:var(--text-secondary);">{{ p.metadata.publisher }} / {{ p.metadata.version }} / <span class="badge badge-info">{{ p.metadata.platform }}</span></p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="buildProject('{{ p.name }}')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Build
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="card" style="text-align:center;padding:48px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5" style="margin-bottom:16px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+                <h3 style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">No Projects</h3>
+                <p style="font-size:14px;color:var(--text-secondary);margin-bottom:24px;">Create or upload a project to build.</p>
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <a href="{{ url_for('create') }}" class="btn btn-primary">Create Project</a>
+                    <a href="{{ url_for('upload') }}" class="btn btn-secondary">Upload Project</a>
+                </div>
+            </div>
+            {% endif %}
+            <div id="buildProgress" class="card" style="display:none;margin-top:16px;">
+                <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+                    <div class="spinner" style="width:24px;height:24px;border-width:2px;"></div>
+                    <div>
+                        <h4 style="font-size:15px;font-weight:600;color:var(--text-primary);">Building...</h4>
+                        <p style="font-size:13px;color:var(--text-secondary);" id="buildStatus">Preparing</p>
+                    </div>
+                </div>
+                <div class="progress"><div class="progress-bar" id="buildProgressBar" style="width:0%"></div></div>
+            </div>
+            <div id="buildResult" class="card" style="display:none;margin-top:16px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+async function buildProject(name) {
+    const bp = document.getElementById('buildProgress');
+    const br = document.getElementById('buildResult');
+    const bb = document.getElementById('buildProgressBar');
+    bp.style.display = 'block';
+    br.style.display = 'none';
+    bb.style.width = '0%';
+    let prog = 0;
+    const iv = setInterval(() => { prog = Math.min(prog + Math.random() * 15, 90); bb.style.width = prog + '%'; }, 500);
+    try {
+        const res = await fetch(`/api/build/${name}`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target:'Linux'})});
+        clearInterval(iv); bb.style.width = '100%';
+        const d = await res.json();
+        if (d.success) { br.innerHTML = `<div style="display:flex;align-items:center;gap:16px;"><div style="width:48px;height:48px;background:rgba(16,124,16,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#107c10" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><h4 style="font-size:15px;font-weight:600;color:var(--text-primary);">Build Successful</h4><p style="font-size:13px;color:var(--text-secondary);">Output: ${d.output}</p></div></div>`; showToast('Build successful!', 'success'); }
+        else { br.innerHTML = `<div style="display:flex;align-items:center;gap:16px;"><div style="width:48px;height:48px;background:rgba(196,43,28,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c42b1c" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div><h4 style="font-size:15px;font-weight:600;color:var(--text-primary);">Build Failed</h4><p style="font-size:13px;color:var(--text-secondary);">${d.error}</p></div></div>`; showToast('Build failed', 'error'); }
+    } catch (e) { clearInterval(iv); showToast(e.message, 'error'); }
+    bp.style.display = 'none';
+    br.style.display = 'block';
+}
+</script>
+{% endblock %}
