@@ -350,6 +350,10 @@
 {% endblock %}
 {% block scripts %}
 <script>
+const REPO_OWNER = 'JesusQuijada34';
+const REPO_NAME = 'packagemaker';
+const FLUTHIN_URL = 'flarmstore://JesusQuijada34.packagemaker/';
+
 async function loadPlatformDownloads() {
     const dlW = document.getElementById('dlWindows');
     const dlL = document.getElementById('dlLinux');
@@ -357,41 +361,52 @@ async function loadPlatformDownloads() {
     const hv = document.getElementById('heroVersion');
     
     try {
-        const res = await fetch('/api/release');
-        if (res.ok) {
-            const d = await res.json();
-            
-            // Update version badge
-            if (d.version) {
-                hv.innerHTML = `<span class="win11-badge">Version ${d.version}</span>`;
+        // Fetch directly from GitHub API (public repo, no auth needed)
+        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`);
+        
+        if (!res.ok) throw new Error('API error');
+        
+        const release = await res.json();
+        
+        // Update version badge
+        if (release.tag_name) {
+            const version = release.tag_name.replace('v', '');
+            hv.innerHTML = `<span class="win11-badge">Version ${version}</span>`;
+        }
+        
+        // Parse downloads from assets
+        let windowsUrl = null;
+        let linuxUrl = null;
+        
+        for (const asset of release.assets || []) {
+            const name = asset.name.toLowerCase();
+            if (name.includes('knosthalij') || name.includes('windows')) {
+                windowsUrl = asset.browser_download_url;
+            } else if (name.includes('danenone') || name.includes('linux')) {
+                linuxUrl = asset.browser_download_url;
             }
-            
-            // Check downloads for each platform
-            const hasWindows = d.downloads && d.downloads.windows;
-            const hasLinux = d.downloads && d.downloads.linux;
-            
-            // Show Windows button if available
-            if (hasWindows) {
-                dlW.href = d.downloads.windows;
-                dlW.style.display = 'flex';
-            }
-            
-            // Show Linux button if available
-            if (hasLinux) {
-                dlL.href = d.downloads.linux;
-                dlL.style.display = 'flex';
-            }
-            
-            // If no platform downloads, show Fluthin Store fallback
-            if (!hasWindows && !hasLinux) {
-                dlF.style.display = 'flex';
-            }
-        } else {
-            // API error - show Fluthin fallback
+        }
+        
+        // Show Windows button if available
+        if (windowsUrl) {
+            dlW.href = windowsUrl;
+            dlW.style.display = 'flex';
+        }
+        
+        // Show Linux button if available
+        if (linuxUrl) {
+            dlL.href = linuxUrl;
+            dlL.style.display = 'flex';
+        }
+        
+        // If no platform downloads, show Fluthin Store fallback
+        if (!windowsUrl && !linuxUrl) {
             dlF.style.display = 'flex';
         }
+        
     } catch (e) {
-        // Network error - show Fluthin fallback
+        console.error('Error loading downloads:', e);
+        // Show Fluthin fallback on error
         dlF.style.display = 'flex';
     }
 }
