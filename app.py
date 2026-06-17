@@ -217,7 +217,23 @@ def get_metadata():
 
 @app.route('/')
 def index():
-    return render_template('index.html', metadata=get_metadata())
+    # Get download URLs server-side
+    downloads = {'windows': None, 'linux': None, 'version': None}
+    try:
+        release = get_latest_release('', 'JesusQuijada34/packagemaker')
+        if release:
+            downloads['version'] = release.get('tag_name', '').replace('v', '')
+            for asset in release.get('assets', []):
+                name = asset.get('name', '').lower()
+                url = asset.get('browser_download_url', '')
+                if 'knosthalij' in name or 'windows' in name:
+                    downloads['windows'] = url
+                elif 'danenone' in name or 'linux' in name:
+                    downloads['linux'] = url
+    except Exception as e:
+        print(f"Error fetching downloads: {e}")
+    
+    return render_template('index.html', metadata=get_metadata(), downloads=downloads)
 
 
 @app.route('/create', methods=['GET', 'POST'])

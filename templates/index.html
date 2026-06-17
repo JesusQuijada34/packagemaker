@@ -17,8 +17,8 @@
                 </div>
                 <h1 class="win11-title">Package Maker</h1>
                 <p class="win11-subtitle">{{ metadata.get('description', 'Suite definitiva para el ecosistema Influent OS') }}</p>
-                <div class="win11-version-badge" id="heroVersion">
-                    <span class="win11-badge">Version {{ metadata.get('version', 'v3.2.7') }}</span>
+                <div class="win11-version-badge">
+                    <span class="win11-badge">Version {{ downloads.get('version', metadata.get('version', 'v3.2.7')) }}</span>
                 </div>
             </div>
 
@@ -26,8 +26,9 @@
             <div class="win11-download-cards">
                 <h2 class="win11-section-title">Descargas Directas</h2>
                 
+                {% if downloads.get('windows') %}
                 <!-- Windows Download -->
-                <a href="#" id="dlWindows" class="win11-download-card" style="display:none;">
+                <a href="{{ downloads.windows }}" class="win11-download-card">
                     <div class="win11-card-icon win11-icon-windows">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                     </div>
@@ -39,9 +40,11 @@
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </div>
                 </a>
-
+                {% endif %}
+                
+                {% if downloads.get('linux') %}
                 <!-- Linux Download -->
-                <a href="#" id="dlLinux" class="win11-download-card" style="display:none;">
+                <a href="{{ downloads.linux }}" class="win11-download-card">
                     <div class="win11-card-icon win11-icon-linux">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
                     </div>
@@ -53,9 +56,11 @@
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </div>
                 </a>
-
+                {% endif %}
+                
+                {% if not downloads.get('windows') and not downloads.get('linux') %}
                 <!-- Fluthin Store Fallback (shown when no platform downloads) -->
-                <a href="flarmstore://JesusQuijada34.packagemaker/" id="dlFluthin" class="win11-download-card win11-card-fluthin" style="display:none;">
+                <a href="flarmstore://JesusQuijada34.packagemaker/" class="win11-download-card win11-card-fluthin">
                     <div class="win11-card-icon win11-icon-fluthin">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                     </div>
@@ -67,6 +72,7 @@
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
                 </a>
+                {% endif %}
             </div>
 
             <!-- Features Preview -->
@@ -350,67 +356,7 @@
 {% endblock %}
 {% block scripts %}
 <script>
-const REPO_OWNER = 'JesusQuijada34';
-const REPO_NAME = 'packagemaker';
-const FLUTHIN_URL = 'flarmstore://JesusQuijada34.packagemaker/';
-
-async function loadPlatformDownloads() {
-    const dlW = document.getElementById('dlWindows');
-    const dlL = document.getElementById('dlLinux');
-    const dlF = document.getElementById('dlFluthin');
-    const hv = document.getElementById('heroVersion');
-    
-    try {
-        // Fetch directly from GitHub API (public repo, no auth needed)
-        const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`);
-        
-        if (!res.ok) throw new Error('API error');
-        
-        const release = await res.json();
-        
-        // Update version badge
-        if (release.tag_name) {
-            const version = release.tag_name.replace('v', '');
-            hv.innerHTML = `<span class="win11-badge">Version ${version}</span>`;
-        }
-        
-        // Parse downloads from assets
-        let windowsUrl = null;
-        let linuxUrl = null;
-        
-        for (const asset of release.assets || []) {
-            const name = asset.name.toLowerCase();
-            if (name.includes('knosthalij') || name.includes('windows')) {
-                windowsUrl = asset.browser_download_url;
-            } else if (name.includes('danenone') || name.includes('linux')) {
-                linuxUrl = asset.browser_download_url;
-            }
-        }
-        
-        // Show Windows button if available
-        if (windowsUrl) {
-            dlW.href = windowsUrl;
-            dlW.style.display = 'flex';
-        }
-        
-        // Show Linux button if available
-        if (linuxUrl) {
-            dlL.href = linuxUrl;
-            dlL.style.display = 'flex';
-        }
-        
-        // If no platform downloads, show Fluthin Store fallback
-        if (!windowsUrl && !linuxUrl) {
-            dlF.style.display = 'flex';
-        }
-        
-    } catch (e) {
-        console.error('Error loading downloads:', e);
-        // Show Fluthin fallback on error
-        dlF.style.display = 'flex';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', loadPlatformDownloads);
+// Download URLs are now server-side rendered
+// No client-side JavaScript needed for downloads
 </script>
 {% endblock %}
