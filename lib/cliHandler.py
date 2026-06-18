@@ -23,6 +23,7 @@ class CLIHandler:
         self.parser.add_argument('--compact', action='store_true', help='Ejecutar en modo compacto para invocaciones de shell')
         self.parser.add_argument('--shell-mode', action='store_true', help='Ejecutar en modo shell integrado')
         self.parser.add_argument('--version', action='store_true', help='Mostrar la versión de la aplicación')
+        self.parser.add_argument('--tui', action='store_true', help='Iniciar interfaz de texto (TUI) en la terminal')
 
         subparsers = self.parser.add_subparsers(dest='command', help='Comandos principales')
 
@@ -215,7 +216,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             platform_value = normalize_platform(project_source.get('platform')) if project_source.get('platform') else normalize_platform('Knosthalij')
             description = project_source.get('description') or 'Proyecto creado con Influent Package Maker'
 
-            print(f"🚀 Creando proyecto en: {project_path}")
+            print(f"[INFO] Creando proyecto en: {project_path}")
             create_project_from_templates(
                 project_path,
                 publisher,
@@ -226,7 +227,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 version_base=version_base,
                 description=description,
             )
-            print(f"✨ Proyecto creado correctamente: {project_path}")
+            print(f"[OK] Proyecto creado correctamente: {project_path}")
             return None
 
         if window and data:
@@ -243,9 +244,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             scripts = kwargs.get('scripts')
             optimize = kwargs.get('optimize')
 
-            print(f"🚀 Iniciando compilación headless...")
-            print(f"📂 Proyecto: {project_path}")
-            print(f"📦 Salida: {output_path}")
+            print(f"[INFO] Iniciando compilación headless...")
+            print(f"[INFO] Proyecto: {project_path}")
+            print(f"[INFO] Salida: {output_path}")
             compiler = FlangCompiler(project_path, output_path, log_callback=print)
             if scripts:
                 compiler.scripts_to_compile = [s.strip() for s in scripts.split(',') if s.strip()]
@@ -261,9 +262,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                     target_platform = 'Linux'
                 else:
                     target_platform = 'Windows' if sys.platform.startswith('win') else 'Linux'
-                print(f"🔎 Objetivo detectado automáticamente: {target_platform}")
+                print(f"[INFO] Objetivo detectado automáticamente: {target_platform}")
             else:
-                print(f"💻 Objetivo: {target_platform}")
+                print(f"[INFO] Objetivo: {target_platform}")
 
             if not compiler.find_scripts():
                 sys.exit(1)
@@ -323,16 +324,16 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 platform_value = 'Knosthalij'
 
             description = kwargs.get('description') or 'Proyecto reparado por MoonFix'
-            print(f"🌙 Ejecutando MoonFix para: {project_path}")
-            print(f"📌 Plataforma objetivo: {platform_value}")
+            print(f"[INFO] Ejecutando MoonFix para: {project_path}")
+            print(f"[INFO] Plataforma objetivo: {platform_value}")
             if kwargs.get('verify_files'):
-                print("🔎 Verificando archivos faltantes...")
+                print("[INFO] Verificando archivos faltantes...")
             if kwargs.get('update_config'):
-                print("⚙️ Actualizando configuraciones antiguas...")
+                print("[INFO] Actualizando configuraciones antiguas...")
             if kwargs.get('repair_structure'):
-                print("🏗️ Reparando estructura de carpetas...")
+                print("[INFO] Reparando estructura de carpetas...")
             if kwargs.get('check_deps'):
-                print("📦 Verificando dependencias...")
+                print("[INFO] Verificando dependencias...")
 
             result = repair_project_from_templates(
                 project_path,
@@ -345,7 +346,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 description=description,
             )
             repaired_files = result.get('files', [])
-            print(f"✨ MoonFix completado. Archivos reparados/restaurados: {len(repaired_files)}")
+            print(f"[OK] MoonFix completado. Archivos reparados/restaurados: {len(repaired_files)}")
             for item in repaired_files:
                 print(f"  - {item}")
             return None

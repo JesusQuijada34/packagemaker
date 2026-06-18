@@ -5140,6 +5140,12 @@ def main():
                 version = "3.2.7" # Fallback
             print(f"Influent Package Maker v{version}")
             sys.exit(0)
+
+        # ── Modo TUI explícito ─────────────────────────────────────────────
+        if getattr(args, 'tui', False):
+            from lib.tui import run_tui
+            run_tui()
+            return
         
         action, data, action_options = cli.get_action(args)
         
@@ -5164,6 +5170,17 @@ def main():
                 sys.exit(app.exec())
             return
     
+    # ── Sin args: lanzar GUI o TUI según el entorno ───────────────────────────
+    # En entornos sin display (SSH sin DISPLAY, CI, WSL puro) lanzar TUI automáticamente.
+    _no_display = (
+        not PYQT6_AVAILABLE
+        or (sys.platform.startswith("linux") and not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"))
+    )
+    if _no_display:
+        from lib.tui import run_tui
+        run_tui()
+        return
+
     app = QApplication(sys.argv)
     app.setFont(APP_FONT)
     
