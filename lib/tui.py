@@ -96,6 +96,7 @@ def _print_menu(title: str, options: List[str], back_label: str = "Volver") -> N
     for i, opt in enumerate(options, 1):
         print(f"  {bold(str(i))}.  {opt}")
     print(f"  {bold('0')}.  {dim(back_label)}")
+    print(f"  {dim('q/b')}.  {dim('Salir/Regresar')}")
     print(_hr())
 
 
@@ -139,10 +140,22 @@ def _prompt_choice(label: str, choices: List[str], default: int = 0) -> int:
     return default
 
 
-def _select_menu(prompt: str) -> int:
-    """Lee un número del menú; retorna -1 en error/interrupción."""
+def _select_menu(prompt: str, allow_back: bool = True) -> int:
+    """
+    Lee un número del menú; retorna -1 en error/interrupción.
+    
+    Args:
+        prompt: Texto del prompt
+        allow_back: Si True, permite regresar con 'q', 'b' o '0'
+    
+    Returns:
+        int: Número seleccionado o -1 si se cancela
+    """
+    back_hint = " [q=Salir, 0=Volver]" if allow_back else ""
     try:
-        raw = input(f"\n  {cyan('›')} {prompt}: ").strip()
+        raw = input(f"\n  {cyan('›')} {prompt}:{back_hint} ").strip().lower()
+        if allow_back and raw in ('q', 'b', 'quit', 'back'):
+            return -1
         return int(raw)
     except (ValueError, KeyboardInterrupt, EOFError):
         return -1
@@ -440,9 +453,9 @@ def _screen_manager() -> None:
         print(_hr())
         names = [p.name for p in projects]
         _print_menu("Seleccionar proyecto", names, back_label="Volver al menú principal")
-        choice = _select_menu("Opción")
+        choice = _select_menu("Opción", allow_back=True)
 
-        if choice == 0:
+        if choice == 0 or choice == -1:
             return
         if not (1 <= choice <= len(projects)):
             continue
@@ -491,9 +504,9 @@ def _project_actions(proj: Path) -> None:
             "Abrir en explorador de archivos",
             "Ver detalles (details.xml)",
         ], back_label="Volver a la lista de proyectos")
-        choice = _select_menu("Opción")
+        choice = _select_menu("Opción", allow_back=True)
 
-        if choice == 0:
+        if choice == 0 or choice == -1:
             return
         elif choice == 1:
             _build_project_direct(proj)
@@ -693,6 +706,95 @@ def _screen_about() -> None:
     _pause()
 
 
+# ─── Screen: Ayuda ───────────────────────────────────────────────────────────
+
+def _screen_help() -> None:
+    _clear()
+    _banner()
+    print(bold(white("  Ayuda — Influent Package Maker TUI")))
+    print(_hr())
+    print()
+    print(bold(cyan("  Bienvenido a Influent Package Maker TUI")))
+    print()
+    print(dim("  Influent Package Maker es un sistema de gestión de paquetes para crear,"))
+    print(dim("  compilar y distribuir aplicaciones de forma sencilla. Esta versión TUI"))
+    print(dim("  está diseñada para entornos sin interfaz gráfica (SSH, CI, WSL sin X)."))
+    print()
+    print(_hr())
+    print(bold(cyan("  Opciones del Menú Principal:")))
+    print(_hr())
+    print()
+    print(bold("  1. Crear Proyecto"))
+    print("     Crea una nueva estructura de proyecto desde cero. Deberás ingresar:")
+    print("     - Empresa/Publisher: Nombre de la organización")
+    print("     - ID Interno (Slug): Identificador único (ej: mi-app-herramienta)")
+    print("     - Nombre Visible: Nombre que verán los usuarios")
+    print("     - Versión Inicial: Número de versión (ej: 1.0.0)")
+    print("     - Autor: Username de GitHub (obligatorio)")
+    print("     - Plataforma: Windows (Knosthalij), Linux (Danenone) o Multiplataforma")
+    print("     - Sandbox: Protección para evitar que el código sea dañino")
+    print()
+    print(bold("  2. Construir Paquete"))
+    print("     Compila un proyecto existente en un paquete ejecutable. Puedes:")
+    print("     - Seleccionar un proyecto de la lista o ingresar la ruta manualmente")
+    print("     - Elegir el modo: Portable (todo en uno) o Lite (archivo único)")
+    print("     - Especificar la carpeta de salida")
+    print()
+    print(bold("  3. Gestor de Aplicaciones"))
+    print("     Administra tus proyectos existentes. Para cada proyecto puedes:")
+    print("     - Compilar el paquete")
+    print("     - Reparar con MoonFix (para problemas de proyectos)")
+    print("     - Abrir en el explorador de archivos")
+    print("     - Ver detalles del proyecto")
+    print()
+    print(bold("  4. MoonFix — Reparar"))
+    print("     Herramienta de reparación automática para proyectos con problemas.")
+    print("     Opciones disponibles:")
+    print("     - Verificar archivos faltantes")
+    print("     - Actualizar configuraciones antiguas")
+    print("     - Reparar estructura de carpetas")
+    print("     - Verificar dependencias")
+    print()
+    print(bold("  5. Configuración"))
+    print("     Ajusta la configuración global de la aplicación:")
+    print("     - Carpeta de proyectos (donde se guardan los nuevos proyectos)")
+    print("     - Idioma de la interfaz (Español, English, Português)")
+    print()
+    print(bold("  6. Acerca de"))
+    print("     Muestra información del sistema y versión de la aplicación.")
+    print()
+    print(_hr())
+    print(bold(cyan("  Comandos de Navegación:")))
+    print(_hr())
+    print()
+    print("  - En cualquier menú numerado, presiona [0] para volver")
+    print("  - Presiona [Enter] para confirmar selecciones")
+    print("  - Puedes usar [Ctrl+C] en cualquier momento para cancelar")
+    print()
+    print(_hr())
+    print(bold(cyan("  Modos de Ejecución:")))
+    print(_hr())
+    print()
+    print("  GUI (Interfaz Gráfica):")
+    print("    python packagemaker.py")
+    print()
+    print("  TUI (Terminal):")
+    print("    python packagemaker.py --tui")
+    print()
+    print("  Headless (sin GUI ni TUI):")
+    print("    python packagemaker.py create /ruta/proyecto --name MiApp --author usuario")
+    print("    python packagemaker.py compile /ruta/proyecto --output ./dist --headless")
+    print()
+    print(_hr())
+    print(bold(cyan("  Recursos Adicionales:")))
+    print(_hr())
+    print()
+    print("  - Documentación: https://github.com/Influent-PackageMaker")
+    print("  - Repositorio: https://github.com/JesusQuijada34/packagemaker")
+    print()
+    _pause()
+
+
 # ─── Menú principal ───────────────────────────────────────────────────────────
 
 _MAIN_MENU = [
@@ -702,6 +804,7 @@ _MAIN_MENU = [
     ("MoonFix — Reparar",     _screen_moonfix),
     ("Configuración",         _screen_config),
     ("Acerca de",             _screen_about),
+    ("Ayuda",                 _screen_help),
 ]
 
 
@@ -718,11 +821,12 @@ def run_tui() -> None:
         for i, (label, _) in enumerate(_MAIN_MENU, 1):
             print(f"  {bold(orange(str(i)))}  {label}")
         print(f"  {bold('0')}  {dim('Salir')}")
+        print(f"  {dim('q')}  {dim('Salir sin confirmar')}")
         print(_hr())
 
-        choice = _select_menu("Opción")
+        choice = _select_menu("Opción", allow_back=True)
 
-        if choice == 0:
+        if choice == 0 or choice == -1:
             _clear()
             print(f"\n  {orange('Hasta pronto.')}\n")
             sys.exit(0)
