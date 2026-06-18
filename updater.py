@@ -1,4 +1,3 @@
-updater.py
 import sys, os, time, shutil, zipfile, subprocess, traceback, threading
 import requests
 import xml.etree.ElementTree as ET

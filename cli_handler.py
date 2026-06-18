@@ -175,7 +175,7 @@ class ShellIntegrationHelper:
             sys.path.insert(0, parent_dir)
         
         try:
-            from shell_integration import ShellIntegration
+            from lib.shell_integration import ShellIntegration
             return ShellIntegration()
         except ImportError as e:
             print(f"[ERROR] No se pudo importar shell_integration: {e}")
@@ -244,7 +244,7 @@ def _handle_shell_actions(action):
     
     elif action == 'show_version':
         print(f"Influent Package Maker v{__version__}")
-        print("https://github.com/Influent-PackageMaker")
+        print("https://github.com/JesusQuijada34/packagemaker")
         return True
     
     return None  # No es acción de shell

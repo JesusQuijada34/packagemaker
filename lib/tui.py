@@ -188,8 +188,8 @@ def _pause() -> None:
 def _detect_platform() -> str:
     """Windows → Knosthalij, Linux → Danenone."""
     if sys.platform.startswith("win"):
-        return "Windows"
-    return "Linux"
+        return "Knosthalij"
+    return "Danenone"
 
 
 def _base_dir() -> Path:
@@ -321,7 +321,14 @@ def _screen_create() -> None:
     print()
     rc = _run_live(cmd)
     if rc == 0:
-        _ok(f"Proyecto creado en: {_base_dir() / f'{empresa}.{slug}'}")
+        # Calcular nombre de carpeta correcto igual que cliHandler.py
+        from lib.template_engine import build_variables, getversion
+        publisher_slug = empresa.strip().lower().replace(" ", "-")
+        app_slug = nombre.strip().lower().replace(" ", "-")
+        version_base = version.strip().split("-")[0] if version else "1.0.0"
+        variables = build_variables(publisher_slug, app_slug, nombre, autor, plataforma, version_base)
+        folder_name = f"{publisher_slug}.{app_slug}.v{variables['VERSION_FULL']}"
+        _ok(f"Proyecto creado en: {_base_dir() / folder_name}")
     else:
         _err(f"Falló con código {rc}")
     _pause()

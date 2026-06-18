@@ -202,27 +202,30 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
     if action == 'create_project':
         if kwargs.get('headless'):
-            from lib.template_engine import create_project_from_templates, normalize_platform
+            from lib.template_engine import create_project_from_templates, normalize_platform, build_variables, getversion
             project_source = data if isinstance(data, dict) else {'path': data}
             base_path = Path(project_source.get('path')).resolve()
-            project_name = (project_source.get('name') or base_path.name).strip()
-            if base_path.exists() and base_path.is_dir() and not project_source.get('name'):
-                project_path = base_path / project_name
-            else:
-                project_path = base_path
+            
+            # Obtener valores de proyecto
             publisher = (project_source.get('publisher') or project_source.get('author') or 'influent').strip().lower().replace(' ', '-')
-            app_id = project_name.strip().lower().replace(' ', '-')
-            version_base = str(project_source.get('version') or '1.0.0').strip().split('-')[0]
+            app_id = (project_source.get('name') or base_path.name).strip().lower().replace(' ', '-')
+            version_base = str(project_source.get('project_version') or project_source.get('version') or '1.0.0').strip().split('-')[0]
             platform_value = normalize_platform(project_source.get('platform')) if project_source.get('platform') else normalize_platform('Knosthalij')
             description = project_source.get('description') or 'Proyecto creado con Influent Package Maker'
-
+            author_val = project_source.get('author') or 'Unknown'
+            
+            # Construir nombre de carpeta igual que la GUI: empresa.slug.vVERSION_FULL
+            variables = build_variables(publisher, app_id, app_id, author_val, platform_value, version_base, description)
+            folder_name = f"{publisher}.{app_id}.v{variables['VERSION_FULL']}"
+            project_path = base_path / folder_name
+            
             print(f"[INFO] Creando proyecto en: {project_path}")
             create_project_from_templates(
                 project_path,
                 publisher,
                 app_id,
-                project_name,
-                project_source.get('author') or 'Unknown',
+                app_id,
+                author_val,
                 platform_value,
                 version_base=version_base,
                 description=description,
@@ -383,7 +386,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         return window
 
     if action == 'install_shell':
-        from shell.shellIntegration import ShellIntegration
+        from lib.shell_integration import ShellIntegration
         shell = ShellIntegration()
         if shell.install_context_menus() and shell.install_mexf_support():
             print("Integración con shell instalada correctamente")
@@ -392,7 +395,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         return None
 
     if action == 'uninstall_shell':
-        from shell.shellIntegration import ShellIntegration
+        from lib.shell_integration import ShellIntegration
         shell = ShellIntegration()
         if shell.uninstall_all():
             print("Integración con shell desinstalada correctamente")
@@ -401,7 +404,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         return None
 
     if action == 'create_shortcuts':
-        from shell.shellIntegration import ShellIntegration
+        from lib.shell_integration import ShellIntegration
         shell = ShellIntegration()
         if shell.create_shortcuts():
             print("Accesos directos creados correctamente")
