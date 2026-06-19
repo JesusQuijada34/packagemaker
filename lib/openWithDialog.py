@@ -230,38 +230,51 @@ class EditorListItem(QWidget):
         
         layout.addLayout(text_layout, 1)
         
-        # Estilo base del widget (Windows 11 / Fluent Design)
-        self.setStyleSheet("""
-            EditorListItem {
-                background-color: #2d2d2d;
-                border-radius: 8px;
-                border-left: 4px solid transparent;
-                color: white;
-            }
-            EditorListItem:hover {
-                background-color: #3a3a3a;
-                border-left: 4px solid rgba(0, 120, 212, 0.5);
-            }
-            EditorListItem:pressed {
-                background-color: #252525;
-                border-left: 4px solid rgba(0, 120, 212, 0.7);
-            }
-            EditorListItem[selected="true"] {
-                background-color: #404040;
-                border-left: 4px solid #0078d4;
-            }
-            EditorListItem[selected="true"]:hover {
-                background-color: #4a4a4a;
-                border-left: 4px solid #0078d4;
-            }
-            EditorListItem[selected="true"]:pressed {
-                background-color: #353535;
-                border-left: 4px solid #0078d4;
-            }
-            QLabel {
-                color: white;
-            }
-        """)
+        # Estilo base del widget
+        self._update_style()
+    
+    def _update_style(self):
+        """Actualiza el estilo del widget basado en el estado de selección."""
+        if self._is_selected:
+            self.setStyleSheet("""
+                EditorListItem {
+                    background-color: #2d2d2d;
+                    border-radius: 8px;
+                    border-left: 4px solid #FF6B00;
+                    color: white;
+                }
+                EditorListItem:hover {
+                    background-color: #3a3a3a;
+                    border-left: 4px solid #FF8533;
+                }
+                EditorListItem:pressed {
+                    background-color: #252525;
+                    border-left: 4px solid #E55C00;
+                }
+                QLabel {
+                    color: white;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                EditorListItem {
+                    background-color: #2d2d2d;
+                    border-radius: 8px;
+                    border-left: 4px solid transparent;
+                    color: white;
+                }
+                EditorListItem:hover {
+                    background-color: #3a3a3a;
+                    border-left: 4px solid rgba(255, 107, 0, 0.4);
+                }
+                EditorListItem:pressed {
+                    background-color: #252525;
+                    border-left: 4px solid rgba(255, 107, 0, 0.6);
+                }
+                QLabel {
+                    color: white;
+                }
+            """)
     
     def _load_icon(self) -> Optional[QPixmap]:
         """Carga el icono del editor usando IconManager o métodos alternativos."""
@@ -300,15 +313,10 @@ class EditorListItem(QWidget):
         return None
     
     def set_selected(self, selected: bool):
-        """Actualiza el estado visual de selección usando propiedades dinámicas QSS."""
+        """Actualiza el estado visual de selección."""
         self._is_selected = selected
-        # Forzar actualización del estilo
-        self.setProperty("selected", "true" if selected else "false")
-        self.style().unpolish(self)
-        self.style().polish(self)
+        self._update_style()
         self.update()
-        # Forzar repintado inmediato
-        self.repaint()
 
 
 class OpenWithDialog(QDialog):
@@ -328,6 +336,7 @@ class OpenWithDialog(QDialog):
         self.project_config = get_project_config() if get_project_config else None
         
         self._setup_ui()
+        self._setup_animations()
         self._detect_editors()
         self._check_project_config()
     
@@ -581,6 +590,23 @@ class OpenWithDialog(QDialog):
         # Almacenar widgets de items para manejar selección
         self._editor_items = []
         self._selected_item = None
+    
+    def _setup_animations(self):
+        """Configura animaciones de entrada para el diálogo."""
+        from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
+        
+        # Animación de entrada con fade y scale
+        self.setWindowOpacity(0.0)
+        
+        self.fade_anim = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_anim.setDuration(250)
+        self.fade_anim.setStartValue(0.0)
+        self.fade_anim.setEndValue(1.0)
+        self.fade_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        
+        # Iniciar animación después de mostrar el diálogo
+        from PyQt6.QtCore import QTimer
+        QTimer.singleShot(50, self.fade_anim.start)
     
     def _detect_editors(self):
         """Detecta los editores disponibles incluyendo el editor de PackageMaker."""

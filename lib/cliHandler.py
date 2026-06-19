@@ -90,6 +90,10 @@ class CLIHandler:
         shell_group = self.parser.add_argument_group('Integración con Shell')
         shell_group.add_argument('--shellpatch', metavar='ACTION', choices=['install', 'remove', 'shortcuts'], help='Gestión de integración shell: install, remove, shortcuts')
 
+        # === Build This ===
+        buildthis_group = self.parser.add_argument_group('Build This')
+        buildthis_group.add_argument('--buildthis', nargs='?', const='.', metavar='PATH', help='Compilar el proyecto en la carpeta actual o en la ruta especificada')
+
     def parse(self):
         return self.parser.parse_args()
 
@@ -213,6 +217,18 @@ class CLIHandler:
         # === Version Update ===
         elif args.version_update:
             return ('version_update', None, shell_options)
+        
+        # === Build This ===
+        elif getattr(args, 'buildthis', None) is not None:
+            project_path = getattr(args, 'buildthis', '.')
+            # Si es '.', usar el directorio actual
+            if project_path == '.':
+                project_path = os.getcwd()
+            return (
+                'buildthis',
+                {'path': project_path},
+                {'compact': False, 'shell_mode': False, 'headless': True}
+            )
         
         # Sin acción
         else:
@@ -526,9 +542,70 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
         if not compiler.compress_to_iflapp(package_path, iflapp_file):
             sys.exit(1)
+
         if optimize:
-            print("⚡ Optimización completada (opción headless no implementada en detalle).")
-        print(f"✨ Proceso completado con éxito: {iflapp_file}")
+            print(f"[INFO] Optimizando binarios...")
+            if not compiler.optimize_binaries():
+                sys.exit(1)
+
+        print(f"[OK] Compilación completada exitosamente")
+        print(f"[INFO] Paquete generado: {iflapp_file}")
+        return None
+    
+    elif action == 'buildthis' and kwargs.get('headless'):
+        from lib.BuildThread import FlangCompiler
+        
+        project_source = data if isinstance(data, dict) else {'path': data}
+        project_path = Path(project_source.get('path')).resolve()
+        
+        # Verificar que la ruta existe y tiene details.xml
+        if not project_path.exists():
+            print(f"[ERROR] La ruta especificada no existe: {project_path}")
+            sys.exit(1)
+        
+        if not (project_path / 'details.xml').exists():
+            print(f"[ERROR] La ruta especificada no es un proyecto válido (no tiene details.xml): {project_path}")
+            sys.exit(1)
+        
+        # Usar ruta predeterminada para salida (misma que usa la GUI)
+        output_path = Path(os.path.expanduser("~")).resolve()
+        if sys.platform.startswith('win'):
+            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
+        else:
+            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar plataforma automáticamente según el sistema operativo
+        target_platform = 'Windows' if sys.platform.startswith('win') else 'Linux'
+
+        print(f"[INFO] Iniciando compilación del proyecto actual...")
+        print(f"[INFO] Proyecto: {project_path}")
+        print(f"[INFO] Salida: {output_path}")
+        print(f"[INFO] Plataforma objetivo (detectada): {target_platform}")
+        compiler = FlangCompiler(project_path, output_path, log_callback=print)
+
+        if not compiler.parse_details_xml():
+            sys.exit(1)
+
+        if not compiler.find_scripts():
+            sys.exit(1)
+        if not compiler.compile_binaries(target_platform):
+            sys.exit(1)
+        if not compiler.create_package(target_platform):
+            sys.exit(1)
+
+        publisher = compiler.metadata['publisher']
+        app = compiler.metadata['app']
+        version = compiler.metadata['version']
+        platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
+        package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
+        iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
+
+        if not compiler.compress_to_iflapp(package_path, iflapp_file):
+            sys.exit(1)
+
+        print(f"[OK] Compilación completada exitosamente")
+        print(f"[INFO] Paquete generado: {iflapp_file}")
         return None
     
     elif action == 'repair_project' and kwargs.get('headless'):

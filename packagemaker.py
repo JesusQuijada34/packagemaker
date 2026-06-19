@@ -870,8 +870,6 @@ class PackageTodoGUI(QMainWindow):
         # Apply Global Styles
         self.apply_theme()
         self._apply_leviathan_and_personalization()
-        apply_dpi_scale(float(APP_CONFIG.get("dpi_scale", 1.0)), APP_FONT)
-        self._applied_dpi_scale = float(APP_CONFIG.get("dpi_scale", 1.0))
 
         if self.compact_mode or self.shell_mode:
             self.enterCompactShellMode()
@@ -2927,7 +2925,6 @@ class PackageTodoGUI(QMainWindow):
         store = get_pm_data()
         user = {k: store.get_user(k) for k in (
             "language", "auto_translate", "base_dir", "fluthin_apps",
-            "touch_mode", "dpi_scale", "device_simulation", "ui_density",
         )}
         user["base_dir"] = user.get("base_dir") or BASE_DIR
         user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
@@ -2999,45 +2996,6 @@ class PackageTodoGUI(QMainWindow):
         hint_tr.setWordWrap(True)
         self._config_tr_labels.append((hint_tr, "config.auto_translate_hint"))
         layout.addWidget(hint_tr)
-
-        add_section("config.section_appearance")
-        # Window mode fixed to GhostBlur (Cristal) due to bugs in other modes
-        self.conf_display_mode = QLabel("GhostBlur (Cristal)")
-        self.conf_display_mode.setStyleSheet("color: #ddd; font-weight: bold;")
-        add_row("config.display_mode", self.conf_display_mode)
-
-        self.conf_device_sim = QComboBox()
-        self.conf_device_sim.addItems(["laptop", "tablet", "tv", "phone", "ios_x"])
-        ds = self.conf_device_sim.findText(user.get("device_simulation", "laptop"))
-        if ds >= 0:
-            self.conf_device_sim.setCurrentIndex(ds)
-        self.conf_device_sim.setStyleSheet(self._conf_field_style())
-        add_row("config.device_sim", self.conf_device_sim)
-
-        self.conf_dpi = QLineEdit(str(user.get("dpi_scale", 1.0)))
-        self.conf_dpi.setStyleSheet(self._conf_field_style())
-        self.conf_dpi.setToolTip(tr("config.dpi_restart_hint"))
-        add_row("config.dpi_scale", self.conf_dpi)
-        dpi_hint = QLabel(tr("config.dpi_restart_hint"))
-        dpi_hint.setStyleSheet("color: #666; font-size: 11px;")
-        dpi_hint.setWordWrap(True)
-        self._config_tr_labels.append((dpi_hint, "config.dpi_restart_hint"))
-        layout.addWidget(dpi_hint)
-
-        self.conf_touch = QCheckBox(tr("config.touch_mode"))
-        self.conf_touch.setChecked(bool(user.get("touch_mode", False)))
-        self.conf_touch.setStyleSheet("color: #ddd;")
-        self._config_tr_labels.append((self.conf_touch, "config.touch_mode"))
-        layout.addWidget(self.conf_touch)
-
-        self.conf_ui_density = QComboBox()
-        self.conf_ui_density.addItem(tr("config.density_normal"), "normal")
-        self.conf_ui_density.addItem(tr("config.density_compact"), "compact")
-        dens_idx = self.conf_ui_density.findData(user.get("ui_density", "normal"))
-        if dens_idx >= 0:
-            self.conf_ui_density.setCurrentIndex(dens_idx)
-        self.conf_ui_density.setStyleSheet(self._conf_field_style())
-        add_row("config.ui_density", self.conf_ui_density)
 
         add_section("config.section_system")
         ro = store.get_readonly()
@@ -3130,10 +3088,6 @@ class PackageTodoGUI(QMainWindow):
             store.set_user("auto_translate", True)
             store.set_user("base_dir", BASE_DIR)
             store.set_user("fluthin_apps", Fluthin_APPS)
-            store.set_user("touch_mode", False)  # Modo táctil desactivado
-            store.set_user("dpi_scale", 1.0)
-            store.set_user("device_simulation", "laptop")
-            store.set_user("ui_density", "normal")
 
             # Eliminar personalización de colores y efectos
             store.remove_user("display_mode")
@@ -3153,7 +3107,6 @@ class PackageTodoGUI(QMainWindow):
             # Aplicar cambios inmediatamente
             self._apply_leviathan_and_personalization()
             self.apply_theme()
-            self.apply_device_simulation()
             
             # Ocultar banner de reinicio si está visible
             if hasattr(self, "conf_restart_banner"):
@@ -3169,7 +3122,6 @@ class PackageTodoGUI(QMainWindow):
             store = get_pm_data()
             user = {k: store.get_user(k) for k in (
                 "language", "auto_translate", "base_dir", "fluthin_apps",
-                "touch_mode", "dpi_scale", "device_simulation", "ui_density",
             )}
             user["base_dir"] = user.get("base_dir") or BASE_DIR
             user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
@@ -3183,22 +3135,10 @@ class PackageTodoGUI(QMainWindow):
                 self.conf_lang_combo.setCurrentIndex(idx_lang)
             
             self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
-
-            ds = self.conf_device_sim.findText(user.get("device_simulation", "laptop"))
-            if ds >= 0:
-                self.conf_device_sim.setCurrentIndex(ds)
-            
-            self.conf_dpi.setText(str(user.get("dpi_scale", 1.0)))
-            self.conf_touch.setChecked(bool(user.get("touch_mode", False)))
-
-            dens_idx = self.conf_ui_density.findData(user.get("ui_density", "normal"))
-            if dens_idx >= 0:
-                self.conf_ui_density.setCurrentIndex(dens_idx)
             
             # Aplicar cambios
             self._apply_leviathan_and_personalization()
             self.apply_theme()
-            self.apply_device_simulation()
             
         except Exception as e:
             print(f"Error actualizando formulario: {e}")
@@ -3209,29 +3149,18 @@ class PackageTodoGUI(QMainWindow):
         restart_application()
 
     def _collect_config_from_form(self) -> dict:
-        try:
-            dpi = float(self.conf_dpi.text().strip() or "1.0")
-        except ValueError:
-            dpi = 1.0
         cfg = {
             "BASE_DIR": self.conf_base_dir.text().strip() or BASE_DIR,
             "Fluthin_APPS": self.conf_fluthin_dir.text().strip() or Fluthin_APPS,
             "LANGUAGE": self.conf_lang_combo.currentData() or "es",
-            "device_simulation": self.conf_device_sim.currentText(),
-            "dpi_scale": dpi,
-            "touch_mode": self.conf_touch.isChecked(),
             "auto_translate": self.conf_auto_translate.isChecked(),
             "notifications_enabled": False,
-            "ui_density": self.conf_ui_density.currentData() or "normal",
         }
         return cfg
 
     def _refresh_config_tab_labels(self):
         if hasattr(self, "conf_header"):
             self.conf_header.setText(tr("config.title"))
-        if hasattr(self, "conf_ui_density"):
-            self.conf_ui_density.setItemText(0, tr("config.density_normal"))
-            self.conf_ui_density.setItemText(1, tr("config.density_compact"))
         for widget, key in getattr(self, "_config_tr_labels", []):
             if isinstance(widget, QCheckBox):
                 widget.setText(tr(key))
@@ -3256,10 +3185,8 @@ class PackageTodoGUI(QMainWindow):
 
     def _save_app_config_compact(self):
         global APP_CONFIG, BASE_DIR, Fluthin_APPS
-        prev_dpi = float(get_pm_data().get_user("applied_dpi_scale", self._applied_dpi_scale))
         new_config = self._collect_config_from_form()
         lang = new_config["LANGUAGE"]
-        new_dpi = float(new_config["dpi_scale"])
 
         if save_app_config(new_config):
             APP_CONFIG = load_app_config()
@@ -3274,27 +3201,8 @@ class PackageTodoGUI(QMainWindow):
             self.apply_ui_language()
             self._apply_leviathan_and_personalization()
             self.apply_theme()
-            self.apply_device_simulation()
 
-            needs_restart = abs(new_dpi - prev_dpi) > 0.02
-            if needs_restart:
-                get_pm_data().set_user("dpi_scale", new_dpi)
-                get_pm_data().save()
-                self._show_restart_banner()
-                msg = tr("config.saved_restart")
-            else:
-                applied = apply_dpi_scale(new_dpi, APP_FONT)
-                self._applied_dpi_scale = applied
-                get_pm_data().set_user("applied_dpi_scale", applied)
-                get_pm_data().save()
-                # Mostrar el botón de reset cuando hay cambios sin reiniciar
-                if hasattr(self, "conf_restart_banner"):
-                    self.conf_restart_banner.setVisible(True)
-                if hasattr(self, "conf_reset_btn"):
-                    self.conf_reset_btn.setVisible(True)
-                msg = tr("config.saved_ok")
-
-            LeviathanDialog.launch(self, tr("config.title"), msg, mode="success")
+            LeviathanDialog.launch(self, tr("config.title"), tr("config.saved_ok"), mode="success")
         else:
             LeviathanDialog.launch(
                 self, tr("config.title"), tr("config.saved_error"), mode="error"
