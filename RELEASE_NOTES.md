@@ -1,4 +1,4 @@
-# Notas de Versión - Influent Package Maker v3.3.0
+# Notas de Versión - Influent Package Maker v3.2.7-26.05-20.13
 
 ## 🚀 Novedades y Mejoras
 

@@ -2,7 +2,7 @@
 
 **Influent Package Maker** es un entorno de desarrollo integrado (IDE) profesional para crear, empaquetar y distribuir aplicaciones Python con interfaces modernas estilo Windows 11.
 
-> **Versión Actual**: v3.3.0 - Mejoras en la detección de editores, gestión de compilación y limpieza de artefactos.
+> **Versión Actual**: v3.2.7-26.05-20.13 - Mejoras en la detección de editores, gestión de compilación y limpieza de artefactos.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 [![PyQt6](https://img.shields.io/badge/PyQt6-6.5%2B-green)](https://pypi.org/project/PyQt6/)
@@ -40,7 +40,7 @@
 
 ---
 
-## 🎉 Novedades en v3.3.0
+## 🎉 Novedades en v3.2.7-26.05-20.13
 
 ### 🚀 Mejoras en la Experiencia de Desarrollo
 

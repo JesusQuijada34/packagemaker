@@ -1,6 +1,6 @@
 # Historial de Cambios - Influent Package Maker
 
-## v3.3.0 - 2026-06-19
+## v3.2.7-26.05-20.13 - 2026-06-19
 
 ### Novedades y Mejoras
 
