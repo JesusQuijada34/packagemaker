@@ -156,6 +156,48 @@ EDITORS_CONFIG = {
         command_template='"{exe}" "{path}"',
         priority=20
     ),
+    "zed": EditorInfo(
+        name="zed",
+        display_name="Zed",
+        executable="zed" if sys.platform != "win32" else "zed.exe",
+        command_template='"{exe}" "{path}"',
+        priority=18
+    ),
+    "fleet": EditorInfo(
+        name="fleet",
+        display_name="Fleet",
+        executable="fleet" if sys.platform != "win32" else "fleet.exe",
+        command_template='"{exe}" "{path}"',
+        priority=15
+    ),
+    "emacs": EditorInfo(
+        name="emacs",
+        display_name="Emacs",
+        executable="emacs" if sys.platform != "win32" else "emacs.exe",
+        command_template='"{exe}" "{path}"',
+        priority=12
+    ),
+    "geany": EditorInfo(
+        name="geany",
+        display_name="Geany",
+        executable="geany" if sys.platform != "win32" else "geany.exe",
+        command_template='"{exe}" "{path}"',
+        priority=10
+    ),
+    "kate": EditorInfo(
+        name="kate",
+        display_name="Kate",
+        executable="kate" if sys.platform != "win32" else "kate.exe",
+        command_template='"{exe}" "{path}"',
+        priority=8
+    ),
+    "gedit": EditorInfo(
+        name="gedit",
+        display_name="Gedit",
+        executable="gedit" if sys.platform != "win32" else "gedit.exe",
+        command_template='"{exe}" "{path}"',
+        priority=5
+    ),
 }
 
 
@@ -295,45 +337,80 @@ class EditorDetector:
         return None
     
     def _extract_icon(self, exe_path: str) -> Optional[str]:
-        """Extrae el icono de un ejecutable (Windows)."""
-        if self.platform != "win32":
-            return None
-            
-        try:
-            # Guardar icono temporalmente
-            import tempfile
-            temp_dir = tempfile.gettempdir()
-            icon_path = os.path.join(temp_dir, f"editor_icon_{os.path.basename(exe_path)}.ico")
-            
-            # Intentar extraer icono usando win32api si está disponible
+        """Extrae el icono de un ejecutable (Windows) o busca iconos en Linux."""
+        if self.platform == "win32":
             try:
-                import win32api
-                import win32con
+                # Guardar icono temporalmente
+                import tempfile
+                temp_dir = tempfile.gettempdir()
+                icon_path = os.path.join(temp_dir, f"editor_icon_{os.path.basename(exe_path)}.ico")
                 
-                # Cargar el icono del ejecutable
-                large_icon, small_icon = win32api.ExtractIconEx(exe_path, 0, 1, 1)
-                if large_icon:
-                    # Guardar como ICO (simplificado - en producción usar PIL)
-                    return None  # TODO: Implementar extracción real
-            except ImportError:
+                # Intentar extraer icono usando win32api si está disponible
+                try:
+                    import win32api
+                    import win32con
+                    
+                    # Cargar el icono del ejecutable
+                    large_icon, small_icon = win32api.ExtractIconEx(exe_path, 0, 1, 1)
+                    if large_icon:
+                        # Guardar como ICO (simplificado - en producción usar PIL)
+                        return None  # TODO: Implementar extracción real
+                except ImportError:
+                    pass
+                
+                # Fallback: buscar icono en carpeta del ejecutable
+                exe_dir = os.path.dirname(exe_path)
+                possible_icons = [
+                    os.path.join(exe_dir, "resources", "app", "icon.ico"),
+                    os.path.join(exe_dir, "resources", "icon.ico"),
+                    os.path.join(exe_dir, "icon.ico"),
+                    os.path.join(exe_dir, "app.ico"),
+                ]
+                
+                for icon in possible_icons:
+                    if os.path.exists(icon):
+                        return icon
+            except Exception:
                 pass
+        elif self.platform.startswith("linux"):
+            # En Linux, buscar en rutas de iconos estándar
+            icon_name = os.path.basename(exe_path).lower()
+            # Casos especiales de nombres de iconos
+            icon_map = {
+                "code": "visual-studio-code",
+                "subl": "sublime-text",
+                "nvim": "nvim",
+                "vim": "vim",
+                "pycharm": "pycharm",
+                "idea": "intellij-idea-ultimate",
+                "zed": "zed",
+            }
+            search_name = icon_map.get(icon_name, icon_name)
             
-            # Fallback: buscar icono en carpeta del ejecutable
-            exe_dir = os.path.dirname(exe_path)
-            possible_icons = [
-                os.path.join(exe_dir, "resources", "app", "icon.ico"),
-                os.path.join(exe_dir, "resources", "icon.ico"),
-                os.path.join(exe_dir, "icon.ico"),
-                os.path.join(exe_dir, "app.ico"),
+            # Buscar en directorios de iconos comunes
+            icon_dirs = [
+                "/usr/share/icons/hicolor/48x48/apps",
+                "/usr/share/icons/hicolor/64x64/apps",
+                "/usr/share/icons/hicolor/128x128/apps",
+                "/usr/share/icons/hicolor/scalable/apps",
+                "/usr/share/pixmaps",
+                os.path.expanduser("~/.local/share/icons"),
             ]
             
-            for icon in possible_icons:
-                if os.path.exists(icon):
-                    return icon
+            for d in icon_dirs:
+                if not os.path.isdir(d): continue
+                for ext in [".png", ".svg", ".ico"]:
+                    icon_path = os.path.join(d, search_name + ext)
+                    if os.path.exists(icon_path):
+                        return icon_path
+                        
+            # Si no se encuentra, intentar buscar por nombre parcial
+            for d in icon_dirs:
+                if not os.path.isdir(d): continue
+                matches = glob.glob(os.path.join(d, f"*{search_name}*"))
+                if matches:
+                    return matches[0]
                     
-        except Exception:
-            pass
-            
         return None
     
     def detect_editors(self) -> List[Tuple[EditorInfo, str]]:

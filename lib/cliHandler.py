@@ -528,28 +528,32 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
         if not compiler.find_scripts():
             sys.exit(1)
-        if not compiler.compile_binaries(target_platform):
-            sys.exit(1)
-        if not compiler.create_package(target_platform):
-            sys.exit(1)
-
-        publisher = compiler.metadata['publisher']
-        app = compiler.metadata['app']
-        version = compiler.metadata['version']
-        platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-        package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
-        iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
-
-        if not compiler.compress_to_iflapp(package_path, iflapp_file):
-            sys.exit(1)
-
-        if optimize:
-            print(f"[INFO] Optimizando binarios...")
-            if not compiler.optimize_binaries():
+        try:
+            if not compiler.compile_binaries(target_platform):
+                sys.exit(1)
+            if not compiler.create_package(target_platform):
                 sys.exit(1)
 
-        print(f"[OK] Compilación completada exitosamente")
-        print(f"[INFO] Paquete generado: {iflapp_file}")
+            publisher = compiler.metadata['publisher']
+            app = compiler.metadata['app']
+            version = compiler.metadata['version']
+            platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
+            package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
+            iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
+
+            if not compiler.compress_to_iflapp(package_path, iflapp_file):
+                sys.exit(1)
+
+            if optimize:
+                print(f"[INFO] Optimizando binarios...")
+                if not compiler.optimize_binaries():
+                    sys.exit(1)
+
+            print(f"[OK] Compilación completada exitosamente")
+            print(f"[INFO] Paquete generado: {iflapp_file}")
+        finally:
+            if hasattr(compiler, '_cleanup_build_artifacts'):
+                compiler._cleanup_build_artifacts()
         return None
     
     elif action == 'buildthis' and kwargs.get('headless'):
@@ -589,23 +593,27 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
         if not compiler.find_scripts():
             sys.exit(1)
-        if not compiler.compile_binaries(target_platform):
-            sys.exit(1)
-        if not compiler.create_package(target_platform):
-            sys.exit(1)
+        try:
+            if not compiler.compile_binaries(target_platform):
+                sys.exit(1)
+            if not compiler.create_package(target_platform):
+                sys.exit(1)
 
-        publisher = compiler.metadata['publisher']
-        app = compiler.metadata['app']
-        version = compiler.metadata['version']
-        platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-        package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
-        iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
+            publisher = compiler.metadata['publisher']
+            app = compiler.metadata['app']
+            version = compiler.metadata['version']
+            platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
+            package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
+            iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
 
-        if not compiler.compress_to_iflapp(package_path, iflapp_file):
-            sys.exit(1)
+            if not compiler.compress_to_iflapp(package_path, iflapp_file):
+                sys.exit(1)
 
-        print(f"[OK] Compilación completada exitosamente")
-        print(f"[INFO] Paquete generado: {iflapp_file}")
+            print(f"[OK] Compilación completada exitosamente")
+            print(f"[INFO] Paquete generado: {iflapp_file}")
+        finally:
+            if hasattr(compiler, '_cleanup_build_artifacts'):
+                compiler._cleanup_build_artifacts()
         return None
     
     elif action == 'repair_project' and kwargs.get('headless'):

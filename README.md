@@ -2,7 +2,7 @@
 
 **Influent Package Maker** es un entorno de desarrollo integrado (IDE) profesional para crear, empaquetar y distribuir aplicaciones Python con interfaces modernas estilo Windows 11.
 
-> **Versión Actual**: v3.2.7 - Versión de Estabilidad Visual con interfaz mejorada y correcciones críticas.
+> **Versión Actual**: v3.3.0 - Mejoras en la detección de editores, gestión de compilación y limpieza de artefactos.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 [![PyQt6](https://img.shields.io/badge/PyQt6-6.5%2B-green)](https://pypi.org/project/PyQt6/)
@@ -20,10 +20,12 @@
 - **Fondos sólidos**: Optimizados para evitar artifacts visuales
 
 ### 📦 Sistema de Compilación Avanzado
-- **Detección automática**: Encuentra scripts candidatos (`if __name__ == '__main__'`)
+- **Detección automática**: Encuentra scripts candidatos (`if __name__ == '__main__'`) 
 - **Extracción de clases**: Separa automáticamente clases a `lib/_class/`
 - **Gestión de dependencias**: Analiza e incluye imports necesarios
 - **Minificación**: Reduce tamaño del código compilado
+- **Integración con .gitignore**: Excluye automáticamente archivos y carpetas especificadas en `.gitignore` durante la compilación y empaquetado, incluyendo archivos de GitHub como `.github` y `.vscode`.
+- **Limpieza Post-Compilación**: Elimina automáticamente los directorios `build/`, `dist/` y los archivos `.spec` generados por PyInstaller después de cada proceso de compilación, manteniendo el directorio del proyecto limpio.
 
 ### 🔒 Métodos de Blindado
 | Método | Descripción | Seguridad |
@@ -34,105 +36,24 @@
 ### 📱 Multi-Plataforma
 - **Windows**: Ejecutables `.exe` con PyInstaller
 - **Android**: APK generable vía Buildozer
-- **Linux**: AppImage y paquetes nativos
+- **Linux**: AppImage y paquetes nativos con renderizado de iconos mejorado.
 
 ---
 
-## 🎉 Novedades en v3.2.7
+## 🎉 Novedades en v3.3.0
 
-### 🎨 Mejoras Visuales
+### 🚀 Mejoras en la Experiencia de Desarrollo
 
-**EditorListItem Widget (lib/openWithDialog.py líneas 78-183):**
-- Icono del editor: 40x40 px con escalado suave (`Qt.AspectRatioMode.KeepAspectRatio`)
-- Nombre del editor: Fuente Segoe UI 12px, peso Medium, color blanco
-- Indicador "Predeterminado": Etiqueta verde #4CAF50 (línea 134)
-- Radio button visual: Círculo de selección interactivo (○/●)
-- Estilos de hover y selected integrados (líneas 456-469)
+- **Más Editores Soportados**: El diálogo "Abrir con" ahora detecta y permite abrir proyectos con una gama más amplia de editores de código, incluyendo **Zed**, **Fleet**, **Emacs**, **Geany**, **Kate** y **Gedit**. Esto proporciona mayor flexibilidad a los desarrolladores para usar su herramienta preferida.
+- **Renderizado de Iconos en Linux**: Se ha mejorado la detección y el renderizado de iconos para editores en entornos Linux (Ubuntu, etc.), asegurando que los iconos se muestren correctamente en el diálogo "Abrir con" y en el sistema.
+- **Exclusión de Archivos con .gitignore**: El proceso de compilación ahora respeta el archivo `.gitignore` del proyecto, excluyendo automáticamente los archivos y directorios listados. Esto incluye archivos relacionados con el control de versiones (`.git`, `.github`) y configuraciones de IDE (`.vscode`, `.idea`), evitando que se incluyan en el paquete final.
+- **Limpieza Automática de Artefactos de Compilación**: Después de cada compilación y empaquetado, el sistema ahora limpia automáticamente los archivos temporales y directorios generados por PyInstaller (`build/`, `dist/`, `.spec`). Esto se aplica tanto a la compilación a través de la GUI como a las invocaciones por línea de comandos (`compile` y `--buildthis`), garantizando un directorio de proyecto ordenado.
 
-**Cambios en packagemaker.py:**
-```python
-# Línea ~615-620: Central Widget
-self.central.setStyleSheet("background: #3a3f4b;")  # Antes: transparent
+### 🐛 Correcciones y Optimizaciones
 
-# Línea ~640-645: Content Container
-self.content_container.setStyleSheet("background: #3a3f4b;")  # Antes: transparent
-
-# Línea ~735-740: Stack
-self.stack.setStyleSheet("background: #3a3f4b;")  # Antes: transparent
-
-# Línea ~628-635: Titlebar
-self.titlebar.setStyleSheet("background-color: #3a3f4b; border: none;")
-
-# BTN_STYLES - Eliminación de gradientes (línea ~126-194)
-BTN_STYLES = {
-    'default': (
-        "background-color: transparent;"
-        "color: rgba(32,33,36,0.96);"
-        "border: 1px solid rgba(209,215,224,0.65);"
-    ),
-    # ... más estilos
-}
-```
-
-- ✅ **Eliminación de gradientes**: Interfaz más limpia y consistente sin gradientes
-- ✅ **Fondos sólidos optimizados**: Color #3a3f4b en todos los widgets principales
-- ✅ **Botones transparentes**: Mejor integración con el tema oscuro
-- ✅ **Consistencia visual**: Unificación de fondos en toda la aplicación
-
-### 🐛 Correcciones Críticas
-
-**1. Error en EditorInfo - TypeError**
-```python
-# lib/openWithDialog.py - Línea 417-423 (OpenWithDialog._detect_editors)
-# ANTES:
-pm_info = EditorInfo(
-    name=pm_editor.name,
-    display_name=pm_editor.display_name,
-    # ❌ FALTA: executable=pm_editor.exe_path
-    icon_path=pm_editor.icon_path,
-    priority=200,
-)
-
-# DESPUÉS:
-pm_info = EditorInfo(
-    name=pm_editor.name,
-    display_name=pm_editor.display_name,
-    executable=pm_editor.exe_path,  # ✅ AGREGADO
-    icon_path=pm_editor.icon_path,
-    priority=200,
-)
-```
-
-**2. Bug de Fondo Blanco al Maximizar**
-- **Causa**: Fondos transparentes permitían que el fondo blanco predeterminado de Qt se mostrara
-- **Solución**: Cambiados todos los fondos de widgets principales a color sólido `#3a3f4b`
-- **Impacto**: Ventana maximizable sin artifacts visuales
-
-**3. Iconos de Editores - Gradiente Radial**
-```python
-# lib/openWithDialog.py - Línea 96-99 (EditorListItem._setup_ui)
-# ANTES:
-self.icon_label.setStyleSheet("""
-    background: qradialgradient(...);  # ❌ Gradiente innecesario
-    border: none;
-""")
-
-# DESPUÉS:
-self.icon_label.setStyleSheet("""
-    background-color: transparent;  # ✅ Sin gradiente
-    border: none;
-""")
-```
-
-### 🔧 Optimizaciones Técnicas
-
-| Componente | Antes | Después |
-|-----------|-------|----------|
-| **Central Widget** | transparent | **#3a3f4b** |
-| **Content Container** | transparent | **#3a3f4b** |
-| **Sidebar** | transparent | **transparent + border** |
-| **Stack** | transparent | **#3a3f4b** |
-| **Titlebar** | transparent | **#3a3f4b** |
+- **Error en EditorInfo - TypeError**: Corregido un `TypeError` en `lib/openWithDialog.py` al inicializar `EditorInfo` para `pmCodeEditor`, asegurando que el campo `executable` se pase correctamente.
+- **Bug de Fondo Blanco al Maximizar**: Solucionado el problema de fondos blancos al maximizar la ventana, asegurando una consistencia visual con el tema oscuro en todo momento.
+- **Iconos de Editores - Gradiente Radial**: Eliminado un gradiente radial innecesario en los iconos de los editores en `lib/openWithDialog.py`, resultando en una apariencia más limpia y moderna.
 
 ---
 
@@ -175,37 +96,15 @@ Click en "Compilar" (verde) o "Compilar Bundle y Firmar" (azul)
 ```
 
 ### 4️⃣ Distribuir
-- Output en `dist/`
+- Output en `releases/` (o la ruta configurada)
 - Listo para subir a GitHub Releases
 
 ---
 
 ## 🛠️ EditorDetector y OpenWithDialog
 
-### Flujo de Detección (lib/openWithDialog.py líneas 28-75)
-
-```python
-class PackageMakerEditor:
-    """Editor integrado pmCodeEditor (siempre disponible)."""
-    
-    def __init__(self):
-        self.name = "pmcodeeditor"
-        self.display_name = "pmCodeEditor"
-        self.icon_path = self._find_icon()
-        self.exe_path = self._find_executable()
-    
-    def _find_icon(self) -> str:
-        """Busca el icono del editor en la carpeta app/."""
-        possible_paths = [
-            Path(__file__).parent.parent / "app" / "pmCodeEditor-icon.ico",
-            Path(__file__).parent.parent / "assets" / "pmCodeEditor-icon.ico",
-            Path(__file__).parent.parent / "pmCodeEditor-icon.ico",
-        ]
-        for path in possible_paths:
-            if path.exists():
-                return str(path)
-        return ""
-```
+### Flujo de Detección Mejorado
+El sistema ahora busca ejecutables de editores en rutas estándar de Linux y utiliza un mapeo de nombres para encontrar iconos relevantes, mejorando la experiencia en sistemas operativos basados en Linux.
 
 ### Colores y Estilos (lib/openWithDialog.py)
 
@@ -238,12 +137,14 @@ border: 1px solid rgba(255, 87, 34, 0.55);
 Cuando compilas un proyecto, Packagemaker:
 
 1. **Análisis**: Lee scripts candidatos y detecta clases
-2. **Extracción**: Mueve clases a `lib/_class/ScriptName/`
-3. **Modificación**: Actualiza imports en scripts originales
-4. **Generación**: Crea `lib/__init__.py` con imports consolidados
-5. **Minificación**: Reduce tamaño de código
-6. **Empaquetado**: Genera `.iflappb` (Simple Blind) o estructura separada (Super Blind)
-7. **Firma**: Opcionalmente firma el paquete
+2. **Exclusión de Archivos**: Aplica patrones de `.gitignore` para ignorar archivos y directorios no deseados.
+3. **Extracción**: Mueve clases a `lib/_class/ScriptName/`
+4. **Modificación**: Actualiza imports en scripts originales
+5. **Generación**: Crea `lib/__init__.py` con imports consolidados
+6. **Minificación**: Reduce tamaño de código
+7. **Empaquetado**: Genera `.iflappb` (Simple Blind) o estructura separada (Super Blind)
+8. **Firma**: Opcionalmente firma el paquete
+9. **Limpieza**: Elimina automáticamente los artefactos de compilación (`build/`, `dist/`, `.spec`) del directorio del proyecto.
 
 ---
 

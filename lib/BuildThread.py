@@ -299,17 +299,58 @@ class FlangCompiler:
         self._update_and_copy_details_xml(package_path, platform_suffix)
         return True
 
+    def _load_gitignore_patterns(self) -> List[str]:
+        """Carga los patrones de .gitignore si existe."""
+        patterns = [
+            "requirements.txt", "*.pyc", "__pycache__", ".git", ".gitignore", 
+            "build", "dist", "*.spec", "*.py", ".idea", ".vscode", ".github"
+        ]
+        gitignore_path = self.repo_path / ".gitignore"
+        if gitignore_path.exists():
+            try:
+                with open(gitignore_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#"):
+                            # Normalizar patrones para fnmatch
+                            p = line
+                            if p.startswith("/"): p = p[1:]
+                            if p.endswith("/"): p = p[:-1]
+                            if p not in patterns:
+                                patterns.append(p)
+                self.log(f"[INFO] .gitignore cargado ({len(patterns)} patrones)")
+            except Exception as e:
+                self.log(f"[WARN] No se pudo leer .gitignore: {e}")
+        return patterns
+
+    def _should_exclude(self, name: str, patterns: List[str]) -> bool:
+        """Verifica si un archivo o directorio debe ser excluido."""
+        for p in patterns:
+            if fnmatch.fnmatch(name, p) or fnmatch.fnmatch(name, f"*/{p}"):
+                return True
+            # Manejar directorios recursivos en gitignore
+            if "/" in p:
+                parts = p.split("/")
+                if name == parts[0] or name == parts[-1]:
+                    return True
+        return False
+
     def _copy_package_files(self, package_path: Path, target_platform: str) -> None:
-        exclude_patterns = ["requirements.txt", "*.pyc", "__pycache__", ".git", ".gitignore", "build", "dist", "*.spec", "*.py"]
+        exclude_patterns = self._load_gitignore_patterns()
+        
+        def ignore_func(directory, contents):
+            return [c for c in contents if self._should_exclude(c, exclude_patterns)]
+
         for item in self.repo_path.iterdir():
-            if any(fnmatch.fnmatch(item.name, p) for p in exclude_patterns):
+            if self._should_exclude(item.name, exclude_patterns):
                 continue
+                
             dest = package_path / item.name
             if item.is_dir():
                 if dest.exists():
                     shutil.rmtree(dest)
                 try:
-                    shutil.copytree(item, dest, ignore=shutil.ignore_patterns(*exclude_patterns))
+                    shutil.copytree(item, dest, ignore=ignore_func)
                 except Exception as e:
                     self.log(f"[WARN] Error copiando {item.name}: {e}")
             elif item.is_file():
@@ -373,6 +414,29 @@ class FlangCompiler:
             self.log(f"[ERROR] Zip failed: {e}")
             return False
 
+    def _cleanup_build_artifacts(self):
+        """Limpia archivos generados por PyInstaller en el proyecto original."""
+        self.log("[INFO] Limpiando archivos de compilación...")
+        dist_dir = self.repo_path / "dist"
+        build_dir = self.repo_path / "build"
+        
+        # Eliminar carpetas dist y build si existen
+        for folder in [dist_dir, build_dir]:
+            if folder.exists() and folder.is_dir():
+                try:
+                    shutil.rmtree(folder)
+                    self.log(f"[INFO] Carpeta eliminada: {folder.name}")
+                except Exception as e:
+                    self.log(f"[WARN] No se pudo eliminar {folder.name}: {e}")
+        
+        # Eliminar archivos .spec
+        for spec_file in self.repo_path.glob("*.spec"):
+            try:
+                spec_file.unlink()
+                self.log(f"[INFO] Archivo eliminado: {spec_file.name}")
+            except Exception as e:
+                self.log(f"[WARN] No se pudo eliminar {spec_file.name}: {e}")
+
     def run(self, build_mode="portable") -> Optional[Path]:
         if not self.parse_details_xml():
             return None
@@ -390,19 +454,24 @@ class FlangCompiler:
             self.log("[WARN] Nothing to compile for this platform/config.")
             return None
         final_iflapp = None
-        for platform_name in platforms_to_compile:
-            if not self.compile_binaries(platform_name):
-                return None
-            if not self.create_package(platform_name):
-                return None
-            platform_suffix = "Knosthalij" if platform_name == "Windows" else "Danenone"
-            package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
-            last_package_path = self.output_path / package_name
-            iflapp_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}-{platform_suffix}.iflapp"
-            iflapp_path = self.output_path / iflapp_name
-            if self.compress_to_iflapp(last_package_path, iflapp_path):
-                final_iflapp = iflapp_path
-                self.log(f"[SUCCESS] Package created: {iflapp_path}")
+        try:
+            for platform_name in platforms_to_compile:
+                if not self.compile_binaries(platform_name):
+                    return None
+                if not self.create_package(platform_name):
+                    return None
+                platform_suffix = "Knosthalij" if platform_name == "Windows" else "Danenone"
+                package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
+                last_package_path = self.output_path / package_name
+                iflapp_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}-{platform_suffix}.iflapp"
+                iflapp_path = self.output_path / iflapp_name
+                if self.compress_to_iflapp(last_package_path, iflapp_path):
+                    final_iflapp = iflapp_path
+                    self.log(f"[SUCCESS] Package created: {iflapp_path}")
+        finally:
+            # Limpiar siempre al finalizar, sea éxito o error
+            self._cleanup_build_artifacts()
+            
         return final_iflapp
 
 class BuildThread(QThread):
