@@ -14,117 +14,13 @@ try:
         QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
         QPushButton, QLabel, QWidget, QFrame, QScrollArea, QSizePolicy, QMessageBox
     )
-    from PyQt6.QtCore import Qt, QSize, QtCore
+    from PyQt6.QtCore import Qt, QSize
     from PyQt6.QtGui import QIcon, QPixmap, QFont
     PYQT6_AVAILABLE = True
-except ImportError:
+except ImportError as e:
+    print(f"[ERROR] No se pudo importar PyQt6: {e}")
     PYQT6_AVAILABLE = False
-    class QDialog:
-        def __init__(self, *args, **kwargs): pass
-        def setWindowTitle(self, *args): pass
-        def setFixedSize(self, *args): pass
-        def setWindowFlags(self, *args): pass
-        def setAttribute(self, *args): pass
-        def setLayout(self, *args): pass
-        def exec(self): return None
-        def accept(self): pass
-        def reject(self): pass
-    class QWidget:
-        def __init__(self, *args, **kwargs): pass
-        def setObjectName(self, *args): pass
-        def setStyleSheet(self, *args): pass
-        def setLayout(self, *args): pass
-        def setFixedHeight(self, *args): pass
-        def setFixedSize(self, *args): pass
-        def setProperty(self, *args): pass
-        def style(self): 
-            class DummyStyle:
-                def unpolish(self, *args): pass
-                def polish(self, *args): pass
-            return DummyStyle()
-        def update(self): pass
-        def repaint(self): pass
-    class QVBoxLayout:
-        def __init__(self, *args): pass
-        def setContentsMargins(self, *args): pass
-        def setSpacing(self, *args): pass
-        def addWidget(self, *args): pass
-        def addLayout(self, *args): pass
-        def insertWidget(self, *args): pass
-        def count(self): return 0
-    class QHBoxLayout:
-        def __init__(self, *args): pass
-        def setContentsMargins(self, *args): pass
-        def setSpacing(self, *args): pass
-        def addWidget(self, *args): pass
-        def addLayout(self, *args): pass
-        def addStretch(self): pass
-    class QFrame:
-        def __init__(self, *args): pass
-        def setObjectName(self, *args): pass
-        def setStyleSheet(self, *args): pass
-    class QLabel:
-        def __init__(self, *args): pass
-        def setText(self, *args): pass
-        def setPixmap(self, *args): pass
-        def setFixedSize(self, *args): pass
-        def setStyleSheet(self, *args): pass
-        def setTextInteractionFlags(self, *args): pass
-        def setToolTip(self, *args): pass
-        def setWordWrap(self, *args): pass
-        def setAlignment(self, *args): pass
-        def setFont(self, *args): pass
-        def setMaximumHeight(self, *args): pass
-        def setMinimumHeight(self, *args): pass
-        def setSizePolicy(self, *args): pass
-        def setObjectName(self, *args): pass
-    class QPushButton:
-        def __init__(self, *args): pass
-        def setText(self, *args): pass
-        def setFixedHeight(self, *args): pass
-        def setMinimumWidth(self, *args): pass
-        def setStyleSheet(self, *args): pass
-        def setEnabled(self, *args): pass
-        def setCursor(self, *args): pass
-        def clicked(self): pass
-        def connect(self, *args): pass
-    class QScrollArea:
-        def __init__(self, *args): pass
-        def setWidget(self, *args): pass
-        def setWidgetResizable(self, *args): pass
-        def setStyleSheet(self, *args): pass
-    class QPixmap:
-        def __init__(self, *args, **kwargs): pass
-        def scaled(self, *args): pass
-    class QIcon:
-        def __init__(self, *args): pass
-    class QFont:
-        def __init__(self, *args): pass
-    class QMessageBox:
-        @staticmethod
-        def warning(*args): pass
-        @staticmethod
-        def information(*args): pass
-    class Qt:
-        class WindowType:
-            Dialog = 0
-            FramelessWindowHint = 0
-        class WidgetAttribute:
-            WA_TranslucentBackground = 0
-        class AlignmentFlag:
-            AlignVCenter = 0
-        class ItemDataRole:
-            UserRole = 0
-        class AspectRatioMode:
-            KeepAspectRatio = 0
-        class TransformationMode:
-            SmoothTransformation = 0
-    class QtCore:
-        class QObject:
-            def __init__(self, *args): pass
-        class QEvent:
-            class Type:
-                MouseButtonPress = 0
+    raise
 
 # Importar detector de editores y utilidades de i18n
 try:
@@ -150,15 +46,6 @@ import platform
 
 
 def detect_executable_type(file_path: str) -> str:
-    """
-    Detecta el tipo de ejecutable basado en la extensión y contenido del archivo.
-    
-    Args:
-        file_path: Ruta al archivo ejecutable
-    
-    Returns:
-        Tipo de ejecutable ('exe', 'elf', 'app', 'script', 'unknown')
-    """
     if not file_path or not os.path.exists(file_path):
         return 'unknown'
     
@@ -220,20 +107,10 @@ def check_executable_exists(exe_path: str) -> bool:
     if os.path.exists(exe_path):
         return True
     
-    # Si no existe, intentar verificar si es un comando del sistema
+    # Si no existe, intentar verificar si es un comando del sistema usando shutil.which
     try:
-        system = platform.system().lower()
-        
-        if system == 'windows':
-            # Windows: usar where command
-            result = subprocess.run(['where', exe_path], capture_output=True, text=True)
-            return result.returncode == 0
-        
-        elif system == 'linux' or system == 'darwin':
-            # Linux/Mac: usar which command
-            result = subprocess.run(['which', exe_path], capture_output=True, text=True)
-            return result.returncode == 0
-        
+        import shutil
+        return shutil.which(exe_path) is not None
     except Exception as e:
         print(f"[ERROR] Error verificando ejecutable {exe_path}: {e}")
     
@@ -751,7 +628,6 @@ class OpenWithDialog(QDialog):
             
             # Estilo del item contenedor (tarjeta Material Design)
             item_container = QFrame()
-            is_pm = editor_info.name == "pmcodeeditor"
             item_container.setStyleSheet(f"""
                 QFrame {{
                     background-color: transparent;
@@ -776,9 +652,9 @@ class OpenWithDialog(QDialog):
             self._editor_items.append(item_data)
             
             # Conectar eventos de clic usando event filter
-            from PyQt6.QtCore import QEvent
+            from PyQt6.QtCore import QEvent, QObject
             
-            click_filter = QtCore.QObject(self)
+            click_filter = QObject(self)
             click_filter.index = i
             click_filter.callback = self._on_editor_clicked
             
@@ -881,10 +757,7 @@ class OpenWithDialog(QDialog):
                 return
             
             # Abrir el proyecto con el editor
-            if platform.system().lower() == 'windows':
-                os.startfile(exe_path, f'"{self.project_path}"')
-            else:
-                subprocess.Popen([exe_path, self.project_path])
+            subprocess.Popen([exe_path, self.project_path])
             
             self.accept()
         
@@ -1009,12 +882,12 @@ def _launch_pm_editor(exe_path: str, project_path: str) -> bool:
         # Si es un script Python, lanzar con python
         if exe_path.endswith('.py'):
             python_exe = sys.executable
-            subprocess.Popen([python_exe, exe_path, project_path], 
-                           creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0)
+            creationflags = getattr(subprocess, 'CREATE_NEW_CONSOLE', 0)
+            subprocess.Popen([python_exe, exe_path, project_path], creationflags=creationflags)
         else:
             # Es un ejecutable
-            subprocess.Popen([exe_path, project_path],
-                           creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == "win32" else 0)
+            creationflags = getattr(subprocess, 'CREATE_NEW_CONSOLE', 0)
+            subprocess.Popen([exe_path, project_path], creationflags=creationflags)
         return True
     except Exception as e:
         print(f"[ERROR] No se pudo lanzar el editor de PackageMaker: {e}")
