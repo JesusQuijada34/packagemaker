@@ -12,27 +12,232 @@ from typing import List, Tuple, Optional, Callable
 try:
     from PyQt6.QtWidgets import (
         QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
-        QPushButton, QLabel, QWidget, QFrame, QScrollArea, QSizePolicy
+        QPushButton, QLabel, QWidget, QFrame, QScrollArea, QSizePolicy, QMessageBox
     )
-    from PyQt6.QtCore import Qt, QSize
+    from PyQt6.QtCore import Qt, QSize, QtCore
     from PyQt6.QtGui import QIcon, QPixmap, QFont
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
     class QDialog:
         def __init__(self, *args, **kwargs): pass
+        def setWindowTitle(self, *args): pass
+        def setFixedSize(self, *args): pass
+        def setWindowFlags(self, *args): pass
+        def setAttribute(self, *args): pass
+        def setLayout(self, *args): pass
+        def exec(self): return None
+        def accept(self): pass
+        def reject(self): pass
     class QWidget:
         def __init__(self, *args, **kwargs): pass
+        def setObjectName(self, *args): pass
+        def setStyleSheet(self, *args): pass
+        def setLayout(self, *args): pass
+        def setFixedHeight(self, *args): pass
+        def setFixedSize(self, *args): pass
+        def setProperty(self, *args): pass
+        def style(self): 
+            class DummyStyle:
+                def unpolish(self, *args): pass
+                def polish(self, *args): pass
+            return DummyStyle()
+        def update(self): pass
+        def repaint(self): pass
+    class QVBoxLayout:
+        def __init__(self, *args): pass
+        def setContentsMargins(self, *args): pass
+        def setSpacing(self, *args): pass
+        def addWidget(self, *args): pass
+        def addLayout(self, *args): pass
+        def insertWidget(self, *args): pass
+        def count(self): return 0
+    class QHBoxLayout:
+        def __init__(self, *args): pass
+        def setContentsMargins(self, *args): pass
+        def setSpacing(self, *args): pass
+        def addWidget(self, *args): pass
+        def addLayout(self, *args): pass
+        def addStretch(self): pass
+    class QFrame:
+        def __init__(self, *args): pass
+        def setObjectName(self, *args): pass
+        def setStyleSheet(self, *args): pass
+    class QLabel:
+        def __init__(self, *args): pass
+        def setText(self, *args): pass
+        def setPixmap(self, *args): pass
+        def setFixedSize(self, *args): pass
+        def setStyleSheet(self, *args): pass
+        def setTextInteractionFlags(self, *args): pass
+        def setToolTip(self, *args): pass
+        def setWordWrap(self, *args): pass
+        def setAlignment(self, *args): pass
+        def setFont(self, *args): pass
+        def setMaximumHeight(self, *args): pass
+        def setMinimumHeight(self, *args): pass
+        def setSizePolicy(self, *args): pass
+        def setObjectName(self, *args): pass
+    class QPushButton:
+        def __init__(self, *args): pass
+        def setText(self, *args): pass
+        def setFixedHeight(self, *args): pass
+        def setMinimumWidth(self, *args): pass
+        def setStyleSheet(self, *args): pass
+        def setEnabled(self, *args): pass
+        def setCursor(self, *args): pass
+        def clicked(self): pass
+        def connect(self, *args): pass
+    class QScrollArea:
+        def __init__(self, *args): pass
+        def setWidget(self, *args): pass
+        def setWidgetResizable(self, *args): pass
+        def setStyleSheet(self, *args): pass
     class QPixmap:
         def __init__(self, *args, **kwargs): pass
+        def scaled(self, *args): pass
+    class QIcon:
+        def __init__(self, *args): pass
+    class QFont:
+        def __init__(self, *args): pass
+    class QMessageBox:
+        @staticmethod
+        def warning(*args): pass
+        @staticmethod
+        def information(*args): pass
+    class Qt:
+        class WindowType:
+            Dialog = 0
+            FramelessWindowHint = 0
+        class WidgetAttribute:
+            WA_TranslucentBackground = 0
+        class AlignmentFlag:
+            AlignVCenter = 0
+        class ItemDataRole:
+            UserRole = 0
+        class AspectRatioMode:
+            KeepAspectRatio = 0
+        class TransformationMode:
+            SmoothTransformation = 0
+    class QtCore:
+        class QObject:
+            def __init__(self, *args): pass
+        class QEvent:
+            class Type:
+                MouseButtonPress = 0
 
 # Importar detector de editores y utilidades de i18n
 try:
     from .editorDetector import EditorDetector, EditorInfo, get_available_editors, save_default_editor, get_default_editor
     from .i18n import tr
+    from .iconManager import load_svg_icon
+    from .projectConfig import get_project_config
 except ImportError:
     from editorDetector import EditorDetector, EditorInfo, get_available_editors, save_default_editor, get_default_editor
     from i18n import tr
+    try:
+        from iconManager import load_svg_icon
+    except ImportError:
+        load_svg_icon = None
+    try:
+        from projectConfig import get_project_config
+    except ImportError:
+        get_project_config = None
+
+import sys
+import subprocess
+import platform
+
+
+def detect_executable_type(file_path: str) -> str:
+    """
+    Detecta el tipo de ejecutable basado en la extensión y contenido del archivo.
+    
+    Args:
+        file_path: Ruta al archivo ejecutable
+    
+    Returns:
+        Tipo de ejecutable ('exe', 'elf', 'app', 'script', 'unknown')
+    """
+    if not file_path or not os.path.exists(file_path):
+        return 'unknown'
+    
+    # Detectar por extensión
+    ext = os.path.splitext(file_path)[1].lower()
+    
+    if ext == '.exe':
+        return 'exe'
+    elif ext == '.app':
+        return 'app'
+    elif ext in ('.sh', '.bash', '.zsh', '.fish'):
+        return 'script'
+    elif ext in ('.py', '.py3'):
+        return 'python'
+    elif ext in ('.js', '.node'):
+        return 'node'
+    
+    # Detectar ELF (Linux/Unix) por magic bytes
+    try:
+        with open(file_path, 'rb') as f:
+            header = f.read(4)
+            if header == b'\x7fELF':
+                return 'elf'
+    except:
+        pass
+    
+    # Detectar Mach-O (Mac) por magic bytes
+    try:
+        with open(file_path, 'rb') as f:
+            header = f.read(4)
+            if header in (b'\xfe\xed\xfa\xce', b'\xfe\xed\xfa\xcf', b'\xce\xfa\xed\xfe', b'\xcf\xfa\xed\xfe'):
+                return 'macho'
+    except:
+        pass
+    
+    # Detectar si es ejecutable por permisos (Linux/Mac sin extensión)
+    if os.access(file_path, os.X_OK):
+        return 'executable'
+    
+    return 'unknown'
+
+
+
+
+def check_executable_exists(exe_path: str) -> bool:
+    """
+    Verifica si un ejecutable existe usando ping o verificación de archivo.
+    
+    Args:
+        exe_path: Ruta del ejecutable a verificar
+    
+    Returns:
+        True si el ejecutable existe y es accesible, False en caso contrario
+    """
+    if not exe_path:
+        return False
+    
+    # Primero verificar si el archivo existe
+    if os.path.exists(exe_path):
+        return True
+    
+    # Si no existe, intentar verificar si es un comando del sistema
+    try:
+        system = platform.system().lower()
+        
+        if system == 'windows':
+            # Windows: usar where command
+            result = subprocess.run(['where', exe_path], capture_output=True, text=True)
+            return result.returncode == 0
+        
+        elif system == 'linux' or system == 'darwin':
+            # Linux/Mac: usar which command
+            result = subprocess.run(['which', exe_path], capture_output=True, text=True)
+            return result.returncode == 0
+        
+    except Exception as e:
+        print(f"[ERROR] Error verificando ejecutable {exe_path}: {e}")
+    
+    return False
 
 
 class PackageMakerEditor:
@@ -86,23 +291,25 @@ class PackageMakerEditor:
 
 
 class EditorListItem(QWidget):
-    """Item personalizado para mostrar un editor en la lista tipo Windows 11."""
+    """Item personalizado para mostrar un editor en la lista tipo Material Design."""
     
     def __init__(self, editor_info, exe_path: str, parent=None, is_default: bool = False):
         super().__init__(parent)
         self.editor_info = editor_info
         self.exe_path = exe_path
         self.is_default = is_default
+        self._is_selected = False
         self._setup_ui()
     
     def _setup_ui(self):
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(16)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(12)
+        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         
-        # Icono del editor (tamaño más grande para mejor visibilidad)
+        # Icono del editor (tamaño estándar de Windows)
         self.icon_label = QLabel()
-        self.icon_label.setFixedSize(40, 40)
+        self.icon_label.setFixedSize(48, 48)
         self.icon_label.setStyleSheet("""
             background-color: transparent;
             border: none;
@@ -111,7 +318,7 @@ class EditorListItem(QWidget):
         # Cargar icono
         icon = self._load_icon()
         if icon:
-            self.icon_label.setPixmap(icon.scaled(40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            self.icon_label.setPixmap(icon.scaled(48, 48, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         else:
             # Icono por defecto con letra inicial
             initial = self.editor_info.display_name[0].upper() if self.editor_info.display_name else "?"
@@ -120,7 +327,7 @@ class EditorListItem(QWidget):
                 border-radius: 8px;
                 color: white;
                 font-weight: bold;
-                font-size: 18px;
+                font-size: 24px;
             """)
             self.icon_label.setText(initial)
             self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -146,21 +353,54 @@ class EditorListItem(QWidget):
         
         layout.addLayout(text_layout, 1)
         
-        # Radio button visual (círculo de selección)
-        self.radio = QLabel("○")
-        self.radio.setFont(QFont("Segoe UI", 16))
-        self.radio.setStyleSheet("color: rgba(255, 255, 255, 0.5);")
-        self.radio.setFixedWidth(24)
-        layout.addWidget(self.radio)
+        # Estilo base del widget (Windows 11 / Fluent Design)
+        self.setStyleSheet("""
+            EditorListItem {
+                background-color: #2d2d2d;
+                border-radius: 8px;
+                border-left: 4px solid transparent;
+                color: white;
+            }
+            EditorListItem:hover {
+                background-color: #3a3a3a;
+                border-left: 4px solid rgba(0, 120, 212, 0.5);
+            }
+            EditorListItem:pressed {
+                background-color: #252525;
+                border-left: 4px solid rgba(0, 120, 212, 0.7);
+            }
+            EditorListItem[selected="true"] {
+                background-color: #404040;
+                border-left: 4px solid #0078d4;
+            }
+            EditorListItem[selected="true"]:hover {
+                background-color: #4a4a4a;
+                border-left: 4px solid #0078d4;
+            }
+            EditorListItem[selected="true"]:pressed {
+                background-color: #353535;
+                border-left: 4px solid #0078d4;
+            }
+            QLabel {
+                color: white;
+            }
+        """)
     
     def _load_icon(self) -> Optional[QPixmap]:
-        """Carga el icono del editor usando QFileIconProvider o icon_path."""
+        """Carga el icono del editor usando IconManager o métodos alternativos."""
         if getattr(self.editor_info, "name", "") == "pmcodeeditor":
             try:
                 from lib.app_icons import svg_to_pixmap, ICONS_SVG
-                return svg_to_pixmap(ICONS_SVG["pmcodeeditor"], 40)
+                return svg_to_pixmap(ICONS_SVG["pmcodeeditor"], 48)
             except ImportError:
                 pass
+        
+        # Intentar usar IconManager para icono por defecto
+        if load_svg_icon:
+            default_icon = load_svg_icon("app", 48)
+            if default_icon:
+                return default_icon
+        
         if hasattr(self.editor_info, 'icon_path') and self.editor_info.icon_path and os.path.exists(self.editor_info.icon_path):
             try:
                 return QPixmap(self.editor_info.icon_path)
@@ -176,20 +416,22 @@ class EditorListItem(QWidget):
                 provider = QFileIconProvider()
                 icon = provider.icon(QFileInfo(self.exe_path))
                 if not icon.isNull():
-                    return icon.pixmap(40, 40)
+                    return icon.pixmap(48, 48)
             except Exception as e:
                 print(f"[DEBUG] Error cargando icono para {self.exe_path}: {e}")
         
         return None
     
     def set_selected(self, selected: bool):
-        """Actualiza el estado visual de selección."""
-        if selected:
-            self.radio.setText("●")
-            self.radio.setStyleSheet("color: #0078d4;")
-        else:
-            self.radio.setText("○")
-            self.radio.setStyleSheet("color: rgba(255, 255, 255, 0.5);")
+        """Actualiza el estado visual de selección usando propiedades dinámicas QSS."""
+        self._is_selected = selected
+        # Forzar actualización del estilo
+        self.setProperty("selected", "true" if selected else "false")
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+        # Forzar repintado inmediato
+        self.repaint()
 
 
 class OpenWithDialog(QDialog):
@@ -205,14 +447,17 @@ class OpenWithDialog(QDialog):
         self.selected_editor: Optional[Tuple[EditorInfo, str]] = None
         self.result_action: str = ""  # "once" o "always"
         self.editors: List[Tuple[EditorInfo, str]] = []
+        self.use_native_dialog = False  # Opción para usar diálogo nativo
+        self.project_config = get_project_config() if get_project_config else None
         
         self._setup_ui()
         self._detect_editors()
+        self._check_project_config()
     
     def _setup_ui(self):
-        """Configura la interfaz del diálogo estilo lista plana de apps."""
+        """Configura la interfaz del diálogo estilo Windows 11 / Fluent Design."""
         self.setWindowTitle(tr("Abrir con..."))
-        self.setFixedSize(420, 520)
+        self.setFixedSize(540, 580)
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
@@ -221,11 +466,11 @@ class OpenWithDialog(QDialog):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         
-        # Contenedor central con estilo acrílico
+        # Contenedor central con estilo Windows 11
         container = QFrame()
         container.setStyleSheet("""
             QFrame {
-                background-color: #252526;
+                background-color: #1f1f1f;
                 border: none;
                 border-radius: 8px;
             }
@@ -234,31 +479,38 @@ class OpenWithDialog(QDialog):
         container_layout.setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(0)
         
-        # Header con fondo sutil
+        # Header (sin bordes, texto plano sobre fondo)
         header_container = QFrame()
         header_container.setStyleSheet("""
             QFrame {
-                background-color: rgba(255, 255, 255, 0.02);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
+                background-color: transparent;
+                border: none;
             }
         """)
         header_layout = QVBoxLayout(header_container)
-        header_layout.setContentsMargins(20, 20, 20, 16)
-        header_layout.setSpacing(4)
+        header_layout.setContentsMargins(28, 28, 28, 20)
+        header_layout.setSpacing(6)
         
         title = QLabel(tr("Abrir con..."))
-        title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        title.setFont(QFont("Segoe UI", 20, QFont.Weight.DemiBold))
         title.setStyleSheet("color: white;")
         header_layout.addWidget(title)
         
         # Subtítulo con nombre del proyecto
         if self.project_name:
             subtitle = QLabel(f'{tr("Proyecto")}: "{self.project_name}"')
-            subtitle.setFont(QFont("Segoe UI", 11))
-            subtitle.setStyleSheet("color: rgba(255, 255, 255, 0.5);")
+            subtitle.setFont(QFont("Segoe UI", 12))
+            subtitle.setStyleSheet("color: #757575;")
             header_layout.addWidget(subtitle)
+        
+        # Detectar y mostrar tipo de ejecutable si hay project_path
+        if self.project_path:
+            exe_type = detect_executable_type(self.project_path)
+            if exe_type != 'unknown':
+                type_label = QLabel(f'{tr("Tipo")}: {exe_type.upper()}')
+                type_label.setFont(QFont("Segoe UI", 10))
+                type_label.setStyleSheet("color: #757575;")
+                header_layout.addWidget(type_label)
         
         container_layout.addWidget(header_container)
         
@@ -273,25 +525,33 @@ class OpenWithDialog(QDialog):
                 border: none;
             }
             QScrollBar:vertical {
-                background-color: transparent;
-                width: 8px;
-                margin: 0px;
+                background-color: #333333;
+                width: 12px;
+                margin: 12px 0 12px 0;
+                border-radius: 6px;
             }
             QScrollBar::handle:vertical {
-                background-color: rgba(255, 255, 255, 0.2);
-                border-radius: 4px;
-                min-height: 30px;
+                background-color: #00aaff;
+                min-height: 20px;
+                border-radius: 6px;
             }
             QScrollBar::handle:vertical:hover {
-                background-color: rgba(255, 255, 255, 0.3);
+                background-color: #0088cc;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                background: none;
+                border: none;
+            }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
             }
         """)
         
         # Widget contenedor de la lista
         list_container = QWidget()
         self.list_layout = QVBoxLayout(list_container)
-        self.list_layout.setContentsMargins(8, 8, 8, 8)
-        self.list_layout.setSpacing(2)
+        self.list_layout.setContentsMargins(20, 20, 20, 20)
+        self.list_layout.setSpacing(8)
         self.list_layout.addStretch()
         
         scroll.setWidget(list_container)
@@ -311,89 +571,116 @@ class OpenWithDialog(QDialog):
         btn_separator.setFixedHeight(1)
         container_layout.addWidget(btn_separator)
         
-        # Botones de acción (estilo Windows 11 moderno)
+        # Botones de acción (Windows 11 / Fluent Design)
         buttons_container = QFrame()
         buttons_container.setStyleSheet("""
             QFrame {
                 background-color: transparent;
+                border-top: 1px solid #333;
                 border-bottom-left-radius: 8px;
                 border-bottom-right-radius: 8px;
             }
         """)
         buttons_layout = QHBoxLayout(buttons_container)
-        buttons_layout.setContentsMargins(16, 16, 16, 16)
+        buttons_layout.setContentsMargins(20, 20, 20, 20)
         buttons_layout.setSpacing(8)
         
-        # Botón Cancelar
-        self.btn_cancel = QPushButton(tr("Cancelar"))
-        self.btn_cancel.setFixedHeight(32)
-        self.btn_cancel.setFont(QFont("Segoe UI", 9))
-        self.btn_cancel.setStyleSheet("""
+        buttons_layout.addStretch()
+        
+        # Botón para editar proyecto (solo si existe configuración)
+        self.btn_edit_project = QPushButton(tr("Editar"))
+        self.btn_edit_project.setFixedHeight(36)
+        self.btn_edit_project.setFont(QFont("Segoe UI", 10))
+        self.btn_edit_project.setMinimumWidth(80)
+        self.btn_edit_project.setStyleSheet("""
             QPushButton {
-                background-color: transparent;
+                background-color: #0078d4;
                 color: white;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 4px;
+                border: none;
+                border-radius: 6px;
                 padding: 0 16px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.05);
-                border-color: rgba(255, 255, 255, 0.25);
+                background-color: #1084d8;
             }
             QPushButton:pressed {
-                background-color: rgba(255, 255, 255, 0.1);
+                background-color: #0064b8;
+            }
+        """)
+        self.btn_edit_project.clicked.connect(self._on_edit_project)
+        self.btn_edit_project.setVisible(False)  # Oculto por defecto
+        buttons_layout.addWidget(self.btn_edit_project)
+        
+        # Botón Cancelar
+        self.btn_cancel = QPushButton(tr("Cancelar"))
+        self.btn_cancel.setFixedHeight(36)
+        self.btn_cancel.setFont(QFont("Segoe UI", 10))
+        self.btn_cancel.setMinimumWidth(80)
+        self.btn_cancel.setStyleSheet("""
+            QPushButton {
+                background-color: #2d2d2d;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 0 16px;
+            }
+            QPushButton:hover {
+                background-color: #3d3d3d;
+            }
+            QPushButton:pressed {
+                background-color: #1d1d1d;
             }
         """)
         self.btn_cancel.clicked.connect(self.reject)
         buttons_layout.addWidget(self.btn_cancel)
         
-        buttons_layout.addStretch()
-        
         # Botón "Solo una vez"
         self.btn_once = QPushButton(tr("Solo una vez"))
-        self.btn_once.setFixedHeight(32)
-        self.btn_once.setFont(QFont("Segoe UI", 9))
+        self.btn_once.setFixedHeight(36)
+        self.btn_once.setFont(QFont("Segoe UI", 10))
+        self.btn_once.setMinimumWidth(100)
         self.btn_once.setEnabled(False)
         self.btn_once.setStyleSheet("""
             QPushButton {
-                background-color: transparent;
+                background-color: #2d2d2d;
                 color: white;
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 4px;
+                border: none;
+                border-radius: 6px;
                 padding: 0 16px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.05);
+                background-color: #3d3d3d;
             }
             QPushButton:pressed {
-                background-color: rgba(255, 255, 255, 0.1);
+                background-color: #1d1d1d;
             }
             QPushButton:disabled {
                 color: rgba(255, 255, 255, 0.3);
-                border-color: rgba(255, 255, 255, 0.08);
+                background-color: #1d1d1d;
             }
         """)
         self.btn_once.clicked.connect(lambda: self._on_accept("once"))
         buttons_layout.addWidget(self.btn_once)
         
-        # Botón "Siempre" (primario)
+        # Botón "Siempre" (primario - acento Windows 11)
         self.btn_always = QPushButton(tr("Siempre"))
-        self.btn_always.setFixedHeight(32)
-        self.btn_always.setFont(QFont("Segoe UI", 9, QFont.Weight.Medium))
+        self.btn_always.setFixedHeight(36)
+        self.btn_always.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        self.btn_always.setMinimumWidth(100)
         self.btn_always.setEnabled(False)
         self.btn_always.setStyleSheet("""
             QPushButton {
                 background-color: #0078d4;
                 color: white;
                 border: none;
-                border-radius: 4px;
+                border-radius: 6px;
                 padding: 0 20px;
             }
             QPushButton:hover {
-                background-color: #006cbd;
+                background-color: #1084d8;
             }
             QPushButton:pressed {
-                background-color: #005a9e;
+                background-color: #0064b8;
             }
             QPushButton:disabled {
                 background-color: rgba(0, 120, 212, 0.3);
@@ -462,24 +749,20 @@ class OpenWithDialog(QDialog):
             item_widget = EditorListItem(editor_info, exe_path, is_default=is_default)
             item_widget.setCursor(Qt.CursorShape.PointingHandCursor)
             
-            # Estilo del item contenedor
+            # Estilo del item contenedor (tarjeta Material Design)
             item_container = QFrame()
             is_pm = editor_info.name == "pmcodeeditor"
-            idle_border = "rgba(0, 120, 212, 0.45)" if is_pm else "transparent"
             item_container.setStyleSheet(f"""
                 QFrame {{
-                    background-color: {"rgba(255, 87, 34, 0.06)" if is_pm else "transparent"};
-                    border: 1px solid {idle_border};
-                    border-radius: 4px;
-                }}
-                QFrame:hover {{
-                    background-color: rgba(255, 255, 255, 0.04);
-                    border-color: rgba(0, 120, 212, 0.35);
+                    background-color: transparent;
+                    border: none;
+                    border-radius: 8px;
                 }}
             """)
             
             item_layout = QVBoxLayout(item_container)
-            item_layout.setContentsMargins(4, 2, 4, 2)
+            item_layout.setContentsMargins(0, 0, 0, 0)
+            item_layout.setSpacing(0)
             item_layout.addWidget(item_widget)
             
             # Guardar referencias
@@ -492,9 +775,22 @@ class OpenWithDialog(QDialog):
             }
             self._editor_items.append(item_data)
             
-            # Conectar eventos de clic
-            item_container.mousePressEvent = lambda e, idx=i: self._on_editor_clicked(idx)
-            item_widget.mousePressEvent = lambda e, idx=i: self._on_editor_clicked(idx)
+            # Conectar eventos de clic usando event filter
+            from PyQt6.QtCore import QEvent
+            
+            click_filter = QtCore.QObject(self)
+            click_filter.index = i
+            click_filter.callback = self._on_editor_clicked
+            
+            def filter_event(obj, event):
+                if event.type() == QEvent.Type.MouseButtonPress:
+                    click_filter.callback(click_filter.index)
+                    return True
+                return False
+            
+            click_filter.eventFilter = filter_event
+            item_container.installEventFilter(click_filter)
+            item_widget.installEventFilter(click_filter)
             
             # Insertar antes del stretch
             self.list_layout.insertWidget(self.list_layout.count() - 1, item_container)
@@ -514,30 +810,11 @@ class OpenWithDialog(QDialog):
         if self._selected_item is not None:
             prev_data = self._editor_items[self._selected_item]
             prev_data['widget'].set_selected(False)
-            prev_data['container'].setStyleSheet("""
-                QFrame {
-                    background-color: transparent;
-                    border: 1px solid transparent;
-                    border-radius: 4px;
-                }
-                QFrame:hover {
-                    background-color: rgba(255, 255, 255, 0.04);
-                    border-color: rgba(255, 255, 255, 0.08);
-                }
-            """)
         
         # Marcar el nuevo
         self._selected_item = index
         item_data = self._editor_items[index]
         item_data['widget'].set_selected(True)
-        is_pm = item_data["editor_info"].name == "pmcodeeditor"
-        item_data["container"].setStyleSheet(f"""
-            QFrame {{
-                background-color: {"rgba(255, 87, 34, 0.12)" if is_pm else "rgba(0, 120, 212, 0.15)"};
-                border: 1px solid {"rgba(255, 87, 34, 0.55)" if is_pm else "rgba(0, 120, 212, 0.45)"};
-                border-radius: 4px;
-            }}
-        """)
         
         # Actualizar selección
         self.selected_editor = (item_data['editor_info'], item_data['exe_path'])
@@ -549,14 +826,88 @@ class OpenWithDialog(QDialog):
         self._on_editor_clicked(index)
         self._on_accept("once")
     
+    def _check_project_config(self):
+        """Verifica si existe configuración para el proyecto y muestra el botón de editar."""
+        if not self.project_config or not self.project_path:
+            return
+        
+        try:
+            # Verificar si existe configuración para este proyecto
+            editor_name = self.project_config.get_project_editor(self.project_path)
+            if editor_name:
+                # Verificar si el ejecutable existe
+                exe_path = self.project_config.get_editor_path(editor_name)
+                if exe_path and check_executable_exists(exe_path):
+                    # Mostrar botón de editar
+                    self.btn_edit_project.setVisible(True)
+                    self.btn_edit_project.setText(f"{tr('Editar')} ({editor_name})")
+        except Exception as e:
+            print(f"[ERROR] Error verificando configuración del proyecto: {e}")
+    
+    def _on_edit_project(self):
+        """Edita el proyecto con el editor configurado."""
+        if not self.project_config or not self.project_path:
+            return
+        
+        try:
+            # Obtener el editor configurado
+            editor_name = self.project_config.get_project_editor(self.project_path)
+            if not editor_name:
+                QMessageBox.warning(
+                    self,
+                    tr("Error"),
+                    tr("No hay configuración de editor para este proyecto.")
+                )
+                return
+            
+            # Obtener la ruta del ejecutable
+            exe_path = self.project_config.get_editor_path(editor_name)
+            if not exe_path:
+                QMessageBox.warning(
+                    self,
+                    tr("Error"),
+                    tr("No hay ruta de ejecutable configurada para este editor.")
+                )
+                return
+            
+            # Verificar si el ejecutable existe
+            if not check_executable_exists(exe_path):
+                QMessageBox.warning(
+                    self,
+                    tr("Error"),
+                    tr("El ejecutable del editor no existe. Se abrirá el diálogo 'Abrir con' para seleccionar otro editor.")
+                )
+                # No cerrar el diálogo, permitir al usuario seleccionar otro editor
+                return
+            
+            # Abrir el proyecto con el editor
+            if platform.system().lower() == 'windows':
+                os.startfile(exe_path, f'"{self.project_path}"')
+            else:
+                subprocess.Popen([exe_path, self.project_path])
+            
+            self.accept()
+        
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                tr("Error"),
+                tr(f"Error al abrir el proyecto: {e}")
+            )
+    
     def _on_accept(self, action: str):
         """Acepta el diálogo con la acción especificada."""
         self.result_action = action
         
         if action == "always" and self.selected_editor:
             # Guardar como predeterminado
-            editor_info, _ = self.selected_editor
+            editor_info, exe_path = self.selected_editor
             save_default_editor(editor_info.name)
+            
+            # Guardar en configuración JSON del proyecto
+            if self.project_config and self.project_path:
+                self.project_config.set_project_editor(self.project_path, editor_info.name)
+                self.project_config.set_editor_path(editor_info.name, exe_path)
         
         self.accept()
     

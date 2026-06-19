@@ -1,10 +1,6 @@
 {
-  "recent_projects": [
-    "/home/codespace/Documents/Packagemaker Projects/jk.jw.v1.0-26.06-18.37-Knosthalij",
-    "/workspaces/codespaces-blank/packagemaker",
-    "/root/Documents/Packagemaker Projects/hhhh.bbb"
-  ],
-  "default_interpreter": "/home/codespace/.python/current/bin/python3",
+  "recent_projects": [],
+  "default_interpreter": "C:\\Program Files\\Python314\\python.EXE",
   "exclude_pyqt": true,
   "exclude_local": true,
   "auto_check": true

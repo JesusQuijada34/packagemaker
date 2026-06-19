@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Wrapper inteligente para PackageMaker.
+Detecta el entorno de ejecución y ejecuta packagemaker apropiadamente.
+"""
+
+import sys
+import os
+import subprocess
+import platform
+
+def main():
+    """Función principal del wrapper."""
+    
+    # Detectar si está ejecutándose como script o como ejecutable compilado
+    is_frozen = getattr(sys, 'frozen', False)
+    
+    if is_frozen:
+        # Si está frozen, ya es un ejecutable, no hacer nada de especial
+        # La aplicación se ejecutará normalmente
+        return
+    
+    # Si no está frozen, ejecutar packagemaker.py
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    packagemaker_script = os.path.join(script_dir, 'packagemaker.py')
+    
+    if not os.path.exists(packagemaker_script):
+        print(f"Error: No se encuentra packagemaker.py en {script_dir}")
+        sys.exit(1)
+    
+    # Ejecutar packagemaker.py
+    try:
+        # Usar el mismo intérprete de Python
+        subprocess.run([sys.executable, packagemaker_script] + sys.argv[1:])
+    except Exception as e:
+        print(f"Error ejecutando packagemaker.py: {e}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

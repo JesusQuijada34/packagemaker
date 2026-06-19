@@ -18,14 +18,21 @@ import ssl
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
-
-# Prefer the local leviathan-ui repository over a globally installed package.
 import importlib
 import importlib.util
 
-# Usar leviathan-ui desde pip (remoto) - instalar con: pip install leviathan-ui
-print(f"[INFO] Usando leviathan-ui desde PyPI (pip install leviathan-ui)")
-
+# Importar detector de modo de ejecución
+try:
+    from lib.executionMode import get_execution_mode, is_frozen, get_command_name
+except ImportError:
+    def get_execution_mode():
+        class DummyMode:
+            def is_frozen(self): return False
+            def get_command_name(self): return "packagemaker.py"
+            def get_base_directory(self): return os.path.dirname(os.path.abspath(__file__))
+        return DummyMode()
+    def is_frozen(): return False
+    def get_command_name(): return "packagemaker.py"
 try:
     from PyQt6 import QtWidgets, QtGui, QtCore
     from PyQt6.QtWidgets import (
@@ -265,6 +272,19 @@ else:
 
 _PLATFORM_BASE_DIR = BASE_DIR
 _PLATFORM_FLUTHIN_APPS = Fluthin_APPS
+
+# --- EXECUTION MODE DETECTION ---
+# Detectar modo de ejecución (frozen/unfrozen) y ajustar comportamiento
+exec_mode = get_execution_mode()
+EXECUTION_INFO = exec_mode.get_platform_info()
+
+# Ajustar BASE_DIR según modo de ejecución
+if exec_mode.is_frozen():
+    # Si está frozen, usar el directorio del ejecutable como base
+    BASE_DIR = exec_mode.get_base_directory()
+else:
+    # Si es script, mantener el comportamiento actual
+    BASE_DIR = _PLATFORM_BASE_DIR
 
 # --- GLOBAL CONFIG SYSTEM ---
 # Manejar icono según la plataforma (PNG para Linux, ICO para Windows)
@@ -1284,43 +1304,49 @@ class PackageTodoGUI(QMainWindow):
             QLabel {{
                 color: #dddddd;
             }}
-            /* Scrollbars UWP Style */
+            /* Scrollbars Material Design Style */
             QScrollBar:vertical {{
                 border: none;
-                background: transparent;
+                background-color: #333333;
                 width: 12px;
-                margin: 0;
+                margin: 12px 0 12px 0;
+                border-radius: 6px;
             }}
             QScrollBar::handle:vertical {{
-                background-color: transparent;
+                background-color: #00aaff;
                 min-height: 20px;
                 border-radius: 6px;
                 margin: 2px;
-                border: 1px solid transparent;
-                background-clip: content-box;
             }}
             QScrollBar::handle:vertical:hover {{
-                background-color: transparent;
+                background-color: #0088cc;
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                background: none;
+                border: none;
             }}
             QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
                 background: none;
             }}
             QScrollBar:horizontal {{
                 border: none;
-                background: transparent;
+                background-color: #333333;
                 height: 12px;
-                margin: 0;
+                margin: 0 12px 0 12px;
+                border-radius: 6px;
             }}
             QScrollBar::handle:horizontal {{
-                background-color: transparent;
+                background-color: #00aaff;
                 min-width: 20px;
                 border-radius: 6px;
                 margin: 2px;
-                border: 1px solid transparent;
-                background-clip: content-box;
             }}
             QScrollBar::handle:horizontal:hover {{
-                background-color: transparent;
+                background-color: #0088cc;
+            }}
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+                background: none;
+                border: none;
             }}
             QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
                 background: none;
@@ -3856,6 +3882,13 @@ class PackageTodoGUI(QMainWindow):
                 version_base=version_base,
                 description=descripcion or "Proyecto creado con Influent Package Maker",
             )
+            
+            # Copiar icono por defecto
+            icon_dest = os.path.join(rutaProyecto, "app", "app-icon.ico")
+            icon_source = os.path.join("app", "app-icon.ico")
+            if os.path.exists(icon_source):
+                shutil.copy(icon_source, icon_dest)
+            
             archivoPrincipal = f"{app_id}.py"
 
             LeviathanDialog.launch(
@@ -5126,12 +5159,12 @@ def main():
     
     from lib.cliHandler import CLIHandler, handle_cli_action
     
-    cli = CLIHandler()
+    cli = CLIHandler(base_dir=BASE_DIR)
     
     if cli.has_cli_args():
         args = cli.parse()
         
-        if hasattr(args, 'version') and args.version:
+        if hasattr(args, 'app_version') and args.app_version:
             # Intentar obtener versión de varias fuentes
             try:
                 from version import VERSION
@@ -5150,6 +5183,11 @@ def main():
         action, data, action_options = cli.get_action(args)
         
         if action:
+            # Los comandos create/compile/moonfix se ejecutan automáticamente en headless
+            # cuando se usan los nuevos argumentos sin --headless explícito
+            if action in ['create_project', 'compile_project', 'repair_project']:
+                action_options['headless'] = True
+            
             # Acciones que no requieren GUI ni QApplication
             if action in ['shellpatch_install', 'shellpatch_remove', 'shellpatch_shortcuts'] or action_options.get('headless'):
                 handle_cli_action(action, data, None, **action_options)

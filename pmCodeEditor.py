@@ -47,7 +47,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout, QLabel, QPushButton, QFileDialog, QMessageBox,
     QDialog, QTextEdit, QLineEdit, QSplitter, QStatusBar,
     QTreeView, QFrame, QSizePolicy, QMenuBar, QMenu, QGroupBox, QScrollArea, QGridLayout,
-    QInputDialog, QRadioButton, QListWidget, QListWidgetItem, QProgressBar,
+    QInputDialog, QRadioButton, QListWidget, QListWidgetItem, QProgressBar, QCheckBox,
 )
 from PyQt6.QtGui import (
     QFont, QSyntaxHighlighter, QTextCharFormat, QTextFormat, QColor, QKeySequence,
@@ -337,7 +337,7 @@ class PythonHighlighter(QSyntaxHighlighter):
         return fmt
     
     def _setup_rules(self):
-        """Configura las reglas de start_install."""
+        """Configura las reglas de resaltado de sintaxis."""
         self.rules = []
         
         # Palabras clave
@@ -894,7 +894,7 @@ class ConsolePanel(QWidget):
             self._process.waitForFinished(2000)
             if self._process.state() != QProcess.ProcessState.NotRunning:
                 self._process.kill()
-            self.append_output("[Proceso detenado por el usuario]", is_error=True)
+            self.append_output("[Proceso detenido por el usuario]", is_error=True)
             self._set_running(False)
     
     def _get_working_dir(self) -> str:
@@ -1447,94 +1447,399 @@ class PythonSetupDialog(QDialog):
         self.load_versions()
 
     def init_ui(self):
-        self.setWindowTitle("Configuración de Python - PackageMaker IDE")
-        self.setMinimumSize(620, 520)
+        self.setWindowTitle("Python Setup - PackageMaker IDE")
+        self.setMinimumSize(700, 550)
+        self.resize(700, 550)
+        
+        # UWP-style window flags
+        if sys.platform == "win32":
+            self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
 
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
+        # Main container with UWP styling
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-        panel = QFrame()
-        panel.setStyleSheet("""
+        # Leviathan-UI style title bar
+        title_bar = QFrame()
+        title_bar.setStyleSheet("""
             QFrame {
-                background-color: #1E1E2E;
-                border: 1px solid #3C3C3C;
-                border-radius: 10px;
+                background-color: #1e1e1e;
+                border-bottom: 1px solid #333333;
             }
         """)
-        layout = QVBoxLayout(panel)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(14)
+        title_bar.setFixedHeight(40)
+        title_bar_layout = QHBoxLayout(title_bar)
+        title_bar_layout.setContentsMargins(12, 0, 0, 0)
+        title_bar_layout.setSpacing(0)
 
-        title = QLabel("Bienvenido a PackageMaker IDE")
-        title.setStyleSheet("font-size: 22px; font-weight: bold; color: #ff5722;")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title)
+        # Window title
+        title_label = QLabel("Python Setup")
+        title_label.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                font-weight: 500;
+                color: #ffffff;
+                font-family: 'Segoe UI', sans-serif;
+            }
+        """)
+        title_bar_layout.addWidget(title_label)
+        title_bar_layout.addStretch()
 
-        desc = QLabel(
-            "Para funcionar de forma autónoma, el IDE puede descargar un intérprete Python portable.\n"
-            "Selecciona una opción:"
+        # Window control buttons (leviathan-ui style)
+        if sys.platform == "win32":
+            btn_min = QPushButton()
+            btn_min.setFixedSize(46, 32)
+            btn_min.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_min.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: none;
+                    color: #ffffff;
+                    font-size: 10px;
+                }
+                QPushButton:hover {
+                    background-color: #2d2d2d;
+                }
+                QPushButton:pressed {
+                    background-color: #1e1e1e;
+                }
+            """)
+            btn_min.setText("─")
+            btn_min.clicked.connect(self.showMinimized)
+            title_bar_layout.addWidget(btn_min)
+
+            btn_max = QPushButton()
+            btn_max.setFixedSize(46, 32)
+            btn_max.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_max.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: none;
+                    color: #ffffff;
+                    font-size: 10px;
+                }
+                QPushButton:hover {
+                    background-color: #2d2d2d;
+                }
+                QPushButton:pressed {
+                    background-color: #1e1e1e;
+                }
+            """)
+            btn_max.setText("□")
+            btn_max.clicked.connect(self._toggle_maximize)
+            title_bar_layout.addWidget(btn_max)
+
+            btn_close = QPushButton()
+            btn_close.setFixedSize(46, 32)
+            btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_close.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: none;
+                    color: #ffffff;
+                    font-size: 10px;
+                }
+                QPushButton:hover {
+                    background-color: #e81123;
+                }
+                QPushButton:pressed {
+                    background-color: #c42b1c;
+                }
+            """)
+            btn_close.setText("✕")
+            btn_close.clicked.connect(self.close)
+            title_bar_layout.addWidget(btn_close)
+
+        main_layout.addWidget(title_bar)
+
+        # Content area with UWP acrylic effect
+        content = QFrame()
+        content.setStyleSheet("""
+            QFrame {
+                background-color: #1e1e1e;
+            }
+        """)
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(40, 32, 40, 32)
+        content_layout.setSpacing(20)
+
+        # Info card with UWP style
+        info_card = QFrame()
+        info_card.setStyleSheet("""
+            QFrame {
+                background-color: rgba(37, 37, 38, 0.95);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 4px;
+            }
+        """)
+        info_layout = QVBoxLayout(info_card)
+        info_layout.setContentsMargins(20, 16, 20, 16)
+        info_layout.setSpacing(8)
+
+        info_title = QLabel("Python Environment Setup")
+        info_title.setStyleSheet("""
+            QLabel {
+                font-size: 16px;
+                font-weight: 600;
+                color: #ffffff;
+                font-family: 'Segoe UI', sans-serif;
+            }
+        """)
+        info_layout.addWidget(info_title)
+
+        info_text = QLabel(
+            "Configure your Python interpreter. Choose a portable version for consistency "
+            "or use your system Python."
         )
-        desc.setStyleSheet("color: #ccc; font-size: 13px;")
-        desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        desc.setWordWrap(True)
-        layout.addWidget(desc)
+        info_text.setStyleSheet("""
+            QLabel {
+                font-size: 13px;
+                color: #a0a0a0;
+                line-height: 1.4;
+                font-family: 'Segoe UI', sans-serif;
+            }
+        """)
+        info_text.setWordWrap(True)
+        info_layout.addWidget(info_text)
 
+        content_layout.addWidget(info_card)
+
+        # Platform warning
         if sys.platform != "win32":
-            warn = QLabel(
-                "En este sistema se usará el Python del sistema. "
-                "La descarga portable solo está disponible en Windows."
+            warn_card = QFrame()
+            warn_card.setStyleSheet("""
+                QFrame {
+                    background-color: #3d2d1f;
+                    border: 1px solid #ff9800;
+                    border-radius: 8px;
+                    padding: 4px;
+                }
+            """)
+            warn_layout = QVBoxLayout(warn_card)
+            warn_layout.setContentsMargins(16, 12, 16, 12)
+            
+            warn_label = QLabel(
+                "⚠️ Portable Python is only available on Windows. "
+                "Your system Python will be used on this platform."
             )
-            warn.setStyleSheet("color: #FFC107; font-size: 12px;")
-            warn.setWordWrap(True)
-            layout.addWidget(warn)
+            warn_label.setStyleSheet("""
+                QLabel {
+                    font-size: 12px;
+                    color: #ffb74d;
+                    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+                }
+            """)
+            warn_label.setWordWrap(True)
+            warn_layout.addWidget(warn_label)
+            
+            content_layout.addWidget(warn_card)
 
-        options_group = QGroupBox("Opciones de instalación")
-        options_layout = QVBoxLayout(options_group)
+        # Options section
+        options_label = QLabel("Installation Options")
+        options_label.setStyleSheet("""
+            QLabel {
+                font-size: 13px;
+                font-weight: 600;
+                color: #ffffff;
+                margin-top: 8px;
+                font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            }
+        """)
+        content_layout.addWidget(options_label)
 
+        # Radio buttons with modern styling
         self.radio_recommended = QRadioButton(
-            f"Descargar versión recomendada (Python {self.manager.get_default_version()})"
+            f"Download recommended version (Python {self.manager.get_default_version()})"
         )
         self.radio_recommended.setChecked(True)
         self.radio_recommended.setEnabled(sys.platform == "win32")
-        options_layout.addWidget(self.radio_recommended)
+        self.radio_recommended.setStyleSheet("""
+            QRadioButton {
+                font-size: 13px;
+                color: #cccccc;
+                spacing: 8px;
+                font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            }
+            QRadioButton::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                border: 2px solid #555555;
+                background-color: #1e1e1e;
+            }
+            QRadioButton::indicator:checked {
+                background-color: #ff5722;
+                border: 2px solid #ff5722;
+            }
+            QRadioButton::indicator:hover {
+                border: 2px solid #ff5722;
+            }
+        """)
+        content_layout.addWidget(self.radio_recommended)
 
-        self.radio_choose = QRadioButton("Elegir versión específica")
+        self.radio_choose = QRadioButton("Choose specific version")
         self.radio_choose.setEnabled(sys.platform == "win32")
-        options_layout.addWidget(self.radio_choose)
+        self.radio_choose.setStyleSheet("""
+            QRadioButton {
+                font-size: 13px;
+                color: #cccccc;
+                spacing: 8px;
+                font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            }
+            QRadioButton::indicator {
+                width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                border: 2px solid #555555;
+                background-color: #1e1e1e;
+            }
+            QRadioButton::indicator:checked {
+                background-color: #ff5722;
+                border: 2px solid #ff5722;
+            }
+            QRadioButton::indicator:hover {
+                border: 2px solid #ff5722;
+            }
+        """)
+        content_layout.addWidget(self.radio_choose)
 
+        # Version list
         self.version_list = QListWidget()
-        self.version_list.setMaximumHeight(160)
+        self.version_list.setMaximumHeight(140)
         self.version_list.setVisible(False)
-        options_layout.addWidget(self.version_list)
+        self.version_list.setStyleSheet("""
+            QListWidget {
+                background-color: #252526;
+                border: 1px solid #3c3c3c;
+                border-radius: 6px;
+                padding: 4px;
+                font-size: 12px;
+                color: #cccccc;
+                font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-radius: 4px;
+                margin: 2px;
+            }
+            QListWidget::item:selected {
+                background-color: #ff5722;
+                color: white;
+            }
+            QListWidget::item:hover {
+                background-color: #3c3c3c;
+            }
+        """)
+        content_layout.addWidget(self.version_list)
 
-        layout.addWidget(options_group)
-
+        # Progress bar
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         self.progress_bar.setTextVisible(False)
-        layout.addWidget(self.progress_bar)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                background-color: #252526;
+                border: none;
+                border-radius: 4px;
+                height: 6px;
+            }
+            QProgressBar::chunk {
+                background-color: #ff5722;
+                border-radius: 4px;
+            }
+        """)
+        content_layout.addWidget(self.progress_bar)
 
+        # Status label
         self.status_label = QLabel("")
-        self.status_label.setStyleSheet("color: #aaa; font-size: 12px;")
+        self.status_label.setStyleSheet("""
+            QLabel {
+                color: #888888;
+                font-size: 11px;
+                font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            }
+        """)
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.status_label)
+        content_layout.addWidget(self.status_label)
 
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
+        content_layout.addStretch()
 
-        self.btn_skip = QPushButton("Usar Python del sistema")
+        # Button bar
+        button_bar = QHBoxLayout()
+        button_bar.setSpacing(12)
+
+        self.btn_skip = QPushButton("Use System Python")
+        self.btn_skip.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_skip.setMinimumHeight(36)
+        self.btn_skip.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #cccccc;
+                border: 1px solid #555555;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: 500;
+                font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            }
+            QPushButton:hover {
+                background-color: #3c3c3c;
+                border: 1px solid #666666;
+                color: #ffffff;
+            }
+            QPushButton:pressed {
+                background-color: #2d2d2d;
+            }
+            QPushButton:disabled {
+                color: #555555;
+                border: 1px solid #3c3c3c;
+            }
+        """)
         self.btn_skip.clicked.connect(self.on_use_system_python)
-        btn_layout.addWidget(self.btn_skip)
+        button_bar.addWidget(self.btn_skip)
 
-        self.btn_next = QPushButton("Siguiente →")
-        self.btn_next.setFixedSize(120, 40)
+        button_bar.addStretch()
+
+        self.btn_next = QPushButton("Continue")
+        self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_next.setMinimumSize(120, 36)
+        self.btn_next.setStyleSheet("""
+            QPushButton {
+                background-color: #ff5722;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 24px;
+                font-size: 13px;
+                font-weight: 600;
+                font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            }
+            QPushButton:hover {
+                background-color: #ff784e;
+            }
+            QPushButton:pressed {
+                background-color: #e64a19;
+            }
+            QPushButton:disabled {
+                background-color: #3c3c3c;
+                color: #666666;
+            }
+        """)
         self.btn_next.clicked.connect(self.on_next)
-        btn_layout.addWidget(self.btn_next)
+        button_bar.addWidget(self.btn_next)
 
-        layout.addLayout(btn_layout)
-        outer.addWidget(panel)
+        content_layout.addLayout(button_bar)
+        main_layout.addWidget(content)
 
         self.radio_choose.toggled.connect(self.on_choose_toggled)
+
+    def _toggle_maximize(self):
+        """Toggle window maximization."""
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
 
     def load_versions(self):
         self.version_list.clear()
@@ -1616,19 +1921,31 @@ class PythonSetupDialog(QDialog):
 
 
 def resolve_python_path() -> Optional[str]:
-    """Resuelve el intérprete Python para el IDE (portable o sistema)."""
+    """Resuelve el intérprete Python para el IDE (portable o sistema).
+    Retorna el path sin mostrar diálogo si ya hay Python instalado."""
     manager = get_python_manager()
     installed = manager.get_installed_versions()
+    
+    # Si hay versiones instaladas, usar la primera disponible sin mostrar diálogo
     if installed:
         version = manager.get_default_version()
         if version not in installed:
             version = installed[0]
         exe = manager.get_python_exe(version)
-        if exe:
+        if exe and exe.exists():
             path = str(exe)
             os.environ["PM_PYTHON_PATH"] = path
+            print(f"[INFO] Usando Python instalado: {path}")
             return path
+    
+    # Si no hay portable, intentar usar Python del sistema
+    system_python = shutil.which("python") or shutil.which("python3")
+    if system_python:
+        os.environ["PM_PYTHON_PATH"] = system_python
+        print(f"[INFO] Usando Python del sistema: {system_python}")
+        return system_python
 
+    # Solo mostrar diálogo si no hay ninguna opción
     dialog = PythonSetupDialog()
     if dialog.exec() != QDialog.DialogCode.Accepted:
         return None
@@ -2332,7 +2649,7 @@ class EditorWindow(QMainWindow):
             ("F6", "Verificar sintaxis"),
         ]
         
-        text = "<h2>Atajos de teclado</h2><tr>"
+        text = "<h2>Atajos de teclado</h2><table>"
         for key, desc in shortcuts:
             text += f"<tr><td><b>{key}</b></td><td>{desc}</td></tr>"
         text += "</table>"

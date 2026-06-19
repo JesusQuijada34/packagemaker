@@ -140,28 +140,18 @@ class ProjectDetailsDialog(QDialog):
     def init_ui(self):
         self.container = QWidget(self)
         self.container.setObjectName("DetailsContainer")
-        # Base container style
+        # Base container style - siempre gris
         self.container.setStyleSheet("""
             #DetailsContainer {
-                background-color: #ffffff;
-                border: 1px solid #d1d5da;
-                border-radius: 8px;
-            }
-        """)
-
-        is_dark = detectar_modo_sistema() == "dark"
-        if is_dark:
-             self.container.setStyleSheet("""
-            #DetailsContainer {
-                background-color: #0d1117;
-                border: 1px solid #30363d;
+                background-color: #2d2d2d;
+                border: 1px solid #404040;
                 border-radius: 8px;
                 color: #c9d1d9;
             }
             QLabel { color: #c9d1d9; font-family: 'Segoe UI', sans-serif; }
             QListWidget {
-                background-color: #161b22;
-                border: 1px solid #30363d;
+                background-color: #1f1f1f;
+                border: 1px solid #404040;
                 color: #c9d1d9;
                 border-radius: 6px;
                 padding: 4px;
@@ -170,28 +160,11 @@ class ProjectDetailsDialog(QDialog):
                 padding: 5px;
             }
             QListWidget::item:selected {
-                background-color: #1f2428;
-                border: 1px solid #58a6ff;
+                background-color: #404040;
+                border: 1px solid #0078d4;
                 border-radius: 4px;
             }
         """)
-        else:
-            # Light mode styles for list
-            self.container.setStyleSheet(self.container.styleSheet() + """
-            QListWidget {
-                background-color: #f6f8fa;
-                border: 1px solid #e1e4e8;
-                color: #24292e;
-                border-radius: 6px;
-                padding: 4px;
-            }
-            QListWidget::item { padding: 5px; }
-            QListWidget::item:selected {
-                background-color: #e1e4e8;
-                border: 1px solid #0366d6;
-                border-radius: 4px;
-            }
-            """)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -238,9 +211,9 @@ class ProjectDetailsDialog(QDialog):
         pub = self.pkg.get('empresa', 'Unknown').capitalize()
         categ = self.pkg.get('rating', 'Unknown') if not self.is_app else "Instalado"
 
-        # Determine colors for meta text
-        color_pub = "#58a6ff" if is_dark else "#0366d6"
-        color_meta = "#8b949e" if is_dark else "#586069"
+        # Determine colors for meta text - siempre modo oscuro
+        color_pub = "#58a6ff"
+        color_meta = "#8b949e"
 
         meta_html = f"<span style='color:{color_pub}; font-weight:bold;'>{pub}</span> &bull; <span style='color:{color_meta};'>{ver}</span> &bull; <span style='color:{color_meta};'>{categ}</span>"
         meta_lbl = QLabel(meta_html)
@@ -287,8 +260,8 @@ class ProjectDetailsDialog(QDialog):
         content_layout.addWidget(self.scripts_list)
 
         # Botones de accion
-        # Obtener estilos GitHub
-        action_style, normal_style = get_github_style(is_dark)
+        # Obtener estilos GitHub - siempre modo oscuro
+        action_style, normal_style = get_github_style(True)
 
         # Helper/Closure para botones
         def mk_btn(text, is_primary=False, icon_str=None):
