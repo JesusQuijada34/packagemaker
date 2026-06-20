@@ -114,9 +114,10 @@ def build_variables(
     plat = platform or "Knosthalij"
 
     ts = getversion()
-    version_vso = f"v{version_base}-{ts}"
+    version_vso = f"{version_base}-{ts}"
     version_full = f"{version_base}-{ts}-{plat}"
-    folder_key = f"{publisher_slug}.{app_slug}.v{version_full}"
+    # Formato solicitado: empresa.shortname.version-Plataforma
+    folder_key = f"{publisher_slug}.{app_slug}.v{version_vso}-{plat}"
     correlation_id = hashlib.sha256(folder_key.encode()).hexdigest()
     rating = detect_rating(app_slug, display_name)
     year = license_year or time.strftime("%Y")
@@ -129,6 +130,7 @@ def build_variables(
         "APP": app_slug,
         "NAME": display_name,
         "VERSION": version_vso,
+        "VERSION_VSO": version_vso,
         "VERSION_FULL": version_full,
         "VERSION_BASE": version_base,
         "AUTHOR": author_val,

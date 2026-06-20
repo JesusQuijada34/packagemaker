@@ -451,9 +451,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         description = project_source.get('description') or 'Proyecto creado con Influent Package Maker'
         author_val = project_source.get('author') or 'Unknown'
         
-        # Construir nombre de carpeta igual que la GUI: empresa.slug.vVERSION_FULL
+        # Construir nombre de carpeta: empresa.shortname.version-Plataforma
         variables = build_variables(publisher, app_id, app_id, author_val, platform_value, version_base, description)
-        folder_name = f"{publisher}.{app_id}.v{variables['VERSION_FULL']}"
+        # Omitir el título (name) en el formato de la carpeta como se solicitó
+        folder_name = f"{publisher}.{app_id}.v{variables['VERSION_VSO']}-{variables['PLATFORM']}"
         project_path = base_path / folder_name
         
         print(f"[INFO] Creando proyecto en: {project_path}")
@@ -476,7 +477,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             shutil.copy(str(icon_source), str(icon_dest))
             print(f"[OK] Icono copiado a: {icon_dest}")
         
-        print(f"[OK] Proyecto creado correctamente: {project_path}")
+        print(f"\n  ✔ Proyecto creado en: {project_path}\n")
         return None
     
     elif action == 'compile_project' and kwargs.get('headless'):
