@@ -475,7 +475,7 @@ class ModernUpdaterWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
 
         if HAS_LEVIATHAN:
-            self.title_bar = CustomTitleBar(self, title="System Updater", is_main=True)
+            self.title_bar = CustomTitleBar(self, title="System Updater")
             self.title_bar.set_color(QColor(0, 0, 0, 0))
             layout.addWidget(self.title_bar)
 

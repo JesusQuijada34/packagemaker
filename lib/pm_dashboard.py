@@ -266,7 +266,7 @@ class DashboardWindow(QMainWindow):
     def __init__(self, python_path: Optional[str] = None, launch_editor: Callable = None):
         super().__init__()
         self.python_path = python_path or os.environ.get("PM_PYTHON_PATH", sys.executable)
-        self._launch_editor = launch_editor
+        self._launch_editor_func = launch_editor
         self.current_project: Optional[str] = None
         self.config: dict = {}
         self.setWindowTitle("PackageMaker IDE")
@@ -434,7 +434,7 @@ class DashboardWindow(QMainWindow):
                 if main_script:
                     break
 
-        self._launch_editor(main_script, path, self.python_path)
+        self._launch_editor_func(main_script, path, self.python_path)
 
     def _open_as_generic_project(self, path: str):
         main_script = None
@@ -442,12 +442,12 @@ class DashboardWindow(QMainWindow):
             if fname.endswith(".py"):
                 main_script = os.path.join(path, fname)
                 break
-        self._launch_editor(main_script, path, self.python_path)
+        self._launch_editor_func(main_script, path, self.python_path)
 
     def _launch_editor(self, file_path: Optional[str], project_path: str):
         self.current_project = project_path
-        if self._launch_editor:
-            self._launch_editor(file_path, project_path, self.python_path)
+        if self._launch_editor_func:
+            self._launch_editor_func(file_path, project_path, self.python_path)
         self.close()
 
     def _on_recent_double_click(self, item: QListWidgetItem):

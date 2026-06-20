@@ -538,8 +538,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             app = compiler.metadata['app']
             version = compiler.metadata['version']
             platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-            package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
-            iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
+            # Formato: empresa.shortname.version-platform
+            package_name = f"{publisher}.{app}.{version}-{platform_suffix}"
+            package_path = output_path / package_name
+            iflapp_file = output_path / f"{package_name}.iflapp"
 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)
@@ -603,8 +605,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             app = compiler.metadata['app']
             version = compiler.metadata['version']
             platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-            package_path = output_path / f"{publisher}.{app}.{version}.{platform_suffix}"
-            iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
+            # Formato: empresa.shortname.version-platform
+            package_name = f"{publisher}.{app}.{version}-{platform_suffix}"
+            package_path = output_path / package_name
+            iflapp_file = output_path / f"{package_name}.iflapp"
 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)

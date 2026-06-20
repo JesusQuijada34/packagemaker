@@ -156,6 +156,11 @@ class PMDataStore:
     def set_user(self, key: str, value: Any) -> None:
         self._data.setdefault("user", {})[key] = value
 
+    def remove_user(self, key: str) -> None:
+        """Elimina una clave de la configuración del usuario."""
+        if "user" in self._data and key in self._data["user"]:
+            del self._data["user"][key]
+
     def get_readonly(self) -> Dict[str, Any]:
         self._refresh_readonly()
         return dict(self._data.get("readonly", {}))

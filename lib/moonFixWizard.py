@@ -58,6 +58,11 @@ except (ImportError, SyntaxError):
     class LeviathanDialog: pass
 from lib.uwp_animations import play_bounce_down_close
 
+class FixedProxy:
+    def __init__(self, v): self.v = v
+    def text(self): return self.v
+    def setText(self, t): self.v = t
+
 class MoonFixWizard(QDialog):
     """Asistente de reparación estilo Setup que procesa múltiples proyectos en una sola ventana."""
     def __init__(self, parent, projects_with_issues):
@@ -544,10 +549,6 @@ class MoonFixWizard(QDialog):
                     self.results[index]["inputs"][key] = PlatformProxy(rad_win, rad_lin, rad_multi)
                     current_row += 1
                 else:
-                    class FixedProxy:
-                        def __init__(self, v): self.v = v
-                        def text(self): return self.v
-                        def setText(self, t): self.v = t
                     self.results[index]["inputs"][key] = FixedProxy(value)
                 continue
 
@@ -576,10 +577,6 @@ class MoonFixWizard(QDialog):
                     edit.textChanged.connect(on_v_change)
                 current_row += 1
             else:
-                class FixedProxy:
-                    def __init__(self, v): self.v = v
-                    def text(self): return self.v
-                    def setText(self, t): self.v = t
                 self.results[index]["inputs"][key] = FixedProxy(value)
 
         missing_icons = [i for i in proj_data["issues"] if "icon" in i["type"] or "logo" in i["type"]]
@@ -969,42 +966,3 @@ def detectar_modo_sistema():
             return palette.color(QtGui.QPalette.Window).lightness() < 128
         return False
 
-# =============================================================================
-# FUNCIONES FALTANTES - MoonFix
-# =============================================================================
-
-def verificar_github_username(username):
-    """Verifica si un username de GitHub existe. Si no hay internet, deja pasar el username."""
-    if not username or not username.strip():
-            return False, "El username no puede estar vacío"
-    username = username.strip()
-    url = f"https://api.github.com/users/{username}"
-    try:
-        req = urllib.request.Request(url)
-        req.add_header('User-Agent', 'Mozilla/5.0')
-        with urllib.request.urlopen(req, timeout=10) as response:
-            if response.status == 200:
-                return True, "Username válido"
-            else:
-                return False, f"Username no encontrado (código: {response.status})"
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return False, "El username no existe en GitHub"
-        else:
-            return False, f"Error al verificar: {e.code}"
-    except urllib.error.URLError as e:
-        # Si no hay internet, se permite el username
-        return True, "Conexión a internet no disponible, se permite el username"
-    except Exception as e:
-        return False, f"Error inesperado: {str(e)}"
-
-
-
-
-
-# =============================================================================
-# ALIASES PARA COMPATIBILIDAD (QSetup, QInstaller)
-# =============================================================================
-
-QSetup = MoonFixWizard
-QInstaller = MoonFixWizard

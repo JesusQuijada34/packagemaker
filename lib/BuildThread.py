@@ -11,7 +11,7 @@ import requests
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 try:
     from PyQt6.QtCore import QThread, pyqtSignal
     PYQT6_AVAILABLE = True
@@ -291,12 +291,18 @@ class FlangCompiler:
         if not self.should_compile_for_platform(target_platform):
             return True
         platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-        package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
+        # Formato: empresa.shortname.version-platform
+        package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}-{platform_suffix}"
         package_path = self.output_path / package_name
         package_path.mkdir(parents=True, exist_ok=True)
         self.log(f"[INFO] Creando paquete en: {package_path}")
         self._copy_package_files(package_path, target_platform)
         self._update_and_copy_details_xml(package_path, platform_suffix)
+        return True
+
+    def optimize_binaries(self) -> bool:
+        """Optimiza los binarios generados (Placeholder para compatibilidad con CLI)."""
+        self.log("[INFO] Optimización de binarios no implementada aún.")
         return True
 
     def _load_gitignore_patterns(self) -> List[str]:

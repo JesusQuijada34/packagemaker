@@ -549,7 +549,7 @@ def get_app_version():
             print(f"Error leyendo details.xml: {e}")
     return "3.2.7-26.05-20.13-AlphaCube"  # Fallback por defecto
 # verificar_github_username moved to lib/moonFixWizard.py
-# get_github_style moved to lib/projectDetailsDialog.py
+def get_github_style(is_dark=True):
     """Genera estilos CSS para botones al estilo GitHub (Action Naranja, Normal B/W)"""
     if is_dark:
         # Action (Orange) - Dark
@@ -3567,7 +3567,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
             
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoCrearProyecto, title="🆕 Crear Proyecto Aquí", is_main=False)
+            titleBar = CustomTitleBar(dialogoCrearProyecto, title="🆕 Crear Proyecto Aquí")
             layoutPrincipal.addWidget(titleBar)
             
             # Contenido
@@ -3840,7 +3840,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
             
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoInstalar, title="📦 Instalar como Fluthin Package", is_main=False)
+            titleBar = CustomTitleBar(dialogoInstalar, title="📦 Instalar como Fluthin Package")
             layoutPrincipal.addWidget(titleBar)
             
             # Contenido
@@ -4042,7 +4042,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
             
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoCompilar, title="🔨 Compilar Proyecto", is_main=False)
+            titleBar = CustomTitleBar(dialogoCompilar, title="🔨 Compilar Proyecto")
             layoutPrincipal.addWidget(titleBar)
             
             # Contenido
@@ -4231,7 +4231,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
             
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoReparar, title="🌙 MoonFix - Reparar Proyecto", is_main=False)
+            titleBar = CustomTitleBar(dialogoReparar, title="🌙 MoonFix - Reparar Proyecto")
             layoutPrincipal.addWidget(titleBar)
             
             # Contenido
@@ -4451,7 +4451,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
             
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoInstalarPaquete, title="📦 Instalar Paquete", is_main=False)
+            titleBar = CustomTitleBar(dialogoInstalarPaquete, title="📦 Instalar Paquete")
             layoutPrincipal.addWidget(titleBar)
             
             # Contenido
@@ -4615,7 +4615,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
             
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoInstalarMexf, title="🔧 Instalar Extensiones MEXF", is_main=False)
+            titleBar = CustomTitleBar(dialogoInstalarMexf, title="🔧 Instalar Extensiones MEXF")
             layoutPrincipal.addWidget(titleBar)
             
             # Contenido
@@ -4799,7 +4799,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
             
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoCrearMexf, title="📝 Crear Archivo MEXF", is_main=False)
+            titleBar = CustomTitleBar(dialogoCrearMexf, title="📝 Crear Archivo MEXF")
             layoutPrincipal.addWidget(titleBar)
             
             # Contenido
