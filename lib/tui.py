@@ -325,11 +325,17 @@ def _screen_create() -> None:
     rc = _run_live(cmd)
     if rc == 0:
         # Calcular nombre de carpeta correcto igual que cliHandler.py
-        from lib.template_engine import build_variables, getversion
+        from lib.template_engine import build_variables
+        
+        # Mapear de código técnico a nombre real para la visualización
+        real_platform_map = {"win": "Knosthalij", "linux": "Danenone", "all": "AlphaCube"}
+        real_platform = real_platform_map.get(plataforma, plataforma)
+        
         publisher_slug = empresa.strip().lower().replace(" ", "-")
-        app_slug = nombre.strip().lower().replace(" ", "-")
+        app_slug = slug.strip().lower().replace(" ", "-")
         version_base = version.strip().split("-")[0] if version else "1.0.0"
-        variables = build_variables(publisher_slug, app_slug, nombre, autor, plataforma, version_base)
+        
+        variables = build_variables(publisher_slug, app_slug, nombre, autor, real_platform, version_base)
         folder_name = f"{publisher_slug}.{app_slug}.v{variables['VERSION_FULL']}"
         _ok(f"Proyecto creado en: {_base_dir() / folder_name}")
     else:
