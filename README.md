@@ -7,6 +7,10 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
 [![PyQt6](https://img.shields.io/badge/PyQt6-6.5%2B-green)](https://pypi.org/project/PyQt6/)
 [![License](https://img.shields.io/badge/License-GNU%20GPL%20v3-yellow)](LICENSE)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/JesusQuijada34/packagemaker)](https://github.com/JesusQuijada34/packagemaker/releases/latest)
+[![GitHub repo size](https://img.shields.io/github/repo-size/JesusQuijada34/packagemaker)](https://github.com/JesusQuijada34/packagemaker)
+[![GitHub last commit](https://img.shields.io/github/last-commit/JesusQuijada34/packagemaker)](https://github.com/JesusQuijada34/packagemaker/commits/main)
+[![GitHub stars](https://img.shields.io/github/stars/JesusQuijada34/packagemaker?style=social)](https://github.com/JesusQuijada34/packagemaker/stargazers)
 
 ---
 
