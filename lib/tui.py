@@ -307,16 +307,15 @@ def _screen_create() -> None:
     py = _find_python()
     entry = Path(os.getcwd()) / "packagemaker.py"
     cmd = [
-        py, str(entry), "create", str(_base_dir()),
+        py, str(entry), "create",
         "--name", nombre,
+        "--shortname", slug,
         "--author", autor,
         "--publisher", empresa,
-        "--project-version", version,
-        "--project-platform", plataforma,
+        "--version", version,
+        "--platform", plataforma.lower().split(" ")[0],
         "--headless",
     ]
-    if not sandbox:
-        cmd.append("--no-sandbox")
 
     print()
     rc = _run_live(cmd)
@@ -414,10 +413,14 @@ def _screen_build() -> None:
 
     py = _find_python()
     entry = Path(os.getcwd()) / "packagemaker.py"
+    # El CLI moderno de compile usa --name, --shortname, etc.
+    # Opcionalmente se puede usar --buildthis si es una ruta directa
     cmd = [
-        py, str(entry), "compile", project_path_str,
-        "--output", output_dir,
-        "--target", detected,
+        py, str(entry), "compile",
+        "--name", nombre,
+        "--shortname", Path(project_path_str).name.split(".")[1] if "." in Path(project_path_str).name else Path(project_path_str).name,
+        "--publisher", empresa,
+        "--version", version_val,
         "--headless",
     ]
 
