@@ -274,8 +274,12 @@ def _screen_create() -> None:
         "Linux (Danenone)",
         "Multiplataforma (AlphaCube)",
     ], default=0)
-    plat_map = {0: "Knosthalij", 1: "Danenone", 2: "AlphaCube"}
+    plat_map = {0: "win", 1: "linux", 2: "all"}
     plataforma = plat_map[plat_idx]
+
+    # Para el resumen visual
+    plat_display = {"win": "Knosthalij (Windows)", "linux": "Danenone (Linux)", "all": "AlphaCube (Multi)"}
+    plataforma_display = plat_display[plataforma]
 
     sandbox = _prompt_bool("Sandbox seguro", True)
 
@@ -287,7 +291,7 @@ def _screen_create() -> None:
     _info(f"Nombre    : {orange(nombre)}")
     _info(f"Versión   : {orange(version)}")
     _info(f"Autor     : {orange(autor) if autor else gray('(sin autor)')}")
-    _info(f"Plataforma: {orange(plataforma)}")
+    _info(f"Plataforma: {orange(plataforma_display)}")
     _info(f"Sandbox   : {green('Sí') if sandbox else red('No')}")
     if icon_path:
         _info(f"Icono     : {orange(icon_path)}")
@@ -313,7 +317,7 @@ def _screen_create() -> None:
         "--author", autor,
         "--publisher", empresa,
         "--version", version,
-        "--platform", plataforma.lower().split(" ")[0],
+        "--platform", plataforma,
         "--headless",
     ]
 
