@@ -76,6 +76,22 @@ except ImportError:
         def setContentsMargins(self, *args): pass
         def setStyleSheet(self, *args): pass
         def hide(self): pass
+    class QDialog:
+        def __init__(self, *args, **kwargs): pass
+    class QFrame:
+        def __init__(self, *args, **kwargs): pass
+    class Qt:
+        class WindowType: pass
+        class WidgetAttribute: pass
+        class AlignmentFlag: pass
+        class CursorShape: pass
+        class SizePolicy: pass
+        class Orientation: pass
+        class ScrollBarPolicy: pass
+        class FocusPolicy: pass
+        class Key: pass
+        class Modifier: pass
+        class MouseButton: pass
 import requests
 try:
     import winreg

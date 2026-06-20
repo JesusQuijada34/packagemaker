@@ -19,6 +19,9 @@ except ImportError:
         def setLayout(self, *args): pass
         def setContentsMargins(self, *args): pass
         def setStyleSheet(self, *args): pass
+    class Qt:
+        class AlignmentFlag: AlignVCenter = 0; AlignLeft = 0
+        class MouseButton: LeftButton = 0
     class QSize:
         def __init__(self, *args, **kwargs): pass
     class QColor:
@@ -33,6 +36,32 @@ except ImportError:
         class valueChanged:
             @staticmethod
             def connect(func): pass
+    class QPainter:
+        class RenderHint: Antialiasing = 0
+        def __init__(self, *args, **kwargs): pass
+        def setRenderHint(self, *args): pass
+        def fillRect(self, *args): pass
+    class QAbstractAnimation:
+        class Direction: Forward = 0; Backward = 0
+    class QLabel:
+        def __init__(self, *args, **kwargs): pass
+        def setPixmap(self, *args): pass
+        def setFixedSize(self, *args): pass
+        def setAlignment(self, *args): pass
+        def setStyleSheet(self, *args): pass
+        def setObjectName(self, *args): pass
+    class QHBoxLayout:
+        def __init__(self, *args, **kwargs): pass
+        def setContentsMargins(self, *args): pass
+        def setSpacing(self, *args): pass
+        def addWidget(self, *args): pass
+        def addStretch(self, *args): pass
+    class QShowEvent: pass
+    class QIcon:
+        def __init__(self, *args): pass
+    class QPixmap:
+        def __init__(self, *args, **kwargs): pass
+        def loadFromData(self, *args): pass
 
 class AnimTitleButton(QPushButton):
     """Boton de titulo con animación de fondo suave (UWP Style)"""

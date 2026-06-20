@@ -19,10 +19,25 @@ try:
     from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent, QPoint, QPropertyAnimation, QEasingCurve
     from PyQt6.QtGui import QIcon, QPixmap, QFont, QColor, QPainter, QBrush, QPen
     PYQT6_AVAILABLE = True
-except ImportError as e:
-    print(f"[ERROR] No se pudo importar PyQt6: {e}")
+except ImportError:
     PYQT6_AVAILABLE = False
-    raise
+    # Mock classes for TUI compatibility
+    class QFrame:
+        def __init__(self, *args, **kwargs): pass
+    class QDialog:
+        def __init__(self, *args, **kwargs): pass
+    class pyqtSignal:
+        def __init__(self, *args, **kwargs): pass
+        def emit(self, *args, **kwargs): pass
+    class Qt:
+        class CursorShape: PointingHandCursor = 0
+        class AspectRatioMode: KeepAspectRatio = 0
+        class TransformationMode: SmoothTransformation = 0
+        class AlignmentFlag: AlignCenter = 0
+        class WidgetAttribute: WA_TranslucentBackground = 0; WA_TransparentForMouseEvents = 0
+        class WindowType: Dialog = 0; FramelessWindowHint = 0
+        class MouseButton: LeftButton = 0
+        class Shape: NoFrame = 0
 
 # Importar detector de editores y utilidades de i18n
 try:
