@@ -104,9 +104,9 @@ def _auto_translate_google(text: str, source: str, target: str) -> Optional[str]
 
 class I18nManager:
     _instance: Optional["I18nManager"] = None
-    _translator: Optional[QTranslator] = None
+    _translator: Optional['QTranslator'] = None
     _current_lang: str = "es"
-    _app: Optional[QCoreApplication] = None
+    _app: Optional['QCoreApplication'] = None
     _auto_translate: bool = True
     _flat_es: Dict[str, str] = {}
 
@@ -115,7 +115,7 @@ class I18nManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def initialize(self, app: QCoreApplication, lang: str = "es", auto_translate: bool = True):
+    def initialize(self, app: 'QCoreApplication', lang: str = "es", auto_translate: bool = True):
         self._app = app
         self._auto_translate = auto_translate
         self._flat_es = _flatten_translations(_load_lang_file("es"))

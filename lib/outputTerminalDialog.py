@@ -223,7 +223,7 @@ class OutputTerminalDialog(QDialog):
             self.background_check_timer.stop()
             # El handler_finished ya manejará la notificación
 
-    def _show_completion_message(self, success: bool, message: str):
+    def _show_completion_message(self, success: 'bool', message: str):
         """Muestra un messagebox cuando el proceso termina en segundo plano."""
         try:
             from PyQt6.QtWidgets import QMessageBox

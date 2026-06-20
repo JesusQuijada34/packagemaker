@@ -118,7 +118,7 @@ def icon_button(btn, key: str, size: int = 18) -> None:
     btn.setIconSize(QSize(size, size))
 
 
-def svg_to_pixmap(svg_data: str, size: int = 24) -> QPixmap:
+def svg_to_pixmap(svg_data: str, size: int = 24) -> 'QPixmap':
     try:
         renderer = QSvgRenderer(QByteArray(svg_data.encode("utf-8")))
         pixmap = QPixmap(size, size)
@@ -135,7 +135,7 @@ def svg_to_pixmap(svg_data: str, size: int = 24) -> QPixmap:
         return pixmap
 
 
-def svg_to_icon(svg_data: str, size: int = 24) -> QIcon:
+def svg_to_icon(svg_data: str, size: int = 24) -> 'QIcon':
     try:
         return QIcon(svg_to_pixmap(svg_data, size))
     except Exception as e:
@@ -143,10 +143,10 @@ def svg_to_icon(svg_data: str, size: int = 24) -> QIcon:
         return QIcon()
 
 
-def get_sidebar_icon(key: str, size: int = 24) -> QIcon:
+def get_sidebar_icon(key: str, size: int = 24) -> 'QIcon':
     svg = ICONS_SVG.get(key, ICONS_SVG["about"])
     return svg_to_icon(svg, size)
 
 
-def get_icon(key: str, size: int = 24) -> QIcon:
+def get_icon(key: str, size: int = 24) -> 'QIcon':
     return get_sidebar_icon(key, size)

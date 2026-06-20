@@ -189,7 +189,7 @@ class EditorCard(QFrame):
         layout.addLayout(text_layout, 1)
         self._update_style()
 
-    def _load_icon(self) -> Optional[QPixmap]:
+    def _load_icon(self) -> Optional['QPixmap']:
         if getattr(self.editor_info, "name", "") == "pmcodeeditor":
             try:
                 from lib.app_icons import svg_to_pixmap, ICONS_SVG

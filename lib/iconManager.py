@@ -36,7 +36,7 @@ class IconManager:
         """Asegura que el directorio de iconos exista."""
         self.icons_dir.mkdir(parents=True, exist_ok=True)
     
-    def load_svg(self, icon_name: str, size: int = 24, color_role: str = 'primary') -> Optional[QPixmap]:
+    def load_svg(self, icon_name: str, size: int = 24, color_role: str = 'primary') -> Optional['QPixmap']:
         """
         Carga un icono SVG y lo procesa para usar currentColor.
         
@@ -97,7 +97,7 @@ class IconManager:
         
         return processed
     
-    def _render_svg_to_pixmap(self, svg_content: str, size: int) -> QPixmap:
+    def _render_svg_to_pixmap(self, svg_content: str, size: int) -> 'QPixmap':
         """
         Renderiza contenido SVG a un QPixmap del tamaño especificado.
         
@@ -121,7 +121,7 @@ class IconManager:
         
         return pixmap
     
-    def _create_default_icon(self, name: str, size: int) -> Optional[QPixmap]:
+    def _create_default_icon(self, name: str, size: int) -> Optional['QPixmap']:
         """
         Crea un icono por defecto simple cuando no existe el archivo.
         
@@ -160,7 +160,7 @@ class IconManager:
 # Instancia global del IconManager
 _icon_manager_instance = None
 
-def get_icon_manager(base_dir: str = None) -> IconManager:
+def get_icon_manager(base_dir: str = None) -> 'IconManager':
     """Retorna la instancia global del IconManager (singleton)."""
     global _icon_manager_instance
     if _icon_manager_instance is None:
@@ -168,7 +168,7 @@ def get_icon_manager(base_dir: str = None) -> IconManager:
     return _icon_manager_instance
 
 
-def load_svg_icon(icon_name: str, size: int = 24, color_role: str = 'primary') -> Optional[QPixmap]:
+def load_svg_icon(icon_name: str, size: int = 24, color_role: str = 'primary') -> Optional['QPixmap']:
     """
     Función de conveniencia para cargar un icono SVG.
     

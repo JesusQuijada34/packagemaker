@@ -184,7 +184,7 @@ class ExecutionMode:
 # Instancia global del detector de modo de ejecución
 _execution_mode_instance = None
 
-def get_execution_mode() -> ExecutionMode:
+def get_execution_mode() -> 'ExecutionMode':
     """Retorna la instancia global del detector de modo de ejecución (singleton)."""
     global _execution_mode_instance
     if _execution_mode_instance is None:
