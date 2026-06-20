@@ -5122,8 +5122,10 @@ def main():
                 app.setFont(APP_FONT)
                 window = handle_cli_action(action, data, PackageTodoGUI, **action_options)
             else:
-                print("❌ Error: PyQt6 no está disponible para esta acción GUI.")
-                sys.exit(1)
+                print("⚠️ PyQt6 no disponible. Forzando modo TUI...")
+                from lib.tui import run_tui
+                run_tui()
+                return
             if window is None: # Si es headless o acción de shell ya terminada
                 return
             if window:
