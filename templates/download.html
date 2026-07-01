@@ -3,38 +3,58 @@
 {% block title_bar %}Package Maker - Descargas{% endblock %}
 {% block app_content %}
 <div class="main-content win11-center">
-    <div class="content-area win11-content">
-        <div class="download-container">
-            <div class="download-header">
-                <div class="app-logo-glow">
-                    <img src="{{ url_for('static', filename='../app/packagemaker.png') }}" alt="Package Maker" id="mainLogo">
+    <div class="content-area win11-content download-page">
+        <div class="download-hero">
+            <div class="hero-left">
+                <div class="download-content">
+                    <div class="app-logo-glow">
+                        <img src="{{ url_for('static', filename='../app/packagemaker.png') }}" alt="Package Maker" id="mainLogo">
+                    </div>
+                    <h1 class="download-title">Obtener Package Maker</h1>
+                    <p class="download-subtitle" id="versionText">Cargando última versión...</p>
+                    
+                    <div class="platform-detection-box" id="platformBox">
+                        <div class="detection-loader">
+                            <div class="spinner"></div>
+                            <p>Detectando tu sistema operativo...</p>
+                        </div>
+                    </div>
+
+                    <div class="other-platforms">
+                        <h3>Otras plataformas</h3>
+                        <div class="mini-platforms">
+                            <a href="#" class="mini-platform-btn" id="btnWinManual" title="Descargar para Windows">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1V11.7H0V3.449zm0 17.1L9.75 21.9V12.3H0v8.249zM10.5 1.95L24 0V11.7H10.5V1.95zm0 20.1L24 24V12.3H10.5v9.75z"/></svg>
+                            </a>
+                            <a href="#" class="mini-platform-btn" id="btnLinManual" title="Descargar para Linux">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.967 0-1.75.783-1.75 1.75s.783 1.75 1.75 1.75 1.75-.783 1.75-1.75-.783-1.75-1.75-1.75zm-3.25 4.5c-1.242 0-2.25 1.008-2.25 2.25v5.5c0 1.242 1.008 2.25 2.25 2.25h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5V16.5h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5c1.242 0 2.25-1.008 2.25-2.25v-5.5c0-1.242-1.008-2.25-2.25-2.25h-6.5z"/></svg>
+                            </a>
+                            <a href="#" class="mini-platform-btn" id="btnAndroidManual" title="Descargar para Android">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18c.16-.31.04-.72-.27-.88-.31-.16-.72-.04-.88.27L16.9 9h-2.05L9.54 6.5c-.16-.31-.57-.43-.88-.27-.31.16-.43.57-.27.88L10.4 9.48C5.3 9.84 1.6 13.9 1.6 18.5V21c0 .83.67 1.5 1.5 1.5h19.8c.83 0 1.5-.67 1.5-1.5v-2.5c0-4.6-3.7-8.66-8.8-9.02zM7 19.5c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5zm10 0c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5z"/></svg>
+                            </a>
+                            <a href="flarmstore://JesusQuijada34.packagemaker/" class="mini-platform-btn" title="Instalar vía Flarmstore">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <h1 class="download-title">Obtener Package Maker</h1>
-                <p class="download-subtitle" id="versionText">Cargando última versión...</p>
             </div>
 
-            <div class="platform-detection-box" id="platformBox">
-                <div class="detection-loader">
-                    <div class="spinner"></div>
-                    <p>Detectando tu sistema operativo...</p>
+            <div class="hero-right">
+                <div class="screenshots-carousel" id="screenshotsCarousel">
+                    <div class="carousel-container">
+                        <div class="carousel-slide active" style="background-image: url('{{ url_for('static', filename='img/screenshots/screen_create.png') }}')"></div>
+                        <div class="carousel-slide" style="background-image: url('{{ url_for('static', filename='img/screenshots/screen_build.png') }}')"></div>
+                        <div class="carousel-slide" style="background-image: url('{{ url_for('static', filename='img/screenshots/screen_manager.png') }}')"></div>
+                        <div class="carousel-slide" style="background-image: url('{{ url_for('static', filename='img/screenshots/screen_config.png') }}')"></div>
+                        <div class="carousel-slide" style="background-image: url('{{ url_for('static', filename='img/screenshots/screen_moonfix.png') }}')"></div>
+                    </div>
+                    <div class="carousel-fade-left"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="other-platforms">
-                <h3>Otras plataformas</h3>
-                <div class="mini-platforms">
-                    <a href="#" class="mini-platform-btn" id="btnWinManual" title="Descargar para Windows">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1V11.7H0V3.449zm0 17.1L9.75 21.9V12.3H0v8.249zM10.5 1.95L24 0V11.7H10.5V1.95zm0 20.1L24 24V12.3H10.5v9.75z"/></svg>
-                    </a>
-                    <a href="#" class="mini-platform-btn" id="btnLinManual" title="Descargar para Linux">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.967 0-1.75.783-1.75 1.75s.783 1.75 1.75 1.75 1.75-.783 1.75-1.75-.783-1.75-1.75-1.75zm-3.25 4.5c-1.242 0-2.25 1.008-2.25 2.25v5.5c0 1.242 1.008 2.25 2.25 2.25h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5V16.5h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5c1.242 0 2.25-1.008 2.25-2.25v-5.5c0-1.242-1.008-2.25-2.25-2.25h-6.5z"/></svg>
-                    </a>
-                    <a href="flarmstore://JesusQuijada34.packagemaker/" class="mini-platform-btn" title="Instalar vía Fluthin Store">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                    </a>
-                </div>
-            </div>
-
+        <div class="release-info-section">
             <div class="release-info-card">
                 <div class="card-header">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
@@ -51,15 +71,44 @@
 
 {% block extra_styles %}
 <style>
-.download-container {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 60px 24px;
-    text-align: center;
+.download-page {
+    background: transparent !important;
+    overflow-y: auto !important;
 }
 
-.download-header {
-    margin-bottom: 48px;
+.download-hero {
+    display: flex;
+    gap: 60px;
+    padding: 60px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+
+.hero-left {
+    flex: 0 0 45%;
+}
+
+.hero-right {
+    flex: 1;
+    position: relative;
+}
+
+.download-content {
+    position: sticky;
+    top: 20px;
+}
+
+.download-title {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.download-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
 }
 
 .app-logo-glow {
@@ -89,17 +138,6 @@
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
-.download-title {
-    font-size: 42px;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.download-subtitle {
-    font-size: 18px;
-    color: var(--text-secondary);
-}
-
 .platform-detection-box {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -118,10 +156,23 @@
     color: var(--text-tertiary);
 }
 
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 87, 34, 0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .main-download-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 24px;
     padding: 24px 40px;
     background: var(--accent);
@@ -130,6 +181,8 @@
     border-radius: 16px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 10px 30px rgba(255, 87, 34, 0.3);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .main-download-btn:hover {
@@ -144,6 +197,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .btn-text-content {
@@ -152,7 +206,7 @@
 
 .btn-main-text {
     display: block;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
 }
 
@@ -177,8 +231,8 @@
 
 .mini-platforms {
     display: flex;
-    justify-content: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .mini-platform-btn {
@@ -199,6 +253,52 @@
     border-color: var(--accent);
     color: var(--accent);
     transform: translateY(-2px);
+}
+
+/* Screenshots Carousel */
+.screenshots-carousel {
+    position: relative;
+    height: 500px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.8s ease-in-out;
+}
+
+.carousel-slide.active {
+    opacity: 1;
+}
+
+.carousel-fade-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(20, 20, 40, 0.8), transparent);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.release-info-section {
+    padding: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .release-info-card {
@@ -253,6 +353,96 @@
     color: var(--text-primary);
     margin-bottom: 12px;
 }
+
+/* Android Specific Styles */
+.android-instructions {
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.android-instructions h3 {
+    color: #4CAF50;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.android-instructions ol {
+    margin-left: 20px;
+    color: var(--text-secondary);
+}
+
+.android-instructions li {
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.termux-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    margin-top: 16px;
+    transition: all 0.3s ease;
+}
+
+.termux-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+}
+
+@media (max-width: 1024px) {
+    .download-hero {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .hero-left {
+        flex: 1;
+    }
+
+    .hero-right {
+        flex: 1;
+    }
+
+    .download-content {
+        position: static;
+    }
+
+    .screenshots-carousel {
+        height: 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .download-hero {
+        padding: 40px 20px;
+    }
+
+    .download-title {
+        font-size: 32px;
+    }
+
+    .hero-left {
+        flex: 1;
+    }
+
+    .hero-right {
+        display: none;
+    }
+
+    .mini-platforms {
+        justify-content: flex-start;
+    }
+}
 </style>
 {% endblock %}
 
@@ -264,17 +454,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const releaseNotes = document.getElementById('releaseNotes');
     const btnWinManual = document.getElementById('btnWinManual');
     const btnLinManual = document.getElementById('btnLinManual');
+    const btnAndroidManual = document.getElementById('btnAndroidManual');
+    const screenshotsCarousel = document.getElementById('screenshotsCarousel');
     
-    let downloads = { windows: null, linux: null };
+    let downloads = { windows: null, linux: null, android: null };
+    let currentSlide = 0;
 
     function detectOS() {
         const ua = window.navigator.userAgent;
+        if (ua.indexOf("Android") !== -1) return "android";
         if (ua.indexOf("Windows NT 10.0") !== -1 || ua.indexOf("Windows NT 11.0") !== -1) return "windows11";
         if (ua.indexOf("Windows") !== -1) return "windows";
         if (ua.indexOf("Mac") !== -1) return "mac";
         if (ua.indexOf("Linux") !== -1) return "linux";
         return "unknown";
     }
+
+    function rotateCarousel() {
+        const slides = screenshotsCarousel.querySelectorAll('.carousel-slide');
+        if (slides.length === 0) return;
+        
+        slides.forEach(slide => slide.classList.remove('active'));
+        slides[currentSlide].classList.add('active');
+        currentSlide = (currentSlide + 1) % slides.length;
+    }
+
+    // Rotate carousel every 5 seconds
+    setInterval(rotateCarousel, 5000);
 
     async function loadRelease() {
         try {
@@ -303,7 +509,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const os = detectOS();
         let html = '';
 
-        if (os.startsWith('windows')) {
+        if (os === 'android') {
+            html = `
+                <div class="android-instructions">
+                    <h3>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18c.16-.31.04-.72-.27-.88-.31-.16-.72-.04-.88.27L16.9 9h-2.05L9.54 6.5c-.16-.31-.57-.43-.88-.27-.31.16-.43.57-.27.88L10.4 9.48C5.3 9.84 1.6 13.9 1.6 18.5V21c0 .83.67 1.5 1.5 1.5h19.8c.83 0 1.5-.67 1.5-1.5v-2.5c0-4.6-3.7-8.66-8.8-9.02zM7 19.5c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5zm10 0c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5z"/></svg>
+                        Instalar en Android con Termux
+                    </h3>
+                    <p>Sigue estos pasos para instalar Package Maker en tu dispositivo Android usando Termux:</p>
+                    <ol>
+                        <li>Descarga e instala <strong>Termux</strong> desde F-Droid o Google Play Store</li>
+                        <li>Abre Termux y ejecuta: <code>pkg install python git</code></li>
+                        <li>Clona el repositorio: <code>git clone https://github.com/JesusQuijada34/packagemaker.git</code></li>
+                        <li>Navega a la carpeta: <code>cd packagemaker</code></li>
+                        <li>Instala dependencias: <code>pip install -r requirements.txt</code></li>
+                        <li>Ejecuta: <code>python packagemaker.py</code></li>
+                    </ol>
+                    <a href="https://f-droid.org/en/packages/com.termux/" class="termux-button" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18c.16-.31.04-.72-.27-.88-.31-.16-.72-.04-.88.27L16.9 9h-2.05L9.54 6.5c-.16-.31-.57-.43-.88-.27-.31.16-.43.57-.27.88L10.4 9.48C5.3 9.84 1.6 13.9 1.6 18.5V21c0 .83.67 1.5 1.5 1.5h19.8c.83 0 1.5-.67 1.5-1.5v-2.5c0-4.6-3.7-8.66-8.8-9.02zM7 19.5c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5zm10 0c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5z"/></svg>
+                        Descargar Termux
+                    </a>
+                </div>
+            `;
+        } else if (os.startsWith('windows')) {
             const isWin11 = os === 'windows11';
             const icon = isWin11 
                 ? `<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1V11.7H0V3.449zm0 17.1L9.75 21.9V12.3H0v8.249zM10.5 1.95L24 0V11.7H10.5V1.95zm0 20.1L24 24V12.3H10.5v9.75z"/></svg>`
@@ -333,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (os === 'mac') {
             html = `
                 <div class="not-supported-box">
-                    <h2>Disponible para Windows y Linux</h2>
+                    <h2>Disponible para Windows, Linux y Android</h2>
                     <p>Actualmente Package Maker no tiene una versión nativa para macOS. Puedes usar una máquina virtual o descargar el código fuente.</p>
                     <div style="margin-top: 24px;">
                         <a href="https://github.com/JesusQuijada34/packagemaker" class="btn btn-secondary">Ver en GitHub</a>

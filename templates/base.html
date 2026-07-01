@@ -9,17 +9,7 @@
     <style>{{ base_qss | safe }}{% block extra_styles %}{% endblock %}</style>
 </head>
 <body>
-    <div class="title-bar">
-        <div class="title-bar-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#ff5722"/><path d="M7 8h10M7 12h10M7 16h6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-            <span>{% block title_bar %}Package Maker{% endblock %}</span>
-        </div>
-        <div class="title-bar-controls">
-            <button class="title-bar-btn minimize" onclick="window.minimize && window.minimize()"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.5"/></svg></button>
-            <button class="title-bar-btn maximize" onclick="window.maximize && window.maximize()"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
-            <button class="title-bar-btn close" onclick="window.close && window.close()"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5"/></svg></button>
-        </div>
-    </div>
+
     <div class="app-container">
         {% block app_content %}
         <div class="main-content">
