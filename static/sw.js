@@ -1,14 +1,12 @@
-const CACHE_NAME = 'pm-cache-v1';
-const urlsToCache = [
-  '/',
+const CACHE_NAME = 'pm-v2';
+const assets = [
   '/pwaMode?id=mobile',
-  '/static/manifest.json'
+  '/static/manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(assets)));
 });
 
 self.addEventListener('fetch', event => {
