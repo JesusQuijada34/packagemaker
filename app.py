@@ -134,6 +134,29 @@ def notes():
         return render_template('page.html', title="Notas de Versión", content=html_content)
     except: return "Error al cargar Notas"
 
+@app.route('/issues')
+def issues_page():
+    try:
+        api_url = f"https://api.github.com/repos/{GITHUB_REPO}/issues?state=open"
+        response = requests.get(api_url)
+        issues = response.json() if response.status_code == 200 else []
+        
+        content = "# Problemas Conocidos y Reportes\n\n"
+        if not issues:
+            content += "Actualmente no hay problemas abiertos reportados. Si encuentras un error, por favor [infórmalo en GitHub](https://github.com/JesusQuijada34/packagemaker/issues).\n"
+        else:
+            for issue in issues:
+                if not issue.get('pull_request'):
+                    content += f"### ⚠️ {issue.get('title')}\n"
+                    content += f"- **Estado**: {issue.get('state')}\n"
+                    content += f"- **Reportado por**: {issue.get('user', {}).get('login')}\n"
+                    content += f"- [Ver en GitHub]({issue.get('html_url')})\n\n"
+        
+        html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
+        return render_template('page.html', title="Issues & Soporte", content=html_content)
+    except:
+        return "Error al cargar Issues"
+
 @app.route('/pwaMode')
 def pwa_mode():
     mode = request.args.get('id', 'desktop')
