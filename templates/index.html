@@ -1,211 +1,186 @@
 {% extends "base.html" %}
-{% block title %}Package Maker - IDE para Influent OS{% endblock %}
-{% block app_content %}
-<div class="main-content win11-center">
-    <div class="content-area win11-content">
-        <div class="splash-screen" id="splashScreen">
-            <div class="splash-container">
-                <img src="{{ url_for('static', filename='img/app/packagemaker.png') }}" alt="PM" class="splash-logo" onerror="this.style.display='none'">
-                <div class="typewriter-container">
-                    <span class="typewriter-text" id="typewriterText"></span>
-                    <span class="cursor"></span>
-                </div>
-            </div>
+
+{% block title %}Inicio{% endblock %}
+
+{% block extra_css %}
+.hero {
+    text-align: center;
+    padding: 4rem 0;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #fff, #aaa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.download-section {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.main-download-btn {
+    font-size: 1.2rem;
+    padding: 1rem 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.version-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.selector-container {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.platform-selector {
+    background: rgba(0,0,0,0.3);
+    color: white;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    margin-right: 10px;
+    width: 250px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 4rem;
+}
+
+.feature-card i {
+    font-size: 2rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>{{ metadata.get('name', 'Package Maker') }}</h1>
+    <p>{{ metadata.get('description', 'La suite definitiva para el desarrollo en Influent OS.') }}</p>
+    
+    <div class="download-section glass-card">
+        <div id="auto-download">
+            <a href="#" id="main-download-link" class="btn btn-primary main-download-btn">
+                <i class="fas fa-download"></i> Descargar para <span id="detected-os">detectando...</span>
+            </a>
+            <p class="version-info">Versión estable: <strong>{{ version }}</strong> | XML: <strong>{{ metadata.get('version') }}</strong></p>
         </div>
 
-        <div class="hero-section">
-            <div class="hero-badge">v3.2.7</div>
-            <div class="hero-icon">
-                <img src="{{ url_for('static', filename='img/app/packagemaker.png') }}" alt="Package Maker" onerror="this.style.display='none'">
-            </div>
-            <h1 class="hero-title">Package Maker</h1>
-            <p class="hero-subtitle">La suite definitiva para crear, compilar y distribuir aplicaciones en el ecosistema Influent OS</p>
-            <div class="hero-actions">
-                <a href="{{ url_for('download') }}" class="btn btn-primary btn-lg">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Descargar ahora
-                </a>
-                <a href="#features" class="btn btn-secondary btn-lg">Conocer mas</a>
-            </div>
-        </div>
-
-        <div class="features-section" id="features">
-            <h2 class="section-title">Caracteristicas principales</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    </div>
-                    <h3>IDE Profesional</h3>
-                    <p>Entorno integrado disenado para el desarrollo de aplicaciones Python con interfaces modernas inspiradas en Windows 11.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    </div>
-                    <h3>Compilacion inteligente</h3>
-                    <p>Empaqueta proyectos en formato .iflapp con deteccion automatica de dependencias y minificacion de codigo.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-                    </div>
-                    <h3>MoonFix Repair</h3>
-                    <p>Sistema avanzado para reparar inconsistencias en paquetes y asegurar la estabilidad de tus aplicaciones.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                    </div>
-                    <h3>Gestor de paquetes</h3>
-                    <p>Administra tus proyectos locales e instala aplicaciones del ecosistema Fluthin con un solo clic.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
-                    <h3>Blindado de codigo</h3>
-                    <p>Protege tu propiedad intelectual con Simple Blind o Super Blind para mayor seguridad.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    </div>
-                    <h3>Multi-plataforma</h3>
-                    <p>Genera ejecutables para Windows (Knosthalij), Linux (Danenone) y Android.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="screenshots-section">
-            <h2 class="section-title">Capturas de pantalla</h2>
-            <div class="screenshots-grid">
-                <div class="screenshot-card">
-                    <img src="{{ url_for('static', filename='img/screenshots/screen_create.png') }}" alt="Crear Proyecto">
-                    <span>Crear Proyecto</span>
-                </div>
-                <div class="screenshot-card">
-                    <img src="{{ url_for('static', filename='img/screenshots/screen_build.png') }}" alt="Compilar Paquete">
-                    <span>Compilar Paquete</span>
-                </div>
-                <div class="screenshot-card">
-                    <img src="{{ url_for('static', filename='img/screenshots/screen_manager.png') }}" alt="Gestor">
-                    <span>Gestor</span>
-                </div>
-                <div class="screenshot-card">
-                    <img src="{{ url_for('static', filename='img/screenshots/screen_config.png') }}" alt="Configuracion">
-                    <span>Configuracion</span>
-                </div>
-                <div class="screenshot-card">
-                    <img src="{{ url_for('static', filename='img/screenshots/screen_moonfix.png') }}" alt="MoonFix">
-                    <span>MoonFix</span>
-                </div>
-                <div class="screenshot-card">
-                    <img src="{{ url_for('static', filename='img/screenshots/screen_about.png') }}" alt="Acerca de">
-                    <span>Acerca de</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="platforms-section">
-            <h2 class="section-title">Disponible para</h2>
-            <div class="platforms-cards">
-                <div class="platform-card windows">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1V11.7H0V3.449zm0 17.1L9.75 21.9V12.3H0v8.249zM10.5 1.95L24 0V11.7H10.5V1.95zm0 20.1L24 24V12.3H10.5v9.75z"/></svg>
-                    <h3>Knosthalij</h3>
-                    <p>Windows 10/11</p>
-                </div>
-                <div class="platform-card linux">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.967 0-1.75.783-1.75 1.75s.783 1.75 1.75 1.75 1.75-.783 1.75-1.75-.783-1.75-1.75-1.75zm-3.25 4.5c-1.242 0-2.25 1.008-2.25 2.25v5.5c0 1.242 1.008 2.25 2.25 2.25h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5V16.5h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5c1.242 0 2.25-1.008 2.25-2.25v-5.5c0-1.242-1.008-2.25-2.25-2.25h-6.5z"/></svg>
-                    <h3>Danenone</h3>
-                    <p>Linux</p>
-                </div>
-                <div class="platform-card android">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18c.16-.31.04-.72-.27-.88-.31-.16-.72-.04-.88.27L16.9 9h-2.05L9.54 6.5c-.16-.31-.57-.43-.88-.27-.31.16-.43.57-.27.88L10.4 9.48C5.3 9.84 1.6 13.9 1.6 18.5V21c0 .83.67 1.5 1.5 1.5h19.8c.83 0 1.5-.67 1.5-1.5v-2.5c0-4.6-3.7-8.66-8.8-9.02zM7 19.5c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5zm10 0c-1.1 0-2-1.1-2-2.5s.9-2.5 2-2.5 2 1.1 2 2.5-.9 2.5-2 2.5z"/></svg>
-                    <h3>Android</h3>
-                    <p>Via Termux</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="cta-section">
-            <h2>Listo para comenzar?</h2>
-            <p>Descarga Package Maker y empieza a crear aplicaciones para el ecosistema Influent OS</p>
-            <a href="{{ url_for('download') }}" class="btn btn-primary btn-lg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Obtener Package Maker
+        <div class="selector-container">
+            <p style="margin-bottom: 1rem;">O elige tu plataforma manualmente:</p>
+            <select id="platform-select" class="platform-selector">
+                <option value="">Selecciona una versión...</option>
+                {% for dl in downloads %}
+                <option value="{{ dl.url }}" data-platform="{{ dl.platform }}">{{ dl.platform }} ({{ dl.size }})</option>
+                {% endfor %}
+            </select>
+            <a href="#" id="manual-download-btn" class="btn btn-outline">
+                Descargar
             </a>
         </div>
-
-        <footer class="page-footer">
-            <p>&copy; 2025 {{ metadata.get('publisher', 'Influent') }} - Desarrollado por {{ metadata.get('author', 'JesusQuijada34') }}</p>
-        </footer>
     </div>
-</div>
+</section>
+
+<section class="features">
+    <div class="glass-card feature-card">
+        <i class="fas fa-cubes"></i>
+        <h3>Ecosistema Influent</h3>
+        <p>Integración total con Influent OS, permitiendo crear paquetes nativos con facilidad y eficiencia.</p>
+    </div>
+    <div class="glass-card feature-card">
+        <i class="fas fa-code"></i>
+        <h3>pmCodeEditor</h3>
+        <p>Editor de código integrado y optimizado para el flujo de trabajo de empaquetado.</p>
+    </div>
+    <div class="glass-card feature-card">
+        <i class="fas fa-shield-alt"></i>
+        <h3>Seguro y Robusto</h3>
+        <p>Basado en estándares modernos y con una arquitectura diseñada para la estabilidad del sistema.</p>
+    </div>
+</section>
 {% endblock %}
 
-{% block extra_styles %}
-<style>
-.hero-badge { display: inline-block; padding: 6px 16px; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 24px; }
-.hero-icon { margin-bottom: 24px; }
-.hero-icon img { width: 100px; height: 100px; border-radius: 24px; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
-.hero-title { font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero-subtitle { font-size: 18px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px; line-height: 1.6; }
-.hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-.section-title { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 40px; color: var(--text-primary); }
-.features-section { margin-bottom: 80px; }
-.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-.feature-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 28px; transition: all 0.3s ease; }
-.feature-card:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
-.feature-icon { width: 52px; height: 52px; background: var(--accent-light); color: var(--accent); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-.feature-card h3 { font-size: 18px; margin-bottom: 10px; }
-.feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
-.screenshots-section { margin-bottom: 80px; }
-.screenshots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
-.screenshot-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; transition: all 0.3s ease; }
-.screenshot-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); border-color: var(--accent); }
-.screenshot-card img { width: 100%; height: auto; display: block; }
-.screenshot-card span { display: block; padding: 12px; text-align: center; font-size: 13px; color: var(--text-secondary); background: var(--bg-secondary); }
-.platforms-section { margin-bottom: 80px; }
-.platforms-cards { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
-.platform-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px 48px; text-align: center; transition: all 0.3s ease; }
-.platform-card:hover { transform: translateY(-6px); border-color: var(--accent); }
-.platform-card svg { margin-bottom: 16px; }
-.platform-card h3 { font-size: 18px; margin-bottom: 6px; }
-.platform-card p { font-size: 13px; color: var(--text-secondary); }
-.platform-card.windows svg { color: #00a4ef; }
-.platform-card.linux svg { color: #fcc624; }
-.platform-card.android svg { color: #3ddc84; }
-.cta-section { text-align: center; padding: 60px 40px; background: linear-gradient(135deg, rgba(255,87,34,0.15), rgba(255,87,34,0.05)); border-radius: 24px; margin-bottom: 60px; border: 1px solid rgba(255,87,34,0.2); }
-.cta-section h2 { font-size: 32px; margin-bottom: 12px; }
-.cta-section p { font-size: 16px; color: var(--text-secondary); margin-bottom: 28px; }
-.page-footer { text-align: center; padding: 32px; border-top: 1px solid var(--border-color); }
-.page-footer p { font-size: 13px; color: var(--text-tertiary); }
-@media (max-width: 768px) { .hero-title { font-size: 36px; } .features-grid { grid-template-columns: 1fr; } .screenshots-grid { grid-template-columns: repeat(2, 1fr); } }
-</style>
-{% endblock %}
-
-{% block scripts %}
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var splash = document.getElementById('splashScreen');
-    var typewriter = document.getElementById('typewriterText');
-    var messages = ['Construye', 'Mas paquetes', 'Declaraciones', 'Programas', 'Proyectos'];
-    var idx = 0, deleting = false, charIdx = 0;
-    function type() {
-        var msg = messages[idx];
-        if (!deleting) {
-            typewriter.textContent += msg.charAt(charIdx++);
-            if (charIdx < msg.length) { setTimeout(type, 80); }
-            else { setTimeout(function() { deleting = true; type(); }, 3000); }
-        } else {
-            typewriter.textContent = msg.substring(0, --charIdx);
-            if (charIdx > 0) { setTimeout(type, 40); }
-            else { deleting = false; idx = (idx + 1) % messages.length; setTimeout(type, 300); }
+    const downloads = {{ downloads | tojson }};
+    const mainBtn = document.getElementById('main-download-link');
+    const detectedOsSpan = document.getElementById('detected-os');
+    const platformSelect = document.getElementById('platform-select');
+    const manualBtn = document.getElementById('manual-download-btn');
+
+    // Detección de OS
+    function detectOS() {
+        const ua = window.navigator.userAgent.toLowerCase();
+        if (ua.indexOf('linux') !== -1) return 'linux';
+        if (ua.indexOf('win') !== -1) return 'windows';
+        return 'unknown';
+    }
+
+    const os = detectOS();
+    let autoUrl = "";
+
+    if (os === 'linux') {
+        const dl = downloads.find(d => d.platform.includes('Linux'));
+        if (dl) {
+            autoUrl = dl.url;
+            detectedOsSpan.innerText = "Linux";
+        }
+    } else if (os === 'windows') {
+        const dl = downloads.find(d => d.platform.includes('Windows'));
+        if (dl) {
+            autoUrl = dl.url;
+            detectedOsSpan.innerText = "Windows";
         }
     }
-    type();
-    setTimeout(function() { splash.classList.add('fade-out'); setTimeout(function() { splash.style.display = 'none'; }, 800); }, 5000);
-});
+
+    if (autoUrl) {
+        mainBtn.href = autoUrl;
+    } else {
+        detectedOsSpan.innerText = "tu sistema";
+        mainBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            platformSelect.focus();
+            alert("Por favor, selecciona una plataforma manualmente.");
+        });
+    }
+
+    // Lógica selectiva
+    manualBtn.addEventListener('click', (e) => {
+        const selectedUrl = platformSelect.value;
+        if (!selectedUrl) {
+            e.preventDefault();
+            alert("Selecciona una plataforma primero.");
+        } else {
+            manualBtn.href = selectedUrl;
+        }
+    });
 </script>
 {% endblock %}
