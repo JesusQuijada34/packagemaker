@@ -48,6 +48,36 @@
                     </div>
                 </div>
 
+                <div class="screenshots-section">
+                    <h3>Características en Acción</h3>
+                    <div class="screenshots-grid">
+                        <div class="screenshot-item">
+                            <img src="{{ url_for('static', filename='img/screenshots/screen_create.png') }}" alt="Crear Proyecto">
+                            <p>Crear Proyecto</p>
+                        </div>
+                        <div class="screenshot-item">
+                            <img src="{{ url_for('static', filename='img/screenshots/screen_build.png') }}" alt="Compilar Paquete">
+                            <p>Compilar Paquete</p>
+                        </div>
+                        <div class="screenshot-item">
+                            <img src="{{ url_for('static', filename='img/screenshots/screen_manager.png') }}" alt="Gestor de Aplicaciones">
+                            <p>Gestor de Aplicaciones</p>
+                        </div>
+                        <div class="screenshot-item">
+                            <img src="{{ url_for('static', filename='img/screenshots/screen_config.png') }}" alt="Configuración">
+                            <p>Configuración</p>
+                        </div>
+                        <div class="screenshot-item">
+                            <img src="{{ url_for('static', filename='img/screenshots/screen_moonfix.png') }}" alt="MoonFix Repair">
+                            <p>MoonFix Repair</p>
+                        </div>
+                        <div class="screenshot-item">
+                            <img src="{{ url_for('static', filename='img/screenshots/screen_about.png') }}" alt="Acerca de">
+                            <p>Acerca de</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="platforms-info">
                     <h3>Soporte Multiplataforma</h3>
                     <p>Package Maker soporta las plataformas líderes del ecosistema:</p>
@@ -210,6 +240,57 @@
 .feature-card p {
     color: var(--text-secondary);
     line-height: 1.5;
+}
+
+.screenshots-section {
+    margin: 60px 0;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+.screenshots-section h3 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 32px;
+}
+
+.screenshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.screenshot-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.screenshot-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: var(--accent);
+}
+
+.screenshot-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: var(--bg-secondary);
+}
+
+.screenshot-item p {
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    margin: 0;
 }
 
 .platforms-info {
