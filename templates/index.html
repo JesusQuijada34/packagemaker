@@ -1,117 +1,86 @@
 {% extends "base.html" %}
-{% block title %}Download Package Maker{% endblock %}
-{% block title_bar %}Package Maker{% endblock %}
+{% block title %}Bienvenido a Package Maker{% endblock %}
+{% block title_bar %}Package Maker - Inicio{% endblock %}
 {% block app_content %}
 <div class="main-content win11-center">
     <div class="content-area win11-content">
-        <!-- Windows 11 Style Download Page -->
-        <div class="win11-download-page">
-            
-            <!-- Hero with App Logo -->
-            <div class="win11-hero">
-                <div class="win11-logo-container">
-                    <img src="{{ url_for('static', filename='../app/packagemaker.png') }}" alt="Package Maker" class="win11-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                    <div class="win11-logo-fallback" style="display:none;">
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="app-icon-large">
+                    <img src="{{ url_for('static', filename='../app/packagemaker.png') }}" alt="Package Maker" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    <div class="icon-fallback" style="display:none;">
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     </div>
                 </div>
-                <h1 class="win11-title">Package Maker</h1>
-                <p class="win11-subtitle">{{ metadata.get('description', 'Suite definitiva para el ecosistema Influent OS') }}</p>
-                <div class="win11-version-badge">
-                    <span class="win11-badge">Version {{ downloads.get('version', metadata.get('version', 'v3.2.7')) }}</span>
+                <h1 class="hero-title">Package Maker</h1>
+                <p class="hero-subtitle">La suite definitiva para el ecosistema Influent OS. Diseña, compila y distribuye aplicaciones con facilidad.</p>
+                <div class="hero-actions">
+                    <a href="{{ url_for('download') }}" class="btn btn-primary btn-lg">Descargar ahora</a>
+                    <a href="#about" class="btn btn-secondary btn-lg">Saber más</a>
                 </div>
             </div>
-
-            <!-- Download Cards -->
-            <div class="win11-download-cards">
-                <h2 class="win11-section-title">Descargas Directas</h2>
-                
-                {% if downloads.get('windows') %}
-                <!-- Windows Download -->
-                <a href="{{ downloads.windows }}" class="win11-download-card">
-                    <div class="win11-card-icon win11-icon-windows">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                    </div>
-                    <div class="win11-card-content">
-                        <span class="win11-card-title">Windows</span>
-                        <span class="win11-card-subtitle">Knosthalij Platform</span>
-                    </div>
-                    <div class="win11-card-action">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </div>
-                </a>
-                {% endif %}
-                
-                {% if downloads.get('linux') %}
-                <!-- Linux Download -->
-                <a href="{{ downloads.linux }}" class="win11-download-card">
-                    <div class="win11-card-icon win11-icon-linux">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
-                    </div>
-                    <div class="win11-card-content">
-                        <span class="win11-card-title">Linux</span>
-                        <span class="win11-card-subtitle">Danenone Platform</span>
-                    </div>
-                    <div class="win11-card-action">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </div>
-                </a>
-                {% endif %}
-                
-                {% if not downloads.get('windows') and not downloads.get('linux') %}
-                <!-- Fluthin Store Fallback (shown when no platform downloads) -->
-                <a href="flarmstore://JesusQuijada34.packagemaker/" class="win11-download-card win11-card-fluthin">
-                    <div class="win11-card-icon win11-icon-fluthin">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                    </div>
-                    <div class="win11-card-content">
-                        <span class="win11-card-title">Instalar con Agente Dependiente de Paquetes Fluthin</span>
-                        <span class="win11-card-subtitle">One-click installation</span>
-                    </div>
-                    <div class="win11-card-action">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </div>
-                </a>
-                {% endif %}
-            </div>
-
-            <!-- Features Preview -->
-            <div class="win11-features">
-                <h2 class="win11-section-title">Características</h2>
-                <div class="win11-features-grid">
-                    <div class="win11-feature">
-                        <div class="win11-feature-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                        </div>
-                        <span>Crear Proyectos</span>
-                    </div>
-                    <div class="win11-feature">
-                        <div class="win11-feature-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                        </div>
-                        <span>Compilar Paquetes</span>
-                    </div>
-                    <div class="win11-feature">
-                        <div class="win11-feature-icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-                        </div>
-                        <span>MoonFix Repair</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="win11-footer">
-                <p>{{ metadata.get('author', 'JesusQuijada34') }} • {{ metadata.get('publisher', 'Influent') }}</p>
-            </div>
-
         </div>
+
+        <div id="about" class="about-section">
+            <div class="section-container">
+                <h2 class="section-title">Acerca del programa</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        </div>
+                        <h3>IDE Profesional</h3>
+                        <p>Un entorno integrado diseñado específicamente para el desarrollo de aplicaciones Python con interfaces modernas.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        </div>
+                        <h3>Compilación Inteligente</h3>
+                        <p>Empaqueta tus proyectos en formato .iflapp con detección automática de dependencias y minificación de código.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                        </div>
+                        <h3>MoonFix Repair</h3>
+                        <p>Sistema avanzado para reparar inconsistencias en paquetes y asegurar la estabilidad de tus aplicaciones.</p>
+                    </div>
+                </div>
+
+                <div class="platforms-info">
+                    <h3>Soporte Multiplataforma</h3>
+                    <p>Package Maker soporta las plataformas líderes del ecosistema:</p>
+                    <div class="platform-tags">
+                        <span class="platform-tag">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1V11.7H0V3.449zm0 17.1L9.75 21.9V12.3H0v8.249zM10.5 1.95L24 0V11.7H10.5V1.95zm0 20.1L24 24V12.3H10.5v9.75z"/></svg>
+                            Knosthalij (Windows)
+                        </span>
+                        <span class="platform-tag">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-.967 0-1.75.783-1.75 1.75s.783 1.75 1.75 1.75 1.75-.783 1.75-1.75-.783-1.75-1.75-1.75zm-3.25 4.5c-1.242 0-2.25 1.008-2.25 2.25v5.5c0 1.242 1.008 2.25 2.25 2.25h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5V16.5h.5v5.25c0 .69.56 1.25 1.25 1.25s1.25-.56 1.25-1.25V16.5h.5c1.242 0 2.25-1.008 2.25-2.25v-5.5c0-1.242-1.008-2.25-2.25-2.25h-6.5z"/></svg>
+                            Danenone (Linux)
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <p>&copy; 2025 {{ metadata.get('publisher', 'Influent') }} - Desarrollado por {{ metadata.get('author', 'JesusQuijada34') }}</p>
+                </div>
+                <div class="footer-right">
+                    <a href="{{ url_for('download') }}" class="btn btn-primary btn-sm">Obtener Package Maker</a>
+                </div>
+            </div>
+        </footer>
     </div>
 </div>
 {% endblock %}
+
 {% block extra_styles %}
 <style>
-/* Windows 11 Centered Layout */
 .win11-center {
     justify-content: center !important;
     align-items: flex-start !important;
@@ -122,241 +91,180 @@
     overflow-y: auto !important;
 }
 
-/* Main Download Page */
-.win11-download-page {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 40px 24px;
-    min-height: 100%;
-}
-
-/* Hero Section */
-.win11-hero {
+.hero-section {
+    padding: 80px 40px;
     text-align: center;
-    margin-bottom: 40px;
+    background: radial-gradient(circle at center, rgba(255, 87, 34, 0.08) 0%, transparent 70%);
 }
 
-.win11-logo-container {
-    margin-bottom: 24px;
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-.win11-logo {
-    width: 120px;
-    height: 120px;
-    border-radius: 28px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-    object-fit: cover;
+.app-icon-large {
+    margin-bottom: 32px;
 }
 
-.win11-logo-fallback {
-    width: 120px;
-    height: 120px;
-    background: linear-gradient(135deg, #ff5722 0%, #ff7043 100%);
-    border-radius: 28px;
+.app-icon-large img {
+    width: 140px;
+    height: 140px;
+    border-radius: 32px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.app-icon-large img:hover {
+    transform: scale(1.05);
+}
+
+.icon-fallback {
+    width: 140px;
+    height: 140px;
+    background: var(--accent);
+    border-radius: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    box-shadow: 0 16px 48px rgba(255, 87, 34, 0.4);
 }
 
-.win11-title {
-    font-size: 42px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 12px;
-    letter-spacing: -1px;
-    background: linear-gradient(135deg, #fff 0%, #ccc 100%);
+.hero-title {
+    font-size: 56px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(to bottom, #fff, #aaa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
-.win11-subtitle {
-    font-size: 16px;
+.hero-subtitle {
+    font-size: 20px;
     color: var(--text-secondary);
-    margin: 0 0 20px;
-    line-height: 1.5;
+    margin-bottom: 40px;
+    line-height: 1.6;
 }
 
-.win11-version-badge {
-    display: inline-block;
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
 }
 
-.win11-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 16px;
-    background: rgba(255, 87, 34, 0.15);
-    border: 1px solid rgba(255, 87, 34, 0.3);
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #ff7043;
+.about-section {
+    padding: 60px 40px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--border-color);
 }
 
-/* Section Title */
-.win11-section-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 0 0 20px;
-    text-align: left;
+.section-container {
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
-/* Download Cards */
-.win11-download-cards {
-    background: rgba(30, 30, 30, 0.6);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 32px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px);
+.section-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 40px;
+    text-align: center;
 }
 
-.win11-download-card {
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 60px;
+}
+
+.feature-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 32px;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    text-decoration: none;
-    transition: all 0.2s ease;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.feature-card h3 {
+    font-size: 20px;
     margin-bottom: 12px;
 }
 
-.win11-download-card:last-child {
-    margin-bottom: 0;
+.feature-card p {
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
-.win11-download-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+.platforms-info {
+    text-align: center;
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius-lg);
 }
 
-.win11-download-card:active {
-    transform: translateY(0);
+.platforms-info h3 {
+    margin-bottom: 16px;
 }
 
-.win11-card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.win11-icon-windows {
-    background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
-}
-
-.win11-icon-linux {
-    background: linear-gradient(135deg, #107c10 0%, #0b5c0b 100%);
-}
-
-.win11-icon-fluthin {
-    background: linear-gradient(135deg, #6200ea 0%, #3700b3 100%);
-}
-
-.win11-card-content {
-    flex: 1;
-    text-align: left;
-}
-
-.win11-card-title {
-    display: block;
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-}
-
-.win11-card-subtitle {
-    display: block;
-    font-size: 13px;
-    color: var(--text-tertiary);
-}
-
-.win11-card-action {
-    color: var(--text-tertiary);
-    transition: all 0.2s;
-}
-
-.win11-download-card:hover .win11-card-action {
-    color: var(--accent);
-    transform: translateX(4px);
-}
-
-.win11-card-fluthin {
-    border-color: rgba(98, 0, 234, 0.3);
-}
-
-.win11-card-fluthin:hover {
-    border-color: rgba(98, 0, 234, 0.6);
-}
-
-/* Features */
-.win11-features {
-    background: rgba(30, 30, 30, 0.4);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 32px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-}
-
-.win11-features-grid {
+.platform-tags {
     display: flex;
     gap: 12px;
-    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
 }
 
-.win11-feature {
+.platform-tag {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
-    font-size: 13px;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 14px;
     color: var(--text-secondary);
 }
 
-.win11-feature-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--accent-light);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent);
+.main-footer {
+    margin-top: 80px;
+    padding: 40px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
 }
 
-/* Footer */
-.win11-footer {
-    text-align: center;
-    padding: 24px 0;
-    font-size: 12px;
+.footer-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-left p {
+    font-size: 14px;
     color: var(--text-tertiary);
 }
 
-.win11-footer p {
-    margin: 0;
+@media (max-width: 768px) {
+    .hero-title { font-size: 40px; }
+    .footer-content { flex-direction: column; gap: 20px; text-align: center; }
 }
 </style>
-{% endblock %}
-{% block scripts %}
-<script>
-// Download URLs are now server-side rendered
-// No client-side JavaScript needed for downloads
-</script>
 {% endblock %}

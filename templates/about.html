@@ -43,5 +43,15 @@
             </div>
         </div>
     </div>
+    <footer class="main-footer" style="margin-top: 40px; padding: 40px; border-top: 1px solid var(--border-color); background: var(--bg-secondary);">
+        <div class="footer-content" style="max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <div class="footer-left">
+                <p style="font-size: 14px; color: var(--text-tertiary);">&copy; 2025 {{ metadata.get('publisher', 'Influent') }} - Desarrollado por {{ metadata.get('author', 'JesusQuijada34') }}</p>
+            </div>
+            <div class="footer-right">
+                <a href="{{ url_for('download') }}" class="btn btn-primary btn-sm">Obtener Package Maker</a>
+            </div>
+        </div>
+    </footer>
 </div>
 {% endblock %}
