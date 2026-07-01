@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Descargar{% endblock %}
+
+{% block extra_css %}
+.download-container {
+    max-width: 900px;
+    margin: 4rem auto;
+    text-align: center;
+}
+
+.download-header {
+    margin-bottom: 3rem;
+}
+
+.download-header h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Advanced Download Button */
+.super-download-btn {
+    display: inline-flex;
+    align-items: stretch;
+    background: var(--accent-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 120, 212, 0.4);
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 70px;
+}
+
+.super-download-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 120, 212, 0.5);
+}
+
+.btn-main-part {
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-right: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-toggle-part {
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: 0.3s;
+}
+
+.btn-toggle-part:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.btn-toggle-part i {
+    transition: 0.3s;
+}
+
+.btn-toggle-part.active i {
+    transform: rotate(180deg);
+}
+
+/* Packages Dropdown */
+.packages-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.packages-list.active {
+    max-height: 500px;
+    margin-top: 2rem;
+}
+
+.package-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+.package-item:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--accent-color);
+    transform: translateX(10px);
+}
+
+.pkg-info {
+    text-align: left;
+}
+
+.pkg-name {
+    font-weight: 600;
+    display: block;
+}
+
+.pkg-meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.pkg-size {
+    background: rgba(0, 120, 212, 0.2);
+    color: var(--accent-color);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.version-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.android-instructions {
+    margin-top: 5rem;
+    text-align: left;
+}
+
+.step-card {
+    background: rgba(0,0,0,0.2);
+    border-left: 4px solid var(--accent-color);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 0 12px 12px 0;
+}
+{% endblock %}
+
+{% block content %}
+<div class="download-container">
+    <div class="download-header">
+        <span class="version-badge">Versión {{ version }}</span>
+        <h2>Obtén Package Maker</h2>
+        <p>Seleccionamos la mejor versión para tu dispositivo.</p>
+    </div>
+
+    <div class="glass-card" style="padding: 4rem 2rem;">
+        <div class="super-download-btn">
+            <a href="#" id="main-download-link" class="btn-main-part">
+                <i class="fas fa-download"></i>
+                <span>Descargar para <span id="detected-os">detectando...</span></span>
+            </a>
+            <div id="packages-toggle" class="btn-toggle-part">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+
+        <div id="packages-list" class="packages-list">
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Paquetes disponibles en este release:</p>
+            {% for dl in downloads %}
+            <a href="{{ dl.url }}" class="package-item">
+                <div class="pkg-info">
+                    <span class="pkg-name">{{ dl.platform }}</span>
+                    <span class="pkg-meta">{{ dl.name }}</span>
+                </div>
+                <span class="pkg-size">{{ dl.size }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if is_android %}
+    <div class="android-instructions">
+        <h3><i class="fab fa-android"></i> Instalación en Android (Termux)</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Sigue estos pasos para ejecutar la suite completa en tu móvil:</p>
+        
+        <div class="step-card">
+            <strong>Paso 1:</strong> Instala Termux desde F-Droid o Google Play.
+        </div>
+        <div class="step-card">
+            <strong>Paso 2:</strong> Abre Termux y pega el siguiente comando:
+            <div style="background: #000; padding: 1rem; border-radius: 8px; margin-top: 1rem; color: #a4c639; font-family: monospace; border: 1px solid #333;">
+                curl -sL {{ request.host_url }}api/download.sh | bash
+            </div>
+        </div>
+        <div class="step-card">
+            <strong>Paso 3:</strong> Espera a que termine la configuración y ejecuta <code>python3 packagemaker.py</code>.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const downloads = {{ downloads | tojson }};
+    const mainBtn = document.getElementById('main-download-link');
+    const detectedOsSpan = document.getElementById('detected-os');
+    const toggle = document.getElementById('packages-toggle');
+    const list = document.getElementById('packages-list');
+
+    // Toggle logic
+    toggle.addEventListener('click', () => {
+        toggle.classList.toggle('active');
+        list.classList.toggle('active');
+    });
+
+    // OS Detection
+    function detectOS() {
+        const ua = window.navigator.userAgent.toLowerCase();
+        if (ua.indexOf('linux') !== -1) return 'linux';
+        if (ua.indexOf('win') !== -1) return 'windows';
+        return 'unknown';
+    }
+
+    const os = detectOS();
+    let autoUrl = "";
+
+    if (os === 'linux') {
+        const dl = downloads.find(d => d.platform.includes('Linux'));
+        if (dl) {
+            autoUrl = dl.url;
+            detectedOsSpan.innerText = "Linux";
+        }
+    } else if (os === 'windows') {
+        const dl = downloads.find(d => d.platform.includes('Windows'));
+        if (dl) {
+            autoUrl = dl.url;
+            detectedOsSpan.innerText = "Windows";
+        }
+    }
+
+    if (autoUrl) {
+        mainBtn.href = autoUrl;
+    } else {
+        detectedOsSpan.innerText = "tu sistema";
+        mainBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggle.click();
+            alert("Selecciona una versión de la lista desplegable.");
+        });
+    }
+</script>
+{% endblock %}

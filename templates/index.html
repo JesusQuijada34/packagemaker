@@ -5,56 +5,29 @@
 {% block extra_css %}
 .hero {
     text-align: center;
-    padding: 4rem 0;
+    padding: 6rem 0;
 }
 
 .hero h1 {
-    font-size: 3.5rem;
-    margin-bottom: 1rem;
-    background: linear-gradient(to right, #fff, #aaa);
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, #fff, #888);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    font-weight: 800;
 }
 
 .hero p {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     color: var(--text-secondary);
-    max-width: 600px;
-    margin: 0 auto 2rem;
+    max-width: 700px;
+    margin: 0 auto 3rem;
 }
 
-.download-section {
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: center;
-}
-
-.main-download-btn {
-    font-size: 1.2rem;
-    padding: 1rem 2.5rem;
-    margin-bottom: 1rem;
-}
-
-.version-info {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-}
-
-.selector-container {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border-light);
-}
-
-.platform-selector {
-    background: rgba(0,0,0,0.3);
-    color: white;
-    padding: 0.8rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-light);
-    margin-right: 10px;
-    width: 250px;
+.cta-group {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
 }
 
 .features {
@@ -65,122 +38,72 @@
 }
 
 .feature-card i {
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: var(--accent-color);
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.feature-card h3 {
-    margin-bottom: 1rem;
+.android-banner {
+    margin-top: 4rem;
+    background: linear-gradient(135deg, rgba(164, 198, 57, 0.1) 0%, rgba(0,0,0,0) 100%);
+    border: 1px solid rgba(164, 198, 57, 0.2);
 }
 
-.feature-card p {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.6;
+.termux-code {
+    background: #000;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'Cascadia Code', monospace;
+    color: #a4c639;
+    margin-top: 1rem;
+    display: inline-block;
+    border: 1px solid #333;
 }
 {% endblock %}
 
 {% block content %}
 <section class="hero">
-    <h1>{{ metadata.get('name', 'Package Maker') }}</h1>
-    <p>{{ metadata.get('description', 'La suite definitiva para el desarrollo en Influent OS.') }}</p>
+    <h1>Package Maker</h1>
+    <p>{{ metadata.get('description', 'La suite definitiva para el ecosistema Influent OS. Crea, empaqueta y distribuye con estilo.') }}</p>
     
-    <div class="download-section glass-card">
-        <div id="auto-download">
-            <a href="#" id="main-download-link" class="btn btn-primary main-download-btn">
-                <i class="fas fa-download"></i> Descargar para <span id="detected-os">detectando...</span>
-            </a>
-            <p class="version-info">Versión estable: <strong>{{ version }}</strong> | XML: <strong>{{ metadata.get('version') }}</strong></p>
-        </div>
-
-        <div class="selector-container">
-            <p style="margin-bottom: 1rem;">O elige tu plataforma manualmente:</p>
-            <select id="platform-select" class="platform-selector">
-                <option value="">Selecciona una versión...</option>
-                {% for dl in downloads %}
-                <option value="{{ dl.url }}" data-platform="{{ dl.platform }}">{{ dl.platform }} ({{ dl.size }})</option>
-                {% endfor %}
-            </select>
-            <a href="#" id="manual-download-btn" class="btn btn-outline">
-                Descargar
-            </a>
-        </div>
+    <div class="cta-group">
+        <a href="/download" class="btn btn-primary btn-lg">
+            <i class="fas fa-rocket"></i> Empezar ahora
+        </a>
+        <a href="/release-notes" class="btn btn-outline btn-lg">
+            Ver novedades
+        </a>
     </div>
+
+    {% if is_android %}
+    <div class="glass-card android-banner" style="margin-top: 5rem;">
+        <h3><i class="fab fa-android"></i> Detectamos que estás en Android</h3>
+        <p>Puedes instalar Package Maker en Termux usando este comando automático:</p>
+        <div class="termux-code">
+            curl -sL {{ request.host_url }}api/download.sh | bash
+        </div>
+        <p style="font-size: 0.8rem; margin-top: 1rem; color: #888;">
+            Requiere Termux instalado. El script configurará Python y todas las dependencias.
+        </p>
+    </div>
+    {% endif %}
 </section>
 
 <section class="features">
     <div class="glass-card feature-card">
-        <i class="fas fa-cubes"></i>
-        <h3>Ecosistema Influent</h3>
-        <p>Integración total con Influent OS, permitiendo crear paquetes nativos con facilidad y eficiencia.</p>
+        <i class="fas fa-layer-group"></i>
+        <h3>Diseño Mica</h3>
+        <p>Una interfaz fluida y moderna inspirada en el diseño de cristal líquido de próxima generación.</p>
     </div>
     <div class="glass-card feature-card">
-        <i class="fas fa-code"></i>
-        <h3>pmCodeEditor</h3>
-        <p>Editor de código integrado y optimizado para el flujo de trabajo de empaquetado.</p>
+        <i class="fas fa-bolt"></i>
+        <h3>Rápido y Ligero</h3>
+        <p>Optimizado para el rendimiento, asegurando que tus paquetes se creen en segundos.</p>
     </div>
     <div class="glass-card feature-card">
-        <i class="fas fa-shield-alt"></i>
-        <h3>Seguro y Robusto</h3>
-        <p>Basado en estándares modernos y con una arquitectura diseñada para la estabilidad del sistema.</p>
+        <i class="fas fa-terminal"></i>
+        <h3>CLI Potente</h3>
+        <p>No solo es visual, nuestra herramienta de línea de comandos es igual de robusta.</p>
     </div>
 </section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    const downloads = {{ downloads | tojson }};
-    const mainBtn = document.getElementById('main-download-link');
-    const detectedOsSpan = document.getElementById('detected-os');
-    const platformSelect = document.getElementById('platform-select');
-    const manualBtn = document.getElementById('manual-download-btn');
-
-    // Detección de OS
-    function detectOS() {
-        const ua = window.navigator.userAgent.toLowerCase();
-        if (ua.indexOf('linux') !== -1) return 'linux';
-        if (ua.indexOf('win') !== -1) return 'windows';
-        return 'unknown';
-    }
-
-    const os = detectOS();
-    let autoUrl = "";
-
-    if (os === 'linux') {
-        const dl = downloads.find(d => d.platform.includes('Linux'));
-        if (dl) {
-            autoUrl = dl.url;
-            detectedOsSpan.innerText = "Linux";
-        }
-    } else if (os === 'windows') {
-        const dl = downloads.find(d => d.platform.includes('Windows'));
-        if (dl) {
-            autoUrl = dl.url;
-            detectedOsSpan.innerText = "Windows";
-        }
-    }
-
-    if (autoUrl) {
-        mainBtn.href = autoUrl;
-    } else {
-        detectedOsSpan.innerText = "tu sistema";
-        mainBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            platformSelect.focus();
-            alert("Por favor, selecciona una plataforma manualmente.");
-        });
-    }
-
-    // Lógica selectiva
-    manualBtn.addEventListener('click', (e) => {
-        const selectedUrl = platformSelect.value;
-        if (!selectedUrl) {
-            e.preventDefault();
-            alert("Selecciona una plataforma primero.");
-        } else {
-            manualBtn.href = selectedUrl;
-        }
-    });
-</script>
 {% endblock %}
