@@ -5,105 +5,144 @@
 {% block extra_css %}
 .hero {
     text-align: center;
-    padding: 6rem 0;
+    padding: 5rem 0;
+    animation: fadeInDown 1s;
 }
 
 .hero h1 {
-    font-size: 4rem;
+    font-size: 4.5rem;
     margin-bottom: 1.5rem;
-    background: linear-gradient(to right, #fff, #888);
+    background: linear-gradient(135deg, #fff 0%, #888 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
+    letter-spacing: -2px;
 }
 
 .hero p {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     color: var(--text-secondary);
-    max-width: 700px;
+    max-width: 800px;
     margin: 0 auto 3rem;
 }
 
-.cta-group {
+.showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 3rem;
+    margin-top: 6rem;
+}
+
+.showcase-item {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     gap: 1.5rem;
 }
 
-.features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 4rem;
+.showcase-item h2 {
+    font-size: 2rem;
+    background: linear-gradient(to right, var(--accent-color), #fff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.feature-card i {
-    font-size: 2.5rem;
-    color: var(--accent-color);
-    margin-bottom: 1.5rem;
+.android-special {
+    margin-top: 6rem;
+    border: 1px solid rgba(164, 198, 57, 0.3);
+    background: linear-gradient(135deg, rgba(164, 198, 57, 0.1) 0%, transparent 100%);
 }
 
-.android-banner {
-    margin-top: 4rem;
-    background: linear-gradient(135deg, rgba(164, 198, 57, 0.1) 0%, rgba(0,0,0,0) 100%);
-    border: 1px solid rgba(164, 198, 57, 0.2);
+.termux-box {
+    background: rgba(0,0,0,0.4);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-top: 1.5rem;
+    overflow-x: auto;
 }
 
 .termux-code {
-    background: #000;
-    padding: 1rem;
-    border-radius: 8px;
     font-family: 'Cascadia Code', monospace;
     color: #a4c639;
-    margin-top: 1rem;
-    display: inline-block;
-    border: 1px solid #333;
+    white-space: nowrap;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 {% endblock %}
 
 {% block content %}
 <section class="hero">
-    <h1>Package Maker</h1>
-    <p>{{ metadata.get('description', 'La suite definitiva para el ecosistema Influent OS. Crea, empaqueta y distribuye con estilo.') }}</p>
+    <div class="version-badge animate__animated animate__pulse animate__infinite" style="display: inline-block; padding: 5px 15px; background: var(--accent-glow); border-radius: 20px; font-size: 0.8rem; margin-bottom: 1rem; color: white;">
+        v3.2.7-26.05-20.13
+    </div>
+    <h1>IDE Profesional para Python</h1>
+    <p>Revoluciona la forma en que creas, empaquetas y distribuyes tus aplicaciones con una interfaz inspirada en Windows 11 y efectos de cristal líquido.</p>
     
-    <div class="cta-group">
+    <div style="display: flex; justify-content: center; gap: 1.5rem;">
+        {% if not is_android %}
         <a href="/download" class="btn btn-primary btn-lg">
-            <i class="fas fa-rocket"></i> Empezar ahora
+            <i class="fas fa-download"></i> Descargar Suite
         </a>
+        {% endif %}
         <a href="/release-notes" class="btn btn-outline btn-lg">
-            Ver novedades
+            Explorar Novedades
         </a>
     </div>
+</section>
 
-    {% if is_android %}
-    <div class="glass-card android-banner" style="margin-top: 5rem;">
-        <h3><i class="fab fa-android"></i> Detectamos que estás en Android</h3>
-        <p>Puedes instalar Package Maker en Termux usando este comando automático:</p>
-        <div class="termux-code">
-            curl -sL {{ request.host_url }}api/download.sh | bash
+{% if is_android %}
+<section class="glass-card android-special animate__animated animate__fadeInUp">
+    <h2 style="color: #a4c639;"><i class="fab fa-android"></i> Optimizado para Android (Termux)</h2>
+    <p>Hemos detectado que estás en un dispositivo móvil. Package Maker está listo para ejecutarse en tu terminal favorita.</p>
+    
+    <div class="termux-box">
+        <code class="termux-code" id="termux-cmd">curl -sL {{ request.host_url }}api/download.sh | bash</code>
+        <button class="btn-copy" onclick="copyToClipboard(document.getElementById('termux-cmd').innerText, this)">
+            <i class="fas fa-copy"></i> Copiar
+        </button>
+    </div>
+    
+    <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; font-size: 0.9rem;">
+        <div class="glass-card" style="padding: 1rem;">
+            <i class="fas fa-check-circle" style="color: #a4c639;"></i> Instalación automática de dependencias.
         </div>
-        <p style="font-size: 0.8rem; margin-top: 1rem; color: #888;">
-            Requiere Termux instalado. El script configurará Python y todas las dependencias.
-        </p>
+        <div class="glass-card" style="padding: 1rem;">
+            <i class="fas fa-check-circle" style="color: #a4c639;"></i> Soporte completo para la rama main.
+        </div>
     </div>
-    {% endif %}
 </section>
+{% endif %}
 
-<section class="features">
-    <div class="glass-card feature-card">
-        <i class="fas fa-layer-group"></i>
-        <h3>Diseño Mica</h3>
-        <p>Una interfaz fluida y moderna inspirada en el diseño de cristal líquido de próxima generación.</p>
+<div class="showcase-grid">
+    <div class="showcase-item animate__animated animate__fadeInLeft">
+        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHcucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=IzI37Dquvs3naI6e7rqzN~2knG8~TDpoKdVewA0mWtaAYH71tBI~MbYgjoq4s5UtoLHt~JONA2JGyuIndCFP8af1SXsAr9ionjeFbaTRICD~nZaFzJzhfuv54lTvlCG9xTEToNSxfhpSHl1GkDvmiORQEfJ5GoWV4TzkLx-dmUOijHhyhtCEVTBApTN8Uk-kNY-IDJMRFyJe-MLY2GVevBo7wsMtTIP7a-GqVTGII2Sl73gc2IqTdBOTphi9xur7z2dlL1NvLRcpGAYA4Dos1e3oKtfYFfwDcTlU9fBZ1s2hEmvR4~OhkZWqb3uRQK8jF7Cdr6AZ~TfVMAdR6e3VNA__" alt="Interfaz Inicial">
+        <h2>Interfaz Intuitiva</h2>
+        <p>Barra de título personalizada basada en Leviathan-UI con efectos acrílicos y mica.</p>
     </div>
-    <div class="glass-card feature-card">
-        <i class="fas fa-bolt"></i>
-        <h3>Rápido y Ligero</h3>
-        <p>Optimizado para el rendimiento, asegurando que tus paquetes se creen en segundos.</p>
+
+    <div class="showcase-item animate__animated animate__fadeInRight" style="animation-delay: 0.2s;">
+        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8x.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHgucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=DPgXoBsF4fjMgB13doz063xtl2rwtvTuYxP~yiutz-L~PrQvC15T3Ga6JYTpD3WmAKOo7drcwC6AUdiM5oZBtI7cpVW6JgD4P04XvUoCrv5BOV8K1WGyzBkKOw~pFsH36Jtc1nWzK-j~MMFUk7DJ-rlFbm1GQkuBiieN50YZKdzp3zmgPE97LQfoUPNmovdXLJNgyG~LJ3bbFsHu2kklSf87~bQcJfhslumnKcwYMs7LyH1NM0Py8hEL-7ZMrdbWGQy9GMNwTg9N1eWOC~2oHdVRupCTouRPN7LHXBb2QjMn9ukm4zrh~1scHh1scEsl1UYy3Jm4ZsnqEoFXj7GrVw__" alt="Compilación">
+        <h2>Compilación Avanzada</h2>
+        <p>Integración inteligente con .gitignore y limpieza automática post-compilación.</p>
     </div>
-    <div class="glass-card feature-card">
-        <i class="fas fa-terminal"></i>
-        <h3>CLI Potente</h3>
-        <p>No solo es visual, nuestra herramienta de línea de comandos es igual de robusta.</p>
+
+    <div class="showcase-item animate__animated animate__fadeInLeft" style="animation-delay: 0.4s;">
+        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8y.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHkucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=YK56x9xaYGW9P3fNeSBCFiIWWaABOvPL7qgpxghacqKu0BmcjMAGrhVAFybeBJM3ICXCMZZ9zbgs4Aa8KFIT0JbEABVL269G~9bgpk8CbvQhnmQOoG6r-8A~Ufd-qsaoiOqZJviVjS-a5rgmIkN4yJEyoJGbJ8mY7gOZAhHPvbgOuJ8RxzHcoHWaFKq1laKfIAOjTETckUpLhdIR3pyP2BWVbaRyRMn7mtmqFXCVefMXQ1xNwvOxRn~A8qxKTxi9PxJdUQkcDgVnwGzp83f1bCxjVk5h0FilLJyeMAQEo0Zd2qHzo8uAGnOMNCwvJmuTd0-D-LcpcirmkjGGJ-ltrw__" alt="Gestor">
+        <h2>Gestión Total</h2>
+        <p>Administra tus proyectos locales e instalados con precisión quirúrgica.</p>
     </div>
-</section>
+
+    <div class="showcase-item animate__animated animate__fadeInRight" style="animation-delay: 0.6s;">
+        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF80.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGODAucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=W60DPJezRvKvTyIuiQvFCOH3oAJBa9Te1gsZnQTwitFK8j-c7LFMDXfvcjW9YJVlg~kIB6VmSmkpJcUQ7abAnteXXAwhA34Ve8bmF82PtXbfWkPOjpG0y9~lpJkIZO6zE-ylOdpr0vhgExS0L9fI4oQS36sts-MzF2VBHLi53T7a5PZTqPk52G~cVHOqgvDiCMu2TJmXC8rZcdCDcF21i-Ny~Wpi6j~oKzdiURXrfIJjbainQMYiExB-bOQBo2Yb9C0ous8c9AG-gWMnHRn3HTnAmIzHkjTbaoS1FmV4ds3WQs7CGvki6Dz8BxgSbyJbtQbpzSCE9V1kC3HZSP3JbA__" alt="MoonFix">
+        <h2>Sanación MoonFix</h2>
+        <p>Manten la salud de tus proyectos escaneando y reparando inconsistencias automáticamente.</p>
+    </div>
+</div>
 {% endblock %}

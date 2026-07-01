@@ -2,36 +2,50 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}{% endblock %} - Package Maker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         :root {
-            --mica-bg: rgba(25, 25, 25, 0.7);
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --accent-color: #0078d4;
-            --accent-hover: #005a9e;
+            --mica-bg: rgba(15, 15, 20, 0.85);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --accent-color: #00a2ff;
+            --accent-glow: rgba(0, 162, 255, 0.5);
             --text-primary: #ffffff;
-            --text-secondary: #cccccc;
+            --text-secondary: rgba(255, 255, 255, 0.7);
             --border-light: rgba(255, 255, 255, 0.1);
-            --liquid-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            --liquid-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI Variable', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background: #0a0a0a;
+            background: #050508;
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 20% 30%, rgba(0, 120, 212, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 80% 70%, rgba(255, 87, 34, 0.1) 0%, transparent 40%);
+            line-height: 1.6;
+        }
+
+        /* Mica / Liquid Glass Background */
+        .mica-engine {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(0, 162, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(255, 0, 128, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.5) 0%, #050508 100%);
         }
 
         .mica-overlay {
@@ -40,8 +54,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--mica-bg);
-            backdrop-filter: blur(50px) saturate(150%);
+            backdrop-filter: blur(80px) saturate(180%);
+            background: rgba(10, 10, 15, 0.4);
             z-index: -1;
         }
 
@@ -49,13 +63,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 10%;
-            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem 5%;
+            background: rgba(0, 0, 0, 0.3);
             border-bottom: 1px solid var(--border-light);
             position: sticky;
             top: 0;
-            z-index: 100;
-            backdrop-filter: blur(20px);
+            z-index: 1000;
+            backdrop-filter: blur(30px);
         }
 
         .logo {
@@ -66,6 +80,11 @@
             font-size: 1.2rem;
             text-decoration: none;
             color: white;
+            transition: 0.3s;
+        }
+
+        .logo:hover {
+            text-shadow: 0 0 15px var(--accent-glow);
         }
 
         .logo svg {
@@ -76,107 +95,153 @@
 
         .nav-links {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
         }
 
         .nav-links a {
             text-decoration: none;
             color: var(--text-secondary);
             font-size: 0.9rem;
-            transition: 0.3s;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
         }
 
         .nav-links a:hover {
             color: white;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.05);
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 5%;
         }
 
         .glass-card {
             background: var(--liquid-glass);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             border: 1px solid var(--border-light);
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 2.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: 0.5s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
         }
 
         .glass-card:hover {
             border-color: rgba(255,255,255,0.2);
-            transform: translateY(-5px);
-            background: rgba(255,255,255,0.08);
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
         }
 
         .btn {
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
+            padding: 0.8rem 1.8rem;
+            border-radius: 12px;
             border: none;
             cursor: pointer;
             font-weight: 600;
-            transition: 0.3s;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             text-decoration: none;
+            font-size: 0.95rem;
         }
 
         .btn-primary {
             background: var(--accent-color);
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 120, 212, 0.3);
+            box-shadow: 0 8px 20px var(--accent-glow);
         }
 
         .btn-primary:hover {
-            background: var(--accent-hover);
-            transform: scale(1.05);
+            background: #00b4ff;
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 12px 25px var(--accent-glow);
         }
 
         .btn-outline {
-            background: transparent;
+            background: rgba(255,255,255,0.05);
             border: 1px solid var(--border-light);
             color: white;
+            backdrop-filter: blur(10px);
         }
 
         .btn-outline:hover {
             background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .btn-copy {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            background: rgba(164, 198, 57, 0.2);
+            color: #a4c639;
+            border: 1px solid rgba(164, 198, 57, 0.3);
+            border-radius: 6px;
         }
 
         footer {
-            padding: 4rem 10% 2rem;
+            padding: 4rem 5% 2rem;
             text-align: center;
             color: var(--text-secondary);
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             border-top: 1px solid var(--border-light);
-            margin-top: 4rem;
+            margin-top: 5rem;
+            backdrop-filter: blur(10px);
         }
 
-        .prose {
-            max-width: 800px;
-            margin: 0 auto;
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            margin: 1.5rem 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: 0.3s;
         }
 
-        .prose h1, .prose h2, .prose h3 { margin-top: 2rem; margin-bottom: 1rem; color: white; border-bottom: 1px solid var(--border-light); padding-bottom: 0.5rem; }
-        .prose p { margin-bottom: 1.2rem; line-height: 1.8; color: var(--text-secondary); }
-        .prose ul { margin-bottom: 1.2rem; padding-left: 1.5rem; }
-        .prose li { margin-bottom: 0.6rem; color: var(--text-secondary); }
-        .prose code { background: rgba(0,0,0,0.3); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: 'Cascadia Code', monospace; color: #ff8c00; }
-        .prose pre { background: rgba(0,0,0,0.4); padding: 1.5rem; border-radius: 12px; overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-light); }
+        img:hover {
+            transform: scale(1.02);
+            border-color: var(--accent-color);
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero h1 { font-size: 2.5rem !important; }
+            .container { padding: 1rem 5%; }
+            .glass-card { padding: 1.5rem; }
+            .btn { width: 100%; justify-content: center; }
+        }
 
         {% block extra_css %}{% endblock %}
     </style>
 </head>
 <body>
+    <div class="mica-engine"></div>
     <div class="mica-overlay"></div>
     
     <nav>
-        <a href="/" class="logo">
+        <a href="/" class="logo animate__animated animate__fadeIn">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
                 <path d="M7 10L10 12L7 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -184,11 +249,11 @@
             </svg>
             Package Maker
         </a>
-        <div class="nav-links">
+        <div class="nav-links animate__animated animate__fadeIn">
             <a href="/">Inicio</a>
+            <a href="/download">Descargas</a>
             <a href="/release-notes">Notas</a>
             <a href="/faq">FAQ</a>
-            <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank"><i class="fab fa-github"></i> GitHub</a>
         </div>
     </nav>
 
@@ -200,6 +265,15 @@
         <p>&copy; 2026 Influent. Creado por JesusQuijada34. Suite definitiva para Influent OS.</p>
     </footer>
 
+    <script>
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            });
+        }
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
