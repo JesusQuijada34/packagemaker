@@ -1,92 +1,110 @@
 {% extends "base.html" %}
 
-{% block title %}Analíticas de Tráfico{% endblock %}
+{% block title %}Analíticas Avanzadas{% endblock %}
 
 {% block extra_css %}
-.stats-grid {
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.metrics-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
 }
 
-.stat-card {
+.metric-card {
     text-align: center;
+    padding: 1.5rem;
 }
 
-.stat-value {
-    font-size: 3rem;
-    font-weight: 800;
-    color: var(--accent-color);
-    margin: 1rem 0;
+.metric-label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+.metric-value { font-size: 2.5rem; font-weight: 800; color: var(--accent-color); margin-top: 0.5rem; }
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
 }
 
-.chart-container {
-    margin-top: 3rem;
-    background: rgba(0,0,0,0.2);
-    padding: 2rem;
-    border-radius: 20px;
-    border: 1px solid var(--border-light);
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 2rem;
-    font-size: 0.9rem;
-}
-
-th, td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-light);
-}
-
+table { width: 100%; border-collapse: collapse; margin-top: 2rem; font-size: 0.85rem; }
+th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border-light); }
 th { color: var(--accent-color); }
-td { color: var(--text-secondary); }
+.badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
+.badge-red { background: rgba(255, 0, 0, 0.2); color: #ff4444; }
+.badge-green { background: rgba(0, 255, 0, 0.2); color: #44ff44; }
+
+@media (max-width: 800px) { .charts-grid { grid-template-columns: 1fr; } }
 {% endblock %}
 
 {% block content %}
 <div class="animate__animated animate__fadeIn">
-    <h1>Dashboard de Analíticas</h1>
-    <p style="color: var(--text-secondary);">Métricas de tráfico en tiempo real para Package Maker.</p>
-
-    <div class="stats-grid">
-        <div class="glass-card stat-card">
-            <h3>Total Visitas</h3>
-            <div class="stat-value">{{ total }}</div>
-            <p>Desde la última purga</p>
+    <div class="stats-header">
+        <div>
+            <h1>Dashboard de Tráfico</h1>
+            <p style="color: var(--text-secondary);">Métricas detalladas de usuario y comportamiento.</p>
         </div>
-
-        <div class="glass-card">
-            <h3>Plataformas Populares</h3>
-            <canvas id="platformChart" style="margin-top: 1rem;"></canvas>
+        <div class="glass-card" style="padding: 0.5rem 1rem;">
+            <span style="color: #44ff44;">●</span> Live
         </div>
     </div>
 
-    <div class="glass-card chart-container">
-        <h3>Rutas más visitadas</h3>
-        <canvas id="pathChart" style="max-height: 300px;"></canvas>
+    <div class="metrics-row">
+        <div class="glass-card metric-card">
+            <div class="metric-label">Total Visitas</div>
+            <div class="metric-value">{{ total }}</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-label">Tiempo Promedio</div>
+            <div class="metric-value">{{ avg_time }}s</div>
+        </div>
+        <div class="glass-card metric-card">
+            <div class="metric-label">Tasa de Rebote</div>
+            <div class="metric-value">{{ bounce }}%</div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="glass-card">
+            <h3>Plataformas</h3>
+            <canvas id="platformChart" style="margin-top: 1.5rem;"></canvas>
+        </div>
+        <div class="glass-card">
+            <h3>Páginas Populares</h3>
+            <canvas id="pathChart" style="margin-top: 1.5rem;"></canvas>
+        </div>
     </div>
 
     <div class="glass-card" style="margin-top: 3rem;">
-        <h3>Actividad Reciente</h3>
+        <h3>Actividad de Sesiones</h3>
         <table>
             <thead>
                 <tr>
                     <th>Fecha</th>
                     <th>Ruta</th>
                     <th>Plataforma</th>
-                    <th>IP (Proxied)</th>
+                    <th>Duración</th>
+                    <th>Estado</th>
                 </tr>
             </thead>
             <tbody>
                 {% for v in recent %}
                 <tr>
-                    <td>{{ v[0] }}</td>
+                    <td>{{ v[0].split('.')[0] }}</td>
                     <td><code>{{ v[1] }}</code></td>
                     <td>{{ v[2] }}</td>
-                    <td>{{ v[3] }}</td>
+                    <td>{{ v[3] }}s</td>
+                    <td>
+                        {% if v[4] %}
+                        <span class="badge badge-red">Rebote</span>
+                        {% else %}
+                        <span class="badge badge-green">Engaged</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -101,7 +119,6 @@ td { color: var(--text-secondary); }
     const platformData = {{ platforms | tojson }};
     const pathData = {{ paths | tojson }};
 
-    // Chart de Plataformas
     new Chart(document.getElementById('platformChart'), {
         type: 'doughnut',
         data: {
@@ -112,12 +129,9 @@ td { color: var(--text-secondary); }
                 borderWidth: 0
             }]
         },
-        options: {
-            plugins: { legend: { labels: { color: '#fff' } } }
-        }
+        options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff', padding: 20 } } } }
     });
 
-    // Chart de Rutas
     new Chart(document.getElementById('pathChart'), {
         type: 'bar',
         data: {
@@ -125,15 +139,15 @@ td { color: var(--text-secondary); }
             datasets: [{
                 label: 'Visitas',
                 data: pathData.map(p => p[1]),
-                backgroundColor: 'rgba(0, 162, 255, 0.5)',
+                backgroundColor: 'rgba(0, 162, 255, 0.4)',
                 borderColor: '#00a2ff',
                 borderWidth: 1
             }]
         },
         options: {
             scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
-                x: { grid: { display: false }, ticks: { color: '#fff' } }
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } },
+                x: { grid: { display: false }, ticks: { color: '#888' } }
             },
             plugins: { legend: { display: false } }
         }

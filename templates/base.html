@@ -18,153 +18,33 @@
             --liquid-glass: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif; }
+        body { background: #020205; color: var(--text-primary); min-height: 100vh; overflow-x: hidden; font-size: 16px; }
 
-        body {
-            background: #020205;
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-            line-height: 1.5;
-            font-size: 16px;
-        }
-
-        /* Enhanced Liquid Glass Background */
-        .glass-engine {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            background: #020205;
-            overflow: hidden;
-        }
-
-        .glass-blob {
-            position: absolute;
-            width: 60vw;
-            height: 60vw;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.15;
-            animation: move 20s infinite alternate;
-        }
-
+        .glass-engine { position: fixed; inset: 0; z-index: -2; background: #020205; overflow: hidden; }
+        .glass-blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(80px); opacity: 0.15; animation: move 20s infinite alternate; }
         .blob-1 { background: var(--accent-color); top: -10%; left: -10%; }
         .blob-2 { background: #ff0080; bottom: -10%; right: -10%; animation-delay: -5s; }
         .blob-3 { background: #7000ff; top: 40%; left: 30%; width: 40vw; height: 40vw; animation-delay: -10s; }
+        @keyframes move { from { transform: translate(0, 0) scale(1); } to { transform: translate(10%, 10%) scale(1.1); } }
 
-        @keyframes move {
-            from { transform: translate(0, 0) scale(1); }
-            to { transform: translate(10%, 10%) scale(1.1); }
-        }
+        .mica-layer { position: fixed; inset: 0; backdrop-filter: blur(100px) saturate(200%); background: rgba(5, 5, 10, 0.5); z-index: -1; }
 
-        .mica-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            backdrop-filter: blur(100px) saturate(200%);
-            background: rgba(5, 5, 10, 0.5);
-            z-index: -1;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 5%;
-            background: rgba(0, 0, 0, 0.4);
-            border-bottom: 1px solid var(--border-light);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(20px);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            text-decoration: none;
-            color: white;
-        }
-
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 5%; background: rgba(0, 0, 0, 0.4); border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(20px); }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; text-decoration: none; color: white; }
         .logo svg { width: 28px; height: 28px; filter: drop-shadow(0 0 5px var(--accent-color)); }
-
         .nav-links { display: flex; gap: 1rem; }
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            padding: 0.4rem 0.7rem;
-            border-radius: 8px;
-            transition: 0.2s;
-        }
+        .nav-links a { text-decoration: none; color: var(--text-secondary); font-size: 0.85rem; padding: 0.4rem 0.7rem; border-radius: 8px; transition: 0.2s; }
         .nav-links a:hover { color: white; background: rgba(255,255,255,0.05); }
 
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 1.5rem 5%;
-        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 5%; }
+        .glass-card { background: var(--liquid-glass); backdrop-filter: blur(30px); border: 1px solid var(--border-light); border-radius: 18px; padding: 2rem; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
 
-        .glass-card {
-            background: var(--liquid-glass);
-            backdrop-filter: blur(30px);
-            border: 1px solid var(--border-light);
-            border-radius: 18px;
-            padding: 2rem;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-            transition: 0.3s ease;
-        }
-
-        .btn {
-            padding: 0.7rem 1.5rem;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
+        .btn { padding: 0.7rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.9rem; }
         .btn-primary { background: var(--accent-color); color: white; box-shadow: 0 5px 15px var(--accent-glow); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--accent-glow); }
+        .btn-copy { padding: 0.5rem 1rem; background: rgba(164, 198, 57, 0.15); color: #a4c639; border: 1px solid rgba(164, 198, 57, 0.2); border-radius: 8px; font-size: 0.8rem; }
 
-        .btn-copy {
-            padding: 0.5rem 1rem;
-            background: rgba(164, 198, 57, 0.15);
-            color: #a4c639;
-            border: 1px solid rgba(164, 198, 57, 0.2);
-            border-radius: 8px;
-            font-size: 0.8rem;
-        }
-
-        /* Mobile Scale Fixes */
-        @media (max-width: 600px) {
-            body { font-size: 14px; }
-            .hero h1 { font-size: 2.2rem !important; }
-            .container { padding: 1rem 4%; }
-            .glass-card { padding: 1.2rem; }
-            nav { padding: 0.7rem 4%; }
-            .logo { font-size: 1rem; }
-            .nav-links { display: none; }
-        }
-
+        @media (max-width: 600px) { body { font-size: 14px; } .hero h1 { font-size: 2.2rem !important; } .container { padding: 1rem 4%; } .nav-links { display: none; } }
         {% block extra_css %}{% endblock %}
     </style>
 </head>
@@ -178,11 +58,7 @@
     
     <nav>
         <a href="/" class="logo">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
-                <path d="M7 10L10 12L7 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M13 14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 10L10 12L7 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             Package Maker
         </a>
         <div class="nav-links">
@@ -196,11 +72,22 @@
         {% block content %}{% endblock %}
     </div>
 
-    <footer>
-        <p>&copy; 2026 Influent. Creado por JesusQuijada34.</p>
-    </footer>
+    <footer><p>&copy; 2026 Influent. Creado por JesusQuijada34.</p></footer>
 
     <script>
+        // Analytics Tracking
+        let startTime = Date.now();
+        function updateDuration() {
+            let duration = Math.floor((Date.now() - startTime) / 1000);
+            fetch('/api/track/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ duration: duration })
+            }).catch(e => {});
+        }
+        window.addEventListener('beforeunload', updateDuration);
+        setInterval(updateDuration, 10000); // Update every 10s
+
         function copyToClipboard(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
                 const original = btn.innerHTML;
