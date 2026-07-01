@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Analíticas de Tráfico{% endblock %}
+
+{% block extra_css %}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.stat-card {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    margin: 1rem 0;
+}
+
+.chart-container {
+    margin-top: 3rem;
+    background: rgba(0,0,0,0.2);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+}
+
+th { color: var(--accent-color); }
+td { color: var(--text-secondary); }
+{% endblock %}
+
+{% block content %}
+<div class="animate__animated animate__fadeIn">
+    <h1>Dashboard de Analíticas</h1>
+    <p style="color: var(--text-secondary);">Métricas de tráfico en tiempo real para Package Maker.</p>
+
+    <div class="stats-grid">
+        <div class="glass-card stat-card">
+            <h3>Total Visitas</h3>
+            <div class="stat-value">{{ total }}</div>
+            <p>Desde la última purga</p>
+        </div>
+
+        <div class="glass-card">
+            <h3>Plataformas Populares</h3>
+            <canvas id="platformChart" style="margin-top: 1rem;"></canvas>
+        </div>
+    </div>
+
+    <div class="glass-card chart-container">
+        <h3>Rutas más visitadas</h3>
+        <canvas id="pathChart" style="max-height: 300px;"></canvas>
+    </div>
+
+    <div class="glass-card" style="margin-top: 3rem;">
+        <h3>Actividad Reciente</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Ruta</th>
+                    <th>Plataforma</th>
+                    <th>IP (Proxied)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in recent %}
+                <tr>
+                    <td>{{ v[0] }}</td>
+                    <td><code>{{ v[1] }}</code></td>
+                    <td>{{ v[2] }}</td>
+                    <td>{{ v[3] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const platformData = {{ platforms | tojson }};
+    const pathData = {{ paths | tojson }};
+
+    // Chart de Plataformas
+    new Chart(document.getElementById('platformChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(platformData),
+            datasets: [{
+                data: Object.values(platformData),
+                backgroundColor: ['#00a2ff', '#a4c639', '#ff0080', '#7000ff', '#888'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: { legend: { labels: { color: '#fff' } } }
+        }
+    });
+
+    // Chart de Rutas
+    new Chart(document.getElementById('pathChart'), {
+        type: 'bar',
+        data: {
+            labels: pathData.map(p => p[0]),
+            datasets: [{
+                label: 'Visitas',
+                data: pathData.map(p => p[1]),
+                backgroundColor: 'rgba(0, 162, 255, 0.5)',
+                borderColor: '#00a2ff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
+                x: { grid: { display: false }, ticks: { color: '#fff' } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+</script>
+{% endblock %}

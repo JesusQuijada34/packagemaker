@@ -3,6 +3,8 @@ import requests
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, jsonify, request, Response
 import markdown
+import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -11,6 +13,46 @@ GITHUB_REPO = "JesusQuijada34/packagemaker"
 XML_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/details.xml"
 RELEASE_NOTES_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/RELEASE_NOTES.md"
 FAQ_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/FAQ.md"
+DB_PATH = 'analytics.db'
+
+# Inicializar Base de Datos
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS visits
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  timestamp DATETIME,
+                  path TEXT,
+                  platform TEXT,
+                  user_agent TEXT,
+                  ip TEXT)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+def log_visit():
+    try:
+        ua = request.headers.get('User-Agent', '').lower()
+        platform = 'Desconocida'
+        if 'android' in ua: platform = 'Android'
+        elif 'windows' in ua: platform = 'Windows'
+        elif 'linux' in ua: platform = 'Linux'
+        elif 'iphone' in ua or 'ipad' in ua: platform = 'iOS'
+        
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("INSERT INTO visits (timestamp, path, platform, user_agent, ip) VALUES (?, ?, ?, ?, ?)",
+                  (datetime.now(), request.path, platform, ua, request.remote_addr))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error logging visit: {e}")
+
+@app.before_request
+def before_request():
+    if not request.path.startswith('/static') and not request.path.startswith('/admin'):
+        log_visit()
 
 def get_xml_metadata():
     try:
@@ -78,16 +120,38 @@ def release_notes():
     except Exception as e:
         return str(e)
 
+@app.route('/admin/stats')
+def stats():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    
+    # Total visitas
+    c.execute("SELECT COUNT(*) FROM visits")
+    total_visits = c.fetchone()[0]
+    
+    # Visitas por plataforma
+    c.execute("SELECT platform, COUNT(*) FROM visits GROUP BY platform")
+    platform_stats = dict(c.fetchall())
+    
+    # Visitas por ruta
+    c.execute("SELECT path, COUNT(*) FROM visits GROUP BY path ORDER BY COUNT(*) DESC LIMIT 5")
+    path_stats = c.fetchall()
+    
+    # Últimas 10 visitas
+    c.execute("SELECT timestamp, path, platform, ip FROM visits ORDER BY timestamp DESC LIMIT 10")
+    recent_visits = c.fetchall()
+    
+    conn.close()
+    return render_template('stats.html', total=total_visits, platforms=platform_stats, paths=path_stats, recent=recent_visits)
+
 @app.route('/api/download.sh')
 def download_sh():
     script = """#!/bin/bash
 # Package Maker - Auto Installer for Termux/Linux
 # Creado por Influent (JesusQuijada34)
 
-# Colores
 RED='\\033[0;31m'
 GREEN='\\033[0;32m'
-BLUE='\\033[0;34m'
 CYAN='\\033[0;36m'
 YELLOW='\\033[1;33m'
 NC='\\033[0m'
@@ -97,7 +161,6 @@ echo -e "${CYAN}====================================================${NC}"
 echo -e "${CYAN}       PACKAGE MAKER - INSTALADOR AUTOMÁTICO        ${NC}"
 echo -e "${CYAN}====================================================${NC}"
 
-# Detectar entorno
 if [ -d "/data/data/com.termux/files/home" ]; then
     ENV="termux"
     echo -e "${GREEN}[+] Entorno Termux detectado.${NC}"
@@ -118,7 +181,6 @@ fi
 echo -e "${YELLOW}[*] Clonando repositorio (rama main)...${NC}"
 rm -rf packagemaker
 git clone -b main https://github.com/JesusQuijada34/packagemaker.git
-
 cd packagemaker
 
 echo -e "${YELLOW}[*] Instalando requerimientos desde lib/requirements.txt...${NC}"
