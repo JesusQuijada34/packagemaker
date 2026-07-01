@@ -2,60 +2,78 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>{% block title %}{% endblock %} - Package Maker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         :root {
-            --mica-bg: rgba(15, 15, 20, 0.85);
-            --glass-bg: rgba(255, 255, 255, 0.03);
+            --mica-bg: rgba(10, 10, 15, 0.8);
+            --glass-bg: rgba(255, 255, 255, 0.02);
             --accent-color: #00a2ff;
-            --accent-glow: rgba(0, 162, 255, 0.5);
+            --accent-glow: rgba(0, 162, 255, 0.4);
             --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --border-light: rgba(255, 255, 255, 0.1);
-            --liquid-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --border-light: rgba(255, 255, 255, 0.08);
+            --liquid-glass: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background: #050508;
+            background: #020205;
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            line-height: 1.6;
+            line-height: 1.5;
+            font-size: 16px;
         }
 
-        /* Mica / Liquid Glass Background */
-        .mica-engine {
+        /* Enhanced Liquid Glass Background */
+        .glass-engine {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-            background: 
-                radial-gradient(circle at 10% 10%, rgba(0, 162, 255, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(255, 0, 128, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.5) 0%, #050508 100%);
+            z-index: -2;
+            background: #020205;
+            overflow: hidden;
         }
 
-        .mica-overlay {
+        .glass-blob {
+            position: absolute;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-1 { background: var(--accent-color); top: -10%; left: -10%; }
+        .blob-2 { background: #ff0080; bottom: -10%; right: -10%; animation-delay: -5s; }
+        .blob-3 { background: #7000ff; top: 40%; left: 30%; width: 40vw; height: 40vw; animation-delay: -10s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(10%, 10%) scale(1.1); }
+        }
+
+        .mica-layer {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            backdrop-filter: blur(80px) saturate(180%);
-            background: rgba(10, 10, 15, 0.4);
+            backdrop-filter: blur(100px) saturate(200%);
+            background: rgba(5, 5, 10, 0.5);
             z-index: -1;
         }
 
@@ -63,185 +81,103 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 5%;
-            background: rgba(0, 0, 0, 0.3);
+            padding: 0.8rem 5%;
+            background: rgba(0, 0, 0, 0.4);
             border-bottom: 1px solid var(--border-light);
             position: sticky;
             top: 0;
             z-index: 1000;
-            backdrop-filter: blur(30px);
+            backdrop-filter: blur(20px);
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-weight: 700;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             text-decoration: none;
             color: white;
-            transition: 0.3s;
         }
 
-        .logo:hover {
-            text-shadow: 0 0 15px var(--accent-glow);
-        }
+        .logo svg { width: 28px; height: 28px; filter: drop-shadow(0 0 5px var(--accent-color)); }
 
-        .logo svg {
-            width: 32px;
-            height: 32px;
-            filter: drop-shadow(0 0 8px var(--accent-color));
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.5rem;
-        }
-
+        .nav-links { display: flex; gap: 1rem; }
         .nav-links a {
             text-decoration: none;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 500;
-            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+            padding: 0.4rem 0.7rem;
             border-radius: 8px;
+            transition: 0.2s;
         }
-
-        .nav-links a:hover {
-            color: white;
-            background: rgba(255,255,255,0.05);
-        }
+        .nav-links a:hover { color: white; background: rgba(255,255,255,0.05); }
 
         .container {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 2rem 5%;
+            padding: 1.5rem 5%;
         }
 
         .glass-card {
             background: var(--liquid-glass);
-            backdrop-filter: blur(25px);
+            backdrop-filter: blur(30px);
             border: 1px solid var(--border-light);
-            border-radius: 20px;
-            padding: 2.5rem;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            transition: 0.5s;
-        }
-
-        .glass-card:hover::before {
-            left: 100%;
-        }
-
-        .glass-card:hover {
-            border-color: rgba(255,255,255,0.2);
-            transform: translateY(-8px);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            border-radius: 18px;
+            padding: 2rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            transition: 0.3s ease;
         }
 
         .btn {
-            padding: 0.8rem 1.8rem;
-            border-radius: 12px;
-            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             text-decoration: none;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
-        .btn-primary {
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 8px 20px var(--accent-glow);
-        }
-
-        .btn-primary:hover {
-            background: #00b4ff;
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 12px 25px var(--accent-glow);
-        }
-
-        .btn-outline {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-light);
-            color: white;
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-outline:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.3);
-        }
+        .btn-primary { background: var(--accent-color); color: white; box-shadow: 0 5px 15px var(--accent-glow); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--accent-glow); }
 
         .btn-copy {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-            background: rgba(164, 198, 57, 0.2);
+            padding: 0.5rem 1rem;
+            background: rgba(164, 198, 57, 0.15);
             color: #a4c639;
-            border: 1px solid rgba(164, 198, 57, 0.3);
-            border-radius: 6px;
+            border: 1px solid rgba(164, 198, 57, 0.2);
+            border-radius: 8px;
+            font-size: 0.8rem;
         }
 
-        footer {
-            padding: 4rem 5% 2rem;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            border-top: 1px solid var(--border-light);
-            margin-top: 5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            border: 1px solid var(--border-light);
-            margin: 1.5rem 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: 0.3s;
-        }
-
-        img:hover {
-            transform: scale(1.02);
-            border-color: var(--accent-color);
-        }
-
-        /* Mobile Adjustments */
-        @media (max-width: 768px) {
+        /* Mobile Scale Fixes */
+        @media (max-width: 600px) {
+            body { font-size: 14px; }
+            .hero h1 { font-size: 2.2rem !important; }
+            .container { padding: 1rem 4%; }
+            .glass-card { padding: 1.2rem; }
+            nav { padding: 0.7rem 4%; }
+            .logo { font-size: 1rem; }
             .nav-links { display: none; }
-            .hero h1 { font-size: 2.5rem !important; }
-            .container { padding: 1rem 5%; }
-            .glass-card { padding: 1.5rem; }
-            .btn { width: 100%; justify-content: center; }
         }
 
         {% block extra_css %}{% endblock %}
     </style>
 </head>
 <body>
-    <div class="mica-engine"></div>
-    <div class="mica-overlay"></div>
+    <div class="glass-engine">
+        <div class="glass-blob blob-1"></div>
+        <div class="glass-blob blob-2"></div>
+        <div class="glass-blob blob-3"></div>
+    </div>
+    <div class="mica-layer"></div>
     
     <nav>
-        <a href="/" class="logo animate__animated animate__fadeIn">
+        <a href="/" class="logo">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
                 <path d="M7 10L10 12L7 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -249,11 +185,10 @@
             </svg>
             Package Maker
         </a>
-        <div class="nav-links animate__animated animate__fadeIn">
+        <div class="nav-links">
             <a href="/">Inicio</a>
             <a href="/download">Descargas</a>
             <a href="/release-notes">Notas</a>
-            <a href="/faq">FAQ</a>
         </div>
     </nav>
 
@@ -262,15 +197,15 @@
     </div>
 
     <footer>
-        <p>&copy; 2026 Influent. Creado por JesusQuijada34. Suite definitiva para Influent OS.</p>
+        <p>&copy; 2026 Influent. Creado por JesusQuijada34.</p>
     </footer>
 
     <script>
         function copyToClipboard(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
-                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => { btn.innerHTML = original; }, 2000);
             });
         }
     </script>

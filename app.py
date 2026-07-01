@@ -1,7 +1,7 @@
 import os
 import requests
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, jsonify, request, Response, make_response
+from flask import Flask, render_template, jsonify, request, Response
 import markdown
 
 app = Flask(__name__)
@@ -78,16 +78,6 @@ def release_notes():
     except Exception as e:
         return str(e)
 
-@app.route('/faq')
-def faq():
-    try:
-        response = requests.get(FAQ_URL)
-        content = response.text if response.status_code == 200 else "No se pudo cargar el FAQ."
-        html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
-        return render_template('page.html', title="Preguntas Frecuentes", content=html_content)
-    except Exception as e:
-        return str(e)
-
 @app.route('/api/download.sh')
 def download_sh():
     script = """#!/bin/bash
@@ -100,24 +90,23 @@ GREEN='\\033[0;32m'
 BLUE='\\033[0;34m'
 CYAN='\\033[0;36m'
 YELLOW='\\033[1;33m'
-NC='\\033[0m' # No Color
+NC='\\033[0m'
 
 clear
 echo -e "${CYAN}====================================================${NC}"
 echo -e "${CYAN}       PACKAGE MAKER - INSTALADOR AUTOMÁTICO        ${NC}"
 echo -e "${CYAN}====================================================${NC}"
-echo -e "${BLUE}Preparando el entorno para Influent OS...${NC}"
 
 # Detectar entorno
 if [ -d "/data/data/com.termux/files/home" ]; then
-    echo -e "${GREEN}[+] Entorno Termux detectado.${NC}"
     ENV="termux"
+    echo -e "${GREEN}[+] Entorno Termux detectado.${NC}"
 else
-    echo -e "${GREEN}[+] Entorno Linux detectado.${NC}"
     ENV="linux"
+    echo -e "${GREEN}[+] Entorno Linux detectado.${NC}"
 fi
 
-echo -e "${YELLOW}[*] Actualizando paquetes y dependencias...${NC}"
+echo -e "${YELLOW}[*] Instalando dependencias del sistema...${NC}"
 if [ "$ENV" == "termux" ]; then
     pkg update -y && pkg upgrade -y
     pkg install -y git python python-pip libexpat openssl
@@ -132,19 +121,17 @@ git clone -b main https://github.com/JesusQuijada34/packagemaker.git
 
 cd packagemaker
 
-echo -e "${YELLOW}[*] Instalando dependencias de Python...${NC}"
+echo -e "${YELLOW}[*] Instalando requerimientos desde lib/requirements.txt...${NC}"
 if [ "$ENV" == "termux" ]; then
-    pip install -r requirements.txt
+    pip install -r lib/requirements.txt
 else
-    pip3 install -r requirements.txt
+    pip3 install -r lib/requirements.txt
 fi
 
 echo -e "${CYAN}====================================================${NC}"
 echo -e "${GREEN}      INSTALACIÓN COMPLETADA CON ÉXITO             ${NC}"
 echo -e "${CYAN}====================================================${NC}"
-echo -e "${WHITE}Para iniciar Package Maker, ejecuta:${NC}"
-echo -e "${YELLOW}cd packagemaker && python3 packagemaker.py${NC}"
-echo -e "${CYAN}====================================================${NC}"
+echo -e "${WHITE}Inicia con:${NC} ${YELLOW}python3 packagemaker.py${NC}"
 """
     return Response(script, mimetype='text/x-shellscript')
 

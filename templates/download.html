@@ -3,201 +3,159 @@
 {% block title %}Descargar{% endblock %}
 
 {% block extra_css %}
-.download-hero {
-    text-align: center;
-    padding: 4rem 0;
-}
-
-.download-hero h1 {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.download-card-container {
+.download-section {
     max-width: 600px;
-    margin: 0 auto;
-}
-
-.platform-card {
-    background: var(--liquid-glass);
-    padding: 3rem;
-    border-radius: 24px;
-    border: 1px solid var(--border-light);
+    margin: 2rem auto;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
 
-.super-btn {
+.termux-card {
+    background: rgba(164, 198, 57, 0.05);
+    border: 1px solid rgba(164, 198, 57, 0.2);
+    text-align: left;
+}
+
+.code-display {
+    background: #000;
+    padding: 1rem;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem 0;
+    border: 1px solid #333;
+}
+
+.code-display code {
+    font-family: 'Cascadia Code', monospace;
+    color: #a4c639;
+    font-size: 0.75rem;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.step-list {
+    list-style: none;
+    margin-top: 1.5rem;
+}
+
+.step-list li {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+    position: relative;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.step-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: #a4c639;
+}
+
+/* Desktop Button Styles */
+.dl-btn-group {
     display: inline-flex;
-    align-items: stretch;
     background: var(--accent-color);
-    border-radius: 14px;
+    border-radius: 12px;
     overflow: hidden;
-    height: 64px;
-    box-shadow: 0 8px 25px var(--accent-glow);
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 60px;
+    box-shadow: 0 10px 25px var(--accent-glow);
 }
 
-.super-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px var(--accent-glow);
-}
-
-.btn-main {
-    padding: 0 2rem;
+.dl-btn-main {
+    padding: 0 1.5rem;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     color: white;
     text-decoration: none;
     font-weight: 700;
     border-right: 1px solid rgba(255,255,255,0.2);
 }
 
-.btn-arrow {
+.dl-btn-toggle {
     width: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: white;
-    transition: 0.3s;
 }
 
-.btn-arrow:hover {
-    background: rgba(255,255,255,0.1);
-}
-
-.btn-arrow.active i {
-    transform: rotate(180deg);
-}
-
-.pkg-dropdown {
+.pkg-list {
     max-height: 0;
     overflow: hidden;
-    transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-top: 0;
+    transition: 0.4s ease;
     opacity: 0;
 }
 
-.pkg-dropdown.active {
-    max-height: 600px;
-    margin-top: 2rem;
+.pkg-list.active {
+    max-height: 500px;
     opacity: 1;
+    margin-top: 1.5rem;
 }
 
-.pkg-link {
+.pkg-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
+    padding: 0.8rem;
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--border-light);
-    border-radius: 12px;
-    margin-bottom: 0.8rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
     text-decoration: none;
     color: white;
-    transition: 0.3s;
-}
-
-.pkg-link:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: var(--accent-color);
-    transform: translateX(5px);
-}
-
-.android-flow {
-    text-align: left;
-}
-
-.step {
-    background: rgba(0,0,0,0.2);
-    padding: 1.5rem;
-    border-radius: 16px;
-    margin-bottom: 1.5rem;
-    border-left: 4px solid #a4c639;
-}
-
-.copy-box {
-    background: #000;
-    padding: 1rem;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-}
-
-.copy-text {
-    font-family: monospace;
-    color: #a4c639;
     font-size: 0.85rem;
-    word-break: break-all;
 }
 {% endblock %}
 
 {% block content %}
-<div class="download-hero animate__animated animate__fadeIn">
-    <h1>Descarga Package Maker</h1>
-    <p style="color: var(--text-secondary);">Obtén la suite profesional para tu plataforma preferida.</p>
-</div>
-
-<div class="download-card-container">
+<div class="download-section">
     {% if is_android %}
-    <!-- Android View: No download button, only Termux steps -->
-    <div class="platform-card android-flow animate__animated animate__zoomIn">
-        <h2 style="color: #a4c639; margin-bottom: 2rem;"><i class="fab fa-android"></i> Instalación para Termux</h2>
+    <div class="glass-card termux-card animate__animated animate__fadeInUp">
+        <h2 style="color: #a4c639; margin-bottom: 1rem;"><i class="fab fa-android"></i> Packagemaker para Termux</h2>
+        <p style="font-size: 0.9rem;">Copia este comando y pégalo en tu terminal para una instalación automática:</p>
         
-        <div class="step">
-            <strong>1. Preparar Termux</strong>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">Asegúrate de tener Termux instalado desde F-Droid para mejor compatibilidad.</p>
+        <div class="code-display">
+            <code id="termux-cmd-full">curl -sL {{ request.host_url }}api/download.sh | bash</code>
+            <button class="btn-copy" onclick="copyToClipboard(document.getElementById('termux-cmd-full').innerText, this)">
+                <i class="fas fa-copy"></i>
+            </button>
         </div>
 
-        <div class="step">
-            <strong>2. Ejecutar Comando Mágico</strong>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">Copia y pega este comando en tu terminal para configurar todo automáticamente:</p>
-            <div class="copy-box">
-                <code class="copy-text" id="termux-cmd-dl">curl -sL {{ request.host_url }}api/download.sh | bash</code>
-                <button class="btn-copy" onclick="copyToClipboard(document.getElementById('termux-cmd-dl').innerText, this)">
-                    <i class="fas fa-copy"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="step">
-            <strong>3. Iniciar el IDE</strong>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">Una vez finalizado, entra a la carpeta y ejecuta:</p>
-            <code style="display: block; background: #111; padding: 0.5rem; border-radius: 5px; margin-top: 0.5rem; color: #00a2ff;">cd packagemaker && python3 packagemaker.py</code>
-        </div>
+        <ul class="step-list">
+            <li>Abre Termux (preferiblemente versión de F-Droid).</li>
+            <li>Pega el comando y presiona Enter.</li>
+            <li>El script instalará Python y clonará la rama <b>main</b>.</li>
+            <li>Inicia con: <code>python3 packagemaker.py</code></li>
+        </ul>
     </div>
     {% else %}
-    <!-- Desktop View: Intelligent Button -->
-    <div class="platform-card animate__animated animate__zoomIn">
-        <div class="super-btn">
-            <a href="#" id="main-dl" class="btn-main">
+    <div class="glass-card animate__animated animate__zoomIn">
+        <h2 style="margin-bottom: 1.5rem;">Descargar Suite</h2>
+        <div class="dl-btn-group">
+            <a href="#" id="main-dl-link" class="dl-btn-main">
                 <i class="fas fa-download"></i>
-                <span>Descargar para <span id="os-name">Detectando...</span></span>
+                <span>Descargar para <span id="os-detect">...</span></span>
             </a>
-            <div id="dl-toggle" class="btn-arrow">
+            <div id="dl-arrow" class="dl-btn-toggle">
                 <i class="fas fa-chevron-down"></i>
             </div>
         </div>
 
-        <div id="dl-dropdown" class="pkg-dropdown">
-            <p style="color: var(--text-secondary); margin: 1.5rem 0 1rem;">Otras plataformas disponibles:</p>
+        <div id="pkg-dropdown-list" class="pkg-list">
             {% for dl in downloads %}
-            <a href="{{ dl.url }}" class="pkg-link">
-                <div style="text-align: left;">
-                    <span style="display: block; font-weight: 600;">{{ dl.platform }}</span>
-                    <span style="font-size: 0.75rem; color: var(--text-secondary);">{{ dl.name }}</span>
-                </div>
-                <span style="font-weight: 700; color: var(--accent-color);">{{ dl.size }}</span>
+            <a href="{{ dl.url }}" class="pkg-item">
+                <span>{{ dl.platform }}</span>
+                <span style="color: var(--accent-color); font-weight: 700;">{{ dl.size }}</span>
             </a>
             {% endfor %}
         </div>
         
-        <p style="margin-top: 2rem; font-size: 0.85rem; color: var(--text-secondary);">
-            Versión actual: <strong>{{ version }}</strong> | Basado en XML: <strong>{{ metadata.get('version') }}</strong>
+        <p style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-secondary);">
+            Versión: {{ version }}
         </p>
     </div>
     {% endif %}
@@ -207,44 +165,31 @@
 {% block extra_js %}
 <script>
     const downloads = {{ downloads | tojson }};
-    const mainDl = document.getElementById('main-dl');
-    const osName = document.getElementById('os-name');
-    const dlToggle = document.getElementById('dl-toggle');
-    const dlDropdown = document.getElementById('dl-dropdown');
+    const arrow = document.getElementById('dl-arrow');
+    const list = document.getElementById('pkg-dropdown-list');
+    const osSpan = document.getElementById('os-detect');
+    const mainLink = document.getElementById('main-dl-link');
 
-    if (dlToggle) {
-        dlToggle.addEventListener('click', () => {
-            dlToggle.classList.toggle('active');
-            dlDropdown.classList.toggle('active');
-        });
+    if (arrow) {
+        arrow.onclick = () => list.classList.toggle('active');
     }
 
-    function detectOS() {
+    function getOS() {
         const ua = window.navigator.userAgent.toLowerCase();
-        if (ua.indexOf('linux') !== -1) return 'linux';
-        if (ua.indexOf('win') !== -1) return 'windows';
-        return 'desktop';
+        if (ua.includes('win')) return 'windows';
+        if (ua.includes('linux')) return 'linux';
+        return 'pc';
     }
 
-    const os = detectOS();
-    if (mainDl) {
-        let target = null;
-        if (os === 'linux') {
-            target = downloads.find(d => d.platform.includes('Linux'));
-            osName.innerText = "Linux";
-        } else if (os === 'windows') {
-            target = downloads.find(d => d.platform.includes('Windows'));
-            osName.innerText = "Windows";
-        }
-
-        if (target) {
-            mainDl.href = target.url;
+    const os = getOS();
+    if (osSpan) {
+        let dl = downloads.find(d => d.platform.toLowerCase().includes(os));
+        if (dl) {
+            osSpan.innerText = os.charAt(0).toUpperCase() + os.slice(1);
+            mainLink.href = dl.url;
         } else {
-            osName.innerText = "Desktop";
-            mainDl.addEventListener('click', (e) => {
-                e.preventDefault();
-                dlToggle.click();
-            });
+            osSpan.innerText = "Desktop";
+            mainLink.onclick = (e) => { e.preventDefault(); arrow.click(); };
         }
     }
 </script>
