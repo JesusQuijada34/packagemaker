@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Package Maker IDE</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #050508;
+            --accent: #00a2ff;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI Variable', system-ui, sans-serif; }
+        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* Liquid Glass Background */
+        .glass-bg { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 50%, #0a0a15 0%, #050508 100%); overflow: hidden; }
+        .blob { position: absolute; width: 80vw; height: 80vw; border-radius: 50%; filter: blur(80px); opacity: 0.1; animation: float 20s infinite alternate; }
+        .b1 { background: var(--accent); top: -20%; left: -20%; }
+        .b2 { background: #ff0080; bottom: -20%; right: -20%; animation-delay: -10s; }
+        @keyframes float { from { transform: translate(0,0); } to { transform: translate(10%, 10%); } }
+
+        /* App Bar */
+        .app-bar { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
+        .logo img { width: 28px; }
+
+        /* Content Area */
+        .main-view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(30px); }
+
+        /* Bottom Nav (Mobile Only) */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            height: calc(70px + var(--safe-bottom)); 
+            background: rgba(10, 10, 15, 0.8); 
+            backdrop-filter: blur(30px); 
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: var(--safe-bottom);
+            z-index: 1000;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.7rem; transition: 0.3s; }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 1.2rem; }
+
+        /* Notifications */
+        .notification-toast { 
+            position: fixed; top: 20px; left: 20px; right: 20px; 
+            background: var(--accent); color: white; padding: 15px; 
+            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none; z-index: 2000; animation: slideDown 0.5s forwards;
+        }
+        @keyframes slideDown { from { transform: translateY(-100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Termux Section */
+        .termux-apk { background: #000; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-top: 15px; }
+        .termux-apk code { color: #a4c639; font-family: monospace; font-size: 0.8rem; word-break: break-all; }
+
+        /* Mode Specifics */
+        {% if mode == 'desktop' %}
+        .bottom-nav { display: none; }
+        .main-view { padding-bottom: 20px; }
+        {% endif %}
+    </style>
+</head>
+<body>
+    <div class="glass-bg"><div class="blob b1"></div><div class="blob b2"></div></div>
+
+    <div class="notification-toast" id="update-toast">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fas fa-sync-alt"></i> Nueva versión disponible: {{ version }}</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" style="background:none; border:none; color:white; font-size:1.2rem;">&times;</button>
+        </div>
+    </div>
+
+    <header class="app-bar">
+        <div class="logo">
+            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" alt="PM">
+            <span>Package Maker</span>
+        </div>
+        <div class="status-dot"><i class="fas fa-circle" style="color: #44ff44; font-size: 0.6rem;"></i></div>
+    </header>
+
+    <main class="main-view" id="content-area">
+        <!-- Home View -->
+        <div id="view-home">
+            <div class="card">
+                <h2>¡Bienvenido al IDE!</h2>
+                <p style="opacity: 0.7; margin-top: 10px;">Versión {{ version }} lista para producción.</p>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <div class="glass-card" style="flex: 1; padding: 15px; text-align: center; background: rgba(0, 162, 255, 0.1); border-radius: 15px;">
+                        <div style="font-size: 1.5rem; font-weight: 800;">12</div>
+                        <div style="font-size: 0.6rem; opacity: 0.6;">PROYECTOS</div>
+                    </div>
+                    <div class="glass-card" style="flex: 1; padding: 15px; text-align: center; background: rgba(164, 198, 57, 0.1); border-radius: 15px;">
+                        <div style="font-size: 1.5rem; font-weight: 800;">5</div>
+                        <div style="font-size: 0.6rem; opacity: 0.6;">BUILDS</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Instalación en Termux</h3>
+                <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 5px;">Ejecuta este comando para configurar el entorno:</p>
+                <div class="termux-apk">
+                    <code id="pwa-cmd">curl -sL {{ request.host_url }}api/download.sh | bash</code>
+                    <button onclick="copyToClipboard(document.getElementById('pwa-cmd').innerText, this)" style="float: right; background: none; border: none; color: #a4c639;"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="showView('home')"><i class="fas fa-home"></i><span>Inicio</span></a>
+        <a href="/download" class="nav-item"><i class="fas fa-download"></i><span>Descargas</span></a>
+        <a href="/release-notes" class="nav-item"><i class="fas fa-history"></i><span>Notas</span></a>
+        <a href="/faq" class="nav-item"><i class="fas fa-question-circle"></i><span>FAQ</span></a>
+    </nav>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => btn.innerHTML = icon, 2000);
+            });
+        }
+
+        // Simulación de alerta de versión
+        setTimeout(() => {
+            document.getElementById('update-toast').style.display = 'block';
+        }, 3000);
+
+        function showView(view) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            // Lógica para cambiar vistas dinámicamente si fuera necesario
+        }
+    </script>
+</body>
+</html>

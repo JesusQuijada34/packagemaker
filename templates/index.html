@@ -3,90 +3,40 @@
 {% block title %}Inicio{% endblock %}
 
 {% block extra_css %}
-.hero-section { text-align: center; padding: 4rem 0 2rem; }
-.hero-section h1 { font-size: 3.2rem; margin-bottom: 1rem; font-weight: 800; background: linear-gradient(135deg, #fff 30%, #777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
-.hero-section p { font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto 2.5rem; }
-
-.content-block { margin-top: 5rem; }
-.content-block h2 { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--accent-color); }
-.content-block p { color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.7; }
-
-.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
-.feature-item { padding: 1.5rem; border-radius: 18px; }
-.feature-item i { font-size: 2rem; color: var(--accent-color); margin-bottom: 1rem; }
-.feature-item h3 { margin-bottom: 0.8rem; font-size: 1.2rem; }
-
-.showcase-img { width: 100%; border-radius: 15px; border: 1px solid var(--border-light); margin: 2rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-
-.tech-specs { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1rem; }
-.spec-tag { background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; color: var(--text-secondary); border: 1px solid var(--border-light); }
-
-@media (max-width: 600px) {
-    .hero-section h1 { font-size: 2.2rem; }
-    .content-block { margin-top: 3rem; }
+.pwa-banner {
+    background: linear-gradient(135deg, rgba(0, 162, 255, 0.2) 0%, transparent 100%);
+    border: 1px solid var(--accent-color);
+    margin-bottom: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
 }
+.hero-section { text-align: center; padding: 2rem 0; }
+.hero-section h1 { font-size: 3.2rem; font-weight: 800; background: linear-gradient(135deg, #fff 30%, #777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-section p { font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto 2rem; }
+.showcase-img { width: 100%; border-radius: 15px; border: 1px solid var(--border-light); margin: 2rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
 {% endblock %}
 
 {% block content %}
-<section class="hero-section" data-aos="fade-up">
-    <div style="display: inline-block; padding: 4px 12px; background: rgba(0, 162, 255, 0.15); border-radius: 20px; font-size: 0.75rem; color: var(--accent-color); margin-bottom: 1rem; font-weight: 700;">
-        NUEVA VERSIÓN v3.2.7
+<div class="glass-card pwa-banner animate__animated animate__fadeInDown">
+    <div>
+        <h3 style="color: var(--accent-color);"><i class="fas fa-mobile-alt"></i> ¡Instala la App IDE!</h3>
+        <p style="font-size: 0.85rem; opacity: 0.8;">Accede a Package Maker como una app nativa en tu móvil.</p>
     </div>
+    <a href="/pwaMode?id=mobile" class="btn btn-primary">Abrir Modo PWA</a>
+</div>
+
+<section class="hero-section" data-aos="fade-up">
     <h1>IDE Profesional para Influent OS</h1>
-    <p>La suite definitiva diseñada para revolucionar la creación, empaquetado y distribución de aplicaciones Python con una interfaz moderna inspirada en Windows 11.</p>
-    
+    <p>La suite definitiva diseñada para revolucionar la creación, empaquetado y distribución de aplicaciones Python.</p>
     <div style="display: flex; justify-content: center; gap: 1rem;">
-        {% if not is_android %}
         <a href="/download" class="btn btn-primary"><i class="fas fa-bolt"></i> Obtener Suite</a>
-        {% endif %}
         <a href="/release-notes" class="btn btn-outline">Ver Novedades</a>
     </div>
 </section>
 
-<div class="content-block" data-aos="fade-right">
-    <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHcucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=IzI37Dquvs3naI6e7rqzN~2knG8~TDpoKdVewA0mWtaAYH71tBI~MbYgjoq4s5UtoLHt~JONA2JGyuIndCFP8af1SXsAr9ionjeFbaTRICD~nZaFzJzhfuv54lTvlCG9xTEToNSxfhpSHl1GkDvmiORQEfJ5GoWV4TzkLx-dmUOijHhyhtCEVTBApTN8Uk-kNY-IDJMRFyJe-MLY2GVevBo7wsMtTIP7a-GqVTGII2Sl73gc2IqTdBOTphi9xur7z2dlL1NvLRcpGAYA4Dos1e3oKtfYFfwDcTlU9fBZ1s2hEmvR4~OhkZWqb3uRQK8jF7Cdr6AZ~TfVMAdR6e3VNA__" class="showcase-img" alt="IDE Inicial">
-    <h2>Una Interfaz Intuitiva y Potente</h2>
-    <p>Desde el primer momento, Influent Package Maker te recibe con una interfaz limpia y moderna. Su barra de título personalizada, basada en Leviathan-UI, y los efectos visuales como acrílico y mica, crean un entorno de desarrollo estéticamente agradable y funcional.</p>
-    <div class="tech-specs">
-        <span class="spec-tag">Qt 6.11.1</span>
-        <span class="spec-tag">Leviathan-UI</span>
-        <span class="spec-tag">Acrylic Effect</span>
-        <span class="spec-tag">Dark Theme</span>
-    </div>
-</div>
-
-<div class="feature-grid">
-    <div class="glass-card feature-item" data-aos="zoom-in" data-aos-delay="100">
-        <i class="fas fa-box-open"></i>
-        <h3>Gestión Avanzada</h3>
-        <p>Simplifica el ciclo de vida de tus proyectos. Detecta scripts, gestiona dependencias y minifica código automáticamente.</p>
-    </div>
-    <div class="glass-card feature-item" data-aos="zoom-in" data-aos-delay="200">
-        <i class="fas fa-shield-alt"></i>
-        <h3>Blindado de Código</h3>
-        <p>Protege tu propiedad intelectual con métodos Simple Blind (.iflappb) o Super Blind con encriptación avanzada.</p>
-    </div>
-    <div class="glass-card feature-item" data-aos="zoom-in" data-aos-delay="300">
-        <i class="fas fa-mobile-alt"></i>
-        <h3>Multi-Plataforma</h3>
-        <p>Genera ejecutables para Windows (.exe), APKs para Android y paquetes nativos para Linux desde una sola suite.</p>
-    </div>
-</div>
-
-<div class="content-block" data-aos="fade-left">
-    <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8x.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHgucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=DPgXoBsF4fjMgB13doz063xtl2rwtvTuYxP~yiutz-L~PrQvC15T3Ga6JYTpD3WmAKOo7drcwC6AUdiM5oZBtI7cpVW6JgD4P04XvUoCrv5BOV8K1WGyzBkKOw~pFsH36Jtc1nWzK-j~MMFUk7DJ-rlFbm1GQkuBiieN50YZKdzp3zmgPE97LQfoUPNmovdXLJNgyG~LJ3bbFsHu2kklSf87~bQcJfhslumnKcwYMs7LyH1NM0Py8hEL-7ZMrdbWGQy9GMNwTg9N1eWOC~2oHdVRupCTouRPN7LHXBb2QjMn9ukm4zrh~1scHh1scEsl1UYy3Jm4ZsnqEoFXj7GrVw__" class="showcase-img" alt="Compilación">
-    <h2>Compilación Inteligente</h2>
-    <p>El IDE ahora respeta automáticamente tu archivo .gitignore, excluyendo carpetas innecesarias como __pycache__ o .git, resultando en paquetes más ligeros.</p>
-</div>
-
 <div class="content-block" data-aos="fade-up">
-    <div class="glass-card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; align-items: center;">
-        <div>
-            <h2>MoonFix: Sanación Profunda</h2>
-            <p>Tu aliada para mantener la salud de tus proyectos. Escanea, detecta y repara inconsistencias en assets y etiquetas XML automáticamente.</p>
-            <a href="/faq" class="btn btn-outline">Saber más sobre MoonFix</a>
-        </div>
-        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF80.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGODAucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=W60DPJezRvKvTyIuiQvFCOH3oAJBa9Te1gsZnQTwitFK8j-c7LFMDXfvcjW9YJVlg~kIB6VmSmkpJcUQ7abAnteXXAwhA34Ve8bmF82PtXbfWkPOjpG0y9~lpJkIZO6zE-ylOdpr0vhgExS0L9fI4oQS36sts-MzF2VBHLi53T7a5PZTqPk52G~cVHOqgvDiCMu2TJmXC8rZcdCDcF21i-Ny~Wpi6j~oKzdiURXrfIJjbainQMYiExB-bOQBo2Yb9C0ous8c9AG-gWMnHRn3HTnAmIzHkjTbaoS1FmV4ds3WQs7CGvki6Dz8BxgSbyJbtQbpzSCE9V1kC3HZSP3JbA__" style="width: 100%; border-radius: 12px;" alt="MoonFix">
-    </div>
+    <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHcucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=IzI37Dquvs3naI6e7rqzN~2knG8~TDpoKdVewA0mWtaAYH71tBI~MbYgjoq4s5UtoLHt~JONA2JGyuIndCFP8af1SXsAr9ionjeFbaTRICD~nZaFzJzhfuv54lTvlCG9xTEToNSxfhpSHl1GkDvmiORQEfJ5GoWV4TzkLx-dmUOijHhyhtCEVTBApTN8Uk-kNY-IDJMRFyJe-MLY2GVevBo7wsMtTIP7a-GqVTGII2Sl73gc2IqTdBOTphi9xur7z2dlL1NvLRcpGAYA4Dos1e3oKtfYFfwDcTlU9fBZ1s2hEmvR4~OhkZWqb3uRQK8jF7Cdr6AZ~TfVMAdR6e3VNA__" class="showcase-img" alt="IDE Inicial">
 </div>
 {% endblock %}

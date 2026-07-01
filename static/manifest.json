@@ -1,0 +1,21 @@
+{
+  "name": "Package Maker",
+  "short_name": "PM IDE",
+  "description": "IDE Profesional para Influent OS",
+  "start_url": "/pwaMode?id=mobile",
+  "display": "standalone",
+  "background_color": "#020205",
+  "theme_color": "#00a2ff",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/app/app-icon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
