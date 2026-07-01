@@ -7,6 +7,7 @@ Uses FlangCompiler from lib/BuildThread.py
 
 import os
 import io
+import platform
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, session
 import jwt
 
@@ -23,6 +24,39 @@ app.config.from_object(config.get(os.environ.get('FLASK_ENV', 'default'), Config
 app.secret_key = os.environ.get('SECRET_KEY', 'pm-secret-key-12345')
 
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# =============================================================================
+# PLATFORM DETECTION
+# =============================================================================
+
+def detect_client_os(req):
+    """Detect client OS from User-Agent header"""
+    ua = req.headers.get('User-Agent', '').lower()
+    if 'android' in ua:
+        return 'android'
+    elif 'windows nt 10' in ua or 'windows nt 11' in ua:
+        return 'windows11'
+    elif 'windows' in ua:
+        return 'windows'
+    elif 'macintosh' in ua or 'mac os' in ua:
+        return 'mac'
+    elif 'linux' in ua:
+        return 'linux'
+    return 'unknown'
+
+def get_recommended_download(downloads, client_os):
+    """Get recommended download URL based on client OS"""
+    mapping = {
+        'windows11': 'windows',
+        'windows': 'windows',
+        'linux': 'linux',
+        'android': None,
+        'mac': None
+    }
+    target = mapping.get(client_os)
+    if target:
+        return downloads.get(target)
+    return None
 
 # =============================================================================
 # MICA STYLES - Full Windows 11 / UWP
@@ -382,12 +416,16 @@ def api_release():
         release = get_latest_release(token, repo)
         if release:
             downloads = get_release_downloads(release)
+            client_os = detect_client_os(request)
+            recommended = get_recommended_download(downloads, client_os)
             return jsonify({
                 'version': release.get('tag_name', 'v1.0').replace('v', ''),
                 'name': release.get('name', ''),
                 'body': release.get('body', ''),
                 'downloads': downloads,
-                'html_url': release.get('html_url', '')
+                'html_url': release.get('html_url', ''),
+                'client_os': client_os,
+                'recommended': recommended
             })
         return jsonify({'error': 'No release'}), 404
     except Exception as e:
