@@ -3,146 +3,90 @@
 {% block title %}Inicio{% endblock %}
 
 {% block extra_css %}
-.hero {
-    text-align: center;
-    padding: 5rem 0;
-    animation: fadeInDown 1s;
-}
+.hero-section { text-align: center; padding: 4rem 0 2rem; }
+.hero-section h1 { font-size: 3.2rem; margin-bottom: 1rem; font-weight: 800; background: linear-gradient(135deg, #fff 30%, #777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+.hero-section p { font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto 2.5rem; }
 
-.hero h1 {
-    font-size: 4.5rem;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(135deg, #fff 0%, #888 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-    letter-spacing: -2px;
-}
+.content-block { margin-top: 5rem; }
+.content-block h2 { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--accent-color); }
+.content-block p { color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.7; }
 
-.hero p {
-    font-size: 1.3rem;
-    color: var(--text-secondary);
-    max-width: 800px;
-    margin: 0 auto 3rem;
-}
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+.feature-item { padding: 1.5rem; border-radius: 18px; }
+.feature-item i { font-size: 2rem; color: var(--accent-color); margin-bottom: 1rem; }
+.feature-item h3 { margin-bottom: 0.8rem; font-size: 1.2rem; }
 
-.showcase-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 3rem;
-    margin-top: 6rem;
-}
+.showcase-img { width: 100%; border-radius: 15px; border: 1px solid var(--border-light); margin: 2rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
 
-.showcase-item {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
+.tech-specs { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1rem; }
+.spec-tag { background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; color: var(--text-secondary); border: 1px solid var(--border-light); }
 
-.showcase-item h2 {
-    font-size: 2rem;
-    background: linear-gradient(to right, var(--accent-color), #fff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.android-special {
-    margin-top: 6rem;
-    border: 1px solid rgba(164, 198, 57, 0.3);
-    background: linear-gradient(135deg, rgba(164, 198, 57, 0.1) 0%, transparent 100%);
-}
-
-.termux-box {
-    background: rgba(0,0,0,0.4);
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid #333;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    margin-top: 1.5rem;
-    overflow-x: auto;
-}
-
-.termux-code {
-    font-family: 'Cascadia Code', monospace;
-    color: #a4c639;
-    white-space: nowrap;
-}
-
-@keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-30px); }
-    to { opacity: 1; transform: translateY(0); }
+@media (max-width: 600px) {
+    .hero-section h1 { font-size: 2.2rem; }
+    .content-block { margin-top: 3rem; }
 }
 {% endblock %}
 
 {% block content %}
-<section class="hero">
-    <div class="version-badge animate__animated animate__pulse animate__infinite" style="display: inline-block; padding: 5px 15px; background: var(--accent-glow); border-radius: 20px; font-size: 0.8rem; margin-bottom: 1rem; color: white;">
-        v3.2.7-26.05-20.13
+<section class="hero-section" data-aos="fade-up">
+    <div style="display: inline-block; padding: 4px 12px; background: rgba(0, 162, 255, 0.15); border-radius: 20px; font-size: 0.75rem; color: var(--accent-color); margin-bottom: 1rem; font-weight: 700;">
+        NUEVA VERSIÓN v3.2.7
     </div>
-    <h1>IDE Profesional para Python</h1>
-    <p>Revoluciona la forma en que creas, empaquetas y distribuyes tus aplicaciones con una interfaz inspirada en Windows 11 y efectos de cristal líquido.</p>
+    <h1>IDE Profesional para Influent OS</h1>
+    <p>La suite definitiva diseñada para revolucionar la creación, empaquetado y distribución de aplicaciones Python con una interfaz moderna inspirada en Windows 11.</p>
     
-    <div style="display: flex; justify-content: center; gap: 1.5rem;">
+    <div style="display: flex; justify-content: center; gap: 1rem;">
         {% if not is_android %}
-        <a href="/download" class="btn btn-primary btn-lg">
-            <i class="fas fa-download"></i> Descargar Suite
-        </a>
+        <a href="/download" class="btn btn-primary"><i class="fas fa-bolt"></i> Obtener Suite</a>
         {% endif %}
-        <a href="/release-notes" class="btn btn-outline btn-lg">
-            Explorar Novedades
-        </a>
+        <a href="/release-notes" class="btn btn-outline">Ver Novedades</a>
     </div>
 </section>
 
-{% if is_android %}
-<section class="glass-card android-special animate__animated animate__fadeInUp">
-    <h2 style="color: #a4c639;"><i class="fab fa-android"></i> Optimizado para Android (Termux)</h2>
-    <p>Hemos detectado que estás en un dispositivo móvil. Package Maker está listo para ejecutarse en tu terminal favorita.</p>
-    
-    <div class="termux-box">
-        <code class="termux-code" id="termux-cmd">curl -sL {{ request.host_url }}api/download.sh | bash</code>
-        <button class="btn-copy" onclick="copyToClipboard(document.getElementById('termux-cmd').innerText, this)">
-            <i class="fas fa-copy"></i> Copiar
-        </button>
+<div class="content-block" data-aos="fade-right">
+    <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHcucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=IzI37Dquvs3naI6e7rqzN~2knG8~TDpoKdVewA0mWtaAYH71tBI~MbYgjoq4s5UtoLHt~JONA2JGyuIndCFP8af1SXsAr9ionjeFbaTRICD~nZaFzJzhfuv54lTvlCG9xTEToNSxfhpSHl1GkDvmiORQEfJ5GoWV4TzkLx-dmUOijHhyhtCEVTBApTN8Uk-kNY-IDJMRFyJe-MLY2GVevBo7wsMtTIP7a-GqVTGII2Sl73gc2IqTdBOTphi9xur7z2dlL1NvLRcpGAYA4Dos1e3oKtfYFfwDcTlU9fBZ1s2hEmvR4~OhkZWqb3uRQK8jF7Cdr6AZ~TfVMAdR6e3VNA__" class="showcase-img" alt="IDE Inicial">
+    <h2>Una Interfaz Intuitiva y Potente</h2>
+    <p>Desde el primer momento, Influent Package Maker te recibe con una interfaz limpia y moderna. Su barra de título personalizada, basada en Leviathan-UI, y los efectos visuales como acrílico y mica, crean un entorno de desarrollo estéticamente agradable y funcional.</p>
+    <div class="tech-specs">
+        <span class="spec-tag">Qt 6.11.1</span>
+        <span class="spec-tag">Leviathan-UI</span>
+        <span class="spec-tag">Acrylic Effect</span>
+        <span class="spec-tag">Dark Theme</span>
     </div>
-    
-    <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; font-size: 0.9rem;">
-        <div class="glass-card" style="padding: 1rem;">
-            <i class="fas fa-check-circle" style="color: #a4c639;"></i> Instalación automática de dependencias.
+</div>
+
+<div class="feature-grid">
+    <div class="glass-card feature-item" data-aos="zoom-in" data-aos-delay="100">
+        <i class="fas fa-box-open"></i>
+        <h3>Gestión Avanzada</h3>
+        <p>Simplifica el ciclo de vida de tus proyectos. Detecta scripts, gestiona dependencias y minifica código automáticamente.</p>
+    </div>
+    <div class="glass-card feature-item" data-aos="zoom-in" data-aos-delay="200">
+        <i class="fas fa-shield-alt"></i>
+        <h3>Blindado de Código</h3>
+        <p>Protege tu propiedad intelectual con métodos Simple Blind (.iflappb) o Super Blind con encriptación avanzada.</p>
+    </div>
+    <div class="glass-card feature-item" data-aos="zoom-in" data-aos-delay="300">
+        <i class="fas fa-mobile-alt"></i>
+        <h3>Multi-Plataforma</h3>
+        <p>Genera ejecutables para Windows (.exe), APKs para Android y paquetes nativos para Linux desde una sola suite.</p>
+    </div>
+</div>
+
+<div class="content-block" data-aos="fade-left">
+    <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8x.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHgucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=DPgXoBsF4fjMgB13doz063xtl2rwtvTuYxP~yiutz-L~PrQvC15T3Ga6JYTpD3WmAKOo7drcwC6AUdiM5oZBtI7cpVW6JgD4P04XvUoCrv5BOV8K1WGyzBkKOw~pFsH36Jtc1nWzK-j~MMFUk7DJ-rlFbm1GQkuBiieN50YZKdzp3zmgPE97LQfoUPNmovdXLJNgyG~LJ3bbFsHu2kklSf87~bQcJfhslumnKcwYMs7LyH1NM0Py8hEL-7ZMrdbWGQy9GMNwTg9N1eWOC~2oHdVRupCTouRPN7LHXBb2QjMn9ukm4zrh~1scHh1scEsl1UYy3Jm4ZsnqEoFXj7GrVw__" class="showcase-img" alt="Compilación">
+    <h2>Compilación Inteligente</h2>
+    <p>El IDE ahora respeta automáticamente tu archivo .gitignore, excluyendo carpetas innecesarias como __pycache__ o .git, resultando en paquetes más ligeros.</p>
+</div>
+
+<div class="content-block" data-aos="fade-up">
+    <div class="glass-card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; align-items: center;">
+        <div>
+            <h2>MoonFix: Sanación Profunda</h2>
+            <p>Tu aliada para mantener la salud de tus proyectos. Escanea, detecta y repara inconsistencias en assets y etiquetas XML automáticamente.</p>
+            <a href="/faq" class="btn btn-outline">Saber más sobre MoonFix</a>
         </div>
-        <div class="glass-card" style="padding: 1rem;">
-            <i class="fas fa-check-circle" style="color: #a4c639;"></i> Soporte completo para la rama main.
-        </div>
-    </div>
-</section>
-{% endif %}
-
-<div class="showcase-grid">
-    <div class="showcase-item animate__animated animate__fadeInLeft">
-        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHcucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=IzI37Dquvs3naI6e7rqzN~2knG8~TDpoKdVewA0mWtaAYH71tBI~MbYgjoq4s5UtoLHt~JONA2JGyuIndCFP8af1SXsAr9ionjeFbaTRICD~nZaFzJzhfuv54lTvlCG9xTEToNSxfhpSHl1GkDvmiORQEfJ5GoWV4TzkLx-dmUOijHhyhtCEVTBApTN8Uk-kNY-IDJMRFyJe-MLY2GVevBo7wsMtTIP7a-GqVTGII2Sl73gc2IqTdBOTphi9xur7z2dlL1NvLRcpGAYA4Dos1e3oKtfYFfwDcTlU9fBZ1s2hEmvR4~OhkZWqb3uRQK8jF7Cdr6AZ~TfVMAdR6e3VNA__" alt="Interfaz Inicial">
-        <h2>Interfaz Intuitiva</h2>
-        <p>Barra de título personalizada basada en Leviathan-UI con efectos acrílicos y mica.</p>
-    </div>
-
-    <div class="showcase-item animate__animated animate__fadeInRight" style="animation-delay: 0.2s;">
-        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8x.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHgucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=DPgXoBsF4fjMgB13doz063xtl2rwtvTuYxP~yiutz-L~PrQvC15T3Ga6JYTpD3WmAKOo7drcwC6AUdiM5oZBtI7cpVW6JgD4P04XvUoCrv5BOV8K1WGyzBkKOw~pFsH36Jtc1nWzK-j~MMFUk7DJ-rlFbm1GQkuBiieN50YZKdzp3zmgPE97LQfoUPNmovdXLJNgyG~LJ3bbFsHu2kklSf87~bQcJfhslumnKcwYMs7LyH1NM0Py8hEL-7ZMrdbWGQy9GMNwTg9N1eWOC~2oHdVRupCTouRPN7LHXBb2QjMn9ukm4zrh~1scHh1scEsl1UYy3Jm4ZsnqEoFXj7GrVw__" alt="Compilación">
-        <h2>Compilación Avanzada</h2>
-        <p>Integración inteligente con .gitignore y limpieza automática post-compilación.</p>
-    </div>
-
-    <div class="showcase-item animate__animated animate__fadeInLeft" style="animation-delay: 0.4s;">
-        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8y.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHkucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=YK56x9xaYGW9P3fNeSBCFiIWWaABOvPL7qgpxghacqKu0BmcjMAGrhVAFybeBJM3ICXCMZZ9zbgs4Aa8KFIT0JbEABVL269G~9bgpk8CbvQhnmQOoG6r-8A~Ufd-qsaoiOqZJviVjS-a5rgmIkN4yJEyoJGbJ8mY7gOZAhHPvbgOuJ8RxzHcoHWaFKq1laKfIAOjTETckUpLhdIR3pyP2BWVbaRyRMn7mtmqFXCVefMXQ1xNwvOxRn~A8qxKTxi9PxJdUQkcDgVnwGzp83f1bCxjVk5h0FilLJyeMAQEo0Zd2qHzo8uAGnOMNCwvJmuTd0-D-LcpcirmkjGGJ-ltrw__" alt="Gestor">
-        <h2>Gestión Total</h2>
-        <p>Administra tus proyectos locales e instalados con precisión quirúrgica.</p>
-    </div>
-
-    <div class="showcase-item animate__animated animate__fadeInRight" style="animation-delay: 0.6s;">
-        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF80.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGODAucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=W60DPJezRvKvTyIuiQvFCOH3oAJBa9Te1gsZnQTwitFK8j-c7LFMDXfvcjW9YJVlg~kIB6VmSmkpJcUQ7abAnteXXAwhA34Ve8bmF82PtXbfWkPOjpG0y9~lpJkIZO6zE-ylOdpr0vhgExS0L9fI4oQS36sts-MzF2VBHLi53T7a5PZTqPk52G~cVHOqgvDiCMu2TJmXC8rZcdCDcF21i-Ny~Wpi6j~oKzdiURXrfIJjbainQMYiExB-bOQBo2Yb9C0ous8c9AG-gWMnHRn3HTnAmIzHkjTbaoS1FmV4ds3WQs7CGvki6Dz8BxgSbyJbtQbpzSCE9V1kC3HZSP3JbA__" alt="MoonFix">
-        <h2>Sanación MoonFix</h2>
-        <p>Manten la salud de tus proyectos escaneando y reparando inconsistencias automáticamente.</p>
+        <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF80.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGODAucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=W60DPJezRvKvTyIuiQvFCOH3oAJBa9Te1gsZnQTwitFK8j-c7LFMDXfvcjW9YJVlg~kIB6VmSmkpJcUQ7abAnteXXAwhA34Ve8bmF82PtXbfWkPOjpG0y9~lpJkIZO6zE-ylOdpr0vhgExS0L9fI4oQS36sts-MzF2VBHLi53T7a5PZTqPk52G~cVHOqgvDiCMu2TJmXC8rZcdCDcF21i-Ny~Wpi6j~oKzdiURXrfIJjbainQMYiExB-bOQBo2Yb9C0ous8c9AG-gWMnHRn3HTnAmIzHkjTbaoS1FmV4ds3WQs7CGvki6Dz8BxgSbyJbtQbpzSCE9V1kC3HZSP3JbA__" style="width: 100%; border-radius: 12px;" alt="MoonFix">
     </div>
 </div>
 {% endblock %}
