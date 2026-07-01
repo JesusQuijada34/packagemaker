@@ -7,7 +7,7 @@
         <div class="hero-section">
             <div class="hero-content">
                 <div class="app-icon-large">
-                    <img src="{{ url_for('static', filename='../app/packagemaker.png') }}" alt="Package Maker" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/product_logo.png" alt="Package Maker Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                     <div class="icon-fallback" style="display:none;">
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     </div>
@@ -93,6 +93,10 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="splash-section">
+            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/splash.png" alt="Package Maker Splash" class="splash-image">
         </div>
 
         <footer class="main-footer">
@@ -321,6 +325,24 @@
     border-radius: 20px;
     font-size: 14px;
     color: var(--text-secondary);
+}
+
+.splash-section {
+    margin: 80px 0 40px;
+    padding: 0 40px;
+    text-align: center;
+}
+
+.splash-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.splash-image:hover {
+    transform: scale(1.02);
 }
 
 .main-footer {
