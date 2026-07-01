@@ -198,5 +198,22 @@ def admin_stats():
     conn.close()
     return render_template('stats.html', total=total, avg_time=round(avg_time, 1), platforms=platforms, recent=recent)
 
+# Error Handlers
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('error.html', code=404, path=request.path), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return render_template('error.html', code=500), 500
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('error.html', code=403), 403
+
+@app.errorhandler(400)
+def bad_request(e):
+    return render_template('error.html', code=400), 400
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
