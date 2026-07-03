@@ -1,127 +1,100 @@
 {% extends "base.html" %}
-
-{% block title %}Descargar{% endblock %}
-
-{% block extra_css %}
-.dl-header { text-align: center; padding: 3rem 0 2rem; }
-.dl-header h1 { font-size: 2.8rem; margin-bottom: 0.5rem; }
-
-.dl-main-card { max-width: 600px; margin: 0 auto; padding: 2.5rem; text-align: center; }
-
-.android-guide { text-align: left; }
-.guide-step { background: rgba(0,0,0,0.25); padding: 1.2rem; border-radius: 15px; margin-bottom: 1.2rem; border-left: 3px solid #a4c639; position: relative; }
-.step-num { position: absolute; right: 1.2rem; top: 1.2rem; font-size: 0.8rem; opacity: 0.3; font-weight: 800; }
-
-.cmd-box { background: #000; padding: 1rem; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; border: 1px solid #222; }
-.cmd-text { font-family: 'Cascadia Code', monospace; color: #a4c639; font-size: 0.75rem; word-break: break-all; }
-
-.pkg-selector { margin-top: 2rem; border-top: 1px solid var(--border-light); pt: 2rem; }
-.pkg-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 0.6rem; text-decoration: none; color: white; font-size: 0.85rem; border: 1px solid transparent; transition: 0.2s; }
-.pkg-row:hover { border-color: var(--accent-color); background: rgba(255,255,255,0.06); transform: translateX(5px); }
-
-.requirement-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; text-align: left; font-size: 0.8rem; color: var(--text-secondary); }
-.req-item { display: flex; align-items: center; gap: 8px; }
-.req-item i { color: var(--accent-color); font-size: 0.7rem; }
-
-@media (max-width: 600px) {
-    .dl-header h1 { font-size: 2rem; }
-    .dl-main-card { padding: 1.5rem; }
-    .requirement-list { grid-template-columns: 1fr; }
-}
-{% endblock %}
-
+{% block title %}Descargas{% endblock %}
 {% block content %}
-<div class="dl-header" data-aos="fade-down">
-    <h1>Obtener Package Maker</h1>
-    <p style="color: var(--text-secondary);">Selección inteligente basada en tu plataforma actual.</p>
-</div>
+<div style="padding-top: 40px;" data-aos="fade-up">
+    <h1 style="text-align: center;">Obtén la Suite</h1>
+    <p style="text-align: center; max-width: 600px; margin: 0 auto 40px;">Detectamos automáticamente tu plataforma para ofrecerte la mejor experiencia de instalación.</p>
 
-<div class="dl-main-card glass-card animate__animated animate__zoomIn" data-aos="zoom-in">
-    {% if is_android %}
-    <div class="android-guide">
-        <h2 style="color: #a4c639; margin-bottom: 1.5rem;"><i class="fab fa-android"></i> Suite para Termux</h2>
-        
-        <div class="guide-step">
-            <span class="step-num">01</span>
-            <strong>Instalar Termux</strong>
-            <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.3rem;">Descarga Termux desde F-Droid para obtener todas las actualizaciones necesarias.</p>
+    <div class="bento-grid">
+        <!-- Main Download Card -->
+        <div class="bento-item" style="grid-column: span 12; text-align: center; padding: 60px 20px;">
+            {% if is_android %}
+                <div style="font-size: 3rem; color: #A4C639; margin-bottom: 20px;"><i class="fab fa-android"></i></div>
+                <h2>Optimizado para Termux</h2>
+                <p style="margin-bottom: 30px;">Instalación directa y automatizada para dispositivos móviles.</p>
+                
+                <div style="background: #000; border-radius: 16px; padding: 20px; border: 1px solid #333; max-width: 600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+                    <code id="termux-cmd" style="color: #A4C639; font-family: monospace; font-size: 0.9rem; word-break: break-all;">curl -sL {{ request.host_url }}api/download.sh | bash</code>
+                    <button onclick="copyCmd()" class="btn" style="padding: 8px 15px; background: rgba(164, 198, 57, 0.2); color: #A4C639; border: 1px solid rgba(164, 198, 57, 0.3);">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p style="font-size: 0.8rem; margin-top: 15px; opacity: 0.5;">Copia y pega este comando en tu terminal Termux.</p>
+            {% else %}
+                <div style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;"><i class="fas fa-rocket"></i></div>
+                <h2>Descarga para Desktop</h2>
+                <p style="margin-bottom: 30px;">Versión estable v3.2.7 (Build 2026)</p>
+                
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <a href="#" id="main-dl-btn" class="btn btn-primary" style="padding: 18px 45px; font-size: 1.1rem;">
+                        Descargar .iflapp <i class="fas fa-download"></i>
+                    </a>
+                    <button class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white;" onclick="toggleList()">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+
+                <div id="other-platforms" style="display: none; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 30px;">
+                    <h4 style="margin-bottom: 20px; opacity: 0.7;">Todos los Paquetes</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                        {% for dl in downloads %}
+                            <a href="{{ dl.url }}" class="btn" style="background: var(--glass); border: 1px solid var(--border); color: white; font-size: 0.8rem;">
+                                {{ dl.platform }} ({{ dl.size }})
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         </div>
 
-        <div class="guide-step">
-            <span class="step-num">02</span>
-            <strong>Ejecutar Instalador</strong>
-            <div class="cmd-box">
-                <code class="cmd-text" id="termux-code">curl -sL {{ request.host_url }}api/download.sh | bash</code>
-                <button class="btn-copy" onclick="copyToClipboard(document.getElementById('termux-code').innerText, this)">
-                    <i class="fas fa-copy"></i>
-                </button>
+        <!-- Requirements -->
+        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right">
+            <h3 style="margin-bottom: 20px;"><i class="fas fa-list-check"></i> Requisitos</h3>
+            <ul style="list-style: none; color: var(--text-secondary);">
+                <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> Python 3.9 o superior</li>
+                <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> 4GB RAM (Mínimo)</li>
+                <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> 500MB Espacio en disco</li>
+                <li><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> Conexión a Internet</li>
+            </ul>
+        </div>
+
+        <!-- Tech Specs -->
+        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left">
+            <h3 style="margin-bottom: 20px;"><i class="fas fa-microchip"></i> Especificaciones</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
+                    <div style="font-size: 0.7rem; opacity: 0.5;">ENGINE</div>
+                    <div style="font-weight: 700;">Qt 6.11.1</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
+                    <div style="font-size: 0.7rem; opacity: 0.5;">UI SYSTEM</div>
+                    <div style="font-weight: 700;">Leviathan</div>
+                </div>
             </div>
         </div>
-
-        <div class="guide-step">
-            <span class="step-num">03</span>
-            <strong>Iniciar IDE</strong>
-            <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.3rem;">Una vez finalizado, navega a la carpeta y lanza el programa:</p>
-            <code style="color: var(--accent-color); display: block; margin-top: 0.5rem;">cd packagemaker && python3 packagemaker.py</code>
-        </div>
-    </div>
-    {% else %}
-    <div style="margin-bottom: 2rem;">
-        <a href="#" id="main-download" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 1rem;">
-            <i class="fas fa-download"></i> Descargar para <span id="detected-platform">Desktop</span>
-        </a>
-    </div>
-
-    <div class="pkg-selector">
-        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; text-align: left;">Todos los paquetes (Release {{ version }}):</p>
-        {% for dl in downloads %}
-        <a href="{{ dl.url }}" class="pkg-row">
-            <span>{{ dl.platform }}</span>
-            <span style="font-weight: 700; color: var(--accent-color);">{{ dl.size }}</span>
-        </a>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="requirement-list">
-        <div class="req-item"><i class="fas fa-check"></i> Python 3.8+</div>
-        <div class="req-item"><i class="fas fa-check"></i> 200MB Espacio Libre</div>
-        <div class="req-item"><i class="fas fa-check"></i> Conexión a Internet</div>
-        <div class="req-item"><i class="fas fa-check"></i> RAM 512MB+</div>
     </div>
 </div>
 
-<div class="content-block" style="margin-top: 4rem;" data-aos="fade-up">
-    <div class="glass-card">
-        <h3>¿Por qué elegir Package Maker?</h3>
-        <p style="font-size: 0.9rem; margin-top: 1rem;">Nuestra suite no solo empaqueta código, sino que optimiza todo el flujo de distribución. Con soporte nativo para el ecosistema Influent OS, garantizamos que tus aplicaciones funcionen de manera fluida y segura en cualquier dispositivo compatible.</p>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
-    const downloads = {{ downloads | tojson }};
-    const mainBtn = document.getElementById('main-download');
-    const platSpan = document.getElementById('detected-platform');
+    function toggleList() {
+        const el = document.getElementById('other-platforms');
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+    function copyCmd() {
+        const cmd = document.getElementById('termux-cmd').innerText;
+        navigator.clipboard.writeText(cmd).then(() => {
+            alert('¡Comando copiado!');
+        });
+    }
 
+    const downloads = {{ downloads | tojson }};
+    const mainBtn = document.getElementById('main-dl-btn');
     if (mainBtn) {
         const ua = navigator.userAgent.toLowerCase();
-        let target = null;
-        
-        if (ua.includes('win')) {
-            target = downloads.find(d => d.platform.includes('Windows'));
-            platSpan.innerText = "Windows";
-        } else if (ua.includes('linux')) {
-            target = downloads.find(d => d.platform.includes('Linux'));
-            platSpan.innerText = "Linux";
-        }
-
-        if (target) {
-            mainBtn.href = target.url;
-        } else {
-            mainBtn.onclick = (e) => { e.preventDefault(); alert("Selecciona una versión de la lista inferior."); };
-        }
+        let target = downloads[0]; // Default
+        if (ua.includes('win')) target = downloads.find(d => d.platform.includes('Windows')) || target;
+        else if (ua.includes('linux')) target = downloads.find(d => d.platform.includes('Linux')) || target;
+        mainBtn.href = target.url;
     }
 </script>
 {% endblock %}

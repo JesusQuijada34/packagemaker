@@ -1,42 +1,75 @@
 {% extends "base.html" %}
-
 {% block title %}Inicio{% endblock %}
-
-{% block extra_css %}
-.pwa-banner {
-    background: linear-gradient(135deg, rgba(0, 162, 255, 0.2) 0%, transparent 100%);
-    border: 1px solid var(--accent-color);
-    margin-bottom: 3rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 2rem;
-}
-.hero-section { text-align: center; padding: 2rem 0; }
-.hero-section h1 { font-size: 3.2rem; font-weight: 800; background: linear-gradient(135deg, #fff 30%, #777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero-section p { font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto 2rem; }
-.showcase-img { width: 100%; border-radius: 15px; border: 1px solid var(--border-light); margin: 2rem 0; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-{% endblock %}
-
 {% block content %}
-<div class="glass-card pwa-banner animate__animated animate__fadeInDown">
-    <div>
-        <h3 style="color: var(--accent-color);"><i class="fas fa-mobile-alt"></i> ¡Instala la App IDE!</h3>
-        <p style="font-size: 0.85rem; opacity: 0.8;">Accede a Package Maker como una app nativa en tu móvil.</p>
+<div style="padding-top: 60px; text-align: center;" data-aos="fade-up">
+    <span style="background: rgba(0, 82, 255, 0.1); color: var(--accent); padding: 8px 16px; border-radius: 100px; font-weight: 600; font-size: 0.8rem; border: 1px solid rgba(0, 82, 255, 0.2); text-transform: uppercase; letter-spacing: 1px;">Nueva Versión v3.2.7</span>
+    <h1 style="margin-top: 20px;">Forja el futuro de<br><span style="background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Influent OS</span></h1>
+    <p style="max-width: 600px; margin: 0 auto 40px;">El IDE definitivo para desarrolladores que buscan potencia, blindaje y elegancia en un solo entorno de trabajo.</p>
+    <div style="display: flex; gap: 15px; justify-content: center;">
+        <a href="/download" class="btn btn-primary">Empezar a Crear <i class="fas fa-arrow-right"></i></a>
+        <a href="https://github.com/JesusQuijada34/packagemaker" class="btn" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border);">GitHub <i class="fab fa-github"></i></a>
     </div>
-    <a href="/pwaMode?id=mobile" class="btn btn-primary">Abrir Modo PWA</a>
 </div>
 
-<section class="hero-section" data-aos="fade-up">
-    <h1>IDE Profesional para Influent OS</h1>
-    <p>La suite definitiva diseñada para revolucionar la creación, empaquetado y distribución de aplicaciones Python.</p>
-    <div style="display: flex; justify-content: center; gap: 1rem;">
-        <a href="/download" class="btn btn-primary"><i class="fas fa-bolt"></i> Obtener Suite</a>
-        <a href="/release-notes" class="btn btn-outline">Ver Novedades</a>
+<div class="bento-grid" style="margin-top: 80px;">
+    <!-- Bento Item 1: Compilación -->
+    <div class="bento-item" style="grid-column: span 8; grid-row: span 2;" data-aos="fade-right">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Compilación Inteligente</h3>
+                <p style="font-size: 0.9rem;">Optimización en tiempo real para el kernel de Influent OS.</p>
+            </div>
+            <div style="background: var(--accent); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-bolt"></i>
+            </div>
+        </div>
+        <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/compilacion.png" alt="Compilación" style="width: 100%; border-radius: 16px; margin-top: 20px; border: 1px solid var(--border);">
     </div>
-</section>
 
-<div class="content-block" data-aos="fade-up">
-    <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvbXZXbUdWeDdSekx2bThEUnRxNzZRdi9zYW5kYm94L2thZks3eG1PM1VEVFFPYXB6ZTQyeHAtaW1hZ2VzXzE3ODE5OTUzMjcxNTBfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwzQmhZMnRoWjJWdFlXdGxjaTluZFdsZlptbHVZV3hmYzNSbGNGOHcucG5nIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=IzI37Dquvs3naI6e7rqzN~2knG8~TDpoKdVewA0mWtaAYH71tBI~MbYgjoq4s5UtoLHt~JONA2JGyuIndCFP8af1SXsAr9ionjeFbaTRICD~nZaFzJzhfuv54lTvlCG9xTEToNSxfhpSHl1GkDvmiORQEfJ5GoWV4TzkLx-dmUOijHhyhtCEVTBApTN8Uk-kNY-IDJMRFyJe-MLY2GVevBo7wsMtTIP7a-GqVTGII2Sl73gc2IqTdBOTphi9xur7z2dlL1NvLRcpGAYA4Dos1e3oKtfYFfwDcTlU9fBZ1s2hEmvR4~OhkZWqb3uRQK8jF7Cdr6AZ~TfVMAdR6e3VNA__" class="showcase-img" alt="IDE Inicial">
+    <!-- Bento Item 2: MoonFix -->
+    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-left">
+        <h3 style="margin-bottom: 10px;">MoonFix</h3>
+        <p style="font-size: 0.85rem;">Saneamiento automático de código y dependencias.</p>
+        <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border);">
+            <code style="color: #4D7CFF; font-size: 0.8rem;">$ moonfix --repair --all</code>
+        </div>
+    </div>
+
+    <!-- Bento Item 3: UI Engine -->
+    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-up">
+        <h3 style="margin-bottom: 10px;">Leviathan UI</h3>
+        <p style="font-size: 0.85rem;">Basado en Qt 6.11.1 para interfaces líquidas.</p>
+    </div>
+
+    <!-- Bento Item 4: IDE Preview -->
+    <div class="bento-item" style="grid-column: span 12;" data-aos="zoom-in">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h2 style="font-size: 2.5rem;">Un entorno sin límites</h2>
+            <p>Diseñado para la máxima productividad con blindaje de código integrado.</p>
+        </div>
+        <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/crear_proyecto.png" alt="IDE" style="width: 100%; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.8);">
+    </div>
+
+    <!-- Bento Item 5: Apps -->
+    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right">
+        <h3>Gestor de Aplicaciones</h3>
+        <p style="font-size: 0.9rem;">Control total sobre el ecosistema de tu proyecto.</p>
+        <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/gestor_apps.png" alt="Apps" style="width: 100%; border-radius: 12px; margin-top: 15px;">
+    </div>
+
+    <!-- Bento Item 6: Security -->
+    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left">
+        <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+            <div style="font-size: 4rem; color: var(--accent); margin-bottom: 20px;"><i class="fas fa-shield-halved"></i></div>
+            <h3>Blindaje de Código</h3>
+            <p>Protección contra ingeniería inversa y acceso no autorizado.</p>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 100px; padding: 60px 0; text-align: center;" data-aos="fade-up">
+    <h2>¿Listo para el siguiente nivel?</h2>
+    <p style="margin-bottom: 30px;">Únete a la revolución del desarrollo en Influent OS.</p>
+    <a href="/download" class="btn btn-primary" style="padding: 16px 40px; font-size: 1.2rem;">Descargar Ahora</a>
 </div>
 {% endblock %}
