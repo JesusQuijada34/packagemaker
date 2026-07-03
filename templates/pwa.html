@@ -326,30 +326,102 @@
             navigator.serviceWorker.register('/sw.js');
         }
 
-        // Navigation
-        function navigate(index) {
+        // Navigation and scroll-sync
+        function navigate(index, options = {}) {
             const items = document.querySelectorAll('.nav-item');
             const indicator = document.getElementById('indicator');
-            
+
             items.forEach(i => i.classList.remove('active'));
-            items[index].classList.add('active');
-            
+            if (items[index]) items[index].classList.add('active');
+
             const itemWidth = 100 / items.length;
+            indicator.style.transition = 'left 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
             indicator.style.left = `calc(${index * itemWidth}% + ${(itemWidth - 15) / 2}%)`;
+
+            // persist the active index so returning users restore the last tab
+            try { localStorage.setItem('pwa-active-index', String(index)); } catch (e) {}
+
+            // If an option `scrollTo` is provided and the element exists, scroll to it
+            if (options.scrollTo) {
+                const target = document.getElementById(options.scrollTo);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         }
 
-        // Init navigation
-        window.onload = () => {
+        // Map nav indices to either a section id (in-page) or a pathname
+        const NAV_MAP = [
+            { type: 'section', id: 'section-home' },
+            { type: 'path', path: '/download' },
+            { type: 'path', path: '/release-notes' },
+            { type: 'path', path: '/issues' },
+            { type: 'path', path: '/faq' }
+        ];
+
+        // Initialize navigation state on load (restore from localStorage when possible)
+        window.addEventListener('load', () => {
             const path = window.location.pathname;
             let activeIndex = 0;
-            
-            if(path.includes('download')) activeIndex = 1;
-            else if(path.includes('release-notes')) activeIndex = 2;
-            else if(path.includes('issues')) activeIndex = 3;
-            else if(path.includes('faq')) activeIndex = 4;
-            
+
+            NAV_MAP.forEach((map, idx) => {
+                if (map.type === 'path' && path.includes(map.path.replace('/', '')) ) activeIndex = idx;
+            });
+
+            // If we have a stored preference, restore it (but only for shell pages)
+            try {
+                const stored = localStorage.getItem('pwa-active-index');
+                if (stored !== null && typeof stored !== 'undefined') {
+                    const n = parseInt(stored, 10);
+                    if (!isNaN(n) && n >= 0 && n < NAV_MAP.length) activeIndex = n;
+                }
+            } catch (e) { /* ignore storage errors */ }
+
+            // If we're on a page that has in-page sections, prefer that mapping
+            if (document.getElementById('section-home')) activeIndex = 0;
+
             navigate(activeIndex);
-        };
+        });
+
+        // When nav items are clicked, either scroll within the PWA shell if the
+        // target section exists, or navigate to the page.
+        document.querySelectorAll('.nav-item').forEach((el, idx) => {
+            el.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                const map = NAV_MAP[idx];
+                if (map.type === 'section' && document.getElementById(map.id)) {
+                    navigate(idx, { scrollTo: map.id });
+                } else if (map.type === 'path') {
+                    // allow the visual active change immediately then navigate
+                    navigate(idx);
+                    window.location.href = map.path + window.location.search + window.location.hash;
+                }
+            });
+        });
+
+        // Observe sections inside the main-view and update nav active state
+        (function initSectionObserver() {
+            const container = document.querySelector('.main-view');
+            if (!container) return;
+
+            const sections = Array.from(container.querySelectorAll('[id]'));
+            if (!sections.length) return;
+
+            const sectionIdToIndex = {};
+            NAV_MAP.forEach((m, i) => { if (m.type === 'section') sectionIdToIndex[m.id] = i; });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
+                        const id = entry.target.id;
+                        const idx = sectionIdToIndex[id];
+                        if (typeof idx === 'number') navigate(idx);
+                    }
+                });
+            }, { root: container, threshold: [0.25, 0.4, 0.6] });
+
+            sections.forEach(s => observer.observe(s));
+        })();
 
         // Copy to clipboard
         function copyToClipboard() {

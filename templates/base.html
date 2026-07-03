@@ -549,6 +549,16 @@
             <a href="/issues" class="{% if request.path == '/issues' %}active{% endif %}">{{ translations.nav_issues }}</a>
             <a href="/faq" class="{% if request.path == '/faq' %}active{% endif %}">{{ translations.nav_faq }}</a>
         </div>
+        <div class="nav-controls" style="margin-left: auto; display:flex; align-items:center; gap:0.75rem;">
+            <form class="language-form" method="get" action="{{ request.path }}" style="display:flex; align-items:center; gap:0.5rem;">
+                <label for="language-selector" style="color:var(--foreground-muted); font-size:0.875rem;">{{ translations.footer_language }}</label>
+                <select id="language-selector" name="lang" onchange="this.form.submit()" style="background:transparent; color:var(--foreground); border:1px solid var(--border); padding:0.35rem 0.5rem; border-radius:8px;">
+                    {% for code, metadata in available_languages.items() %}
+                    <option value="{{ code }}" {% if code == lang_code %}selected{% endif %}>{{ metadata.native }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
     </nav>
 
     <main class="container" id="main-content">
@@ -557,14 +567,6 @@
 
     <footer>
         <p>{{ translations.footer_text }}</p>
-        <form class="footer-controls" method="get" action="{{ request.path }}">
-            <label for="language-selector">{{ translations.footer_language }}</label>
-            <select id="language-selector" name="lang" onchange="this.form.submit()">
-                {% for code, metadata in available_languages.items() %}
-                <option value="{{ code }}" {% if code == lang_code %}selected{% endif %}>{{ metadata.native }}</option>
-                {% endfor %}
-            </select>
-        </form>
     </footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
