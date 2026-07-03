@@ -39,3 +39,14 @@ def test_download_page_supports_extra_languages():
     assert 'value="fr"' in html
     assert 'value="de"' in html
     assert 'Téléchargement' in html or 'Télécharger' in html
+
+
+def test_homepage_translates_remaining_sections_for_french():
+    client = app.test_client()
+    response = client.get('/?lang=fr')
+
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+
+    assert 'Gestion de projets' in html
+    assert 'Terminal (CLI)' in html

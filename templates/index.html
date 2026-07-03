@@ -97,13 +97,13 @@
         <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
                 <div class="feature-icon"><i class="fas fa-box-open" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">Gestión de Proyectos</h3>
+                <h3 style="margin-bottom: 0;">{{ translations.feature_projects_title }}</h3>
             </div>
-            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">Sistema de compilación avanzada con detección automática de scripts.</p>
+            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">{{ translations.feature_projects_desc }}</p>
             <ul class="feature-list">
-                <li><i class="fas fa-check-circle"></i><span>Integración con <code>.gitignore</code></span></li>
-                <li><i class="fas fa-check-circle"></i><span>Limpieza automática post-compilación</span></li>
-                <li><i class="fas fa-check-circle"></i><span>Gestión de dependencias</span></li>
+                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_projects_item_1 | safe }}</span></li>
+                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_projects_item_2 }}</span></li>
+                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_projects_item_3 }}</span></li>
             </ul>
         </div>
 
@@ -111,12 +111,12 @@
         <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
                 <div class="feature-icon" style="background: linear-gradient(135deg, #6bff6b 0%, #44ff44 100%);"><i class="fas fa-shield-alt" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">Blindado de Código</h3>
+                <h3 style="margin-bottom: 0;">{{ translations.feature_security_title }}</h3>
             </div>
-            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">Protege tu propiedad intelectual con métodos avanzados.</p>
+            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">{{ translations.feature_security_desc }}</p>
             <ul class="feature-list">
-                <li><i class="fas fa-check-circle"></i><span><strong>Simple Blind:</strong> Empaqueta en <code>.iflappb</code></span></li>
-                <li><i class="fas fa-check-circle"></i><span><strong>Super Blind:</strong> Separación de clases + encriptación</span></li>
+                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_security_item_1 | safe }}</span></li>
+                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_security_item_2 | safe }}</span></li>
             </ul>
         </div>
     </div>
@@ -127,17 +127,17 @@
     <div class="bento-item liquid-card" style="grid-column: span 12;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center;">
             <div>
-                <h2 class="section-title">Compilación Avanzada</h2>
-                <p class="section-subtitle" style="text-align: left; margin: 0;">Detecta automáticamente scripts candidatos, gestiona dependencias y minifica tu código.</p>
+                <h2 class="section-title">{{ translations.feature_build_title }}</h2>
+                <p class="section-subtitle" style="text-align: left; margin: 0;">{{ translations.feature_build_desc }}</p>
                 <div style="margin-top: var(--space-6);">
                     <div class="code-block" style="margin-bottom: var(--space-3);">
-                        <code>✓ gitignore integrado</code>
+                        <code>{{ translations.feature_build_item_1 }}</code>
                     </div>
                     <div class="code-block" style="margin-bottom: var(--space-3);">
-                        <code>✓ Limpieza automática</code>
+                        <code>{{ translations.feature_build_item_2 }}</code>
                     </div>
                     <div class="code-block">
-                        <code>✓ Paquetes ligeros</code>
+                        <code>{{ translations.feature_build_item_3 }}</code>
                     </div>
                 </div>
             </div>
@@ -151,8 +151,8 @@
 <!-- Multi-Platform -->
 <section style="margin-top: var(--space-8);">
     <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 12; text-align: center;">
-        <h2 class="section-title"><i class="fas fa-globe" style="color: var(--accent); margin-right: var(--space-3);"></i>Multi-Plataforma</h2>
-        <p class="section-subtitle" style="margin-bottom: var(--space-8);">Genera ejecutables para cualquier plataforma desde un solo código.</p>
+        <h2 class="section-title"><i class="fas fa-globe" style="color: var(--accent); margin-right: var(--space-3);"></i>{{ translations.feature_multiplatform_title }}</h2>
+        <p class="section-subtitle" style="margin-bottom: var(--space-8);">{{ translations.feature_multiplatform_desc }}</p>
         <div class="platform-pills" style="justify-content: center;">
             <span class="platform-pill"><i class="fab fa-windows"></i> Windows (.exe)</span>
             <span class="platform-pill"><i class="fab fa-android"></i> Android (APK)</span>
@@ -167,9 +167,9 @@
         <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
                 <div class="feature-icon" style="background: linear-gradient(135deg, #ff6b9d 0%, #ffa500 100%);"><i class="fas fa-th-large" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">Gestor de Apps</h3>
+                <h3 style="margin-bottom: 0;">{{ translations.feature_apps_title }}</h3>
             </div>
-            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Administra tus proyectos locales y aplicaciones instaladas.</p>
+            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">{{ translations.feature_apps_desc }}</p>
             <div class="mica-frame">
                 <img src="/assets/screenshots/gui-3.png" alt="Gestor de Apps" loading="lazy">
             </div>
@@ -177,9 +177,9 @@
         <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
                 <div class="feature-icon" style="background: linear-gradient(135deg, #7C5CDD 0%, #5CDDC9 100%);"><i class="fas fa-cog" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">Configuración</h3>
+                <h3 style="margin-bottom: 0;">{{ translations.feature_config_title }}</h3>
             </div>
-            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Control total sobre rutas, idioma y personalización.</p>
+            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">{{ translations.feature_config_desc }}</p>
             <div class="mica-frame">
                 <img src="/assets/screenshots/gui-4.png" alt="Configuración" loading="lazy">
             </div>
@@ -199,8 +199,8 @@
                     <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fas fa-moon" style="color: white;"></i></div>
                     <h3 style="margin-bottom: 0; font-size: 1.5rem;">MoonFix</h3>
                 </div>
-                <h4 style="color: var(--foreground-muted); font-weight: 400; margin-bottom: var(--space-4);">Sanación Profunda de Proyectos</h4>
-                <p style="margin-bottom: var(--space-4);">Tu aliada para mantener la salud de tus proyectos. Realiza una sanación profunda, escaneando y reparando inconsistencias.</p>
+                <h4 style="color: var(--foreground-muted); font-weight: 400; margin-bottom: var(--space-4);">{{ translations.feature_moonfix_title }}</h4>
+                <p style="margin-bottom: var(--space-4);">{{ translations.feature_moonfix_desc }}</p>
                 <div class="code-block"><code>moonfix --repair --all</code></div>
             </div>
         </div>
@@ -212,24 +212,24 @@
     <div class="bento-item liquid-card" style="grid-column: span 12;">
         <div style="text-align: center; margin-bottom: var(--space-6);">
             <div class="feature-icon" style="margin: 0 auto var(--space-4);"><i class="fas fa-info-circle" style="color: white;"></i></div>
-            <h3 style="font-size: 1.5rem;">Acerca de Influent Package Maker</h3>
+            <h3 style="font-size: 1.5rem;">{{ translations.feature_about_title }}</h3>
         </div>
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); text-align: center;">
             <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Framework</div>
-                <div style="font-weight: 700;">Qt 6.11.1</div>
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_framework }}</div>
+                <div style="font-weight: 700;">{{ translations.feature_about_framework_value }}</div>
             </div>
             <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">UI System</div>
-                <div style="font-weight: 700;">Leviathan</div>
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_ui }}</div>
+                <div style="font-weight: 700;">{{ translations.feature_about_ui_value }}</div>
             </div>
             <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Licencia</div>
-                <div style="font-weight: 700;">GNU GPL v3</div>
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_license }}</div>
+                <div style="font-weight: 700;">{{ translations.feature_about_license_value }}</div>
             </div>
             <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Desarrollador</div>
-                <div style="font-weight: 700;">Jesús Quijada</div>
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_developer }}</div>
+                <div style="font-weight: 700;">{{ translations.feature_about_developer_value }}</div>
             </div>
         </div>
         <div class="mica-frame" style="margin-top: var(--space-6); border-radius: var(--radius-xl);">
@@ -245,9 +245,9 @@
             <div>
                 <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
                     <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #7C5CDD 100%);"><i class="fas fa-terminal" style="color: white;"></i></div>
-                    <h3 style="margin-bottom: 0; font-size: 1.5rem;">Terminal (CLI)</h3>
+                    <h3 style="margin-bottom: 0; font-size: 1.5rem;">{{ translations.feature_cli_title }}</h3>
                 </div>
-                <p style="margin-bottom: var(--space-4);">Potente interfaz de línea de comandos para automatizar tareas e integrar en scripts CI/CD.</p>
+                <p style="margin-bottom: var(--space-4);">{{ translations.feature_cli_desc }}</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
                     <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">create</code></div>
                     <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">compile</code></div>
@@ -265,22 +265,22 @@
 <!-- What's New -->
 <section style="margin-top: var(--space-8);">
     <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 12;">
-        <h2 class="section-title" style="text-align: center;"><i class="fas fa-star" style="color: #FFD700; margin-right: var(--space-3);"></i>Novedades v3.2.7</h2>
+        <h2 class="section-title" style="text-align: center;"><i class="fas fa-star" style="color: #FFD700; margin-right: var(--space-3);"></i>{{ translations.feature_news_title }}</h2>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-top: var(--space-6);">
             <div style="text-align: center;">
                 <div class="feature-icon" style="margin: 0 auto var(--space-3); background: linear-gradient(135deg, #7C5CDD 0%, #ff6b9d 100%);"><i class="fas fa-code" style="color: white;"></i></div>
-                <h4 style="margin-bottom: var(--space-2);">Editores Extendidos</h4>
-                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">Zed, Fleet, Emacs, Geany, Kate, Gedit</p>
+                <h4 style="margin-bottom: var(--space-2);">{{ translations.feature_news_item_1_title }}</h4>
+                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ translations.feature_news_item_1_desc }}</p>
             </div>
             <div style="text-align: center;">
                 <div class="feature-icon" style="margin: 0 auto var(--space-3); background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fab fa-linux" style="color: white;"></i></div>
-                <h4 style="margin-bottom: var(--space-2);">Iconos en Linux</h4>
-                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">Renderizado mejorado para Ubuntu</p>
+                <h4 style="margin-bottom: var(--space-2);">{{ translations.feature_news_item_2_title }}</h4>
+                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ translations.feature_news_item_2_desc }}</p>
             </div>
             <div style="text-align: center;">
                 <div class="feature-icon" style="margin: 0 auto var(--space-3);"><i class="fas fa-bug" style="color: white;"></i></div>
-                <h4 style="margin-bottom: var(--space-2);">Correcciones</h4>
-                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">TypeError, fondo blanco, gradientes</p>
+                <h4 style="margin-bottom: var(--space-2);">{{ translations.feature_news_item_3_title }}</h4>
+                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ translations.feature_news_item_3_desc }}</p>
             </div>
         </div>
     </div>
@@ -289,9 +289,9 @@
 <!-- CTA Section -->
 <section style="margin-top: var(--space-16);" class="scroll-reveal">
     <div class="cta-section">
-        <h2 class="section-title">¿Listo para el siguiente nivel?</h2>
-        <p class="section-subtitle" style="margin-bottom: var(--space-8);">Descarga la última versión y revoluciona tu flujo de desarrollo Python.</p>
-        <a href="/download" class="btn btn-primary" style="padding: var(--space-5) var(--space-10); font-size: 1.125rem;"><i class="fas fa-download"></i> Descargar v3.2.7</a>
+        <h2 class="section-title">{{ translations.cta_title }}</h2>
+        <p class="section-subtitle" style="margin-bottom: var(--space-8);">{{ translations.cta_desc }}</p>
+        <a href="/download" class="btn btn-primary" style="padding: var(--space-5) var(--space-10); font-size: 1.125rem;"><i class="fas fa-download"></i> {{ translations.cta_button }}</a>
     </div>
 </section>
 

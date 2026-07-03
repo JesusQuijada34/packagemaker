@@ -581,17 +581,30 @@
         }
 
         const preferredLang = '{{ lang_code }}';
-        const storedLang = localStorage.getItem('pm-lang') || preferredLang;
-        localStorage.setItem('pm-lang', storedLang);
-        document.cookie = `lang=${storedLang}; path=/; max-age=31536000; SameSite=Lax`;
+        const queryLang = new URLSearchParams(window.location.search).get('lang');
+        const storedLang = queryLang || localStorage.getItem('pm-lang') || preferredLang;
+        const effectiveLang = storedLang || preferredLang;
+        localStorage.setItem('pm-lang', effectiveLang);
+        document.cookie = `lang=${effectiveLang}; path=/; max-age=31536000; SameSite=Lax`;
+
+        const syncLanguageInUrl = (lang) => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', lang);
+            const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+            if (window.location.pathname + window.location.search + window.location.hash !== nextUrl) {
+                window.history.replaceState({}, '', nextUrl);
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
+            syncLanguageInUrl(effectiveLang);
+
             document.querySelectorAll('a[href]').forEach((anchor) => {
                 try {
                     const url = new URL(anchor.href, window.location.origin);
                     if (url.origin === window.location.origin && !url.pathname.startsWith('/api/') && !url.pathname.startsWith('/static/')) {
                         if (!url.searchParams.has('lang')) {
-                            url.searchParams.set('lang', storedLang);
+                            url.searchParams.set('lang', effectiveLang);
                             anchor.href = `${url.pathname}${url.search}${url.hash}`;
                         }
                     }
@@ -601,14 +614,29 @@
             });
 
             document.querySelectorAll('form').forEach((form) => {
-                if (!form.querySelector('input[name="lang"]') && form.method.toLowerCase() === 'get') {
+                if (!form.querySelector('input[name="lang"], select[name="lang"]') && form.method.toLowerCase() === 'get') {
                     const langInput = document.createElement('input');
                     langInput.type = 'hidden';
                     langInput.name = 'lang';
-                    langInput.value = storedLang;
+                    langInput.value = effectiveLang;
                     form.appendChild(langInput);
                 }
             });
+
+            const languageSelector = document.getElementById('language-selector');
+            if (languageSelector) {
+                languageSelector.addEventListener('change', (event) => {
+                    const selectedLang = event.target.value;
+                    localStorage.setItem('pm-lang', selectedLang);
+                    document.cookie = `lang=${selectedLang}; path=/; max-age=31536000; SameSite=Lax`;
+                    syncLanguageInUrl(selectedLang);
+                });
+            }
+        });
+
+        window.addEventListener('popstate', () => {
+            const currentLang = new URLSearchParams(window.location.search).get('lang') || localStorage.getItem('pm-lang') || preferredLang;
+            syncLanguageInUrl(currentLang);
         });
     </script>
     {% block extra_js %}{% endblock %}
