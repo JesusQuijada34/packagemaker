@@ -1034,12 +1034,15 @@ def check_iflapp_exists(url):
             print(f'Error saving report: {e}')
 
         # Notify owner
-        owner_text = f"<b>REPORT {ticket}</b>\n\n" + \
-                     f"<b>Título:</b> {title}\n" + \
-                     f"<b>Descripción:</b> {description}\n\n" + \
-                     f"<b>Reporter:</b> {reporter_username or 'N/A'}\n" + \
-                     f"<b>Telegram ID (if provided):</b> {reporter_telegram_id or 'N/A'}\n\n" + \
-                     "Responde a este mensaje para enviar un mensaje al reporter (si está registrado)."
+        owner_text = (
+            f"<b>REPORT {ticket}</b>\n\n"
+            f"<b>Título:</b> {title}\n"
+            f"<b>Descripción:</b> {description}\n\n"
+            f"<b>Reporter:</b> {reporter_username or 'N/A'}\n"
+            f"<b>ReporterChatID:</b> {reporter_chat_id or 'N/A'}\n"
+            f"<b>ReporterIP:</b> {reporter_ip or 'N/A'}\n\n"
+            "Responde a este mensaje para enviar un mensaje al reporter (si está registrado) o para notificar al IP proporcionado."
+        )
 
         if TELEGRAM_OWNER_ID:
             try:
@@ -1081,28 +1084,57 @@ def check_iflapp_exists(url):
             # If owner replied to a report message, forward the reply to the reporter
             if str(user_id) == str(TELEGRAM_OWNER_ID) and message.get('reply_to_message'):
                 reply_to = message.get('reply_to_message')
-                # Look for REPORT ticket in the replied-to text
+                # Look for REPORT and contact info embedded in the replied-to text
                 replied_text = reply_to.get('text', '')
                 import re
                 m = re.search(r'REPORT\s+(R-[0-9a-fA-F]+)', replied_text)
                 if m:
                     ticket = m.group(1)
-                    # Find report and reporter chat id
-                    conn = sqlite3.connect(DB_PATH)
-                    c = conn.cursor()
-                    c.execute('SELECT reporter_chat_id, reporter_username FROM reports WHERE ticket = ?', (ticket,))
-                    row = c.fetchone()
-                    conn.close()
-                    if row:
-                        reporter_chat_id, reporter_username = row
-                        if reporter_chat_id:
-                            # forward owner's text to reporter
-                            send_telegram_message(reporter_chat_id, f"Respuesta del Owner sobre {ticket}:\n\n{text}")
-                            send_telegram_message(TELEGRAM_OWNER_ID, f"Mensaje enviado a {reporter_username or reporter_chat_id}.")
-                        else:
-                            send_telegram_message(TELEGRAM_OWNER_ID, f"El reporter de {ticket} no está registrado o no proporcionó chat id.")
+                    # Try to parse chat id and IP directly from the message text (temporary/no-db flow)
+                    chat_match = re.search(r'ReporterChatID:\s*([0-9]+)', replied_text)
+                    ip_match = re.search(r'ReporterIP:\s*([0-9\.]+)', replied_text)
+                    parsed_chat_id = int(chat_match.group(1)) if chat_match else None
+                    parsed_ip = ip_match.group(1) if ip_match else None
+
+                    sent = False
+                    send_info = ''
+
+                    # Prefer in-message chat id
+                    if parsed_chat_id:
+                        send_telegram_message(parsed_chat_id, f"Respuesta del Owner sobre {ticket}:\n\n{text}")
+                        send_telegram_message(TELEGRAM_OWNER_ID, f"Mensaje enviado a chat id {parsed_chat_id}.")
+                        sent = True
+                        send_info = f'tg:{parsed_chat_id}'
+                    elif parsed_ip:
+                        ok, info = try_notify_via_ip(parsed_ip, {'ticket': ticket, 'status': 'resolved_by_owner_message', 'note': text})
+                        send_telegram_message(TELEGRAM_OWNER_ID, f"Intento de notificar al IP {parsed_ip}: {ok} - {info}")
+                        sent = ok
+                        send_info = f'ip:{parsed_ip}:{info}'
                     else:
-                        send_telegram_message(TELEGRAM_OWNER_ID, f"No se encontró el ticket {ticket}.")
+                        # Fallback to DB lookup if parsing failed
+                        conn = sqlite3.connect(DB_PATH)
+                        c = conn.cursor()
+                        c.execute('SELECT reporter_chat_id, reporter_username, reporter_ip FROM reports WHERE ticket = ?', (ticket,))
+                        row = c.fetchone()
+                        conn.close()
+                        if row:
+                            reporter_chat_id, reporter_username, reporter_ip = row
+                            if reporter_chat_id:
+                                send_telegram_message(reporter_chat_id, f"Respuesta del Owner sobre {ticket}:\n\n{text}")
+                                send_telegram_message(TELEGRAM_OWNER_ID, f"Mensaje enviado a {reporter_username or reporter_chat_id}.")
+                                sent = True
+                                send_info = f'tg:{reporter_chat_id}'
+                            elif reporter_ip:
+                                ok, info = try_notify_via_ip(reporter_ip, {'ticket': ticket, 'status': 'resolved_by_owner_message', 'note': text})
+                                send_telegram_message(TELEGRAM_OWNER_ID, f"Intento de notificar al IP {reporter_ip}: {ok} - {info}")
+                                sent = ok
+                                send_info = f'ip:{reporter_ip}:{info}'
+                        else:
+                            send_telegram_message(TELEGRAM_OWNER_ID, f"No se encontró el ticket {ticket} en registros.")
+
+                    # Optionally log or inform owner about the final result
+                    if not sent:
+                        send_telegram_message(TELEGRAM_OWNER_ID, f"No fue posible notificar al reporter para {ticket}. Info: {send_info}")
 
             return jsonify({'ok': True})
         except Exception as e:
