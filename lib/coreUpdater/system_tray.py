@@ -3,9 +3,22 @@
 """
 System tray icon functionality for the updater.
 """
-from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
-from PyQt6.QtGui import QIcon, QPixmap, QColor, QAction
-from PyQt6.QtCore import Qt
+
+# PyQt6 imports con fallback para entornos sin GUI
+try:
+    from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
+    from PyQt6.QtGui import QIcon, QPixmap, QColor, QAction
+    from PyQt6.QtCore import Qt
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    Qt = None
+    class QSystemTrayIcon: pass
+    class QMenu: pass
+    class QIcon: pass
+    class QPixmap: pass
+    class QColor: pass
+    class QAction: pass
 
 # --- GLOBAL VARIABLES FOR SYSTEM TRAY ---
 _tray_icon = None

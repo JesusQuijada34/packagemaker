@@ -5,9 +5,27 @@ Installation functions for the updater system.
 """
 import os
 import sys
-from PyQt6.QtWidgets import QApplication
+import shutil
+from pathlib import Path
+
+# PyQt6 imports con fallback
+try:
+    from PyQt6.QtWidgets import QApplication
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    QApplication = None
+
 from .core import log, _rXml, _rXml_r, _fR, _fR_exe
-from .windows import ModernUpdaterWindow, IFLAPPInstallerWindow, EXEInstallerWindow, LicenseTermsDialog
+
+# Windows y GUI con fallback
+try:
+    from .windows import ModernUpdaterWindow, IFLAPPInstallerWindow, EXEInstallerWindow, LicenseTermsDialog
+except ImportError:
+    ModernUpdaterWindow = object
+    IFLAPPInstallerWindow = object
+    EXEInstallerWindow = object
+    LicenseTermsDialog = object
 
 # --- LEVIATHAN UI CHECK ---
 try:
@@ -15,6 +33,80 @@ try:
     HAS_LEVIATHAN = True
 except ImportError:
     HAS_LEVIATHAN = False
+
+
+def get_templates_source_dir():
+    """Obtiene el directorio fuente de plantillas (en la actualización extraída)."""
+    # Buscar en el directorio temporal de extracción
+    candidates = [
+        Path("update_temp_extracted/src/templates"),
+        Path("update_temp_extracted/templates"),
+        Path("src/templates"),
+    ]
+    for cand in candidates:
+        if cand.is_dir():
+            return cand
+    return None
+
+
+def get_templates_target_dir():
+    """Obtiene el directorio destino de plantillas."""
+    if getattr(sys, "frozen", False):
+        if hasattr(sys, "_MEIPASS"):
+            return Path(sys._MEIPASS) / "src" / "templates"
+        return Path(sys.executable).resolve().parent / "src" / "templates"
+    return Path(__file__).resolve().parent.parent / "src" / "templates"
+
+
+def sync_templates_to_local():
+    """Sincroniza plantillas desde el directorio de actualización al directorio local.
+    
+    Returns:
+        tuple: (success: bool, message: str, files_synced: list)
+    """
+    source = get_templates_source_dir()
+    target = get_templates_target_dir()
+    files_synced = []
+    
+    if not source or not source.is_dir():
+        return False, "No se encontró directorio de plantillas en actualización", []
+    
+    log(f"[TEMPLATE SYNC] Fuente: {source}")
+    log(f"[TEMPLATE SYNC] Destino: {target}")
+    
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        
+        # Estructura de carpetas a sincronizar
+        template_folders = ["config", "docs", "lib", "project"]
+        
+        for folder in template_folders:
+            src_folder = source / folder
+            tgt_folder = target / folder
+            
+            if src_folder.is_dir():
+                tgt_folder.mkdir(parents=True, exist_ok=True)
+                
+                for item in src_folder.rglob("*"):
+                    if item.is_file():
+                        rel_path = item.relative_to(src_folder)
+                        tgt_file = tgt_folder / rel_path
+                        
+                        # Copiar solo si es más nuevo o no existe
+                        if not tgt_file.exists() or item.stat().st_mtime > tgt_file.stat().st_mtime:
+                            tgt_file.parent.mkdir(parents=True, exist_ok=True)
+                            shutil.copy2(item, tgt_file)
+                            files_synced.append(str(rel_path))
+                            log(f"[TEMPLATE SYNC] Sincronizado: {rel_path}")
+        
+        if files_synced:
+            return True, f"Sincronizadas {len(files_synced)} plantillas", files_synced
+        else:
+            return True, "Plantillas ya actualizadas", []
+            
+    except Exception as e:
+        log(f"[TEMPLATE SYNC] Error: {e}")
+        return False, str(e), []
 
 
 def install_iflapp(iflapp_path, target_dir=None, silent=False):

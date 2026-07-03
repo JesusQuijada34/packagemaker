@@ -109,7 +109,11 @@ except (ImportError, SyntaxError) as e:
         @staticmethod
         def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")
     class LeviathanProgressBar: pass
-from lib.Updater import KillerLogic, InstallerWorker, ModernUpdaterWindow
+# Updater - usar coreUpdater si está disponible, sino fallback a lib.Updater
+try:
+    from lib.coreUpdater import KillerLogic, InstallerWorker, ModernUpdaterWindow
+except ImportError:
+    from lib.Updater import KillerLogic, InstallerWorker, ModernUpdaterWindow
 from lib.BuildThread import BuildThread, FlangCompiler
 from lib.TitleBar import AnimTitleButton, TitleBar
 from lib.app_icons import get_sidebar_icon, get_icon, icon_button
@@ -267,7 +271,32 @@ BTN_STYLES = {
 
 plataforma_platform = sys.platform
 plataforma_name = os.name
-if plataforma_platform.startswith("win"):
+
+# --- TERMUX/ANDROID DETECTION ---
+# Termux usa PREFIX=/data/data/com.termux/files/usr
+# Android tiene restricciones de acceso a carpetas estándar
+_is_termux = os.environ.get("PREFIX", "").startswith("/data/data/com.termux")
+_is_android = sys.platform.startswith("linux") and (
+    os.path.exists("/system/app") or 
+    os.environ.get("ANDROID_ROOT") or
+    os.environ.get("ANDROID_DATA")
+)
+
+if _is_termux:
+    # Termux: guardar en carpeta home de termux (accessible)
+    # Carpeta oculta .packagemaker en home de termux
+    termux_home = os.path.expanduser("~")
+    BASE_DIR = os.path.join(termux_home, ".packagemaker", "projects")
+    Fluthin_APPS = os.path.join(termux_home, ".packagemaker", "apps")
+    linkedsys = "termux"
+    # Termux no tiene acceso a ~/Documents por restricciones de Android
+elif _is_android:
+    # Android: guardar en carpeta interna de la app o almacenamiento común
+    android_home = os.path.expanduser("~")
+    BASE_DIR = os.path.join(android_home, "PackageMaker", "Projects")
+    Fluthin_APPS = os.path.join(android_home, "PackageMaker", "Apps")
+    linkedsys = "android"
+elif plataforma_platform.startswith("win"):
     user_profile = os.environ.get("USERPROFILE", "")
     doc_folder = "Documents"
     if os.path.exists(os.path.join(user_profile, "Documentos")):
@@ -346,8 +375,24 @@ BASE_DIR = APP_CONFIG.get("BASE_DIR", _PLATFORM_BASE_DIR) or _PLATFORM_BASE_DIR
 Fluthin_APPS = APP_CONFIG.get("Fluthin_APPS", _PLATFORM_FLUTHIN_APPS) or _PLATFORM_FLUTHIN_APPS
 
 # Crear las carpetas si no existen
-os.makedirs(BASE_DIR, exist_ok=True)
-os.makedirs(Fluthin_APPS, exist_ok=True)
+try:
+    os.makedirs(BASE_DIR, exist_ok=True)
+    os.makedirs(Fluthin_APPS, exist_ok=True)
+    print(f"[PackageMaker] Plataforma detectada: {linkedsys}")
+    print(f"[PackageMaker] BASE_DIR: {BASE_DIR}")
+    print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}")
+except OSError as e:
+    print(f"[PackageMaker] ADVERTENCIA: No se pudo crear directorio {BASE_DIR}: {e}")
+    # Intentar con directorio alternativo
+    alt_dir = os.path.expanduser("~")
+    BASE_DIR = os.path.join(alt_dir, "PackageMaker", "Projects")
+    Fluthin_APPS = os.path.join(alt_dir, "PackageMaker", "Apps")
+    try:
+        os.makedirs(BASE_DIR, exist_ok=True)
+        os.makedirs(Fluthin_APPS, exist_ok=True)
+        print(f"[PackageMaker] Usando directorio alternativo: {BASE_DIR}")
+    except OSError as e2:
+        print(f"[PackageMaker] ERROR: No se pudo crear directorio alternativo: {e2}")
 
 def save_app_config(config):
     store = get_pm_data()
