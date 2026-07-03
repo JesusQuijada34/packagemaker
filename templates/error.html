@@ -124,8 +124,12 @@
                     <div class="error-icon icon-500"><i class="fas fa-server"></i></div>
                     <h1 class="error-title">Error Interno del Servidor</h1>
                     <p class="error-description">
-                        Algo salió mal en nuestro servidor. Nuestro equipo ha sido notificado 
-                        y estamos trabajando para resolver el problema lo antes posible.
+                        {% if message %}
+                            {{ message }}
+                        {% else %}
+                            Algo salió mal en nuestro servidor. Nuestro equipo ha sido notificado 
+                            y estamos trabajando para resolver el problema lo antes posible.
+                        {% endif %}
                     </p>
                     <div class="suggestions">
                         <h4><i class="fas fa-tools"></i> Qué puedes hacer:</h4>

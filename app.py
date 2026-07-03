@@ -78,17 +78,18 @@ def sw():
 
 def get_xml_metadata():
     try:
-        response = requests.get(XML_URL)
+        response = requests.get(XML_URL, timeout=5)
         if response.status_code == 200:
             root = ET.fromstring(response.text)
             return {child.tag: child.text for child in root}
-    except: pass
+    except Exception as e:
+        print(f"Error fetching XML: {e}")
     return {"version": "v3.2.7", "name": "Package Maker"}
 
 def get_github_releases():
     try:
         api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-        response = requests.get(api_url)
+        response = requests.get(api_url, timeout=5)
         if response.status_code == 200:
             data = response.json()
             version = data.get("tag_name", "")
@@ -99,11 +100,13 @@ def get_github_releases():
                 platform = "Linux" if "danenone" in name else "Windows"
                 downloads.append({"name": asset.get("name"), "url": asset.get("browser_download_url"), "platform": platform, "size": f"{asset.get('size', 0) / (1024*1024):.2f} MB"})
             return version, downloads
-    except: pass
+    except Exception as e:
+        print(f"Error fetching releases: {e}")
     return "v3.2.7", []
 
 @app.route('/')
 def index():
+    print(f"DEBUG: Accessing index from {request.remote_addr}")
     metadata = get_xml_metadata()
     version, _ = get_github_releases()
     ua = request.headers.get('User-Agent', '').lower()
@@ -111,6 +114,7 @@ def index():
 
 @app.route('/download')
 def download():
+    print(f"DEBUG: Accessing download from {request.remote_addr}")
     metadata = get_xml_metadata()
     version, downloads = get_github_releases()
     ua = request.headers.get('User-Agent', '').lower()
@@ -119,26 +123,30 @@ def download():
 @app.route('/faq')
 def faq_page():
     try:
-        response = requests.get(FAQ_URL)
+        response = requests.get(FAQ_URL, timeout=5)
         content = response.text if response.status_code == 200 else "# FAQ\nNo se pudo cargar el contenido."
         html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
         return render_template('page.html', title="Preguntas Frecuentes", content=html_content)
-    except: return "Error al cargar FAQ"
+    except Exception as e:
+        print(f"Error loading FAQ: {e}")
+        return render_template('error.html', code=500, message="Error al cargar FAQ"), 500
 
 @app.route('/release-notes')
 def notes():
     try:
-        response = requests.get(RELEASE_NOTES_URL)
+        response = requests.get(RELEASE_NOTES_URL, timeout=5)
         content = response.text if response.status_code == 200 else "# Release Notes"
         html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
         return render_template('page.html', title="Notas de Versión", content=html_content)
-    except: return "Error al cargar Notas"
+    except Exception as e:
+        print(f"Error loading notes: {e}")
+        return render_template('error.html', code=500, message="Error al cargar Notas"), 500
 
 @app.route('/issues')
 def issues_page():
     try:
         api_url = f"https://api.github.com/repos/{GITHUB_REPO}/issues?state=open"
-        response = requests.get(api_url)
+        response = requests.get(api_url, timeout=5)
         issues = response.json() if response.status_code == 200 else []
         
         content = "# Problemas Conocidos y Reportes\n\n"
@@ -154,8 +162,9 @@ def issues_page():
         
         html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
         return render_template('page.html', title="Issues & Soporte", content=html_content)
-    except:
-        return "Error al cargar Issues"
+    except Exception as e:
+        print(f"Error loading issues: {e}")
+        return render_template('error.html', code=500, message="Error al cargar Issues"), 500
 
 @app.route('/pwaMode')
 def pwa_mode():
@@ -189,14 +198,21 @@ echo -e "${GREEN}INSTALACIÓN COMPLETADA. Inicia con: python3 packagemaker.py${N
 
 @app.route('/admin/stats')
 def admin_stats():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM visits"); total = c.fetchone()[0]
-    c.execute("SELECT AVG(duration) FROM visits WHERE duration > 0"); avg_time = c.fetchone()[0] or 0
-    c.execute("SELECT platform, COUNT(*) FROM visits GROUP BY platform"); platforms = dict(c.fetchall())
-    c.execute("SELECT timestamp, path, platform, duration FROM visits ORDER BY id DESC LIMIT 20"); recent = c.fetchall()
-    conn.close()
-    return render_template('stats.html', total=total, avg_time=round(avg_time, 1), platforms=platforms, recent=recent)
+    print(f"DEBUG: Accessing admin_stats from {request.remote_addr}")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM visits"); total = c.fetchone()[0]
+        c.execute("SELECT AVG(duration) FROM visits WHERE duration > 0"); avg_time = c.fetchone()[0] or 0
+        c.execute("SELECT platform, COUNT(*) FROM visits GROUP BY platform"); platforms = dict(c.fetchall())
+        c.execute("SELECT path, COUNT(*) FROM visits GROUP BY path ORDER BY COUNT(*) DESC LIMIT 5"); paths = c.fetchall()
+        c.execute("SELECT (COUNT(CASE WHEN bounced = 1 THEN 1 END) * 100.0 / COUNT(*)) FROM visits"); bounce = c.fetchone()[0] or 0
+        c.execute("SELECT timestamp, path, platform, duration, bounced FROM visits ORDER BY id DESC LIMIT 20"); recent = c.fetchall()
+        conn.close()
+        return render_template('stats.html', total=total, avg_time=round(avg_time, 1), platforms=platforms, paths=paths, bounce=round(bounce, 1), recent=recent)
+    except Exception as e:
+        print(f"DEBUG ERROR in admin_stats: {e}")
+        return render_template('error.html', code=500, message=f"Error en base de datos: {e}"), 500
 
 # Error Handlers
 @app.errorhandler(404)
@@ -205,7 +221,8 @@ def not_found(e):
 
 @app.errorhandler(500)
 def internal_error(e):
-    return render_template('error.html', code=500), 500
+    message = getattr(e, 'description', 'Error Interno del Servidor')
+    return render_template('error.html', code=500, message=message), 500
 
 @app.errorhandler(403)
 def forbidden(e):
