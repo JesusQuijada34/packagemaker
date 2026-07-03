@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ lang_code }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -271,15 +271,16 @@
         }
         
         .bento-item { 
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: var(--radius-xl); 
             padding: var(--space-6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
             transition: all var(--duration-slow) var(--ease-out);
             position: relative;
             overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 50px rgba(0,0,0,0.28);
         }
         
         .bento-item::before { 
@@ -389,6 +390,35 @@
             border-top: 1px solid var(--border);
             color: var(--foreground-muted);
             font-size: 0.875rem;
+        }
+
+        .footer-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-top: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .footer-controls label {
+            font-size: 0.8rem;
+            color: var(--foreground-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .footer-controls select {
+            background: transparent;
+            color: var(--foreground);
+            border: none;
+            font-size: 0.875rem;
+            outline: none;
+            cursor: pointer;
         }
         
         /* Glass Card (for page.html) */
@@ -513,11 +543,11 @@
             <span>Package Maker</span>
         </a>
         <div class="nav-links">
-            <a href="/" class="{% if request.path == '/' %}active{% endif %}">Inicio</a>
-            <a href="/download" class="{% if request.path == '/download' %}active{% endif %}">Descargas</a>
-            <a href="/release-notes" class="{% if request.path == '/release-notes' %}active{% endif %}">Notas</a>
-            <a href="/issues" class="{% if request.path == '/issues' %}active{% endif %}">Issues</a>
-            <a href="/faq" class="{% if request.path == '/faq' %}active{% endif %}">FAQ</a>
+            <a href="/" class="{% if request.path == '/' %}active{% endif %}">{{ translations.nav_home }}</a>
+            <a href="/download" class="{% if request.path == '/download' %}active{% endif %}">{{ translations.nav_download }}</a>
+            <a href="/release-notes" class="{% if request.path == '/release-notes' %}active{% endif %}">{{ translations.nav_release_notes }}</a>
+            <a href="/issues" class="{% if request.path == '/issues' %}active{% endif %}">{{ translations.nav_issues }}</a>
+            <a href="/faq" class="{% if request.path == '/faq' %}active{% endif %}">{{ translations.nav_faq }}</a>
         </div>
     </nav>
 
@@ -526,7 +556,15 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 Influent OS Engineering. Creado por JesusQuijada34.</p>
+        <p>{{ translations.footer_text }}</p>
+        <form class="footer-controls" method="get" action="{{ request.path }}">
+            <label for="language-selector">{{ translations.footer_language }}</label>
+            <select id="language-selector" name="lang" onchange="this.form.submit()">
+                {% for code, metadata in available_languages.items() %}
+                <option value="{{ code }}" {% if code == lang_code %}selected{% endif %}>{{ metadata.native }}</option>
+                {% endfor %}
+            </select>
+        </form>
     </footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

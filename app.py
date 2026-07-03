@@ -1,7 +1,7 @@
 import os
 import requests
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, jsonify, request, Response, session, send_from_directory
+from flask import Flask, render_template, jsonify, request, Response, session, send_from_directory, g
 import markdown
 import sqlite3
 from datetime import datetime, timedelta
@@ -9,6 +9,124 @@ import uuid
 
 app = Flask(__name__)
 app.secret_key = 'pm-pwa-secret-2026'
+
+SUPPORTED_LANGUAGES = {
+    'es': {'name': 'Español', 'native': 'Español'},
+    'en': {'name': 'English', 'native': 'English'},
+    'pt': {'name': 'Português', 'native': 'Português'},
+}
+
+TRANSLATIONS = {
+    'es': {
+        'nav_home': 'Inicio',
+        'nav_download': 'Descargas',
+        'nav_release_notes': 'Notas',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering. Creado por JesusQuijada34.',
+        'footer_language': 'Idioma',
+        'hero_badge': '✨ Nueva Versión v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': 'Tu IDE Profesional para Python ha evolucionado. Crea, empaqueta y distribuye aplicaciones Python con una experiencia moderna y eficiente inspirada en Windows 11.',
+        'hero_download': 'Descargar Ahora',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': 'Interfaz intuitiva y potente',
+        'section_interface_subtitle': 'Barra de título personalizada Leviathan-UI con efectos visuales acrílico y mica.',
+    },
+    'en': {
+        'nav_home': 'Home',
+        'nav_download': 'Downloads',
+        'nav_release_notes': 'Notes',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering. Crafted by JesusQuijada34.',
+        'footer_language': 'Language',
+        'hero_badge': '✨ New Version v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': 'Your professional Python IDE has evolved. Create, package and distribute Python apps with a modern, efficient experience inspired by Windows 11.',
+        'hero_download': 'Download Now',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': 'Intuitive and powerful interface',
+        'section_interface_subtitle': 'Custom Leviathan-UI title bar with acrylic and mica visual effects.',
+    },
+    'pt': {
+        'nav_home': 'Início',
+        'nav_download': 'Downloads',
+        'nav_release_notes': 'Notas',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering. Criado por JesusQuijada34.',
+        'footer_language': 'Idioma',
+        'hero_badge': '✨ Nova Versão v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': 'Seu IDE profissional para Python evoluiu. Crie, empacote e distribua aplicativos Python com uma experiência moderna e eficiente inspirada no Windows 11.',
+        'hero_download': 'Baixar agora',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': 'Interface intuitiva e poderosa',
+        'section_interface_subtitle': 'Barra de título personalizada do Leviathan-UI com efeitos visuais de acrílico e mica.',
+    },
+}
+
+
+def normalize_language(lang_code: str | None) -> str:
+    if not lang_code:
+        return 'es'
+    code = str(lang_code).strip().lower().replace('_', '-')
+    if code.startswith('en'):
+        return 'en'
+    if code.startswith('pt'):
+        return 'pt'
+    if code.startswith('es'):
+        return 'es'
+    return 'es'
+
+
+def resolve_language(request_obj) -> str:
+    requested = (
+        request_obj.args.get('lang')
+        or session.get('lang')
+        or request_obj.cookies.get('lang')
+        or request_obj.headers.get('X-Language')
+        or request_obj.accept_languages.best_match(list(SUPPORTED_LANGUAGES.keys()))
+        or 'es'
+    )
+    return normalize_language(requested)
+
+
+@app.before_request
+def apply_language():
+    lang_code = resolve_language(request)
+    session['lang'] = lang_code
+    g.lang_code = lang_code
+    g.lang_name = SUPPORTED_LANGUAGES[lang_code]['name']
+    g.translations = TRANSLATIONS[lang_code]
+    g.available_languages = SUPPORTED_LANGUAGES
+
+
+@app.after_request
+def persist_language(response):
+    if hasattr(g, 'lang_code'):
+        response.set_cookie('lang', g.lang_code, max_age=60 * 60 * 24 * 365, path='/', samesite='Lax')
+    return response
+
+
+@app.context_processor
+def inject_language_context():
+    return {
+        'lang_code': getattr(g, 'lang_code', 'es'),
+        'lang_name': getattr(g, 'lang_name', 'Español'),
+        'translations': getattr(g, 'translations', TRANSLATIONS['es']),
+        'available_languages': getattr(g, 'available_languages', SUPPORTED_LANGUAGES),
+    }
 
 # Configuración
 GITHUB_REPO = "JesusQuijada34/packagemaker"

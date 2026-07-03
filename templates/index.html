@@ -17,14 +17,14 @@
 .orb-3 { width: 25vw; height: 25vw; background: #5CDDC9; top: 30%; right: 20%; animation-delay: -10s; }
 @keyframes float-orb { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(5%, 10%) scale(1.05); } 50% { transform: translate(-5%, 5%) scale(0.95); } 75% { transform: translate(10%, -5%) scale(1.1); } }
 /* Liquid Glass Cards */
-.liquid-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-xl); overflow: hidden; position: relative; transition: all 0.5s var(--ease-out); }
-.liquid-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%); pointer-events: none; }
-.liquid-card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(94, 106, 210, 0.15); }
+.liquid-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-xl); overflow: hidden; position: relative; transition: all 0.5s var(--ease-out); box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 20px 50px rgba(0, 0, 0, 0.28); }
+.liquid-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%); pointer-events: none; }
+.liquid-card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 30px 70px rgba(0, 0, 0, 0.35), 0 0 45px rgba(255, 122, 26, 0.12); }
 /* Mica Frame */
-.mica-frame { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-lg); overflow: hidden; position: relative; }
-.mica-frame::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 30%); pointer-events: none; z-index: 1; }
-.mica-frame img { width: 100%; display: block; transition: transform 0.5s var(--ease-out); }
-.liquid-card:hover .mica-frame img { transform: scale(1.05); }
+.mica-frame { background: linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); overflow: hidden; position: relative; padding: 0.35rem; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 18px 40px rgba(0, 0, 0, 0.28); }
+.mica-frame::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 35%); pointer-events: none; z-index: 1; }
+.mica-frame img { width: 100%; display: block; transition: transform 0.5s var(--ease-out); border-radius: calc(var(--radius-lg) - 8px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 16px 32px rgba(0,0,0,0.28); }
+.liquid-card:hover .mica-frame img { transform: scale(1.04) translateY(-3px); }
 /* Feature Icons */
 .feature-icon { width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent) 0%, #7C5CDD 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 8px 24px rgba(94, 106, 210, 0.3); transition: all 0.3s var(--ease-out); }
 .liquid-card:hover .feature-icon { transform: scale(1.1) rotate(5deg); box-shadow: 0 12px 32px rgba(94, 106, 210, 0.4); }
@@ -63,17 +63,17 @@
 
 <!-- Hero Section -->
 <section class="hero-section">
-    <div class="hero-badge">✨ Nueva Versión v3.2.7-26.05-20.13</div>
-    <h1 class="hero-title" style="max-width: min(100%, 900px); margin-left: auto; margin-right: auto; word-break: break-word; overflow-wrap: anywhere;">Influent Package Maker</h1>
-    <p class="hero-subtitle">Tu IDE Profesional para Python ha Evolucionado. Crea, empaqueta y distribuye aplicaciones Python con una experiencia moderna y eficiente inspirada en Windows 11.</p>
+    <div class="hero-badge">{{ translations.hero_badge }}</div>
+    <h1 class="hero-title" style="max-width: min(100%, 900px); margin-left: auto; margin-right: auto; word-break: break-word; overflow-wrap: anywhere;">{{ translations.hero_title }}</h1>
+    <p class="hero-subtitle">{{ translations.hero_subtitle }}</p>
     <div class="hero-buttons">
-        <a href="/download" class="btn btn-primary"><i class="fas fa-rocket"></i> Descargar Ahora</a>
-        <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank" class="btn btn-secondary"><i class="fab fa-github"></i> GitHub</a>
+        <a href="/download" class="btn btn-primary"><i class="fas fa-rocket"></i> {{ translations.hero_download }}</a>
+        <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank" class="btn btn-secondary"><i class="fab fa-github"></i> {{ translations.hero_github }}</a>
     </div>
     <div class="platform-pills" style="margin-top: var(--space-8); animation: fadeInUp 0.8s var(--ease-out) 1s both;">
-        <span class="platform-pill"><i class="fab fa-windows"></i> Windows</span>
-        <span class="platform-pill"><i class="fab fa-android"></i> Android</span>
-        <span class="platform-pill"><i class="fab fa-linux"></i> Linux</span>
+        <span class="platform-pill"><i class="fab fa-windows"></i> {{ translations.hero_platform_windows }}</span>
+        <span class="platform-pill"><i class="fab fa-android"></i> {{ translations.hero_platform_android }}</span>
+        <span class="platform-pill"><i class="fab fa-linux"></i> {{ translations.hero_platform_linux }}</span>
     </div>
 </section>
 
@@ -81,8 +81,8 @@
 <section style="margin-top: var(--space-8);" class="scroll-reveal">
     <div class="bento-item liquid-card" style="grid-column: span 12;">
         <div style="text-align: center; margin-bottom: var(--space-6);">
-            <h2 class="section-title shimmer-text">Interfaz Intuitiva y Potente</h2>
-            <p class="section-subtitle">Barra de título personalizada Leviathan-UI con efectos visuales acrílico y mica.</p>
+            <h2 class="section-title shimmer-text">{{ translations.section_interface_title }}</h2>
+            <p class="section-subtitle">{{ translations.section_interface_subtitle }}</p>
         </div>
         <div class="mica-frame" style="border-radius: var(--radius-xl);">
             <img src="/assets/screenshots/gui-1.png" alt="Pantalla Inicial" loading="lazy">
