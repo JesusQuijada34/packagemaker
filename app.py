@@ -86,6 +86,52 @@ def get_xml_metadata():
         print(f"Error fetching XML: {e}")
     return {"version": "v3.2.7", "name": "Package Maker"}
 
+def get_release_info():
+    """Get all releases with their assets for download verification"""
+    try:
+        api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
+        response = requests.get(api_url, timeout=5)
+        if response.status_code == 200:
+            releases = response.json()
+            all_downloads = []
+            for release in releases[:5]:  # Latest 5 releases
+                version = release.get("tag_name", "")
+                assets = release.get("assets", [])
+                for asset in assets:
+                    name = asset.get("name", "").lower()
+                    # Determine platform from filename
+                    if "danenone" in name:
+                        platform = "Linux"
+                        platform_key = "linux"
+                    elif "knosthalij" in name:
+                        platform = "Windows"
+                        platform_key = "windows"
+                    else:
+                        platform = "Other"
+                        platform_key = "other"
+                    
+                    url = asset.get("browser_download_url", "")
+                    all_downloads.append({
+                        "name": asset.get("name"),
+                        "url": url,
+                        "platform": platform,
+                        "platform_key": platform_key,
+                        "version": version,
+                        "size": f"{asset.get('size', 0) / (1024*1024):.2f} MB"
+                    })
+            return all_downloads
+    except Exception as e:
+        print(f"Error fetching releases: {e}")
+    return []
+
+def check_iflapp_exists(url):
+    """Check if an iflapp file exists at the given URL"""
+    try:
+        response = requests.head(url, timeout=10, allow_redirects=True)
+        return response.status_code == 200
+    except:
+        return False
+
 def get_github_releases():
     try:
         api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
@@ -104,6 +150,54 @@ def get_github_releases():
         print(f"Error fetching releases: {e}")
     return "v3.2.7", []
 
+def get_download_for_platform(user_agent):
+    """Get download info based on platform detection, checking actual file existence"""
+    ua = user_agent.lower()
+    all_downloads = get_release_info()
+    
+    # Detect platform
+    if "android" in ua or "mobile" in ua:
+        detected_platform = "android"
+        iflapp_key = None  # No direct iflapp for Android
+    elif "win" in ua or "windows" in ua:
+        detected_platform = "windows"
+        iflapp_key = "windows"
+    elif "linux" in ua or "ubuntu" in ua or "debian" in ua:
+        detected_platform = "linux"
+        iflapp_key = "linux"
+    else:
+        detected_platform = "desktop"
+        iflapp_key = None
+    
+    # Find direct download for platform from latest release
+    direct_download = None
+    for dl in all_downloads:
+        if dl["platform_key"] == iflapp_key:
+            direct_download = dl
+            break
+    
+    # Check if direct download actually exists
+    download_status = "available"
+    if direct_download:
+        # Verify the file exists
+        if not check_iflapp_exists(direct_download["url"]):
+            download_status = "unavailable"
+            direct_download = None
+    
+    # Get alternatives if no direct download
+    alternatives = []
+    for dl in all_downloads[:6]:  # Top 6 most recent
+        if dl != direct_download:
+            alternatives.append(dl)
+    
+    return {
+        "detected_platform": detected_platform,
+        "direct_download": direct_download,
+        "download_status": download_status,
+        "alternatives": alternatives,
+        "all_downloads": all_downloads
+    }
+
 @app.route('/')
 def index():
     print(f"DEBUG: Accessing index from {request.remote_addr}")
@@ -116,9 +210,19 @@ def index():
 def download():
     print(f"DEBUG: Accessing download from {request.remote_addr}")
     metadata = get_xml_metadata()
-    version, downloads = get_github_releases()
-    ua = request.headers.get('User-Agent', '').lower()
-    return render_template('download.html', metadata=metadata, version=version, downloads=downloads, is_android='android' in ua)
+    version = metadata.get("version", "v3.2.7")
+    ua = request.headers.get('User-Agent', '')
+    
+    # Get download info with platform detection and existence check
+    download_info = get_download_for_platform(ua)
+    
+    return render_template(
+        'download.html', 
+        metadata=metadata, 
+        version=version, 
+        is_android=download_info["detected_platform"] == "android",
+        download_info=download_info
+    )
 
 @app.route('/faq')
 def faq_page():

@@ -4,17 +4,19 @@
 <div data-aos="fade-up">
     <div style="text-align: center; margin-bottom: var(--space-10);">
         <h1>Obtén la Suite</h1>
-        <p style="max-width: 500px; margin: var(--space-4) auto 0;">Detectamos automáticamente tu plataforma para ofrecerte la mejor experiencia de instalación.</p>
+        <p style="max-width: 500px; margin: var(--space-4) auto 0;">Descarga directa para tu plataforma o alternativas si no hay versión específica.</p>
     </div>
 
     <div class="bento-grid">
+        <!-- Main Download Card -->
         <div class="bento-item" style="grid-column: span 12; text-align: center; padding: var(--space-10) var(--space-6);" data-aos="fade-up">
             {% if is_android %}
+                <!-- Android/Termux -->
                 <div style="width: 64px; height: 64px; background: rgba(164, 198, 57, 0.15); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
                     <i class="fab fa-android" style="font-size: 2rem; color: #A4C639;"></i>
                 </div>
                 <h2 style="margin-bottom: var(--space-3);">Optimizado para Termux</h2>
-                <p style="margin-bottom: var(--space-6);">Instalación directa y automatizada para dispositivos móviles.</p>
+                <p style="margin-bottom: var(--space-6);">Instalación directa y automatizada para dispositivos móviles Android.</p>
                 <div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); max-width: 500px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: var(--space-4);">
                     <code id="termux-cmd" style="color: #A4C639; font-size: 0.8125rem; font-family: monospace; word-break: break-all; flex: 1; text-align: left;">curl -sL {{ request.host_url }}api/download.sh | bash</code>
                     <button onclick="copyCmd()" class="btn" style="padding: var(--space-2) var(--space-3); background: rgba(164, 198, 57, 0.15); color: #A4C639; border: 1px solid rgba(164, 198, 57, 0.3); flex-shrink: 0;" aria-label="Copiar comando">
@@ -22,34 +24,54 @@
                     </button>
                 </div>
                 <p style="font-size: 0.8125rem; margin-top: var(--space-4); color: var(--foreground-muted);">Copia y pega este comando en tu terminal Termux.</p>
-            {% else %}
+            {% elif download_info.direct_download %}
+                <!-- Direct Download Available -->
                 <div style="width: 64px; height: 64px; background: var(--accent-soft); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
                     <i class="fas fa-rocket" style="font-size: 2rem; color: var(--accent);"></i>
                 </div>
-                <h2 style="margin-bottom: var(--space-3);">Descarga para Desktop</h2>
-                <p style="margin-bottom: var(--space-6);">Versión estable v3.2.7 (Build 2026)</p>
-                <div style="display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap;">
-                    <a href="#" id="main-dl-btn" class="btn btn-primary" style="padding: var(--space-4) var(--space-8); font-size: 1rem;">
-                        Descargar .iflapp <i class="fas fa-download"></i>
+                <h2 style="margin-bottom: var(--space-3);">Descarga Directa</h2>
+                <p style="margin-bottom: var(--space-2);">Versión {{ download_info.direct_download.version }} para {{ download_info.direct_download.platform }}</p>
+                <p style="font-size: 0.875rem; color: var(--accent); margin-bottom: var(--space-6);">{{ download_info.direct_download.size }}</p>
+                <a href="{{ download_info.direct_download.url }}" class="btn btn-primary" style="padding: var(--space-4) var(--space-8); font-size: 1rem;" id="main-dl-btn">
+                    <i class="fas fa-download"></i> Descargar .iflapp
+                </a>
+            {% else %}
+                <!-- No Direct Download - Show Alternatives -->
+                <div style="width: 64px; height: 64px; background: rgba(255, 107, 157, 0.15); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
+                    <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #ff6b9d;"></i>
+                </div>
+                <h2 style="margin-bottom: var(--space-3);">No hay versión directa</h2>
+                <p style="margin-bottom: var(--space-6);">No existe un archivo .iflapp para tu plataforma ({{ download_info.detected_platform }}), pero puedes:</p>
+                
+                <div style="display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; margin-bottom: var(--space-6);">
+                    <a href="https://github.com/JesusQuijada34/packagemaker/archive/refs/heads/main.zip" class="btn btn-primary">
+                        <i class="fab fa-github"></i> Código Fuente
                     </a>
-                    <button class="btn btn-secondary" onclick="toggleList()" aria-label="Ver más opciones">
-                        <i class="fas fa-chevron-down"></i>
+                    <button class="btn btn-secondary" onclick="toggleList()">
+                        <i class="fas fa-list"></i> Ver Versiones
                     </button>
                 </div>
-
-                <div id="other-platforms" style="display: none; margin-top: var(--space-8); padding-top: var(--space-8); border-top: 1px solid var(--border);">
-                    <h4 style="margin-bottom: var(--space-4); color: var(--foreground-muted);">Todos los Paquetes</h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center;">
-                        {% for dl in downloads %}
-                            <a href="{{ dl.url }}" class="btn btn-secondary" style="font-size: 0.8125rem;">
-                                {{ dl.platform }} ({{ dl.size }})
-                            </a>
+                
+                <div id="other-platforms" style="display: none; margin-top: var(--space-6); padding-top: var(--space-6); border-top: 1px solid var(--border); text-align: left;">
+                    <h4 style="margin-bottom: var(--space-4); text-align: center; color: var(--foreground-muted);">Versiones Disponibles</h4>
+                    <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                        {% for dl in download_info.alternatives %}
+                        <a href="{{ dl.url }}" class="bento-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-4);">
+                            <div>
+                                <div style="font-weight: 600;">{{ dl.platform }}</div>
+                                <div style="font-size: 0.75rem; color: var(--foreground-muted);">{{ dl.version }}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ dl.size }}</span>
+                            </div>
+                        </a>
                         {% endfor %}
                     </div>
                 </div>
             {% endif %}
         </div>
 
+        <!-- Requirements Card -->
         <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right" data-aos-delay="100">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6);">
                 <div style="width: 40px; height: 40px; background: var(--accent-soft); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
@@ -77,6 +99,7 @@
             </ul>
         </div>
 
+        <!-- Specs Card -->
         <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left" data-aos-delay="200">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6);">
                 <div style="width: 40px; height: 40px; background: rgba(124, 92, 221, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
@@ -104,20 +127,12 @@
         el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
     function copyCmd() {
-        const cmd = document.getElementById('termux-cmd').innerText;
-        navigator.clipboard.writeText(cmd).then(() => {
-            alert('¡Comando copiado!');
+        const cmd = document.getElementById('termux-cmd');
+        navigator.clipboard.writeText(cmd.innerText).then(() => {
+            const btn = document.querySelector('button[onclick="copyCmd()"] i');
+            btn.className = 'fas fa-check';
+            setTimeout(() => btn.className = 'fas fa-copy', 2000);
         });
-    }
-
-    const downloads = {{ downloads | tojson }};
-    const mainBtn = document.getElementById('main-dl-btn');
-    if (mainBtn && downloads.length > 0) {
-        const ua = navigator.userAgent.toLowerCase();
-        let target = downloads[0];
-        if (ua.includes('win')) target = downloads.find(d => d.platform.includes('Windows')) || target;
-        else if (ua.includes('linux')) target = downloads.find(d => d.platform.includes('Linux')) || target;
-        mainBtn.href = target.url;
     }
 </script>
 {% endblock %}
