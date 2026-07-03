@@ -1,109 +1,150 @@
 {% extends "base.html" %}
 {% block title %}Inicio{% endblock %}
+{% block extra_css %}
+/* Hero Section - iOS 27 Style */
+.hero-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: var(--space-8); position: relative; overflow: hidden; }
+.hero-badge { display: inline-flex; align-items: center; gap: var(--space-2); background: rgba(94, 106, 210, 0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(94, 106, 210, 0.2); padding: var(--space-2) var(--space-5); border-radius: var(--radius-full); margin-bottom: var(--space-8); font-size: 0.875rem; font-weight: 600; animation: fadeInUp 0.8s var(--ease-out) 0.2s both; }
+.hero-badge::before { content: ''; width: 8px; height: 8px; background: linear-gradient(135deg, #6bff6b, #44ff44); border-radius: 50%; animation: pulse-glow 2s infinite; }
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(100, 255, 100, 0.4); } 50% { box-shadow: 0 0 20px 5px rgba(100, 255, 100, 0.2); } }
+.hero-title { font-family: var(--font-display); font-size: clamp(3rem, 10vw, 6rem); font-weight: 900; line-height: 1; margin-bottom: var(--space-6); background: linear-gradient(135deg, var(--foreground) 0%, var(--accent) 50%, #7C5CDD 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: fadeInUp 0.8s var(--ease-out) 0.4s both; }
+.hero-title span { display: block; background: linear-gradient(135deg, var(--accent) 0%, #7C5CDD 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-subtitle { font-size: clamp(1.125rem, 2vw, 1.5rem); color: var(--foreground-muted); max-width: 600px; margin: 0 auto var(--space-10); line-height: 1.6; animation: fadeInUp 0.8s var(--ease-out) 0.6s both; }
+.hero-buttons { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; animation: fadeInUp 0.8s var(--ease-out) 0.8s both; }
+.hero-buttons .btn { padding: var(--space-4) var(--space-8); font-size: 1rem; }
+.floating-orbs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: -1; }
+.orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; animation: float-orb 20s ease-in-out infinite; }
+.orb-1 { width: 40vw; height: 40vw; background: var(--accent); top: -10%; left: -10%; }
+.orb-2 { width: 30vw; height: 30vw; background: #7C5CDD; bottom: 10%; right: -5%; animation-delay: -5s; }
+.orb-3 { width: 25vw; height: 25vw; background: #5CDDC9; top: 30%; right: 20%; animation-delay: -10s; }
+@keyframes float-orb { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(5%, 10%) scale(1.05); } 50% { transform: translate(-5%, 5%) scale(0.95); } 75% { transform: translate(10%, -5%) scale(1.1); } }
+/* Liquid Glass Cards */
+.liquid-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-xl); overflow: hidden; position: relative; transition: all 0.5s var(--ease-out); }
+.liquid-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%); pointer-events: none; }
+.liquid-card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(94, 106, 210, 0.15); }
+/* Mica Frame */
+.mica-frame { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-lg); overflow: hidden; position: relative; }
+.mica-frame::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 30%); pointer-events: none; z-index: 1; }
+.mica-frame img { width: 100%; display: block; transition: transform 0.5s var(--ease-out); }
+.liquid-card:hover .mica-frame img { transform: scale(1.05); }
+/* Feature Icons */
+.feature-icon { width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent) 0%, #7C5CDD 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 8px 24px rgba(94, 106, 210, 0.3); transition: all 0.3s var(--ease-out); }
+.liquid-card:hover .feature-icon { transform: scale(1.1) rotate(5deg); box-shadow: 0 12px 32px rgba(94, 106, 210, 0.4); }
+/* Code Blocks */
+.code-block { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-md); padding: var(--space-4); font-family: monospace; font-size: 0.875rem; color: var(--accent); }
+/* Scroll Reveal */
+.scroll-reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s var(--ease-out); }
+.scroll-reveal.revealed { opacity: 1; transform: translateY(0); }
+/* CTA Section */
+.cta-section { background: linear-gradient(135deg, rgba(94, 106, 210, 0.1) 0%, rgba(124, 92, 221, 0.1) 100%); border: 1px solid rgba(94, 106, 210, 0.2); border-radius: var(--radius-xl); padding: var(--space-12); text-align: center; position: relative; overflow: hidden; }
+.cta-section::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(94, 106, 210, 0.15), transparent 70%); pointer-events: none; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+.shimmer-text { background: linear-gradient(90deg, var(--foreground) 0%, var(--accent) 25%, #7C5CDD 50%, var(--accent) 75%, var(--foreground) 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: shimmer 3s linear infinite; }
+@media (max-width: 768px) { .liquid-card:hover { transform: translateY(-4px) scale(1.01); } }
+{% endblock %}
+
 {% block content %}
-<section style="padding-top: var(--space-16); padding-bottom: var(--space-16); text-align: center;" data-aos="fade-up">
-    <div style="display: inline-flex; align-items: center; gap: var(--space-2); background: var(--accent-soft); border: 1px solid var(--border); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); margin-bottom: var(--space-6);">
-        <span style="width: 8px; height: 8px; background: #44ff44; border-radius: 50%; animation: pulse 2s infinite;"></span>
-        <span style="color: var(--foreground); font-size: 0.8125rem; font-weight: 600;">Nueva Versión v3.2.7</span>
-    </div>
-    <h1 style="margin-bottom: var(--space-4);">
-        Forja el futuro de<br>
-        <span class="text-gradient">Influent OS</span>
-    </h1>
-    <p style="max-width: 540px; margin: 0 auto var(--space-8); font-size: 1.125rem;">
-        El IDE definitivo para desarrolladores que buscan potencia, blindaje y elegancia en un solo entorno de trabajo.
-    </p>
-    <div style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-        <a href="/download" class="btn btn-primary">Empezar a Crear <i class="fas fa-arrow-right"></i></a>
-        <a href="https://github.com/JesusQuijada34/packagemaker" class="btn btn-secondary" target="_blank" rel="noopener">GitHub <i class="fab fa-github"></i></a>
-    </div>
-</section>
-
-<div class="bento-grid">
-    <div class="bento-item" style="grid-column: span 8; grid-row: span 2;" data-aos="fade-right" data-aos-delay="100">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
-            <div>
-                <h3 style="font-size: 1.25rem; margin-bottom: var(--space-2);">Compilación Inteligente</h3>
-                <p style="font-size: 0.875rem;">Optimización en tiempo real para el kernel de Influent OS.</p>
-            </div>
-            <div style="width: 48px; height: 48px; background: var(--accent); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-bolt" style="font-size: 1.25rem;"></i>
-            </div>
-        </div>
-        <div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border);">
-            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/screenshots/gui-1.png" alt="Compilación" style="width: 100%; display: block;">
-        </div>
-    </div>
-
-    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-left" data-aos-delay="200">
-        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
-            <div style="width: 40px; height: 40px; background: var(--accent-soft); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-moon" style="color: var(--accent);"></i>
-            </div>
-            <h3 style="margin-bottom: 0;">MoonFix</h3>
-        </div>
-        <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Saneamiento automático de código y dependencias.</p>
-        <div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3);">
-            <code style="color: var(--accent); font-size: 0.8125rem; font-family: monospace;">$ moonfix --repair --all</code>
-        </div>
-    </div>
-
-    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-up" data-aos-delay="300">
-        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
-            <div style="width: 40px; height: 40px; background: rgba(124, 92, 221, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-layer-group" style="color: #7C5CDD;"></i>
-            </div>
-            <h3 style="margin-bottom: 0;">Leviathan UI</h3>
-        </div>
-        <p style="font-size: 0.875rem;">Basado en Qt 6.11.1 para interfaces líquidas.</p>
-    </div>
-
-    <div class="bento-item" style="grid-column: span 12;" data-aos="zoom-in" data-aos-delay="400">
-        <div style="text-align: center; margin-bottom: var(--space-6);">
-            <h2 style="font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: var(--space-2);">Un entorno sin límites</h2>
-            <p style="max-width: 480px; margin: 0 auto;">Diseñado para la máxima productividad con blindaje de código integrado.</p>
-        </div>
-        <div style="border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg);">
-            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/screenshots/gui-2.png" alt="Package Maker IDE" style="width: 100%; display: block;">
-        </div>
-    </div>
-
-    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right" data-aos-delay="500">
-        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
-            <div style="width: 40px; height: 40px; background: rgba(92, 221, 201, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-th-large" style="color: #5CDDC9;"></i>
-            </div>
-            <h3 style="margin-bottom: 0;">Gestor de Aplicaciones</h3>
-        </div>
-        <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Control total sobre el ecosistema de tu proyecto.</p>
-        <div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border);">
-            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/screenshots/gui-4.png" alt="Gestor de Apps" style="width: 100%; display: block;">
-        </div>
-    </div>
-
-    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left" data-aos-delay="600">
-        <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: var(--space-8);">
-            <div style="width: 72px; height: 72px; background: var(--accent-soft); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-                <i class="fas fa-shield-halved" style="font-size: 2rem; color: var(--accent);"></i>
-            </div>
-            <h3 style="margin-bottom: var(--space-2);">Blindaje de Código</h3>
-            <p style="font-size: 0.875rem;">Protección contra ingeniería inversa y acceso no autorizado.</p>
-        </div>
-    </div>
+<div class="floating-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 </div>
 
-<section style="margin-top: var(--space-16); padding: var(--space-12) 0; text-align: center;" data-aos="fade-up">
-    <h2 style="margin-bottom: var(--space-3);">¿Listo para el siguiente nivel?</h2>
-    <p style="margin-bottom: var(--space-6);">Únete a la revolución del desarrollo en Influent OS.</p>
-    <a href="/download" class="btn btn-primary" style="padding: var(--space-4) var(--space-8); font-size: 1rem;">
-        Descargar Ahora <i class="fas fa-download"></i>
-    </a>
+<section class="hero-section">
+    <div class="hero-badge">Nueva Versión v3.2.7-26.05-20.13</div>
+    <h1 class="hero-title">Forja el futuro de<span>Influent OS</span></h1>
+    <p class="hero-subtitle">El IDE definitivo para desarrolladores que buscan potencia, blindaje y elegancia en un solo entorno de trabajo.</p>
+    <div class="hero-buttons">
+        <a href="/download" class="btn btn-primary"><i class="fas fa-rocket"></i> Empezar a Crear</a>
+        <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank" class="btn btn-secondary"><i class="fab fa-github"></i> GitHub</a>
+    </div>
 </section>
 
-<style>
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-</style>
+<section style="margin-top: var(--space-16);">
+    <div class="bento-grid">
+        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 8; grid-row: span 2;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-6);">
+                <div><h3 style="font-size: 1.5rem; margin-bottom: var(--space-2);">Compilación Inteligente</h3><p style="font-size: 0.9375rem;">Optimización en tiempo real para el kernel de Influent OS.</p></div>
+                <div class="feature-icon"><i class="fas fa-bolt" style="color: white;"></i></div>
+            </div>
+            <div class="mica-frame">
+                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png" alt="Package Maker IDE" loading="lazy">
+            </div>
+        </div>
+        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 4;">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #7C5CDD 0%, #5CDDC9 100%);"><i class="fas fa-moon" style="color: white;"></i></div>
+                <h3 style="margin-bottom: 0;">MoonFix</h3>
+            </div>
+            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Saneamiento automático de código y dependencias.</p>
+            <div class="code-block"><code>moonfix --repair --all</code></div>
+        </div>
+        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 4;">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fas fa-layer-group" style="color: white;"></i></div>
+                <h3 style="margin-bottom: 0;">Leviathan UI</h3>
+            </div>
+            <p style="font-size: 0.875rem;">Basado en Qt 6.11.1 para interfaces líquidas con efectos Mica y Acrylic.</p>
+        </div>
+    </div>
+</section>
+
+<section style="margin-top: var(--space-8);" class="scroll-reveal">
+    <div class="bento-item liquid-card" style="grid-column: span 12;">
+        <div style="text-align: center; margin-bottom: var(--space-8);">
+            <h2 style="font-size: clamp(1.75rem, 4vw, 2.5rem); margin-bottom: var(--space-3);" class="shimmer-text">Un entorno sin límites</h2>
+            <p style="max-width: 500px; margin: 0 auto;">Diseñado para la máxima productividad con efectos visuales de última generación.</p>
+        </div>
+        <div class="mica-frame" style="border-radius: var(--radius-xl);">
+            <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8x.png" alt="IDE Preview" loading="lazy">
+        </div>
+    </div>
+</section>
+
+<section style="margin-top: var(--space-8);">
+    <div class="bento-grid">
+        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #ff6b9d 0%, #ffa500 100%);"><i class="fas fa-th-large" style="color: white;"></i></div>
+                <h3 style="margin-bottom: 0;">Gestor de Apps</h3>
+            </div>
+            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Control total sobre el ecosistema de tu proyecto.</p>
+            <div class="mica-frame">
+                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF80.png" alt="Gestor de Apps" loading="lazy">
+            </div>
+        </div>
+        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #6bff6b 0%, #44ff44 100%);"><i class="fas fa-shield-halved" style="color: white;"></i></div>
+                <h3 style="margin-bottom: 0;">Blindaje de Código</h3>
+            </div>
+            <p style="font-size: 0.875rem; margin-bottom: var(--space-6);">Protección contra ingeniería inversa y acceso no autorizado.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">encryption://enabled</code></div>
+                <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">obfuscation://active</code></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section style="margin-top: var(--space-16);" class="scroll-reveal">
+    <div class="cta-section">
+        <h2 style="margin-bottom: var(--space-4); font-size: clamp(1.75rem, 4vw, 2.5rem);">¿Listo para el siguiente nivel?</h2>
+        <p style="margin-bottom: var(--space-8); max-width: 400px; margin-left: auto; margin-right: auto;">Únete a la revolución del desarrollo en Influent OS.</p>
+        <a href="/download" class="btn btn-primary" style="padding: var(--space-5) var(--space-10); font-size: 1.125rem;"><i class="fas fa-download"></i> Descargar Ahora</a>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.scroll-reveal').forEach(el => { observer.observe(el); });
+});
+</script>
 {% endblock %}
