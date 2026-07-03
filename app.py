@@ -854,6 +854,14 @@ def init_db():
                   resolution_note TEXT,
                   resolved_at DATETIME,
                   created_at DATETIME)''')
+    # table to log notification attempts
+    c.execute('''CREATE TABLE IF NOT EXISTS notification_logs
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  ticket TEXT,
+                  method TEXT,
+                  success INTEGER,
+                  info TEXT,
+                  created_at DATETIME)''')
     conn.commit()
     conn.close()
 
@@ -1000,6 +1008,37 @@ def check_iflapp_exists(url):
             return None
 
 
+    def send_telegram_message_with_buttons(chat_id, text, buttons=None, parse_mode='HTML'):
+        if not TELEGRAM_BOT_TOKEN:
+            print('Telegram token not configured; skipping send')
+            return None
+        api = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
+        reply_markup = None
+        if buttons:
+            # buttons: list of rows, each row a list of dicts {text, callback_data}
+            reply_markup = {'inline_keyboard': buttons}
+        payload = {'chat_id': chat_id, 'text': text, 'parse_mode': parse_mode}
+        if reply_markup:
+            payload['reply_markup'] = reply_markup
+        try:
+            resp = requests.post(api, json=payload, timeout=8)
+            return resp.json() if resp.status_code == 200 else None
+        except Exception as e:
+            print(f'Error sending telegram message with buttons: {e}')
+            return None
+
+
+    def log_notification(ticket, method, success, info):
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            c = conn.cursor()
+            c.execute('INSERT INTO notification_logs (ticket, method, success, info, created_at) VALUES (?, ?, ?, ?, ?)', (ticket, method, int(success), str(info), datetime.now()))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f'Error logging notification: {e}')
+
+
     @app.route('/report', methods=['GET', 'POST'])
     def report_issue():
         if request.method == 'GET':
@@ -1046,7 +1085,9 @@ def check_iflapp_exists(url):
 
         if TELEGRAM_OWNER_ID:
             try:
-                send_telegram_message(TELEGRAM_OWNER_ID, owner_text)
+                # include inline buttons so owner can resolve/contact quickly
+                buttons = [[{'text': 'Marcar resuelto', 'callback_data': f'resolve:{ticket}'}, {'text': 'Contactar reporter', 'callback_data': f'contact:{ticket}'}]]
+                send_telegram_message_with_buttons(TELEGRAM_OWNER_ID, owner_text, buttons=buttons)
             except Exception as e:
                 print(f'Error notifying owner: {e}')
 
@@ -1057,6 +1098,36 @@ def check_iflapp_exists(url):
     def telegram_webhook():
         data = request.json or {}
         try:
+            # handle callback_query separately
+            if 'callback_query' in data:
+                cq = data['callback_query']
+                cb_data = cq.get('data', '')
+                from_user = cq.get('from', {})
+                user_id = from_user.get('id')
+                # Only owner may trigger actions
+                if str(user_id) != str(TELEGRAM_OWNER_ID):
+                    return jsonify({'ok': True})
+                import re
+                m = re.match(r'(resolve|contact):(.+)', cb_data)
+                if m:
+                    action, ticket = m.group(1), m.group(2)
+                    if action == 'resolve':
+                        mark_and_notify(ticket, 'Resuelto (via botón)')
+                        # answer callback
+                        requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': f'Resolviendo {ticket}', 'show_alert': False})
+                    elif action == 'contact':
+                        # fetch reporter info from DB
+                        conn = sqlite3.connect(DB_PATH)
+                        c = conn.cursor()
+                        c.execute('SELECT reporter_chat_id, reporter_ip, reporter_username FROM reports WHERE ticket = ?', (ticket,))
+                        row = c.fetchone()
+                        conn.close()
+                        info_text = 'No disponible'
+                        if row:
+                            info_text = f"ReporterChatID: {row[0] or 'N/A'}\nReporterIP: {row[1] or 'N/A'}\nReporter: {row[2] or 'N/A'}"
+                        requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': info_text, 'show_alert': True})
+                return jsonify({'ok': True})
+
             message = data.get('message') or data.get('edited_message')
             if not message:
                 return jsonify({'ok': True})
@@ -1164,6 +1235,44 @@ def check_iflapp_exists(url):
         return False, last_err if 'last_err' in locals() else 'failed'
 
 
+    def mark_and_notify(ticket, note):
+        """Mark a report resolved and attempt notifications; logs attempts."""
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('SELECT reporter_chat_id, reporter_ip, reporter_username FROM reports WHERE ticket = ?', (ticket,))
+        row = c.fetchone()
+        if not row:
+            conn.close()
+            return {'ok': False, 'reason': 'not found'}
+        reporter_chat_id, reporter_ip, reporter_username = row
+        now = datetime.now()
+        c.execute('UPDATE reports SET resolved = 1, resolution_note = ?, resolved_at = ? WHERE ticket = ?', (note, now, ticket))
+        conn.commit()
+        conn.close()
+
+        notified = False
+        notify_info = ''
+        if reporter_chat_id:
+            res = send_telegram_message(reporter_chat_id, f"Tu reporte {ticket} ha sido resuelto:\n\n{note}")
+            success = bool(res)
+            notify_info = f'tg:{res}'
+            log_notification(ticket, 'telegram', success, notify_info)
+            notified = success
+        else:
+            payload = {'ticket': ticket, 'status': 'resolved', 'note': note}
+            ok, info = try_notify_via_ip(reporter_ip, payload)
+            notify_info = info
+            log_notification(ticket, 'ip', ok, info)
+            notified = ok
+
+        # Inform owner
+        owner_msg = f"Reporte {ticket} marcado como resuelto. Notificado: {notified}. Info: {notify_info}"
+        if TELEGRAM_OWNER_ID:
+            send_telegram_message(TELEGRAM_OWNER_ID, owner_msg)
+
+        return {'ok': True, 'notified': notified, 'info': notify_info}
+
+
     @app.route('/admin/reports')
     def admin_reports():
         try:
@@ -1187,37 +1296,7 @@ def check_iflapp_exists(url):
     def resolve_report(ticket):
         note = request.form.get('resolution_note') or 'Resuelto'
         try:
-            conn = sqlite3.connect(DB_PATH)
-            c = conn.cursor()
-            c.execute('SELECT reporter_chat_id, reporter_ip FROM reports WHERE ticket = ?', (ticket,))
-            row = c.fetchone()
-            if not row:
-                conn.close()
-                return render_template('error.html', code=404, message='Ticket no encontrado'), 404
-            reporter_chat_id, reporter_ip = row
-            now = datetime.now()
-            c.execute('UPDATE reports SET resolved = 1, resolution_note = ?, resolved_at = ? WHERE ticket = ?', (note, now, ticket))
-            conn.commit()
-            conn.close()
-
-            notified = False
-            notify_log = ''
-            # Try Telegram first
-            if reporter_chat_id:
-                res = send_telegram_message(reporter_chat_id, f"Tu reporte {ticket} ha sido resuelto:\n\n{note}")
-                notified = bool(res)
-                notify_log = f'tg:{res}'
-            else:
-                payload = {'ticket': ticket, 'status': 'resolved', 'note': note}
-                ok, info = try_notify_via_ip(reporter_ip, payload)
-                notified = ok
-                notify_log = info
-
-            # Inform owner about result
-            owner_msg = f"Reporte {ticket} marcado como resuelto. Notificado: {notified}. Info: {notify_log}"
-            if TELEGRAM_OWNER_ID:
-                send_telegram_message(TELEGRAM_OWNER_ID, owner_msg)
-
+            result = mark_and_notify(ticket, note)
             return ('', 204) if request.headers.get('Accept') == 'application/json' else ('', 204)
         except Exception as e:
             print(f'Error resolving report: {e}')
