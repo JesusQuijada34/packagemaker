@@ -849,6 +849,10 @@ def init_db():
                   reporter_username TEXT,
                   reporter_telegram_id TEXT,
                   reporter_chat_id INTEGER,
+                  reporter_ip TEXT,
+                  resolved INTEGER DEFAULT 0,
+                  resolution_note TEXT,
+                  resolved_at DATETIME,
                   created_at DATETIME)''')
     conn.commit()
     conn.close()
@@ -1011,6 +1015,7 @@ def check_iflapp_exists(url):
         created_at = datetime.now()
 
         reporter_chat_id = None
+        reporter_ip = request.remote_addr
         # If user provided a numeric telegram id, use it as chat id
         try:
             if reporter_telegram_id:
@@ -1021,8 +1026,8 @@ def check_iflapp_exists(url):
         try:
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
-            c.execute('INSERT INTO reports (ticket, title, description, reporter_username, reporter_telegram_id, reporter_chat_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                      (ticket, title, description, reporter_username, reporter_telegram_id, reporter_chat_id, created_at))
+            c.execute('INSERT INTO reports (ticket, title, description, reporter_username, reporter_telegram_id, reporter_chat_id, reporter_ip, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                  (ticket, title, description, reporter_username, reporter_telegram_id, reporter_chat_id, reporter_ip, created_at))
             conn.commit()
             conn.close()
         except Exception as e:
@@ -1103,6 +1108,88 @@ def check_iflapp_exists(url):
         except Exception as e:
             print(f'Error in telegram_webhook: {e}')
             return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+    def try_notify_via_ip(ip, payload):
+        """Attempt simple HTTP callbacks to the reporter IP to notify of resolution."""
+        if not ip:
+            return False, 'no ip'
+        urls = [
+            f'http://{ip}/pm/notify',
+            f'http://{ip}:9000/pm/notify',
+            f'http://{ip}/notify',
+            f'http://{ip}:9000/notify'
+        ]
+        headers = {'Content-Type': 'application/json'}
+        for u in urls:
+            try:
+                resp = requests.post(u, json=payload, headers=headers, timeout=3)
+                if resp.status_code < 400:
+                    return True, f'ok {u} {resp.status_code}'
+            except Exception as e:
+                # continue trying other endpoints
+                last_err = str(e)
+        return False, last_err if 'last_err' in locals() else 'failed'
+
+
+    @app.route('/admin/reports')
+    def admin_reports():
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            c = conn.cursor()
+            c.execute('SELECT ticket, title, description, reporter_username, reporter_telegram_id, reporter_chat_id, reporter_ip, resolved, resolution_note, resolved_at, created_at FROM reports ORDER BY created_at DESC')
+            rows = c.fetchall()
+            conn.close()
+            reports = []
+            for r in rows:
+                reports.append({
+                    'ticket': r[0], 'title': r[1], 'description': r[2], 'reporter_username': r[3], 'reporter_telegram_id': r[4], 'reporter_chat_id': r[5], 'reporter_ip': r[6], 'resolved': bool(r[7]), 'resolution_note': r[8], 'resolved_at': r[9], 'created_at': r[10]
+                })
+            return render_template('admin_reports.html', reports=reports)
+        except Exception as e:
+            print(f'Error loading admin reports: {e}')
+            return render_template('error.html', code=500, message='Error cargando reports'), 500
+
+
+    @app.route('/admin/report/<ticket>/resolve', methods=['POST'])
+    def resolve_report(ticket):
+        note = request.form.get('resolution_note') or 'Resuelto'
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            c = conn.cursor()
+            c.execute('SELECT reporter_chat_id, reporter_ip FROM reports WHERE ticket = ?', (ticket,))
+            row = c.fetchone()
+            if not row:
+                conn.close()
+                return render_template('error.html', code=404, message='Ticket no encontrado'), 404
+            reporter_chat_id, reporter_ip = row
+            now = datetime.now()
+            c.execute('UPDATE reports SET resolved = 1, resolution_note = ?, resolved_at = ? WHERE ticket = ?', (note, now, ticket))
+            conn.commit()
+            conn.close()
+
+            notified = False
+            notify_log = ''
+            # Try Telegram first
+            if reporter_chat_id:
+                res = send_telegram_message(reporter_chat_id, f"Tu reporte {ticket} ha sido resuelto:\n\n{note}")
+                notified = bool(res)
+                notify_log = f'tg:{res}'
+            else:
+                payload = {'ticket': ticket, 'status': 'resolved', 'note': note}
+                ok, info = try_notify_via_ip(reporter_ip, payload)
+                notified = ok
+                notify_log = info
+
+            # Inform owner about result
+            owner_msg = f"Reporte {ticket} marcado como resuelto. Notificado: {notified}. Info: {notify_log}"
+            if TELEGRAM_OWNER_ID:
+                send_telegram_message(TELEGRAM_OWNER_ID, owner_msg)
+
+            return ('', 204) if request.headers.get('Accept') == 'application/json' else ('', 204)
+        except Exception as e:
+            print(f'Error resolving report: {e}')
+            return render_template('error.html', code=500, message='Error al resolver report'), 500
 
 def get_github_releases():
     try:
