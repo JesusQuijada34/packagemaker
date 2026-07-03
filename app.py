@@ -76,6 +76,14 @@ def manifest():
 def sw():
     return send_from_directory('static', 'sw.js')
 
+@app.route('/app/<path:filename>')
+def app_assets(filename):
+    return send_from_directory('app', filename)
+
+@app.route('/assets/<path:filename>')
+def site_assets(filename):
+    return send_from_directory('assets', filename)
+
 def get_xml_metadata():
     try:
         response = requests.get(XML_URL, timeout=5)
