@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Inicio{% endblock %}
 {% block extra_css %}
-/* Hero Section - iOS 27 Style */
+/* Hero Section */
 .hero-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: var(--space-8); position: relative; overflow: hidden; }
 .hero-badge { display: inline-flex; align-items: center; gap: var(--space-2); background: rgba(94, 106, 210, 0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(94, 106, 210, 0.2); padding: var(--space-2) var(--space-5); border-radius: var(--radius-full); margin-bottom: var(--space-8); font-size: 0.875rem; font-weight: 600; animation: fadeInUp 0.8s var(--ease-out) 0.2s both; }
 .hero-badge::before { content: ''; width: 8px; height: 8px; background: linear-gradient(135deg, #6bff6b, #44ff44); border-radius: 50%; animation: pulse-glow 2s infinite; }
 @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(100, 255, 100, 0.4); } 50% { box-shadow: 0 0 20px 5px rgba(100, 255, 100, 0.2); } }
-.hero-title { font-family: var(--font-display); font-size: clamp(3rem, 10vw, 6rem); font-weight: 900; line-height: 1; margin-bottom: var(--space-6); background: linear-gradient(135deg, var(--foreground) 0%, var(--accent) 50%, #7C5CDD 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: fadeInUp 0.8s var(--ease-out) 0.4s both; }
-.hero-title span { display: block; background: linear-gradient(135deg, var(--accent) 0%, #7C5CDD 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero-subtitle { font-size: clamp(1.125rem, 2vw, 1.5rem); color: var(--foreground-muted); max-width: 600px; margin: 0 auto var(--space-10); line-height: 1.6; animation: fadeInUp 0.8s var(--ease-out) 0.6s both; }
+.hero-title { font-family: var(--font-display); font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; line-height: 1.1; margin-bottom: var(--space-6); background: linear-gradient(135deg, var(--foreground) 0%, var(--accent) 50%, #7C5CDD 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: fadeInUp 0.8s var(--ease-out) 0.4s both; }
+.hero-subtitle { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--foreground-muted); max-width: 700px; margin: 0 auto var(--space-10); line-height: 1.7; animation: fadeInUp 0.8s var(--ease-out) 0.6s both; }
 .hero-buttons { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; animation: fadeInUp 0.8s var(--ease-out) 0.8s both; }
 .hero-buttons .btn { padding: var(--space-4) var(--space-8); font-size: 1rem; }
 .floating-orbs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: -1; }
@@ -19,7 +18,7 @@
 @keyframes float-orb { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(5%, 10%) scale(1.05); } 50% { transform: translate(-5%, 5%) scale(0.95); } 75% { transform: translate(10%, -5%) scale(1.1); } }
 /* Liquid Glass Cards */
 .liquid-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-xl); overflow: hidden; position: relative; transition: all 0.5s var(--ease-out); }
-.liquid-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%); pointer-events: none; }
+.liquid-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%); pointer-events: none; }
 .liquid-card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(94, 106, 210, 0.15); }
 /* Mica Frame */
 .mica-frame { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-lg); overflow: hidden; position: relative; }
@@ -37,6 +36,18 @@
 /* CTA Section */
 .cta-section { background: linear-gradient(135deg, rgba(94, 106, 210, 0.1) 0%, rgba(124, 92, 221, 0.1) 100%); border: 1px solid rgba(94, 106, 210, 0.2); border-radius: var(--radius-xl); padding: var(--space-12); text-align: center; position: relative; overflow: hidden; }
 .cta-section::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(94, 106, 210, 0.15), transparent 70%); pointer-events: none; }
+/* Section Titles */
+.section-title { font-size: clamp(1.75rem, 4vw, 2.5rem); margin-bottom: var(--space-4); }
+.section-subtitle { color: var(--foreground-muted); max-width: 600px; margin: 0 auto; }
+/* Feature List */
+.feature-list { list-style: none; padding: 0; margin: 0; }
+.feature-list li { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+.feature-list li:last-child { border-bottom: none; }
+.feature-list li i { color: var(--accent); margin-top: 4px; }
+/* Platform Pills */
+.platform-pills { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; }
+.platform-pill { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); font-size: 0.875rem; display: flex; align-items: center; gap: var(--space-2); }
+.platform-pill i { color: var(--accent); }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
 .shimmer-text { background: linear-gradient(90deg, var(--foreground) 0%, var(--accent) 25%, #7C5CDD 50%, var(--accent) 75%, var(--foreground) 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: shimmer 3s linear infinite; }
@@ -50,57 +61,107 @@
     <div class="orb orb-3"></div>
 </div>
 
+<!-- Hero Section -->
 <section class="hero-section">
-    <div class="hero-badge">Nueva Versión v3.2.7-26.05-20.13</div>
-    <h1 class="hero-title">Forja el futuro de<span>Influent OS</span></h1>
-    <p class="hero-subtitle">El IDE definitivo para desarrolladores que buscan potencia, blindaje y elegancia en un solo entorno de trabajo.</p>
+    <div class="hero-badge">✨ Nueva Versión v3.2.7-26.05-20.13</div>
+    <h1 class="hero-title">Influent Package Maker</h1>
+    <p class="hero-subtitle">Tu IDE Profesional para Python ha Evolucionado. Crea, empaqueta y distribuye aplicaciones Python con una experiencia moderna y eficiente inspirada en Windows 11.</p>
     <div class="hero-buttons">
-        <a href="/download" class="btn btn-primary"><i class="fas fa-rocket"></i> Empezar a Crear</a>
+        <a href="/download" class="btn btn-primary"><i class="fas fa-rocket"></i> Descargar Ahora</a>
         <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank" class="btn btn-secondary"><i class="fab fa-github"></i> GitHub</a>
     </div>
-</section>
-
-<section style="margin-top: var(--space-16);">
-    <div class="bento-grid">
-        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 8; grid-row: span 2;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-6);">
-                <div><h3 style="font-size: 1.5rem; margin-bottom: var(--space-2);">Compilación Inteligente</h3><p style="font-size: 0.9375rem;">Optimización en tiempo real para el kernel de Influent OS.</p></div>
-                <div class="feature-icon"><i class="fas fa-bolt" style="color: white;"></i></div>
-            </div>
-            <div class="mica-frame">
-                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png" alt="Package Maker IDE" loading="lazy">
-            </div>
-        </div>
-        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 4;">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div class="feature-icon" style="background: linear-gradient(135deg, #7C5CDD 0%, #5CDDC9 100%);"><i class="fas fa-moon" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">MoonFix</h3>
-            </div>
-            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Saneamiento automático de código y dependencias.</p>
-            <div class="code-block"><code>moonfix --repair --all</code></div>
-        </div>
-        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 4;">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fas fa-layer-group" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">Leviathan UI</h3>
-            </div>
-            <p style="font-size: 0.875rem;">Basado en Qt 6.11.1 para interfaces líquidas con efectos Mica y Acrylic.</p>
-        </div>
+    <div class="platform-pills" style="margin-top: var(--space-8); animation: fadeInUp 0.8s var(--ease-out) 1s both;">
+        <span class="platform-pill"><i class="fab fa-windows"></i> Windows</span>
+        <span class="platform-pill"><i class="fab fa-android"></i> Android</span>
+        <span class="platform-pill"><i class="fab fa-linux"></i> Linux</span>
     </div>
 </section>
 
+<!-- Interface Preview -->
 <section style="margin-top: var(--space-8);" class="scroll-reveal">
     <div class="bento-item liquid-card" style="grid-column: span 12;">
-        <div style="text-align: center; margin-bottom: var(--space-8);">
-            <h2 style="font-size: clamp(1.75rem, 4vw, 2.5rem); margin-bottom: var(--space-3);" class="shimmer-text">Un entorno sin límites</h2>
-            <p style="max-width: 500px; margin: 0 auto;">Diseñado para la máxima productividad con efectos visuales de última generación.</p>
+        <div style="text-align: center; margin-bottom: var(--space-6);">
+            <h2 class="section-title shimmer-text">Interfaz Intuitiva y Potente</h2>
+            <p class="section-subtitle">Barra de título personalizada Leviathan-UI con efectos visuales acrílico y mica.</p>
         </div>
         <div class="mica-frame" style="border-radius: var(--radius-xl);">
-            <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8x.png" alt="IDE Preview" loading="lazy">
+            <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8w.png" alt="Pantalla Inicial" loading="lazy">
         </div>
     </div>
 </section>
 
+<!-- Features Grid -->
+<section style="margin-top: var(--space-8);">
+    <div class="bento-grid">
+        <!-- Compilation -->
+        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div class="feature-icon"><i class="fas fa-box-open" style="color: white;"></i></div>
+                <h3 style="margin-bottom: 0;">Gestión de Proyectos</h3>
+            </div>
+            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">Sistema de compilación avanzada con detección automática de scripts.</p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i><span>Integración con <code>.gitignore</code></span></li>
+                <li><i class="fas fa-check-circle"></i><span>Limpieza automática post-compilación</span></li>
+                <li><i class="fas fa-check-circle"></i><span>Gestión de dependencias</span></li>
+            </ul>
+        </div>
+
+        <!-- Security -->
+        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #6bff6b 0%, #44ff44 100%);"><i class="fas fa-shield-alt" style="color: white;"></i></div>
+                <h3 style="margin-bottom: 0;">Blindado de Código</h3>
+            </div>
+            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">Protege tu propiedad intelectual con métodos avanzados.</p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i><span><strong>Simple Blind:</strong> Empaqueta en <code>.iflappb</code></span></li>
+                <li><i class="fas fa-check-circle"></i><span><strong>Super Blind:</strong> Separación de clases + encriptación</span></li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Build Section -->
+<section style="margin-top: var(--space-8);" class="scroll-reveal">
+    <div class="bento-item liquid-card" style="grid-column: span 12;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center;">
+            <div>
+                <h2 class="section-title">Compilación Avanzada</h2>
+                <p class="section-subtitle" style="text-align: left; margin: 0;">Detecta automáticamente scripts candidatos, gestiona dependencias y minifica tu código.</p>
+                <div style="margin-top: var(--space-6);">
+                    <div class="code-block" style="margin-bottom: var(--space-3);">
+                        <code>✓ gitignore integrado</code>
+                    </div>
+                    <div class="code-block" style="margin-bottom: var(--space-3);">
+                        <code>✓ Limpieza automática</code>
+                    </div>
+                    <div class="code-block">
+                        <code>✓ Paquetes ligeros</code>
+                    </div>
+                </div>
+            </div>
+            <div class="mica-frame" style="border-radius: var(--radius-xl);">
+                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8x.png" alt="Sección Construir" loading="lazy">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Multi-Platform -->
+<section style="margin-top: var(--space-8);">
+    <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 12; text-align: center;">
+        <h2 class="section-title"><i class="fas fa-globe" style="color: var(--accent); margin-right: var(--space-3);"></i>Multi-Plataforma</h2>
+        <p class="section-subtitle" style="margin-bottom: var(--space-8);">Genera ejecutables para cualquier plataforma desde un solo código.</p>
+        <div class="platform-pills" style="justify-content: center;">
+            <span class="platform-pill"><i class="fab fa-windows"></i> Windows (.exe)</span>
+            <span class="platform-pill"><i class="fab fa-android"></i> Android (APK)</span>
+            <span class="platform-pill"><i class="fab fa-linux"></i> Linux (AppImage)</span>
+        </div>
+    </div>
+</section>
+
+<!-- App Manager & Config -->
 <section style="margin-top: var(--space-8);">
     <div class="bento-grid">
         <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
@@ -108,30 +169,129 @@
                 <div class="feature-icon" style="background: linear-gradient(135deg, #ff6b9d 0%, #ffa500 100%);"><i class="fas fa-th-large" style="color: white;"></i></div>
                 <h3 style="margin-bottom: 0;">Gestor de Apps</h3>
             </div>
-            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Control total sobre el ecosistema de tu proyecto.</p>
+            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Administra tus proyectos locales y aplicaciones instaladas.</p>
             <div class="mica-frame">
-                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF80.png" alt="Gestor de Apps" loading="lazy">
+                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8y.png" alt="Gestor de Apps" loading="lazy">
             </div>
         </div>
         <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div class="feature-icon" style="background: linear-gradient(135deg, #6bff6b 0%, #44ff44 100%);"><i class="fas fa-shield-halved" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">Blindaje de Código</h3>
+                <div class="feature-icon" style="background: linear-gradient(135deg, #7C5CDD 0%, #5CDDC9 100%);"><i class="fas fa-cog" style="color: white;"></i></div>
+                <h3 style="margin-bottom: 0;">Configuración</h3>
             </div>
-            <p style="font-size: 0.875rem; margin-bottom: var(--space-6);">Protección contra ingeniería inversa y acceso no autorizado.</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">encryption://enabled</code></div>
-                <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">obfuscation://active</code></div>
+            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Control total sobre rutas, idioma y personalización.</p>
+            <div class="mica-frame">
+                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF8z.png" alt="Configuración" loading="lazy">
             </div>
         </div>
     </div>
 </section>
 
+<!-- MoonFix -->
+<section style="margin-top: var(--space-8);" class="scroll-reveal">
+    <div class="bento-item liquid-card" style="grid-column: span 12;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center;">
+            <div class="mica-frame" style="border-radius: var(--radius-xl);">
+                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF80.png" alt="MoonFix" loading="lazy">
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fas fa-moon" style="color: white;"></i></div>
+                    <h3 style="margin-bottom: 0; font-size: 1.5rem;">MoonFix</h3>
+                </div>
+                <h4 style="color: var(--foreground-muted); font-weight: 400; margin-bottom: var(--space-4);">Sanación Profunda de Proyectos</h4>
+                <p style="margin-bottom: var(--space-4);">Tu aliada para mantener la salud de tus proyectos. Realiza una sanación profunda, escaneando y reparando inconsistencias.</p>
+                <div class="code-block"><code>moonfix --repair --all</code></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About -->
+<section style="margin-top: var(--space-8);" class="scroll-reveal">
+    <div class="bento-item liquid-card" style="grid-column: span 12;">
+        <div style="text-align: center; margin-bottom: var(--space-6);">
+            <div class="feature-icon" style="margin: 0 auto var(--space-4);"><i class="fas fa-info-circle" style="color: white;"></i></div>
+            <h3 style="font-size: 1.5rem;">Acerca de Influent Package Maker</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); text-align: center;">
+            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Framework</div>
+                <div style="font-weight: 700;">Qt 6.11.1</div>
+            </div>
+            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">UI System</div>
+                <div style="font-weight: 700;">Leviathan</div>
+            </div>
+            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Licencia</div>
+                <div style="font-weight: 700;">GNU GPL v3</div>
+            </div>
+            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Desarrollador</div>
+                <div style="font-weight: 700;">Jesús Quijada</div>
+            </div>
+        </div>
+        <div class="mica-frame" style="margin-top: var(--space-6); border-radius: var(--radius-xl);">
+            <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci9ndWlfZmluYWxfc3RlcF81.png" alt="Acerca de" loading="lazy">
+        </div>
+    </div>
+</section>
+
+<!-- CLI Section -->
+<section style="margin-top: var(--space-8);" class="scroll-reveal">
+    <div class="bento-item liquid-card" style="grid-column: span 12;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center;">
+            <div>
+                <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #7C5CDD 100%);"><i class="fas fa-terminal" style="color: white;"></i></div>
+                    <h3 style="margin-bottom: 0; font-size: 1.5rem;">Terminal (CLI)</h3>
+                </div>
+                <p style="margin-bottom: var(--space-4);">Potente interfaz de línea de comandos para automatizar tareas e integrar en scripts CI/CD.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">create</code></div>
+                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">compile</code></div>
+                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">moonfix</code></div>
+                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">buildthis</code></div>
+                </div>
+            </div>
+            <div class="mica-frame" style="border-radius: var(--radius-xl); background: rgba(0,0,0,0.6); padding: var(--space-4);">
+                <img src="https://private-us-east-1.manuscdn.com/sessionFile/mvWmGVx7RzLvm8DRtq76Qv/sandbox/kafK7xmO3UDTQOapze42xp-images_1781995327150_na1fn_L2hvbWUvdWJ1bnR1L3BhY2thZ2VtYWtlci90ZXJtaW5hbF9zY3JlZW5zaG90.png" alt="Terminal" loading="lazy">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- What's New -->
+<section style="margin-top: var(--space-8);">
+    <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 12;">
+        <h2 class="section-title" style="text-align: center;"><i class="fas fa-star" style="color: #FFD700; margin-right: var(--space-3);"></i>Novedades v3.2.7</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-top: var(--space-6);">
+            <div style="text-align: center;">
+                <div class="feature-icon" style="margin: 0 auto var(--space-3); background: linear-gradient(135deg, #7C5CDD 0%, #ff6b9d 100%);"><i class="fas fa-code" style="color: white;"></i></div>
+                <h4 style="margin-bottom: var(--space-2);">Editores Extendidos</h4>
+                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">Zed, Fleet, Emacs, Geany, Kate, Gedit</p>
+            </div>
+            <div style="text-align: center;">
+                <div class="feature-icon" style="margin: 0 auto var(--space-3); background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fab fa-linux" style="color: white;"></i></div>
+                <h4 style="margin-bottom: var(--space-2);">Iconos en Linux</h4>
+                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">Renderizado mejorado para Ubuntu</p>
+            </div>
+            <div style="text-align: center;">
+                <div class="feature-icon" style="margin: 0 auto var(--space-3);"><i class="fas fa-bug" style="color: white;"></i></div>
+                <h4 style="margin-bottom: var(--space-2);">Correcciones</h4>
+                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">TypeError, fondo blanco, gradientes</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
 <section style="margin-top: var(--space-16);" class="scroll-reveal">
     <div class="cta-section">
-        <h2 style="margin-bottom: var(--space-4); font-size: clamp(1.75rem, 4vw, 2.5rem);">¿Listo para el siguiente nivel?</h2>
-        <p style="margin-bottom: var(--space-8); max-width: 400px; margin-left: auto; margin-right: auto;">Únete a la revolución del desarrollo en Influent OS.</p>
-        <a href="/download" class="btn btn-primary" style="padding: var(--space-5) var(--space-10); font-size: 1.125rem;"><i class="fas fa-download"></i> Descargar Ahora</a>
+        <h2 class="section-title">¿Listo para el siguiente nivel?</h2>
+        <p class="section-subtitle" style="margin-bottom: var(--space-8);">Descarga la última versión y revoluciona tu flujo de desarrollo Python.</p>
+        <a href="/download" class="btn btn-primary" style="padding: var(--space-5) var(--space-10); font-size: 1.125rem;"><i class="fas fa-download"></i> Descargar v3.2.7</a>
     </div>
 </section>
 
