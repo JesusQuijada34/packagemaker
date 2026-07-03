@@ -14,6 +14,11 @@ SUPPORTED_LANGUAGES = {
     'es': {'name': 'Español', 'native': 'Español'},
     'en': {'name': 'English', 'native': 'English'},
     'pt': {'name': 'Português', 'native': 'Português'},
+    'fr': {'name': 'Français', 'native': 'Français'},
+    'de': {'name': 'Deutsch', 'native': 'Deutsch'},
+    'it': {'name': 'Italiano', 'native': 'Italiano'},
+    'ja': {'name': '日本語', 'native': '日本語'},
+    'zh': {'name': '中文', 'native': '中文'},
 }
 
 TRANSLATIONS = {
@@ -25,6 +30,7 @@ TRANSLATIONS = {
         'nav_faq': 'FAQ',
         'footer_text': '© 2026 Influent OS Engineering. Creado por JesusQuijada34.',
         'footer_language': 'Idioma',
+        'back_home': 'Volver al inicio',
         'hero_badge': '✨ Nueva Versión v3.2.7-26.05-20.13',
         'hero_title': 'Influent Package Maker',
         'hero_subtitle': 'Tu IDE Profesional para Python ha evolucionado. Crea, empaqueta y distribuye aplicaciones Python con una experiencia moderna y eficiente inspirada en Windows 11.',
@@ -35,6 +41,34 @@ TRANSLATIONS = {
         'hero_platform_linux': 'Linux',
         'section_interface_title': 'Interfaz intuitiva y potente',
         'section_interface_subtitle': 'Barra de título personalizada Leviathan-UI con efectos visuales acrílico y mica.',
+        'download_title': 'Obtén la Suite',
+        'download_intro': 'Descarga directa para tu plataforma o alternativas si no hay versión específica.',
+        'download_direct_title': 'Descarga Directa',
+        'download_android_title': 'Optimizado para Termux',
+        'download_android_desc': 'Instalación directa y automatizada para dispositivos móviles Android.',
+        'download_android_hint': 'Copia y pega este comando en tu terminal Termux.',
+        'download_no_direct_title': 'No hay versión directa',
+        'download_no_direct_desc': 'No existe un archivo .iflapp para tu plataforma, pero puedes:',
+        'download_source_code': 'Código Fuente',
+        'download_versions': 'Ver Versiones',
+        'download_available_versions': 'Versiones Disponibles',
+        'download_requirements': 'Requisitos',
+        'download_specs': 'Especificaciones',
+        'download_copy_command': 'Copiar comando',
+        'error_404_title': 'Página No Encontrada',
+        'error_404_desc': 'La página que buscas se ha perdido en el espacio digital.',
+        'error_500_title': 'Error Interno del Servidor',
+        'error_500_desc': 'Algo salió mal en nuestro servidor. Estamos trabajando para resolverlo.',
+        'error_403_title': 'Acceso Prohibido',
+        'error_back_home': 'Volver al Inicio',
+        'error_downloads': 'Descargas',
+        'pwa_status': 'Estado del Sistema',
+        'pwa_install': 'INSTALAR APP IDE',
+        'pwa_home': 'Inicio',
+        'pwa_downloads': 'Descargas',
+        'pwa_notes': 'Notas',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
     },
     'en': {
         'nav_home': 'Home',
@@ -44,6 +78,7 @@ TRANSLATIONS = {
         'nav_faq': 'FAQ',
         'footer_text': '© 2026 Influent OS Engineering. Crafted by JesusQuijada34.',
         'footer_language': 'Language',
+        'back_home': 'Back to home',
         'hero_badge': '✨ New Version v3.2.7-26.05-20.13',
         'hero_title': 'Influent Package Maker',
         'hero_subtitle': 'Your professional Python IDE has evolved. Create, package and distribute Python apps with a modern, efficient experience inspired by Windows 11.',
@@ -54,6 +89,34 @@ TRANSLATIONS = {
         'hero_platform_linux': 'Linux',
         'section_interface_title': 'Intuitive and powerful interface',
         'section_interface_subtitle': 'Custom Leviathan-UI title bar with acrylic and mica visual effects.',
+        'download_title': 'Get the Suite',
+        'download_intro': 'Direct download for your platform or alternatives if a specific version is unavailable.',
+        'download_direct_title': 'Direct Download',
+        'download_android_title': 'Optimized for Termux',
+        'download_android_desc': 'Direct and automated installation for Android mobile devices.',
+        'download_android_hint': 'Copy and paste this command into your Termux terminal.',
+        'download_no_direct_title': 'No direct version available',
+        'download_no_direct_desc': 'There is no .iflapp file for your platform, but you can:',
+        'download_source_code': 'Source Code',
+        'download_versions': 'View Versions',
+        'download_available_versions': 'Available versions',
+        'download_requirements': 'Requirements',
+        'download_specs': 'Specifications',
+        'download_copy_command': 'Copy command',
+        'error_404_title': 'Page Not Found',
+        'error_404_desc': 'The page you are looking for has drifted into the digital void.',
+        'error_500_title': 'Internal Server Error',
+        'error_500_desc': 'Something went wrong on our server. We are working on it.',
+        'error_403_title': 'Access Forbidden',
+        'error_back_home': 'Back to Home',
+        'error_downloads': 'Downloads',
+        'pwa_status': 'System Status',
+        'pwa_install': 'INSTALL IDE APP',
+        'pwa_home': 'Home',
+        'pwa_downloads': 'Downloads',
+        'pwa_notes': 'Notes',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
     },
     'pt': {
         'nav_home': 'Início',
@@ -63,6 +126,7 @@ TRANSLATIONS = {
         'nav_faq': 'FAQ',
         'footer_text': '© 2026 Influent OS Engineering. Criado por JesusQuijada34.',
         'footer_language': 'Idioma',
+        'back_home': 'Voltar ao início',
         'hero_badge': '✨ Nova Versão v3.2.7-26.05-20.13',
         'hero_title': 'Influent Package Maker',
         'hero_subtitle': 'Seu IDE profissional para Python evoluiu. Crie, empacote e distribua aplicativos Python com uma experiência moderna e eficiente inspirada no Windows 11.',
@@ -73,6 +137,274 @@ TRANSLATIONS = {
         'hero_platform_linux': 'Linux',
         'section_interface_title': 'Interface intuitiva e poderosa',
         'section_interface_subtitle': 'Barra de título personalizada do Leviathan-UI com efeitos visuais de acrílico e mica.',
+        'download_title': 'Obtenha a suíte',
+        'download_intro': 'Download direto para sua plataforma ou alternativas se nenhuma versão específica estiver disponível.',
+        'download_direct_title': 'Download direto',
+        'download_android_title': 'Otimizando para Termux',
+        'download_android_desc': 'Instalação direta e automatizada para dispositivos móveis Android.',
+        'download_android_hint': 'Copie e cole este comando no seu terminal Termux.',
+        'download_no_direct_title': 'Nenhuma versão direta disponível',
+        'download_no_direct_desc': 'Não existe um arquivo .iflapp para a sua plataforma, mas você pode:',
+        'download_source_code': 'Código Fonte',
+        'download_versions': 'Ver versões',
+        'download_available_versions': 'Versões disponíveis',
+        'download_requirements': 'Requisitos',
+        'download_specs': 'Especificações',
+        'download_copy_command': 'Copiar comando',
+        'error_404_title': 'Página não encontrada',
+        'error_404_desc': 'A página que você procura se perdeu no espaço digital.',
+        'error_500_title': 'Erro interno do servidor',
+        'error_500_desc': 'Algo deu errado em nosso servidor. Estamos trabalhando para resolver isso.',
+        'error_403_title': 'Acesso proibido',
+        'error_back_home': 'Voltar ao início',
+        'error_downloads': 'Downloads',
+        'pwa_status': 'Estado do sistema',
+        'pwa_install': 'INSTALAR APP IDE',
+        'pwa_home': 'Início',
+        'pwa_downloads': 'Downloads',
+        'pwa_notes': 'Notas',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
+    },
+    'fr': {
+        'nav_home': 'Accueil',
+        'nav_download': 'Téléchargements',
+        'nav_release_notes': 'Notes',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering. Créé par JesusQuijada34.',
+        'footer_language': 'Langue',
+        'back_home': 'Retour à l’accueil',
+        'hero_badge': '✨ Nouvelle version v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': 'Votre IDE Python professionnel a évolué. Créez, empaquetez et distribuez des applications Python avec une expérience moderne et efficace inspirée de Windows 11.',
+        'hero_download': 'Télécharger',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': 'Interface intuitive et puissante',
+        'section_interface_subtitle': 'Barre de titre Leviathan-UI personnalisée avec des effets visuels en acrylique et mica.',
+        'download_title': 'Obtenez la suite',
+        'download_intro': 'Téléchargement direct pour votre plateforme ou alternatives si aucune version spécifique n’est disponible.',
+        'download_direct_title': 'Téléchargement direct',
+        'download_android_title': 'Optimisé pour Termux',
+        'download_android_desc': 'Installation directe et automatisée pour les appareils Android.',
+        'download_android_hint': 'Copiez et collez cette commande dans votre terminal Termux.',
+        'download_no_direct_title': 'Aucune version directe disponible',
+        'download_no_direct_desc': 'Aucun fichier .iflapp n’existe pour votre plateforme, mais vous pouvez :',
+        'download_source_code': 'Code source',
+        'download_versions': 'Voir les versions',
+        'download_available_versions': 'Versions disponibles',
+        'download_requirements': 'Prérequis',
+        'download_specs': 'Spécifications',
+        'download_copy_command': 'Copier la commande',
+        'error_404_title': 'Page introuvable',
+        'error_404_desc': 'La page que vous recherchez s’est perdue dans le vide numérique.',
+        'error_500_title': 'Erreur interne du serveur',
+        'error_500_desc': 'Quelque chose s’est mal passé sur notre serveur. Nous travaillons à résoudre ce problème.',
+        'error_403_title': 'Accès refusé',
+        'error_back_home': 'Retour à l’accueil',
+        'error_downloads': 'Téléchargements',
+        'pwa_status': 'État du système',
+        'pwa_install': 'INSTALLER L’APP IDE',
+        'pwa_home': 'Accueil',
+        'pwa_downloads': 'Téléchargements',
+        'pwa_notes': 'Notes',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
+    },
+    'de': {
+        'nav_home': 'Startseite',
+        'nav_download': 'Downloads',
+        'nav_release_notes': 'Hinweise',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering. Erstellt von JesusQuijada34.',
+        'footer_language': 'Sprache',
+        'back_home': 'Zurück zur Startseite',
+        'hero_badge': '✨ Neue Version v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': 'Ihre professionelle Python-IDE hat sich weiterentwickelt. Erstellen, verpacken und verteilen Sie Python-Apps mit einer modernen und effizienten Erfahrung, inspiriert von Windows 11.',
+        'hero_download': 'Jetzt herunterladen',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': 'Intuitive und leistungsstarke Oberfläche',
+        'section_interface_subtitle': 'Benutzerdefinierte Leviathan-UI-Titelleiste mit Acryl- und Mica-Effekten.',
+        'download_title': 'Erhalten Sie die Suite',
+        'download_intro': 'Direkter Download für Ihre Plattform oder Alternativen, falls keine spezifische Version verfügbar ist.',
+        'download_direct_title': 'Direkter Download',
+        'download_android_title': 'Optimiert für Termux',
+        'download_android_desc': 'Direkte und automatisierte Installation für Android-Geräte.',
+        'download_android_hint': 'Kopieren Sie diesen Befehl und fügen Sie ihn in Ihr Termux-Terminal ein.',
+        'download_no_direct_title': 'Keine direkte Version verfügbar',
+        'download_no_direct_desc': 'Es gibt keine .iflapp-Datei für Ihre Plattform, aber Sie können:',
+        'download_source_code': 'Quellcode',
+        'download_versions': 'Versionen ansehen',
+        'download_available_versions': 'Verfügbare Versionen',
+        'download_requirements': 'Anforderungen',
+        'download_specs': 'Spezifikationen',
+        'download_copy_command': 'Befehl kopieren',
+        'error_404_title': 'Seite nicht gefunden',
+        'error_404_desc': 'Die gesuchte Seite ist im digitalen Nichts verschwunden.',
+        'error_500_title': 'Interner Serverfehler',
+        'error_500_desc': 'Etwas ist auf unserem Server schiefgelaufen. Wir arbeiten daran.',
+        'error_403_title': 'Zugriff verboten',
+        'error_back_home': 'Zurück zur Startseite',
+        'error_downloads': 'Downloads',
+        'pwa_status': 'Systemstatus',
+        'pwa_install': 'IDE-APP INSTALLIEREN',
+        'pwa_home': 'Startseite',
+        'pwa_downloads': 'Downloads',
+        'pwa_notes': 'Hinweise',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
+    },
+    'it': {
+        'nav_home': 'Home',
+        'nav_download': 'Download',
+        'nav_release_notes': 'Note',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering. Creato da JesusQuijada34.',
+        'footer_language': 'Lingua',
+        'back_home': 'Torna alla home',
+        'hero_badge': '✨ Nuova versione v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': 'Il tuo IDE Python professionale si è evoluto. Crea, impacchetta e distribuisci app Python con un’esperienza moderna ed efficiente ispirata a Windows 11.',
+        'hero_download': 'Scarica ora',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': 'Interfaccia intuitiva e potente',
+        'section_interface_subtitle': 'Barra del titolo Leviathan-UI personalizzata con effetti visivi in acrilico e mica.',
+        'download_title': 'Ottieni la suite',
+        'download_intro': 'Download diretto per la tua piattaforma o alternative se non è disponibile una versione specifica.',
+        'download_direct_title': 'Download diretto',
+        'download_android_title': 'Ottimizzato per Termux',
+        'download_android_desc': 'Installazione diretta e automatizzata per dispositivi mobili Android.',
+        'download_android_hint': 'Copia e incolla questo comando nel terminale Termux.',
+        'download_no_direct_title': 'Nessuna versione diretta disponibile',
+        'download_no_direct_desc': 'Non esiste un file .iflapp per la tua piattaforma, ma puoi:',
+        'download_source_code': 'Codice sorgente',
+        'download_versions': 'Vedi versioni',
+        'download_available_versions': 'Versioni disponibili',
+        'download_requirements': 'Requisiti',
+        'download_specs': 'Specifiche',
+        'download_copy_command': 'Copia comando',
+        'error_404_title': 'Pagina non trovata',
+        'error_404_desc': 'La pagina che stai cercando si è persa nel vuoto digitale.',
+        'error_500_title': 'Errore interno del server',
+        'error_500_desc': 'Qualcosa è andato storto sul nostro server. Stiamo lavorando per risolverlo.',
+        'error_403_title': 'Accesso vietato',
+        'error_back_home': 'Torna alla home',
+        'error_downloads': 'Download',
+        'pwa_status': 'Stato del sistema',
+        'pwa_install': 'INSTALLA L’APP IDE',
+        'pwa_home': 'Home',
+        'pwa_downloads': 'Download',
+        'pwa_notes': 'Note',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
+    },
+    'ja': {
+        'nav_home': 'ホーム',
+        'nav_download': 'ダウンロード',
+        'nav_release_notes': 'ノート',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering. JesusQuijada34 によって作成されました。',
+        'footer_language': '言語',
+        'back_home': 'ホームに戻る',
+        'hero_badge': '✨ 新バージョン v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': 'プロフェッショナルな Python IDE が進化しました。Windows 11 に着想を得た現代的で効率的な体験で Python アプリを作成、パッケージ化、配布します。',
+        'hero_download': '今すぐダウンロード',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': '直感的で強力なインターフェース',
+        'section_interface_subtitle': 'アクリルとミカの視覚効果を備えたカスタム Leviathan-UI タイトルバー。',
+        'download_title': 'スイートを入手',
+        'download_intro': 'お使いのプラットフォーム向けの直接ダウンロード、または特定バージョンがない場合の代替手段。',
+        'download_direct_title': '直接ダウンロード',
+        'download_android_title': 'Termux 向け最適化',
+        'download_android_desc': 'Android モバイル端末向けの直接自動インストール。',
+        'download_android_hint': 'このコマンドを Termux ターミナルにコピーして貼り付けてください。',
+        'download_no_direct_title': '直接ダウンロード版はありません',
+        'download_no_direct_desc': 'お使いのプラットフォーム用の .iflapp ファイルはありませんが、次の方法があります:',
+        'download_source_code': 'ソースコード',
+        'download_versions': 'バージョンを見る',
+        'download_available_versions': '利用可能なバージョン',
+        'download_requirements': '要件',
+        'download_specs': '仕様',
+        'download_copy_command': 'コマンドをコピー',
+        'error_404_title': 'ページが見つかりません',
+        'error_404_desc': 'お探しのページはデジタルの空の彼方に消えました。',
+        'error_500_title': 'サーバー内部エラー',
+        'error_500_desc': 'サーバーで問題が発生しました。対応中です。',
+        'error_403_title': 'アクセスが拒否されました',
+        'error_back_home': 'ホームに戻る',
+        'error_downloads': 'ダウンロード',
+        'pwa_status': 'システム状態',
+        'pwa_install': 'IDE アプリをインストール',
+        'pwa_home': 'ホーム',
+        'pwa_downloads': 'ダウンロード',
+        'pwa_notes': 'ノート',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
+    },
+    'zh': {
+        'nav_home': '首页',
+        'nav_download': '下载',
+        'nav_release_notes': '说明',
+        'nav_issues': 'Issues',
+        'nav_faq': 'FAQ',
+        'footer_text': '© 2026 Influent OS Engineering。由 JesusQuijada34 创建。',
+        'footer_language': '语言',
+        'back_home': '返回首页',
+        'hero_badge': '✨ 新版本 v3.2.7-26.05-20.13',
+        'hero_title': 'Influent Package Maker',
+        'hero_subtitle': '专业的 Python IDE 已经升级。借鉴 Windows 11 的现代高效体验，创建、打包和分发 Python 应用。',
+        'hero_download': '立即下载',
+        'hero_github': 'GitHub',
+        'hero_platform_windows': 'Windows',
+        'hero_platform_android': 'Android',
+        'hero_platform_linux': 'Linux',
+        'section_interface_title': '直观且强大的界面',
+        'section_interface_subtitle': '具有亚克力和云母视觉效果的定制 Leviathan-UI 标题栏。',
+        'download_title': '获取套件',
+        'download_intro': '为您的平台提供直接下载，或在没有特定版本时提供替代方案。',
+        'download_direct_title': '直接下载',
+        'download_android_title': '针对 Termux 优化',
+        'download_android_desc': '适用于 Android 移动设备的直接自动安装。',
+        'download_android_hint': '将此命令复制并粘贴到您的 Termux 终端中。',
+        'download_no_direct_title': '没有可用的直接版本',
+        'download_no_direct_desc': '您的平台没有 .iflapp 文件，但您可以：',
+        'download_source_code': '源代码',
+        'download_versions': '查看版本',
+        'download_available_versions': '可用版本',
+        'download_requirements': '系统要求',
+        'download_specs': '规格',
+        'download_copy_command': '复制命令',
+        'error_404_title': '页面未找到',
+        'error_404_desc': '您寻找的页面已经消失在数字空间中。',
+        'error_500_title': '服务器内部错误',
+        'error_500_desc': '我们的服务器出现了问题。我们正在处理。',
+        'error_403_title': '访问被拒绝',
+        'error_back_home': '返回首页',
+        'error_downloads': '下载',
+        'pwa_status': '系统状态',
+        'pwa_install': '安装 IDE 应用',
+        'pwa_home': '首页',
+        'pwa_downloads': '下载',
+        'pwa_notes': '说明',
+        'pwa_issues': 'Issues',
+        'pwa_faq': 'FAQ',
     },
 }
 
@@ -81,11 +413,21 @@ def normalize_language(lang_code: str | None) -> str:
     if not lang_code:
         return 'es'
     code = str(lang_code).strip().lower().replace('_', '-')
-    if code.startswith('en'):
+    if code.startswith(('en', 'en-us', 'en-gb')):
         return 'en'
-    if code.startswith('pt'):
+    if code.startswith(('pt', 'pt-br', 'pt-pt')):
         return 'pt'
-    if code.startswith('es'):
+    if code.startswith(('fr', 'fr-fr', 'fr-ca')):
+        return 'fr'
+    if code.startswith(('de', 'de-de')):
+        return 'de'
+    if code.startswith(('it', 'it-it')):
+        return 'it'
+    if code.startswith(('ja', 'ja-jp')):
+        return 'ja'
+    if code.startswith(('zh', 'zh-cn', 'zh-hk', 'zh-tw')):
+        return 'zh'
+    if code.startswith(('es', 'es-es', 'es-mx')):
         return 'es'
     return 'es'
 
@@ -212,6 +554,28 @@ def get_xml_metadata():
         print(f"Error fetching XML: {e}")
     return {"version": "v3.2.7", "name": "Package Maker"}
 
+
+def get_latest_release_version():
+    try:
+        response = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest", timeout=8)
+        if response.status_code == 200:
+            return response.json().get("tag_name") or get_xml_metadata().get("version", "v3.2.7")
+    except Exception as e:
+        print(f"Error fetching latest release version: {e}")
+    return get_xml_metadata().get("version", "v3.2.7")
+
+
+def classify_download_asset(name: str):
+    lowered = (name or "").lower()
+    if any(token in lowered for token in ["danenone", "linux", "appimage"]):
+        return "linux", "linux"
+    if any(token in lowered for token in ["knosthalij", "windows", "exe"]):
+        return "windows", "windows"
+    if "android" in lowered:
+        return "android", "android"
+    return "other", "other"
+
+
 def get_release_info():
     """Get all releases with their assets for download verification"""
     try:
@@ -224,18 +588,13 @@ def get_release_info():
                 version = release.get("tag_name", "")
                 assets = release.get("assets", [])
                 for asset in assets:
-                    name = asset.get("name", "").lower()
-                    # Determine platform from filename
-                    if "danenone" in name:
-                        platform = "Linux"
-                        platform_key = "linux"
-                    elif "knosthalij" in name:
-                        platform = "Windows"
-                        platform_key = "windows"
-                    else:
-                        platform = "Other"
-                        platform_key = "other"
-                    
+                    name = asset.get("name", "") or ""
+                    platform_key = classify_download_asset(name)[1]
+                    platform = {
+                        "linux": "Linux",
+                        "windows": "Windows",
+                        "android": "Android",
+                    }.get(platform_key, "Other")
                     url = asset.get("browser_download_url", "")
                     all_downloads.append({
                         "name": asset.get("name"),
@@ -251,11 +610,11 @@ def get_release_info():
     return []
 
 def check_iflapp_exists(url):
-    """Check if an iflapp file exists at the given URL"""
+    """Check if an iflapp file exists at the given URL."""
     try:
-        response = requests.head(url, timeout=10, allow_redirects=True)
-        return response.status_code == 200
-    except:
+        response = requests.get(url, timeout=15, allow_redirects=True, stream=True, headers={"User-Agent": "Mozilla/5.0"})
+        return response.status_code < 400
+    except Exception:
         return False
 
 def get_github_releases():
@@ -268,8 +627,13 @@ def get_github_releases():
             assets = data.get("assets", [])
             downloads = []
             for asset in assets:
-                name = asset.get("name", "").lower()
-                platform = "Linux" if "danenone" in name else "Windows"
+                name = asset.get("name", "") or ""
+                platform_key = classify_download_asset(name)[1]
+                platform = {
+                    "linux": "Linux",
+                    "windows": "Windows",
+                    "android": "Android",
+                }.get(platform_key, "Other")
                 downloads.append({"name": asset.get("name"), "url": asset.get("browser_download_url"), "platform": platform, "size": f"{asset.get('size', 0) / (1024*1024):.2f} MB"})
             return version, downloads
     except Exception as e:
@@ -277,45 +641,46 @@ def get_github_releases():
     return "v3.2.7", []
 
 def get_download_for_platform(user_agent):
-    """Get download info based on platform detection, checking actual file existence"""
+    """Get download info based on platform detection, checking the latest release assets."""
     ua = user_agent.lower()
     all_downloads = get_release_info()
-    
-    # Detect platform
+
     if "android" in ua or "mobile" in ua:
         detected_platform = "android"
-        iflapp_key = None  # No direct iflapp for Android
+        preferred_keys = []
     elif "win" in ua or "windows" in ua:
         detected_platform = "windows"
-        iflapp_key = "windows"
+        preferred_keys = ["windows"]
     elif "linux" in ua or "ubuntu" in ua or "debian" in ua:
         detected_platform = "linux"
-        iflapp_key = "linux"
+        preferred_keys = ["linux"]
     else:
         detected_platform = "desktop"
-        iflapp_key = None
-    
-    # Find direct download for platform from latest release
+        preferred_keys = ["windows", "linux"]
+
     direct_download = None
-    for dl in all_downloads:
-        if dl["platform_key"] == iflapp_key:
-            direct_download = dl
+    for preferred_key in preferred_keys:
+        for dl in all_downloads:
+            if dl["platform_key"] == preferred_key:
+                if check_iflapp_exists(dl["url"]):
+                    direct_download = dl
+                    break
+        if direct_download:
             break
-    
-    # Check if direct download actually exists
+
     download_status = "available"
-    if direct_download:
-        # Verify the file exists
-        if not check_iflapp_exists(direct_download["url"]):
+    if direct_download is None and all_downloads:
+        fallback_download = next((dl for dl in all_downloads if check_iflapp_exists(dl["url"])), None)
+        if fallback_download:
+            direct_download = fallback_download
+        else:
             download_status = "unavailable"
-            direct_download = None
-    
-    # Get alternatives if no direct download
+
     alternatives = []
-    for dl in all_downloads[:6]:  # Top 6 most recent
+    for dl in all_downloads[:6]:
         if dl != direct_download:
             alternatives.append(dl)
-    
+
     return {
         "detected_platform": detected_platform,
         "direct_download": direct_download,
@@ -328,7 +693,7 @@ def get_download_for_platform(user_agent):
 def index():
     print(f"DEBUG: Accessing index from {request.remote_addr}")
     metadata = get_xml_metadata()
-    version, _ = get_github_releases()
+    version = get_latest_release_version()
     ua = request.headers.get('User-Agent', '').lower()
     return render_template('index.html', metadata=metadata, version=version, is_android='android' in ua)
 
@@ -336,7 +701,7 @@ def index():
 def download():
     print(f"DEBUG: Accessing download from {request.remote_addr}")
     metadata = get_xml_metadata()
-    version = metadata.get("version", "v3.2.7")
+    version = get_latest_release_version() or metadata.get("version", "v3.2.7")
     ua = request.headers.get('User-Agent', '')
     
     # Get download info with platform detection and existence check

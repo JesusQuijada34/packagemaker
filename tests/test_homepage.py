@@ -27,3 +27,15 @@ def test_homepage_detects_browser_language_and_shows_footer_selector():
 
     assert 'lang="en"' in html
     assert 'id="language-selector"' in html
+
+
+def test_download_page_supports_extra_languages():
+    client = app.test_client()
+    response = client.get('/download', headers={'Accept-Language': 'fr-FR,fr;q=0.9'})
+
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+
+    assert 'value="fr"' in html
+    assert 'value="de"' in html
+    assert 'Téléchargement' in html or 'Télécharger' in html

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ lang_code }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -245,11 +245,11 @@
     </header>
 
     <main class="main-view">
-        <button id="install-pwa" class="btn-install">INSTALAR APP IDE</button>
+        <button id="install-pwa" class="btn-install">{{ translations.pwa_install }}</button>
         
         <div id="section-home">
             <div class="card">
-                <h2 style="font-size: 1.125rem; margin-bottom: var(--space-1);">Estado del Sistema</h2>
+                <h2 style="font-size: 1.125rem; margin-bottom: var(--space-1);">{{ translations.pwa_status }}</h2>
                 <p style="font-size: 0.8125rem; color: var(--foreground-muted);">IDE optimizado para Influent OS</p>
                 <div class="status-grid">
                     <div class="status-item">
@@ -281,23 +281,23 @@
         <div class="nav-indicator" id="indicator"></div>
         <a href="javascript:void(0)" class="nav-item active" onclick="navigate(0)">
             <i class="fas fa-home"></i>
-            <span>Inicio</span>
+            <span>{{ translations.pwa_home }}</span>
         </a>
         <a href="/download" class="nav-item" onclick="navigate(1)">
             <i class="fas fa-download"></i>
-            <span>Descargas</span>
+            <span>{{ translations.pwa_downloads }}</span>
         </a>
         <a href="/release-notes" class="nav-item" onclick="navigate(2)">
             <i class="fas fa-history"></i>
-            <span>Notas</span>
+            <span>{{ translations.pwa_notes }}</span>
         </a>
         <a href="/issues" class="nav-item" onclick="navigate(3)">
             <i class="fas fa-exclamation-circle"></i>
-            <span>Issues</span>
+            <span>{{ translations.pwa_issues }}</span>
         </a>
         <a href="/faq" class="nav-item" onclick="navigate(4)">
             <i class="fas fa-question-circle"></i>
-            <span>FAQ</span>
+            <span>{{ translations.pwa_faq }}</span>
         </a>
     </nav>
 

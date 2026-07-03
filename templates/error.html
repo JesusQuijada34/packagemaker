@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ lang_code }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -169,9 +169,9 @@
             <div class="error-card">
                 {% if code == 404 %}
                     <div class="error-icon icon-404"><i class="fas fa-map"></i></div>
-                    <h1 class="error-title">Página No Encontrada</h1>
+                    <h1 class="error-title">{{ translations.error_404_title }}</h1>
                     <p class="error-description">
-                        La página que buscas se ha perdido en el espacio digital. 
+                        {{ translations.error_404_desc }}
                         La ruta <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">{{ path }}</code> no existe.
                     </p>
                     <div class="suggestions">
@@ -185,9 +185,9 @@
                     </div>
                 {% elif code == 500 %}
                     <div class="error-icon icon-500"><i class="fas fa-server"></i></div>
-                    <h1 class="error-title">Error Interno del Servidor</h1>
+                    <h1 class="error-title">{{ translations.error_500_title }}</h1>
                     <p class="error-description">
-                        {% if message %}{{ message }}{% else %}Algo salió mal en nuestro servidor. Estamos trabajando para resolverlo.{% endif %}
+                        {% if message %}{{ message }}{% else %}{{ translations.error_500_desc }}{% endif %}
                     </p>
                     <div class="suggestions">
                         <h4><i class="fas fa-tools"></i> Qué puedes hacer:</h4>
@@ -200,7 +200,7 @@
                     </div>
                 {% elif code == 403 %}
                     <div class="error-icon icon-403"><i class="fas fa-lock"></i></div>
-                    <h1 class="error-title">Acceso Prohibido</h1>
+                    <h1 class="error-title">{{ translations.error_403_title }}</h1>
                     <p class="error-description">No tienes permiso para acceder a este recurso. Esta área está restringida.</p>
                     <div class="suggestions">
                         <h4><i class="fas fa-shield-alt"></i> Información:</h4>
@@ -218,8 +218,8 @@
             </div>
 
             <div class="btn-group">
-                <a href="/" class="btn btn-primary"><i class="fas fa-home"></i> Volver al Inicio</a>
-                <a href="/download" class="btn btn-secondary"><i class="fas fa-download"></i> Descargas</a>
+                <a href="/" class="btn btn-primary"><i class="fas fa-home"></i> {{ translations.error_back_home }}</a>
+                <a href="/download" class="btn btn-secondary"><i class="fas fa-download"></i> {{ translations.error_downloads }}</a>
             </div>
         </div>
     </main>
