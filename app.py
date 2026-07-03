@@ -834,6 +834,22 @@ def init_db():
                   ip TEXT,
                   duration INTEGER DEFAULT 0,
                   bounced BOOLEAN DEFAULT 1)''')
+    # Table to map Telegram chat ids and usernames when users register the bot
+    c.execute('''CREATE TABLE IF NOT EXISTS telegram_users
+                 (chat_id INTEGER PRIMARY KEY,
+                  username TEXT,
+                  registered_at DATETIME)''')
+
+    # Reports submitted from the website
+    c.execute('''CREATE TABLE IF NOT EXISTS reports
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  ticket TEXT,
+                  title TEXT,
+                  description TEXT,
+                  reporter_username TEXT,
+                  reporter_telegram_id TEXT,
+                  reporter_chat_id INTEGER,
+                  created_at DATETIME)''')
     conn.commit()
     conn.close()
 
@@ -960,6 +976,133 @@ def check_iflapp_exists(url):
         return response.status_code < 400
     except Exception:
         return False
+
+
+    # --- Telegram integration helpers and routes ---
+    TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+    TELEGRAM_OWNER_ID = os.getenv('TELEGRAM_OWNER_ID')
+
+    def send_telegram_message(chat_id, text, parse_mode='HTML'):
+        if not TELEGRAM_BOT_TOKEN:
+            print('Telegram token not configured; skipping send')
+            return None
+        api = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
+        payload = {'chat_id': chat_id, 'text': text, 'parse_mode': parse_mode}
+        try:
+            resp = requests.post(api, json=payload, timeout=8)
+            return resp.json() if resp.status_code == 200 else None
+        except Exception as e:
+            print(f'Error sending telegram message: {e}')
+            return None
+
+
+    @app.route('/report', methods=['GET', 'POST'])
+    def report_issue():
+        if request.method == 'GET':
+            return render_template('report.html')
+
+        # POST: create report and notify owner via Telegram
+        title = request.form.get('title')
+        description = request.form.get('description')
+        reporter_username = request.form.get('reporter_username')
+        reporter_telegram_id = request.form.get('reporter_telegram_id') or None
+
+        ticket = f"R-{uuid.uuid4().hex[:8]}"
+        created_at = datetime.now()
+
+        reporter_chat_id = None
+        # If user provided a numeric telegram id, use it as chat id
+        try:
+            if reporter_telegram_id:
+                reporter_chat_id = int(reporter_telegram_id)
+        except Exception:
+            reporter_chat_id = None
+
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            c = conn.cursor()
+            c.execute('INSERT INTO reports (ticket, title, description, reporter_username, reporter_telegram_id, reporter_chat_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                      (ticket, title, description, reporter_username, reporter_telegram_id, reporter_chat_id, created_at))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f'Error saving report: {e}')
+
+        # Notify owner
+        owner_text = f"<b>REPORT {ticket}</b>\n\n" + \
+                     f"<b>Título:</b> {title}\n" + \
+                     f"<b>Descripción:</b> {description}\n\n" + \
+                     f"<b>Reporter:</b> {reporter_username or 'N/A'}\n" + \
+                     f"<b>Telegram ID (if provided):</b> {reporter_telegram_id or 'N/A'}\n\n" + \
+                     "Responde a este mensaje para enviar un mensaje al reporter (si está registrado)."
+
+        if TELEGRAM_OWNER_ID:
+            try:
+                send_telegram_message(TELEGRAM_OWNER_ID, owner_text)
+            except Exception as e:
+                print(f'Error notifying owner: {e}')
+
+        return render_template('report.html', submitted=True, ticket=ticket)
+
+
+    @app.route('/api/telegram_webhook', methods=['POST'])
+    def telegram_webhook():
+        data = request.json or {}
+        try:
+            message = data.get('message') or data.get('edited_message')
+            if not message:
+                return jsonify({'ok': True})
+
+            from_user = message.get('from', {})
+            text = message.get('text', '')
+            chat = message.get('chat', {})
+            chat_id = chat.get('id')
+            username = from_user.get('username')
+            user_id = from_user.get('id')
+
+            # If a user registers the bot, store mapping
+            if text and text.strip().lower().startswith('/register'):
+                try:
+                    conn = sqlite3.connect(DB_PATH)
+                    c = conn.cursor()
+                    c.execute('REPLACE INTO telegram_users (chat_id, username, registered_at) VALUES (?, ?, ?)', (chat_id, username, datetime.now()))
+                    conn.commit()
+                    conn.close()
+                    send_telegram_message(chat_id, 'Registro completado. Ahora podrás recibir mensajes de soporte a través de este bot.')
+                except Exception as e:
+                    print(f'Error saving telegram user: {e}')
+                return jsonify({'ok': True})
+
+            # If owner replied to a report message, forward the reply to the reporter
+            if str(user_id) == str(TELEGRAM_OWNER_ID) and message.get('reply_to_message'):
+                reply_to = message.get('reply_to_message')
+                # Look for REPORT ticket in the replied-to text
+                replied_text = reply_to.get('text', '')
+                import re
+                m = re.search(r'REPORT\s+(R-[0-9a-fA-F]+)', replied_text)
+                if m:
+                    ticket = m.group(1)
+                    # Find report and reporter chat id
+                    conn = sqlite3.connect(DB_PATH)
+                    c = conn.cursor()
+                    c.execute('SELECT reporter_chat_id, reporter_username FROM reports WHERE ticket = ?', (ticket,))
+                    row = c.fetchone()
+                    conn.close()
+                    if row:
+                        reporter_chat_id, reporter_username = row
+                        if reporter_chat_id:
+                            # forward owner's text to reporter
+                            send_telegram_message(reporter_chat_id, f"Respuesta del Owner sobre {ticket}:\n\n{text}")
+                            send_telegram_message(TELEGRAM_OWNER_ID, f"Mensaje enviado a {reporter_username or reporter_chat_id}.")
+                        else:
+                            send_telegram_message(TELEGRAM_OWNER_ID, f"El reporter de {ticket} no está registrado o no proporcionó chat id.")
+                    else:
+                        send_telegram_message(TELEGRAM_OWNER_ID, f"No se encontró el ticket {ticket}.")
+
+            return jsonify({'ok': True})
+        except Exception as e:
+            print(f'Error in telegram_webhook: {e}')
+            return jsonify({'ok': False, 'error': str(e)}), 500
 
 def get_github_releases():
     try:

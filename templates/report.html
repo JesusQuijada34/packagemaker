@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Reportar Problema{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:2rem auto;padding:1rem;">
+    <div class="liquid-card" style="padding:1.5rem;">
+        <h2 style="margin-bottom:0.5rem;">Reportar un error o inconveniente</h2>
+        {% if submitted %}
+            <p style="color:var(--accent);">Gracias. Su reporte <strong>{{ ticket }}</strong> ha sido enviado.</p>
+            <p>Si desea recibir respuestas por Telegram, abra una conversación con el bot y envíe <code>/register</code>.</p>
+        {% else %}
+        <form method="post">
+            <div style="margin-bottom:0.75rem;">
+                <label>Título</label>
+                <input name="title" required style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--foreground);">
+            </div>
+            <div style="margin-bottom:0.75rem;">
+                <label>Descripción</label>
+                <textarea name="description" required rows="6" style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--foreground);"></textarea>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+                <div style="flex:1;">
+                    <label>Tu usuario (opcional)</label>
+                    <input name="reporter_username" placeholder="@usuario o tu nombre" style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--foreground);">
+                </div>
+                <div style="width:220px;">
+                    <label>Telegram ID (opcional)</label>
+                    <input name="reporter_telegram_id" placeholder="123456789" style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--foreground);">
+                </div>
+            </div>
+            <p style="color:var(--foreground-muted);font-size:0.9rem;">Para que pueda responderle directamente desde Telegram, debe iniciar conversación con el bot y enviar <code>/register</code>. Si no lo hace, recibirá la respuesta en este sitio.</p>
+            <div style="margin-top:1rem;display:flex;gap:0.5rem;">
+                <button class="btn btn-primary" type="submit">Enviar Reporte</button>
+                <a href="/" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
