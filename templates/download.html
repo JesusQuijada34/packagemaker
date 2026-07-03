@@ -1,44 +1,47 @@
 {% extends "base.html" %}
 {% block title %}Descargas{% endblock %}
 {% block content %}
-<div style="padding-top: 40px;" data-aos="fade-up">
-    <h1 style="text-align: center;">Obtén la Suite</h1>
-    <p style="text-align: center; max-width: 600px; margin: 0 auto 40px;">Detectamos automáticamente tu plataforma para ofrecerte la mejor experiencia de instalación.</p>
+<div data-aos="fade-up">
+    <div style="text-align: center; margin-bottom: var(--space-10);">
+        <h1>Obtén la Suite</h1>
+        <p style="max-width: 500px; margin: var(--space-4) auto 0;">Detectamos automáticamente tu plataforma para ofrecerte la mejor experiencia de instalación.</p>
+    </div>
 
     <div class="bento-grid">
-        <!-- Main Download Card -->
-        <div class="bento-item" style="grid-column: span 12; text-align: center; padding: 60px 20px;">
+        <div class="bento-item" style="grid-column: span 12; text-align: center; padding: var(--space-10) var(--space-6);" data-aos="fade-up">
             {% if is_android %}
-                <div style="font-size: 3rem; color: #A4C639; margin-bottom: 20px;"><i class="fab fa-android"></i></div>
-                <h2>Optimizado para Termux</h2>
-                <p style="margin-bottom: 30px;">Instalación directa y automatizada para dispositivos móviles.</p>
-                
-                <div style="background: #000; border-radius: 16px; padding: 20px; border: 1px solid #333; max-width: 600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-                    <code id="termux-cmd" style="color: #A4C639; font-family: monospace; font-size: 0.9rem; word-break: break-all;">curl -sL {{ request.host_url }}api/download.sh | bash</code>
-                    <button onclick="copyCmd()" class="btn" style="padding: 8px 15px; background: rgba(164, 198, 57, 0.2); color: #A4C639; border: 1px solid rgba(164, 198, 57, 0.3);">
+                <div style="width: 64px; height: 64px; background: rgba(164, 198, 57, 0.15); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
+                    <i class="fab fa-android" style="font-size: 2rem; color: #A4C639;"></i>
+                </div>
+                <h2 style="margin-bottom: var(--space-3);">Optimizado para Termux</h2>
+                <p style="margin-bottom: var(--space-6);">Instalación directa y automatizada para dispositivos móviles.</p>
+                <div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); max-width: 500px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: var(--space-4);">
+                    <code id="termux-cmd" style="color: #A4C639; font-size: 0.8125rem; font-family: monospace; word-break: break-all; flex: 1; text-align: left;">curl -sL {{ request.host_url }}api/download.sh | bash</code>
+                    <button onclick="copyCmd()" class="btn" style="padding: var(--space-2) var(--space-3); background: rgba(164, 198, 57, 0.15); color: #A4C639; border: 1px solid rgba(164, 198, 57, 0.3); flex-shrink: 0;" aria-label="Copiar comando">
                         <i class="fas fa-copy"></i>
                     </button>
                 </div>
-                <p style="font-size: 0.8rem; margin-top: 15px; opacity: 0.5;">Copia y pega este comando en tu terminal Termux.</p>
+                <p style="font-size: 0.8125rem; margin-top: var(--space-4); color: var(--foreground-muted);">Copia y pega este comando en tu terminal Termux.</p>
             {% else %}
-                <div style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;"><i class="fas fa-rocket"></i></div>
-                <h2>Descarga para Desktop</h2>
-                <p style="margin-bottom: 30px;">Versión estable v3.2.7 (Build 2026)</p>
-                
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <a href="#" id="main-dl-btn" class="btn btn-primary" style="padding: 18px 45px; font-size: 1.1rem;">
+                <div style="width: 64px; height: 64px; background: var(--accent-soft); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
+                    <i class="fas fa-rocket" style="font-size: 2rem; color: var(--accent);"></i>
+                </div>
+                <h2 style="margin-bottom: var(--space-3);">Descarga para Desktop</h2>
+                <p style="margin-bottom: var(--space-6);">Versión estable v3.2.7 (Build 2026)</p>
+                <div style="display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap;">
+                    <a href="#" id="main-dl-btn" class="btn btn-primary" style="padding: var(--space-4) var(--space-8); font-size: 1rem;">
                         Descargar .iflapp <i class="fas fa-download"></i>
                     </a>
-                    <button class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white;" onclick="toggleList()">
+                    <button class="btn btn-secondary" onclick="toggleList()" aria-label="Ver más opciones">
                         <i class="fas fa-chevron-down"></i>
                     </button>
                 </div>
 
-                <div id="other-platforms" style="display: none; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 30px;">
-                    <h4 style="margin-bottom: 20px; opacity: 0.7;">Todos los Paquetes</h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                <div id="other-platforms" style="display: none; margin-top: var(--space-8); padding-top: var(--space-8); border-top: 1px solid var(--border);">
+                    <h4 style="margin-bottom: var(--space-4); color: var(--foreground-muted);">Todos los Paquetes</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center;">
                         {% for dl in downloads %}
-                            <a href="{{ dl.url }}" class="btn" style="background: var(--glass); border: 1px solid var(--border); color: white; font-size: 0.8rem;">
+                            <a href="{{ dl.url }}" class="btn btn-secondary" style="font-size: 0.8125rem;">
                                 {{ dl.platform }} ({{ dl.size }})
                             </a>
                         {% endfor %}
@@ -47,28 +50,48 @@
             {% endif %}
         </div>
 
-        <!-- Requirements -->
-        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right">
-            <h3 style="margin-bottom: 20px;"><i class="fas fa-list-check"></i> Requisitos</h3>
-            <ul style="list-style: none; color: var(--text-secondary);">
-                <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> Python 3.9 o superior</li>
-                <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> 4GB RAM (Mínimo)</li>
-                <li style="margin-bottom: 12px;"><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> 500MB Espacio en disco</li>
-                <li><i class="fas fa-check" style="color: var(--accent); margin-right: 10px;"></i> Conexión a Internet</li>
+        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right" data-aos-delay="100">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6);">
+                <div style="width: 40px; height: 40px; background: var(--accent-soft); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-list-check" style="color: var(--accent);"></i>
+                </div>
+                <h3 style="margin-bottom: 0;">Requisitos</h3>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border);">
+                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
+                    <span style="color: var(--foreground-muted);">Python 3.9 o superior</span>
+                </li>
+                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border);">
+                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
+                    <span style="color: var(--foreground-muted);">4GB RAM (Mínimo)</span>
+                </li>
+                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border);">
+                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
+                    <span style="color: var(--foreground-muted);">500MB Espacio en disco</span>
+                </li>
+                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0;">
+                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
+                    <span style="color: var(--foreground-muted);">Conexión a Internet</span>
+                </li>
             </ul>
         </div>
 
-        <!-- Tech Specs -->
-        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left">
-            <h3 style="margin-bottom: 20px;"><i class="fas fa-microchip"></i> Especificaciones</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
-                    <div style="font-size: 0.7rem; opacity: 0.5;">ENGINE</div>
-                    <div style="font-weight: 700;">Qt 6.11.1</div>
+        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left" data-aos-delay="200">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6);">
+                <div style="width: 40px; height: 40px; background: rgba(124, 92, 221, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-microchip" style="color: #7C5CDD;"></i>
                 </div>
-                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
-                    <div style="font-size: 0.7rem; opacity: 0.5;">UI SYSTEM</div>
-                    <div style="font-weight: 700;">Leviathan</div>
+                <h3 style="margin-bottom: 0;">Especificaciones</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); text-align: center;">
+                    <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Engine</div>
+                    <div style="font-weight: 700; color: var(--foreground);">Qt 6.11.1</div>
+                </div>
+                <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); text-align: center;">
+                    <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">UI System</div>
+                    <div style="font-weight: 700; color: var(--foreground);">Leviathan</div>
                 </div>
             </div>
         </div>
@@ -89,9 +112,9 @@
 
     const downloads = {{ downloads | tojson }};
     const mainBtn = document.getElementById('main-dl-btn');
-    if (mainBtn) {
+    if (mainBtn && downloads.length > 0) {
         const ua = navigator.userAgent.toLowerCase();
-        let target = downloads[0]; // Default
+        let target = downloads[0];
         if (ua.includes('win')) target = downloads.find(d => d.platform.includes('Windows')) || target;
         else if (ua.includes('linux')) target = downloads.find(d => d.platform.includes('Linux')) || target;
         mainBtn.href = target.url;

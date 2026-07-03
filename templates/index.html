@@ -1,75 +1,109 @@
 {% extends "base.html" %}
 {% block title %}Inicio{% endblock %}
 {% block content %}
-<div style="padding-top: 60px; text-align: center;" data-aos="fade-up">
-    <span style="background: rgba(0, 82, 255, 0.1); color: var(--accent); padding: 8px 16px; border-radius: 100px; font-weight: 600; font-size: 0.8rem; border: 1px solid rgba(0, 82, 255, 0.2); text-transform: uppercase; letter-spacing: 1px;">Nueva Versión v3.2.7</span>
-    <h1 style="margin-top: 20px;">Forja el futuro de<br><span style="background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Influent OS</span></h1>
-    <p style="max-width: 600px; margin: 0 auto 40px;">El IDE definitivo para desarrolladores que buscan potencia, blindaje y elegancia en un solo entorno de trabajo.</p>
-    <div style="display: flex; gap: 15px; justify-content: center;">
+<section style="padding-top: var(--space-16); padding-bottom: var(--space-16); text-align: center;" data-aos="fade-up">
+    <div style="display: inline-flex; align-items: center; gap: var(--space-2); background: var(--accent-soft); border: 1px solid var(--border); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); margin-bottom: var(--space-6);">
+        <span style="width: 8px; height: 8px; background: #44ff44; border-radius: 50%; animation: pulse 2s infinite;"></span>
+        <span style="color: var(--foreground); font-size: 0.8125rem; font-weight: 600;">Nueva Versión v3.2.7</span>
+    </div>
+    <h1 style="margin-bottom: var(--space-4);">
+        Forja el futuro de<br>
+        <span class="text-gradient">Influent OS</span>
+    </h1>
+    <p style="max-width: 540px; margin: 0 auto var(--space-8); font-size: 1.125rem;">
+        El IDE definitivo para desarrolladores que buscan potencia, blindaje y elegancia en un solo entorno de trabajo.
+    </p>
+    <div style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
         <a href="/download" class="btn btn-primary">Empezar a Crear <i class="fas fa-arrow-right"></i></a>
-        <a href="https://github.com/JesusQuijada34/packagemaker" class="btn" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border);">GitHub <i class="fab fa-github"></i></a>
+        <a href="https://github.com/JesusQuijada34/packagemaker" class="btn btn-secondary" target="_blank" rel="noopener">GitHub <i class="fab fa-github"></i></a>
     </div>
-</div>
+</section>
 
-<div class="bento-grid" style="margin-top: 80px;">
-    <!-- Bento Item 1: Compilación -->
-    <div class="bento-item" style="grid-column: span 8; grid-row: span 2;" data-aos="fade-right">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+<div class="bento-grid">
+    <div class="bento-item" style="grid-column: span 8; grid-row: span 2;" data-aos="fade-right" data-aos-delay="100">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
             <div>
-                <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Compilación Inteligente</h3>
-                <p style="font-size: 0.9rem;">Optimización en tiempo real para el kernel de Influent OS.</p>
+                <h3 style="font-size: 1.25rem; margin-bottom: var(--space-2);">Compilación Inteligente</h3>
+                <p style="font-size: 0.875rem;">Optimización en tiempo real para el kernel de Influent OS.</p>
             </div>
-            <div style="background: var(--accent); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-bolt"></i>
+            <div style="width: 48px; height: 48px; background: var(--accent); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-bolt" style="font-size: 1.25rem;"></i>
             </div>
         </div>
-        <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/compilacion.png" alt="Compilación" style="width: 100%; border-radius: 16px; margin-top: 20px; border: 1px solid var(--border);">
-    </div>
-
-    <!-- Bento Item 2: MoonFix -->
-    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-left">
-        <h3 style="margin-bottom: 10px;">MoonFix</h3>
-        <p style="font-size: 0.85rem;">Saneamiento automático de código y dependencias.</p>
-        <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border);">
-            <code style="color: #4D7CFF; font-size: 0.8rem;">$ moonfix --repair --all</code>
+        <div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border);">
+            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/compilacion.png" alt="Compilación" style="width: 100%; display: block;">
         </div>
     </div>
 
-    <!-- Bento Item 3: UI Engine -->
-    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-up">
-        <h3 style="margin-bottom: 10px;">Leviathan UI</h3>
-        <p style="font-size: 0.85rem;">Basado en Qt 6.11.1 para interfaces líquidas.</p>
-    </div>
-
-    <!-- Bento Item 4: IDE Preview -->
-    <div class="bento-item" style="grid-column: span 12;" data-aos="zoom-in">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <h2 style="font-size: 2.5rem;">Un entorno sin límites</h2>
-            <p>Diseñado para la máxima productividad con blindaje de código integrado.</p>
+    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-left" data-aos-delay="200">
+        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
+            <div style="width: 40px; height: 40px; background: var(--accent-soft); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-moon" style="color: var(--accent);"></i>
+            </div>
+            <h3 style="margin-bottom: 0;">MoonFix</h3>
         </div>
-        <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/crear_proyecto.png" alt="IDE" style="width: 100%; border-radius: 20px; box-shadow: 0 30px 60px rgba(0,0,0,0.8);">
+        <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Saneamiento automático de código y dependencias.</p>
+        <div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3);">
+            <code style="color: var(--accent); font-size: 0.8125rem; font-family: monospace;">$ moonfix --repair --all</code>
+        </div>
     </div>
 
-    <!-- Bento Item 5: Apps -->
-    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right">
-        <h3>Gestor de Aplicaciones</h3>
-        <p style="font-size: 0.9rem;">Control total sobre el ecosistema de tu proyecto.</p>
-        <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/gestor_apps.png" alt="Apps" style="width: 100%; border-radius: 12px; margin-top: 15px;">
+    <div class="bento-item" style="grid-column: span 4;" data-aos="fade-up" data-aos-delay="300">
+        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
+            <div style="width: 40px; height: 40px; background: rgba(124, 92, 221, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-layer-group" style="color: #7C5CDD;"></i>
+            </div>
+            <h3 style="margin-bottom: 0;">Leviathan UI</h3>
+        </div>
+        <p style="font-size: 0.875rem;">Basado en Qt 6.11.1 para interfaces líquidas.</p>
     </div>
 
-    <!-- Bento Item 6: Security -->
-    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left">
-        <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-            <div style="font-size: 4rem; color: var(--accent); margin-bottom: 20px;"><i class="fas fa-shield-halved"></i></div>
-            <h3>Blindaje de Código</h3>
-            <p>Protección contra ingeniería inversa y acceso no autorizado.</p>
+    <div class="bento-item" style="grid-column: span 12;" data-aos="zoom-in" data-aos-delay="400">
+        <div style="text-align: center; margin-bottom: var(--space-6);">
+            <h2 style="font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: var(--space-2);">Un entorno sin límites</h2>
+            <p style="max-width: 480px; margin: 0 auto;">Diseñado para la máxima productividad con blindaje de código integrado.</p>
+        </div>
+        <div style="border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg);">
+            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/crear_proyecto.png" alt="Package Maker IDE" style="width: 100%; display: block;">
+        </div>
+    </div>
+
+    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right" data-aos-delay="500">
+        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
+            <div style="width: 40px; height: 40px; background: rgba(92, 221, 201, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-th-large" style="color: #5CDDC9;"></i>
+            </div>
+            <h3 style="margin-bottom: 0;">Gestor de Aplicaciones</h3>
+        </div>
+        <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">Control total sobre el ecosistema de tu proyecto.</p>
+        <div style="border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border);">
+            <img src="https://raw.githubusercontent.com/JesusQuijada34/packagemaker/main/assets/gestor_apps.png" alt="Gestor de Apps" style="width: 100%; display: block;">
+        </div>
+    </div>
+
+    <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left" data-aos-delay="600">
+        <div style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: var(--space-8);">
+            <div style="width: 72px; height: 72px; background: var(--accent-soft); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+                <i class="fas fa-shield-halved" style="font-size: 2rem; color: var(--accent);"></i>
+            </div>
+            <h3 style="margin-bottom: var(--space-2);">Blindaje de Código</h3>
+            <p style="font-size: 0.875rem;">Protección contra ingeniería inversa y acceso no autorizado.</p>
         </div>
     </div>
 </div>
 
-<div style="margin-top: 100px; padding: 60px 0; text-align: center;" data-aos="fade-up">
-    <h2>¿Listo para el siguiente nivel?</h2>
-    <p style="margin-bottom: 30px;">Únete a la revolución del desarrollo en Influent OS.</p>
-    <a href="/download" class="btn btn-primary" style="padding: 16px 40px; font-size: 1.2rem;">Descargar Ahora</a>
-</div>
+<section style="margin-top: var(--space-16); padding: var(--space-12) 0; text-align: center;" data-aos="fade-up">
+    <h2 style="margin-bottom: var(--space-3);">¿Listo para el siguiente nivel?</h2>
+    <p style="margin-bottom: var(--space-6);">Únete a la revolución del desarrollo en Influent OS.</p>
+    <a href="/download" class="btn btn-primary" style="padding: var(--space-4) var(--space-8); font-size: 1rem;">
+        Descargar Ahora <i class="fas fa-download"></i>
+    </a>
+</section>
+
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+</style>
 {% endblock %}

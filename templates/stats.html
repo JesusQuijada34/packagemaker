@@ -7,108 +7,178 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
+    flex-wrap: wrap;
+    gap: var(--space-4);
 }
 
 .metrics-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: var(--space-5);
+    margin-bottom: var(--space-8);
 }
 
 .metric-card {
     text-align: center;
-    padding: 1.5rem;
+    padding: var(--space-6);
 }
 
-.metric-label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
-.metric-value { font-size: 2.5rem; font-weight: 800; color: var(--accent-color); margin-top: 0.5rem; }
+.metric-label { 
+    font-size: 0.75rem; 
+    color: var(--foreground-muted); 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    margin-bottom: var(--space-2);
+}
+.metric-value { 
+    font-size: 2.5rem; 
+    font-weight: 800; 
+    background: linear-gradient(135deg, var(--foreground) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
 .charts-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: var(--space-6);
 }
 
-table { width: 100%; border-collapse: collapse; margin-top: 2rem; font-size: 0.85rem; }
-th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--border-light); }
-th { color: var(--accent-color); }
-.badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; }
-.badge-red { background: rgba(255, 0, 0, 0.2); color: #ff4444; }
-.badge-green { background: rgba(0, 255, 0, 0.2); color: #44ff44; }
+.table-wrapper {
+    overflow-x: auto;
+    margin-top: var(--space-6);
+}
 
-@media (max-width: 800px) { .charts-grid { grid-template-columns: 1fr; } }
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 0.875rem; 
+    min-width: 500px;
+}
+th, td { 
+    padding: var(--space-4); 
+    text-align: left; 
+    border-bottom: 1px solid var(--border); 
+}
+th { 
+    color: var(--accent); 
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+td { color: var(--foreground-muted); }
+
+.badge { 
+    padding: var(--space-1) var(--space-3); 
+    border-radius: var(--radius-full); 
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.badge-red { background: rgba(255, 100, 100, 0.15); color: #ff6b6b; }
+.badge-green { background: rgba(100, 255, 100, 0.15); color: #6bff6b; }
+
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: rgba(100, 255, 100, 0.1);
+    border: 1px solid rgba(100, 255, 100, 0.2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    color: #6bff6b;
+}
+.live-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #6bff6b;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@media (max-width: 800px) { 
+    .charts-grid { grid-template-columns: 1fr; } 
+}
 {% endblock %}
 
 {% block content %}
-<div class="animate__animated animate__fadeIn">
+<div data-aos="fade-up">
     <div class="stats-header">
         <div>
-            <h1>Dashboard de Tráfico</h1>
-            <p style="color: var(--text-secondary);">Métricas detalladas de usuario y comportamiento.</p>
+            <h1 style="margin-bottom: var(--space-2);">Dashboard de Tráfico</h1>
+            <p>Métricas detalladas de usuario y comportamiento.</p>
         </div>
-        <div class="glass-card" style="padding: 0.5rem 1rem;">
-            <span style="color: #44ff44;">●</span> Live
+        <div class="live-indicator">
+            <span>●</span> Live
         </div>
     </div>
 
     <div class="metrics-row">
-        <div class="glass-card metric-card">
+        <div class="bento-item metric-card">
             <div class="metric-label">Total Visitas</div>
             <div class="metric-value">{{ total }}</div>
         </div>
-        <div class="glass-card metric-card">
+        <div class="bento-item metric-card">
             <div class="metric-label">Tiempo Promedio</div>
             <div class="metric-value">{{ avg_time }}s</div>
         </div>
-        <div class="glass-card metric-card">
+        <div class="bento-item metric-card">
             <div class="metric-label">Tasa de Rebote</div>
             <div class="metric-value">{{ bounce }}%</div>
         </div>
     </div>
 
     <div class="charts-grid">
-        <div class="glass-card">
-            <h3>Plataformas</h3>
-            <canvas id="platformChart" style="margin-top: 1.5rem;"></canvas>
+        <div class="bento-item">
+            <h3 style="margin-bottom: var(--space-4);">Plataformas</h3>
+            <canvas id="platformChart" style="max-height: 250px;"></canvas>
         </div>
-        <div class="glass-card">
-            <h3>Páginas Populares</h3>
-            <canvas id="pathChart" style="margin-top: 1.5rem;"></canvas>
+        <div class="bento-item">
+            <h3 style="margin-bottom: var(--space-4);">Páginas Populares</h3>
+            <canvas id="pathChart" style="max-height: 250px;"></canvas>
         </div>
     </div>
 
-    <div class="glass-card" style="margin-top: 3rem;">
-        <h3>Actividad de Sesiones</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Ruta</th>
-                    <th>Plataforma</th>
-                    <th>Duración</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for v in recent %}
-                <tr>
-                    <td>{{ v[0].split('.')[0] }}</td>
-                    <td><code>{{ v[1] }}</code></td>
-                    <td>{{ v[2] }}</td>
-                    <td>{{ v[3] }}s</td>
-                    <td>
-                        {% if v[4] %}
-                        <span class="badge badge-red">Rebote</span>
-                        {% else %}
-                        <span class="badge badge-green">Engaged</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bento-item" style="margin-top: var(--space-8);">
+        <h3 style="margin-bottom: var(--space-4);">Actividad de Sesiones</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Ruta</th>
+                        <th>Plataforma</th>
+                        <th>Duración</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in recent %}
+                    <tr>
+                        <td>{{ v[0].split('.')[0] }}</td>
+                        <td><code style="background: var(--bg-elevated); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); font-size: 0.8125rem;">{{ v[1] }}</code></td>
+                        <td>{{ v[2] }}</td>
+                        <td>{{ v[3] }}s</td>
+                        <td>
+                            {% if v[4] %}
+                            <span class="badge badge-red">Rebote</span>
+                            {% else %}
+                            <span class="badge badge-green">Engaged</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -119,17 +189,28 @@ th { color: var(--accent-color); }
     const platformData = {{ platforms | tojson }};
     const pathData = {{ paths | tojson }};
 
+    const chartColors = ['#5E6AD2', '#A4C639', '#ff6b9d', '#7C5CDD', '#5CDDC9'];
+    
     new Chart(document.getElementById('platformChart'), {
         type: 'doughnut',
         data: {
             labels: Object.keys(platformData),
             datasets: [{
                 data: Object.values(platformData),
-                backgroundColor: ['#00a2ff', '#a4c639', '#ff0080', '#7000ff', '#888'],
-                borderWidth: 0
+                backgroundColor: chartColors.slice(0, Object.keys(platformData).length),
+                borderWidth: 0,
+                hoverOffset: 10
             }]
         },
-        options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff', padding: 20 } } } }
+        options: { 
+            responsive: true,
+            plugins: { 
+                legend: { 
+                    position: 'bottom', 
+                    labels: { color: '#8A8F98', padding: 20, usePointStyle: true } 
+                } 
+            } 
+        }
     });
 
     new Chart(document.getElementById('pathChart'), {
@@ -139,15 +220,24 @@ th { color: var(--accent-color); }
             datasets: [{
                 label: 'Visitas',
                 data: pathData.map(p => p[1]),
-                backgroundColor: 'rgba(0, 162, 255, 0.4)',
-                borderColor: '#00a2ff',
-                borderWidth: 1
+                backgroundColor: 'rgba(94, 106, 210, 0.4)',
+                borderColor: '#5E6AD2',
+                borderWidth: 1,
+                borderRadius: 8
             }]
         },
         options: {
+            responsive: true,
             scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } },
-                x: { grid: { display: false }, ticks: { color: '#888' } }
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: 'rgba(255,255,255,0.05)' }, 
+                    ticks: { color: '#8A8F98' } 
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { color: '#8A8F98' } 
+                }
             },
             plugins: { legend: { display: false } }
         }
