@@ -6,9 +6,14 @@ Core utilities and logic for the updater system.
 import sys
 import os
 import subprocess
-import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime
+
+# requests con fallback a urllib
+try:
+    import requests
+except ImportError:
+    requests = None
 
 # --- CONFIG ---
 XML_PATH = "details.xml"
@@ -43,19 +48,42 @@ def _rXml(path):
 def _rXml_r(author, app):
     url = f"https://raw.githubusercontent.com/{author}/{app}/main/details.xml"
     try:
-        r = requests.get(url, timeout=10)
-        if r.status_code == 200:
-            return ET.fromstring(r.text).findtext("version", "").strip()
+        if requests:
+            r = requests.get(url, timeout=10)
+            if r.status_code == 200:
+                return ET.fromstring(r.text).findtext("version", "").strip()
+        else:
+            # Fallback usando urllib
+            import urllib.request
+            with urllib.request.urlopen(url, timeout=10) as response:
+                if response.status == 200:
+                    content = response.read().decode('utf-8')
+                    return ET.fromstring(content).findtext("version", "").strip()
     except: pass
     return ""
+
+def _check_url_exists(url):
+    """Verifica si una URL existe (HEAD request)."""
+    if requests:
+        try:
+            r = requests.head(url, timeout=15, allow_redirects=True)
+            return r.status_code == 200
+        except: pass
+    else:
+        # Fallback usando urllib
+        try:
+            import urllib.request
+            req = urllib.request.Request(url, method='HEAD')
+            with urllib.request.urlopen(req, timeout=15) as response:
+                return response.status == 200
+        except: pass
+    return False
 
 def _fR(author, app, version, platform, publisher):
     filename = f"{publisher}.{app}.{version}-{platform}.iflapp"
     url = f"https://github.com/{author}/{app}/releases/download/{version}/{filename}"
-    try:
-        if requests.head(url, timeout=15, allow_redirects=True).status_code == 200:
-            return url
-    except: pass
+    if _check_url_exists(url):
+        return url
     return None
 
 def _fR_exe(author, app, version, platform, publisher):
@@ -73,12 +101,9 @@ def _fR_exe(author, app, version, platform, publisher):
     
     for filename in exe_patterns:
         url = f"https://github.com/{author}/{app}/releases/download/{version}/{filename}"
-        try:
-            r = requests.head(url, timeout=15, allow_redirects=True)
-            if r.status_code == 200:
-                log(f"[EXE] Setup encontrado: {filename}")
-                return url, filename
-        except: pass
+        if _check_url_exists(url):
+            log(f"[EXE] Setup encontrado: {filename}")
+            return url, filename
     
     return None, None
 

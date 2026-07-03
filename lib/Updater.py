@@ -10,8 +10,14 @@ import shutil
 import zipfile
 import traceback
 import subprocess
-import requests
 from pathlib import Path
+
+# requests con fallback a urllib
+try:
+    import requests
+except ImportError:
+    requests = None
+
 try:
     from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
     from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor
@@ -38,6 +44,16 @@ try:
     HAS_LEVIATHAN = True
 except (ImportError, SyntaxError):
     HAS_LEVIATHAN = False
+    class WipeWindow:
+        @staticmethod
+        def create():
+            class MockWipe:
+                def set_mode(self, mode): return self
+                def apply(self, widget): pass
+            return MockWipe()
+    class CustomTitleBar:
+        def __init__(self, *args, **kwargs): pass
+        def set_color(self, *args): pass
     class LeviathanDialog:
         @staticmethod
         def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")

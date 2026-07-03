@@ -13,7 +13,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
-import requests
+# requests con fallback a urllib
+try:
+    import requests
+except ImportError:
+    requests = None
+
 try:
     from PyQt6.QtCore import QObject, QThread, pyqtSignal
     PYQT6_AVAILABLE = True
@@ -344,9 +349,14 @@ class PythonPortableManager(QObject):
     def _install_pip_for_python(self, python_exe: Path):
         get_pip_path = python_exe.parent / "get-pip.py"
         try:
-            response = requests.get(GET_PIP_URL, timeout=60)
-            response.raise_for_status()
-            get_pip_path.write_bytes(response.content)
+            if requests is None:
+                # Fallback usando urllib
+                import urllib.request
+                urllib.request.urlretrieve(GET_PIP_URL, get_pip_path)
+            else:
+                response = requests.get(GET_PIP_URL, timeout=60)
+                response.raise_for_status()
+                get_pip_path.write_bytes(response.content)
             subprocess.run(
                 [str(python_exe), str(get_pip_path), "--no-warn-script-location"],
                 capture_output=True,

@@ -7,11 +7,17 @@ import subprocess
 import platform
 import fnmatch
 import hashlib
-import requests
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, Optional, List
+
+# requests con fallback a urllib
+try:
+    import requests
+except ImportError:
+    requests = None
+
 try:
     from PyQt6.QtCore import QThread, pyqtSignal
     PYQT6_AVAILABLE = True

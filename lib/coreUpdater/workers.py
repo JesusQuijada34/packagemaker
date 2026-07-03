@@ -4,13 +4,20 @@
 Worker classes for background installation tasks.
 """
 import os
+import sys
 import shutil
 import zipfile
 import time
 import traceback
-import requests
+from io import BytesIO
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from .core import log, KillerLogic, cache_get, cache_set
+
+# requests con fallback a urllib
+try:
+    import requests
+except ImportError:
+    requests = None
 
 class InstallerWorker(QObject):
     finished = pyqtSignal(bool, str)
@@ -28,15 +35,30 @@ class InstallerWorker(QObject):
         ext_dir = "update_temp_extracted"
         try:
             self.status.emit("Conectando con el servidor...")
-            r = requests.get(self.url, stream=True)
-            total = int(r.headers.get("content-length", 0))
-            down = 0
-            with open(temp_zip, "wb") as f:
-                for chunk in r.iter_content(8192):
-                    if not self._running: return
-                    f.write(chunk)
-                    down += len(chunk)
-                    if total: self.progress.emit(int(down * 100 / total))
+            
+            if requests:
+                r = requests.get(self.url, stream=True)
+                total = int(r.headers.get("content-length", 0))
+                down = 0
+                with open(temp_zip, "wb") as f:
+                    for chunk in r.iter_content(8192):
+                        if not self._running: return
+                        f.write(chunk)
+                        down += len(chunk)
+                        if total: self.progress.emit(int(down * 100 / total))
+            else:
+                # Fallback usando urllib
+                import urllib.request
+                with urllib.request.urlopen(self.url, timeout=60) as response:
+                    total = int(response.headers.get("Content-Length", 0))
+                    down = 0
+                    with open(temp_zip, "wb") as f:
+                        while True:
+                            chunk = response.read(8192)
+                            if not chunk or not self._running: break
+                            f.write(chunk)
+                            down += len(chunk)
+                            if total: self.progress.emit(int(down * 100 / total))
 
             self.status.emit("Descomprimiendo actualización...")
             if os.path.exists(ext_dir): shutil.rmtree(ext_dir)
@@ -64,6 +86,18 @@ class InstallerWorker(QObject):
                             except: continue
                     try: shutil.move(src, dst)
                     except: pass
+
+            # Sincronizar plantillas antes de borrar
+            try:
+                from .installer import sync_templates_to_local
+                self.status.emit("Sincronizando plantillas...")
+                sync_ok, sync_msg, sync_files = sync_templates_to_local()
+                if sync_ok and sync_files:
+                    log(f"[UPDATE] Plantillas sincronizadas: {len(sync_files)} archivos")
+                elif not sync_ok:
+                    log(f"[UPDATE] Sincronización de plantillas: {sync_msg}")
+            except Exception as sync_err:
+                log(f"[UPDATE] Error sincronizando plantillas: {sync_err}")
 
             try: shutil.rmtree(ext_dir)
             except: pass
@@ -140,10 +174,8 @@ class EXEInstallerWorker(QObject):
         self.temp_exe_path = None
     
     def run(self):
-        import sys
         import subprocess
         import tempfile
-        from io import BytesIO
         
         try:
             cache_key = f"exe_download_{self.url}"
@@ -158,38 +190,69 @@ class EXEInstallerWorker(QObject):
                 else:
                     # Descargar a memoria
                     self.status.emit("Descargando instalador...")
-                    r = requests.get(self.url, stream=True, timeout=60)
-                    total = int(r.headers.get("content-length", 0))
+                    if requests:
+                        r = requests.get(self.url, stream=True, timeout=60)
+                        total = int(r.headers.get("content-length", 0))
+                        
+                        chunks = []
+                        downloaded = 0
+                        for chunk in r.iter_content(65536):  # 64KB chunks
+                            if not self._running:
+                                return
+                            chunks.append(chunk)
+                            downloaded += len(chunk)
+                            if total:
+                                self.progress.emit(int(downloaded * 50 / total))  # 0-50% descarga
+                        
+                        exe_data = b"".join(chunks)
+                    else:
+                        # Fallback usando urllib
+                        import urllib.request
+                        with urllib.request.urlopen(self.url, timeout=60) as response:
+                            total = int(response.headers.get("Content-Length", 0))
+                            chunks = []
+                            downloaded = 0
+                            while True:
+                                chunk = response.read(65536)
+                                if not chunk or not self._running:
+                                    break
+                                chunks.append(chunk)
+                                downloaded += len(chunk)
+                                if total:
+                                    self.progress.emit(int(downloaded * 50 / total))
+                            exe_data = b"".join(chunks)
                     
-                    chunks = []
-                    downloaded = 0
-                    for chunk in r.iter_content(65536):  # 64KB chunks
-                        if not self._running:
-                            return
-                        chunks.append(chunk)
-                        downloaded += len(chunk)
-                        if total:
-                            self.progress.emit(int(downloaded * 50 / total))  # 0-50% descarga
-                    
-                    exe_data = b"".join(chunks)
                     cache_set(cache_key, exe_data)
                     log(f"[CACHE] Guardado en memoria: {len(exe_data)} bytes")
             else:
                 # Descarga tradicional a archivo
                 self.status.emit("Descargando instalador...")
-                r = requests.get(self.url, stream=True, timeout=60)
-                total = int(r.headers.get("content-length", 0))
+                temp_file = os.path.join(tempfile.gettempdir(), f"download_{os.getpid()}.tmp")
                 
-                exe_data = BytesIO()
-                downloaded = 0
-                for chunk in r.iter_content(65536):
-                    if not self._running:
-                        return
-                    exe_data.write(chunk)
-                    downloaded += len(chunk)
-                    if total:
-                        self.progress.emit(int(downloaded * 50 / total))
-                exe_data = exe_data.getvalue()
+                if requests:
+                    r = requests.get(self.url, stream=True, timeout=60)
+                    total = int(r.headers.get("content-length", 0))
+                    
+                    downloaded = 0
+                    with open(temp_file, "wb") as f:
+                        for chunk in r.iter_content(65536):
+                            if not self._running:
+                                return
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if total:
+                                self.progress.emit(int(downloaded * 50 / total))
+                    with open(temp_file, "rb") as f:
+                        exe_data = f.read()
+                else:
+                    # Fallback usando urllib
+                    import urllib.request
+                    def reporthook(block_num, block_size, total_size):
+                        if total_size > 0:
+                            self.progress.emit(int(block_num * block_size * 50 / total_size))
+                    urllib.request.urlretrieve(self.url, temp_file, reporthook)
+                    with open(temp_file, "rb") as f:
+                        exe_data = f.read()
             
             self.progress.emit(50)
             self.status.emit("Preparando instalación...")

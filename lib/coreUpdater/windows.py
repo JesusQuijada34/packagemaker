@@ -7,12 +7,41 @@ import os
 import sys
 import subprocess
 import time
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, 
-    QProgressBar, QPushButton, QTextEdit, QHBoxLayout, QCheckBox
-)
-from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor, QGuiApplication
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+
+# PyQt6 imports con fallback para entornos sin GUI
+try:
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, 
+        QProgressBar, QPushButton, QTextEdit, QHBoxLayout, QCheckBox
+    )
+    from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor, QGuiApplication
+    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+    PYQT6_AVAILABLE = True
+except ImportError:
+    PYQT6_AVAILABLE = False
+    QApplication = None
+    QMainWindow = object
+    QWidget = object
+    QVBoxLayout = object
+    QLabel = object
+    QProgressBar = object
+    QPushButton = object
+    QTextEdit = object
+    QHBoxLayout = object
+    QCheckBox = object
+    QFont = object
+    QIcon = object
+    QPixmap = object
+    QColor = object
+    QGuiApplication = None
+    Qt = None
+    QThread = object
+    class pyqtSignal:
+        def __init__(self, *args): pass
+        def connect(self, *args): pass
+        def emit(self, *args): pass
+    QTimer = object
+
 from .workers import InstallerWorker, IFLAPPInstallerWorker, EXEInstallerWorker
 from .system_tray import get_tray_icon, set_tray_icon, get_updater_window, set_updater_window
 from .core import log
@@ -23,6 +52,21 @@ try:
     HAS_LEVIATHAN = True
 except ImportError:
     HAS_LEVIATHAN = False
+    class LeviathanDialog:
+        @staticmethod
+        def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")
+    class WipeWindow:
+        @staticmethod
+        def create():
+            class MockWipe:
+                def set_mode(self, *args): return self
+                def apply(self, *args): pass
+            return MockWipe()
+    class LeviathanProgressBar: pass
+    class CustomTitleBar:
+        def __init__(self, *args, **kwargs): pass
+        def set_color(self, *args): pass
+    class InmersiveSplash: pass
 
 
 class ModernUpdaterWindow(QMainWindow):
