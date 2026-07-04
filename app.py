@@ -1116,9 +1116,18 @@ def telegram_webhook():
                 if m:
                     action, ticket = m.group(1), m.group(2)
                     if action == 'resolve':
-                        mark_and_notify(ticket, 'Resuelto (via botón)')
-                        # answer callback
-                        requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': f'Resolviendo {ticket}', 'show_alert': False})
+                        res = mark_and_notify(ticket, 'Resuelto (via botón)')
+                        text_resp = f"Ticket {ticket} resuelto." if res.get('ok') else f"Error: {res.get('reason')}"
+                        requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': text_resp, 'show_alert': False})
+                        # Update original message to remove buttons or change text
+                        new_text = cq.get('message', {}).get('text', '') + f"\n\n✅ <b>ESTADO: RESUELTO</b>"
+                        requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/editMessageText', json={
+                            'chat_id': user_id,
+                            'message_id': cq.get('message', {}).get('message_id'),
+                            'text': new_text,
+                            'parse_mode': 'HTML',
+                            'reply_markup': {'inline_keyboard': []}
+                        })
                     elif action == 'contact':
                         # fetch reporter info from DB
                         conn = sqlite3.connect(DB_PATH)
@@ -1126,10 +1135,14 @@ def telegram_webhook():
                         c.execute('SELECT reporter_chat_id, reporter_ip, reporter_username FROM reports WHERE ticket = ?', (ticket,))
                         row = c.fetchone()
                         conn.close()
-                        info_text = 'No disponible'
                         if row:
-                            info_text = f"ReporterChatID: {row[0] or 'N/A'}\nReporterIP: {row[1] or 'N/A'}\nReporter: {row[2] or 'N/A'}"
-                        requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': info_text, 'show_alert': True})
+                            info_text = f"<b>Detalles del Reporter ({ticket}):</b>\n\n👤 <b>Usuario:</b> {row[2] or 'N/A'}\n🆔 <b>Chat ID:</b> {row[0] or 'N/A'}\n🌐 <b>IP:</b> {row[1] or 'N/A'}"
+                        else:
+                            info_text = f"No se encontró información para el ticket {ticket}."
+                        
+                        # Send as a new message instead of just alert for better visibility
+                        send_telegram_message(user_id, info_text)
+                        requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': 'Información enviada', 'show_alert': False})
                 return jsonify({'ok': True})
 
             message = data.get('message') or data.get('edited_message')
@@ -1143,18 +1156,42 @@ def telegram_webhook():
             username = from_user.get('username')
             user_id = from_user.get('id')
 
-            # If a user registers the bot, store mapping
-            if text and text.strip().lower().startswith('/register'):
-                try:
-                    conn = sqlite3.connect(DB_PATH)
-                    c = conn.cursor()
-                    c.execute('REPLACE INTO telegram_users (chat_id, username, registered_at) VALUES (?, ?, ?)', (chat_id, username, datetime.now()))
-                    conn.commit()
-                    conn.close()
-                    send_telegram_message(chat_id, 'Registro completado. Ahora podrás recibir mensajes de soporte a través de este bot.')
-                except Exception as e:
-                    print(f'Error saving telegram user: {e}')
-                return jsonify({'ok': True})
+            # Handle commands
+            if text:
+                cmd = text.strip().lower()
+                if cmd.startswith('/start'):
+                    welcome_text = (
+                        "<b>¡Bienvenido al bot de Influent Package Maker!</b>\n\n"
+                        "Este bot te permite recibir notificaciones sobre tus reportes de errores y contactar con soporte.\n\n"
+                        "<b>Comandos disponibles:</b>\n"
+                        "/register - Registrarse para recibir notificaciones\n"
+                        "/status - Ver estado de tus reportes\n"
+                        "/help - Mostrar este mensaje de ayuda"
+                    )
+                    send_telegram_message(chat_id, welcome_text)
+                    return jsonify({'ok': True})
+                
+                elif cmd.startswith('/register'):
+                    try:
+                        conn = sqlite3.connect(DB_PATH)
+                        c = conn.cursor()
+                        c.execute('REPLACE INTO telegram_users (chat_id, username, registered_at) VALUES (?, ?, ?)', (chat_id, username, datetime.now()))
+                        conn.commit()
+                        conn.close()
+                        send_telegram_message(chat_id, '✅ <b>Registro completado.</b>\nAhora podrás recibir mensajes de soporte y actualizaciones de tus reportes directamente aquí.')
+                    except Exception as e:
+                        print(f'Error saving telegram user: {e}')
+                        send_telegram_message(chat_id, '❌ Hubo un error al procesar tu registro. Por favor, intenta más tarde.')
+                    return jsonify({'ok': True})
+                
+                elif cmd.startswith('/help'):
+                    help_text = (
+                        "<b>Ayuda de Influent Package Maker Bot</b>\n\n"
+                        "Usa /register para vincular tu cuenta de Telegram con el sistema de reportes.\n"
+                        "Cuando el administrador responda a tu reporte, recibirás una notificación instantánea aquí."
+                    )
+                    send_telegram_message(chat_id, help_text)
+                    return jsonify({'ok': True})
 
             # If owner replied to a report message, forward the reply to the reporter
             if str(user_id) == str(TELEGRAM_OWNER_ID) and message.get('reply_to_message'):
@@ -1516,5 +1553,17 @@ def forbidden(e):
 def bad_request(e):
     return render_template('error.html', code=400), 400
 
+def auto_setup_webhook():
+    token = os.getenv('TELEGRAM_BOT_TOKEN')
+    webhook_url = os.getenv('WEBHOOK_URL')
+    if token and webhook_url:
+        full_url = f"{webhook_url.rstrip('/')}/api/telegram_webhook"
+        try:
+            requests.post(f"https://api.telegram.org/bot{token}/setWebhook", json={'url': full_url}, timeout=5)
+            print(f"Webhook auto-configured to {full_url}")
+        except:
+            pass
+
 if __name__ == '__main__':
+    auto_setup_webhook()
     app.run(debug=True, port=5000)
