@@ -990,11 +990,11 @@ def check_iflapp_exists(url):
         return False
 
 
-    # --- Telegram integration helpers and routes ---
-    TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-    TELEGRAM_OWNER_ID = os.getenv('TELEGRAM_OWNER_ID')
+# --- Telegram integration helpers and routes ---
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_OWNER_ID = os.getenv('TELEGRAM_OWNER_ID')
 
-    def send_telegram_message(chat_id, text, parse_mode='HTML'):
+def send_telegram_message(chat_id, text, parse_mode='HTML'):
         if not TELEGRAM_BOT_TOKEN:
             print('Telegram token not configured; skipping send')
             return None
@@ -1008,7 +1008,7 @@ def check_iflapp_exists(url):
             return None
 
 
-    def send_telegram_message_with_buttons(chat_id, text, buttons=None, parse_mode='HTML'):
+def send_telegram_message_with_buttons(chat_id, text, buttons=None, parse_mode='HTML'):
         if not TELEGRAM_BOT_TOKEN:
             print('Telegram token not configured; skipping send')
             return None
@@ -1028,7 +1028,7 @@ def check_iflapp_exists(url):
             return None
 
 
-    def log_notification(ticket, method, success, info):
+def log_notification(ticket, method, success, info):
         try:
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
@@ -1039,8 +1039,8 @@ def check_iflapp_exists(url):
             print(f'Error logging notification: {e}')
 
 
-    @app.route('/report', methods=['GET', 'POST'])
-    def report_issue():
+@app.route('/report', methods=['GET', 'POST'])
+def report_issue():
         if request.method == 'GET':
             return render_template('report.html')
 
@@ -1094,8 +1094,8 @@ def check_iflapp_exists(url):
         return render_template('report.html', submitted=True, ticket=ticket)
 
 
-    @app.route('/api/telegram_webhook', methods=['POST'])
-    def telegram_webhook():
+@app.route('/api/telegram_webhook', methods=['POST'])
+def telegram_webhook():
         data = request.json or {}
         try:
             # handle callback_query separately
@@ -1213,7 +1213,7 @@ def check_iflapp_exists(url):
             return jsonify({'ok': False, 'error': str(e)}), 500
 
 
-    def try_notify_via_ip(ip, payload):
+def try_notify_via_ip(ip, payload):
         """Attempt simple HTTP callbacks to the reporter IP to notify of resolution."""
         if not ip:
             return False, 'no ip'
@@ -1235,7 +1235,7 @@ def check_iflapp_exists(url):
         return False, last_err if 'last_err' in locals() else 'failed'
 
 
-    def mark_and_notify(ticket, note):
+def mark_and_notify(ticket, note):
         """Mark a report resolved and attempt notifications; logs attempts."""
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
@@ -1273,8 +1273,8 @@ def check_iflapp_exists(url):
         return {'ok': True, 'notified': notified, 'info': notify_info}
 
 
-    @app.route('/admin/reports')
-    def admin_reports():
+@app.route('/admin/reports')
+def admin_reports():
         try:
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
@@ -1292,8 +1292,8 @@ def check_iflapp_exists(url):
             return render_template('error.html', code=500, message='Error cargando reports'), 500
 
 
-    @app.route('/admin/report/<ticket>/resolve', methods=['POST'])
-    def resolve_report(ticket):
+@app.route('/admin/report/<ticket>/resolve', methods=['POST'])
+def resolve_report(ticket):
         note = request.form.get('resolution_note') or 'Resuelto'
         try:
             result = mark_and_notify(ticket, note)
