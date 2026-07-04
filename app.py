@@ -1042,6 +1042,7 @@ def log_notification(ticket, method, success, info):
             print(f'Error logging notification: {e}')
 
 
+@app.route('/report/', methods=['GET', 'POST'])
 @app.route('/report', methods=['GET', 'POST'])
 def report_issue():
         if request.method == 'GET':
