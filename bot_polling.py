@@ -5,7 +5,9 @@ import json
 
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 # Usamos la URL local para reenviar los mensajes al webhook de Flask
-WEBHOOK_LOCAL_URL = "http://127.0.0.1:5000/api/telegram_webhook"
+# En Render, Gunicorn usa el puerto definido en $PORT. Por defecto 5000 si no existe.
+PORT = os.getenv('PORT', '5000')
+WEBHOOK_LOCAL_URL = f"http://127.0.0.1:{PORT}/api/telegram_webhook"
 
 def run_polling():
     if not TOKEN:

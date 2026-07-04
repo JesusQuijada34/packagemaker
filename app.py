@@ -1564,6 +1564,10 @@ def auto_setup_webhook():
         except:
             pass
 
-if __name__ == '__main__':
+# Intentar configurar el webhook al inicio si estamos en producción (Gunicorn/Render)
+if os.getenv('WEBHOOK_URL'):
     auto_setup_webhook()
+
+if __name__ == '__main__':
+    # Solo se ejecuta en desarrollo local
     app.run(debug=True, port=5000)
