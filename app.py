@@ -10,6 +10,10 @@ import uuid
 app = Flask(__name__)
 app.secret_key = 'pm-pwa-secret-2026'
 
+# Use absolute path for database to avoid issues on different deployment environments
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'analytics.db')
+
 SUPPORTED_LANGUAGES = {
     'es': {'name': 'Español', 'native': 'Español'},
     'en': {'name': 'English', 'native': 'English'},
@@ -819,7 +823,6 @@ GITHUB_REPO = "JesusQuijada34/packagemaker"
 XML_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/details.xml"
 RELEASE_NOTES_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/RELEASE_NOTES.md"
 FAQ_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/FAQ.md"
-DB_PATH = 'analytics.db'
 
 # Inicializar Base de Datos
 def init_db():
