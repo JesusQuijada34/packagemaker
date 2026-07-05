@@ -1568,6 +1568,15 @@ def auto_setup_webhook():
 if os.getenv('WEBHOOK_URL'):
     auto_setup_webhook()
 
+# Inicializar base de datos al importar para asegurar que las tablas existan en Render
+with app.app_context():
+    try:
+        from app import init_db
+        init_db()
+        print("Base de datos inicializada correctamente.")
+    except Exception as e:
+        print(f"Error al inicializar base de datos: {e}")
+
 if __name__ == '__main__':
     # Solo se ejecuta en desarrollo local
     app.run(debug=True, port=5000)

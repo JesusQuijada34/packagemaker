@@ -1,21 +1,32 @@
 #!/bin/bash
 
-# Iniciar la aplicación Flask con Gunicorn en segundo plano
-echo "Iniciando servidor web..."
-gunicorn --bind 0.0.0.0:$PORT app:app &
+# Función para limpiar procesos al salir
+cleanup() {
+    echo "Deteniendo procesos..."
+    kill $(jobs -p)
+    exit
+}
 
-# Esperar un poco a que el servidor web esté listo
-sleep 5
+trap cleanup SIGINT SIGTERM
 
-# Configurar Webhook si las variables están presentes
+echo "--- Iniciando Entorno Packagemaker ---"
+
+# 1. Configurar Webhook primero (si aplica)
+# Esto es rápido y no bloqueante, asegura que Telegram sepa a dónde enviar mensajes
 if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$WEBHOOK_URL" ]; then
-    echo "Configurando Webhook de Telegram..."
+    echo "[Telegram] Configurando Webhook..."
     python3 setup_webhook.py
-else
-    # Si no hay Webhook configurado, intentar Polling como respaldo
-    echo "TELEGRAM_BOT_TOKEN o WEBHOOK_URL no configurados. Iniciando bot en modo polling..."
+fi
+
+# 2. Iniciar el bot en modo Polling SOLO si no hay Webhook
+# Se lanza en segundo plano (&)
+if [ -z "$WEBHOOK_URL" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+    echo "[Telegram] Iniciando bot en modo POLLING (segundo plano)..."
     python3 bot_polling.py &
 fi
 
-# Mantener el script vivo
-wait
+# 3. Iniciar el servidor Flask con Gunicorn
+# IMPORTANTE: Gunicorn debe ser el proceso principal que mantenga vivo el contenedor/instancia en Render.
+# Lo ejecutamos en PRIMER PLANO al final para que Render monitoree este proceso.
+echo "[Web] Iniciando servidor Flask con Gunicorn en puerto ${PORT:-5000}..."
+exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 4 --timeout 120 app:app
