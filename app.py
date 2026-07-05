@@ -876,6 +876,13 @@ def init_db():
                   update_id INTEGER,
                   raw_data TEXT,
                   created_at DATETIME)''')
+    # Tabla para gestionar el "Modo Soporte" (Chat Directo)
+    c.execute('''CREATE TABLE IF NOT EXISTS chat_states
+                 (chat_id INTEGER PRIMARY KEY,
+                  mode TEXT,
+                  target_user_id INTEGER,
+                  target_ticket TEXT,
+                  updated_at DATETIME)''')
     conn.commit()
     conn.close()
 
@@ -1140,6 +1147,7 @@ def telegram_webhook():
                 cb_data = cq.get('data', '')
                 from_user = cq.get('from', {})
                 user_id = from_user.get('id')
+                chat_id = cq.get('message', {}).get('chat', {}).get('id')
                 
                 # Solo el owner puede resolver tickets
                 if str(user_id) == str(TELEGRAM_OWNER_ID):
@@ -1148,13 +1156,13 @@ def telegram_webhook():
                     if m:
                         action, ticket = m.group(1), m.group(2)
                         if action == 'resolve':
-                            res = mark_and_notify(ticket, 'Resuelto (via botón)')
-                            text_resp = f"Ticket {ticket} resuelto." if res.get('ok') else f"Error: {res.get('reason')}"
+                            res = mark_and_notify(ticket, 'Problema resuelto satisfactoriamente.')
+                            text_resp = f"Ticket {ticket} finalizado y eliminado de DB activa." if res.get('ok') else f"Error: {res.get('reason')}"
                             requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': text_resp}, timeout=8)
                             
-                            new_text = cq.get('message', {}).get('text', '') + f"\n\n✅ <b>ESTADO: RESUELTO</b>"
+                            new_text = cq.get('message', {}).get('text', '') + f"\n\n✅ <b>ESTADO: RESUELTO Y CERRADO</b>"
                             requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/editMessageText', json={
-                                'chat_id': cq.get('message', {}).get('chat', {}).get('id'),
+                                'chat_id': chat_id,
                                 'message_id': cq.get('message', {}).get('message_id'),
                                 'text': new_text,
                                 'parse_mode': 'HTML',
@@ -1163,13 +1171,18 @@ def telegram_webhook():
                         elif action == 'contact':
                             conn = sqlite3.connect(DB_PATH)
                             c = conn.cursor()
-                            c.execute('SELECT reporter_chat_id, reporter_ip, reporter_username FROM reports WHERE ticket = ?', (ticket,))
+                            c.execute('SELECT reporter_chat_id, reporter_username FROM reports WHERE ticket = ?', (ticket,))
                             row = c.fetchone()
+                            if row and row[0]:
+                                target_chat_id = row[0]
+                                c.execute('REPLACE INTO chat_states (chat_id, mode, target_user_id, target_ticket, updated_at) VALUES (?, ?, ?, ?, ?)',
+                                          (chat_id, 'support', target_chat_id, ticket, datetime.now()))
+                                conn.commit()
+                                send_telegram_message(chat_id, f"🛠 <b>MODO SOPORTE ACTIVADO</b>\n\nConectado con: <code>{row[1] or target_chat_id}</code>\nTicket: <code>{ticket}</code>\n\nTodos tus mensajes serán reenviados al usuario. Envía /exit para salir.")
+                            else:
+                                send_telegram_message(chat_id, "❌ No se puede contactar: El usuario no tiene Chat ID registrado.")
                             conn.close()
-                            if row:
-                                info_text = f"<b>Detalles del Reporter ({ticket}):</b>\n\n👤 <b>Usuario:</b> {row[2] or 'N/A'}\n🆔 <b>Chat ID:</b> {row[0] or 'N/A'}\n🌐 <b>IP:</b> {row[1] or 'N/A'}"
-                                send_telegram_message(user_id, info_text)
-                            requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': 'Info enviada'}, timeout=8)
+                            requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': 'Modo Soporte listo'}, timeout=8)
                 return jsonify({'ok': True})
 
             if not message:
@@ -1180,39 +1193,88 @@ def telegram_webhook():
             user_id = message.get('from', {}).get('id')
             username = message.get('from', {}).get('username')
 
-            # Manejo de Comandos
+            # Manejo de Comandos e Interacciones
             if text:
-                cmd = text.strip().lower()
+                cmd_parts = text.strip().split()
+                cmd = cmd_parts[0].lower()
+                
+                # Salir del modo soporte
+                if cmd == '/exit':
+                    conn = sqlite3.connect(DB_PATH)
+                    c = conn.cursor()
+                    c.execute('DELETE FROM chat_states WHERE chat_id = ?', (chat_id,))
+                    conn.commit()
+                    conn.close()
+                    send_telegram_message(chat_id, "🚪 <b>Modo Soporte desactivado.</b>")
+                    return jsonify({'ok': True})
+
                 if cmd.startswith('/start'):
-                    welcome_text = (
-                        "<b>🚀 Influent Package Maker Bot</b>\n\n"
-                        "¡Hola! Este bot es tu puente directo con el soporte de Packagemaker.\n\n"
-                        "<b>¿Qué puedes hacer?</b>\n"
-                        "• Recibir notificaciones de tus reportes.\n"
-                        "• Hablar directamente con el desarrollador.\n\n"
-                        "<b>Comandos:</b>\n"
-                        "/register - Activar notificaciones\n"
-                        "/help - Ver ayuda"
+                    if str(user_id) == str(TELEGRAM_OWNER_ID):
+                        welcome = "👋 <b>Hola, Desarrollador.</b>\n\nSistema de monitoreo activo. Los reportes llegarán aquí en tiempo real con opciones de gestión técnica."
+                    else:
+                        welcome = "<b>🚀 Influent Package Maker Bot</b>\n\n¡Hola! Usa /send seguido de tu mensaje para reportar un problema."
+                    send_telegram_message(chat_id, welcome)
+                    return jsonify({'ok': True})
+                
+                elif cmd == '/send':
+                    msg_content = " ".join(cmd_parts[1:])
+                    if not msg_content:
+                        send_telegram_message(chat_id, "❌ <b>Uso:</b> /send [tu mensaje]")
+                        return jsonify({'ok': True})
+                    
+                    ticket = f"R-{uuid.uuid4().hex[:8]}"
+                    is_group = message.get('chat', {}).get('type') in ['group', 'supergroup']
+                    origin = f"Grupo: {message.get('chat', {}).get('title')}" if is_group else "Privado"
+                    
+                    # Guardar reporte
+                    conn = sqlite3.connect(DB_PATH)
+                    c = conn.cursor()
+                    c.execute('INSERT INTO reports (ticket, title, description, reporter_username, reporter_chat_id, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+                              (ticket, f"Reporte via Bot ({origin})", msg_content, username or f"ID:{user_id}", user_id, datetime.now()))
+                    conn.commit()
+                    conn.close()
+                    
+                    # Notificar al Owner
+                    owner_text = (
+                        f"🚨 <b>NUEVO REPORTE {ticket}</b>\n\n"
+                        f"👤 <b>Usuario:</b> @{username or 'N/A'} (<code>{user_id}</code>)\n"
+                        f"📍 <b>Origen:</b> {origin}\n"
+                        f"📝 <b>Mensaje:</b> {msg_content}"
                     )
-                    send_telegram_message(chat_id, welcome_text)
+                    buttons = [[
+                        {'text': '✅ Marcar Resuelto', 'callback_data': f'resolve:{ticket}'},
+                        {'text': '💬 Contactar', 'callback_data': f'contact:{ticket}'}
+                    ]]
+                    send_telegram_message_with_buttons(TELEGRAM_OWNER_ID, owner_text, buttons)
+                    
+                    send_telegram_message(chat_id, f"✅ <b>Reporte enviado.</b>\nID de Ticket: <code>{ticket}</code>\nSe te notificará cuando sea resuelto.")
                     return jsonify({'ok': True})
-                
+
                 elif cmd.startswith('/register'):
-                    try:
-                        conn = sqlite3.connect(DB_PATH)
-                        c = conn.cursor()
-                        c.execute('REPLACE INTO telegram_users (chat_id, username, registered_at) VALUES (?, ?, ?)', (chat_id, username, datetime.now()))
-                        conn.commit()
-                        conn.close()
-                        send_telegram_message(chat_id, '✅ <b>¡Registro exitoso!</b>\nAhora recibirás alertas cuando tus reportes sean procesados.')
-                    except Exception as e:
-                        send_telegram_message(chat_id, '❌ Error al registrar. Inténtalo de nuevo.')
+                    conn = sqlite3.connect(DB_PATH)
+                    c = conn.cursor()
+                    c.execute('REPLACE INTO telegram_users (chat_id, username, registered_at) VALUES (?, ?, ?)', (chat_id, username, datetime.now()))
+                    conn.commit()
+                    conn.close()
+                    send_telegram_message(chat_id, '✅ <b>¡Registro exitoso!</b>')
                     return jsonify({'ok': True})
-                
-                elif cmd.startswith('/help'):
-                    help_text = "<b>🆘 Ayuda</b>\n\nUsa /register para vincularte. Si envías un reporte desde la web, el admin podrá responderte por aquí."
-                    send_telegram_message(chat_id, help_text)
-                    return jsonify({'ok': True})
+
+            # Lógica de Modo Soporte / Reenvío
+            conn = sqlite3.connect(DB_PATH)
+            c = conn.cursor()
+            c.execute('SELECT mode, target_user_id, target_ticket FROM chat_states WHERE chat_id = ?', (chat_id,))
+            state = c.fetchone()
+            conn.close()
+
+            if state and state[0] == 'support' and str(chat_id) == str(TELEGRAM_OWNER_ID):
+                target_id = state[1]
+                ticket = state[2]
+                res = send_telegram_message(target_id, f"💬 <b>Mensaje del Desarrollador (Ticket {ticket}):</b>\n\n{text}")
+                if res:
+                    send_telegram_message(chat_id, "✔️ <i>Enviado al reportero.</i>")
+                else:
+                    send_telegram_message(chat_id, "❌ <i>Error al enviar. ¿El usuario bloqueó al bot?</i>")
+                return jsonify({'ok': True})
 
             # If owner replied to a report message, forward the reply to the reporter
             if str(user_id) == str(TELEGRAM_OWNER_ID) and message.get('reply_to_message'):
@@ -1307,15 +1369,12 @@ def mark_and_notify(ticket, note):
             conn.close()
             return {'ok': False, 'reason': 'not found'}
         reporter_chat_id, reporter_ip, reporter_username = row
-        now = datetime.now()
-        c.execute('UPDATE reports SET resolved = 1, resolution_note = ?, resolved_at = ? WHERE ticket = ?', (note, now, ticket))
-        conn.commit()
-        conn.close()
-
+        
+        # Notificar antes de eliminar
         notified = False
         notify_info = ''
         if reporter_chat_id:
-            res = send_telegram_message(reporter_chat_id, f"Tu reporte {ticket} ha sido resuelto:\n\n{note}")
+            res = send_telegram_message(reporter_chat_id, f"✅ <b>SOPORTE: TICKET {ticket} RESUELTO</b>\n\nEl desarrollador ha marcado tu reporte como solucionado. ¡Gracias por tu feedback!")
             success = bool(res)
             notify_info = f'tg:{res}'
             log_notification(ticket, 'telegram', success, notify_info)
@@ -1327,9 +1386,20 @@ def mark_and_notify(ticket, note):
             log_notification(ticket, 'ip', ok, info)
             notified = ok
 
-        # Inform owner
-        owner_msg = f"Reporte {ticket} marcado como resuelto. Notificado: {notified}. Info: {notify_info}"
+        # Eliminar de la base de datos activa como se solicitó
+        c.execute('DELETE FROM reports WHERE ticket = ?', (ticket,))
+        conn.commit()
+        conn.close()
+
+        # Informar al desarrollador (Tono técnico)
         if TELEGRAM_OWNER_ID:
+            owner_msg = (
+                f"🛠 <b>LOG DE SISTEMA: TICKET {ticket}</b>\n\n"
+                f"Estado: <code>PROCESADO_Y_ELIMINADO</code>\n"
+                f"Notificación: {'EXITOSA' if notified else 'FALLIDA'}\n"
+                f"Info Técnica: <code>{notify_info}</code>\n"
+                f"Base de datos actualizada: <code>reports_table.delete(ticket)</code>"
+            )
             send_telegram_message(TELEGRAM_OWNER_ID, owner_msg)
 
         return {'ok': True, 'notified': notified, 'info': notify_info}
