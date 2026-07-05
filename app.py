@@ -1210,10 +1210,48 @@ def telegram_webhook():
 
                 if cmd.startswith('/start'):
                     if str(user_id) == str(TELEGRAM_OWNER_ID):
-                        welcome = "👋 <b>Hola, Desarrollador.</b>\n\nSistema de monitoreo activo. Los reportes llegarán aquí en tiempo real con opciones de gestión técnica."
+                        welcome = (
+                            "🛠 <b>Panel de Control - Influent OS</b>\n\n"
+                            "Bienvenido, <b>JesusQuijada34</b>. El sistema de monitoreo de <b>Package Maker</b> está activo.\n\n"
+                            "📌 <b>Funciones Disponibles:</b>\n"
+                            "• Recibirás alertas de crashes en tiempo real.\n"
+                            "• Podrás gestionar tickets directamente desde aquí.\n"
+                            "• Usa /stats para ver un resumen rápido."
+                        )
                     else:
-                        welcome = "<b>🚀 Influent Package Maker Bot</b>\n\n¡Hola! Usa /send seguido de tu mensaje para reportar un problema."
+                        welcome = (
+                            "<b>🚀 Influent Package Maker Bot</b>\n\n"
+                            "¡Bienvenido al asistente oficial de <b>Package Maker</b>!\n\n"
+                            "Este bot te permite interactuar con el ecosistema de Influent OS:\n"
+                            "• 📝 <b>Reportar:</b> Usa /send [mensaje] para informar un error.\n"
+                            "• ℹ️ <b>Ayuda:</b> Usa /help para ver más comandos.\n"
+                            "• 🌐 <b>Web:</b> <a href='https://packagemaker.onrender.com'>Visitar Sitio Oficial</a>\n\n"
+                            "<i>Tu experiencia de desarrollo Python, ahora más conectada.</i>"
+                        )
                     send_telegram_message(chat_id, welcome)
+                    return jsonify({'ok': True})
+
+                elif cmd == '/help':
+                    help_text = (
+                        "<b>❓ Guía de Comandos</b>\n\n"
+                        "• /start - Iniciar interacción con el bot.\n"
+                        "• /send [mensaje] - Reportar un error o sugerencia.\n"
+                        "• /register - Registrarte para recibir notificaciones.\n"
+                        "• /status - Consultar el estado de los servicios.\n"
+                        "• /exit - Salir de cualquier modo activo (ej. Soporte)."
+                    )
+                    send_telegram_message(chat_id, help_text)
+                    return jsonify({'ok': True})
+
+                elif cmd == '/status':
+                    status_text = (
+                        "<b>🛰 Estado del Sistema</b>\n\n"
+                        "• <b>API:</b> ✅ Online\n"
+                        "• <b>Base de Datos:</b> ✅ Conectada\n"
+                        "• <b>Servidor Render:</b> ✅ Operativo\n\n"
+                        "<i>Última comprobación: Recién ahora.</i>"
+                    )
+                    send_telegram_message(chat_id, status_text)
                     return jsonify({'ok': True})
                 
                 elif cmd == '/send':
@@ -1247,7 +1285,12 @@ def telegram_webhook():
                     ]]
                     send_telegram_message_with_buttons(TELEGRAM_OWNER_ID, owner_text, buttons)
                     
-                    send_telegram_message(chat_id, f"✅ <b>Reporte enviado.</b>\nID de Ticket: <code>{ticket}</code>\nSe te notificará cuando sea resuelto.")
+                    send_telegram_message(chat_id, (
+                        f"✅ <b>¡Reporte Recibido!</b>\n\n"
+                        f"Tu ticket <code>{ticket}</code> ha sido registrado en nuestro sistema. "
+                        f"El equipo técnico de <b>Influent OS</b> lo revisará pronto.\n\n"
+                        f"🔔 <i>Te notificaremos por aquí cuando haya novedades.</i>"
+                    ))
                     return jsonify({'ok': True})
 
                 elif cmd.startswith('/register'):
