@@ -18,12 +18,8 @@ if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$WEBHOOK_URL" ]; then
     python3 setup_webhook.py
 fi
 
-# 2. Iniciar el bot en modo Polling SOLO si no hay Webhook
-# Se lanza en segundo plano (&)
-if [ -z "$WEBHOOK_URL" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
-    echo "[Telegram] Iniciando bot en modo POLLING (segundo plano)..."
-    python3 bot_polling.py &
-fi
+# El bot ahora se gestiona principalmente vía Webhook en app.py.
+# bot_polling.py queda como respaldo manual si se desea ejecutar localmente.
 
 # 3. Iniciar el servidor Flask con Gunicorn
 # IMPORTANTE: Gunicorn debe ser el proceso principal que mantenga vivo el contenedor/instancia en Render.
