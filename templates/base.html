@@ -549,6 +549,7 @@
             <a href="/issues" class="{% if request.path == '/issues' %}active{% endif %}">{{ translations.nav_issues }}</a>
             <a href="/faq" class="{% if request.path == '/faq' %}active{% endif %}">{{ translations.nav_faq }}</a>
             <a href="/report" class="{% if request.path == '/report' %}active{% endif %}">Reportar</a>
+            <a href="/privacy" class="{% if request.path == '/privacy' %}active{% endif %}">{{ translations.nav_privacy or 'Privacidad' }}</a>
         </div>
         <div class="nav-controls" style="margin-left: auto; display:flex; align-items:center; gap:0.75rem;">
             <form class="language-form" method="get" action="{{ request.path }}" style="display:flex; align-items:center; gap:0.5rem;">

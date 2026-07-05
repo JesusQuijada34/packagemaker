@@ -110,6 +110,7 @@ TRANSLATIONS = {
         'error_403_title': 'Acceso Prohibido',
         'error_back_home': 'Volver al Inicio',
         'error_downloads': 'Descargas',
+        'nav_privacy': 'Privacidad',
         'pwa_status': 'Estado del Sistema',
         'pwa_install': 'INSTALAR APP IDE',
         'pwa_home': 'Inicio',
@@ -201,6 +202,7 @@ TRANSLATIONS = {
         'error_403_title': 'Access Forbidden',
         'error_back_home': 'Back to Home',
         'error_downloads': 'Downloads',
+        'nav_privacy': 'Privacy',
         'pwa_status': 'System Status',
         'pwa_install': 'INSTALL IDE APP',
         'pwa_home': 'Home',
@@ -1596,6 +1598,37 @@ def notes():
     except Exception as e:
         print(f"Error loading notes: {e}")
         return render_template('error.html', code=500, message="Error al cargar Notas"), 500
+
+@app.route('/privacy')
+def privacy_page():
+    content = """
+# Política de Privacidad
+
+La privacidad de nuestros usuarios es fundamental para **Influent OS Engineering**. Esta política detalla cómo manejamos la información en el ecosistema de **Package Maker**.
+
+## 1. Recopilación de Información
+Recopilamos información mínima necesaria para el funcionamiento técnico y la mejora del servicio:
+*   **Reportes de Errores:** Cuando utilizas el sistema de telemetría o el bot de Telegram, se recopila el tipo de excepción, el traceback del error y datos básicos del entorno (OS, versión de Python).
+*   **Identificadores de Telegram:** Si interactúas con nuestro bot, almacenamos tu ID de usuario y nombre de usuario para gestionar tus reportes y enviarte notificaciones.
+*   **Datos de Navegación:** Recopilamos estadísticas anónimas de visitas al sitio web (plataforma, duración de la sesión) para optimizar la interfaz.
+
+## 2. Uso de la Información
+La información recopilada se utiliza exclusivamente para:
+*   Diagnosticar y resolver problemas técnicos en Influent Package Maker.
+*   Notificar a los usuarios sobre el estado de sus reportes.
+*   Mejorar la estabilidad y el rendimiento de nuestras herramientas.
+
+## 3. Protección de Datos
+No compartimos, vendemos ni distribuimos tus datos personales a terceros. Toda la información de telemetría se maneja de forma interna por el equipo de desarrollo.
+
+## 4. Contacto
+Si tienes dudas sobre cómo manejamos tus datos, puedes contactarnos a través de nuestro [repositorio oficial en GitHub](https://github.com/JesusQuijada34/packagemaker).
+
+---
+*Última actualización: 05 de Julio de 2026*
+"""
+    html_content = markdown.markdown(content, extensions=['extra', 'codehilite'])
+    return render_template('page.html', title="Política de Privacidad", content=html_content)
 
 @app.route('/issues')
 def issues_page():
