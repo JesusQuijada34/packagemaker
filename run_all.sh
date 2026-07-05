@@ -3,7 +3,7 @@
 # Función para limpiar procesos al salir
 cleanup() {
     echo "Deteniendo procesos..."
-    kill $(jobs -p)
+    kill "$(jobs -p)"
     exit
 }
 
@@ -25,4 +25,4 @@ fi
 # IMPORTANTE: Gunicorn debe ser el proceso principal que mantenga vivo el contenedor/instancia en Render.
 # Lo ejecutamos en PRIMER PLANO al final para que Render monitoree este proceso.
 echo "[Web] Iniciando servidor Flask con Gunicorn en puerto ${PORT:-5000}..."
-exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 4 --timeout 120 app:app
+exec gunicorn --bind "0.0.0.0:${PORT:-5000}" --workers 2 --threads 4 --timeout 120 app:app

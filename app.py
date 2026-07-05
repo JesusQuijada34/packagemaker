@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, jsonify, request, Response, session, send_from_directory, g
 import markdown
@@ -8,7 +9,7 @@ from datetime import datetime, timedelta
 import uuid
 
 app = Flask(__name__)
-app.secret_key = 'pm-pwa-secret-2026'
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'pm-pwa-secret-2026')
 
 # Use absolute path for database to avoid issues on different deployment environments
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1149,7 +1150,7 @@ def telegram_webhook():
                         if action == 'resolve':
                             res = mark_and_notify(ticket, 'Resuelto (via botón)')
                             text_resp = f"Ticket {ticket} resuelto." if res.get('ok') else f"Error: {res.get('reason')}"
-                            requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': text_resp})
+                            requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': text_resp}, timeout=8)
                             
                             new_text = cq.get('message', {}).get('text', '') + f"\n\n✅ <b>ESTADO: RESUELTO</b>"
                             requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/editMessageText', json={
@@ -1158,7 +1159,7 @@ def telegram_webhook():
                                 'text': new_text,
                                 'parse_mode': 'HTML',
                                 'reply_markup': {'inline_keyboard': []}
-                            })
+                            }, timeout=8)
                         elif action == 'contact':
                             conn = sqlite3.connect(DB_PATH)
                             c = conn.cursor()
@@ -1168,7 +1169,7 @@ def telegram_webhook():
                             if row:
                                 info_text = f"<b>Detalles del Reporter ({ticket}):</b>\n\n👤 <b>Usuario:</b> {row[2] or 'N/A'}\n🆔 <b>Chat ID:</b> {row[0] or 'N/A'}\n🌐 <b>IP:</b> {row[1] or 'N/A'}"
                                 send_telegram_message(user_id, info_text)
-                            requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': 'Info enviada'})
+                            requests.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery', json={'callback_query_id': cq.get('id'), 'text': 'Info enviada'}, timeout=8)
                 return jsonify({'ok': True})
 
             if not message:
@@ -1591,7 +1592,6 @@ if os.getenv('WEBHOOK_URL'):
 # Inicializar base de datos al importar para asegurar que las tablas existan en Render
 with app.app_context():
     try:
-        from app import init_db
         init_db()
         print("Base de datos inicializada correctamente.")
     except Exception as e:
