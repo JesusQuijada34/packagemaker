@@ -1608,6 +1608,29 @@ echo -e "${GREEN}INSTALACIÓN COMPLETADA. Inicia con: python3 packagemaker.py${N
 """
     return Response(script, mimetype='text/x-shellscript')
 
+@app.route('/api/report_error', methods=['POST'])
+def report_error():
+    """
+    Endpoint para recibir reportes de errores de los clientes.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data received"}), 400
+        
+        # En un entorno real, aquí guardaríamos el error en la base de datos
+        # Por ahora, simulamos el almacenamiento y lo imprimimos en consola para debug
+        print(f"REPORTED ERROR: {data.get('exception_type')} - {data.get('exception_message')}")
+        
+        # Opcional: Guardar en analytics.db si fuera necesario
+        # conn = sqlite3.connect(DB_PATH)
+        # ... lógica de guardado ...
+        
+        return jsonify({"status": "success", "message": "Report received"}), 200
+    except Exception as e:
+        print(f"ERROR in report_error endpoint: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route('/admin/stats')
 def admin_stats():
     print(f"DEBUG: Accessing admin_stats from {request.remote_addr}")

@@ -99,6 +99,11 @@ from lib.window_chrome import (
     restart_application,
     is_frameless_maximized,
 )
+from lib.errorReporter import setup_global_reporter
+
+# URL de la API pública para reportes (ajustar según despliegue real)
+ERROR_API_URL = "https://packagemaker.onrender.com/api/report_error"
+setup_global_reporter(ERROR_API_URL)
 from lib.uwp_animations import play_bounce_down_close
 from lib.openWithDialog import show_open_with_dialog, open_project_with_editor
 from lib.SidebarItem import SidebarItem
