@@ -23,6 +23,15 @@ variables:
     - apt-get update && apt-get install -y gh
     - gh auth setup-git
 
+.install_windows_dependencies:
+  before_script:
+    - python -V
+    - pip -V
+    - pip install --upgrade pip
+    - pip install -r lib/requirements.txt
+    - choco install gh cli --confirm # Instalar gh CLI en Windows
+    - gh auth setup-git
+
 build_linux:
   stage: build
   image: python:3.9-slim-buster # O una imagen de Linux con Python preinstalado
@@ -43,15 +52,14 @@ build_windows:
   stage: build
   tags:
     - windows # Asume que tienes runners de GitLab configurados con la etiqueta 'windows'
+  extends: .install_windows_dependencies
   script:
     - echo "Iniciando compilación para Windows..."
-    - python -V
-    - pip -V
-    - pip install --upgrade pip
-    - pip install -r lib/requirements.txt
+    - choco install gh cli --confirm # Instalar gh CLI en Windows
+    - gh auth setup-git
     - cd packagemaker
     - python packagemaker.py --buildthis
-    - dir releases # Verificar que el .iflapp se generó
+    - ls -R releases # Verificar que el .iflapp se generó (comando compatible con Git Bash en Windows)
   artifacts:
     paths:
       - packagemaker/releases/*.iflapp
@@ -105,5 +113,6 @@ release_job:
   dependencies:
     - build_linux
     - build_windows
+  allow_failure: true # Permitir que el job de Windows falle sin detener el pipeline si no hay runner de Windows disponible
   only:
     - main
