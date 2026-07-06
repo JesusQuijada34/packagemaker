@@ -1,0 +1,109 @@
+
+stages:
+  - build
+  - release
+
+variables:
+  GIT_DEPTH: 0 # Asegura que todo el historial esté disponible para gh CLI
+  # Configuración para GitHub CLI
+  # Necesitarás configurar una variable CI/CD en GitLab llamada GITHUB_TOKEN
+  # con un token personal de GitHub que tenga permisos para crear/editar releases y subir assets.
+  # Por ejemplo, un token con los scopes `repo` y `workflow`.
+  GH_TOKEN: $GITHUB_TOKEN
+
+.install_dependencies:
+  before_script:
+    - python3 -V
+    - pip3 -V
+    - pip3 install --upgrade pip
+    - pip3 install -r lib/requirements.txt
+    - apt-get update && apt-get install -y curl # Para instalar gh CLI en Linux
+    - curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+    - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+    - apt-get update && apt-get install -y gh
+    - gh auth setup-git
+
+build_linux:
+  stage: build
+  image: python:3.9-slim-buster # O una imagen de Linux con Python preinstalado
+  extends: .install_dependencies
+  script:
+    - echo "Iniciando compilación para Linux..."
+    - cd packagemaker
+    - python3 packagemaker.py --buildthis
+    - ls -R releases # Verificar que el .iflapp se generó
+  artifacts:
+    paths:
+      - packagemaker/releases/*.iflapp
+    expire_in: 1 week
+  only:
+    - main
+
+build_windows:
+  stage: build
+  tags:
+    - windows # Asume que tienes runners de GitLab configurados con la etiqueta 'windows'
+  script:
+    - echo "Iniciando compilación para Windows..."
+    - python -V
+    - pip -V
+    - pip install --upgrade pip
+    - pip install -r lib/requirements.txt
+    - cd packagemaker
+    - python packagemaker.py --buildthis
+    - dir releases # Verificar que el .iflapp se generó
+  artifacts:
+    paths:
+      - packagemaker/releases/*.iflapp
+    expire_in: 1 week
+  only:
+    - main
+
+release_job:
+  stage: release
+  image: python:3.9-slim-buster # O una imagen de Linux con Python preinstalado
+  extends: .install_dependencies
+  script:
+    - echo "Extrayendo versión de details.xml..."
+    - python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('packagemaker/details.xml'); version = tree.getroot().find('version').text; print(version)" > VERSION_TAG.txt
+    - VERSION=$(cat VERSION_TAG.txt)
+    - echo "Versión detectada: $VERSION"
+
+    - echo "Verificando si existe un release con el tag $VERSION..."
+    - | # Usar un bloque multi-línea para el script de bash
+      if gh release view $VERSION &>/dev/null; then
+        echo "Release $VERSION existe. Eliminando..."
+        gh release delete $VERSION --yes
+      else
+        echo "Release $VERSION no existe."
+      fi
+
+    - echo "Creando nuevo release $VERSION..."
+    - gh release create $VERSION --notes "" --draft
+
+    - echo "Subiendo artefactos .iflapp..."
+    - for file in packagemaker/releases/*.iflapp; do
+        if [ -f "$file" ]; then
+          echo "Subiendo $file al release $VERSION..."
+          gh release upload $VERSION "$file"
+        else
+          echo "Advertencia: No se encontró el archivo $file"
+        fi
+      done
+
+    - echo "Subiendo notas de release desde RELEASE_NOTES.md..."
+    - if [ -f "packagemaker/RELEASE_NOTES.md" ]; then
+        gh release edit $VERSION --notes-file packagemaker/RELEASE_NOTES.md
+      else
+        echo "Advertencia: No se encontró RELEASE_NOTES.md. El release se creará sin notas."
+      fi
+
+    - echo "Publicando release $VERSION..."
+    - gh release edit $VERSION --draft=false
+
+    - echo "Workflow de Release completado."
+  dependencies:
+    - build_linux
+    - build_windows
+  only:
+    - main
