@@ -360,6 +360,7 @@ def _screen_build() -> None:
         )
 
     project_path_str = ""
+    manual_mode = False
     if projects:
         print(f"\n  {bold('Proyectos recientes:')}")
         display = [p.name for p in projects[:10]]
@@ -369,15 +370,17 @@ def _screen_build() -> None:
             project_path_str = str(projects[idx])
         else:
             project_path_str = _prompt("Ruta al proyecto", "")
+            manual_mode = True
     else:
         project_path_str = _prompt("Ruta al proyecto", "")
+        manual_mode = True
 
     if not project_path_str or not Path(project_path_str).exists():
         _err("Ruta de proyecto inválida o no existe.")
         _pause()
         return
 
-    # Leer details.xml para prellenar campos
+    # Leer details.xml para obtener metadatos
     details_xml = Path(project_path_str) / "details.xml"
     empresa, nombre, version_val = "influent", "mycoolapp", "1.0"
     if details_xml.exists():
@@ -389,52 +392,56 @@ def _screen_build() -> None:
         except Exception:
             pass
 
-    print()
-    print(bold("  Datos del paquete:"))
-    empresa     = _prompt("Fabricante",      empresa)
-    nombre      = _prompt("Nombre interno",  nombre)
-    version_val = _prompt("Versión",         version_val)
-
     detected = _detect_platform()
-    _info(f"Entorno de compilación detectado: {orange(detected)}")
 
-    print(f"\n  {bold('Modo de compilación:')}")
-    mode_idx = _prompt_choice("Modo", ["Portable (All-in-one)", "Lite (Single File)"], default=0)
-    build_mode = "portable" if mode_idx == 0 else "lite"
+    # Si es modo manual, pedir confirmación de datos
+    if manual_mode:
+        print()
+        print(bold("  Datos del paquete:"))
+        empresa     = _prompt("Fabricante",      empresa)
+        nombre      = _prompt("Nombre interno",  nombre)
+        version_val = _prompt("Versión",         version_val)
 
-    output_dir = _prompt("Carpeta de salida", str(Path(project_path_str).parent / "dist"))
+        _info(f"Entorno de compilación detectado: {orange(detected)}")
 
-    print()
-    print(_hr())
-    print(bold("  Resumen:"))
-    _info(f"Proyecto  : {orange(project_path_str)}")
-    _info(f"Fabricante: {orange(empresa)}")
-    _info(f"App       : {orange(nombre)}")
-    _info(f"Versión   : {orange(version_val)}")
-    _info(f"Modo      : {orange(build_mode)}")
-    _info(f"Salida    : {orange(output_dir)}")
-    _info(f"Plataforma: {orange(detected)}")
-    print(_hr())
+        print(f"\n  {bold('Modo de compilación:')}")
+        mode_idx = _prompt_choice("Modo", ["Portable (All-in-one)", "Lite (Single File)"], default=0)
+        build_mode = "portable" if mode_idx == 0 else "lite"
 
-    if not _prompt_bool("¿Construir paquete?", True):
-        _warn("Cancelado.")
-        _pause()
-        return
+        output_dir = _prompt("Carpeta de salida", str(Path(project_path_str).parent / "dist"))
 
-    py = _find_python()
-    entry = Path(os.getcwd()) / "packagemaker.py"
-    # El CLI moderno de compile usa --name, --shortname, etc.
-    # Opcionalmente se puede usar --buildthis si es una ruta directa
-    cmd = [
-        py, str(entry), "compile",
-        "--name", nombre,
-        "--shortname", Path(project_path_str).name.split(".")[1] if "." in Path(project_path_str).name else Path(project_path_str).name,
-        "--publisher", empresa,
-        "--version", version_val,
-        "--headless",
-    ]
+        print()
+        print(_hr())
+        print(bold("  Resumen:"))
+        _info(f"Proyecto  : {orange(project_path_str)}")
+        _info(f"Fabricante: {orange(empresa)}")
+        _info(f"App       : {orange(nombre)}")
+        _info(f"Versión   : {orange(version_val)}")
+        _info(f"Modo      : {orange(build_mode)}")
+        _info(f"Salida    : {orange(output_dir)}")
+        _info(f"Plataforma: {orange(detected)}")
+        print(_hr())
 
-    print()
+        if not _prompt_bool("¿Construir paquete?", True):
+            _warn("Cancelado.")
+            _pause()
+            return
+    else:
+        # Modo automático: compilar directamente con metadatos del proyecto
+        print()
+        print(_hr())
+        print(bold("  Compilando proyecto seleccionado:"))
+        _info(f"Proyecto  : {orange(Path(project_path_str).name)}")
+        _info(f"Fabricante: {orange(empresa)}")
+        _info(f"App       : {orange(nombre)}")
+        _info(f"Versión   : {orange(version_val)}")
+        _info(f"Plataforma: {orange(detected)}")
+        print(_hr())
+        _info("Iniciando compilación con metadatos del proyecto...")
+        print()
+
+    cmd = _build_project_command(Path(project_path_str))
+
     rc = _run_live(cmd)
     if rc == 0:
         _ok("Paquete construido con éxito.")
@@ -538,15 +545,20 @@ def _project_actions(proj: Path) -> None:
             _show_details_xml(proj)
 
 
+def _build_project_command(proj: Path, python_exe: Optional[str] = None) -> List[str]:
+    """Construye el comando de compilación para un proyecto concreto."""
+    py = python_exe or _find_python()
+    entry = Path(os.getcwd()) / "packagemaker.py"
+    return [py, str(entry), "--buildthis", str(proj)]
+
+
 def _build_project_direct(proj: Path) -> None:
     """Lanza compilación sobre un proyecto del gestor."""
     output_dir = str(proj.parent / "dist")
     detected = _detect_platform()
     print()
     _info(f"Compilando {orange(proj.name)} para {orange(detected)}…")
-    py = _find_python()
-    entry = Path(os.getcwd()) / "packagemaker.py"
-    cmd = [py, str(entry), "compile", str(proj), "--output", output_dir, "--target", detected, "--headless"]
+    cmd = _build_project_command(proj)
     rc = _run_live(cmd)
     if rc == 0:
         _ok("Paquete construido con éxito.")
