@@ -449,6 +449,16 @@ class FlangCompiler:
             except Exception as e:
                 self.log(f"[WARN] No se pudo eliminar {spec_file.name}: {e}")
 
+    def _cleanup_package_folder(self, package_path: Path, iflapp_path: Path):
+        """Elimina la carpeta del paquete después de crear el .iflapp para no estorbar al gestor."""
+        if package_path.exists() and package_path.is_dir() and iflapp_path.exists():
+            try:
+                shutil.rmtree(package_path)
+                self.log(f"[INFO] Carpeta del paquete eliminada: {package_path.name}")
+                self.log(f"[INFO] Solo queda el archivo .iflapp: {iflapp_path.name}")
+            except Exception as e:
+                self.log(f"[WARN] No se pudo eliminar la carpeta del paquete {package_path.name}: {e}")
+
     def run(self, build_mode="portable") -> Optional[Path]:
         if not self.parse_details_xml():
             return None
@@ -480,6 +490,8 @@ class FlangCompiler:
                 if self.compress_to_iflapp(last_package_path, iflapp_path):
                     final_iflapp = iflapp_path
                     self.log(f"[SUCCESS] Package created: {iflapp_path}")
+                    # Limpiar la carpeta del paquete después de crear el .iflapp
+                    self._cleanup_package_folder(last_package_path, iflapp_path)
         finally:
             # Limpiar siempre al finalizar, sea éxito o error
             self._cleanup_build_artifacts()

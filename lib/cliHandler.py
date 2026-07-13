@@ -13,6 +13,32 @@ from pathlib import Path
 # Constantes
 import xml.etree.ElementTree as ET
 
+
+def _safe_print(message, stream=None):
+    """Imprime mensajes de forma segura incluso si la consola no soporta Unicode."""
+    target = stream or sys.stdout
+    if target is None:
+        return
+
+    mapping = {
+        '✔': '[OK]',
+        '✖': '[ERROR]',
+        '⚠': '[WARN]',
+        'ℹ': '[INFO]',
+        '●': '*',
+        '○': 'o',
+        '›': '>',
+    }
+
+    safe_message = ''.join(mapping.get(char, char) for char in str(message))
+    encoding = getattr(target, 'encoding', None) or 'utf-8'
+    try:
+        print(safe_message, file=target)
+    except UnicodeEncodeError:
+        fallback = safe_message.encode(encoding, errors='replace').decode(encoding, errors='replace')
+        print(fallback, file=target)
+
+
 with open(Path(__file__).parent / "../details.xml", "r") as f:
     tree = ET.parse(f)
     root_xml = tree.getroot()
@@ -477,7 +503,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             shutil.copy(str(icon_source), str(icon_dest))
             print(f"[OK] Icono copiado a: {icon_dest}")
         
-        print(f"\n  ✔ Proyecto creado en: {project_path}\n")
+        _safe_print(f"\n  ✔ Proyecto creado en: {project_path}\n")
         return None
     
     elif action == 'compile_project' and kwargs.get('headless'):
@@ -554,6 +580,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
             print(f"[OK] Compilación completada exitosamente")
             print(f"[INFO] Paquete generado: {iflapp_file}")
+            
+            # Limpiar la carpeta del paquete después de crear el .iflapp
+            if hasattr(compiler, '_cleanup_package_folder'):
+                compiler._cleanup_package_folder(package_path, iflapp_file)
         finally:
             if hasattr(compiler, '_cleanup_build_artifacts'):
                 compiler._cleanup_build_artifacts()
@@ -616,6 +646,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
             print(f"[OK] Compilación completada exitosamente")
             print(f"[INFO] Paquete generado: {iflapp_file}")
+            
+            # Limpiar la carpeta del paquete después de crear el .iflapp
+            if hasattr(compiler, '_cleanup_package_folder'):
+                compiler._cleanup_package_folder(package_path, iflapp_file)
         finally:
             if hasattr(compiler, '_cleanup_build_artifacts'):
                 compiler._cleanup_build_artifacts()
