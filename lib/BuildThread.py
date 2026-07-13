@@ -12,6 +12,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, Optional, List
 
+from lib.projectNameFormatter import ProjectNameFormatter
+
 # requests con fallback a urllib
 try:
     import requests
@@ -296,9 +298,14 @@ class FlangCompiler:
     def create_package(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):
             return True
+        # Usar ProjectNameFormatter para formato consistente
         platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-        # Formato: empresa.shortname.version-platform
-        package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}-{platform_suffix}"
+        package_name = ProjectNameFormatter.format_package_folder(
+            self.metadata['publisher'],
+            self.metadata['app'],
+            self.metadata['version'],
+            platform_suffix
+        )
         package_path = self.output_path / package_name
         package_path.mkdir(parents=True, exist_ok=True)
         self.log(f"[INFO] Creando paquete en: {package_path}")
@@ -483,10 +490,24 @@ class FlangCompiler:
                 if not self.create_package(platform_name):
                     return None
                 platform_suffix = "Knosthalij" if platform_name == "Windows" else "Danenone"
-                package_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}.{platform_suffix}"
+                
+                # Usar ProjectNameFormatter para formato consistente
+                package_name = ProjectNameFormatter.format_package_folder(
+                    self.metadata['publisher'],
+                    self.metadata['app'],
+                    self.metadata['version'],
+                    platform_suffix
+                )
                 last_package_path = self.output_path / package_name
-                iflapp_name = f"{self.metadata['publisher']}.{self.metadata['app']}.{self.metadata['version']}-{platform_suffix}.iflapp"
+                
+                iflapp_name = ProjectNameFormatter.format_iflapp_filename(
+                    self.metadata['publisher'],
+                    self.metadata['app'],
+                    self.metadata['version'],
+                    platform_suffix
+                )
                 iflapp_path = self.output_path / iflapp_name
+                
                 if self.compress_to_iflapp(last_package_path, iflapp_path):
                     final_iflapp = iflapp_path
                     self.log(f"[SUCCESS] Package created: {iflapp_path}")

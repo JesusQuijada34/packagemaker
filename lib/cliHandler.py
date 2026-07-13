@@ -13,6 +13,8 @@ from pathlib import Path
 # Constantes
 import xml.etree.ElementTree as ET
 
+from lib.projectNameFormatter import ProjectNameFormatter
+
 
 def _safe_print(message, stream=None):
     """Imprime mensajes de forma segura incluso si la consola no soporta Unicode."""
@@ -477,10 +479,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         description = project_source.get('description') or 'Proyecto creado con Influent Package Maker'
         author_val = project_source.get('author') or 'Unknown'
         
-        # Construir nombre de carpeta: empresa.shortname.version-Plataforma
+        # Usar ProjectNameFormatter para formato consistente
+        folder_name = ProjectNameFormatter.format_project_folder(
+            publisher, app_id, version_base, platform_value
+        )
         variables = build_variables(publisher, app_id, app_id, author_val, platform_value, version_base, description)
-        # Omitir el título (name) en el formato de la carpeta como se solicitó
-        folder_name = f"{publisher}.{app_id}.v{variables['VERSION_VSO']}-{variables['PLATFORM']}"
         project_path = base_path / folder_name
         
         print(f"[INFO] Creando proyecto en: {project_path}")
@@ -565,10 +568,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             app = compiler.metadata['app']
             version = compiler.metadata['version']
             platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-            # Formato: empresa.shortname.version-platform
-            package_name = f"{publisher}.{app}.{version}-{platform_suffix}"
+            
+            # Usar ProjectNameFormatter para formato consistente
+            package_name = ProjectNameFormatter.format_package_folder(publisher, app, version, platform_suffix)
             package_path = output_path / package_name
-            iflapp_file = output_path / f"{package_name}.iflapp"
+            iflapp_file = output_path / ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform_suffix)
 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)
@@ -636,10 +640,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             app = compiler.metadata['app']
             version = compiler.metadata['version']
             platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-            # Formato: empresa.shortname.version-platform
-            package_name = f"{publisher}.{app}.{version}-{platform_suffix}"
+            
+            # Usar ProjectNameFormatter para formato consistente
+            package_name = ProjectNameFormatter.format_package_folder(publisher, app, version, platform_suffix)
             package_path = output_path / package_name
-            iflapp_file = output_path / f"{package_name}.iflapp"
+            iflapp_file = output_path / ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform_suffix)
 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)

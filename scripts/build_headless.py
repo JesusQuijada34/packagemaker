@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from lib.BuildThread import FlangCompiler
+from lib.projectNameFormatter import ProjectNameFormatter
 
 def main():
     parser = argparse.ArgumentParser(description='PackageMaker Headless Builder')
@@ -47,15 +48,16 @@ def main():
         print("❌ Error al crear el paquete")
         sys.exit(1)
         
-    # Buscar la carpeta del paquete creada
+    # Usar ProjectNameFormatter para formato consistente
     publisher = compiler.metadata['publisher']
     app = compiler.metadata['app']
     version = compiler.metadata['version']
     platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
-    package_dir_name = f"{publisher}.{app}.{version}.{platform_suffix}"
+    
+    package_dir_name = ProjectNameFormatter.format_package_folder(publisher, app, version, platform_suffix)
     package_path = output_path / package_dir_name
     
-    iflapp_file = output_path / f"{publisher}.{app}.{version}.{platform_suffix}.iflapp"
+    iflapp_file = output_path / ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform_suffix)
     
     print(f"🗜️ Comprimiendo a .iflapp: {iflapp_file}")
     if not compiler.compress_to_iflapp(package_path, iflapp_file):

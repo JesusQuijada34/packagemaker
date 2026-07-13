@@ -13,6 +13,8 @@ from string import Template
 from typing import Any, Dict, List, Optional
 from xml.dom import minidom
 
+from lib.projectNameFormatter import ProjectNameFormatter
+
 DEFAULT_FOLDERS = ("app", "assets", "config", "docs", "source", "lib")
 
 AGE_RATINGS = {
@@ -107,17 +109,18 @@ def build_variables(
     license_year: Optional[str] = None,
 ) -> Dict[str, str]:
     """Construye todas las variables __*__ para plantillas de proyecto."""
-    publisher_slug = publisher.strip().lower().replace(" ", "-") or "influent"
-    app_slug = app_id.strip().lower().replace(" ", "-") or "myapp"
+    publisher_slug = ProjectNameFormatter.normalize_publisher(publisher)
+    app_slug = ProjectNameFormatter.normalize_app_id(app_id)
     display_name = name.strip() or app_slug
     author_val = author.strip() or "Unknown"
-    plat = platform or "Knosthalij"
+    plat = ProjectNameFormatter.normalize_platform(platform)
 
-    ts = getversion()
-    version_vso = f"{version_base}-{ts}"
-    version_full = f"{version_base}-{ts}-{plat}"
-    # Formato solicitado: empresa.shortname.version-Plataforma
-    folder_key = f"{publisher_slug}.{app_slug}.v{version_vso}-{plat}"
+    version_vso = ProjectNameFormatter.format_version_vso(version_base)
+    version_full = ProjectNameFormatter.format_version_full(version_base, platform)
+    
+    # Usar ProjectNameFormatter para el nombre de carpeta
+    folder_key = ProjectNameFormatter.format_project_folder(publisher, app_id, version_base, platform)
+    
     correlation_id = hashlib.sha256(folder_key.encode()).hexdigest()
     rating = detect_rating(app_slug, display_name)
     year = license_year or time.strftime("%Y")

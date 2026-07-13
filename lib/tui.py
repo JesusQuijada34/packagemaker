@@ -15,6 +15,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, List, Dict
 
+from lib.projectNameFormatter import ProjectNameFormatter
+
 # ─── ANSI helpers ────────────────────────────────────────────────────────────
 
 _USE_COLOR = sys.stdout.isatty() and os.name != "nt" or (
@@ -335,8 +337,11 @@ def _screen_create() -> None:
         app_slug = slug.strip().lower().replace(" ", "-")
         version_base = version.strip().split("-")[0] if version else "1.0.0"
         
+        # Usar ProjectNameFormatter para formato consistente
+        folder_name = ProjectNameFormatter.format_project_folder(
+            publisher_slug, app_slug, version_base, real_platform
+        )
         variables = build_variables(publisher_slug, app_slug, nombre, autor, real_platform, version_base)
-        folder_name = f"{publisher_slug}.{app_slug}.v{variables['VERSION_FULL']}"
         _ok(f"Proyecto creado en: {_base_dir() / folder_name}")
     else:
         _err(f"Falló con código {rc}")

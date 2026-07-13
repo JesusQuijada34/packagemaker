@@ -80,7 +80,8 @@ def _check_url_exists(url):
     return False
 
 def _fR(author, app, version, platform, publisher):
-    filename = f"{publisher}.{app}.{version}-{platform}.iflapp"
+    from lib.projectNameFormatter import ProjectNameFormatter
+    filename = ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform)
     url = f"https://github.com/{author}/{app}/releases/download/{version}/{filename}"
     if _check_url_exists(url):
         return url
