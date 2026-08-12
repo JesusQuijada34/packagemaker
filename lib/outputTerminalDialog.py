@@ -168,7 +168,7 @@ class OutputTerminalDialog(QDialog):
                 self.last_line = line
                 self.terminal_output.clear()
                 self.terminal_output.append(f"<span style='color: #c9d1d9;'>{line}</span>")
-        self.terminal_output.moveCursor(QtGui.QTextCursor.End)
+        self.terminal_output.moveCursor(QtGui.QTextCursor.MoveOperation.End)
 
     def handle_stderr(self):
         data = self.process.readAllStandardError().data().decode('utf-8', errors='replace')
@@ -179,7 +179,7 @@ class OutputTerminalDialog(QDialog):
                 self.last_line = line
                 self.terminal_output.clear()
                 self.terminal_output.append(f"<span style='color: #ff7b72;'>{line}</span>")
-        self.terminal_output.moveCursor(QtGui.QTextCursor.End)
+        self.terminal_output.moveCursor(QtGui.QTextCursor.MoveOperation.End)
 
     def handle_finished(self, exit_code, exit_status):
         color = "#3fb950" if exit_code == 0 else "#ff7b72"
