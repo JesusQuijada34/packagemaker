@@ -872,8 +872,9 @@ def verificar_github_username(username):
     except urllib.error.HTTPError as e:
         if e.code == 404:
             return False, "El username no existe en GitHub"
-        else:
-            return False, f"Error al verificar: {e.code}"
+        if e.code in (403, 429):
+            return True, f"No se pudo verificar por límite de GitHub ({e.code}), se permite el username"
+        return False, f"Error al verificar: {e.code}"
     except urllib.error.URLError as e:
         # Si no hay internet, se permite el username
         return True, "Conexión a internet no disponible, se permite el username"
