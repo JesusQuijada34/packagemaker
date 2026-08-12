@@ -64,6 +64,8 @@ def main():
         print("❌ Error al comprimir el paquete")
         sys.exit(1)
         
+    compiler._cleanup_package_folder(package_path, iflapp_file)
+    compiler.cleanup_processed_project(iflapp_file)
     print(f"✨ Proceso completado con éxito: {iflapp_file}")
 
 if __name__ == "__main__":

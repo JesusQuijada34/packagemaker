@@ -585,9 +585,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             print(f"[OK] Compilación completada exitosamente")
             print(f"[INFO] Paquete generado: {iflapp_file}")
             
-            # Limpiar la carpeta del paquete después de crear el .iflapp
-            if hasattr(compiler, '_cleanup_package_folder'):
-                compiler._cleanup_package_folder(package_path, iflapp_file)
+            # El artefacto ya existe; limpiar paquete temporal y proyecto fuente.
+            compiler._cleanup_package_folder(package_path, iflapp_file)
+            compiler.cleanup_processed_project(iflapp_file)
         finally:
             if hasattr(compiler, '_cleanup_build_artifacts'):
                 compiler._cleanup_build_artifacts()
@@ -652,9 +652,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             print(f"[OK] Compilación completada exitosamente")
             print(f"[INFO] Paquete generado: {iflapp_file}")
             
-            # Limpiar la carpeta del paquete después de crear el .iflapp
-            if hasattr(compiler, '_cleanup_package_folder'):
-                compiler._cleanup_package_folder(package_path, iflapp_file)
+            # El artefacto ya existe; limpiar paquete temporal y proyecto fuente.
+            compiler._cleanup_package_folder(package_path, iflapp_file)
+            compiler.cleanup_processed_project(iflapp_file)
         finally:
             if hasattr(compiler, '_cleanup_build_artifacts'):
                 compiler._cleanup_build_artifacts()

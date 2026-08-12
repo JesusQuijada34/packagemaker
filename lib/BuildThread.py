@@ -457,14 +457,38 @@ class FlangCompiler:
                 self.log(f"[WARN] No se pudo eliminar {spec_file.name}: {e}")
 
     def _cleanup_package_folder(self, package_path: Path, iflapp_path: Path):
-        """Elimina la carpeta del paquete después de crear el .iflapp para no estorbar al gestor."""
+        """Elimina la carpeta temporal del paquete tras crear el `.iflapp`."""
         if package_path.exists() and package_path.is_dir() and iflapp_path.exists():
             try:
                 shutil.rmtree(package_path)
                 self.log(f"[INFO] Carpeta del paquete eliminada: {package_path.name}")
                 self.log(f"[INFO] Solo queda el archivo .iflapp: {iflapp_path.name}")
-            except Exception as e:
-                self.log(f"[WARN] No se pudo eliminar la carpeta del paquete {package_path.name}: {e}")
+            except OSError as exc:
+                self.log(f"[WARN] No se pudo eliminar la carpeta del paquete {package_path.name}: {exc}")
+
+    def cleanup_processed_project(self, iflapp_path: Path) -> bool:
+        """Elimina el proyecto fuente después de verificar el artefacto final.
+
+        La eliminación solo se permite si el archivo `.iflapp` existe, es un ZIP
+        válido y está fuera del proyecto. Así se evita borrar fuentes cuando el
+        empaquetado falla o cuando la salida se configuró por error dentro del
+        mismo directorio del proyecto.
+        """
+        source_path = self.repo_path.resolve()
+        artifact_path = Path(iflapp_path).resolve()
+        if not artifact_path.is_file() or not zipfile.is_zipfile(artifact_path):
+            self.log("[WARN] Se conserva el proyecto: el archivo .iflapp no es válido.")
+            return False
+        if source_path == artifact_path.parent or source_path in artifact_path.parents:
+            self.log("[WARN] Se conserva el proyecto: el .iflapp está dentro de la carpeta fuente.")
+            return False
+        try:
+            shutil.rmtree(source_path)
+            self.log(f"[INFO] Proyecto procesado eliminado: {source_path.name}")
+            return True
+        except OSError as exc:
+            self.log(f"[WARN] No se pudo eliminar el proyecto procesado {source_path.name}: {exc}")
+            return False
 
     def run(self, build_mode="portable") -> Optional[Path]:
         if not self.parse_details_xml():
@@ -511,8 +535,9 @@ class FlangCompiler:
                 if self.compress_to_iflapp(last_package_path, iflapp_path):
                     final_iflapp = iflapp_path
                     self.log(f"[SUCCESS] Package created: {iflapp_path}")
-                    # Limpiar la carpeta del paquete después de crear el .iflapp
+                    # Limpiar la carpeta temporal y el proyecto fuente tras validar el .iflapp.
                     self._cleanup_package_folder(last_package_path, iflapp_path)
+                    self.cleanup_processed_project(iflapp_path)
         finally:
             # Limpiar siempre al finalizar, sea éxito o error
             self._cleanup_build_artifacts()
