@@ -185,3 +185,5 @@ data/pm.data
 
 # pmCodeEditor - Python portables descargados (no versionar)
 data/pmCodeEditor/python/
+
+debian-build/
