@@ -161,6 +161,16 @@ class PMDataStore:
         if "user" in self._data and key in self._data["user"]:
             del self._data["user"][key]
 
+    def reset_user_configuration(self) -> bool:
+        """Elimina preferencias y cachés de usuario y restaura los valores base.
+
+        No elimina proyectos, paquetes ni la sección de solo lectura necesaria
+        para identificar la instalación actual.
+        """
+        self._data["user"] = deepcopy(DEFAULT_USER)
+        self._data["translation_cache"] = {}
+        return self.save()
+
     def get_readonly(self) -> Dict[str, Any]:
         self._refresh_readonly()
         return dict(self._data.get("readonly", {}))

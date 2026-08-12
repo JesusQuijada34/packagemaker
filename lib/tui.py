@@ -694,8 +694,8 @@ def _screen_config() -> None:
     try:
         from lib.pm_data import get_pm_data
         store = get_pm_data()
-        base_dir = store.get_user("BASE_DIR") or str(_base_dir())
-        lang = store.get_user("LANGUAGE") or "es"
+        base_dir = store.get_user("base_dir") or str(_base_dir())
+        lang = store.get_user("language") or "es"
     except Exception:
         base_dir = str(_base_dir())
         lang = "es"
@@ -703,6 +703,28 @@ def _screen_config() -> None:
     _info(f"Carpeta de proyectos: {cyan(base_dir)}")
     _info(f"Idioma actual        : {cyan(lang)}")
     print(_hr())
+
+    action = _prompt_choice(
+        "Acción",
+        ["Editar configuración", "Eliminar configuración y restaurar valores predeterminados"],
+        default=0,
+    )
+
+    if action == 1:
+        if not _prompt_bool("¿Eliminar preferencias y cachés de usuario?", False):
+            _warn("Eliminación cancelada.")
+            _pause()
+            return
+        try:
+            from lib.pm_data import get_pm_data
+            if get_pm_data().reset_user_configuration():
+                _ok("Configuración eliminada y valores predeterminados restaurados.")
+            else:
+                _err("No se pudo eliminar la configuración.")
+        except Exception as e:
+            _err(f"No se pudo eliminar la configuración: {e}")
+        _pause()
+        return
 
     new_base = _prompt("Nueva carpeta de proyectos (Enter = sin cambios)", base_dir)
     lang_idx = _prompt_choice("Idioma", ["Español", "English", "Português"], default=0)
@@ -717,9 +739,12 @@ def _screen_config() -> None:
     try:
         from lib.pm_data import get_pm_data
         store = get_pm_data()
-        store.set_user("BASE_DIR", new_base)
-        store.set_user("LANGUAGE", new_lang)
-        _ok("Configuración guardada.")
+        store.set_user("base_dir", new_base)
+        store.set_user("language", new_lang)
+        if store.save():
+            _ok("Configuración guardada.")
+        else:
+            _err("No se pudo guardar la configuración.")
     except Exception as e:
         _err(f"No se pudo guardar: {e}")
     _pause()
