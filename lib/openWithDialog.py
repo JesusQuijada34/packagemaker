@@ -80,12 +80,43 @@ def detect_executable_type(file_path: str) -> str:
 
 
 def check_executable_exists(exe_path: str) -> bool:
-    if not exe_path: return False
-    if os.path.exists(exe_path): return True
+    """Comprueba que exista un archivo ejecutable o un comando del PATH."""
+    if not exe_path:
+        return False
     try:
+        if os.path.isfile(exe_path):
+            if os.name == "nt":
+                return Path(exe_path).suffix.lower() in {".exe", ".bat", ".cmd", ".com"}
+            return os.access(exe_path, os.X_OK)
         import shutil
         return shutil.which(exe_path) is not None
-    except: return False
+    except (OSError, TypeError):
+        return False
+
+
+def _open_with_system_default(project_path: str) -> bool:
+    """Abre un proyecto con el manejador nativo cuando el editor falla."""
+    try:
+        if os.name == "nt" and hasattr(os, "startfile"):
+            os.startfile(project_path)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", project_path])
+        else:
+            subprocess.Popen(["xdg-open", project_path])
+        return True
+    except OSError:
+        return False
+
+
+def launch_editor_or_default(editor_path: str, project_path: str) -> bool:
+    """Lanza un editor validado o usa el manejador nativo como fallback."""
+    if not check_executable_exists(editor_path):
+        return _open_with_system_default(project_path)
+    try:
+        subprocess.Popen([editor_path, project_path])
+        return True
+    except OSError:
+        return _open_with_system_default(project_path)
 
 
 class PackageMakerEditor:
@@ -458,8 +489,7 @@ class OpenWithDialog(QDialog):
         try:
             editor_name = self.project_config.get_project_editor(self.project_path)
             exe_path = self.project_config.get_editor_path(editor_name)
-            if exe_path and check_executable_exists(exe_path):
-                subprocess.Popen([exe_path, self.project_path])
+            if exe_path and launch_editor_or_default(exe_path, self.project_path):
                 self.accept()
         except Exception as e:
             QMessageBox.warning(self, tr("Error"), f"{tr('Error al abrir el proyecto')}: {e}")
@@ -513,16 +543,14 @@ def open_project_with_editor(parent=None, project_path: str = "", project_name: 
             all_editors.extend(detector.detect_editors())
             
             for info, path in all_editors:
-                if info.name == default_name and check_executable_exists(path):
-                    subprocess.Popen([path, project_path])
-                    return True
+                if info.name == default_name:
+                    return launch_editor_or_default(path, project_path)
 
     # Mostrar diálogo
     res, action = show_open_with_dialog(parent, project_path, project_name)
     if res:
-        info, path = res
-        subprocess.Popen([path, project_path])
-        return True
+        _info, path = res
+        return launch_editor_or_default(path, project_path)
     return False
 
 if __name__ == "__main__":
