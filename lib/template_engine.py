@@ -115,27 +115,31 @@ def build_variables(
     author_val = author.strip() or "Unknown"
     plat = ProjectNameFormatter.normalize_platform(platform)
 
-    version_vso = ProjectNameFormatter.format_version_vso(version_base)
-    version_full = ProjectNameFormatter.format_version_full(version_base, platform)
-    
-    # Usar ProjectNameFormatter para el nombre de carpeta
-    folder_key = ProjectNameFormatter.format_project_folder(publisher, app_id, version_base, platform)
+    version_clean, existing_timestamp = ProjectNameFormatter.version_components(version_base)
+    timestamp = existing_timestamp or ProjectNameFormatter.get_timestamp()
+    version_vso = ProjectNameFormatter.format_version_vso(version_clean, timestamp)
+    version_full = ProjectNameFormatter.format_version_full(version_clean, platform, timestamp)
+
+    # La carpeta, los metadatos y el paquete comparten la misma marca temporal.
+    folder_key = ProjectNameFormatter.format_project_folder(
+        publisher, app_id, version_clean, platform, timestamp
+    )
     
     correlation_id = hashlib.sha256(folder_key.encode()).hexdigest()
     rating = detect_rating(app_slug, display_name)
     year = license_year or time.strftime("%Y")
     xte = "exe" if plat in ("Knosthalij", "AlphaCube") else "appImage"
-    product_version = version_base.split("-")[0] if "-" in version_base else version_base
+    product_version = version_clean
     company = publisher_slug.capitalize()
 
     return {
         "PUBLISHER": publisher_slug.capitalize(),
         "APP": app_slug,
         "NAME": display_name,
-        "VERSION": version_vso,
+        "VERSION": version_full,
         "VERSION_VSO": version_vso,
         "VERSION_FULL": version_full,
-        "VERSION_BASE": version_base,
+        "VERSION_BASE": version_clean,
         "AUTHOR": author_val,
         "PLATFORM": plat,
         "DESCRIPTION": description or f"Aplicacion creada con PackageMaker",

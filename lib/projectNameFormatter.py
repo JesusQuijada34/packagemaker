@@ -1,208 +1,174 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Project Name Formatter - Centraliza la lógica de formato de nombres para proyectos y paquetes.
-Esta clase asegura consistencia en todos los formatos de nombres en el sistema.
+"""Formato canónico de nombres de PackageMaker.
+
+Todos los artefactos públicos deben usar exactamente:
+    publisher.appname.vXx.xx-YY.MM-HH.MM-platform
+
+Las plataformas admitidas son Danenone, Knosthalij y AlphaCube.
 """
 
+from __future__ import annotations
+
+import re
 import time
-from typing import Dict, Optional
-from pathlib import Path
+from typing import Dict, Optional, Tuple
 
 
 class ProjectNameFormatter:
-    """Centraliza el formato de nombres para proyectos, paquetes y archivos .iflapp."""
-    
+    """Centraliza, valida y analiza nombres de proyectos y paquetes."""
+
+    ALLOWED_PLATFORMS = ("Danenone", "Knosthalij", "AlphaCube")
+    _VERSION_PATTERN = re.compile(
+        r"^v?(?P<base>\d+(?:\.\d+){1,2})"
+        r"(?:-(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2}))?"
+        r"(?:-(?P<platform>Danenone|Knosthalij|AlphaCube))?$"
+    )
+    _PROJECT_PATTERN = re.compile(
+        r"^(?P<publisher>[^.]+)\.(?P<app>[^.]+)\.v"
+        r"(?P<version>\d+(?:\.\d+){1,2})-"
+        r"(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2})-"
+        r"(?P<platform>Danenone|Knosthalij|AlphaCube)$"
+    )
+
     @staticmethod
     def get_timestamp() -> str:
-        """Genera timestamp en formato YY.MM-HH.MM"""
+        """Genera la marca temporal requerida, con formato ``YY.MM-HH.MM``."""
         return time.strftime("%y.%m-%H.%M")
-    
+
     @staticmethod
     def normalize_publisher(publisher: str) -> str:
-        """Normaliza el nombre del publisher: minúsculas, guiones en lugar de espacios."""
-        return publisher.strip().lower().replace(" ", "-") or "influent"
-    
+        """Normaliza el publisher en un segmento válido y estable."""
+        value = str(publisher or "").strip().lower().replace(" ", "-")
+        return value or "influent"
+
     @staticmethod
     def normalize_app_id(app_id: str) -> str:
-        """Normaliza el ID de la aplicación: minúsculas, guiones en lugar de espacios."""
-        return app_id.strip().lower().replace(" ", "-") or "myapp"
-    
-    @staticmethod
-    def normalize_platform(platform: str) -> str:
-        """Normaliza el nombre de plataforma al formato estándar."""
-        p = (platform or "").strip().lower()
-        if "win" in p or p in ("knosthalij", "windows"):
+        """Normaliza el identificador de aplicación en un segmento válido."""
+        value = str(app_id or "").strip().lower().replace(" ", "-")
+        return value or "myapp"
+
+    @classmethod
+    def normalize_platform(cls, platform: str) -> str:
+        """Convierte alias de plataforma al conjunto canónico permitido."""
+        value = str(platform or "").strip().lower()
+        if value in {"win", "windows", "knosthalij"} or "win" in value:
             return "Knosthalij"
-        if "lin" in p or "danen" in p or p == "linux":
+        if value in {"linux", "danenone"} or "lin" in value or "danen" in value:
             return "Danenone"
-        if "multi" in p or "alpha" in p:
+        if value in {"all", "multi", "multiplataforma", "alphacube", "alpha"} or "multi" in value or "alpha" in value:
             return "AlphaCube"
-        return platform.strip() if platform else "Knosthalij"
-    
-    @staticmethod
-    def format_version_vso(version_base: str) -> str:
-        """Formatea la versión con timestamp: version_base-YY.MM-HH.MM"""
-        version_clean = version_base.split("-")[0] if "-" in str(version_base) else str(version_base)
-        return f"{version_clean}-{ProjectNameFormatter.get_timestamp()}"
-    
-    @staticmethod
-    def format_version_full(version_base: str, platform: str) -> str:
-        """Formatea la versión completa: version_base-YY.MM-HH.MM-Plataforma"""
-        version_vso = ProjectNameFormatter.format_version_vso(version_base)
-        platform_norm = ProjectNameFormatter.normalize_platform(platform)
-        return f"{version_vso}-{platform_norm}"
-    
+        raise ValueError(
+            "Plataforma no compatible. Use Danenone, Knosthalij o AlphaCube."
+        )
+
+    @classmethod
+    def version_components(cls, version: str) -> Tuple[str, Optional[str]]:
+        """Extrae versión base y timestamp de una versión simple o canónica.
+
+        Acepta ``1.0``, ``1.0.0``, ``v1.0-26.08-15.38`` y la forma completa
+        con plataforma. Devuelve la versión base sin ``v`` y el timestamp si
+        ya existe para que los flujos posteriores no generen uno distinto.
+        """
+        candidate = str(version or "").strip()
+        match = cls._VERSION_PATTERN.fullmatch(candidate)
+        if not match:
+            raise ValueError(
+                "Versión inválida. Use Xx.xx o Xx.xx.xx, opcionalmente seguida "
+                "de -YY.MM-HH.MM y una plataforma canónica."
+            )
+        return match.group("base"), match.group("timestamp")
+
+    @classmethod
+    def format_version_vso(
+        cls, version_base: str, timestamp: Optional[str] = None
+    ) -> str:
+        """Devuelve ``vXx.xx-YY.MM-HH.MM`` sin plataforma."""
+        base, existing_timestamp = cls.version_components(version_base)
+        return f"v{base}-{timestamp or existing_timestamp or cls.get_timestamp()}"
+
+    @classmethod
+    def format_version_full(
+        cls, version_base: str, platform: str, timestamp: Optional[str] = None
+    ) -> str:
+        """Devuelve ``vXx.xx-YY.MM-HH.MM-platform``."""
+        platform_norm = cls.normalize_platform(platform)
+        return f"{cls.format_version_vso(version_base, timestamp)}-{platform_norm}"
+
     @classmethod
     def format_project_folder(
-        cls, 
-        publisher: str, 
-        app_id: str, 
-        version_base: str, 
-        platform: str
+        cls,
+        publisher: str,
+        app_id: str,
+        version_base: str,
+        platform: str,
+        timestamp: Optional[str] = None,
     ) -> str:
-        """
-        Formatea el nombre de la carpeta del proyecto.
-        Formato: publisher.app.vversion_base-YY.MM-HH.MM-Plataforma
-        
-        Args:
-            publisher: Nombre del publisher/empresa
-            app_id: ID corto de la aplicación
-            version_base: Versión base (ej: "1.0.0")
-            platform: Plataforma (Windows, Linux, etc.)
-        
-        Returns:
-            Nombre formateado de la carpeta del proyecto
-        """
+        """Devuelve el nombre canónico de proyecto, paquete o directorio."""
         publisher_norm = cls.normalize_publisher(publisher)
         app_norm = cls.normalize_app_id(app_id)
-        version_full = cls.format_version_full(version_base, platform)
-        
-        return f"{publisher_norm}.{app_norm}.v{version_full}"
-    
+        version_full = cls.format_version_full(version_base, platform, timestamp)
+        return f"{publisher_norm}.{app_norm}.{version_full}"
+
     @classmethod
     def format_package_folder(
         cls,
         publisher: str,
         app_id: str,
         version: str,
-        platform: str
+        platform: str,
+        timestamp: Optional[str] = None,
     ) -> str:
-        """
-        Formatea el nombre de la carpeta del paquete compilado.
-        Formato: publisher.app.version-Plataforma
-        
-        Args:
-            publisher: Nombre del publisher/empresa
-            app_id: ID corto de la aplicación
-            version: Versión completa (con timestamp si viene de details.xml)
-            platform: Plataforma (Windows, Linux, etc.)
-        
-        Returns:
-            Nombre formateado de la carpeta del paquete
-        """
-        publisher_norm = cls.normalize_publisher(publisher)
-        app_norm = cls.normalize_app_id(app_id)
-        platform_norm = cls.normalize_platform(platform)
-        
-        # Limpiar versión de prefijos 'v' si existen
-        version_clean = version.lstrip("v")
-        
-        return f"{publisher_norm}.{app_norm}.{version_clean}-{platform_norm}"
-    
+        """Devuelve el mismo formato canónico para el directorio del paquete."""
+        return cls.format_project_folder(publisher, app_id, version, platform, timestamp)
+
     @classmethod
     def format_iflapp_filename(
         cls,
         publisher: str,
         app_id: str,
         version: str,
-        platform: str
+        platform: str,
+        timestamp: Optional[str] = None,
     ) -> str:
-        """
-        Formatea el nombre del archivo .iflapp.
-        Formato: publisher.app.version-Plataforma.iflapp
-        
-        Args:
-            publisher: Nombre del publisher/empresa
-            app_id: ID corto de la aplicación
-            version: Versión completa (con timestamp si viene de details.xml)
-            platform: Plataforma (Windows, Linux, etc.)
-        
-        Returns:
-            Nombre formateado del archivo .iflapp
-        """
-        package_name = cls.format_package_folder(publisher, app_id, version, platform)
+        """Devuelve el nombre canónico de archivo ``.iflapp``."""
+        package_name = cls.format_package_folder(
+            publisher, app_id, version, platform, timestamp
+        )
         return f"{package_name}.iflapp"
-    
+
     @classmethod
     def format_from_metadata(cls, metadata: Dict[str, str]) -> Dict[str, str]:
-        """
-        Genera todos los formatos de nombres a partir de metadatos.
-        
-        Args:
-            metadata: Diccionario con claves: publisher, app, version, platform
-        
-        Returns:
-            Diccionario con todos los formatos de nombres:
-            - project_folder: Nombre de carpeta del proyecto
-            - package_folder: Nombre de carpeta del paquete
-            - iflapp_filename: Nombre del archivo .iflapp
-            - version_vso: Versión con timestamp
-            - version_full: Versión completa con plataforma
-        """
+        """Genera todas las variantes sin perder la marca temporal existente."""
         publisher = metadata.get("publisher", metadata.get("empresa", "influent"))
         app_id = metadata.get("app", metadata.get("name", "myapp"))
         version = metadata.get("version", "1.0.0")
         platform = metadata.get("platform", metadata.get("plataforma", "Knosthalij"))
-        
-        version_base = version.split("-")[0] if "-" in str(version) else str(version)
-        
+        version_base, timestamp = cls.version_components(version)
+        timestamp = timestamp or cls.get_timestamp()
+        version_vso = cls.format_version_vso(version_base, timestamp)
+        version_full = cls.format_version_full(version_base, platform, timestamp)
+        project_folder = cls.format_project_folder(
+            publisher, app_id, version_base, platform, timestamp
+        )
         return {
-            "project_folder": cls.format_project_folder(publisher, app_id, version_base, platform),
-            "package_folder": cls.format_package_folder(publisher, app_id, version, platform),
-            "iflapp_filename": cls.format_iflapp_filename(publisher, app_id, version, platform),
-            "version_vso": cls.format_version_vso(version_base),
-            "version_full": cls.format_version_full(version_base, platform),
+            "project_folder": project_folder,
+            "package_folder": project_folder,
+            "iflapp_filename": f"{project_folder}.iflapp",
+            "version_vso": version_vso,
+            "version_full": version_full,
         }
-    
+
     @classmethod
     def parse_project_folder(cls, folder_name: str) -> Optional[Dict[str, str]]:
-        """
-        Intenta parsear un nombre de carpeta de proyecto para extraer metadatos.
-        
-        Args:
-            folder_name: Nombre de la carpeta del proyecto
-        
-        Returns:
-            Diccionario con metadatos extraídos o None si no se puede parsear
-        """
-        try:
-            # Formato esperado: publisher.app.vversion-YY.MM-HH.MM-Plataforma
-            if not folder_name.startswith("v"):
-                return None
-            
-            parts = folder_name.split(".")
-            if len(parts) < 3:
-                return None
-            
-            publisher = parts[0]
-            app = parts[1]
-            version_part = ".".join(parts[2:])
-            
-            # Extraer versión y plataforma
-            if "-" in version_part:
-                version_platform = version_part.split("-")
-                version = "-".join(version_platform[:-1])
-                platform = version_platform[-1]
-            else:
-                version = version_part
-                platform = "Knosthalij"
-            
-            return {
-                "publisher": publisher,
-                "app": app,
-                "version": version.lstrip("v"),
-                "platform": platform,
-            }
-        except Exception:
+        """Analiza exclusivamente un nombre que cumple el formato canónico."""
+        match = cls._PROJECT_PATTERN.fullmatch(str(folder_name or ""))
+        if not match:
             return None
+        return {
+            "publisher": match.group("publisher"),
+            "app": match.group("app"),
+            "version": match.group("version"),
+            "timestamp": match.group("timestamp"),
+            "platform": match.group("platform"),
+        }
