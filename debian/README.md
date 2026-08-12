@@ -1,6 +1,6 @@
 # Paquetes Debian de Influent Package Maker
 
-Esta rama se llama `debían` y contiene el constructor reproducible de paquetes Debian. El script `debian/build_debs.py` genera variantes para `amd64`, `arm64`, `armhf` e `i386`, con nombres como `influent.packagemaker.v3.2.7-26.05-20.13-AlphaCube_amd64.deb`.
+Esta rama se llama `debían` y contiene el constructor reproducible de paquetes Debian. El script `debian/build_debs.py` genera variantes para `amd64`, `arm64`, `armhf` e `i386`, con nombres como `influent.packagemaker.v3.2.7-26.05-20.13-Danenone_amd64.deb`. `AlphaCube` queda reservado para paquetes que contengan únicamente código fuente o que se declaren explícitamente como multiplataforma; no se usa para archivos `.deb`.
 
 El paquete instala el código Python/Qt en `/opt/influent-packagemaker`, añade el lanzador `/usr/bin/packagemaker` y registra una entrada `.desktop`. Los metadatos declaran las dependencias Debian de Python, PyQt6, Requests, Packaging y Pillow. Los directorios `.git`, `.github`, `.vscode`, las cachés y los artefactos temporales quedan excluidos del paquete.
 

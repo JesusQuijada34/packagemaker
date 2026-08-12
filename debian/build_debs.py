@@ -30,9 +30,10 @@ def metadata() -> tuple[str, str, str, str]:
     app = (root.findtext("app") or "packagemaker").strip().lower()
     full_version = (root.findtext("version") or "v0.0.0").strip()
     version = full_version.lstrip("v")
-    platform = (root.findtext("platform") or "Danenone").strip()
-    if platform not in {"Danenone", "Knosthalij", "AlphaCube"}:
-        raise ValueError(f"unsupported platform: {platform}")
+    # Debian packages are native Linux deliverables, therefore they always use
+    # the canonical Linux platform label. AlphaCube is reserved for a source-only
+    # or explicitly multi-platform package and must not leak into .deb names.
+    platform = "Danenone"
     return publisher, app, version, platform
 
 
