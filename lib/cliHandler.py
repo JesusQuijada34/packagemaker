@@ -8,6 +8,7 @@ This is a library module, not an entry point.
 import os
 import sys
 import argparse
+import re
 from pathlib import Path
 
 # Constantes
@@ -670,7 +671,20 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         # Construir nombre de carpeta para buscar el proyecto
         publisher = (project_source.get('publisher') or project_source.get('author') or 'influent').strip().lower().replace(' ', '-')
         app_id = project_source.get('shortname') or (project_source.get('name') or '').strip().lower().replace(' ', '-')
-        version_base = str(project_source.get('version') or '1.0.0').strip().split('-')[0]
+        version_raw_input = str(project_source.get('version') or '1.0.0').strip()
+        try:
+            version_base, _ = ProjectNameFormatter.version_components(version_raw_input)
+        except ValueError:
+            # Compatibilidad con proyectos antiguos: v1-YY.MM-HH.MM-platform,
+            # que todavía no tienen una versión base con punto.
+            match = re.match(r'^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?', version_raw_input)
+            if match:
+                major, minor, patch = match.groups()
+                version_base = f"{major}.{minor or '0'}"
+                if patch is not None:
+                    version_base += f".{patch}"
+            else:
+                version_base = '1.0'
         
         # Buscar proyecto que coincida con el patrón
         project_path = None
@@ -697,7 +711,16 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 app_id = root.findtext('app') or root.findtext('name') or app_id
                 name = root.findtext('name') or name
                 author = root.findtext('author') or root.findtext('autor') or author
-                version_raw = (root.findtext('version') or version_base).strip().lstrip('v').split('-')[0] or version_base
+                version_raw = (root.findtext('version') or version_raw_input).strip()
+                try:
+                    version_base, _ = ProjectNameFormatter.version_components(version_raw)
+                except ValueError:
+                    match = re.match(r'^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?', version_raw)
+                    if match:
+                        major, minor, patch = match.groups()
+                        version_base = f"{major}.{minor or '0'}"
+                        if patch is not None:
+                            version_base += f".{patch}"
                 # Los proyectos antiguos pueden declarar la plataforma como <with>
                 # o <target> en lugar de usar <platform>. No asumir Windows cuando
                 # el metadato Linux ya está presente.
