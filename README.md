@@ -29,7 +29,8 @@
 - **Gestión de dependencias**: Analiza e incluye imports necesarios
 - **Minificación**: Reduce tamaño del código compilado
 - **Integración con .gitignore**: Excluye automáticamente archivos y carpetas especificadas en `.gitignore` durante la compilación y empaquetado, incluyendo archivos de GitHub como `.github` y `.vscode`.
-- **Limpieza Post-Compilación**: Elimina automáticamente los directorios `build/`, `dist/` y los archivos `.spec` generados por PyInstaller después de cada proceso de compilación, manteniendo el directorio del proyecto limpio.
+- **Limpieza Post-Compilación**: Elimina automáticamente los directorios `build/`, `dist/` y los archivos `.spec` generados por PyInstaller después de cada proceso de compilación.
+- **Entrega y limpieza segura**: Una vez validado el `.iflapp` generado fuera del directorio fuente, elimina el paquete temporal y la carpeta de proyecto procesada. Esta protección se aplica a GUI, TUI, `compile`, `--buildthis` y `scripts/build_headless.py`; no borra fuentes si el `.iflapp` es inválido o está dentro de la carpeta del proyecto.
 
 ### 🔒 Métodos de Blindado
 | Método | Descripción | Seguridad |
@@ -103,6 +104,14 @@ Click en "Compilar" (verde) o "Compilar Bundle y Firmar" (azul)
 - Output en `releases/` (o la ruta configurada)
 - Listo para subir a GitHub Releases
 
+### Compilar el proyecto actual con `--buildthis`
+
+```bash
+python packagemaker.py --buildthis /ruta/al/proyecto
+```
+
+El proyecto debe contener `details.xml` y su script principal. La salida se crea en `~/Documents/Packagemaker Projects/Compiled`. El nombre del directorio y del archivo sigue la convención exacta `publisher.appname.vXx.xx-YY.MM-HH.MM-platform`, usando `Danenone`, `Knosthalij` o `AlphaCube` como plataforma. El empaquetador respeta `.gitignore`, por lo que excluye `.git`, `.github`, `.vscode` y demás patrones declarados. Tras verificar que el `.iflapp` es un ZIP válido y está fuera del proyecto, el directorio fuente se elimina de forma intencionada; conserva una copia antes de invocar la compilación si necesitas seguir editándolo.
+
 ---
 
 ## 🛠️ EditorDetector y OpenWithDialog
@@ -146,9 +155,9 @@ Cuando compilas un proyecto, Packagemaker:
 4. **Modificación**: Actualiza imports en scripts originales
 5. **Generación**: Crea `lib/__init__.py` con imports consolidados
 6. **Minificación**: Reduce tamaño de código
-7. **Empaquetado**: Genera `.iflappb` (Simple Blind) o estructura separada (Super Blind)
-8. **Firma**: Opcionalmente firma el paquete
-9. **Limpieza**: Elimina automáticamente los artefactos de compilación (`build/`, `dist/`, `.spec`) del directorio del proyecto.
+7. **Empaquetado**: Genera un archivo `.iflapp` con nombre canónico.
+8. **Firma**: Opcionalmente firma el paquete.
+9. **Limpieza**: Elimina artefactos de compilación (`build/`, `dist/`, `.spec`), el paquete temporal y, tras validar el `.iflapp` externo, la carpeta de proyecto procesada.
 
 ---
 
