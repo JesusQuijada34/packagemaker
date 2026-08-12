@@ -575,8 +575,37 @@ def _build_project_direct(proj: Path) -> None:
 def _moonfix_project_direct(proj: Path) -> None:
     py = _find_python()
     entry = Path(os.getcwd()) / "packagemaker.py"
-    cmd = [py, str(entry), "moonfix", str(proj), "--headless",
-           "--verify-files", "--update-config", "--repair-structure"]
+
+    # El CLI de MoonFix selecciona el proyecto desde BASE_DIR usando sus
+    # metadatos; no acepta una ruta posicional ni las antiguas opciones de
+    # verificación. Construir los argumentos desde details.xml evita reparar
+    # accidentalmente otro proyecto con el mismo directorio base.
+    metadata = {
+        "publisher": "influent",
+        "app": proj.name,
+        "name": proj.name,
+        "author": "Unknown",
+        "version": "1.0.0",
+    }
+    details = proj / "details.xml"
+    try:
+        root = ET.parse(details).getroot()
+        metadata["publisher"] = (root.findtext("publisher") or root.findtext("empresa") or metadata["publisher"]).strip()
+        metadata["app"] = (root.findtext("app") or root.findtext("shortname") or metadata["app"]).strip()
+        metadata["name"] = (root.findtext("name") or metadata["name"]).strip()
+        metadata["author"] = (root.findtext("author") or root.findtext("autor") or metadata["author"]).strip()
+        metadata["version"] = (root.findtext("version") or metadata["version"]).strip()
+    except Exception as exc:
+        _warn(f"No se pudo leer details.xml; se usarán valores mínimos: {exc}")
+
+    cmd = [
+        py, str(entry), "--headless", "moonfix",
+        "--name", metadata["name"],
+        "--shortname", metadata["app"],
+        "--publisher", metadata["publisher"],
+        "--author", metadata["author"],
+        "--version", metadata["version"],
+    ]
     print()
     _info(f"Ejecutando MoonFix sobre {orange(proj.name)}…")
     rc = _run_live(cmd)

@@ -698,12 +698,26 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 name = root.findtext('name') or name
                 author = root.findtext('author') or root.findtext('autor') or author
                 version_raw = (root.findtext('version') or version_base).strip().lstrip('v').split('-')[0] or version_base
-                platform_value = normalize_platform(root.findtext('platform') or '')
+                # Los proyectos antiguos pueden declarar la plataforma como <with>
+                # o <target> en lugar de usar <platform>. No asumir Windows cuando
+                # el metadato Linux ya está presente.
+                platform_text = (
+                    root.findtext('platform')
+                    or root.findtext('with')
+                    or root.findtext('target')
+                    or ''
+                )
+                platform_value = normalize_platform(platform_text)
             except Exception as e:
                 print(f"⚠ Advertencia: no se pudo leer details.xml: {e}")
 
         if not platform_value:
-            platform_value = 'Knosthalij'
+            if sys.platform.startswith('linux'):
+                platform_value = 'Danenone'
+            elif sys.platform.startswith('win'):
+                platform_value = 'Knosthalij'
+            else:
+                platform_value = 'AlphaCube'
 
         description = 'Proyecto reparado por MoonFix'
         print(f"[INFO] Ejecutando MoonFix para: {project_path}")
