@@ -133,7 +133,7 @@ def build_variables(
     company = publisher_slug.capitalize()
 
     return {
-        "PUBLISHER": publisher_slug.capitalize(),
+        "PUBLISHER": publisher_slug,
         "APP": app_slug,
         "NAME": display_name,
         "VERSION": version_full,

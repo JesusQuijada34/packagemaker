@@ -3,7 +3,7 @@
 """Formato canónico de nombres de PackageMaker.
 
 Todos los artefactos públicos deben usar exactamente:
-    publisher.appname.vXx.xx-YY.MM-HH.MM-platform
+    publisher.appname.vX.x-YY.MM-HH.MM
 
 Las plataformas admitidas son Danenone, Knosthalij y AlphaCube.
 """
@@ -20,15 +20,14 @@ class ProjectNameFormatter:
 
     ALLOWED_PLATFORMS = ("Danenone", "Knosthalij", "AlphaCube")
     _VERSION_PATTERN = re.compile(
-        r"^v?(?P<base>\d+(?:\.\d+){1,2})"
+        r"^v?(?P<base>\d+\.\d+)(?:\.\d+)*"
         r"(?:-(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2}))?"
         r"(?:-(?P<platform>Danenone|Knosthalij|AlphaCube))?$"
     )
     _PROJECT_PATTERN = re.compile(
         r"^(?P<publisher>[^.]+)\.(?P<app>[^.]+)\.v"
-        r"(?P<version>\d+(?:\.\d+){1,2})-"
-        r"(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2})-"
-        r"(?P<platform>Danenone|Knosthalij|AlphaCube)$"
+        r"(?P<version>\d+\.\d+)-"
+        r"(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2})$"
     )
 
     @staticmethod
@@ -64,18 +63,18 @@ class ProjectNameFormatter:
 
     @classmethod
     def version_components(cls, version: str) -> Tuple[str, Optional[str]]:
-        """Extrae versión base y timestamp de una versión simple o canónica.
+        """Extrae una versión de dos componentes y su timestamp.
 
-        Acepta ``1.0``, ``1.0.0``, ``v1.0-26.08-15.38`` y la forma completa
-        con plataforma. Devuelve la versión base sin ``v`` y el timestamp si
-        ya existe para que los flujos posteriores no generen uno distinto.
+        Acepta ``1.0``, ``1.0.0``, ``v1.0-26.08-15.38`` y la forma histórica
+        con plataforma. Los componentes posteriores al segundo se descartan
+        para cumplir la convención pública ``vX.x-Yy.Mm-hh.mm``.
         """
         candidate = str(version or "").strip()
         match = cls._VERSION_PATTERN.fullmatch(candidate)
         if not match:
             raise ValueError(
-                "Versión inválida. Use Xx.xx o Xx.xx.xx, opcionalmente seguida "
-                "de -YY.MM-HH.MM y una plataforma canónica."
+                "Versión inválida. Use X.x, opcionalmente con parche histórico, "
+                "seguida de -YY.MM-HH.MM."
             )
         return match.group("base"), match.group("timestamp")
 
@@ -91,9 +90,9 @@ class ProjectNameFormatter:
     def format_version_full(
         cls, version_base: str, platform: str, timestamp: Optional[str] = None
     ) -> str:
-        """Devuelve ``vXx.xx-YY.MM-HH.MM-platform``."""
-        platform_norm = cls.normalize_platform(platform)
-        return f"{cls.format_version_vso(version_base, timestamp)}-{platform_norm}"
+        """Devuelve ``vX.x-YY.MM-HH.MM`` sin plataforma."""
+        cls.normalize_platform(platform)  # valida la plataforma interna
+        return cls.format_version_vso(version_base, timestamp)
 
     @classmethod
     def format_project_folder(
@@ -161,7 +160,7 @@ class ProjectNameFormatter:
 
     @classmethod
     def parse_project_folder(cls, folder_name: str) -> Optional[Dict[str, str]]:
-        """Analiza exclusivamente un nombre que cumple el formato canónico."""
+        """Analiza exclusivamente el formato público sin plataforma."""
         match = cls._PROJECT_PATTERN.fullmatch(str(folder_name or ""))
         if not match:
             return None
@@ -170,5 +169,5 @@ class ProjectNameFormatter:
             "app": match.group("app"),
             "version": match.group("version"),
             "timestamp": match.group("timestamp"),
-            "platform": match.group("platform"),
+            "platform": None,
         }

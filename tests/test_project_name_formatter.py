@@ -7,7 +7,7 @@ from lib.template_engine import build_variables
 
 class ProjectNameFormatterTests(unittest.TestCase):
     TIMESTAMP = "26.08-15.38"
-    EXPECTED = "acme-labs.hello-world.v1.2-26.08-15.38-Danenone"
+    EXPECTED = "acme-labs.hello-world.v1.2-26.08-15.38"
 
     @patch.object(ProjectNameFormatter, "get_timestamp", return_value=TIMESTAMP)
     def test_all_artifacts_use_the_exact_canonical_format(self, _timestamp):
@@ -31,7 +31,7 @@ class ProjectNameFormatterTests(unittest.TestCase):
             {
                 "publisher": "Acme Labs",
                 "app": "Hello World",
-                "version": "v1.2-26.08-15.38-Danenone",
+                "version": "v1.2-26.08-15.38",
                 "platform": "Linux",
             }
         )
@@ -39,15 +39,15 @@ class ProjectNameFormatterTests(unittest.TestCase):
         self.assertEqual(names["project_folder"], self.EXPECTED)
         self.assertEqual(names["package_folder"], self.EXPECTED)
         self.assertEqual(names["iflapp_filename"], f"{self.EXPECTED}.iflapp")
-        self.assertEqual(names["version_full"], "v1.2-26.08-15.38-Danenone")
+        self.assertEqual(names["version_full"], "v1.2-26.08-15.38")
 
     @patch.object(ProjectNameFormatter, "get_timestamp", return_value=TIMESTAMP)
     def test_project_template_persists_the_canonical_full_version(self, _timestamp):
         variables = build_variables(
             "Acme Labs", "Hello World", "Hello World", "Tester", "Linux", "1.2"
         )
-        self.assertEqual(variables["VERSION"], "v1.2-26.08-15.38-Danenone")
-        self.assertEqual(variables["VERSION_FULL"], "v1.2-26.08-15.38-Danenone")
+        self.assertEqual(variables["VERSION"], "v1.2-26.08-15.38")
+        self.assertEqual(variables["VERSION_FULL"], "v1.2-26.08-15.38")
         self.assertEqual(variables["VERSION_VSO"], "v1.2-26.08-15.38")
 
     def test_parse_accepts_only_the_exact_canonical_format(self):
@@ -59,7 +59,7 @@ class ProjectNameFormatterTests(unittest.TestCase):
                 "app": "hello-world",
                 "version": "1.2",
                 "timestamp": self.TIMESTAMP,
-                "platform": "Danenone",
+                "platform": None,
             },
         )
         self.assertIsNone(ProjectNameFormatter.parse_project_folder("acme.hello.1.2-Linux"))
