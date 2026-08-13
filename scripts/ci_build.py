@@ -29,6 +29,11 @@ def create_iflapp(metadata, platform="AlphaCube"):
     publisher = metadata['publisher'].strip()
     if not version.startswith("v"):
         version = f"v{version}"
+    for existing_platform in ("Danenone", "Knosthalij", "AlphaCube"):
+        suffix = f"-{existing_platform}"
+        if version.endswith(suffix):
+            version = version[:-len(suffix)]
+            break
     iflapp_name = f"{publisher}.{app_name}.{version}-{platform}.iflapp"
     
     output_dir = Path("dist")
