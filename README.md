@@ -1,3 +1,28 @@
+# Package Maker
+
+**Identidad del paquete:** `influent.packagemaker.v3.2-26.08-21.56`
+**Autor:** `JesusQuijada34`
+**Plataforma:** `AlphaCube`
+**Descripción:** Estructura reparada por MoonFix
+
+## Estructura PackageMaker 3.2.7
+
+Este repositorio fue normalizado mediante **MoonFix**, usando la estructura de PackageMaker 3.2.7. El paquete público debe conservar `details.xml`, `version.res`, `autorun`, `autorun.bat`, `.storedetail`, `updater.py`, `config/settings.json`, los marcadores `.container` y los archivos de documentación correspondientes. El publisher oficial es `influent` y la versión pública no contiene sufijo de plataforma.
+
+## Instalación y ejecución
+
+Instala las dependencias declaradas en `lib/requirements.txt` cuando exista y ejecuta el entrypoint real del proyecto. En Linux, los comandos privilegiados son específicos de Danenone y no deben trasladarse a Windows. En proyectos AlphaCube, la validación Windows debe realizarse con el `buildthis` oficial de PackageMaker.
+
+## Validación
+
+La fuente debe pasar compilación sintáctica, pruebas funcionales disponibles, comprobación de identidad XML, protección contra traversal en ZIP y llamadas seguras a subprocess. Los artefactos `.iflapp` deben ser generados por PackageMaker; los paquetes Debian deben usar el nombre canónico `influent.packagemaker.v3.2-26.08-21.56_ARCH.deb`.
+
+## Release
+
+El tag y el título del release deben ser exactamente `v3.2-26.08-21.56`. Los assets deben usar el nombre canónico del paquete y una extensión objetiva. No se permite publicar un release AlphaCube que contenga únicamente el build Linux.
+
+## Referencia original
+
 # 📦 Influent Package Maker - IDE Profesional para Python
 
 **Influent Package Maker** es un entorno de desarrollo integrado (IDE) profesional para crear, empaquetar y distribuir aplicaciones Python con interfaces modernas estilo Windows 11.
@@ -24,7 +49,7 @@
 - **Fondos sólidos**: Optimizados para evitar artifacts visuales
 
 ### 📦 Sistema de Compilación Avanzado
-- **Detección automática**: Encuentra scripts candidatos (`if __name__ == '__main__'`) 
+- **Detección automática**: Encuentra scripts candidatos (`if __name__ == '__main__'`)
 - **Extracción de clases**: Separa automáticamente clases a `lib/_class/`
 - **Gestión de dependencias**: Analiza e incluye imports necesarios
 - **Minificación**: Reduce tamaño del código compilado
