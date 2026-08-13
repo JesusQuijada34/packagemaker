@@ -32,9 +32,16 @@ def check_dependencies() -> dict:
         "leviathan_ui": False,
     }
     
-    for dep in deps:
+    import_names = {
+        "PyQt6": "PyQt6",
+        "PyInstaller": "PyInstaller",
+        "PIL": "PIL",
+        "requests": "requests",
+        "leviathan_ui": "leviathan_ui",
+    }
+    for dep, import_name in import_names.items():
         try:
-            __import__(dep.lower().replace("-", "_"))
+            __import__(import_name)
             deps[dep] = True
         except ImportError:
             deps[dep] = False
