@@ -14,13 +14,14 @@ EXCLUDE_DIRS = {".git", "__pycache__", "dist", "build", ".pytest_cache", ".mypy_
 EXCLUDE_FILES = {".env", ".env.local", ".env.production"}
 
 
-def metadata(project: Path) -> tuple[str, str, str, str]:
+def metadata(project: Path) -> tuple[str, str, str, str, str]:
     root = ET.parse(project / "details.xml").getroot()
-    publisher = (root.findtext("publisher") or "influent").strip().lower()
-    app = (root.findtext("app") or project.name).strip().lower()
-    version = (root.findtext("version") or "v1.0.0").strip().lstrip("v").split("-", 1)[0]
+    publisher = (root.findtext("publisher") or "Influent").strip()
+    app = (root.findtext("app") or project.name).strip()
+    full_version = (root.findtext("version") or "v1.0.0-Danenone").strip()
     platform = (root.findtext("platform") or "Danenone").strip()
-    return publisher, app, version, platform
+    deb_version = full_version.lstrip("v").replace("-", "+", 1).replace("-", ".")
+    return publisher, app, full_version, platform, deb_version
 
 
 def copy_project(project: Path, destination: Path) -> None:
@@ -36,9 +37,10 @@ def copy_project(project: Path, destination: Path) -> None:
 
 
 def build_one(project: Path, output: Path, architecture: str) -> Path:
-    publisher, app, version, platform = metadata(project)
-    stem = f"{publisher}-{app}"
-    filename = f"{stem}_{version}_{architecture}.deb"
+    publisher, app, full_version, platform, deb_version = metadata(project)
+    stem = f"{publisher.lower()}-{app.lower()}"
+    identity = f"{publisher}.{app}.{full_version}"
+    filename = f"{identity}_{architecture}.deb"
     with tempfile.TemporaryDirectory(prefix="audited-deb-") as temporary:
         stage = Path(temporary) / stem
         payload = stage / "opt" / stem
@@ -55,7 +57,7 @@ def build_one(project: Path, output: Path, architecture: str) -> Path:
         control_dir = stage / "DEBIAN"
         control_dir.mkdir()
         control = (
-            f"Package: {stem}\nVersion: {version}\nArchitecture: {architecture}\n"
+            f"Package: {stem}\nVersion: {deb_version}\nArchitecture: {architecture}\n"
             "Section: misc\nPriority: optional\nMaintainer: JesusQuijada34\n"
             f"Description: Audited {app} source package ({platform})\n"
             " MoonFix-normalized source bundle. Runtime dependencies remain project-specific.\n"
