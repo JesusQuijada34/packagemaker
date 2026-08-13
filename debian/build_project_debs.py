@@ -14,14 +14,15 @@ EXCLUDE_DIRS = {".git", "__pycache__", "dist", "build", ".pytest_cache", ".mypy_
 EXCLUDE_FILES = {".env", ".env.local", ".env.production"}
 
 
-def metadata(project: Path) -> tuple[str, str, str, str, str]:
+def metadata(project: Path) -> tuple[str, str, str, str, str, str]:
     root = ET.parse(project / "details.xml").getroot()
-    publisher = (root.findtext("publisher") or "Influent").strip()
+    publisher = (root.findtext("publisher") or "influent").strip().lower()
     app = (root.findtext("app") or project.name).strip()
-    full_version = (root.findtext("version") or "v1.0.0-Danenone").strip()
+    full_version = (root.findtext("version") or "v1.0-26.08-00.00").strip()
+    author = (root.findtext("author") or "JesusQuijada34").strip()
     platform = (root.findtext("platform") or "Danenone").strip()
     deb_version = full_version.lstrip("v").replace("-", "+", 1).replace("-", ".")
-    return publisher, app, full_version, platform, deb_version
+    return publisher, app, full_version, author, platform, deb_version
 
 
 def copy_project(project: Path, destination: Path) -> None:
@@ -37,8 +38,8 @@ def copy_project(project: Path, destination: Path) -> None:
 
 
 def build_one(project: Path, output: Path, architecture: str) -> Path:
-    publisher, app, full_version, platform, deb_version = metadata(project)
-    stem = f"{publisher.lower()}-{app.lower()}"
+    publisher, app, full_version, author, platform, deb_version = metadata(project)
+    stem = f"{publisher}-{app.lower()}"
     identity = f"{publisher}.{app}.{full_version}"
     filename = f"{identity}_{architecture}.deb"
     with tempfile.TemporaryDirectory(prefix="audited-deb-") as temporary:
@@ -58,7 +59,7 @@ def build_one(project: Path, output: Path, architecture: str) -> Path:
         control_dir.mkdir()
         control = (
             f"Package: {stem}\nVersion: {deb_version}\nArchitecture: {architecture}\n"
-            "Section: misc\nPriority: optional\nMaintainer: JesusQuijada34\n"
+            f"Section: misc\nPriority: optional\nMaintainer: {author}\n"
             f"Description: Audited {app} source package ({platform})\n"
             " MoonFix-normalized source bundle. Runtime dependencies remain project-specific.\n"
         )
