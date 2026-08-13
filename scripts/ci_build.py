@@ -23,28 +23,28 @@ def get_metadata():
         print(f"❌ Error al parsear details.xml: {e}")
         sys.exit(1)
 
-def create_iflapp(metadata):
-    app_name = metadata['app']
-    version = metadata['version']
-    publisher = metadata['publisher']
+def create_iflapp(metadata, platform="AlphaCube"):
+    app_name = metadata['app'].strip()
+    version = metadata['version'].strip()
+    publisher = metadata['publisher'].strip()
+    if not version.startswith("v"):
+        version = f"v{version}"
+    iflapp_name = f"{publisher}.{app_name}.{version}-{platform}.iflapp"
     
     output_dir = Path("dist")
     output_dir.mkdir(exist_ok=True)
-    
-    iflapp_name = f"{publisher}.{app_name}.{version}-CI.iflapp"
     iflapp_path = output_dir / iflapp_name
     
     print(f"📦 Creando paquete: {iflapp_name}...")
     
-    exclude_patterns = [".git", ".github", "dist", "build", "__pycache__", "*.pyc", ".gitignore"]
+    exclude_dirs = {".git", ".github", ".gitlab", ".vscode", "dist", "build", "__pycache__", ".pytest_cache"}
+    exclude_files = {".gitignore", ".gitattributes"}
     
     with zipfile.ZipFile(iflapp_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk("."):
-            dirs[:] = [d for d in dirs if d not in exclude_patterns]
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
             for file in files:
-                if any(file.endswith(ext) for ext in [".pyc"]):
-                    continue
-                if file in exclude_patterns:
+                if file.endswith(".pyc") or file in exclude_files:
                     continue
                 file_path = Path(root) / file
                 arcname = file_path.relative_to(".")
