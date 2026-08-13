@@ -17,13 +17,18 @@ def get_metadata():
             'publisher': root.findtext('publisher') or root.findtext('empresa') or 'Unknown',
             'app': root.findtext('app') or root.findtext('name') or 'Unknown',
             'version': root.findtext('version') or 'v1.0',
+            'platform': root.findtext('platform') or root.findtext('plataforma') or 'AlphaCube',
         }
         return metadata
     except Exception as e:
         print(f"❌ Error al parsear details.xml: {e}")
         sys.exit(1)
 
-def create_iflapp(metadata, platform="AlphaCube"):
+def create_iflapp(metadata, platform=None):
+    allowed_platforms = {"Danenone", "Knosthalij", "AlphaCube"}
+    platform = (platform or metadata.get("platform") or "AlphaCube").strip()
+    if platform not in allowed_platforms:
+        raise ValueError(f"Plataforma no válida: {platform}")
     app_name = metadata['app'].strip()
     version = metadata['version'].strip()
     publisher = metadata['publisher'].strip()
