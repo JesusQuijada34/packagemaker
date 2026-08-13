@@ -377,6 +377,27 @@ class FlangCompiler:
                     shutil.copy2(item, dest)
                 except:
                     pass
+        # Los archivos estructurales de PackageMaker son parte del contrato del paquete.
+        # Se copian explícitamente después de aplicar .gitignore para evitar que un
+        # proyecto excluya accidentalmente sus propios metadatos MoonFix.
+        mandatory_paths = [
+            Path(".storedetail"), Path("version.res"), Path("autorun"),
+            Path("autorun.bat"), Path("updater.py"), Path("config/settings.json"),
+            Path("app/.app-container"), Path("assets/.assets-container"),
+            Path("config/.config-container"), Path("docs/.docs-container"),
+            Path("source/.source-container"), Path("lib/.lib-container"),
+        ]
+        if (self.repo_path / "manifest.res").exists():
+            mandatory_paths.append(Path("manifest.res"))
+        for relative in mandatory_paths:
+            source = self.repo_path / relative
+            destination = package_path / relative
+            if source.is_file():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+            elif source.is_dir():
+                destination.mkdir(parents=True, exist_ok=True)
+
         dist_dir = self.repo_path / "dist"
         if dist_dir.exists():
             for binary in dist_dir.iterdir():
