@@ -314,10 +314,8 @@ def repair_project_from_templates(
         write_template(docs_path, "docs/index.html.template", variables)
         repaired.append(str(docs_path.relative_to(project_path)))
 
-    for touch in (
-        project_path / "assets" / ".assets-container",
-        project_path / "app" / ".app-container",
-    ):
+    for folder in DEFAULT_FOLDERS:
+        touch = project_path / folder / f".{folder}-container"
         touch.parent.mkdir(parents=True, exist_ok=True)
         if not touch.exists():
             touch.touch()
