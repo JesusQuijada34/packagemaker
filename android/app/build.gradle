@@ -2,18 +2,32 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace "com.influent.packagemaker"
     compileSdkVersion 33
     defaultConfig {
         applicationId "com.influent.packagemaker"
         minSdkVersion 24
         targetSdkVersion 33
         versionCode 1
-        versionName "3.2.6"
+        versionName "3.2.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    signingConfigs {
+        release {
+            def ks = System.getenv('PACKAGEMAKER_KEYSTORE')
+            def kp = System.getenv('PACKAGEMAKER_KEY_PASSWORD')
+            if (ks && kp) {
+                storeFile file(ks)
+                storePassword kp
+                keyAlias System.getenv('PACKAGEMAKER_KEY_ALIAS') ?: 'packagemaker'
+                keyPassword kp
+            }
+        }
     }
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -21,11 +35,16 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.0"
     implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
+    implementation 'com.jcraft:jsch:0.1.55'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
 }

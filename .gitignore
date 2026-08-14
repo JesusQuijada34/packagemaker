@@ -185,3 +185,10 @@ data/pm.data
 
 # pmCodeEditor - Python portables descargados (no versionar)
 data/pmCodeEditor/python/
+
+# Android local and signing secrets
+android/.gradle/
+android/local.properties
+*.jks
+*.keystore
+*.pem
