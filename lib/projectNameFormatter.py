@@ -27,7 +27,8 @@ class ProjectNameFormatter:
     _PROJECT_PATTERN = re.compile(
         r"^(?P<publisher>[^.]+)\.(?P<app>[^.]+)\.v"
         r"(?P<version>\d+\.\d+(?:\.\d+)?)-"
-        r"(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2})$"
+        r"(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2})-"
+        r"(?P<platform>Danenone|Knosthalij|AlphaCube)$"
     )
 
     @staticmethod
@@ -112,8 +113,9 @@ class ProjectNameFormatter:
         """Devuelve el nombre canónico de proyecto, paquete o directorio."""
         publisher_norm = cls.normalize_publisher(publisher)
         app_norm = cls.normalize_app_id(app_id)
-        version_full = cls.format_version_full(version_base, platform, timestamp)
-        return f"{publisher_norm}.{app_norm}.{version_full}"
+        platform_norm = cls.normalize_platform(platform)
+        version_full = cls.format_version_full(version_base, platform_norm, timestamp)
+        return f"{publisher_norm}.{app_norm}.{version_full}-{platform_norm}"
 
     @classmethod
     def format_package_folder(
@@ -175,5 +177,5 @@ class ProjectNameFormatter:
             "app": match.group("app"),
             "version": match.group("version"),
             "timestamp": match.group("timestamp"),
-            "platform": None,
+            "platform": match.group("platform"),
         }
