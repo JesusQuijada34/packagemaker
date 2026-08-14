@@ -48,7 +48,7 @@ def build_one(project: Path, output: Path, architecture: str) -> Path:
         copy_project(project, payload)
         bin_dir = stage / "usr" / "bin"
         bin_dir.mkdir(parents=True)
-        launcher = bin_dir / app
+        launcher = bin_dir / app.lower()
         launcher.write_text(
             "#!/bin/sh\n"
             f"exec /usr/bin/env sh /opt/{stem}/autorun \"$@\"\n",
