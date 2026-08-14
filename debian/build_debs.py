@@ -29,7 +29,7 @@ def metadata() -> tuple[str, str, str, str]:
     publisher = (root.findtext("publisher") or "influent").strip().lower()
     app = (root.findtext("app") or "packagemaker").strip().lower()
     full_version = (root.findtext("version") or "v0.0.0").strip()
-    version = full_version.lstrip("v")
+    version = full_version[1:] if full_version.startswith("v") else full_version
     # Debian packages are native Linux deliverables, therefore they always use
     # the canonical Linux platform label. AlphaCube is reserved for a source-only
     # or explicitly multi-platform package and must not leak into .deb names.
