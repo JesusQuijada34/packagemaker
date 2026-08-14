@@ -24,11 +24,16 @@ COPY_DIRS = ("app", "assets", "config", "docs", "lang", "lib", "shell", "source"
 COPY_FILES = ("packagemaker.py", "pmCodeEditor.py", "updater.py", "launcher.sh", "details.xml", "LICENSE", "README.md", "FAQ.md", "CHANGELOG.md", "RELEASE_NOTES.md")
 
 
+def _control_value(value: str) -> str:
+    """Sanitize a value for use in Debian control fields by removing newlines."""
+    return value.replace("\n", " ").strip()
+
+
 def metadata() -> tuple[str, str, str, str]:
     root = ElementTree.parse(ROOT / "details.xml").getroot()
-    publisher = (root.findtext("publisher") or "influent").strip().lower()
-    app = (root.findtext("app") or "packagemaker").strip().lower()
-    full_version = (root.findtext("version") or "v0.0.0").strip()
+    publisher = _control_value((root.findtext("publisher") or "influent").strip().lower())
+    app = _control_value((root.findtext("app") or "packagemaker").strip().lower())
+    full_version = _control_value((root.findtext("version") or "v0.0.0").strip())
     version = full_version[1:] if full_version.startswith("v") else full_version
     # Debian packages are native Linux deliverables, therefore they always use
     # the canonical Linux platform label. AlphaCube is reserved for a source-only

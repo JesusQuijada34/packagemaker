@@ -14,13 +14,18 @@ EXCLUDE_DIRS = {".git", "__pycache__", "dist", "build", ".pytest_cache", ".mypy_
 EXCLUDE_FILES = {".env", ".env.local", ".env.production"}
 
 
+def _control_value(value: str) -> str:
+    """Sanitize a value for use in Debian control fields by removing newlines."""
+    return value.replace("\n", " ").strip()
+
+
 def metadata(project: Path) -> tuple[str, str, str, str, str, str]:
     root = ET.parse(project / "details.xml").getroot()
-    publisher = (root.findtext("publisher") or "influent").strip().lower()
-    app = (root.findtext("app") or project.name).strip()
-    full_version = (root.findtext("version") or "v1.0-26.08-00.00").strip()
-    author = (root.findtext("author") or "JesusQuijada34").strip()
-    platform = (root.findtext("platform") or "Danenone").strip()
+    publisher = _control_value((root.findtext("publisher") or "influent").strip().lower())
+    app = _control_value((root.findtext("app") or project.name).strip())
+    full_version = _control_value((root.findtext("version") or "v1.0-26.08-00.00").strip())
+    author = _control_value((root.findtext("author") or "JesusQuijada34").strip())
+    platform = _control_value((root.findtext("platform") or "Danenone").strip())
     deb_version = full_version.lstrip("v").replace("-", "+", 1).replace("-", ".")
     return publisher, app, full_version, author, platform, deb_version
 
