@@ -37,9 +37,15 @@ class ProjectNameFormatter:
 
     @staticmethod
     def normalize_publisher(publisher: str) -> str:
-        """Normaliza el publisher en un segmento válido y estable."""
-        value = str(publisher or "").strip().lower().replace(" ", "-")
-        return value or "influent"
+        """Normaliza el publisher sin perder la capitalización declarada."""
+        value = str(publisher or "").strip().replace(" ", "-")
+        if not value:
+            return "influent"
+        if any(part in {"", ".", ".."} for part in value.split(".")):
+            raise ValueError("Publisher inválido")
+        if any(ch in value for ch in "/\\\\\n\r\t"):
+            raise ValueError("Publisher inválido")
+        return value
 
     @staticmethod
     def normalize_app_id(app_id: str) -> str:
