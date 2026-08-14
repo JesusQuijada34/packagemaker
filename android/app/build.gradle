@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.chaquo.python'
 
 android {
     namespace "com.influent.packagemaker"
@@ -11,6 +12,15 @@ android {
         versionCode 1
         versionName "3.2.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+        python {
+            version "3.8"
+            pyc {
+                src false
+            }
+        }
     }
     signingConfigs {
         release {
@@ -39,6 +49,7 @@ android {
         jvmTarget = '1.8'
     }
 }
+
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.0"

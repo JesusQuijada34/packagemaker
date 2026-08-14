@@ -37,6 +37,8 @@ import java.io.ByteArrayOutputStream
 import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -57,6 +59,7 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!Python.isStarted()) Python.start(AndroidPlatform(this))
         bridge = AndroidBridge(this)
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
@@ -161,6 +164,27 @@ class MainActivity : AppCompatActivity() {
                 }
                 visit(folder, "")
                 notifyAndReload("Proyecto subido a $repo: $uploaded archivos")
+            }
+        }
+
+        @JavascriptInterface
+        fun pythonCapabilities(): String = pythonCall("capabilities", JSONObject()).toString()
+
+        @JavascriptInterface
+        fun createProjectPython(publisher: String, appName: String, version: String, author: String, displayName: String, description: String) {
+            runAsync {
+                val root = projectsFolder() ?: error("Selecciona primero la carpeta Documentos")
+                val tempRoot = File(context.cacheDir, "python-projects").apply { mkdirs() }
+                val metadata = JSONObject().put("publisher", publisher).put("app", appName).put("version", version).put("author", author).put("name", displayName).put("description", description).put("platform", "AlphaCube")
+                val result = pythonCall("create", JSONObject().put("root", tempRoot.absolutePath).put("metadata", metadata))
+                require(result.optBoolean("ok")) { result.optString("message", "Python no pudo crear el proyecto") }
+                val generated = File(result.getString("path"))
+                val folderName = generated.name
+                require(root.findFile(folderName) == null) { "Ya existe el proyecto $folderName" }
+                val destination = root.createDirectory(folderName) ?: error("No se pudo crear la carpeta")
+                copyLocalTree(generated, destination)
+                generated.deleteRecursively()
+                notifyAndReload("Proyecto Python creado en Documentos/PackageMaker Projects/$folderName")
             }
         }
 
@@ -319,6 +343,23 @@ class MainActivity : AppCompatActivity() {
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }, "Compartir paquete"))
+        }
+
+        private fun pythonCall(action: String, payload: JSONObject): JSONObject {
+            val module = Python.getInstance().getModule("packagemaker_android")
+            return JSONObject(module.callAttr("main", action, payload.toString()).toString())
+        }
+
+        private fun copyLocalTree(source: File, destination: DocumentFile) {
+            source.listFiles()?.forEach { child ->
+                if (child.isDirectory) {
+                    val target = destination.findFile(child.name) ?: destination.createDirectory(child.name)
+                    if (target != null) copyLocalTree(child, target)
+                } else {
+                    val target = destination.findFile(child.name) ?: destination.createFile("application/octet-stream", child.name)
+                    if (target != null) contentResolver.openOutputStream(target.uri, "wt")!!.use { out -> FileInputStream(child).use { input -> input.copyTo(out) } }
+                }
+            }
         }
 
         private fun githubRequest(path: String, method: String, body: String?, token: String): ApiResponse {

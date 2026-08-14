@@ -253,7 +253,7 @@
             <div id="view-about" class="hidden">
             <div class="card" style="text-align:center;padding-top:28px;"><img src="brand/app-icon.png" alt="Package Maker" style="width:96px;height:96px;border-radius:22px;box-shadow:0 0 30px rgba(255,87,34,.35);"><h2 style="margin:18px 0 4px;">Package Maker</h2><p style="color:var(--text-dim);margin-top:0;">Influent · IDE móvil para crear y gestionar proyectos</p><div class="p-sub" style="margin-top:18px;">Versión 3.2.7 · Android</div></div>
             <div class="card"><h3>Acerca de esta aplicación</h3><p style="color:var(--text-dim);">Port de Android inspirado en PackageMaker, con gestión de proyectos, editor, paquetes, splashs y compilación remota por SSH.</p><p style="color:var(--text-dim);">Autor original: <b>JesusQuijada34</b><br>Publisher: <b>Influent</b><br>Licencia: <b>GNU GPL v3</b></p><button class="btn secondary" onclick="openProjectPage()">Abrir repositorio oficial</button></div>
-            <div class="card"><h3>Seguridad y firma</h3><p style="color:var(--text-dim);">La identidad del APK se verifica mediante su certificado de firma. Consulta el SHA-256 distribuido junto al APK antes de instalarlo.</p></div>
+            <div class="card"><h3>Motor PackageMaker</h3><p id="python-status" style="color:var(--text-dim);">Comprobando runtime Python…</p></div><div class="card"><h3>Seguridad y firma</h3><p style="color:var(--text-dim);">La identidad del APK se verifica mediante su certificado de firma. Consulta el SHA-256 distribuido junto al APK antes de instalarlo.</p></div>
         </div>
 
         <div id="view-home">
@@ -385,7 +385,7 @@
             const description = document.getElementById('in-description').value || 'Proyecto creado con PackageMaker';
 
             if (window.AndroidBridge) {
-                window.AndroidBridge.createProject(pub, name, ver, auth, display, description);
+                window.AndroidBridge.createProjectPython(pub, name, ver, auth, display, description);
                 showView('home');
             } else {
                 alert('No se detectó Bridge de Android (Modo Demo)');
@@ -393,6 +393,7 @@
         }
 
         function openProjectPage() { if(window.AndroidBridge) window.AndroidBridge.openProjectPage(); }
+        function loadPythonStatus() { if(!window.AndroidBridge) return; try { const c=JSON.parse(window.AndroidBridge.pythonCapabilities()); document.getElementById('python-status').textContent='Python nativo activo: crear, reparar, validar y empaquetar proyectos localmente. La compilación binaria de escritorio se ejecuta por SSH: '+(c.remote_compile?'disponible':'no disponible')+'.'; } catch(e) { document.getElementById('python-status').textContent='Runtime Python no disponible: '+e; } }
         function githubStep(step) { [1,2,3,4].forEach(i => document.getElementById('github-step-'+i).classList.toggle('hidden', i !== step)); }
         function openGithubTokenPage() { if(window.AndroidBridge) window.AndroidBridge.openGithubTokenPage(); }
         function loadGithubState() { const state=JSON.parse(window.AndroidBridge.githubState()); if(state.connected){ githubStep(3); document.getElementById('github-account').textContent='Conectado como @'+state.login; } else githubStep(1); }
@@ -472,7 +473,8 @@
 
         // Init
         window.onload = () => {
-            setTimeout(() => document.getElementById('splash-screen').classList.add('splash-hide'), 1250);
+            loadPythonStatus();
+            setTimeout(() => { document.getElementById('splash-screen').classList.add('splash-hide'); }, 1250);
             if (window.AndroidBridge) {
                 loadStorageLocation();
                 loadProjects();

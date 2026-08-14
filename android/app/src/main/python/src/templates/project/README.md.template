@@ -1,0 +1,32 @@
+# __NAME__
+
+Proyecto generado con PackageMaker.
+
+## Informacion
+
+- **Organizacion:** __PUBLISHER__
+- **ID:** __APP__
+- **Version:** __VERSION_FULL__
+- **Autor:** __AUTHOR__
+- **Plataforma:** __PLATFORM__
+
+## Descripcion
+
+__DESCRIPTION__
+
+## Estructura
+
+```
+app/          - Iconos y recursos
+assets/       - Imagenes y assets
+config/       - Configuracion
+docs/         - Documentacion
+source/       - Codigo fuente adicional
+lib/          - Dependencias
+```
+
+## Uso
+
+```bash
+python __APP__.py
+```

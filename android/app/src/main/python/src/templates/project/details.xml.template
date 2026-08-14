@@ -1,0 +1,12 @@
+<app>
+  <publisher>__PUBLISHER__</publisher>
+  <app>__APP__</app>
+  <name>__NAME__</name>
+  <version>__VERSION__</version>
+  <correlationid>__CORRELATIONID__</correlationid>
+  <rate>__RATE__</rate>
+  <author>__AUTHOR__</author>
+  <platform>__PLATFORM__</platform>
+  <description>__DESCRIPTION__</description>
+  <year>__YEAR__</year>
+</app>
