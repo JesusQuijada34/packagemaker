@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.2-26.08-21.56
+## v3.2.7-26.05-20.13
 
 - Identidad normalizada: publisher `influent` y author `JesusQuijada34`.
 - Versión pública normalizada sin sufijo de plataforma.
