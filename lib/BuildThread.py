@@ -237,6 +237,10 @@ class FlangCompiler:
         script_name = script["name"]
         assets_dir, app_dir = self._prepare_pyinstaller_data_dirs()
         add_data = [(str(assets_dir), "assets"), (str(app_dir), "app")]
+        # cliHandler y otros módulos cargan details.xml relativo a la raíz del bundle.
+        # Incluirlo explícitamente es necesario para ejecutables onefile/frozen.
+        if self.details_xml_path.is_file():
+            add_data.append((str(self.details_xml_path), "."))
         hidden_imports = self._detect_hidden_imports(script_path)
 
         pyi = get_pyinstaller()

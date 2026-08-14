@@ -153,12 +153,8 @@ if sys.platform.startswith("win"):
     except ImportError:
         winreg = None
 
-# PyInstaller splash screen support: Optional, only has effect in frozen bundles
-if getattr(sys, 'frozen', False):
-    try:
-        import pyi_splash  # Only needed for PyInstaller splash screen; will not be found otherwise
-    except ImportError:
-        pass  # Not an error unless running under PyInstaller build
+# El splash de PyInstaller solo se cierra cuando el bootloader configuró IPC.
+# No importar pyi_splash estáticamente: eso activa su hook aunque no exista splash.
 # ----------- CONFIGURABLE VARIABLES -----------
 if PYQT6_AVAILABLE:
     APP_FONT = QFont('Segoe UI Variable', 11)
@@ -5208,11 +5204,11 @@ def main():
     )
     
     def on_splash_finished():
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
             try:
-                import pyi_splash
-                pyi_splash.close()
-            except ImportError:
+                import importlib
+                importlib.import_module("pyi_splash").close()
+            except (ImportError, OSError):
                 pass
     
     splash.finished.connect(on_splash_finished)

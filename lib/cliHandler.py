@@ -42,10 +42,28 @@ def _safe_print(message, stream=None):
         print(fallback, file=target)
 
 
-with open(Path(__file__).parent / "../details.xml", "r") as f:
+def _find_details_xml() -> Path:
+    """Localiza details.xml tanto en fuente como en bundles PyInstaller."""
+    candidates = []
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        bundle_root = Path(sys._MEIPASS)
+        candidates.extend((bundle_root / "_internal", bundle_root))
+    candidates.extend((Path(__file__).resolve().parent.parent, Path.cwd()))
+    for root in candidates:
+        candidate = root / "details.xml"
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError(
+        "No se encontró details.xml en las raíces de recursos: "
+        + ", ".join(str(path) for path in candidates)
+    )
+
+
+_DETAILS_XML_PATH = _find_details_xml()
+with _DETAILS_XML_PATH.open("r", encoding="utf-8") as f:
     tree = ET.parse(f)
     root_xml = tree.getroot()
-    __version__ = root_xml.find("version").text
+    __version__ = root_xml.findtext("version", "")
 
 # Mapeo de comandos legacy a acciones modernas
 LEGACY_COMMAND_MAP = {
