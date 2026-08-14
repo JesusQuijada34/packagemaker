@@ -491,16 +491,18 @@ class FlangCompiler:
             except OSError as exc:
                 self.log(f"[WARN] No se pudo eliminar la carpeta del paquete {package_path.name}: {exc}")
 
-    def cleanup_processed_project(self, iflapp_path: Path) -> bool:
-        """Elimina el proyecto fuente después de verificar el artefacto final.
+    def cleanup_processed_project(self, iflapp_path: Path, allow_delete: bool = False) -> bool:
+        """Elimina el proyecto fuente solo cuando el llamador lo autoriza.
 
-        La eliminación solo se permite si el archivo `.iflapp` existe, es un ZIP
-        válido y está fuera del proyecto. Así se evita borrar fuentes cuando el
-        empaquetado falla o cuando la salida se configuró por error dentro del
-        mismo directorio del proyecto.
+        La conservación es el comportamiento seguro por defecto. Incluso con
+        autorización, el archivo `.iflapp` debe existir, ser un ZIP válido y
+        quedar fuera del directorio fuente.
         """
         source_path = self.repo_path.resolve()
         artifact_path = Path(iflapp_path).resolve()
+        if not allow_delete:
+            self.log("[INFO] Proyecto fuente conservado; la eliminación requiere autorización explícita.")
+            return False
         if not artifact_path.is_file() or not zipfile.is_zipfile(artifact_path):
             self.log("[WARN] Se conserva el proyecto: el archivo .iflapp no es válido.")
             return False
