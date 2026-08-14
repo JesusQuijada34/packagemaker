@@ -20,13 +20,13 @@ class ProjectNameFormatter:
 
     ALLOWED_PLATFORMS = ("Danenone", "Knosthalij", "AlphaCube")
     _VERSION_PATTERN = re.compile(
-        r"^v?(?P<base>\d+\.\d+)(?:\.\d+)*"
+        r"^v?(?P<base>\d+\.\d+(?:\.\d+)*)"
         r"(?:-(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2}))?"
         r"(?:-(?P<platform>Danenone|Knosthalij|AlphaCube))?$"
     )
     _PROJECT_PATTERN = re.compile(
         r"^(?P<publisher>[^.]+)\.(?P<app>[^.]+)\.v"
-        r"(?P<version>\d+\.\d+)-"
+        r"(?P<version>\d+\.\d+(?:\.\d+)?)-"
         r"(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2})$"
     )
 
@@ -63,17 +63,17 @@ class ProjectNameFormatter:
 
     @classmethod
     def version_components(cls, version: str) -> Tuple[str, Optional[str]]:
-        """Extrae una versión de dos componentes y su timestamp.
+        """Extrae la versión completa y su timestamp.
 
         Acepta ``1.0``, ``1.0.0``, ``v1.0-26.08-15.38`` y la forma histórica
-        con plataforma. Los componentes posteriores al segundo se descartan
-        para cumplir la convención pública ``vX.x-Yy.Mm-hh.mm``.
+        con plataforma. Conserva los componentes de parche, por lo que
+        ``v3.2.7-26.05-20.13`` no se trunca a ``v3.2-26.05-20.13``.
         """
         candidate = str(version or "").strip()
         match = cls._VERSION_PATTERN.fullmatch(candidate)
         if not match:
             raise ValueError(
-                "Versión inválida. Use X.x, opcionalmente con parche histórico, "
+                "Versión inválida. Use X.x o X.x.z, opcionalmente con timestamp, "
                 "seguida de -YY.MM-HH.MM."
             )
         return match.group("base"), match.group("timestamp")
