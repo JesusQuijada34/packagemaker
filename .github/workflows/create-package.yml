@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   build-release:
     strategy:
@@ -34,14 +37,36 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller requests
+          pip install -r lib/requirements.txt
 
       - name: Build release package with Packagemaker
         run: |
-          python packagemaker.py compile . --output ./dist --target ${{ matrix.target }} --headless
+          python packagemaker.py --buildthis . --output "$RUNNER_TEMP/packagemaker-output" --platform ${{ matrix.target }}
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-iflapp-${{ matrix.target }}
-          path: dist/*.iflapp
+          path: ${{ runner.temp }}/packagemaker-output/*.iflapp
+
+  release:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-iflapp-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: artifacts/*.iflapp
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
