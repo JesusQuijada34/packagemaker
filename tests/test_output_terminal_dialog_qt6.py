@@ -1,11 +1,15 @@
 import inspect
 import unittest
 
-from PyQt6 import QtGui
+try:
+    from PyQt6 import QtGui
+    from lib.outputTerminalDialog import OutputTerminalDialog
+except ImportError:  # PyQt6 es opcional para la suite headless.
+    QtGui = None
+    OutputTerminalDialog = None
 
-from lib.outputTerminalDialog import OutputTerminalDialog
 
-
+@unittest.skipUnless(QtGui is not None, "PyQt6 no está instalado en este entorno")
 class OutputTerminalDialogQt6Tests(unittest.TestCase):
     def test_output_handlers_use_qt6_cursor_move_operation(self):
         self.assertTrue(hasattr(QtGui.QTextCursor.MoveOperation, "End"))

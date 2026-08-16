@@ -1,13 +1,13 @@
 # Package Maker
 
-**Identidad del paquete:** `influent.packagemaker.v3.2.7-26.05-20.13`
+**Identidad del paquete:** `Influent.packagemaker.v3.2.7-26.05-20.13-AlphaCube`
 **Autor:** `JesusQuijada34`
 **Plataforma:** `AlphaCube`
 **Descripción:** Estructura reparada por MoonFix
 
 ## Estructura PackageMaker 3.2.7
 
-Este repositorio fue normalizado mediante **MoonFix**, usando la estructura de PackageMaker 3.2.7. El paquete público debe conservar `details.xml`, `version.res`, `autorun`, `autorun.bat`, `.storedetail`, `updater.py`, `config/settings.json`, los marcadores `.container` y los archivos de documentación correspondientes. El publisher oficial es `influent` y la versión pública no contiene sufijo de plataforma.
+Este repositorio fue normalizado mediante **MoonFix**, usando la estructura de PackageMaker 3.2.7. El paquete público debe conservar `details.xml`, `version.res`, `autorun`, `autorun.bat`, `.storedetail`, `updater.py`, `config/settings.json`, los marcadores `.container` y los archivos de documentación correspondientes. El publisher conserva la capitalización de `details.xml` (`Influent`) y la versión pública incluye el sufijo canónico de plataforma (`Danenone`, `Knosthalij` o `AlphaCube`).
 
 ## Instalación y ejecución
 
@@ -15,7 +15,7 @@ Instala las dependencias declaradas en `lib/requirements.txt` cuando exista y ej
 
 ## Validación
 
-La fuente debe pasar compilación sintáctica, pruebas funcionales disponibles, comprobación de identidad XML, protección contra traversal en ZIP y llamadas seguras a subprocess. Los artefactos `.iflapp` deben ser generados por PackageMaker; los paquetes Debian deben usar el nombre canónico `influent.packagemaker.v3.2.7-26.05-20.13_ARCH.deb`.
+La fuente debe pasar compilación sintáctica, pruebas funcionales disponibles, comprobación de identidad XML, protección contra traversal en ZIP y llamadas seguras a subprocess. Los artefactos `.iflapp` deben ser generados por PackageMaker; los paquetes Debian deben usar el nombre canónico `Influent.packagemaker.v3.2.7-26.05-20.13_ARCH.deb`.
 
 ## Release
 
@@ -55,7 +55,7 @@ El tag y el título del release deben ser exactamente `v3.2.7-26.05-20.13`. Los 
 - **Minificación**: Reduce tamaño del código compilado
 - **Integración con .gitignore**: Excluye automáticamente archivos y carpetas especificadas en `.gitignore` durante la compilación y empaquetado, incluyendo archivos de GitHub como `.github` y `.vscode`.
 - **Limpieza Post-Compilación**: Elimina automáticamente los directorios `build/`, `dist/` y los archivos `.spec` generados por PyInstaller después de cada proceso de compilación.
-- **Entrega y limpieza segura**: Una vez validado el `.iflapp` generado fuera del directorio fuente, elimina el paquete temporal y la carpeta de proyecto procesada. Esta protección se aplica a GUI, TUI, `compile`, `--buildthis` y `scripts/build_headless.py`; no borra fuentes si el `.iflapp` es inválido o está dentro de la carpeta del proyecto.
+- **Entrega y limpieza segura**: Una vez validado el `.iflapp` generado fuera del directorio fuente, elimina el paquete temporal. Esta protección se aplica a GUI, TUI, `compile`, `--buildthis` y `scripts/build_headless.py`; conserva las fuentes por defecto y solo permite eliminarlas mediante una autorización explícita.
 
 ### 🔒 Métodos de Blindado
 | Método | Descripción | Seguridad |
@@ -95,7 +95,7 @@ git clone https://github.com/JesusQuijada34/packagemaker.git
 cd packagemaker
 
 # Instalar dependencias
-pip install -r requirements.txt
+pip install -r lib/requirements.txt
 
 # Ejecutar IDE
 python packagemaker.py
@@ -135,7 +135,7 @@ Click en "Compilar" (verde) o "Compilar Bundle y Firmar" (azul)
 python packagemaker.py --buildthis /ruta/al/proyecto
 ```
 
-El proyecto debe contener `details.xml` y su script principal. La salida se crea en `~/Documents/Packagemaker Projects/Compiled`. El nombre del directorio y del archivo sigue la convención exacta `publisher.appname.vXx.xx-YY.MM-HH.MM-platform`, usando `Danenone`, `Knosthalij` o `AlphaCube` como plataforma. El empaquetador respeta `.gitignore`, por lo que excluye `.git`, `.github`, `.vscode` y demás patrones declarados. Tras verificar que el `.iflapp` es un ZIP válido y está fuera del proyecto, el directorio fuente se elimina de forma intencionada; conserva una copia antes de invocar la compilación si necesitas seguir editándolo.
+El proyecto debe contener `details.xml` y su script principal. La salida se crea en `~/Documents/Packagemaker Projects/Compiled`, salvo que se especifique `--output`. El nombre del directorio y del archivo sigue la convención exacta `Publisher.appname.vX.x[.z]-YY.MM-HH.MM-Platform`, usando `Danenone`, `Knosthalij` o `AlphaCube` como plataforma. El empaquetador respeta `.gitignore`, por lo que excluye `.git`, `.github`, `.vscode` y demás patrones declarados. El proyecto fuente se conserva por defecto; cualquier eliminación requiere autorización explícita del llamador y solo se permite después de validar un `.iflapp` externo.
 
 ---
 

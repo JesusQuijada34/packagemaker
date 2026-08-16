@@ -34,12 +34,12 @@ build_linux:
   extends: .install_dependencies
   script:
     - echo "Iniciando compilación para Linux..."
-    - cd packagemaker
-    - python3 packagemaker.py --buildthis
-    - ls -R releases
+    - mkdir -p "$CI_PROJECT_DIR/ci-artifacts"
+    - python3 packagemaker.py --buildthis . --output "$CI_PROJECT_DIR/ci-artifacts" --platform Linux
+    - ls -R ci-artifacts
   artifacts:
     paths:
-      - packagemaker/releases/*.iflapp
+      - ci-artifacts/*.iflapp
     expire_in: 1 week
   only:
     - main
@@ -53,12 +53,12 @@ build_windows:
     - echo "Iniciando compilación para Windows..."
     - choco install gh cli --confirm
     - gh auth setup-git
-    - cd packagemaker
-    - python packagemaker.py --buildthis
-    - ls -R releases
+    - New-Item -ItemType Directory -Force -Path "$CI_PROJECT_DIR\\ci-artifacts"
+    - python packagemaker.py --buildthis . --output "$CI_PROJECT_DIR\\ci-artifacts" --platform Windows
+    - Get-ChildItem -Recurse ci-artifacts
   artifacts:
     paths:
-      - packagemaker/releases/*.iflapp
+      - ci-artifacts/*.iflapp
     expire_in: 1 week
   only:
     - main
@@ -69,19 +69,22 @@ release_job:
   extends: .install_dependencies
   script:
     - echo "Extrayendo versión de details.xml..."
-    - python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('packagemaker/details.xml'); version = tree.getroot().find('version').text; print(version)" > VERSION_TAG.txt
+    - python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('details.xml'); version = tree.getroot().find('version').text; print(version)" > VERSION_TAG.txt
     - VERSION=$(cat VERSION_TAG.txt)
     - echo "Versión detectada $VERSION"
     - |
-      if gh release view $VERSION &>/dev/null; then
-        echo "Release $VERSION existe. Eliminando..."
-        gh release delete $VERSION --yes
-      else
-        echo "Release $VERSION no existe."
+      if gh release view "$VERSION" &>/dev/null; then
+        echo "Error: el release $VERSION ya existe; no se sobrescribirá automáticamente."
+        exit 1
       fi
-    - gh release create $VERSION --notes "" --draft
     - |
-      for file in packagemaker/releases/*.iflapp; do
+      if [ -f "RELEASE_NOTES.md" ]; then
+        gh release create "$VERSION" --title "$VERSION" --notes-file RELEASE_NOTES.md --draft
+      else
+        gh release create "$VERSION" --title "$VERSION" --notes "" --draft
+      fi
+    - |
+      for file in ci-artifacts/*.iflapp; do
         if [ -f "$file" ]; then
           echo "Subiendo $file al release $VERSION..."
           gh release upload $VERSION "$file"
@@ -90,8 +93,8 @@ release_job:
         fi
       done
     - |
-      if [ -f "packagemaker/RELEASE_NOTES.md" ]; then
-        gh release edit $VERSION --notes-file packagemaker/RELEASE_NOTES.md
+      if [ -f "RELEASE_NOTES.md" ]; then
+        gh release edit "$VERSION" --notes-file RELEASE_NOTES.md
       else
         echo "Advertencia: No se encontró RELEASE_NOTES.md. El release se creará sin notas."
       fi
@@ -100,6 +103,6 @@ release_job:
   dependencies:
     - build_linux
     - build_windows
-  allow_failure: true
+  allow_failure: false
   only:
     - main

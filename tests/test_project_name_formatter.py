@@ -7,7 +7,7 @@ from lib.template_engine import build_variables
 
 class ProjectNameFormatterTests(unittest.TestCase):
     TIMESTAMP = "26.08-15.38"
-    EXPECTED = "acme-labs.hello-world.v1.2-26.08-15.38"
+    EXPECTED = "Acme-Labs.hello-world.v1.2-26.08-15.38-Danenone"
 
     @patch.object(ProjectNameFormatter, "get_timestamp", return_value=TIMESTAMP)
     def test_all_artifacts_use_the_exact_canonical_format(self, _timestamp):
@@ -50,25 +50,40 @@ class ProjectNameFormatterTests(unittest.TestCase):
         self.assertEqual(variables["VERSION_FULL"], "v1.2-26.08-15.38")
         self.assertEqual(variables["VERSION_VSO"], "v1.2-26.08-15.38")
 
-    def test_parse_accepts_only_the_exact_canonical_format(self):
+    def test_parse_accepts_the_exact_canonical_format(self):
         parsed = ProjectNameFormatter.parse_project_folder(self.EXPECTED)
         self.assertEqual(
             parsed,
             {
-                "publisher": "acme-labs",
+                "publisher": "Acme-Labs",
                 "app": "hello-world",
                 "version": "1.2",
                 "timestamp": self.TIMESTAMP,
-                "platform": None,
+                "platform": "Danenone",
             },
         )
         self.assertIsNone(ProjectNameFormatter.parse_project_folder("acme.hello.1.2-Linux"))
+
+    def test_parse_preserves_patch_versions(self):
+        parsed = ProjectNameFormatter.parse_project_folder(
+            "Influent.packagemaker.v3.2.7-26.05-20.13-AlphaCube"
+        )
+        self.assertEqual(parsed["version"], "3.2.7")
+        self.assertEqual(parsed["platform"], "AlphaCube")
 
     def test_invalid_platform_is_rejected(self):
         with self.assertRaises(ValueError):
             ProjectNameFormatter.format_project_folder(
                 "Acme", "Hello", "1.2", "MacOS"
             )
+
+    def test_unsafe_segments_are_rejected(self):
+        for publisher, app in (("../escape", "hello"), ("Acme", "../escape"), ("Acme Inc", "hello_world")):
+            with self.subTest(publisher=publisher, app=app):
+                with self.assertRaises(ValueError):
+                    ProjectNameFormatter.format_project_folder(
+                        publisher, app, "1.2", "Linux"
+                    )
 
 
 if __name__ == "__main__":

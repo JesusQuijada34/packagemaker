@@ -49,7 +49,8 @@ mi-proyecto/
 │   │       ├── __init__.py
 │   │       └── MiClase.py   # Clase extraída
 │   └── __init__.py          # Imports consolidados
-└── manifest.yaml            # Metadatos
+├── details.xml              # Metadatos
+└── manifest.res              # Manifiesto Windows opcional
 ```
 
 ---
@@ -93,7 +94,7 @@ git clone https://github.com/JesusQuijada34/packagemaker.git
 cd packagemaker
 
 # Instalar dependencias
-pip install -r requirements.txt
+pip install -r lib/requirements.txt
 
 # Ejecutar IDE
 python packagemaker.py

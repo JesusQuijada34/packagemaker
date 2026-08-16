@@ -13,7 +13,7 @@
 ```bash
 git clone https://github.com/JesusQuijada34/packagemaker.git
 cd packagemaker
-pip install -r requirements.txt
+pip install -r lib/requirements.txt
 python packagemaker.py
 ```
 
@@ -56,8 +56,8 @@ Packagemaker analiza AST (Abstract Syntax Tree) del código y:
 Verifica:
 1. **Clases extraídas**: Revisa que `lib/_class/` contiene los archivos
 2. **Imports**: Confirma que `lib/__init__.py` tiene los imports correctos
-3. **Dependencias**: Asegúrate que todas las librerías estén en `requirements.txt`
-4. **Script principal**: El entry point debe estar bien definido en `manifest.yaml`
+3. **Dependencias**: Asegúrate que todas las librerías estén en `lib/requirements.txt`
+4. **Script principal**: El entry point debe corresponder al `<app>` de `details.xml` y a su script principal
 
 ---
 
@@ -157,7 +157,8 @@ mi-proyecto/
 ├── assets/
 │   └── icon.ico
 ├── requirements.txt
-└── manifest.yaml         # Generado por Packagemaker
+├── details.xml           # Metadatos del proyecto
+└── manifest.res          # Manifiesto Windows opcional
 ```
 
 ### Optimización de compilación

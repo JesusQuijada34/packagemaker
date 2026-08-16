@@ -3,9 +3,10 @@
 """Formato canónico de nombres de PackageMaker.
 
 Todos los artefactos públicos deben usar exactamente:
-    publisher.appname.vX.x-YY.MM-HH.MM
+    publisher.appname.vX.x[.z]-YY.MM-HH.MM-Platform
 
-Las plataformas admitidas son Danenone, Knosthalij y AlphaCube.
+Las plataformas admitidas son Danenone, Knosthalij y AlphaCube. El publisher
+conserva la capitalización declarada en ``details.xml``.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ class ProjectNameFormatter:
     """Centraliza, valida y analiza nombres de proyectos y paquetes."""
 
     ALLOWED_PLATFORMS = ("Danenone", "Knosthalij", "AlphaCube")
+    _SAFE_SEGMENT_PATTERN = re.compile(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$")
     _VERSION_PATTERN = re.compile(
         r"^v?(?P<base>\d+\.\d+(?:\.\d+)*)"
         r"(?:-(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2}))?"
@@ -26,7 +28,7 @@ class ProjectNameFormatter:
     )
     _PROJECT_PATTERN = re.compile(
         r"^(?P<publisher>[^.]+)\.(?P<app>[^.]+)\.v"
-        r"(?P<version>\d+\.\d+(?:\.\d+)?)-"
+        r"(?P<version>\d+\.\d+(?:\.\d+)*)-"
         r"(?P<timestamp>\d{2}\.\d{2}-\d{2}\.\d{2})-"
         r"(?P<platform>Danenone|Knosthalij|AlphaCube)$"
     )
@@ -42,17 +44,23 @@ class ProjectNameFormatter:
         value = str(publisher or "").strip().replace(" ", "-")
         if not value:
             return "influent"
-        if any(part in {"", ".", ".."} for part in value.split(".")):
-            raise ValueError("Publisher inválido")
-        if any(ch in value for ch in "/\\\\\n\r\t"):
-            raise ValueError("Publisher inválido")
+        if not ProjectNameFormatter._SAFE_SEGMENT_PATTERN.fullmatch(value):
+            raise ValueError(
+                "Publisher inválido: use solo letras, números, espacios o guiones."
+            )
         return value
 
     @staticmethod
     def normalize_app_id(app_id: str) -> str:
         """Normaliza el identificador de aplicación en un segmento válido."""
         value = str(app_id or "").strip().lower().replace(" ", "-")
-        return value or "myapp"
+        if not value:
+            return "myapp"
+        if not ProjectNameFormatter._SAFE_SEGMENT_PATTERN.fullmatch(value):
+            raise ValueError(
+                "Identificador de aplicación inválido: use solo letras, números o guiones."
+            )
+        return value
 
     @classmethod
     def normalize_platform(cls, platform: str) -> str:
@@ -89,7 +97,7 @@ class ProjectNameFormatter:
     def format_version_vso(
         cls, version_base: str, timestamp: Optional[str] = None
     ) -> str:
-        """Devuelve ``vXx.xx-YY.MM-HH.MM`` sin plataforma."""
+        """Devuelve ``vX.x[.z]-YY.MM-HH.MM`` sin plataforma."""
         base, existing_timestamp = cls.version_components(version_base)
         return f"v{base}-{timestamp or existing_timestamp or cls.get_timestamp()}"
 
@@ -97,7 +105,7 @@ class ProjectNameFormatter:
     def format_version_full(
         cls, version_base: str, platform: str, timestamp: Optional[str] = None
     ) -> str:
-        """Devuelve ``vX.x-YY.MM-HH.MM`` sin plataforma."""
+        """Valida la plataforma y devuelve ``vX.x[.z]-YY.MM-HH.MM``."""
         cls.normalize_platform(platform)  # valida la plataforma interna
         return cls.format_version_vso(version_base, timestamp)
 
@@ -168,7 +176,7 @@ class ProjectNameFormatter:
 
     @classmethod
     def parse_project_folder(cls, folder_name: str) -> Optional[Dict[str, str]]:
-        """Analiza exclusivamente el formato público sin plataforma."""
+        """Analiza el formato público completo, incluido el sufijo de plataforma."""
         match = cls._PROJECT_PATTERN.fullmatch(str(folder_name or ""))
         if not match:
             return None

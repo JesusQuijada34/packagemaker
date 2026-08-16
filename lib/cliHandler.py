@@ -137,9 +137,18 @@ class CLIHandler:
         shell_group = self.parser.add_argument_group('Integración con Shell')
         shell_group.add_argument('--shellpatch', metavar='ACTION', choices=['install', 'remove', 'shortcuts'], help='Gestión de integración shell: install, remove, shortcuts')
 
+        # === Compatibilidad legacy ===
+        legacy_group = self.parser.add_argument_group('Compatibilidad legacy')
+        legacy_group.add_argument(
+            '--compile-project', metavar='PATH',
+            help='Alias legacy de --buildthis para menús contextuales y shell integration'
+        )
+
         # === Build This ===
         buildthis_group = self.parser.add_argument_group('Build This')
         buildthis_group.add_argument('--buildthis', nargs='?', const='.', metavar='PATH', help='Compilar el proyecto en la carpeta actual o en la ruta especificada')
+        buildthis_group.add_argument('--output', metavar='PATH', help='Directorio externo para el artefacto `.iflapp`')
+        buildthis_group.add_argument('--platform', choices=['Linux', 'Windows'], help='Plataforma objetivo; por defecto se detecta el sistema actual')
 
     def parse(self):
         return self.parser.parse_args()
@@ -265,6 +274,20 @@ class CLIHandler:
         elif args.version_update:
             return ('version_update', None, shell_options)
         
+        # === Compatibilidad legacy: compile-project ===
+        elif getattr(args, 'compile_project', None):
+            return (
+                'buildthis',
+                {'path': args.compile_project},
+                {
+                    'compact': False,
+                    'shell_mode': False,
+                    'headless': True,
+                    'output': getattr(args, 'output', None),
+                    'platform': getattr(args, 'platform', None),
+                }
+            )
+
         # === Build This ===
         elif getattr(args, 'buildthis', None) is not None:
             project_path = getattr(args, 'buildthis', '.')
@@ -274,7 +297,13 @@ class CLIHandler:
             return (
                 'buildthis',
                 {'path': project_path},
-                {'compact': False, 'shell_mode': False, 'headless': True}
+                {
+                    'compact': False,
+                    'shell_mode': False,
+                    'headless': True,
+                    'output': getattr(args, 'output', None),
+                    'platform': getattr(args, 'platform', None),
+                }
             )
         
         # Sin acción
@@ -627,18 +656,23 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             print(f"[ERROR] La ruta especificada no es un proyecto válido (no tiene details.xml): {project_path}")
             sys.exit(1)
         
-        # Usar ruta predeterminada para salida (misma que usa la GUI)
-        output_path = Path(os.path.expanduser("~")).resolve()
-        if sys.platform.startswith('win'):
-            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
+        # Usar la salida explícita de CI cuando se proporciona; de lo contrario,
+        # conservar la ruta predeterminada de la GUI.
+        output_arg = kwargs.get('output')
+        if output_arg:
+            output_path = Path(output_arg).expanduser().resolve()
         else:
+            output_path = Path(os.path.expanduser("~")).resolve()
             output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
         output_path.mkdir(parents=True, exist_ok=True)
-        
-        # Detectar plataforma automáticamente según el sistema operativo
-        target_platform = 'Windows' if sys.platform.startswith('win') else 'Linux'
+
+        # Detectar plataforma automáticamente salvo que el llamador la fije.
+        target_platform = kwargs.get('platform') or (
+            'Windows' if sys.platform.startswith('win') else 'Linux'
+        )
 
         print(f"[INFO] Iniciando compilación del proyecto actual...")
+
         print(f"[INFO] Proyecto: {project_path}")
         print(f"[INFO] Salida: {output_path}")
         print(f"[INFO] Plataforma objetivo (detectada): {target_platform}")

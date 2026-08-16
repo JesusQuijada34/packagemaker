@@ -196,13 +196,26 @@ class FlangCompiler:
 
     def compile_binaries(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):
-            return True
+            self.last_error = (
+                f"La plataforma del proyecto ({self.platform_type}) no permite "
+                f"compilar para {target_platform}."
+            )
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         if target_platform == "Windows" and self.current_platform != "Windows":
-            self.log(f"[SKIP] Cannot compile Windows on {self.current_platform}")
-            return True
+            self.last_error = (
+                f"No se puede compilar para Windows desde {self.current_platform}; "
+                "se requiere un runner Windows."
+            )
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         if target_platform == "Linux" and self.current_platform != "Linux":
-            self.log(f"[SKIP] Cannot compile Linux on {self.current_platform}")
-            return True
+            self.last_error = (
+                f"No se puede compilar para Linux desde {self.current_platform}; "
+                "se requiere un runner Linux."
+            )
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         if not self._ensure_pyinstaller():
             return False
         self.log("--- / --- - WORKING FOR SQUAREROOM - --- / ---")
@@ -301,7 +314,12 @@ class FlangCompiler:
 
     def create_package(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):
-            return True
+            self.last_error = (
+                f"La plataforma del proyecto ({self.platform_type}) no permite "
+                f"crear un paquete para {target_platform}."
+            )
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         # Usar ProjectNameFormatter para formato consistente
         platform_suffix = "Knosthalij" if target_platform == "Windows" else "Danenone"
         package_name = ProjectNameFormatter.format_package_folder(
@@ -315,6 +333,20 @@ class FlangCompiler:
         self.log(f"[INFO] Creando paquete en: {package_path}")
         self._copy_package_files(package_path, target_platform)
         self._update_and_copy_details_xml(package_path, platform_suffix)
+
+        expected_suffix = ".exe" if target_platform == "Windows" else ""
+        expected_binaries = [
+            package_path / f"{script['name']}{expected_suffix}"
+            for script in self.scripts
+        ]
+        if not expected_binaries or not all(path.is_file() for path in expected_binaries):
+            self.last_error = (
+                f"El paquete para {target_platform} no contiene todos los binarios "
+                "compilados esperados."
+            )
+            self.log(f"[ERROR] {self.last_error}")
+            shutil.rmtree(package_path, ignore_errors=True)
+            return False
         return True
 
     def optimize_binaries(self) -> bool:
@@ -447,12 +479,31 @@ class FlangCompiler:
     def compress_to_iflapp(self, package_path: Path, output_file: Path) -> bool:
         self.log(f"[INFO] Creando .iflapp: {output_file.name}")
         try:
+            if not package_path.is_dir():
+                self.last_error = f"No existe la carpeta de paquete: {package_path}"
+                self.log(f"[ERROR] {self.last_error}")
+                return False
+
+            files_added = 0
             with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for root, dirs, files in os.walk(package_path):
                     for file in files:
                         fp = Path(root) / file
                         arcname = fp.relative_to(package_path)
                         zipf.write(fp, arcname)
+                        files_added += 1
+
+            if files_added == 0 or not zipfile.is_zipfile(output_file):
+                self.last_error = "El archivo .iflapp generado está vacío o no es un ZIP válido."
+                self.log(f"[ERROR] {self.last_error}")
+                output_file.unlink(missing_ok=True)
+                return False
+            with zipfile.ZipFile(output_file) as zipf:
+                if "details.xml" not in zipf.namelist():
+                    self.last_error = "El archivo .iflapp no contiene details.xml."
+                    self.log(f"[ERROR] {self.last_error}")
+                    output_file.unlink(missing_ok=True)
+                    return False
             return True
         except Exception as e:
             self.log(f"[ERROR] Zip failed: {e}")
