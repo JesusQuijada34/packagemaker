@@ -43,7 +43,7 @@ class ProjectNameFormatter:
         """Normaliza el publisher sin perder la capitalización declarada."""
         value = str(publisher or "").strip().replace(" ", "-")
         if not value:
-            return "influent"
+            return "Influent"
         if not ProjectNameFormatter._SAFE_SEGMENT_PATTERN.fullmatch(value):
             raise ValueError(
                 "Publisher inválido: use solo letras, números, espacios o guiones."

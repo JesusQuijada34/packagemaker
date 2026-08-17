@@ -71,6 +71,12 @@ class ProjectNameFormatterTests(unittest.TestCase):
         self.assertEqual(parsed["version"], "3.2.7")
         self.assertEqual(parsed["platform"], "AlphaCube")
 
+    def test_influent_capitalization_is_preserved(self):
+        result = ProjectNameFormatter.format_project_folder(
+            "Influent", "Foundstore", "1.1-26.08-22.31", "Danenone"
+        )
+        self.assertTrue(result.startswith("Influent.foundstore."))
+
     def test_invalid_platform_is_rejected(self):
         with self.assertRaises(ValueError):
             ProjectNameFormatter.format_project_folder(
