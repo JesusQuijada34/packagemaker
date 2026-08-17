@@ -123,12 +123,35 @@ def cache_clear():
 class KillerLogic:
     @staticmethod
     def kill_target(target_name):
-        log(f"Matando procesos de: {target_name}")
+        """Termina procesos por nombre sin interpolar comandos en un shell."""
+        process_name = os.path.basename(str(target_name)).strip()
+        if not process_name:
+            log("Kill error: empty process name")
+            return False
+
         try:
             if sys.platform == "win32":
-                subprocess.call(f"taskkill /F /IM {target_name}.exe", shell=True)
-                subprocess.call(f"taskkill /F /IM {target_name}", shell=True) 
+                commands = [
+                    ["taskkill", "/F", "/IM", f"{process_name}.exe"],
+                    ["taskkill", "/F", "/IM", process_name],
+                ]
+            elif sys.platform == "darwin":
+                commands = [["pkill", "-9", "-x", process_name]]
             else:
-                subprocess.call(f"pkill -9 -f {target_name}", shell=True)
-        except Exception as e:
+                commands = [["pkill", "-9", "-x", process_name]]
+
+            for command in commands:
+                result = subprocess.run(
+                    command,
+                    capture_output=True,
+                    text=True,
+                    shell=False,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    log(f"Proceso terminado: {process_name}")
+                    return True
+            return False
+        except (OSError, ValueError) as e:
             log(f"Kill error: {e}")
+            return False
