@@ -265,6 +265,11 @@ class FlangCompiler:
         dist_dir = self.repo_path / "dist"
         dist_dir.mkdir(exist_ok=True)
         build_dir = tempfile.mkdtemp(prefix="pyi_build_")
+        # PyInstaller puede limpiar el directorio de salida entre ejecuciones.
+        # Cada script se compila en una salida aislada y luego su ejecutable se
+        # acumula en el `dist` compartido que consume create_package().
+        script_dist_dir = Path(build_dir) / "dist"
+        script_dist_dir.mkdir(parents=True, exist_ok=True)
 
         try:
             self.log(f"[DEBUG] Compilando {script_name} con PyInstaller embebido...")
@@ -284,7 +289,7 @@ class FlangCompiler:
             exe_path = pyi.compile_to_exe(
                 script_path=str(script_path),
                 output_name=script_name,
-                output_dir=str(dist_dir),
+                output_dir=str(script_dist_dir),
                 icon_path=str(icon_to_use) if icon_to_use else None,
                 windowed=windowed,
                 onefile=True,
@@ -294,9 +299,11 @@ class FlangCompiler:
                 cwd=str(self.repo_path),
             )
             if exe_path and os.path.exists(exe_path):
+                accumulated_exe = dist_dir / Path(exe_path).name
+                shutil.copy2(exe_path, accumulated_exe)
                 if not windowed:
                     try:
-                        os.chmod(exe_path, 0o755)
+                        os.chmod(accumulated_exe, 0o755)
                     except OSError:
                         pass
                 self.log(f"[OK] {script_name} compilado.")
@@ -335,11 +342,23 @@ class FlangCompiler:
         self._update_and_copy_details_xml(package_path, platform_suffix)
 
         expected_suffix = ".exe" if target_platform == "Windows" else ""
-        expected_binaries = [
-            package_path / f"{script['name']}{expected_suffix}"
-            for script in self.scripts
-        ]
-        if not expected_binaries or not all(path.is_file() for path in expected_binaries):
+        compiled_names = sorted(item.name for item in (self.repo_path / "dist").iterdir()) if (self.repo_path / "dist").is_dir() else []
+        packaged_names = sorted(item.name for item in package_path.iterdir())
+        self.log(f"[DEBUG] Binarios acumulados en dist: {compiled_names}")
+        self.log(f"[DEBUG] Entradas copiadas al paquete: {packaged_names}")
+        expected_binaries = []
+        missing_binaries = []
+        for script in self.scripts:
+            binary_name = f"{script['name']}{expected_suffix}"
+            candidates = [package_path / binary_name, package_path / "bin" / binary_name]
+            binary_path = next((candidate for candidate in candidates if candidate.is_file()), None)
+            if binary_path is None:
+                missing_binaries.append(binary_name)
+            else:
+                expected_binaries.append(binary_path)
+        if missing_binaries:
+            self.log(f"[DEBUG] Binarios faltantes: {missing_binaries}")
+        if not expected_binaries or missing_binaries:
             self.last_error = (
                 f"El paquete para {target_platform} no contiene todos los binarios "
                 "compilados esperados."
@@ -437,12 +456,16 @@ class FlangCompiler:
         dist_dir = self.repo_path / "dist"
         if dist_dir.exists():
             for binary in dist_dir.iterdir():
-                if target_platform == "Windows" and binary.suffix == ".exe":
-                    shutil.copy2(binary, package_path / binary.name)
-                elif target_platform == "Linux" and binary.suffix == "":
-                    shutil.copy2(binary, package_path / binary.name)
+                if (target_platform == "Windows" and binary.suffix == ".exe") or (target_platform == "Linux" and binary.suffix == ""):
+                    destination = package_path / binary.name
+                    # `app`, `config` y otros nombres pueden coincidir con
+                    # carpetas obligatorias del contrato Fluthin.
+                    if destination.exists() and destination.is_dir():
+                        destination = package_path / "bin" / binary.name
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(binary, destination)
                     try:
-                        (package_path / binary.name).chmod(0o755)
+                        destination.chmod(0o755)
                     except:
                         pass
 
