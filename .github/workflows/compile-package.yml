@@ -18,6 +18,7 @@ on:
 jobs:
   compile:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -40,14 +41,32 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y binutils
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies (Linux)
+        if: runner.os == 'Linux'
         run: |
           python -m pip install --upgrade pip
-          pip install -r lib/requirements.txt
+          python -m pip install -r lib/requirements.txt
+        shell: bash
 
-      - name: Compile package with Packagemaker
+      - name: Install Python dependencies (Windows)
+        if: runner.os == 'Windows'
         run: |
-          python packagemaker.py --buildthis . --output "$RUNNER_TEMP/packagemaker-output" --platform ${{ matrix.target }}
+          python -m pip install --upgrade pip
+          python -m pip install -r lib/requirements.txt
+        shell: pwsh
+
+      - name: Compile package with PackageMaker (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          python packagemaker.py --buildthis . --output "$RUNNER_TEMP/packagemaker-output" --platform Linux
+        shell: bash
+
+      - name: Compile package with PackageMaker (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP "packagemaker-output"
+          python packagemaker.py --buildthis . --output $output --platform Windows
+        shell: pwsh
 
       - name: Upload compiled package artifact
         uses: actions/upload-artifact@v4
