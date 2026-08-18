@@ -12,6 +12,8 @@ import traceback
 import subprocess
 from pathlib import Path
 
+from lib.safe_zip import safe_extract_zip
+
 # requests con fallback a urllib
 try:
     import requests
@@ -342,7 +344,7 @@ class InstallerWorker(QObject):
             
             # Extrae ZIP
             with zipfile.ZipFile(self._temp_zip, "r") as z:
-                z.extractall(self._ext_dir)
+                safe_extract_zip(z, self._ext_dir)
             
             # Verifica que se extrajo algo
             if not os.path.exists(self._ext_dir) or not os.listdir(self._ext_dir):

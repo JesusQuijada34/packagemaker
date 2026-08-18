@@ -8,6 +8,7 @@ import os
 import time
 import shutil
 import zipfile
+from lib.safe_zip import safe_extract_zip
 import tempfile
 import json
 import re
@@ -309,7 +310,7 @@ class MoonFixWizard(QDialog):
         try:
             temp_dir = tempfile.mkdtemp(prefix="ipm_icons_")
             with zipfile.ZipFile(file_path, 'r') as z:
-                z.extractall(temp_dir)
+                safe_extract_zip(z, temp_dir)
                 
             proj_idx = self.stack.currentIndex() - 1
             if proj_idx < 0: return
@@ -346,7 +347,7 @@ class MoonFixWizard(QDialog):
                     LeviathanDialog.launch(self, "Asset Pack", "El paquete no contiene metadata.json válida.", mode="error")
                     return
                 
-                z.extractall(temp_dir)
+                safe_extract_zip(z, temp_dir)
                 meta_path = os.path.join(temp_dir, 'metadata.json')
                 with open(meta_path, 'r', encoding='utf-8') as f:
                     meta = json.load(f)

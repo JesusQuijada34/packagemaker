@@ -12,6 +12,7 @@ import traceback
 from io import BytesIO
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from .core import log, KillerLogic, cache_get, cache_set
+from lib.safe_zip import safe_extract_zip
 
 # requests con fallback a urllib
 try:
@@ -63,7 +64,7 @@ class InstallerWorker(QObject):
             self.status.emit("Descomprimiendo actualización...")
             if os.path.exists(ext_dir): shutil.rmtree(ext_dir)
             with zipfile.ZipFile(temp_zip, "r") as z:
-                z.extractall(ext_dir)
+                safe_extract_zip(z, ext_dir)
 
             self.status.emit("Cerrando aplicación principal...")
             KillerLogic.kill_target(self.app)
@@ -133,11 +134,10 @@ class IFLAPPInstallerWorker(QObject):
             
             # Extraer archivo .iflapp (zip)
             with zipfile.ZipFile(self.iflapp_path, 'r') as zf:
-                files = zf.namelist()
+                files = safe_extract_zip(zf, self.target_dir)
                 total = len(files)
-                for i, file in enumerate(files):
-                    zf.extract(file, self.target_dir)
-                    self.progress.emit(int((i + 1) * 100 / total))
+                for i, _ in enumerate(files):
+                    self.progress.emit(int((i + 1) * 100 / total) if total else 100)
             
             self.status.emit("Configurando aplicación...")
             

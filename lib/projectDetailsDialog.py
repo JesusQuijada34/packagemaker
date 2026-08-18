@@ -23,6 +23,7 @@ from lib.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.moonFixWizard import detectar_modo_sistema
 from lib.notificationSystem import info, warning, error, success, NotificationAction
+from lib.safe_zip import safe_extract_zip
 
 # Default empty - icons should be passed from caller if needed
 TAB_ICONS = {}
@@ -411,7 +412,7 @@ class ProjectDetailsDialog(QDialog):
             
             self.install_console.log(f"Extrayendo a: {target_dir}")
             with zipfile.ZipFile(valid_file, 'r') as zf:
-                zf.extractall(target_dir)
+                safe_extract_zip(zf, target_dir)
             
             self.install_console.log("Instalacion completada exitosamente!")
             if hasattr(self.manager, "load_manager_lists"): 

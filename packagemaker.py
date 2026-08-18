@@ -21,6 +21,8 @@ from typing import Dict, List, Tuple, Optional
 import importlib
 import importlib.util
 
+from lib.safe_zip import safe_extract_zip
+
 # Importar detector de modo de ejecución
 try:
     from lib.executionMode import get_execution_mode, is_frozen, get_command_name
@@ -2820,7 +2822,7 @@ class PackageTodoGUI(QMainWindow):
             os.makedirs(target_dir, exist_ok=True)
             try:
                 with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                    zip_ref.extractall(target_dir)
+                    safe_extract_zip(zip_ref, target_dir)
                 self.manager_status.setText(f"✅ Instalado: {pkg_name} en Fluthin Apps")
                 # Asociación de extensión y menú inicio en Windows
                 if sys.platform.startswith('win'):

@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
+from lib.safe_zip import safe_extract_zip
+
 # requests con fallback a urllib
 try:
     import requests
@@ -292,7 +294,7 @@ class PythonPortableManager(QObject):
 
         try:
             with zipfile.ZipFile(temp_file, "r") as zf:
-                zf.extractall(dest_dir)
+                safe_extract_zip(zf, dest_dir)
             temp_file.unlink(missing_ok=True)
 
             python_exe, pip_exe = self._configure_windows_embed(dest_dir)
