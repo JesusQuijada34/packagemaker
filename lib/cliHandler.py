@@ -503,15 +503,16 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         compact: Modo compacto
         shell_mode: Modo shell
         **kwargs: Opciones adicionales (headless, output, platform, etc.)
-    
+
     Returns:
-        Instancia de ventana GUI o None
+        Instancia de ventana GUI, True/False para acciones de shell o None
+
     """
     # Primero intentar manejar como acción de shell (sin GUI)
     shell_result = _handle_shell_actions(action)
     if shell_result is not None:
-        # Es acción de shell, no requiere GUI
-        return None
+        # Es acción de shell, no requiere GUI; propagar True/False al entrypoint.
+        return shell_result
     
     # Manejar acciones headless (create, compile, repair)
     if action == 'create_project' and kwargs.get('headless'):

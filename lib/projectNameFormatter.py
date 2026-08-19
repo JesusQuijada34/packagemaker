@@ -66,12 +66,22 @@ class ProjectNameFormatter:
     def normalize_platform(cls, platform: str) -> str:
         """Convierte alias de plataforma al conjunto canónico permitido."""
         value = str(platform or "").strip().lower()
-        if value in {"win", "windows", "knosthalij"} or "win" in value:
-            return "Knosthalij"
-        if value in {"linux", "danenone"} or "lin" in value or "danen" in value:
-            return "Danenone"
-        if value in {"all", "multi", "multiplataforma", "alphacube", "alpha"} or "multi" in value or "alpha" in value:
-            return "AlphaCube"
+        aliases = {
+            "win": "Knosthalij",
+            "win32": "Knosthalij",
+            "windows": "Knosthalij",
+            "knosthalij": "Knosthalij",
+            "linux": "Danenone",
+            "linux2": "Danenone",
+            "danenone": "Danenone",
+            "all": "AlphaCube",
+            "multi": "AlphaCube",
+            "multiplataforma": "AlphaCube",
+            "alphacube": "AlphaCube",
+            "alpha": "AlphaCube",
+        }
+        if value in aliases:
+            return aliases[value]
         raise ValueError(
             "Plataforma no compatible. Use Danenone, Knosthalij o AlphaCube."
         )
@@ -155,7 +165,7 @@ class ProjectNameFormatter:
     @classmethod
     def format_from_metadata(cls, metadata: Dict[str, str]) -> Dict[str, str]:
         """Genera todas las variantes sin perder la marca temporal existente."""
-        publisher = metadata.get("publisher", metadata.get("empresa", "influent"))
+        publisher = metadata.get("publisher", metadata.get("empresa", "Influent"))
         app_id = metadata.get("app", metadata.get("name", "myapp"))
         version = metadata.get("version", "1.0.0")
         platform = metadata.get("platform", metadata.get("plataforma", "Knosthalij"))

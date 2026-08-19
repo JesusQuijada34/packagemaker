@@ -1,7 +1,9 @@
 import os
+import os
 import sys
 import shutil
 import zipfile
+import subprocess
 try:
     from PyQt6.QtCore import Qt
     from PyQt6 import QtCore
@@ -27,6 +29,16 @@ from lib.safe_zip import safe_extract_zip
 
 # Default empty - icons should be passed from caller if needed
 TAB_ICONS = {}
+
+
+def _open_path_in_file_manager(path):
+    """Abre una carpeta con el explorador nativo sin invocar un shell."""
+    target = os.path.abspath(os.fspath(path))
+    if sys.platform.startswith("win"):
+        os.startfile(target)  # type: ignore[attr-defined]
+        return
+    command = ["open", target] if sys.platform == "darwin" else ["xdg-open", target]
+    subprocess.Popen(command, close_fds=True)
 
 def find_python_executable():
     """Busca un ejecutable de Python disponible en el sistema."""
@@ -518,11 +530,13 @@ class ProjectDetailsDialog(QDialog):
         )
         
     def _open_project_folder(self):
-        """Abrir carpeta del proyecto en el explorador"""
-        import subprocess
+        """Abrir carpeta del proyecto en el explorador."""
         folder = self.pkg.get("folder", "")
         if folder and os.path.exists(folder):
-            subprocess.Popen(f'explorer "{folder}"')
+            try:
+                _open_path_in_file_manager(folder)
+            except OSError as exc:
+                warning("No se pudo abrir la carpeta", str(exc))
         else:
             warning("Carpeta no encontrada", "No se pudo abrir la carpeta del proyecto.")
             
@@ -548,9 +562,11 @@ class ProjectDetailsDialog(QDialog):
             warning("Aplicación no encontrada", "La carpeta de instalación no existe.")
             
     def _open_folder(self, folder):
-        """Abrir carpeta especificada en el explorador"""
-        import subprocess
+        """Abrir una carpeta especificada en el explorador."""
         if folder and os.path.exists(folder):
-            subprocess.Popen(f'explorer "{folder}"')
+            try:
+                _open_path_in_file_manager(folder)
+            except OSError as exc:
+                warning("No se pudo abrir la carpeta", str(exc))
         else:
             warning("Carpeta no encontrada", "No se pudo abrir la carpeta especificada.")

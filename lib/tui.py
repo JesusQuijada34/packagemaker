@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import sys
 import shutil
+import subprocess
 import platform
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -581,7 +582,7 @@ def _moonfix_project_direct(proj: Path) -> None:
     # verificación. Construir los argumentos desde details.xml evita reparar
     # accidentalmente otro proyecto con el mismo directorio base.
     metadata = {
-        "publisher": "influent",
+        "publisher": "Influent",
         "app": proj.name,
         "name": proj.name,
         "author": "Unknown",
@@ -617,12 +618,14 @@ def _moonfix_project_direct(proj: Path) -> None:
 
 
 def _open_folder(proj: Path) -> None:
+    """Abre una carpeta con el explorador nativo sin invocar un shell."""
+    target = str(proj.resolve())
     if sys.platform.startswith("win"):
-        os.startfile(str(proj))  # type: ignore[attr-defined]
-    elif sys.platform.startswith("linux"):
-        os.system(f'xdg-open "{proj}" &')
+        os.startfile(target)  # type: ignore[attr-defined]
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", target], close_fds=True)
     else:
-        os.system(f'open "{proj}"')
+        subprocess.Popen(["xdg-open", target], close_fds=True)
     _ok(f"Abriendo {proj.name}")
     _pause()
 
@@ -674,41 +677,18 @@ def _screen_moonfix() -> None:
         _pause()
         return
 
-    print(f"\n  {bold('Opciones de reparación:')}")
-    verify    = _prompt_bool("Verificar archivos faltantes",      True)
-    update    = _prompt_bool("Actualizar configuraciones antiguas", True)
-    repair    = _prompt_bool("Reparar estructura de carpetas",      True)
-    check_dep = _prompt_bool("Verificar dependencias",             False)
-
-    print(f"\n  {bold('Plataforma objetivo (dejar vacío = auto):')}")
-    plat_idx = _prompt_choice("Plataforma", [
-        "Auto (leer desde details.xml)",
-        "Windows (Knosthalij)",
-        "Linux (Danenone)",
-    ], default=0)
-    plat_flag = ["", "Windows", "Linux"][plat_idx]
-
-    print()
+    print(f"\n  {bold('Reparación con MoonFix:')}")
+    _info("MoonFix lee details.xml y restaura la estructura y los archivos faltantes mediante las plantillas del proyecto.")
     if not _prompt_bool("¿Iniciar MoonFix?", True):
         _warn("Cancelado.")
         _pause()
         return
 
-    py = _find_python()
-    entry = Path(os.getcwd()) / "packagemaker.py"
-    cmd = [py, str(entry), "moonfix", project_path_str, "--headless"]
-    if verify:    cmd.append("--verify-files")
-    if update:    cmd.append("--update-config")
-    if repair:    cmd.append("--repair-structure")
-    if check_dep: cmd.append("--check-deps")
-    if plat_flag: cmd += ["--platform", plat_flag]
-
-    rc = _run_live(cmd)
-    if rc == 0:
-        _ok("MoonFix completado con éxito.")
-    else:
-        _err(f"Falló con código {rc}")
-    _pause()
+    # Reutilizar la misma ruta que usa el gestor de proyectos. La CLI actual
+    # recibe metadatos (--name/--shortname/...) y selecciona el proyecto por
+    # details.xml; no acepta una ruta posicional ni los antiguos flags de
+    # verificación que construía esta pantalla.
+    _moonfix_project_direct(Path(project_path_str))
 
 
 # ─── Screen: Configuración ────────────────────────────────────────────────────

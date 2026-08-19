@@ -69,37 +69,41 @@ release_job:
   extends: .install_dependencies
   script:
     - echo "Extrayendo versión de details.xml..."
-    - python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('details.xml'); version = tree.getroot().find('version').text; print(version)" > VERSION_TAG.txt
+    - python3 -c "import xml.etree.ElementTree as ET; root = ET.parse('details.xml').getroot(); version = root.findtext('version'); raise SystemExit('details.xml no contiene version') if not version else print(version.strip())" > VERSION_TAG.txt
     - VERSION=$(cat VERSION_TAG.txt)
     - echo "Versión detectada $VERSION"
     - |
-      if gh release view "$VERSION" &>/dev/null; then
-        echo "Error: el release $VERSION ya existe; no se sobrescribirá automáticamente."
-        exit 1
+      set -eu
+      assets="$(gh release view "$VERSION" --json assets --jq '.assets[].name' 2>/dev/null || true)"
+      linux_asset="$(printf '%s\n' "$assets" | grep -E -- '-Danenone\.iflapp$' || true)"
+      windows_asset="$(printf '%s\n' "$assets" | grep -E -- '-Knosthalij\.iflapp$' || true)"
+      if [ -n "$linux_asset" ] && [ -n "$windows_asset" ]; then
+        echo "El release $VERSION ya contiene los artefactos Linux y Windows; no se modifica."
+        exit 0
+      fi
+      if gh release view "$VERSION" >/dev/null 2>&1; then
+        echo "El release $VERSION está incompleto; se eliminará el release y se conservará el tag."
+        gh release delete "$VERSION" --yes
       fi
     - |
+      set -eu
+      linux_file="$(find ci-artifacts -maxdepth 1 -type f -name '*-Danenone.iflapp' -print -quit)"
+      windows_file="$(find ci-artifacts -maxdepth 1 -type f -name '*-Knosthalij.iflapp' -print -quit)"
+      if [ -z "$linux_file" ] || [ -z "$windows_file" ]; then
+        echo "Error: se requieren ambos artefactos canónicos (-Danenone y -Knosthalij)."
+        exit 1
+      fi
       if [ -f "RELEASE_NOTES.md" ]; then
         gh release create "$VERSION" --title "$VERSION" --notes-file RELEASE_NOTES.md --draft
       else
         gh release create "$VERSION" --title "$VERSION" --notes "" --draft
       fi
-    - |
-      for file in ci-artifacts/*.iflapp; do
-        if [ -f "$file" ]; then
-          echo "Subiendo $file al release $VERSION..."
-          gh release upload $VERSION "$file"
-        else
-          echo "Advertencia: No se encontró el archivo $file"
-        fi
-      done
-    - |
+      gh release upload "$VERSION" "$linux_file" "$windows_file"
       if [ -f "RELEASE_NOTES.md" ]; then
         gh release edit "$VERSION" --notes-file RELEASE_NOTES.md
-      else
-        echo "Advertencia: No se encontró RELEASE_NOTES.md. El release se creará sin notas."
       fi
-    - gh release edit $VERSION --draft=false
-    - echo "Workflow de Release completado."
+      gh release edit "$VERSION" --draft=false
+      echo "Workflow de Release completado con ambos artefactos."
   dependencies:
     - build_linux
     - build_windows

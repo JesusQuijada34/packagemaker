@@ -7,7 +7,9 @@
 - Python 3.8 o superior
 - PyQt6 6.5+
 - 4GB RAM (8GB recomendado para proyectos grandes)
-- Windows 10/11 (Linux/macOS con funcionalidad limitada)
+- Windows 10/11 para la interfaz completa
+- Linux: compilación `.iflapp` verificada localmente para Danenone
+- macOS: funciones básicas; no se verifica compilación cruzada desde macOS
 
 **Instalación:**
 ```bash
@@ -18,65 +20,43 @@ python packagemaker.py
 ```
 
 ### ¿Funciona en Linux o macOS?
-Packagemaker está optimizado para Windows. Las funciones básicas funcionan en Linux/macOS, pero:
-- La compilación a `.exe` no está disponible
-- Algunos efectos visuales pueden no renderizar igual
-- Se recomienda usar máquina virtual Windows para desarrollo multiplataforma
+Packagemaker puede ejecutar funciones básicas fuera de Windows. La compilación debe realizarse en un runner nativo de la plataforma objetivo: desde Linux se ha verificado la generación de `.iflapp` para Danenone, mientras que la compilación Windows requiere Windows y no se puede validar desde Linux. macOS no dispone en este repositorio de una ruta de compilación cruzada verificada.
 
 ---
 
 ## 📦 Compilación y Empaquetado
 
 ### ¿Qué es un "script candidato"?
-Es un archivo Python que Packagemaker detecta como punto de entrada principal. Debe contener:
+Es un archivo Python que el analizador puede considerar como punto de entrada principal. La selección final debe coincidir con el `<app>` y el script principal definidos en `details.xml`; el bloque siguiente es una convención recomendada, no una garantía suficiente por sí sola:
 ```python
 if __name__ == '__main__':
-    # Código de entrada
     main()
 ```
 
-### ¿Cómo funciona la extracción de clases?
-Packagemaker analiza AST (Abstract Syntax Tree) del código y:
-1. Detecta clases definidas en nivel superior
-2. Mueve cada clase a archivo separado en `lib/_class/ScriptName/`
-3. Actualiza el script original para importar desde nuevo path
-4. Genera `lib/__init__.py` con imports consolidados
+### ¿La extracción de clases forma parte del contrato actual?
+Los términos de extracción automática a `lib/_class/` pertenecen a documentación histórica y no aparecen como una opción activa del CLI v3.2.7. El flujo actual debe validarse mediante `details.xml`, el script principal, la estructura del proyecto y el `.iflapp` resultante; no se debe asumir que una clase será movida automáticamente.
 
-### ¿Cuál es la diferencia entre Simple Blind y Super Blind?
-
-| Característica | Simple Blind | Super Blind |
-|----------------|--------------|-------------|
-| Estructura | Un archivo `.iflappb` | Múltiples carpetas organizadas |
-| Seguridad | Estándar | Alta |
-| Descompilación | Difícil | Muy difícil |
-| Compatibilidad | Universal | Requiere instalador especial |
-| Uso recomendado | Apps simples | Apps enterprise |
+### ¿Cuál es el formato de entrega actual?
+La salida validada del flujo actual es un archivo `.iflapp`, que se inspecciona como ZIP y debe contener sus metadatos, binarios y recursos esperados. `Simple Blind`, `Super Blind` y `.iflappb` no son opciones expuestas por el CLI actual y no deben usarse como instrucciones de compilación v3.2.7.
 
 ### ¿Por qué mi bundle no ejecuta?
 Verifica:
-1. **Clases extraídas**: Revisa que `lib/_class/` contiene los archivos
-2. **Imports**: Confirma que `lib/__init__.py` tiene los imports correctos
-3. **Dependencias**: Asegúrate que todas las librerías estén en `lib/requirements.txt`
-4. **Script principal**: El entry point debe corresponder al `<app>` de `details.xml` y a su script principal
+1. **Metadatos**: Confirma que `details.xml` es válido y que `<app>` coincide con el script principal
+2. **Estructura**: Comprueba que las carpetas y marcadores requeridos están presentes
+3. **Dependencias**: Asegúrate de que las librerías necesarias estén declaradas en `lib/requirements.txt`
+4. **Artefacto**: Valida que el `.iflapp` sea un ZIP válido con `details.xml`, binarios y recursos
 
 ---
 
 ## 🎨 Interface y UX
 
 ### ¿Cómo cambio el tema/colores?
-Edita `config/theme.json`:
-```json
-{
-  "primary": "#ff5722",
-  "background": "#121822",
-  "accent": "#00d4aa"
-}
-```
+El archivo `config/theme.json` no forma parte del repositorio actual. Los estilos se definen en los módulos de interfaz y las preferencias persistentes se almacenan en `data/pm.data`; utiliza las opciones de preferencias disponibles en la aplicación y no crees ese archivo esperando que sea cargado automáticamente.
 
 ### ¿Por qué la ventana muestra bordes azules?
 Packagemaker hereda el estilo de Leviathan-UI. Para fondo oscuro uniforme:
 ```python
-# En tu código (automático en v1.0.0)
+# Ejemplo para una aplicación Qt propia; no modifica el tema global de PackageMaker
 widget.setStyleSheet("background-color: #121822; border: none;")
 ```
 
@@ -105,10 +85,7 @@ Sí. Packagemaker detecta automáticamente proyectos Python. Solo:
 Sí. Packagemaker detecta automáticamente entornos virtuales en el proyecto. Al compilar, incluye las dependencias del entorno activo.
 
 ### ¿Puedo compilar para Android?
-Sí, pero requiere configuración adicional:
-1. Instala Buildozer: `pip install buildozer`
-2. Configura `buildozer.spec` en raíz del proyecto
-3. Usa opción "Compilar para Android" en Packagemaker
+El repositorio contiene un proyecto Android separado en `android/`, pero el CLI de PackageMaker no expone una opción `Buildozer` ni un comando "Compilar para Android". La compilación Android debe ejecutarse desde ese proyecto con sus herramientas nativas y no se considera una compilación `.iflapp` de PackageMaker.
 
 ---
 
@@ -123,11 +100,11 @@ if __name__ == '__main__':
 ```
 
 ### "Error: 'lib' no encontrado al ejecutar"
-**Causa**: La estructura de carpetas se rompió durante extracción
+**Causa**: La estructura del proyecto o los metadatos no coinciden con el contrato esperado
 **Solución**: 
-1. Verifica que `lib/_class/` existe
-2. Revisa que `lib/__init__.py` tiene contenido
-3. Recompila desde cero: `Build → Clean & Rebuild`
+1. Verifica que `details.xml` y el script principal existen
+2. Comprueba las carpetas y marcadores requeridos por el proyecto
+3. Recompila desde cero con `python packagemaker.py --buildthis /ruta/al/proyecto`
 
 ### "La compilación se congela"
 **Causa**: Proyecto muy grande o dependencias circulares
@@ -137,10 +114,10 @@ if __name__ == '__main__':
 3. Aumenta timeout en configuración
 
 ### "Errores de import tras compilar"
-**Causa**: Imports relativos mal manejados
+**Causa**: La estructura de imports o las dependencias no se resolvieron al compilar
 **Solución**: 
-- Usa imports absolutos: `from lib.mi_modulo import X`
-- Evita imports con `*` en clases extraídas
+- Usa imports absolutos cuando el proyecto los requiera: `from lib.mi_modulo import X`
+- Revisa el log de compilación y declara las dependencias en `lib/requirements.txt`
 
 ---
 
@@ -162,20 +139,20 @@ mi-proyecto/
 ```
 
 ### Optimización de compilación
-1. **Excluye archivos innecesarios**: Usa `.pmignore` (similar a `.gitignore`)
-2. **Minifica assets**: Comprime imágenes antes de compilar
-3. **Usa Simple Blind**: Para apps pequeñas (más rápido)
-4. **Cache de análisis**: Habilita en configuración para recompilaciones rápidas
+1. **Excluye archivos innecesarios**: Mantén un `.gitignore` correcto; el compilador aplica sus patrones declarados
+2. **Optimiza assets**: Comprime imágenes antes de compilar sin eliminar recursos requeridos
+3. **Valida el artefacto**: Comprueba el ZIP, `details.xml`, binarios y recursos antes de distribuir
+4. **Conserva las fuentes**: El proyecto fuente no debe eliminarse como efecto secundario de la compilación
 
 ---
 
 ## 📞 Soporte
 
 ¿No encuentras tu respuesta?
-- Abre un [Issue en GitHub](../../issues)
-- Consulta la documentación en `docs/`
-- Revisa ejemplos en `examples/`
+- Abre un [Issue en GitHub](https://github.com/JesusQuijada34/packagemaker/issues)
+- Consulta el índice disponible en `docs/index.html`
+- Revisa `README.md`, `CHANGELOG.md` y `RELEASE_NOTES.md`
 
 ---
 
-**Última actualización**: 2026-04-09 | **Versión**: 1.0.0
+**Última actualización**: 2026-08-19 | **Versión**: v3.2.7-26.05-20.13

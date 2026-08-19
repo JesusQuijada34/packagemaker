@@ -78,10 +78,19 @@ class ProjectNameFormatterTests(unittest.TestCase):
         self.assertTrue(result.startswith("Influent.foundstore."))
 
     def test_invalid_platform_is_rejected(self):
-        with self.assertRaises(ValueError):
-            ProjectNameFormatter.format_project_folder(
-                "Acme", "Hello", "1.2", "MacOS"
-            )
+        for platform in ("MacOS", "Darwin", "Windows Server-ish"):
+            with self.subTest(platform=platform):
+                with self.assertRaises(ValueError):
+                    ProjectNameFormatter.format_project_folder(
+                        "Acme", "Hello", "1.2", platform
+                    )
+
+    @patch.object(ProjectNameFormatter, "get_timestamp", return_value=TIMESTAMP)
+    def test_missing_publisher_uses_canonical_influent_capitalization(self, _timestamp):
+        names = ProjectNameFormatter.format_from_metadata(
+            {"app": "Demo", "version": "1.2", "platform": "Linux"}
+        )
+        self.assertTrue(names["project_folder"].startswith("Influent.demo."))
 
     def test_unsafe_segments_are_rejected(self):
         for publisher, app in (("../escape", "hello"), ("Acme", "../escape"), ("Acme Inc", "hello_world")):

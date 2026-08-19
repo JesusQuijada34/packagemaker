@@ -8,6 +8,7 @@ import os
 import sys
 import glob
 import platform
+import shlex
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Tuple
@@ -443,14 +444,33 @@ class EditorDetector:
         """Genera el comando para abrir un proyecto."""
         return editor_info.command_template.format(exe=exe_path, path=project_path)
     
+    def _get_launch_arguments(
+        self, editor_info: EditorInfo, exe_path: str, project_path: str
+    ) -> List[str]:
+        """Convierte una plantilla de editor en argumentos sin invocar un shell."""
+        template = editor_info.command_template.strip()
+        if template in {"{exe} {path}", '"{exe}" "{path}"'}:
+            return [exe_path, project_path]
+
+        command = self.get_command(editor_info, exe_path, project_path)
+        arguments = shlex.split(command, posix=self.platform != "win32")
+        if self.platform == "win32":
+            arguments = [argument.strip('"') for argument in arguments]
+        if not arguments:
+            raise ValueError("La plantilla del editor no produjo argumentos")
+        return arguments
+
     def launch_editor(self, editor_info: EditorInfo, exe_path: str, project_path: str) -> bool:
-        """Abre un proyecto con el editor especificado."""
+        """Abre un proyecto con el editor especificado sin interpretar comandos."""
         import subprocess
-        
+
         try:
-            cmd = self.get_command(editor_info, exe_path, project_path)
-            # Usar shell=True en Windows para manejar paths con espacios
-            subprocess.Popen(cmd, shell=(self.platform == "win32"), close_fds=True)
+            arguments = self._get_launch_arguments(editor_info, exe_path, project_path)
+            subprocess.Popen(
+                arguments,
+                shell=False,
+                close_fds=self.platform != "win32",
+            )
             return True
         except Exception as e:
             print(f"[ERROR] No se pudo lanzar {editor_info.display_name}: {e}")

@@ -5157,7 +5157,9 @@ def main():
             
             # Acciones que no requieren GUI ni QApplication
             if action in ['shellpatch_install', 'shellpatch_remove', 'shellpatch_shortcuts'] or action_options.get('headless'):
-                handle_cli_action(action, data, None, **action_options)
+                result = handle_cli_action(action, data, None, **action_options)
+                if result is False:
+                    sys.exit(1)
                 return
             
             if PYQT6_AVAILABLE:

@@ -48,25 +48,21 @@ El tag y el título del release deben ser exactamente `v3.2.7-26.05-20.13`. Los 
 - **Sin gradientes**: Interfaz limpia y consistente sin gradientes
 - **Fondos sólidos**: Optimizados para evitar artifacts visuales
 
-### 📦 Sistema de Compilación Avanzado
-- **Detección automática**: Encuentra scripts candidatos (`if __name__ == '__main__'`)
-- **Extracción de clases**: Separa automáticamente clases a `lib/_class/`
-- **Gestión de dependencias**: Analiza e incluye imports necesarios
-- **Minificación**: Reduce tamaño del código compilado
-- **Integración con .gitignore**: Excluye automáticamente archivos y carpetas especificadas en `.gitignore` durante la compilación y empaquetado, incluyendo archivos de GitHub como `.github` y `.vscode`.
-- **Limpieza Post-Compilación**: Elimina automáticamente los directorios `build/`, `dist/` y los archivos `.spec` generados por PyInstaller después de cada proceso de compilación.
-- **Entrega y limpieza segura**: Una vez validado el `.iflapp` generado fuera del directorio fuente, elimina el paquete temporal. Esta protección se aplica a GUI, TUI, `compile`, `--buildthis` y `scripts/build_headless.py`; conserva las fuentes por defecto y solo permite eliminarlas mediante una autorización explícita.
+### 📦 Sistema de Compilación Actual
+- **Detección de entrypoint**: Usa `details.xml` y el script principal del proyecto como fuente de identidad.
+- **Gestión de dependencias**: Construye con el flujo PyInstaller embebido del repositorio.
+- **Exclusión por `.gitignore`**: Aplica los patrones declarados para evitar incluir archivos de control y configuración no requeridos.
+- **Limpieza Post-Compilación**: Retira artefactos temporales de PyInstaller (`build/`, `dist/` y `.spec`) cuando el flujo los genera.
+- **Entrega segura**: Valida el `.iflapp` antes de conservarlo en una salida externa; la fuente se conserva por defecto y no se elimina como efecto secundario.
 
-### 🔒 Métodos de Blindado
-| Método | Descripción | Seguridad |
-|--------|-------------|----------|
-| **Simple Blind** | Empaqueta todo en `.iflappb` | 🔒🔒 |
-| **Super Blind** | Clases separadas por script + encriptación | 🔒🔒🔒🔒 |
+### 📦 Formato de entrega
+El artefacto de distribución del flujo actual es un `.iflapp`, un ZIP con extensión personalizada que contiene metadatos, binarios y recursos. Los términos históricos `Simple Blind`, `Super Blind` y `.iflappb` no son opciones expuestas por el CLI v3.2.7.
 
-### 📱 Multi-Plataforma
-- **Windows**: Ejecutables `.exe` con PyInstaller
-- **Android**: APK generable vía Buildozer
-- **Linux**: AppImage y paquetes nativos con renderizado de iconos mejorado.
+### 📱 Plataformas
+- **Windows**: requiere un runner Windows nativo para verificar el ejecutable y el paquete Knosthalij.
+- **Linux**: generación `.iflapp` Danenone verificada localmente.
+- **AlphaCube**: representa el flujo multiplataforma y debe contener ambos artefactos cuando se publica un release.
+- **Android**: existe un proyecto separado en `android/`; no es una opción Buildozer del CLI PackageMaker.
 
 ---
 
@@ -116,18 +112,20 @@ Archivo → Nuevo Proyecto → Seleccionar carpeta
 ```
 
 ### 2️⃣ Configurar Compilación
-- **Modo Bundle**: Switch para cambiar entre "Empaquetar" y "Compilar Bundle"
-- **Método de Blindado**: Simple vs Super Blind
-- **Opciones adicionales**: Firma digital, compresión, icono personalizado
+- Configura el proyecto y la plataforma desde el flujo disponible.
+- Revisa el entrypoint, los metadatos y los recursos antes de compilar.
+- Usa las opciones de salida e icono que exponga la versión instalada; no asumas que existen opciones históricas de blindado o firma.
 
 ### 3️⃣ Compilar
-```
-Click en "Compilar" (verde) o "Compilar Bundle y Firmar" (azul)
+Ejecuta la acción de compilación de la interfaz o el comando validado:
+```bash
+python packagemaker.py --buildthis /ruta/al/proyecto
 ```
 
 ### 4️⃣ Distribuir
-- Output en `releases/` (o la ruta configurada)
-- Listo para subir a GitHub Releases
+- La salida predeterminada de `--buildthis` se guarda en `~/Documents/Packagemaker Projects/Compiled`.
+- Puedes indicar una carpeta externa con `--output`.
+- Valida el `.iflapp` antes de subirlo a un release de GitHub.
 
 ### Compilar el proyecto actual con `--buildthis`
 
@@ -174,15 +172,12 @@ border: 1px solid rgba(255, 87, 34, 0.55);
 
 Cuando compilas un proyecto, Packagemaker:
 
-1. **Análisis**: Lee scripts candidatos y detecta clases
-2. **Exclusión de Archivos**: Aplica patrones de `.gitignore` para ignorar archivos y directorios no deseados.
-3. **Extracción**: Mueve clases a `lib/_class/ScriptName/`
-4. **Modificación**: Actualiza imports en scripts originales
-5. **Generación**: Crea `lib/__init__.py` con imports consolidados
-6. **Minificación**: Reduce tamaño de código
-7. **Empaquetado**: Genera un archivo `.iflapp` con nombre canónico.
-8. **Firma**: Opcionalmente firma el paquete.
-9. **Limpieza**: Elimina artefactos de compilación (`build/`, `dist/`, `.spec`), el paquete temporal y, tras validar el `.iflapp` externo, la carpeta de proyecto procesada.
+1. **Análisis**: Lee `details.xml`, localiza el script principal y comprueba la estructura del proyecto.
+2. **Exclusión de archivos**: Aplica patrones de `.gitignore` para ignorar archivos y directorios no deseados.
+3. **Construcción**: Invoca el flujo PyInstaller embebido con la plataforma objetivo.
+4. **Empaquetado**: Genera un archivo `.iflapp` con nombre canónico.
+5. **Validación**: Comprueba que el `.iflapp` sea un ZIP válido, conserve `details.xml` y contenga los binarios y recursos esperados.
+6. **Limpieza**: Elimina artefactos temporales de compilación (`build/`, `dist`, `.spec`) y conserva la fuente y el paquete validado.
 
 ---
 
@@ -201,9 +196,9 @@ Packagemaker utiliza **Leviathan-UI** como base visual:
 
 ## 📚 Documentación
 
-- `docs/getting-started.md` - Guía de inicio rápido
-- `docs/build-system.md` - Sistema de compilación
-- `docs/android-deployment.md` - Despliegue Android
+- `docs/index.html` - Índice de documentación disponible
+- `docs/dev-community-post.md` - Descripción pública del proyecto
+- `docs/social_media_posts_v3.2.7.md` - Material histórico de difusión
 - `FAQ.md` - Preguntas frecuentes
 - `CHANGELOG.md` - Historial de cambios
 - `RELEASE_NOTES.md` - Notas de versión

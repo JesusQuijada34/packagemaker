@@ -73,6 +73,40 @@ class TuiBuildCommandTests(unittest.TestCase):
             command = mock_run_live.call_args[0][0]
             self.assertEqual(command[2:], ["--buildthis", str(project)])
 
+    @patch("lib.tui._moonfix_project_direct")
+    @patch("lib.tui._prompt_bool", return_value=True)
+    @patch("lib.tui._prompt_choice", return_value=0)
+    @patch("lib.tui._base_dir")
+    @patch("lib.tui._pause")
+    @patch("lib.tui._info")
+    @patch("lib.tui._banner")
+    @patch("lib.tui._clear")
+    def test_screen_moonfix_delegates_to_supported_cli_path(
+        self,
+        mock_clear,
+        mock_banner,
+        mock_info,
+        mock_pause,
+        mock_base_dir,
+        mock_prompt_choice,
+        mock_prompt_bool,
+        mock_moonfix,
+    ):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            base = Path(temp_dir) / "projects"
+            project = base / "Influent.demo.v1.2-26.08-15.38-Danenone"
+            project.mkdir(parents=True)
+            (project / "details.xml").write_text(
+                "<app><publisher>Influent</publisher><app>demo</app>"
+                "<name>Demo</name><version>v1.2-26.08-15.38</version></app>",
+                encoding="utf-8",
+            )
+            mock_base_dir.return_value = base
+
+            tui._screen_moonfix()
+
+            mock_moonfix.assert_called_once_with(project)
+
 
 if __name__ == "__main__":
     unittest.main()
