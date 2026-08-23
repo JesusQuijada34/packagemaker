@@ -1,70 +1,59 @@
-# Proyecto de sistema operativo Linux con aplicaciones Android y Linux
+# Influent OS: arquitectura de aplicaciones Linux y Android
 
-## Hallazgos iniciales
+## Alcance del prototipo
 
-La opción técnicamente más viable para un primer prototipo no es reimplementar Android desde cero, sino usar una distribución Linux existente y añadir una capa Android basada en Waydroid. Waydroid arranca un sistema Android completo dentro de un contenedor Linux usando namespaces y LXC, con integración de hardware mediante binder y soporte de escritorio orientado a Wayland. La documentación pública de Waydroid describe integración de aplicaciones Android en el menú de aplicaciones Linux y modos de ventana múltiple y pantalla completa.
+Influent OS es una distribución experimental **x86_64 basada en Ubuntu Noble**, con sesión GNOME sobre Wayland, aplicaciones Linux nativas y una capa Android separada del host. La primera entrega no intenta reemplazar el kernel ni reimplementar Android: integra componentes existentes de Ubuntu y AOSP mediante interfaces controladas.
 
-AOSP es una pila de software Android de código abierto y documenta la compilación, personalización, seguridad y compatibilidad. Para una primera versión conviene consumir una imagen Android compatible y reservar la compilación de una imagen personalizada basada en AOSP/LineageOS para una segunda fase.
+## Decisión Android: sin Waydroid
 
-Wayland será la base gráfica preferida porque es la arquitectura de escritorio recomendada por Waydroid y permite convivir con aplicaciones Linux nativas. XWayland puede cubrir aplicaciones Linux X11 que aún no sean Wayland-native.
+**Waydroid queda excluido por decisión explícita del proyecto.** La estrategia inicial será ejecutar una imagen Android x86_64 basada en **AOSP/Cuttlefish** dentro de una máquina virtual acelerada por KVM. Cuttlefish está diseñado para ejecutar Android localmente en hosts Linux x86/x86_64 y proporciona un dispositivo virtual con el framework Android y ART, por lo que permite usar APKs sin convertir Waydroid en una dependencia del sistema.
 
-## Arquitectura propuesta
+Esta decisión implica una separación clara: Ubuntu ejecuta sus aplicaciones ELF nativas y el escritorio; la instancia Android ejecuta ART, el framework Android y las APKs. El intercambio de información se realizará a través de un servicio C++ con IPC local, ADB controlado y sincronización explícita. No se presentará como una traducción completa de APIs Android a Linux, porque esa alternativa requeriría reimplementar una gran parte de Android.
 
-| Capa | Tecnología propuesta | Responsabilidad |
+## Arquitectura por capas
+
+| Capa | Tecnología | Responsabilidad |
 |---|---|---|
-| Arranque y sistema base | Linux kernel + systemd + una base Debian/Ubuntu | Arranque, servicios, dispositivos, actualizaciones y recuperación |
-| Escritorio | Wayland + compositor wlroots o KDE/GNOME | Ventanas, entrada, portapapeles y composición |
-| Apps Linux | ELF nativo, Flatpak/AppImage/deb | Ejecución normal de aplicaciones Linux |
-| Apps Android | Waydroid + LXC + imagen Android/LineageOS | ART, framework Android, APKs y servicios Android |
-| Integración | Servicio propio en C++ | Detectar, iniciar, detener, registrar y exponer apps Android |
-| Gestión de paquetes | PackageMaker existente, adaptado gradualmente | Crear y distribuir paquetes de aplicaciones, sin mezclarlo con el kernel |
-| API Java | Java dentro de Android; JNI/IPC con C++ | Código Java Android y puente con servicios nativos |
-| Instalador | ISO reproducible con Calamares o live-build | Instalación del sistema y configuración inicial |
+| Arranque y sistema base | Kernel Linux, systemd, Ubuntu Noble | Arranque, dispositivos, red, actualizaciones y recuperación |
+| Escritorio | GNOME, Mutter, Wayland, XWayland | Ventanas, entrada, composición y compatibilidad X11 |
+| Aplicaciones Linux | ELF nativo, deb y futuras capas Flatpak/AppImage | Ejecutar aplicaciones Linux normales |
+| Runtime Android | AOSP x86_64/Cuttlefish sobre KVM | Ejecutar Android, ART, servicios Android y APKs |
+| Puente del host | C++17, socket Unix, systemd | Comprobar KVM, iniciar/detener el runtime, validar comandos y sincronizar estado |
+| Lanzador Android | Java dentro de Android | Descubrir paquetes, publicar actividades lanzables e iniciar APKs con intents |
+| Interfaz del host | Cliente de escritorio y entrada `.desktop` | Mostrar el catálogo Android junto a las apps Linux |
+| Construcción | live-build con compatibilidad local GRUB2 | Generar una ISO reproducible para x86_64 |
+| Gestión de paquetes | PackageMaker como herramienta complementaria | Crear o distribuir paquetes de aplicaciones, sin mezclarlo con el kernel |
 
-## Decisiones importantes
+## División entre Java y C++
 
-1. Android se ejecutará inicialmente en un contenedor, no como emulación completa de CPU. Esto ofrece mejor rendimiento en equipos con la misma arquitectura que la aplicación Android y reduce el alcance del proyecto.
-2. El prototipo debe enfocarse primero en x86_64, GPU Intel/AMD y sesión Wayland. ARM64, NVIDIA, máquinas virtuales y compatibilidad avanzada se tratarán después.
-3. El servicio C++ no debe reimplementar ART ni el framework Android. Su función será orquestación, integración de ventanas, descubrimiento de APKs, ciclo de vida y comunicación segura.
-4. Java se usará para componentes Android o una aplicación de configuración Android; los servicios del host Linux permanecerán en C++ y se comunicarán mediante D-Bus, sockets Unix o una API local definida.
-5. El repositorio PackageMaker es un IDE/compilador de paquetes Python/PyQt6 con plataforma AlphaCube. Puede reutilizarse como gestor de empaquetado de aplicaciones, pero no constituye por sí mismo la base del sistema operativo.
+El componente **Java** vivirá en el entorno Android. Usará `PackageManager` e intents explícitos para descubrir aplicaciones instaladas, registrar metadatos y lanzar actividades. El lanzador no debe ejecutar APKs directamente sobre Ubuntu: debe enviar una solicitud al servicio Android que controle el ciclo de vida dentro de Cuttlefish.
 
-## Riesgos y límites
+El componente **C++** será el soldador y orquestador del host. Su API aceptará un conjunto pequeño de operaciones como `status`, `start`, `stop`, `install` y `launch`; validará nombres de paquetes y actividades; y ejecutará solamente binarios Android permitidos mediante argumentos construidos internamente. Las futuras funciones de portapapeles, archivos, audio y ventanas se añadirán como módulos separados.
 
-El soporte de Google Play y aplicaciones que dependen de certificación, DRM, SafetyNet/Play Integrity, ARM-only binaries o drivers específicos no puede darse por garantizado. También habrá diferencias de compatibilidad entre GPUs, kernels y aplicaciones Android.
+## Flujo de una aplicación Android
 
-## Fuentes
+1. El usuario selecciona “Aplicaciones Android” desde el escritorio Ubuntu-like.
+2. El cliente local contacta con el socket Unix del puente C++.
+3. El puente verifica la configuración, el acceso a KVM y el estado de Cuttlefish.
+4. Si el runtime no está activo, el puente lo inicia con una configuración conocida.
+5. La aplicación Java consulta el `PackageManager` Android y devuelve el catálogo de actividades lanzables.
+6. Una selección del usuario se transforma en un intent controlado dentro de Android.
+7. El estado del runtime y del proceso se devuelve al escritorio mediante IPC.
 
-[1] Waydroid, sitio oficial: https://waydro.id/
-[2] Waydroid, documentación: https://docs.waydro.id/
-[3] Android Open Source Project, documentación: https://source.android.com/docs
-[4] Wayland, sitio oficial: https://wayland.freedesktop.org/
-[5] PackageMaker, repositorio revisado: https://github.com/JesusQuijada34/packagemaker
+## Limitaciones conocidas
 
-## Cambio solicitado: sin Waydroid
+La primera versión no garantiza Google Play, DRM, SafetyNet/Play Integrity, sensores físicos, cámaras, aceleración 3D perfecta ni aplicaciones que requieran binarios ARM-only. Cuttlefish requiere soporte KVM y no ofrece por sí solo integración transparente de cada ventana Android con el compositor Linux. La compatibilidad de APKs se validará progresivamente por familias de aplicaciones.
 
-Waydroid queda excluido. La alternativa viable para el prototipo será ejecutar una imagen AOSP x86_64 mediante una máquina virtual acelerada por KVM, tomando Cuttlefish como referencia de dispositivo virtual. Cuttlefish está diseñado para ejecutar Android localmente en hosts Linux x86 y x86_64 y mantiene alta fidelidad con el framework Android; requiere virtualización disponible en el host. La primera versión usará esta vía para obtener un entorno Android real con ART y compatibilidad APK, sin depender de Waydroid ni de su contenedor.
+## Fuentes técnicas
 
-El servicio C++ del host actuará como orquestador: comprobará KVM, preparará la instancia, iniciará y detendrá el dispositivo Android, expondrá una API local segura, sincronizará archivos y recibirá eventos. No reemplazará ART ni fingirá traducir cada API de Android. Una traducción completa de Android a Linux sería un proyecto de años y no es realista para un primer prototipo.
+[1] [Android Open Source Project: Cuttlefish](https://source.android.com/docs/devices/cuttlefish)
 
-El componente Java será una aplicación/servicio Android dentro de la imagen AOSP. Su responsabilidad será registrar APKs instalados, publicar metadatos de lanzamiento, iniciar actividades mediante intents y devolver estados al puente C++. El host podrá incluir un pequeño cliente C++/GTK o una interfaz de escritorio para mostrar esos lanzadores junto con las aplicaciones Linux.
+[2] [Android Open Source Project: introducción a Cuttlefish](https://source.android.com/docs/devices/cuttlefish/get-started)
 
-### Arquitectura revisada
+[3] [Android Runtime (ART)](https://source.android.com/docs/core/runtime)
 
-| Componente | Primera implementación | Evolución posterior |
-|---|---|---|
-| Android | AOSP x86_64 + Cuttlefish/KVM, separado del host Ubuntu | Imagen AOSP personalizada y backend de virtualización optimizado |
-| Lanzador APK | Servicio Java en Android que usa PackageManager/Intents | Catálogo de apps, permisos y actualización integrada |
-| Soldador/traductor | Daemon C++ con IPC local, control de VM y sincronización | Integración avanzada de ventanas, portapapeles, audio y archivos |
-| Escritorio | Wayland Ubuntu-like en el host | Shell propio y compositor personalizado si se justifica |
+[4] [ART como módulo del sistema](https://source.android.com/docs/core/ota/modular-system/art)
 
-### Limitaciones explícitas
+[5] [Wayland](https://wayland.freedesktop.org/)
 
-La primera versión no garantizará Google Play, DRM, SafetyNet/Play Integrity, sensores físicos, cámaras, aceleración 3D perfecta ni aplicaciones que requieran binarios ARM-only. Cuttlefish documenta su dependencia de KVM y su uso como dispositivo virtual de alta fidelidad, no como una capa transparente nativa de ventanas Linux.
-
-### Fuentes nuevas
-
-[6] AOSP Cuttlefish: https://source.android.com/docs/devices/cuttlefish
-[7] Inicio de Cuttlefish y requisito KVM: https://source.android.com/docs/devices/cuttlefish/get-started
-[8] Android Runtime (ART): https://source.android.com/docs/core/runtime
-[9] ART como módulo del sistema: https://source.android.com/docs/core/ota/modular-system/art
+[6] [Repositorio PackageMaker seleccionado](https://github.com/JesusQuijada34/packagemaker)
