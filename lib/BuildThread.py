@@ -1,4 +1,5 @@
 import os
+import json
 import sys
 import time
 import shutil
@@ -46,8 +47,8 @@ class FlangCompiler:
         self.scripts = []
         self.platform_type = None
         self.current_platform = platform.system()
-        self.scripts_to_compile = None
         self.last_error = ""
+        self.scripts_to_compile = self._load_scripts_to_compile()
 
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.log(f"[FlangCompiler IT] Inicializado en: {self.repo_path}")
@@ -56,6 +57,39 @@ class FlangCompiler:
     def log(self, msg):
         if self.log_callback:
             self.log_callback(msg)
+
+    def _load_scripts_to_compile(self) -> Optional[List[str]]:
+        """Carga una lista opcional de entry points desde config/settings.json.
+
+        Sin la clave se conserva el descubrimiento histórico de todos los scripts.
+        Si la clave está presente, sólo se compilan los nombres declarados para
+        evitar publicar pruebas, utilidades o prototipos como binarios de la app.
+        """
+        settings_path = self.repo_path / "config" / "settings.json"
+        if not settings_path.is_file():
+            return None
+        try:
+            settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            self.last_error = f"No se pudo leer config/settings.json: {error}"
+            self.log(f"[ERROR] {self.last_error}")
+            return []
+        build = settings.get("build")
+        if not isinstance(build, dict) or "scripts" not in build:
+            return None
+        scripts = build.get("scripts")
+        if not isinstance(scripts, list) or not scripts:
+            self.last_error = "config/settings.json debe declarar build.scripts como una lista no vacía."
+            self.log(f"[ERROR] {self.last_error}")
+            return []
+        normalized = []
+        for script in scripts:
+            if not isinstance(script, str) or not script or any(char in script for char in "/\\") or script != Path(script).stem:
+                self.last_error = "build.scripts contiene un nombre de script no seguro."
+                self.log(f"[ERROR] {self.last_error}")
+                return []
+            normalized.append(script)
+        return normalized
 
     def _check_pyinstaller_installed(self) -> bool:
         pyi = get_pyinstaller()
@@ -125,8 +159,13 @@ class FlangCompiler:
         return hidden_imports
 
     def find_scripts(self) -> bool:
-        if self.scripts_to_compile:
+        if self.scripts_to_compile is not None:
             self.scripts = []
+            if not self.scripts_to_compile:
+                if not self.last_error:
+                    self.last_error = "No se declararon scripts de compilación."
+                self.log(f"[ERROR] {self.last_error}")
+                return False
             app_dir = self.repo_path / "app"
             for script_name in self.scripts_to_compile:
                 script_path = self.repo_path / f"{script_name}.py"
