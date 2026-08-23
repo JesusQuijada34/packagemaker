@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SOCKET="${INFLUENT_BRIDGE_SOCKET:-/run/influent/bridge.sock}"
+COMMAND="ANDROID_START"
+if [[ "$#" -eq 1 ]]; then
+    if [[ ! "$1" =~ ^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)*$ ]]; then
+        echo "Identificador de paquete no válido" >&2
+        exit 2
+    fi
+    COMMAND="LAUNCH $1"
+elif [[ "$#" -gt 1 ]]; then
+    echo "Uso: influent-apps [package.name]" >&2
+    exit 2
+fi
+
+python3 - "$SOCKET" "$COMMAND" <<'PY'
+import socket
+import sys
+
+socket_path, command = sys.argv[1], sys.argv[2]
+with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+    client.settimeout(5.0)
+    client.connect(socket_path)
+    client.sendall((command + "\n").encode("utf-8"))
+    response = client.recv(4096).decode("utf-8", errors="replace").strip()
+print(response)
+if response.startswith("ERROR"):
+    raise SystemExit(1)
+PY

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Influent Apps
+Comment=Lanzador de aplicaciones Android de Influent OS
+Exec=/usr/local/bin/influent-apps
+Icon=application-x-apk
+Terminal=false
+Type=Application
+Categories=Utility;System;
+Keywords=Android;APK;Influent;
+StartupNotify=true

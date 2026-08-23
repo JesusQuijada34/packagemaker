@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+if ! getent group influent >/dev/null 2>&1; then
+    groupadd --system influent
+fi
+if ! getent passwd influent >/dev/null 2>&1; then
+    useradd --system --gid influent --home-dir /var/lib/influent --shell /usr/sbin/nologin influent
+fi
+install -d -o influent -g influent -m 0750 /var/lib/influent
+install -d -o influent -g influent -m 0750 /var/lib/influent/apks
+install -d -o influent -g influent -m 0750 /var/lib/influent/android

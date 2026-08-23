@@ -185,3 +185,22 @@ data/pm.data
 
 # pmCodeEditor - Python portables descargados (no versionar)
 data/pmCodeEditor/python/
+
+# Influent OS: artefactos grandes de live-build
+os/.live-build/
+os/dist/
+
+# Builds locales del puente y del lanzador
+os/host-bridge/build/
+os/android-launcher/.gradle/
+os/android-launcher/build/
+
+# Imágenes y metadatos generados
+*.iso
+*.iso.sha256
+*.zsync
+*.zsync.xz
+
+# Estado local de desarrollo
+.env.*
+!*.env.example

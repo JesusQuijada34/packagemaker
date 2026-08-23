@@ -1,0 +1,55 @@
+# Base del sistema
+linux-image-generic
+systemd-sysv
+sudo
+network-manager
+ca-certificates
+curl
+wget
+git
+unzip
+zip
+xz-utils
+
+# Escritorio Ubuntu-like sobre Wayland
+gnome-shell
+gnome-session
+gdm3
+gnome-settings-daemon
+ubuntu-settings
+yaru-theme-gtk
+yaru-theme-icon
+gnome-control-center
+gnome-terminal
+nautilus
+adwaita-icon-theme
+ubuntu-wallpapers
+plymouth-theme-ubuntu-text
+
+# Aplicaciones Linux comunes
+file-roller
+gedit
+
+# Desarrollo C++ y Java
+build-essential
+cmake
+ninja-build
+pkg-config
+libdbus-1-dev
+libsystemd-dev
+android-tools-adb
+
+# Virtualización y diagnóstico Android
+qemu-system-x86
+qemu-kvm
+cpu-checker
+
+# Empaquetado y recuperación
+squashfs-tools
+xorriso
+syslinux-utils
+os-prober
+
+# Integración visual
+fonts-ubuntu
+fonts-noto

@@ -1,0 +1,23 @@
+[Unit]
+Description=Influent OS Android integration bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=-/etc/influent/influent.conf
+Type=simple
+User=influent
+Group=influent
+RuntimeDirectory=influent
+RuntimeDirectoryMode=0750
+ExecStart=/usr/lib/influent/influent-bridge --socket=/run/influent/bridge.sock
+Restart=on-failure
+RestartSec=2s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/influent /var/lib/influent
+
+[Install]
+WantedBy=multi-user.target
