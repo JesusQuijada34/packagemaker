@@ -25,7 +25,10 @@ new file mode 100644
 [32m+import uuid[m
 [32m+[m
 [32m+app = Flask(__name__)[m
-[32m+app.secret_key = 'pm-pwa-secret-2026'[m
+[32m+app.secret_key = os.getenv('FLASK_SECRET_KEY', '').strip() or os.urandom(32)
++if os.getenv('FLASK_ENV', '').lower() == 'production' and not os.getenv('FLASK_SECRET_KEY', '').strip():
++    raise RuntimeError('FLASK_SECRET_KEY debe estar configurada en Render')
+[m
 [32m+[m
 [32m+# Use absolute path for database to avoid issues on different deployment environments[m
 [32m+BASE_DIR = os.path.dirname(os.path.abspath(__file__))[m

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vincular PackageMaker con GitHub</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0d1117; --panel:#161b22; --line:#30363d; --text:#f0f6fc; --muted:#9da7b3; --accent:#ff7b72; --ok:#3fb950; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 50% -10%, #263342 0, var(--bg) 50%); color:var(--text); font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(100%,520px); padding:32px; border:1px solid var(--line); border-radius:24px; background:rgba(22,27,34,.95); box-shadow:0 28px 90px rgba(0,0,0,.35); }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+    .mark { width:30px; height:30px; display:grid; place-items:center; border-radius:10px; background:var(--accent); color:var(--bg); font-weight:900; }
+    h1 { margin:26px 0 10px; font-size:32px; line-height:1.1; letter-spacing:-.04em; }
+    p { color:var(--muted); margin:0 0 24px; }
+    .step { display:flex; gap:14px; align-items:flex-start; padding:14px 0; border-top:1px solid rgba(255,255,255,.08); }
+    .number { flex:none; width:28px; height:28px; display:grid; place-items:center; border-radius:50%; background:#21262d; color:var(--accent); font-weight:800; }
+    .step strong { display:block; margin-bottom:3px; }
+    .step span { color:var(--muted); font-size:14px; }
+    a.button { display:inline-flex; justify-content:center; width:100%; padding:13px 18px; border-radius:12px; background:var(--text); color:var(--bg); text-decoration:none; font-weight:800; }
+    a.button:hover { background:#cdd9e5; }
+    .code { margin:20px 0; padding:20px; text-align:center; border:1px dashed var(--accent); border-radius:16px; background:rgba(255,123,114,.08); color:var(--accent); font:800 32px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.1em; }
+    .success { padding:16px; border:1px solid rgba(63,185,80,.45); border-radius:14px; background:rgba(63,185,80,.1); color:#aff5b6; }
+    .error { padding:16px; border:1px solid rgba(255,123,114,.45); border-radius:14px; background:rgba(255,123,114,.1); color:#ffdcd7; }
+    .small { margin-top:16px; font-size:12px; color:var(--muted); text-align:center; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><div class="mark">P</div> PackageMaker</div>
+    <h1>Vincular dispositivo</h1>
+    <p>Conecta tu cuenta de GitHub con PackageMaker sin escribir tu contraseña en la aplicación.</p>
+
+    {% if setup_error %}
+      <div class="error">El servicio todavía no está configurado para vincular GitHub. Revisa las variables de entorno de Render.</div>
+    {% elif expired %}
+      <div class="error">Esta vinculación ya no está disponible. Vuelve a abrir <strong>/linkdevice</strong> para generar una nueva.</div>
+    {% elif linked %}
+      <div class="success"><strong>Vinculación exitosa.</strong><br>Ya puedes volver a PackageMaker. La aplicación recibió tu sesión de GitHub.</div>
+    {% else %}
+      <div class="step"><div class="number">1</div><div><strong>Autoriza GitHub</strong><span>Se abrirá GitHub en una ventana segura del navegador.</span></div></div>
+      <div class="step"><div class="number">2</div><div><strong>Copia el código</strong><span>Cuando termine la autorización aparecerá aquí durante 15 minutos.</span></div></div>
+      <div class="step"><div class="number">3</div><div><strong>Escríbelo en PackageMaker</strong><span>La aplicación lo validará automáticamente.</span></div></div>
+      {% if github_url %}<a class="button" href="{{ github_url }}">Continuar con GitHub</a>{% endif %}
+      <div id="code-area" hidden>
+        <div class="code" id="pairing-code"></div>
+        <p class="small">Mantén abierta esta página mientras PackageMaker valida el código.</p>
+      </div>
+      <div id="linked-area" class="success" hidden><strong>Vinculación exitosa.</strong><br>PackageMaker ya puede continuar.</div>
+    {% endif %}
+  </main>
+{% if request_id and status_url and not linked and not setup_error and not expired %}
+<script>
+  const requestId = {{ request_id|tojson }};
+  const statusUrl = {{ status_url|tojson }};
+  async function refreshLinkStatus() {
+    try {
+      const response = await fetch(`${statusUrl}?request_id=${encodeURIComponent(requestId)}`, {cache:'no-store'});
+      const data = await response.json();
+      if (data.status === 'ready' && data.code) {
+        document.querySelector('.button')?.remove();
+        document.querySelector('#code-area').hidden = false;
+        document.querySelector('#pairing-code').textContent = data.code;
+      }
+      if (data.status === 'linked') {
+        document.querySelector('.button')?.remove();
+        document.querySelector('#code-area').hidden = true;
+        document.querySelector('#linked-area').hidden = false;
+        return;
+      }
+      if (data.status !== 'expired' && data.status !== 'failed') setTimeout(refreshLinkStatus, 2000);
+    } catch (_) { setTimeout(refreshLinkStatus, 4000); }
+  }
+  refreshLinkStatus();
+</script>
+{% endif %}
+</body>
+</html>

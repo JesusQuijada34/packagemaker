@@ -1,19 +1,24 @@
 import os
 import requests
 import json
+import hmac
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, jsonify, request, Response, session, send_from_directory, g
+from flask import Flask, render_template, jsonify, request, Response, session, send_from_directory, g, redirect
 import markdown
 import sqlite3
 from datetime import datetime, timedelta
 import uuid
+from lib.device_link import DeviceLinkStore, LINK_TTL_SECONDS, build_github_url, exchange_github_code
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'pm-pwa-secret-2026')
+app.secret_key = os.getenv('FLASK_SECRET_KEY', '').strip() or os.urandom(32)
+if os.getenv('FLASK_ENV', '').lower() == 'production' and not os.getenv('FLASK_SECRET_KEY', '').strip():
+    raise RuntimeError('FLASK_SECRET_KEY debe estar configurada en Render')
 
 # Use absolute path for database to avoid issues on different deployment environments
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'analytics.db')
+DEVICE_LINK_STORE = DeviceLinkStore(DB_PATH)
 
 SUPPORTED_LANGUAGES = {
     'es': {'name': 'Español', 'native': 'Español'},
@@ -889,6 +894,128 @@ def init_db():
     conn.close()
 
 init_db()
+
+
+def _public_base_url() -> str:
+    configured = os.getenv("RENDER_AUTH_BASE_URL", "https://packagemaker.onrender.com").strip().rstrip("/")
+    return configured or request.url_root.rstrip("/")
+
+
+def _link_response(payload: dict, status: int = 200):
+    response = jsonify(payload)
+    response.status_code = status
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.get("/linkdevice")
+def linkdevice():
+    request_id = request.args.get("request_id", "").strip()
+    linked = False
+    if not request_id:
+        try:
+            auth_request = DEVICE_LINK_STORE.create_auth_request()
+            github_url = build_github_url(_public_base_url(), auth_request)
+        except RuntimeError as error:
+            app.logger.error("No se pudo iniciar linkdevice: %s", error)
+            return render_template(
+                "linkdevice.html",
+                request_id="",
+                github_url="",
+                linked=False,
+                setup_error=True,
+                status_url="",
+            ), 503
+        request_id = auth_request.request_id
+    else:
+        row = DEVICE_LINK_STORE.get(request_id)
+        if row is None:
+            return render_template(
+                "linkdevice.html",
+                request_id="",
+                github_url="",
+                linked=False,
+                setup_error=False,
+                expired=True,
+                status_url="",
+            ), 410
+        auth_request = None
+        github_url = ""
+        linked = DEVICE_LINK_STORE.browser_status(request_id).get("status") == "linked"
+    return render_template(
+        "linkdevice.html",
+        request_id=request_id,
+        github_url=github_url,
+        linked=linked,
+        setup_error=False,
+        expired=False,
+        status_url="/api/linkdevice/status",
+    )
+
+
+@app.get("/auth/github/device-callback")
+def github_device_callback():
+    state = request.args.get("state", "").strip()
+    code = request.args.get("code", "").strip()
+    row = DEVICE_LINK_STORE.get_by_state(state) if state else None
+    if row is None or not hmac.compare_digest(row["state_hash"], DEVICE_LINK_STORE.digest(state)):
+        return render_template(
+            "linkdevice.html",
+            request_id="",
+            github_url="",
+            linked=False,
+            setup_error=False,
+            expired=True,
+            status_url="",
+        ), 400
+    if not code:
+        DEVICE_LINK_STORE.fail(row["request_id"])
+        return redirect(f"/linkdevice?request_id={row['request_id']}")
+    try:
+        access_token, profile = exchange_github_code(_public_base_url(), row, code)
+        DEVICE_LINK_STORE.complete_authorization(row["request_id"], access_token, profile)
+    except (requests.RequestException, RuntimeError, ValueError) as error:
+        app.logger.warning("Falló el callback de linkdevice: %s", error)
+        DEVICE_LINK_STORE.fail(row["request_id"])
+    return redirect(f"/linkdevice?request_id={row['request_id']}")
+
+
+@app.get("/api/linkdevice/status")
+def linkdevice_status():
+    request_id = request.args.get("request_id", "").strip()
+    if not request_id:
+        return _link_response({"status": "invalid"}, 400)
+    return _link_response(DEVICE_LINK_STORE.browser_status(request_id))
+
+
+@app.post("/api/linkdevice/poll")
+def linkdevice_poll():
+    payload = request.get_json(silent=True) or {}
+    code = str(payload.get("code", "")).strip()
+    if not code:
+        return _link_response({"status": "invalid"}, 400)
+    status, profile, ticket, remaining = DEVICE_LINK_STORE.poll_code(code)
+    if status == "pending":
+        return _link_response({"status": "pending", "expires_in": remaining}, 202)
+    if status == "complete" and profile and ticket:
+        return _link_response({
+            "status": "complete",
+            "profile": profile,
+            "session": {"ticket": ticket, "expires_in": remaining},
+        })
+    if status == "expired":
+        return _link_response({"status": "expired"}, 410)
+    return _link_response({"status": "invalid"}, 404)
+
+
+@app.post("/api/linkdevice/session")
+def linkdevice_session():
+    payload = request.get_json(silent=True) or {}
+    profile, remaining = DEVICE_LINK_STORE.validate_ticket(str(payload.get("ticket", "")).strip())
+    if profile is None:
+        return _link_response({"status": "expired"}, 401)
+    return _link_response({"status": "valid", "profile": profile, "expires_in": remaining})
+
 
 @app.before_request
 def track_visit():

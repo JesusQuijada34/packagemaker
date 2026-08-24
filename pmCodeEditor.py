@@ -2375,6 +2375,10 @@ def main():
     app.setStyle("Fusion")
     app.setStyleSheet(DARK_QSS)
 
+    from lib.device_link_client import require_device_link
+    if not require_device_link():
+        sys.exit(0)
+
     python_path = resolve_python_path()
     if not python_path:
         print("[INFO] Configuracion de Python cancelada")

@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Callable
 
+from lib.device_session import load_session
+
 try:
     from PyQt6.QtWidgets import (
         QMainWindow,
@@ -141,6 +143,8 @@ class NewProjectWizard(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        cached = load_session() or {}
+        self.github_profile = cached.get("profile", {})
         self.setWindowTitle("Nuevo Proyecto PackageMaker")
         self.setMinimumSize(520, 560)
         self.setStyleSheet(DARK_QSS)
@@ -175,7 +179,10 @@ class NewProjectWizard(QDialog):
         form.addRow("Version:", self.input_version)
 
         self.input_author = QLineEdit()
-        self.input_author.setPlaceholderText("GitHub username")
+        login = str(self.github_profile.get("login", "")).strip()
+        self.input_author.setText(login)
+        self.input_author.setReadOnly(bool(login))
+        self.input_author.setPlaceholderText("Usuario de GitHub")
         form.addRow("Autor:", self.input_author)
 
         self.input_platform = QComboBox()
