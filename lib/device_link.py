@@ -198,10 +198,12 @@ class DeviceLinkStore:
             ticket = secrets.token_urlsafe(32)
             # Replace the one-time server ticket hash with the returned ticket.
             with self._connect() as connection:
-                connection.execute(
+                cursor = connection.execute(
                     "UPDATE device_links SET session_ticket_hash = ?, status = 'linked', consumed_at = ? WHERE request_id = ? AND status = 'ready'",
                     (self.digest(ticket), time.time(), row["request_id"]),
                 )
+            if cursor.rowcount != 1:
+                return "linked", None, None, remaining
             profile = json.loads(row["profile_json"] or "{}")
             return "complete", profile, ticket, remaining
         return row["status"], None, None, remaining
