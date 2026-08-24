@@ -913,6 +913,16 @@ def linkdevice():
     request_id = request.args.get("request_id", "").strip()
     linked = False
     if not request_id:
+        if not os.getenv("GITHUB_CLIENT_ID", "").strip():
+            return render_template(
+                "linkdevice.html",
+                request_id="",
+                github_url="",
+                linked=False,
+                setup_error=True,
+                expired=False,
+                status_url="",
+            )
         try:
             auth_request = DEVICE_LINK_STORE.create_auth_request()
             github_url = build_github_url(_public_base_url(), auth_request)
@@ -924,8 +934,9 @@ def linkdevice():
                 github_url="",
                 linked=False,
                 setup_error=True,
+                expired=False,
                 status_url="",
-            ), 503
+            )
         request_id = auth_request.request_id
     else:
         row = DEVICE_LINK_STORE.get(request_id)
