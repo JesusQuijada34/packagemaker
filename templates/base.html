@@ -176,25 +176,30 @@
             pointer-events: none;
         }
 
-        /* Navigation - Modern Sticky */
-        nav { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: var(--space-4) var(--space-8);
-            background: rgba(5, 5, 6, 0.7);
+        /* Navigation - compact command menu */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-3) var(--space-8);
+            background: rgba(5, 5, 6, 0.72);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-bottom: 1px solid var(--border);
-            position: sticky; 
-            top: 0; 
+            position: sticky;
+            top: 0;
             z-index: 1000;
-            transition: background var(--duration-normal) var(--ease-out);
+            transition: background var(--duration-normal) var(--ease-out), border-color var(--duration-normal) var(--ease-out);
         }
-        
-        nav:hover {
-            background: rgba(5, 5, 6, 0.85);
-        }
+        nav:focus-within, nav:hover { background: rgba(5, 5, 6, 0.9); }
+        .skip-link { position:fixed; left:1rem; top:.75rem; z-index:2000; padding:.7rem 1rem; border-radius:10px; background:var(--accent); color:#fff; transform:translateY(-150%); transition:transform var(--duration-fast) var(--ease-out); }
+        .skip-link:focus { transform:translateY(0); }
+        .nav-menu-toggle { display:grid; place-items:center; width:44px; height:44px; margin-left:auto; border:1px solid var(--border); border-radius:12px; background:var(--surface); color:var(--foreground); cursor:pointer; transition:background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
+        .nav-menu-toggle:hover { background:var(--surface-hover); }
+        .nav-menu-toggle:active { transform:scale(.96); }
+        .nav-menu-toggle:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+        .nav-menu-toggle svg { width:20px; height:20px; }
 
         .logo { 
             display: flex; 
@@ -217,11 +222,24 @@
         }
         .logo:hover img { filter: drop-shadow(0 0 15px var(--accent-glow)); }
 
-        .nav-links { 
-            display: flex; 
-            gap: var(--space-1);
-            align-items: center;
+        .nav-links {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: var(--space-8);
+            width: min(340px, calc(100vw - 2rem));
+            grid-template-columns: 1fr;
+            gap: .3rem;
+            padding: .65rem;
+            border: 1px solid var(--border-hover);
+            border-radius: 18px;
+            background: rgba(13, 14, 18, .96);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            box-shadow: 0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
         }
+        .nav-links.is-open { display:grid; animation:menu-enter 180ms var(--ease-out) both; }
+        @keyframes menu-enter { from { opacity:0; transform:translateY(-8px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
         
         .nav-links a { 
             text-decoration: none; 
@@ -386,12 +404,27 @@
         /* Footer */
         footer {
             margin-top: var(--space-16);
-            padding: var(--space-8) var(--space-6);
+            padding: var(--space-10) var(--space-6) calc(var(--space-10) + env(safe-area-inset-bottom));
             text-align: center;
             border-top: 1px solid var(--border);
             color: var(--foreground-muted);
             font-size: 0.875rem;
         }
+        .footer-inner { max-width:1200px; margin:0 auto; display:grid; gap:var(--space-5); justify-items:center; }
+        .footer-identity { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:var(--space-4); }
+        .github-identity { display:inline-flex; align-items:center; gap:.75rem; min-height:44px; padding:.45rem .8rem .45rem .5rem; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,.04); color:var(--foreground); text-decoration:none; transition:background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
+        .github-identity:hover { background:var(--surface-hover); border-color:var(--border-hover); transform:translateY(-1px); }
+        .github-identity:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+        .github-identity img, .github-mark { width:32px; height:32px; border-radius:50%; }
+        .github-mark { display:grid; place-items:center; background:#f0f6fc; color:#0d1117; }
+        .github-mark svg { width:19px; height:19px; }
+        .github-copy { display:grid; gap:0; text-align:left; line-height:1.2; }
+        .github-copy strong { font-size:.86rem; }
+        .github-copy span { color:var(--foreground-muted); font-size:.76rem; }
+        .footer-logout { min-height:44px; display:inline-flex; align-items:center; padding:.6rem .9rem; border-radius:10px; color:var(--foreground-muted); text-decoration:none; transition:color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); }
+        .footer-logout:hover { color:var(--foreground); background:var(--surface); }
+        .footer-logout:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+        .footer-meta { margin:0; color:var(--foreground-muted); }
 
         .footer-controls {
             display: inline-flex;
@@ -501,30 +534,17 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            nav { 
-                padding: var(--space-3) var(--space-4);
-            }
-            
-            .nav-menu-toggle { display:grid; place-items:center; margin-left:auto; }
-            .nav-links { display:none; width:100%; order:4; padding-top:.65rem; }
-            .nav-links.is-open { display:grid; grid-template-columns:1fr 1fr; gap:.35rem; }
-            .nav-links a { padding:.7rem .75rem; }
-            .nav-controls { order:3; }
+            nav { padding: var(--space-3) var(--space-4); }
+            .nav-links { right:var(--space-4); }
+            .nav-links a { padding:.75rem .85rem; }
             .nav-controls .language-form label { display:none; }
-            .nav-login { font-size:.8rem; padding-inline:.7rem; }
-            
-            .bento-grid { 
-                grid-template-columns: 1fr; 
-                gap: var(--space-4);
-            }
-            
-            h1 { font-size: 2rem; }
-            
-            .container { padding: var(--space-6) var(--space-4); }
+            .nav-login { font-size:.9rem; }
+            .bento-grid { grid-template-columns:1fr; gap:var(--space-4); }
+            h1 { font-size:2rem; }
+            .container { padding:var(--space-6) var(--space-4); }
+            .footer-identity { align-items:stretch; flex-direction:column; }
+            .footer-logout { justify-content:center; }
         }
-
-        .nav-menu-toggle { display:none; width:44px; height:44px; border:1px solid var(--border); border-radius:12px; background:var(--surface); color:var(--foreground); cursor:pointer; }
-        .nav-menu-toggle svg { width:20px; height:20px; }
         .nav-login { white-space:nowrap; }
 
         /* Accessibility */
@@ -547,6 +567,7 @@
         <div class="bg-blob bg-blob-3"></div>
     </div>
     <div class="glass-layer"></div>
+    <a class="skip-link" href="#main-content">Saltar al contenido</a>
 
     <nav aria-label="Navegación principal">
         <a href="/" class="logo" aria-label="Package Maker - Inicio">
@@ -571,7 +592,7 @@
             <a href="/login?next=/" class="nav-login">Entrar</a>
             {% endif %}
         </div>
-        <div class="nav-controls" style="margin-left: auto; display:flex; align-items:center; gap:0.75rem;">
+        <div class="nav-controls" style="display:flex; align-items:center; gap:0.75rem;">
             <form class="language-form" method="get" action="{{ request.path }}" style="display:flex; align-items:center; gap:0.5rem;">
                 <label for="language-selector" style="color:var(--foreground-muted); font-size:0.875rem;">{{ translations.footer_language }}</label>
                 <select id="language-selector" name="lang" onchange="this.form.submit()" style="background:transparent; color:var(--foreground); border:1px solid var(--border); padding:0.35rem 0.5rem; border-radius:8px;">
@@ -588,7 +609,20 @@
     </main>
 
     <footer>
-        <p>{{ translations.footer_text }}</p>
+        <div class="footer-inner">
+            <div class="footer-identity">
+                <a class="github-identity" href="https://github.com/JesusQuijada34" target="_blank" rel="noopener noreferrer">
+                    {% if session.get('github_profile', {}).get('avatar_url') %}
+                    <img src="{{ session.get('github_profile', {}).get('avatar_url') }}" alt="Avatar de GitHub de {{ session.get('github_profile', {}).get('name', 'Jesús Quijada') }}">
+                    {% else %}
+                    <span class="github-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.4a9.6 9.6 0 0 0-3.04 18.71c.48.09.66-.21.66-.46v-1.63c-2.69.58-3.26-1.14-3.26-1.14-.44-1.12-1.08-1.42-1.08-1.42-.88-.6.07-.59.07-.59.97.07 1.48 1 1.48 1 .86 1.47 2.26 1.05 2.81.8.09-.62.34-1.05.61-1.29-.2-2.15-1.08-4.41-4.8-4.41-1.06 0-1.92.38-2.6 1-.25-.1-1.23-.43-2.56.1 0 0-.26.82.99 2.64A9.16 9.16 0 0 1 12 7.1c.82 0 1.64.11 2.41.32 1.82-1.25 2.64-.99 2.64-.99.53 1.33.2 2.31.1 2.56.62.68 1 1.54 1 2.6 0 3.73-2.27 4.55-4.43 4.79.35.3.66.88.66 1.78v2.63c0 .25.17.55.67.46A9.6 9.6 0 0 0 12 2.4Z"/></svg></span>
+                    {% endif %}
+                    <span class="github-copy"><strong>{{ session.get('github_profile', {}).get('name', 'Jesús Quijada') }}</strong><span>@{{ session.get('github_profile', {}).get('login', 'JesusQuijada34') }}</span></span>
+                </a>
+                {% if session.get('github_profile') %}<a class="footer-logout" href="/logout">Cerrar sesión</a>{% endif %}
+            </div>
+            <p class="footer-meta">{{ translations.footer_text }}</p>
+        </div>
     </footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -625,10 +659,16 @@
             const menuToggle = document.querySelector('.nav-menu-toggle');
             const primaryNavigation = document.getElementById('primary-navigation');
             if (menuToggle && primaryNavigation) {
-                menuToggle.addEventListener('click', () => {
-                    const open = primaryNavigation.classList.toggle('is-open');
+                const setMenuState = (open) => {
+                    primaryNavigation.classList.toggle('is-open', open);
                     menuToggle.setAttribute('aria-expanded', String(open));
-                });
+                    menuToggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+                };
+                menuToggle.addEventListener('click', () => setMenuState(!primaryNavigation.classList.contains('is-open')));
+                primaryNavigation.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenuState(false)));
+                document.addEventListener('keydown', (event) => { if (event.key === 'Escape') setMenuState(false); });
+                document.addEventListener('click', (event) => { if (!navContains(event.target) && primaryNavigation.classList.contains('is-open')) setMenuState(false); });
+                function navContains(target) { return target && (target === menuToggle || primaryNavigation.contains(target)); }
             }
 
             document.querySelectorAll('a[href]').forEach((anchor) => {

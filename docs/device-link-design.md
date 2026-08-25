@@ -2,7 +2,7 @@
 
 ## Flujo web
 
-1. Las rutas `/download`, `/api/download.sh` y `/linkdevice` comprueban la sesión web de GitHub.
+1. Las rutas `/download` y `/linkdevice` comprueban la sesión web de GitHub.
 2. Si no existe una sesión válida, redirigen a `/login?next=...`.
 3. `/login` crea el estado OAuth y PKCE, y GitHub autentica al usuario directamente en el navegador.
 4. El callback de GitHub vuelve a `/auth/github/callback`. Render consulta el perfil público, guarda una sesión temporal de 15 minutos y coloca solamente un identificador de sesión firmado en la cookie persistente del navegador.

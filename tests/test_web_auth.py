@@ -63,6 +63,29 @@ class WebAuthTests(unittest.TestCase):
         self.assertIn("Suite".encode("utf-8"), protected.data)
         self.assertIsNotNone(request)
 
+    def test_mobile_download_offers_editions_and_logout_clears_session(self):
+        with self.client.session_transaction() as browser_session:
+            session_id = self.app_module.DEVICE_LINK_STORE.save_github_session(
+                "server-token", {"login": "octocat", "id": 1, "name": "The Octocat"}
+            )
+            browser_session["github_session_id"] = session_id
+        fake_downloads = [
+            {"name": "publisher.app.v3.2.7-Knosthalij.iflapp", "url": "https://example.test/k.iflapp", "platform": "Windows", "platform_key": "windows", "edition": "Knosthalij", "version": "v3.2.7", "size": "10.00 MB"},
+            {"name": "publisher.app.v3.2.7-Danenone.iflapp", "url": "https://example.test/d.iflapp", "platform": "Linux", "platform_key": "linux", "edition": "Danenone", "version": "v3.2.7", "size": "11.00 MB"},
+        ]
+        with patch.object(self.app_module, "get_release_info", return_value=fake_downloads), patch.object(self.app_module, "check_iflapp_exists", return_value=True), patch.object(self.app_module, "get_xml_metadata", return_value={"version": "v3.2.7"}), patch.object(self.app_module, "get_latest_release_version", return_value="v3.2.7"):
+            mobile = self.client.get("/download", headers={"User-Agent": "Mozilla/5.0 (Linux; Android 14; Pixel 8)"})
+        self.assertEqual(mobile.status_code, 200)
+        self.assertIn(b"Knosthalij", mobile.data)
+        self.assertIn(b"Danenone", mobile.data)
+        self.assertNotIn(b"Termux", mobile.data)
+
+        logout = self.client.get("/logout", follow_redirects=False)
+        self.assertEqual(logout.status_code, 302)
+        protected_again = self.client.get("/download", follow_redirects=False)
+        self.assertEqual(protected_again.status_code, 302)
+        self.assertIn("/login?", protected_again.headers["Location"])
+
     def test_linkdevice_uses_cached_profile(self):
         with self.client.session_transaction() as browser_session:
             session_id = self.app_module.DEVICE_LINK_STORE.save_github_session(

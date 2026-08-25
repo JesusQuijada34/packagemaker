@@ -1,54 +1,47 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vincular PackageMaker con GitHub</title>
-  <style>
-    :root { color-scheme: dark; --bg:#0d1117; --panel:#161b22; --line:#30363d; --text:#f0f6fc; --muted:#9da7b3; --accent:#ff7b72; --ok:#3fb950; }
-    * { box-sizing: border-box; }
-    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 50% -10%, #263342 0, var(--bg) 50%); color:var(--text); font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    main { width:min(100%,520px); padding:32px; border:1px solid var(--line); border-radius:24px; background:rgba(22,27,34,.95); box-shadow:0 28px 90px rgba(0,0,0,.35); }
-    .brand { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
-    .mark { width:30px; height:30px; display:grid; place-items:center; border-radius:10px; background:var(--accent); color:var(--bg); font-weight:900; }
-    h1 { margin:26px 0 10px; font-size:32px; line-height:1.1; letter-spacing:-.04em; }
-    p { color:var(--muted); margin:0 0 24px; }
-    .step { display:flex; gap:14px; align-items:flex-start; padding:14px 0; border-top:1px solid rgba(255,255,255,.08); }
-    .number { flex:none; width:28px; height:28px; display:grid; place-items:center; border-radius:50%; background:#21262d; color:var(--accent); font-weight:800; }
-    .step strong { display:block; margin-bottom:3px; }
-    .step span { color:var(--muted); font-size:14px; }
-    a.button { display:inline-flex; justify-content:center; width:100%; padding:13px 18px; border-radius:12px; background:var(--text); color:var(--bg); text-decoration:none; font-weight:800; }
-    a.button:hover { background:#cdd9e5; }
-    .code { margin:20px 0; padding:20px; text-align:center; border:1px dashed var(--accent); border-radius:16px; background:rgba(255,123,114,.08); color:var(--accent); font:800 32px/1.1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.1em; }
-    .success { padding:16px; border:1px solid rgba(63,185,80,.45); border-radius:14px; background:rgba(63,185,80,.1); color:#aff5b6; }
-    .error { padding:16px; border:1px solid rgba(255,123,114,.45); border-radius:14px; background:rgba(255,123,114,.1); color:#ffdcd7; }
-    .small { margin-top:16px; font-size:12px; color:var(--muted); text-align:center; }
-  </style>
-</head>
-<body>
-  <main>
-    <div class="brand"><div class="mark">P</div> PackageMaker</div>
-    <h1>Vincular dispositivo</h1>
-    <p>Conecta tu cuenta de GitHub con PackageMaker sin escribir tu contraseña en la aplicación.</p>
+{% extends "base.html" %}
+{% block title %}Vincular dispositivo{% endblock %}
+{% block extra_css %}
+.device-link-page { max-width:620px; margin:clamp(1rem,8vw,5rem) auto; }
+.device-link-card { padding:clamp(1.4rem,5vw,2.4rem); border:1px solid var(--border); border-radius:26px; background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025)); box-shadow:var(--shadow-lg); }
+.device-link-brand { display:flex; align-items:center; gap:.7rem; color:var(--foreground-muted); font:700 .75rem var(--font-mono); letter-spacing:.08em; text-transform:uppercase; }
+.device-link-brand svg { width:28px; height:28px; padding:6px; border-radius:9px; background:var(--accent); color:#fff; }
+.device-link-card h1 { margin:1.7rem 0 .7rem; font-size:clamp(2.2rem,7vw,4rem); letter-spacing:-.07em; line-height:1; }
+.device-link-card > p { max-width:48ch; margin-bottom:1.4rem; }
+.device-step { display:flex; gap:.85rem; align-items:flex-start; padding:1rem 0; border-top:1px solid var(--border); }
+.device-step-number { flex:none; display:grid; place-items:center; width:30px; height:30px; border-radius:10px; background:var(--accent-soft); color:var(--accent); font:700 .78rem var(--font-mono); }
+.device-step strong { display:block; margin-bottom:.2rem; }
+.device-step span { color:var(--foreground-muted); font-size:.88rem; }
+.device-code { margin:1.2rem 0; padding:1.15rem; text-align:center; border:1px dashed rgba(255,122,26,.7); border-radius:17px; background:rgba(255,122,26,.08); color:var(--accent); font:800 clamp(1.7rem,8vw,2.5rem)/1.1 var(--font-mono); letter-spacing:.12em; }
+.device-status { margin-top:1rem; padding:1rem; border-radius:15px; }
+.device-status.success { border:1px solid rgba(98,230,199,.38); background:rgba(98,230,199,.08); color:#b8f8e9; }
+.device-status.error { border:1px solid rgba(255,122,26,.38); background:rgba(255,122,26,.08); color:#ffd3bb; }
+.device-note { margin:1rem 0 0; color:var(--foreground-muted); font-size:.78rem; text-align:center; }
+{% endblock %}
+{% block content %}
+<section class="device-link-page" aria-labelledby="device-link-title">
+  <div class="device-link-card">
+    <div class="device-link-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4.5 7.2v9.6L12 21l7.5-4.2V7.2L12 3Z"/><path d="m4.5 7.2 7.5 4.2 7.5-4.2M12 11.4V21"/></svg>PackageMaker device link</div>
+    <h1 id="device-link-title">Vincula tu dispositivo.</h1>
+    <p>Conecta tu sesión de GitHub con PackageMaker sin escribir tu contraseña dentro de la aplicación.</p>
 
     {% if setup_error %}
-      <div class="error">El servicio todavía no está configurado para vincular GitHub. Revisa las variables de entorno de Render.</div>
+      <div class="device-status error" role="alert">El servicio todavía no está configurado para vincular GitHub. Revisa las variables privadas de Render.</div>
     {% elif expired %}
-      <div class="error">Esta vinculación ya no está disponible. Vuelve a abrir <strong>/linkdevice</strong> para generar una nueva.</div>
+      <div class="device-status error" role="alert">Esta vinculación ya no está disponible. Vuelve a abrir <strong>/linkdevice</strong> para generar una nueva.</div>
     {% elif linked %}
-      <div class="success"><strong>Vinculación exitosa.</strong><br>Ya puedes volver a PackageMaker. La aplicación recibió tu sesión de GitHub.</div>
+      <div class="device-status success" role="status"><strong>Vinculación exitosa.</strong><br>Ya puedes volver a PackageMaker; la aplicación recibió tu sesión.</div>
     {% else %}
-      <div class="step"><div class="number">1</div><div><strong>Sesión confirmada</strong><span>Tu cuenta de GitHub ya está lista para vincular el dispositivo.</span></div></div>
-      <div class="step"><div class="number">2</div><div><strong>Copia el código</strong><span>Aparecerá aquí durante 15 minutos y solo podrá utilizarse una vez.</span></div></div>
-      <div class="step"><div class="number">3</div><div><strong>Escríbelo en PackageMaker</strong><span>La aplicación lo validará automáticamente.</span></div></div>
-      {% if github_url %}<a class="button" href="{{ github_url }}">Continuar con GitHub</a>{% endif %}
-      <div id="code-area" hidden>
-        <div class="code" id="pairing-code"></div>
-        <p class="small">Mantén abierta esta página mientras PackageMaker valida el código.</p>
-      </div>
-      <div id="linked-area" class="success" hidden><strong>Vinculación exitosa.</strong><br>PackageMaker ya puede continuar.</div>
+      <div class="device-step"><span class="device-step-number">01</span><span><strong>Sesión lista</strong><span>Tu cuenta de GitHub está preparada para vincular el dispositivo.</span></span></div>
+      <div class="device-step"><span class="device-step-number">02</span><span><strong>Copia el código</strong><span>Aparecerá aquí durante 15 minutos y solo podrá utilizarse una vez.</span></span></div>
+      <div class="device-step"><span class="device-step-number">03</span><span><strong>Escríbelo en PackageMaker</strong><span>La aplicación lo validará automáticamente.</span></span></div>
+      {% if github_url %}<a class="btn btn-primary" style="width:100%;margin-top:1.1rem" href="{{ github_url }}">Continuar con GitHub</a>{% endif %}
+      <div id="code-area" hidden><div class="device-code" id="pairing-code" aria-live="polite"></div><p class="device-note">Mantén abierta esta página mientras PackageMaker valida el código.</p></div>
+      <div id="linked-area" class="device-status success" role="status" hidden><strong>Vinculación exitosa.</strong><br>PackageMaker ya puede continuar.</div>
     {% endif %}
-  </main>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
 {% if request_id and status_url and not linked and not setup_error and not expired %}
 <script>
   const requestId = {{ request_id|tojson }};
@@ -57,22 +50,12 @@
     try {
       const response = await fetch(`${statusUrl}?request_id=${encodeURIComponent(requestId)}`, {cache:'no-store'});
       const data = await response.json();
-      if (data.status === 'ready' && data.code) {
-        document.querySelector('.button')?.remove();
-        document.querySelector('#code-area').hidden = false;
-        document.querySelector('#pairing-code').textContent = data.code;
-      }
-      if (data.status === 'linked') {
-        document.querySelector('.button')?.remove();
-        document.querySelector('#code-area').hidden = true;
-        document.querySelector('#linked-area').hidden = false;
-        return;
-      }
+      if (data.status === 'ready' && data.code) { document.querySelector('.btn-primary')?.remove(); document.querySelector('#code-area').hidden = false; document.querySelector('#pairing-code').textContent = data.code; }
+      if (data.status === 'linked') { document.querySelector('.btn-primary')?.remove(); document.querySelector('#code-area').hidden = true; document.querySelector('#linked-area').hidden = false; return; }
       if (data.status !== 'expired' && data.status !== 'failed') setTimeout(refreshLinkStatus, 2000);
     } catch (_) { setTimeout(refreshLinkStatus, 4000); }
   }
   refreshLinkStatus();
 </script>
 {% endif %}
-</body>
-</html>
+{% endblock %}

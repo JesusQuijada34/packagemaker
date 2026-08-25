@@ -1,138 +1,69 @@
 {% extends "base.html" %}
 {% block title %}{{ translations.nav_download }}{% endblock %}
+{% block extra_css %}
+.download-page { max-width:1040px; margin:0 auto; }
+.download-hero { padding:clamp(2rem,7vw,5rem) 0 2rem; display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:end; }
+.download-hero h1 { max-width:12ch; margin:0; font-size:clamp(2.6rem,6vw,5rem); letter-spacing:-.07em; line-height:.98; }
+.download-hero p { max-width:48ch; margin:1rem 0 0; }
+.download-kicker { display:inline-flex; align-items:center; gap:.55rem; color:var(--accent); font:700 .72rem var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }
+.download-kicker::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 14px var(--accent); }
+.edition-picker { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.edition-card { display:grid; gap:1rem; padding:1.25rem; border:1px solid var(--border); border-radius:20px; background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025)); color:var(--foreground); transition:transform var(--duration-normal) var(--ease-out),border-color var(--duration-normal) var(--ease-out),background var(--duration-normal) var(--ease-out); }
+.edition-card:hover { transform:translateY(-4px); border-color:var(--border-hover); background:var(--surface-hover); }
+.edition-card:focus-within { outline:3px solid var(--accent); outline-offset:3px; }
+.edition-card.recommended { border-color:rgba(255,122,26,.55); box-shadow:0 18px 50px rgba(255,122,26,.1); }
+.edition-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.edition-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:15px; background:var(--accent-soft); color:var(--accent); }
+.edition-icon svg { width:22px; height:22px; }
+.edition-badge { padding:.35rem .55rem; border-radius:999px; background:rgba(98,230,199,.12); color:var(--home-mint,#62e6c7); font:700 .65rem var(--font-mono); letter-spacing:.05em; text-transform:uppercase; }
+.edition-card h2 { margin:0; font-size:1.35rem; letter-spacing:-.04em; }
+.edition-meta { display:flex; flex-wrap:wrap; gap:.5rem; color:var(--foreground-muted); font-size:.82rem; }
+.edition-meta span { padding:.35rem .55rem; border:1px solid var(--border); border-radius:8px; }
+.edition-action { display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:44px; margin-top:.25rem; padding:.7rem .85rem; border-radius:12px; background:var(--accent); color:#fff; font-weight:700; text-decoration:none; }
+.edition-action:hover { background:var(--accent-hover); }
+.edition-action svg { width:18px; height:18px; }
+.download-panel { margin-top:1rem; padding:1.25rem; border:1px solid var(--border); border-radius:20px; background:rgba(255,255,255,.035); }
+.download-panel h2 { margin-bottom:.45rem; }
+.download-panel p { margin:0; }
+.download-details { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem; }
+.download-detail { padding:1.2rem; border:1px solid var(--border); border-radius:18px; background:rgba(255,255,255,.035); }
+.download-detail h3 { margin:0 0 .8rem; }
+.detail-list { display:grid; gap:.65rem; margin:0; padding:0; list-style:none; }
+.detail-list li { display:flex; gap:.6rem; align-items:flex-start; color:var(--foreground-muted); font-size:.9rem; }
+.detail-list svg { flex:none; width:17px; height:17px; margin-top:.2rem; color:var(--accent); }
+.empty-download { padding:1.5rem; border:1px dashed var(--border-hover); border-radius:18px; text-align:center; }
+.empty-download .btn { margin-top:1rem; }
+@media (max-width:700px) { .download-hero { grid-template-columns:1fr; padding-top:2rem; } .edition-picker,.download-details { grid-template-columns:1fr; } .edition-card { padding:1rem; } }
+{% endblock %}
 {% block content %}
-<div data-aos="fade-up">
-    <div style="text-align: center; margin-bottom: var(--space-10);">
-        <h1>{{ translations.download_title }}</h1>
-        <p style="max-width: 500px; margin: var(--space-4) auto 0;">{{ translations.download_intro }}</p>
+<div class="download-page">
+  <section class="download-hero" aria-labelledby="download-title">
+    <div><div class="download-kicker">PackageMaker releases</div><h1 id="download-title">{{ translations.download_title }}</h1><p>{{ translations.download_intro }} Elige la edición que corresponde a tu destino.</p></div>
+    <div class="edition-meta" aria-label="Información de la versión"><span>v{{ version|replace('v','') }}</span><span>GitHub Releases</span></div>
+  </section>
+
+  {% set editions = download_info.edition_options or download_info.all_downloads %}
+  {% if editions %}
+  <section aria-labelledby="edition-title">
+    <div class="section-heading" style="display:flex;justify-content:space-between;align-items:end;gap:1rem;margin:1.5rem 0 1rem"><div><div class="download-kicker">Descargas disponibles</div><h2 id="edition-title" style="margin:.5rem 0 0">Una edición para cada destino.</h2></div></div>
+    <div class="edition-picker">
+      {% for dl in editions %}
+      <article class="edition-card {% if download_info.direct_download and dl.url == download_info.direct_download.url %}recommended{% endif %}">
+        <div class="edition-top"><div class="edition-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4.5 7.2v9.6L12 21l7.5-4.2V7.2L12 3Z"/><path d="m4.5 7.2 7.5 4.2 7.5-4.2M12 11.4V21"/></svg></div>{% if download_info.direct_download and dl.url == download_info.direct_download.url %}<span class="edition-badge">Recomendada</span>{% endif %}</div>
+        <div><h2>{{ dl.edition or dl.platform }}</h2><p>{{ dl.platform }} · {{ dl.version }}</p></div>
+        <div class="edition-meta"><span>{{ dl.size }}</span><span>.iflapp</span></div>
+        <a class="edition-action" href="{{ dl.url }}" rel="noopener">Descargar edición <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5"/></svg></a>
+      </article>
+      {% endfor %}
     </div>
+  </section>
+  {% else %}
+  <div class="empty-download"><h2>{{ translations.download_no_direct_title }}</h2><p>{{ translations.download_no_direct_desc }}</p><a class="btn btn-secondary" href="https://github.com/JesusQuijada34/packagemaker/releases" target="_blank" rel="noopener">Ver releases en GitHub</a></div>
+  {% endif %}
 
-    <div class="bento-grid">
-        <!-- Main Download Card -->
-        <div class="bento-item" style="grid-column: span 12; text-align: center; padding: var(--space-10) var(--space-6);" data-aos="fade-up">
-            {% if is_android %}
-                <!-- Android/Termux -->
-                <div style="width: 64px; height: 64px; background: rgba(164, 198, 57, 0.15); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
-                    <i class="fab fa-android" style="font-size: 2rem; color: #A4C639;"></i>
-                </div>
-                <h2 style="margin-bottom: var(--space-3);">{{ translations.download_android_title }}</h2>
-                <p style="margin-bottom: var(--space-6);">{{ translations.download_android_desc }}</p>
-                <div style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); max-width: 500px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: var(--space-4);">
-                    <code id="termux-cmd" style="color: #A4C639; font-size: 0.8125rem; font-family: monospace; word-break: break-all; flex: 1; text-align: left;">curl -sL {{ request.host_url }}api/download.sh | bash</code>
-                    <button onclick="copyCmd()" class="btn" style="padding: var(--space-2) var(--space-3); background: rgba(164, 198, 57, 0.15); color: #A4C639; border: 1px solid rgba(164, 198, 57, 0.3); flex-shrink: 0;" aria-label="{{ translations.download_copy_command }}">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-                <p style="font-size: 0.8125rem; margin-top: var(--space-4); color: var(--foreground-muted);">{{ translations.download_android_hint }}</p>
-            {% elif download_info.direct_download %}
-                <!-- Direct Download Available -->
-                <div style="width: 64px; height: 64px; background: var(--accent-soft); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
-                    <i class="fas fa-rocket" style="font-size: 2rem; color: var(--accent);"></i>
-                </div>
-                <h2 style="margin-bottom: var(--space-3);">{{ translations.download_direct_title }}</h2>
-                <p style="margin-bottom: var(--space-2);">Versión {{ download_info.direct_download.version }} para {{ download_info.direct_download.platform }}</p>
-                <p style="font-size: 0.875rem; color: var(--accent); margin-bottom: var(--space-6);">{{ download_info.direct_download.size }}</p>
-                <a href="{{ download_info.direct_download.url }}" class="btn btn-primary" style="padding: var(--space-4) var(--space-8); font-size: 1rem;" id="main-dl-btn">
-                    <i class="fas fa-download"></i> {{ translations.hero_download }} .iflapp
-                </a>
-            {% else %}
-                <!-- No Direct Download - Show Alternatives -->
-                <div style="width: 64px; height: 64px; background: rgba(255, 107, 157, 0.15); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
-                    <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #ff6b9d;"></i>
-                </div>
-                <h2 style="margin-bottom: var(--space-3);">{{ translations.download_no_direct_title }}</h2>
-                <p style="margin-bottom: var(--space-6);">{{ translations.download_no_direct_desc }} ({{ download_info.detected_platform }})</p>
-                
-                <div style="display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; margin-bottom: var(--space-6);">
-                    <a href="https://github.com/JesusQuijada34/packagemaker/archive/refs/heads/main.zip" class="btn btn-primary">
-                        <i class="fab fa-github"></i> {{ translations.download_source_code }}
-                    </a>
-                    <button class="btn btn-secondary" onclick="toggleList()">
-                        <i class="fas fa-list"></i> {{ translations.download_versions }}
-                    </button>
-                </div>
-                
-                <div id="other-platforms" style="display: none; margin-top: var(--space-6); padding-top: var(--space-6); border-top: 1px solid var(--border); text-align: left;">
-                    <h4 style="margin-bottom: var(--space-4); text-align: center; color: var(--foreground-muted);">{{ translations.download_available_versions }}</h4>
-                    <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                        {% for dl in download_info.alternatives %}
-                        <a href="{{ dl.url }}" class="bento-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-4);">
-                            <div>
-                                <div style="font-weight: 600;">{{ dl.platform }}</div>
-                                <div style="font-size: 0.75rem; color: var(--foreground-muted);">{{ dl.version }}</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <span style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ dl.size }}</span>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Requirements Card -->
-        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-right" data-aos-delay="100">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6);">
-                <div style="width: 40px; height: 40px; background: var(--accent-soft); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-list-check" style="color: var(--accent);"></i>
-                </div>
-                <h3 style="margin-bottom: 0;">{{ translations.download_requirements }}</h3>
-            </div>
-            <ul style="list-style: none; padding: 0; margin: 0;">
-                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border);">
-                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
-                    <span style="color: var(--foreground-muted);">Python 3.9 o superior</span>
-                </li>
-                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border);">
-                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
-                    <span style="color: var(--foreground-muted);">4GB RAM (Mínimo)</span>
-                </li>
-                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border);">
-                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
-                    <span style="color: var(--foreground-muted);">500MB Espacio en disco</span>
-                </li>
-                <li style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0;">
-                    <i class="fas fa-check" style="color: var(--accent); width: 20px;"></i>
-                    <span style="color: var(--foreground-muted);">Conexión a Internet</span>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Specs Card -->
-        <div class="bento-item" style="grid-column: span 6;" data-aos="fade-left" data-aos-delay="200">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6);">
-                <div style="width: 40px; height: 40px; background: rgba(124, 92, 221, 0.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-microchip" style="color: #7C5CDD;"></i>
-                </div>
-                <h3 style="margin-bottom: 0;">{{ translations.download_specs }}</h3>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); text-align: center;">
-                    <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">Engine</div>
-                    <div style="font-weight: 700; color: var(--foreground);">Qt 6.11.1</div>
-                </div>
-                <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); text-align: center;">
-                    <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">UI System</div>
-                    <div style="font-weight: 700; color: var(--foreground);">Leviathan</div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <section class="download-details" aria-label="Requisitos y especificaciones">
+    <div class="download-detail"><h3>{{ translations.download_requirements }}</h3><ul class="detail-list"><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg>Python 3.9 o superior</li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg>4 GB de RAM recomendados</li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg>500 MB de espacio disponible</li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg>Conexión para consultar releases</li></ul></div>
+    <div class="download-detail"><h3>{{ translations.download_specs }}</h3><ul class="detail-list"><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/></svg>Qt 6.11.1 · Leviathan UI</li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h16M12 4v16"/></svg>Ediciones separadas por plataforma</li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12a7 7 0 1 0 14 0"/></svg>Distribución mediante GitHub Releases</li></ul></div>
+  </section>
 </div>
-
-<script>
-    function toggleList() {
-        const el = document.getElementById('other-platforms');
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    }
-    function copyCmd() {
-        const cmd = document.getElementById('termux-cmd');
-        navigator.clipboard.writeText(cmd.innerText).then(() => {
-            const btn = document.querySelector('button[onclick="copyCmd()"] i');
-            btn.className = 'fas fa-check';
-            setTimeout(() => btn.className = 'fas fa-copy', 2000);
-        });
-    }
-</script>
 {% endblock %}

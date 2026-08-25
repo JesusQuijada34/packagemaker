@@ -3,7 +3,7 @@ import requests
 import json
 import hmac
 import xml.etree.ElementTree as ET
-from flask import Flask, render_template, jsonify, request, Response, session, send_from_directory, g, redirect
+from flask import Flask, render_template, jsonify, request, session, send_from_directory, g, redirect
 import markdown
 import sqlite3
 from datetime import datetime, timedelta
@@ -104,9 +104,6 @@ TRANSLATIONS = {
         'download_title': 'Obtén la Suite',
         'download_intro': 'Descarga directa para tu plataforma o alternativas si no hay versión específica.',
         'download_direct_title': 'Descarga Directa',
-        'download_android_title': 'Optimizado para Termux',
-        'download_android_desc': 'Instalación directa y automatizada para dispositivos móviles Android.',
-        'download_android_hint': 'Copia y pega este comando en tu terminal Termux.',
         'download_no_direct_title': 'No hay versión directa',
         'download_no_direct_desc': 'No existe un archivo .iflapp para tu plataforma, pero puedes:',
         'download_source_code': 'Código Fuente',
@@ -196,9 +193,6 @@ TRANSLATIONS = {
         'download_title': 'Get the Suite',
         'download_intro': 'Direct download for your platform or alternatives if a specific version is unavailable.',
         'download_direct_title': 'Direct Download',
-        'download_android_title': 'Optimized for Termux',
-        'download_android_desc': 'Direct and automated installation for Android mobile devices.',
-        'download_android_hint': 'Copy and paste this command into your Termux terminal.',
         'download_no_direct_title': 'No direct version available',
         'download_no_direct_desc': 'There is no .iflapp file for your platform, but you can:',
         'download_source_code': 'Source Code',
@@ -288,9 +282,6 @@ TRANSLATIONS = {
         'download_title': 'Obtenha a suíte',
         'download_intro': 'Download direto para sua plataforma ou alternativas se nenhuma versão específica estiver disponível.',
         'download_direct_title': 'Download direto',
-        'download_android_title': 'Otimizando para Termux',
-        'download_android_desc': 'Instalação direta e automatizada para dispositivos móveis Android.',
-        'download_android_hint': 'Copie e cole este comando no seu terminal Termux.',
         'download_no_direct_title': 'Nenhuma versão direta disponível',
         'download_no_direct_desc': 'Não existe um arquivo .iflapp para a sua plataforma, mas você pode:',
         'download_source_code': 'Código Fonte',
@@ -379,9 +370,6 @@ TRANSLATIONS = {
         'download_title': 'Obtenez la suite',
         'download_intro': 'Téléchargement direct pour votre plateforme ou alternatives si aucune version spécifique n’est disponible.',
         'download_direct_title': 'Téléchargement direct',
-        'download_android_title': 'Optimisé pour Termux',
-        'download_android_desc': 'Installation directe et automatisée pour les appareils Android.',
-        'download_android_hint': 'Copiez et collez cette commande dans votre terminal Termux.',
         'download_no_direct_title': 'Aucune version directe disponible',
         'download_no_direct_desc': 'Aucun fichier .iflapp n’existe pour votre plateforme, mais vous pouvez :',
         'download_source_code': 'Code source',
@@ -470,9 +458,6 @@ TRANSLATIONS = {
         'download_title': 'Erhalten Sie die Suite',
         'download_intro': 'Direkter Download für Ihre Plattform oder Alternativen, falls keine spezifische Version verfügbar ist.',
         'download_direct_title': 'Direkter Download',
-        'download_android_title': 'Optimiert für Termux',
-        'download_android_desc': 'Direkte und automatisierte Installation für Android-Geräte.',
-        'download_android_hint': 'Kopieren Sie diesen Befehl und fügen Sie ihn in Ihr Termux-Terminal ein.',
         'download_no_direct_title': 'Keine direkte Version verfügbar',
         'download_no_direct_desc': 'Es gibt keine .iflapp-Datei für Ihre Plattform, aber Sie können:',
         'download_source_code': 'Quellcode',
@@ -561,9 +546,6 @@ TRANSLATIONS = {
         'download_title': 'Ottieni la suite',
         'download_intro': 'Download diretto per la tua piattaforma o alternative se non è disponibile una versione specifica.',
         'download_direct_title': 'Download diretto',
-        'download_android_title': 'Ottimizzato per Termux',
-        'download_android_desc': 'Installazione diretta e automatizzata per dispositivi mobili Android.',
-        'download_android_hint': 'Copia e incolla questo comando nel terminale Termux.',
         'download_no_direct_title': 'Nessuna versione diretta disponibile',
         'download_no_direct_desc': 'Non esiste un file .iflapp per la tua piattaforma, ma puoi:',
         'download_source_code': 'Codice sorgente',
@@ -652,9 +634,6 @@ TRANSLATIONS = {
         'download_title': 'スイートを入手',
         'download_intro': 'お使いのプラットフォーム向けの直接ダウンロード、または特定バージョンがない場合の代替手段。',
         'download_direct_title': '直接ダウンロード',
-        'download_android_title': 'Termux 向け最適化',
-        'download_android_desc': 'Android モバイル端末向けの直接自動インストール。',
-        'download_android_hint': 'このコマンドを Termux ターミナルにコピーして貼り付けてください。',
         'download_no_direct_title': '直接ダウンロード版はありません',
         'download_no_direct_desc': 'お使いのプラットフォーム用の .iflapp ファイルはありませんが、次の方法があります:',
         'download_source_code': 'ソースコード',
@@ -743,9 +722,6 @@ TRANSLATIONS = {
         'download_title': '获取套件',
         'download_intro': '为您的平台提供直接下载，或在没有特定版本时提供替代方案。',
         'download_direct_title': '直接下载',
-        'download_android_title': '针对 Termux 优化',
-        'download_android_desc': '适用于 Android 移动设备的直接自动安装。',
-        'download_android_hint': '将此命令复制并粘贴到您的 Termux 终端中。',
         'download_no_direct_title': '没有可用的直接版本',
         'download_no_direct_desc': '您的平台没有 .iflapp 文件，但您可以：',
         'download_source_code': '源代码',
@@ -1162,9 +1138,16 @@ def classify_download_asset(name: str):
         return "linux", "linux"
     if any(token in lowered for token in ["knosthalij", "windows", "exe"]):
         return "windows", "windows"
-    if "android" in lowered:
-        return "android", "android"
     return "other", "other"
+
+
+def edition_for_download_asset(name: str) -> str:
+    lowered = (name or "").lower()
+    if "danenone" in lowered:
+        return "Danenone"
+    if "knosthalij" in lowered:
+        return "Knosthalij"
+    return "PackageMaker"
 
 
 def get_release_info():
@@ -1192,6 +1175,7 @@ def get_release_info():
                         "url": url,
                         "platform": platform,
                         "platform_key": platform_key,
+                        "edition": edition_for_download_asset(name),
                         "version": version,
                         "size": f"{asset.get('size', 0) / (1024*1024):.2f} MB"
                     })
@@ -1692,7 +1676,7 @@ def get_github_releases():
                     "windows": "Windows",
                     "android": "Android",
                 }.get(platform_key, "Other")
-                downloads.append({"name": asset.get("name"), "url": asset.get("browser_download_url"), "platform": platform, "size": f"{asset.get('size', 0) / (1024*1024):.2f} MB"})
+                downloads.append({"name": asset.get("name"), "url": asset.get("browser_download_url"), "platform": platform, "edition": edition_for_download_asset(name), "size": f"{asset.get('size', 0) / (1024*1024):.2f} MB"})
             return version, downloads
     except Exception as e:
         print(f"Error fetching releases: {e}")
@@ -1704,8 +1688,8 @@ def get_download_for_platform(user_agent):
     all_downloads = get_release_info()
 
     if "android" in ua or "mobile" in ua:
-        detected_platform = "android"
-        preferred_keys = []
+        detected_platform = "mobile"
+        preferred_keys = ["windows", "linux"]
     elif "win" in ua or "windows" in ua:
         detected_platform = "windows"
         preferred_keys = ["windows"]
@@ -1739,11 +1723,20 @@ def get_download_for_platform(user_agent):
         if dl != direct_download:
             alternatives.append(dl)
 
+    edition_options = []
+    seen_editions = set()
+    for dl in all_downloads:
+        edition = dl.get("edition") or dl.get("platform")
+        if edition not in seen_editions:
+            seen_editions.add(edition)
+            edition_options.append(dl)
+
     return {
         "detected_platform": detected_platform,
         "direct_download": direct_download,
         "download_status": download_status,
         "alternatives": alternatives,
+        "edition_options": edition_options,
         "all_downloads": all_downloads
     }
 
@@ -1752,8 +1745,7 @@ def index():
     print(f"DEBUG: Accessing index from {request.remote_addr}")
     metadata = get_xml_metadata()
     version = get_latest_release_version()
-    ua = request.headers.get('User-Agent', '').lower()
-    return render_template('index.html', metadata=metadata, version=version, is_android='android' in ua)
+    return render_template('index.html', metadata=metadata, version=version)
 
 @app.route('/download')
 def download():
@@ -1771,7 +1763,6 @@ def download():
         'download.html', 
         metadata=metadata, 
         version=version, 
-        is_android=download_info["detected_platform"] == "android",
         download_info=download_info
     )
 
@@ -1858,31 +1849,6 @@ def pwa_mode():
     metadata = get_xml_metadata()
     version, downloads = get_github_releases()
     return render_template('pwa.html', mode=mode, metadata=metadata, version=version, downloads=downloads)
-
-@app.route('/api/download.sh')
-def download_sh():
-    if _current_github_session() is None:
-        return _login_redirect(request.full_path)
-    script = """#!/bin/bash
-# Package Maker - Auto Installer
-RED='\\033[0;31m'
-GREEN='\\033[0;32m'
-CYAN='\\033[0;36m'
-YELLOW='\\033[1;33m'
-NC='\\033[0m'
-clear
-echo -e "${CYAN}====================================================${NC}"
-echo -e "${CYAN}       PACKAGE MAKER - INSTALADOR AUTOMÁTICO        ${NC}"
-echo -e "${CYAN}====================================================${NC}"
-if [ -d "/data/data/com.termux/files/home" ]; then ENV="termux"; else ENV="linux"; fi
-if [ "$ENV" == "termux" ]; then pkg update -y && pkg upgrade -y && pkg install -y git python python-pip libexpat openssl
-else sudo apt update -y && sudo apt install -y git python3 python3-pip libexpat1; fi
-git clone -b main https://github.com/JesusQuijada34/packagemaker.git
-cd packagemaker
-pip3 install -r lib/requirements.txt
-echo -e "${GREEN}INSTALACIÓN COMPLETADA. Inicia con: python3 packagemaker.py${NC}"
-"""
-    return Response(script, mimetype='text/x-shellscript')
 
 @app.route('/api/report_error', methods=['POST'])
 def report_error():

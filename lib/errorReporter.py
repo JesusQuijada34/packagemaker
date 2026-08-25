@@ -2,7 +2,6 @@ import sys
 import traceback
 import requests
 import json
-import os
 import platform
 from datetime import datetime
 
@@ -27,8 +26,7 @@ class ErrorReporter:
             "environment": {
                 "os": platform.system(),
                 "os_release": platform.release(),
-                "python_version": sys.version.split()[0],
-                "termux": "TERMUX_VERSION" in os.environ
+                "python_version": sys.version.split()[0]
             }
         }
 
