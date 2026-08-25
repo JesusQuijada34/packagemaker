@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Entrar{% endblock %}
+{% block extra_css %}
+.login-shell { min-height: calc(100vh - 220px); display:grid; place-items:center; padding: clamp(2rem, 8vw, 6rem) 0; }
+.login-card { width:min(100%, 560px); padding:clamp(1.5rem, 5vw, 3rem); border:1px solid rgba(255,255,255,.14); border-radius:32px; background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045)); box-shadow:0 32px 100px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18); backdrop-filter:blur(32px) saturate(160%); }
+.login-icon { width:72px; height:72px; display:grid; place-items:center; border-radius:24px; background:linear-gradient(145deg,#fff,#c8d0dc); color:#0b0d10; box-shadow:0 14px 34px rgba(255,255,255,.18); font-size:2rem; }
+.login-card h1 { margin:1.5rem 0 .75rem; font-size:clamp(2rem, 7vw, 3.5rem); letter-spacing:-.055em; }
+.login-card .lead { max-width:42ch; color:var(--foreground-muted); font-size:1.05rem; }
+.login-points { display:grid; gap:.75rem; margin:1.75rem 0; }
+.login-point { display:flex; gap:.75rem; align-items:flex-start; padding:.9rem 1rem; border:1px solid var(--border); border-radius:16px; background:rgba(0,0,0,.16); color:var(--foreground-muted); }
+.login-point svg { flex:none; width:20px; height:20px; color:var(--accent); margin-top:2px; }
+.login-error { padding:1rem; border:1px solid rgba(255,123,114,.45); border-radius:16px; background:rgba(255,123,114,.11); color:#ffdcd7; margin:1.25rem 0; }
+.login-note { color:var(--foreground-muted); font-size:.82rem; margin-top:1rem; text-align:center; }
+.login-note a { color:var(--foreground); }
+{% endblock %}
+{% block content %}
+<section class="login-shell" aria-labelledby="login-title">
+  <div class="login-card" data-aos="zoom-in" data-aos-duration="500">
+    <div class="login-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor"><path d="M12 2.4a9.6 9.6 0 0 0-3.04 18.71c.48.09.66-.21.66-.46v-1.63c-2.69.58-3.26-1.14-3.26-1.14-.44-1.12-1.08-1.42-1.08-1.42-.88-.6.07-.59.07-.59.97.07 1.48 1 1.48 1 .86 1.47 2.26 1.05 2.81.8.09-.62.34-1.05.61-1.29-2.15-.24-4.41-1.08-4.41-4.8 0-1.06.38-1.92 1-2.6-.1-.25-.43-1.23.1-2.56 0 0 .82-.26 2.64.99A9.16 9.16 0 0 1 12 7.1c.82 0 1.64.11 2.41.32 1.82-1.25 2.64-.99 2.64-.99.53 1.33.2 2.31.1 2.56.62.68 1 1.54 1 2.6 0 3.73-2.27 4.55-4.43 4.79.35.3.66.88.66 1.78v2.63c0 .25.17.55.67.46A9.6 9.6 0 0 0 12 2.4Z"/></svg>
+    </div>
+    <h1 id="login-title">Tu espacio de creación.</h1>
+    <p class="lead">Entra con GitHub para descargar PackageMaker y vincular tu aplicación de escritorio en un solo paso.</p>
+    {% if error %}<div class="login-error" role="alert">{{ error }}</div>{% endif %}
+    {% if setup_error %}<div class="login-error" role="alert">El acceso con GitHub aún no está configurado en el servidor. La página ya está lista; falta añadir las variables de la OAuth App.</div>{% endif %}
+    <div class="login-points">
+      <div class="login-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 5 6v5c0 4.4 2.98 8.53 7 10 4.02-1.47 7-5.6 7-10V6l-7-3Z"/><path d="m9.2 12 1.8 1.8 4-4"/></svg><span>GitHub mantiene tus credenciales fuera de PackageMaker.</span></div>
+      <div class="login-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Tu acceso web se conserva en caché para la próxima visita.</span></div>
+      <div class="login-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7.5h16v12H4z"/><path d="M8 7.5V5.8A2.8 2.8 0 0 1 10.8 3h2.4A2.8 2.8 0 0 1 16 5.8v1.7"/></svg><span>Después podrás volver a la descarga o vincular tu dispositivo.</span></div>
+    </div>
+    {% if github_url %}<a class="btn btn-primary" style="width:100%; padding:1rem 1.25rem; font-size:1rem;" href="{{ github_url }}"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2.4a9.6 9.6 0 0 0-3.04 18.71c.48.09.66-.21.66-.46v-1.63c-2.69.58-3.26-1.14-3.26-1.14-.44-1.12-1.08-1.42-1.08-1.42-.88-.6.07-.59.07-.59.97.07 1.48 1 1.48 1 .86 1.47 2.26 1.05 2.81.8.09-.62.34-1.05.61-1.29-2.15-.24-4.41-1.08-4.41-4.8 0-1.06.38-1.92 1-2.6-.1-.25-.43-1.23.1-2.56 0 0 .82-.26 2.64.99A9.16 9.16 0 0 1 12 7.1c.82 0 1.64.11 2.41.32 1.82-1.25 2.64-.99 2.64-.99.53 1.33.2 2.31.1 2.56.62.68 1 1.54 1 2.6 0 3.73-2.27 4.55-4.43 4.79.35.3.66.88.66 1.78v2.63c0 .25.17.55.67.46A9.6 9.6 0 0 0 12 2.4Z"/></svg> Continuar con GitHub</a>{% endif %}
+    <p class="login-note">Al continuar aceptas el uso técnico de una sesión temporal. <a href="/privacy">Ver privacidad</a>.</p>
+  </div>
+</section>
+{% endblock %}

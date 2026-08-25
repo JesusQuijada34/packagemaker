@@ -8,12 +8,19 @@ import markdown
 import sqlite3
 from datetime import datetime, timedelta
 import uuid
+from urllib.parse import urlencode
 from lib.device_link import DeviceLinkStore, LINK_TTL_SECONDS, build_github_url, exchange_github_code
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', '').strip() or os.urandom(32)
 if os.getenv('FLASK_ENV', '').lower() == 'production' and not os.getenv('FLASK_SECRET_KEY', '').strip():
     raise RuntimeError('FLASK_SECRET_KEY debe estar configurada en Render')
+app.permanent_session_lifetime = timedelta(days=30)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.getenv('FLASK_ENV', '').lower() == 'production',
+)
 
 # Use absolute path for database to avoid issues on different deployment environments
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -896,6 +903,31 @@ def init_db():
 init_db()
 
 
+def _safe_next_path(value: str | None, default: str = "/") -> str:
+    value = (value or "").strip()
+    if value.endswith("?"):
+        value = value[:-1]
+    if not value.startswith("/") or value.startswith("//"):
+        return default
+    return value
+
+
+def _current_github_session() -> dict | None:
+    session_id = str(session.get("github_session_id", "")).strip()
+    if session_id:
+        cached = DEVICE_LINK_STORE.get_github_session(session_id)
+        if cached:
+            session["github_profile"] = cached["profile"]
+            return cached
+        session.pop("github_session_id", None)
+        session.pop("github_profile", None)
+    return None
+
+
+def _login_redirect(next_path: str):
+    return redirect(f"/login?{urlencode({'next': _safe_next_path(next_path)})}")
+
+
 def _public_base_url() -> str:
     configured = os.getenv("RENDER_AUTH_BASE_URL", "https://packagemaker.onrender.com").strip().rstrip("/")
     return configured or request.url_root.rstrip("/")
@@ -908,55 +940,81 @@ def _link_response(payload: dict, status: int = 200):
     return response
 
 
+@app.get("/login")
+def login_page():
+    next_path = _safe_next_path(request.args.get("next"), "/")
+    cached = _current_github_session()
+    if cached:
+        return redirect(next_path)
+    if not os.getenv("GITHUB_CLIENT_ID", "").strip():
+        return render_template("login.html", github_url="", next_path=next_path, setup_error=True)
+    try:
+        auth_request = DEVICE_LINK_STORE.create_auth_request()
+        session["login_next"] = next_path
+        github_url = build_github_url(_public_base_url(), auth_request, "/auth/github/callback")
+    except RuntimeError as error:
+        app.logger.error("No se pudo iniciar login: %s", error)
+        return render_template("login.html", github_url="", next_path=next_path, setup_error=True)
+    return render_template("login.html", github_url=github_url, next_path=next_path, setup_error=False)
+
+
+@app.get("/auth/github/callback")
+def github_login_callback():
+    state = request.args.get("state", "").strip()
+    code = request.args.get("code", "").strip()
+    row = DEVICE_LINK_STORE.get_by_state(state) if state else None
+    next_path = _safe_next_path(session.pop("login_next", "/"), "/")
+    if row is None or not hmac.compare_digest(row["state_hash"], DEVICE_LINK_STORE.digest(state)):
+        return render_template("login.html", github_url="", next_path=next_path, error="El enlace de GitHub expiró. Inténtalo de nuevo.")
+    if not code:
+        DEVICE_LINK_STORE.fail(row["request_id"])
+        return render_template("login.html", github_url="", next_path=next_path, error="La autorización fue cancelada.")
+    try:
+        access_token, profile = exchange_github_code(_public_base_url(), row, code, "/auth/github/callback")
+        session_id = DEVICE_LINK_STORE.complete_web_authorization(row["request_id"], access_token, profile)
+        session.permanent = True
+        session["github_session_id"] = session_id
+        session["github_profile"] = profile
+        return redirect(next_path)
+    except (requests.RequestException, RuntimeError, ValueError) as error:
+        app.logger.warning("Falló el login de GitHub: %s", error)
+        return render_template("login.html", github_url="", next_path=next_path, error="No se pudo completar el acceso con GitHub. Vuelve a intentarlo.")
+
+
+@app.get("/logout")
+def logout():
+    session.pop("github_session_id", None)
+    session.pop("github_profile", None)
+    session.pop("login_next", None)
+    return redirect("/")
+
+
 @app.get("/linkdevice")
 def linkdevice():
+    if _current_github_session() is None:
+        return _login_redirect(request.full_path)
     request_id = request.args.get("request_id", "").strip()
     linked = False
     if not request_id:
-        if not os.getenv("GITHUB_CLIENT_ID", "").strip():
-            return render_template(
-                "linkdevice.html",
-                request_id="",
-                github_url="",
-                linked=False,
-                setup_error=True,
-                expired=False,
-                status_url="",
-            )
-        try:
-            auth_request = DEVICE_LINK_STORE.create_auth_request()
-            github_url = build_github_url(_public_base_url(), auth_request)
-        except RuntimeError as error:
-            app.logger.error("No se pudo iniciar linkdevice: %s", error)
-            return render_template(
-                "linkdevice.html",
-                request_id="",
-                github_url="",
-                linked=False,
-                setup_error=True,
-                expired=False,
-                status_url="",
-            )
-        request_id = auth_request.request_id
-    else:
-        row = DEVICE_LINK_STORE.get(request_id)
-        if row is None:
-            return render_template(
-                "linkdevice.html",
-                request_id="",
-                github_url="",
-                linked=False,
-                setup_error=False,
-                expired=True,
-                status_url="",
-            ), 410
-        auth_request = None
-        github_url = ""
-        linked = DEVICE_LINK_STORE.browser_status(request_id).get("status") == "linked"
+        cached = _current_github_session()
+        request_id, _ = DEVICE_LINK_STORE.create_ready_link(cached["access_token"], cached["profile"])
+        return redirect(f"/linkdevice?request_id={request_id}")
+    row = DEVICE_LINK_STORE.get(request_id)
+    if row is None:
+        return render_template(
+            "linkdevice.html",
+            request_id="",
+            github_url="",
+            linked=False,
+            setup_error=False,
+            expired=True,
+            status_url="",
+        ), 410
+    linked = DEVICE_LINK_STORE.browser_status(request_id).get("status") == "linked"
     return render_template(
         "linkdevice.html",
         request_id=request_id,
-        github_url=github_url,
+        github_url="",
         linked=linked,
         setup_error=False,
         expired=False,
@@ -1699,6 +1757,8 @@ def index():
 
 @app.route('/download')
 def download():
+    if _current_github_session() is None:
+        return _login_redirect(request.full_path)
     print(f"DEBUG: Accessing download from {request.remote_addr}")
     metadata = get_xml_metadata()
     version = get_latest_release_version() or metadata.get("version", "v3.2.7")
@@ -1801,6 +1861,8 @@ def pwa_mode():
 
 @app.route('/api/download.sh')
 def download_sh():
+    if _current_github_session() is None:
+        return _login_redirect(request.full_path)
     script = """#!/bin/bash
 # Package Maker - Auto Installer
 RED='\\033[0;31m'

@@ -1,310 +1,121 @@
 {% extends "base.html" %}
 {% block title %}Inicio{% endblock %}
 {% block extra_css %}
-/* Hero Section */
-.hero-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: var(--space-8); position: relative; overflow: hidden; }
-.hero-badge { display: inline-flex; align-items: center; gap: var(--space-2); background: rgba(94, 106, 210, 0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(94, 106, 210, 0.2); padding: var(--space-2) var(--space-5); border-radius: var(--radius-full); margin-bottom: var(--space-8); font-size: 0.875rem; font-weight: 600; animation: fadeInUp 0.8s var(--ease-out) 0.2s both; }
-.hero-badge::before { content: ''; width: 8px; height: 8px; background: linear-gradient(135deg, #6bff6b, #44ff44); border-radius: 50%; animation: pulse-glow 2s infinite; }
-@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(100, 255, 100, 0.4); } 50% { box-shadow: 0 0 20px 5px rgba(100, 255, 100, 0.2); } }
-.hero-title { font-family: var(--font-display); font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; line-height: 1.1; margin-bottom: var(--space-6); background: linear-gradient(135deg, var(--foreground) 0%, var(--accent) 50%, #7C5CDD 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: fadeInUp 0.8s var(--ease-out) 0.4s both; }
-.hero-subtitle { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--foreground-muted); max-width: 700px; margin: 0 auto var(--space-10); line-height: 1.7; animation: fadeInUp 0.8s var(--ease-out) 0.6s both; }
-.hero-buttons { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; animation: fadeInUp 0.8s var(--ease-out) 0.8s both; }
-.hero-buttons .btn { padding: var(--space-4) var(--space-8); font-size: 1rem; }
-.floating-orbs { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: -1; }
-.orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; animation: float-orb 20s ease-in-out infinite; }
-.orb-1 { width: 40vw; height: 40vw; background: var(--accent); top: -10%; left: -10%; }
-.orb-2 { width: 30vw; height: 30vw; background: #7C5CDD; bottom: 10%; right: -5%; animation-delay: -5s; }
-.orb-3 { width: 25vw; height: 25vw; background: #5CDDC9; top: 30%; right: 20%; animation-delay: -10s; }
-@keyframes float-orb { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(5%, 10%) scale(1.05); } 50% { transform: translate(-5%, 5%) scale(0.95); } 75% { transform: translate(10%, -5%) scale(1.1); } }
-/* Liquid Glass Cards */
-.liquid-card { background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-xl); overflow: hidden; position: relative; transition: all 0.5s var(--ease-out); box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 20px 50px rgba(0, 0, 0, 0.28); }
-.liquid-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%); pointer-events: none; }
-.liquid-card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 30px 70px rgba(0, 0, 0, 0.35), 0 0 45px rgba(255, 122, 26, 0.12); }
-/* Mica Frame */
-.mica-frame { background: linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); overflow: hidden; position: relative; padding: 0.35rem; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 18px 40px rgba(0, 0, 0, 0.28); }
-.mica-frame::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 35%); pointer-events: none; z-index: 1; }
-.mica-frame img { width: 100%; display: block; transition: transform 0.5s var(--ease-out); border-radius: calc(var(--radius-lg) - 8px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 16px 32px rgba(0,0,0,0.28); }
-.liquid-card:hover .mica-frame img { transform: scale(1.04) translateY(-3px); }
-/* Feature Icons */
-.feature-icon { width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent) 0%, #7C5CDD 100%); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 8px 24px rgba(94, 106, 210, 0.3); transition: all 0.3s var(--ease-out); }
-.liquid-card:hover .feature-icon { transform: scale(1.1) rotate(5deg); box-shadow: 0 12px 32px rgba(94, 106, 210, 0.4); }
-/* Code Blocks */
-.code-block { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: var(--radius-md); padding: var(--space-4); font-family: monospace; font-size: 0.875rem; color: var(--accent); }
-/* Scroll Reveal */
-.scroll-reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s var(--ease-out); }
-.scroll-reveal.revealed { opacity: 1; transform: translateY(0); }
-/* CTA Section */
-.cta-section { background: linear-gradient(135deg, rgba(94, 106, 210, 0.1) 0%, rgba(124, 92, 221, 0.1) 100%); border: 1px solid rgba(94, 106, 210, 0.2); border-radius: var(--radius-xl); padding: var(--space-12); text-align: center; position: relative; overflow: hidden; }
-.cta-section::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(94, 106, 210, 0.15), transparent 70%); pointer-events: none; }
-/* Section Titles */
-.section-title { font-size: clamp(1.75rem, 4vw, 2.5rem); margin-bottom: var(--space-4); }
-.section-subtitle { color: var(--foreground-muted); max-width: 600px; margin: 0 auto; }
-/* Feature List */
-.feature-list { list-style: none; padding: 0; margin: 0; }
-.feature-list li { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
-.feature-list li:last-child { border-bottom: none; }
-.feature-list li i { color: var(--accent); margin-top: 4px; }
-/* Platform Pills */
-.platform-pills { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; }
-.platform-pill { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); font-size: 0.875rem; display: flex; align-items: center; gap: var(--space-2); }
-.platform-pill i { color: var(--accent); }
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
-.shimmer-text { background: linear-gradient(90deg, var(--foreground) 0%, var(--accent) 25%, #7C5CDD 50%, var(--accent) 75%, var(--foreground) 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: shimmer 3s linear infinite; }
-@media (max-width: 768px) { .liquid-card:hover { transform: translateY(-4px) scale(1.01); } }
+.home-page { --home-accent:#ff7a1a; --home-violet:#8b7cff; --home-mint:#62e6c7; max-width:1240px; margin:0 auto; }
+.home-hero { min-height:calc(100vh - 92px); display:grid; grid-template-columns:minmax(0, .88fr) minmax(420px, 1.12fr); align-items:center; gap:clamp(2rem, 6vw, 7rem); padding:clamp(3rem, 8vw, 7rem) 0 5rem; }
+.hero-copy { position:relative; z-index:2; }
+.eyebrow { display:inline-flex; align-items:center; gap:.55rem; padding:.5rem .8rem; border:1px solid rgba(255,255,255,.13); border-radius:999px; background:rgba(255,255,255,.055); color:#d9e0e9; font-size:.74rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+.eyebrow-dot { width:8px; height:8px; border-radius:50%; background:var(--home-mint); box-shadow:0 0 0 5px rgba(98,230,199,.1), 0 0 18px rgba(98,230,199,.8); }
+.home-hero h1 { max-width:720px; margin:1.5rem 0 1.25rem; font-size:clamp(3.2rem, 7.2vw, 7.3rem); line-height:.96; letter-spacing:-.075em; }
+.hero-gradient { background:linear-gradient(105deg,#f6f8fb 0%,#f6f8fb 28%,#ff9b58 54%,#a995ff 78%,#f6f8fb 100%); background-size:180% auto; -webkit-background-clip:text; background-clip:text; color:transparent; animation:hero-shimmer 7s ease-in-out infinite; }
+.hero-copy > p { max-width:54ch; color:#a8b1bd; font-size:clamp(1rem,1.5vw,1.18rem); line-height:1.75; }
+.hero-actions { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:2rem; }
+.hero-actions .btn { padding:.85rem 1.15rem; border-radius:14px; }
+.hero-actions .btn-primary { background:var(--home-accent); box-shadow:0 12px 34px rgba(255,122,26,.25); }
+.hero-actions .btn-primary:hover { box-shadow:0 18px 48px rgba(255,122,26,.34); }
+.hero-note { display:flex; gap:.7rem; align-items:center; margin-top:1.25rem; color:#7f8996; font-size:.84rem; }
+.hero-note svg { width:17px; height:17px; color:var(--home-mint); }
+.product-stage { position:relative; min-height:540px; display:grid; place-items:center; }
+.stage-glow { position:absolute; width:80%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle,rgba(255,122,26,.23),rgba(139,124,255,.13) 38%,transparent 70%); filter:blur(24px); animation:stage-breathe 6s ease-in-out infinite; }
+.orbit { position:absolute; width:85%; aspect-ratio:1; border:1px solid rgba(255,255,255,.1); border-radius:50%; transform:rotate(-20deg); }
+.orbit::before,.orbit::after { content:''; position:absolute; width:10px; height:10px; border-radius:50%; background:var(--home-mint); box-shadow:0 0 22px 8px rgba(98,230,199,.28); }
+.orbit::before { left:8%; top:20%; }.orbit::after { right:9%; bottom:18%; background:var(--home-accent); box-shadow:0 0 22px 8px rgba(255,122,26,.3); }
+.workspace-window { position:relative; width:min(100%,560px); border:1px solid rgba(255,255,255,.17); border-radius:24px; overflow:hidden; background:linear-gradient(145deg,rgba(28,33,43,.94),rgba(11,13,17,.97)); box-shadow:0 35px 90px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.14); transform:rotate(2deg); animation:window-float 8s ease-in-out infinite; }
+.window-top { height:46px; display:flex; align-items:center; gap:7px; padding:0 17px; border-bottom:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.045); }
+.window-dot { width:10px; height:10px; border-radius:50%; background:#ff6b6b; }.window-dot:nth-child(2){background:#ffd166}.window-dot:nth-child(3){background:#55d68a}
+.window-title { margin-left:8px; color:#7e8a98; font:600 11px var(--font-mono); }
+.window-body { display:grid; grid-template-columns:145px 1fr; min-height:360px; }
+.window-sidebar { padding:18px 12px; border-right:1px solid rgba(255,255,255,.07); background:rgba(0,0,0,.13); }
+.side-label { color:#687483; font:700 9px var(--font-mono); letter-spacing:.1em; text-transform:uppercase; padding:0 8px 10px; }
+.side-item { display:flex; align-items:center; gap:8px; padding:9px 8px; border-radius:9px; color:#aeb7c3; font-size:11px; }.side-item.active { background:rgba(255,122,26,.14); color:#fff; }.side-item svg { width:14px; height:14px; color:var(--home-accent); }
+.window-main { padding:22px; }.main-kicker { color:var(--home-accent); font:700 10px var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }.main-title { margin:8px 0 20px; color:#f6f8fb; font-size:28px; letter-spacing:-.05em; }
+.build-flow { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; align-items:center; margin:20px 0 26px; }.flow-line { position:absolute; top:25px; left:17%; right:17%; height:1px; background:linear-gradient(90deg,var(--home-accent),var(--home-violet),var(--home-mint)); opacity:.8; }.flow-node { position:relative; z-index:1; display:grid; justify-items:center; gap:8px; color:#8d99a6; font-size:10px; }.flow-icon { width:50px; height:50px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.15); border-radius:16px; background:#181e28; color:#f6f8fb; box-shadow:0 8px 22px rgba(0,0,0,.3); }.flow-node:nth-child(2) .flow-icon{color:var(--home-violet)}.flow-node:nth-child(3) .flow-icon{color:var(--home-mint)}.flow-icon svg{width:21px;height:21px}
+.code-preview { border:1px solid rgba(255,255,255,.09); border-radius:14px; background:#090b0e; padding:14px; color:#a8b1bd; font:11px/1.75 var(--font-mono); }.code-preview .accent{color:var(--home-accent)}.code-preview .mint{color:var(--home-mint)}.code-preview .violet{color:var(--home-violet)}
+.stage-pill { position:absolute; right:-4%; top:16%; display:flex; align-items:center; gap:.5rem; padding:.7rem .85rem; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(18,22,29,.8); color:#dfe5ec; font-size:.73rem; box-shadow:0 15px 35px rgba(0,0,0,.35); backdrop-filter:blur(16px); animation:badge-drift 6s ease-in-out infinite; }.stage-pill svg{width:16px;height:16px;color:var(--home-mint)}
+.scroll-cue { display:flex; justify-content:center; align-items:center; gap:.65rem; margin-top:-1rem; color:#778390; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; }.scroll-cue span{width:34px;height:52px;border:1px solid rgba(255,255,255,.2);border-radius:20px;position:relative}.scroll-cue span::after{content:'';position:absolute;width:4px;height:8px;border-radius:4px;background:var(--home-accent);left:50%;top:10px;transform:translateX(-50%);animation:scroll-dot 1.7s ease-in-out infinite}
+.home-section { padding:clamp(5rem,10vw,9rem) 0; }.section-intro { display:flex; align-items:end; justify-content:space-between; gap:2rem; margin-bottom:2.5rem; }.section-intro h2 { max-width:14ch; margin:0; font-size:clamp(2.3rem,5vw,4.4rem); line-height:1; letter-spacing:-.065em; }.section-intro p { max-width:42ch; margin:0; color:#8f9aa7; }
+.story-grid { display:grid; grid-template-columns:.8fr 1.4fr; gap:1.25rem; align-items:stretch; }.story-list { display:grid; gap:.75rem; }.story-card { display:flex; gap:1rem; align-items:flex-start; padding:1.2rem; border:1px solid rgba(255,255,255,.1); border-radius:18px; background:rgba(255,255,255,.045); transition:transform .25s var(--ease-out),border-color .25s var(--ease-out),background .25s var(--ease-out); }.story-card:hover,.story-card.is-active{transform:translateX(6px); border-color:rgba(255,122,26,.45); background:rgba(255,122,26,.08); }.story-index{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:11px;background:#202631;color:var(--home-accent);font:700 12px var(--font-mono)}.story-card h3{margin:0 0 .3rem;font-size:1rem}.story-card p{margin:0;font-size:.86rem;color:#8f9aa7;line-height:1.5}
+.story-screen { min-height:420px; padding:clamp(1.3rem,4vw,2rem); border:1px solid rgba(255,255,255,.13); border-radius:26px; background:radial-gradient(circle at 80% 10%,rgba(139,124,255,.18),transparent 40%),linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.03)); overflow:hidden; position:relative; }.story-screen::after{content:'';position:absolute;inset:auto -20% -55% 20%;height:80%;background:radial-gradient(circle,rgba(98,230,199,.12),transparent 65%);pointer-events:none}.screen-top{display:flex;justify-content:space-between;align-items:center;color:#7b8795;font:10px var(--font-mono)}.screen-status{display:inline-flex;align-items:center;gap:.45rem;color:var(--home-mint)}.screen-status i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}.screen-content{position:relative;z-index:1;display:grid;grid-template-columns:1fr .8fr;gap:2rem;align-items:center;min-height:330px}.screen-content h3{font-size:clamp(1.8rem,3.7vw,3rem);letter-spacing:-.06em;line-height:1.05;margin:.85rem 0}.screen-content p{color:#a8b1bd;max-width:34ch}.screen-label{color:var(--home-accent);font:700 11px var(--font-mono);text-transform:uppercase;letter-spacing:.1em}.progress-stack{display:grid;gap:.7rem}.progress-item{display:flex;align-items:center;gap:.7rem;padding:.85rem;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(0,0,0,.16);color:#c8d0d9;font-size:.82rem}.progress-item svg{width:18px;height:18px;color:var(--home-accent)}.progress-item.done svg{color:var(--home-mint)}
+.capability-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.capability-card{min-height:210px;padding:1.4rem;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));transition:transform .25s var(--ease-out),border-color .25s var(--ease-out)}.capability-card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.24)}.capability-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:rgba(255,122,26,.13);color:var(--home-accent);margin-bottom:1rem}.capability-icon svg{width:21px;height:21px}.capability-card h3{margin:0 0 .5rem}.capability-card p{font-size:.9rem;color:#8f9aa7;line-height:1.55}
+.home-cta{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2rem;padding:clamp(1.6rem,4vw,3rem);border:1px solid rgba(255,255,255,.13);border-radius:26px;background:linear-gradient(110deg,rgba(255,122,26,.16),rgba(139,124,255,.13) 60%,rgba(98,230,199,.1));overflow:hidden;position:relative}.home-cta::before{content:'';position:absolute;width:320px;height:320px;right:-90px;top:-170px;border:1px solid rgba(255,255,255,.17);border-radius:50%;box-shadow:0 0 0 30px rgba(255,255,255,.025),0 0 0 60px rgba(255,255,255,.02)}.home-cta h2{position:relative;z-index:1;margin:0 0 .5rem;font-size:clamp(1.8rem,4vw,3.4rem);letter-spacing:-.06em}.home-cta p{position:relative;z-index:1;margin:0;max-width:50ch}.home-cta .btn{position:relative;z-index:1;white-space:nowrap}
+@keyframes hero-shimmer{0%,100%{background-position:0% center}50%{background-position:100% center}}@keyframes stage-breathe{0%,100%{transform:scale(.95);opacity:.65}50%{transform:scale(1.08);opacity:1}}@keyframes window-float{0%,100%{transform:rotate(2deg) translateY(0)}50%{transform:rotate(1deg) translateY(-12px)}}@keyframes badge-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-8px,8px)}}@keyframes scroll-dot{0%,100%{transform:translate(-50%,0);opacity:.6}50%{transform:translate(-50%,19px);opacity:1}}
+@media (max-width:900px){.home-hero{grid-template-columns:1fr;min-height:auto;padding-top:4.5rem}.product-stage{min-height:480px}.stage-pill{right:0}.story-grid{grid-template-columns:1fr}.capability-grid{grid-template-columns:1fr 1fr}.home-cta{grid-template-columns:1fr}}
+@media (max-width:600px){.home-hero h1{font-size:clamp(3rem,16vw,5rem)}.product-stage{min-height:365px}.workspace-window{transform:none}.window-body{grid-template-columns:1fr}.window-sidebar{display:none}.window-main{padding:16px}.window-title{display:none}.build-flow{gap:4px}.flow-icon{width:42px;height:42px}.story-screen{min-height:520px}.screen-content{grid-template-columns:1fr;gap:1.3rem}.capability-grid{grid-template-columns:1fr}.section-intro{display:block}.section-intro p{margin-top:1rem}.home-cta .btn{width:100%}}
+@media (prefers-reduced-motion:reduce){.hero-gradient,.stage-glow,.workspace-window,.stage-pill,.scroll-cue span::after{animation:none}.story-card:hover,.story-card.is-active,.capability-card:hover{transform:none}}
 {% endblock %}
-
 {% block content %}
-<div class="floating-orbs">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+<div class="home-page">
+  <section class="home-hero" aria-labelledby="hero-title">
+    <div class="hero-copy" data-aos="fade-up" data-aos-duration="700">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> {{ translations.hero_badge|replace('✨ ','') }}</div>
+      <h1 id="hero-title">Tu código.<br><span class="hero-gradient">Tu paquete.</span><br>Tu momento.</h1>
+      <p>{{ translations.hero_subtitle }}</p>
+      <div class="hero-actions">
+        <a href="/download" class="btn btn-primary"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>{{ translations.hero_download }}</a>
+        <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank" rel="noopener" class="btn btn-secondary"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2.4a9.6 9.6 0 0 0-3.04 18.71c.48.09.66-.21.66-.46v-1.63c-2.69.58-3.26-1.14-3.26-1.14-.44-1.12-1.08-1.42-1.08-1.42-.88-.6.07-.59.07-.59.97.07 1.48 1 1.48 1 .86 1.47 2.26 1.05 2.81.8.09-.62.34-1.05.61-1.29-.2-2.15-1.08-4.41-4.8-4.41-1.06 0-1.92.38-2.6 1-.25-.1-1.23-.43-2.56.1 0 0-.26.82.99 2.64A9.16 9.16 0 0 1 12 7.1c.82 0 1.64.11 2.41.32 1.82-1.25 2.64-.99 2.64-.99.53 1.33.2 2.31.1 2.56.62.68 1 1.54 1 2.6 0 3.73-2.27 4.55-4.43 4.79.35.3.66.88.66 1.78v2.63c0 .25.17.55.67.46A9.6 9.6 0 0 0 12 2.4Z"/></svg>{{ translations.hero_github }}</a>
+      </div>
+      <div class="hero-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg> Un flujo limpio para crear, empaquetar y compartir.</div>
+    </div>
+    <div class="product-stage" data-aos="fade-left" data-aos-duration="900" aria-label="Vista animada del flujo de PackageMaker">
+      <div class="stage-glow" aria-hidden="true"></div><div class="orbit" aria-hidden="true"></div>
+      <div class="workspace-window">
+        <div class="window-top"><span class="window-dot"></span><span class="window-dot"></span><span class="window-dot"></span><span class="window-title">packagemaker / workspace</span></div>
+        <div class="window-body">
+          <aside class="window-sidebar"><div class="side-label">Workspace</div><div class="side-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>Overview</div><div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg>Builds</div><div class="side-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8L12 3Z"/></svg>MoonFix</div></aside>
+          <div class="window-main"><div class="main-kicker">Ready to ship</div><div class="main-title">A beautiful build<br>in one motion.</div><div class="build-flow"><div class="flow-line"></div><div class="flow-node"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h3"/></svg></div><span>Write</span></div><div class="flow-node"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg></div><span>Build</span></div><div class="flow-node"><div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg></div><span>Ship</span></div></div><div class="code-preview"><span class="violet">project</span> = <span class="accent">package</span>(<span class="mint">"my_app"</span>)<br><span class="violet">project</span>.build(target=<span class="mint">"windows"</span>)<br><span class="accent">✓ package ready</span></div></div>
+        </div>
+      </div>
+      <div class="stage-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg> build completed</div>
+    </div>
+  </section>
+  <div class="scroll-cue" aria-hidden="true"><span></span> baja para ver el flujo</div>
+
+  <section class="home-section" aria-labelledby="story-title">
+    <div class="section-intro"><h2 id="story-title">Una mini película para tu workflow.</h2><p>La herramienta desaparece para que se sienta el resultado: menos fricción, más control y una salida lista para compartir.</p></div>
+    <div class="story-grid">
+      <div class="story-list">
+        <article class="story-card is-active" data-scene="0"><div class="story-index">01</div><div><h3>Escribe sin ruido</h3><p>Tu proyecto empieza en un espacio limpio, enfocado y preparado.</p></div></article>
+        <article class="story-card" data-scene="1"><div class="story-index">02</div><div><h3>Construye con intención</h3><p>Dependencias, plataformas y limpieza en un solo movimiento.</p></div></article>
+        <article class="story-card" data-scene="2"><div class="story-index">03</div><div><h3>Distribuye con confianza</h3><p>Un paquete reconocible, documentado y listo para salir.</p></div></article>
+      </div>
+      <div class="story-screen" id="story-screen" data-scene="0"><div class="screen-top"><span>package-maker / narrative</span><span class="screen-status"><i></i> live preview</span></div><div class="screen-content"><div><div class="screen-label" id="scene-label">01 / WRITE</div><h3 id="scene-title">El primer movimiento es tuyo.</h3><p id="scene-copy">Un espacio de trabajo claro convierte una idea en un proyecto que se puede tocar.</p></div><div class="progress-stack"><div class="progress-item done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg><span>workspace creado</span></div><div class="progress-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg><span id="scene-progress">build preparado</span></div><div class="progress-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/></svg><span>resultado en camino</span></div></div></div></div></div>
+    </div>
+  </section>
+
+  <section class="home-section" aria-labelledby="capabilities-title">
+    <div class="section-intro"><h2 id="capabilities-title">Potencia que se siente simple.</h2><p>PackageMaker combina una interfaz cuidada con las herramientas que necesitas para llevar Python más lejos.</p></div>
+    <div class="capability-grid">
+      <article class="capability-card"><div class="capability-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg></div><h3>Empaquetado claro</h3><p>Detecta scripts, gestiona dependencias y construye una salida coherente.</p></article>
+      <article class="capability-card"><div class="capability-icon" style="color:var(--home-violet);background:rgba(139,124,255,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 5 6v5c0 4.4 2.98 8.53 7 10 4.02-1.47 7-5.6 7-10V6l-7-3Z"/><path d="m9.2 12 1.8 1.8 4-4"/></svg></div><h3>Protección integrada</h3><p>Cuida tu trabajo con opciones de blindado y una distribución más controlada.</p></article>
+      <article class="capability-card"><div class="capability-icon" style="color:var(--home-mint);background:rgba(98,230,199,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17 10 11l4 4 6-7"/><path d="M20 8v5h-5"/></svg></div><h3>Listo para compartir</h3><p>Windows, Linux y Android en una experiencia pensada para publicar sin drama.</p></article>
+    </div>
+  </section>
+
+  <section class="home-section" style="padding-top:0" aria-label="Llamada a la acción"><div class="home-cta"><div><h2>Haz que tu próximo build se sienta bien.</h2><p>Entra con GitHub, descarga la herramienta y vuelve a tu código con todo listo.</p></div><a href="/download" class="btn btn-primary">{{ translations.cta_button }} <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5"/></svg></a></div></section>
 </div>
-
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="hero-badge">{{ translations.hero_badge }}</div>
-    <h1 class="hero-title" style="max-width: min(100%, 900px); margin-left: auto; margin-right: auto; word-break: break-word; overflow-wrap: anywhere;">{{ translations.hero_title }}</h1>
-    <p class="hero-subtitle">{{ translations.hero_subtitle }}</p>
-    <div class="hero-buttons">
-        <a href="/download" class="btn btn-primary"><i class="fas fa-rocket"></i> {{ translations.hero_download }}</a>
-        <a href="https://github.com/JesusQuijada34/packagemaker" target="_blank" class="btn btn-secondary"><i class="fab fa-github"></i> {{ translations.hero_github }}</a>
-    </div>
-    <div class="platform-pills" style="margin-top: var(--space-8); animation: fadeInUp 0.8s var(--ease-out) 1s both;">
-        <span class="platform-pill"><i class="fab fa-windows"></i> {{ translations.hero_platform_windows }}</span>
-        <span class="platform-pill"><i class="fab fa-android"></i> {{ translations.hero_platform_android }}</span>
-        <span class="platform-pill"><i class="fab fa-linux"></i> {{ translations.hero_platform_linux }}</span>
-    </div>
-</section>
-
-<!-- Interface Preview -->
-<section style="margin-top: var(--space-8);" class="scroll-reveal">
-    <div class="bento-item liquid-card" style="grid-column: span 12;">
-        <div style="text-align: center; margin-bottom: var(--space-6);">
-            <h2 class="section-title shimmer-text">{{ translations.section_interface_title }}</h2>
-            <p class="section-subtitle">{{ translations.section_interface_subtitle }}</p>
-        </div>
-        <div class="mica-frame" style="border-radius: var(--radius-xl);">
-            <img src="/assets/screenshots/gui-1.png" alt="Pantalla Inicial" loading="lazy">
-        </div>
-    </div>
-</section>
-
-<!-- Features Grid -->
-<section style="margin-top: var(--space-8);">
-    <div class="bento-grid">
-        <!-- Compilation -->
-        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div class="feature-icon"><i class="fas fa-box-open" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">{{ translations.feature_projects_title }}</h3>
-            </div>
-            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">{{ translations.feature_projects_desc }}</p>
-            <ul class="feature-list">
-                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_projects_item_1 | safe }}</span></li>
-                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_projects_item_2 }}</span></li>
-                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_projects_item_3 }}</span></li>
-            </ul>
-        </div>
-
-        <!-- Security -->
-        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div class="feature-icon" style="background: linear-gradient(135deg, #6bff6b 0%, #44ff44 100%);"><i class="fas fa-shield-alt" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">{{ translations.feature_security_title }}</h3>
-            </div>
-            <p style="font-size: 0.9375rem; margin-bottom: var(--space-4);">{{ translations.feature_security_desc }}</p>
-            <ul class="feature-list">
-                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_security_item_1 | safe }}</span></li>
-                <li><i class="fas fa-check-circle"></i><span>{{ translations.feature_security_item_2 | safe }}</span></li>
-            </ul>
-        </div>
-    </div>
-</section>
-
-<!-- Build Section -->
-<section style="margin-top: var(--space-8);" class="scroll-reveal">
-    <div class="bento-item liquid-card" style="grid-column: span 12;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center;">
-            <div>
-                <h2 class="section-title">{{ translations.feature_build_title }}</h2>
-                <p class="section-subtitle" style="text-align: left; margin: 0;">{{ translations.feature_build_desc }}</p>
-                <div style="margin-top: var(--space-6);">
-                    <div class="code-block" style="margin-bottom: var(--space-3);">
-                        <code>{{ translations.feature_build_item_1 }}</code>
-                    </div>
-                    <div class="code-block" style="margin-bottom: var(--space-3);">
-                        <code>{{ translations.feature_build_item_2 }}</code>
-                    </div>
-                    <div class="code-block">
-                        <code>{{ translations.feature_build_item_3 }}</code>
-                    </div>
-                </div>
-            </div>
-            <div class="mica-frame" style="border-radius: var(--radius-xl);">
-                <img src="/assets/screenshots/gui-2.png" alt="Sección Construir" loading="lazy">
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Multi-Platform -->
-<section style="margin-top: var(--space-8);">
-    <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 12; text-align: center;">
-        <h2 class="section-title"><i class="fas fa-globe" style="color: var(--accent); margin-right: var(--space-3);"></i>{{ translations.feature_multiplatform_title }}</h2>
-        <p class="section-subtitle" style="margin-bottom: var(--space-8);">{{ translations.feature_multiplatform_desc }}</p>
-        <div class="platform-pills" style="justify-content: center;">
-            <span class="platform-pill"><i class="fab fa-windows"></i> Windows (.exe)</span>
-            <span class="platform-pill"><i class="fab fa-android"></i> Android (APK)</span>
-            <span class="platform-pill"><i class="fab fa-linux"></i> Linux (AppImage)</span>
-        </div>
-    </div>
-</section>
-
-<!-- App Manager & Config -->
-<section style="margin-top: var(--space-8);">
-    <div class="bento-grid">
-        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div class="feature-icon" style="background: linear-gradient(135deg, #ff6b9d 0%, #ffa500 100%);"><i class="fas fa-th-large" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">{{ translations.feature_apps_title }}</h3>
-            </div>
-            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">{{ translations.feature_apps_desc }}</p>
-            <div class="mica-frame">
-                <img src="/assets/screenshots/gui-3.png" alt="Gestor de Apps" loading="lazy">
-            </div>
-        </div>
-        <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 6;">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div class="feature-icon" style="background: linear-gradient(135deg, #7C5CDD 0%, #5CDDC9 100%);"><i class="fas fa-cog" style="color: white;"></i></div>
-                <h3 style="margin-bottom: 0;">{{ translations.feature_config_title }}</h3>
-            </div>
-            <p style="font-size: 0.875rem; margin-bottom: var(--space-4);">{{ translations.feature_config_desc }}</p>
-            <div class="mica-frame">
-                <img src="/assets/screenshots/gui-4.png" alt="Configuración" loading="lazy">
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- MoonFix -->
-<section style="margin-top: var(--space-8);" class="scroll-reveal">
-    <div class="bento-item liquid-card" style="grid-column: span 12;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center;">
-            <div class="mica-frame" style="border-radius: var(--radius-xl);">
-                <img src="/assets/screenshots/gui-5.png" alt="MoonFix" loading="lazy">
-            </div>
-            <div>
-                <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                    <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fas fa-moon" style="color: white;"></i></div>
-                    <h3 style="margin-bottom: 0; font-size: 1.5rem;">MoonFix</h3>
-                </div>
-                <h4 style="color: var(--foreground-muted); font-weight: 400; margin-bottom: var(--space-4);">{{ translations.feature_moonfix_title }}</h4>
-                <p style="margin-bottom: var(--space-4);">{{ translations.feature_moonfix_desc }}</p>
-                <div class="code-block"><code>moonfix --repair --all</code></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- About -->
-<section style="margin-top: var(--space-8);" class="scroll-reveal">
-    <div class="bento-item liquid-card" style="grid-column: span 12;">
-        <div style="text-align: center; margin-bottom: var(--space-6);">
-            <div class="feature-icon" style="margin: 0 auto var(--space-4);"><i class="fas fa-info-circle" style="color: white;"></i></div>
-            <h3 style="font-size: 1.5rem;">{{ translations.feature_about_title }}</h3>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); text-align: center;">
-            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_framework }}</div>
-                <div style="font-weight: 700;">{{ translations.feature_about_framework_value }}</div>
-            </div>
-            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_ui }}</div>
-                <div style="font-weight: 700;">{{ translations.feature_about_ui_value }}</div>
-            </div>
-            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_license }}</div>
-                <div style="font-weight: 700;">{{ translations.feature_about_license_value }}</div>
-            </div>
-            <div style="background: var(--bg-elevated); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                <div style="font-size: 0.6875rem; color: var(--foreground-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2);">{{ translations.feature_about_developer }}</div>
-                <div style="font-weight: 700;">{{ translations.feature_about_developer_value }}</div>
-            </div>
-        </div>
-        <div class="mica-frame" style="margin-top: var(--space-6); border-radius: var(--radius-xl);">
-            <img src="/assets/screenshots/about.png" alt="Acerca de" loading="lazy">
-        </div>
-    </div>
-</section>
-
-<!-- CLI Section -->
-<section style="margin-top: var(--space-8);" class="scroll-reveal">
-    <div class="bento-item liquid-card" style="grid-column: span 12;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: center;">
-            <div>
-                <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                    <div class="feature-icon" style="background: linear-gradient(135deg, #5CDDC9 0%, #7C5CDD 100%);"><i class="fas fa-terminal" style="color: white;"></i></div>
-                    <h3 style="margin-bottom: 0; font-size: 1.5rem;">{{ translations.feature_cli_title }}</h3>
-                </div>
-                <p style="margin-bottom: var(--space-4);">{{ translations.feature_cli_desc }}</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
-                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">create</code></div>
-                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">compile</code></div>
-                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">moonfix</code></div>
-                    <div class="code-block" style="padding: var(--space-3);"><code style="font-size: 0.75rem;">buildthis</code></div>
-                </div>
-            </div>
-            <div class="mica-frame" style="border-radius: var(--radius-xl); background: rgba(0,0,0,0.6); padding: var(--space-4);">
-                <img src="/assets/screenshots/terminal.png" alt="Terminal" loading="lazy">
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- What's New -->
-<section style="margin-top: var(--space-8);">
-    <div class="bento-item liquid-card scroll-reveal" style="grid-column: span 12;">
-        <h2 class="section-title" style="text-align: center;"><i class="fas fa-star" style="color: #FFD700; margin-right: var(--space-3);"></i>{{ translations.feature_news_title }}</h2>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-top: var(--space-6);">
-            <div style="text-align: center;">
-                <div class="feature-icon" style="margin: 0 auto var(--space-3); background: linear-gradient(135deg, #7C5CDD 0%, #ff6b9d 100%);"><i class="fas fa-code" style="color: white;"></i></div>
-                <h4 style="margin-bottom: var(--space-2);">{{ translations.feature_news_item_1_title }}</h4>
-                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ translations.feature_news_item_1_desc }}</p>
-            </div>
-            <div style="text-align: center;">
-                <div class="feature-icon" style="margin: 0 auto var(--space-3); background: linear-gradient(135deg, #5CDDC9 0%, #6bff6b 100%);"><i class="fab fa-linux" style="color: white;"></i></div>
-                <h4 style="margin-bottom: var(--space-2);">{{ translations.feature_news_item_2_title }}</h4>
-                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ translations.feature_news_item_2_desc }}</p>
-            </div>
-            <div style="text-align: center;">
-                <div class="feature-icon" style="margin: 0 auto var(--space-3);"><i class="fas fa-bug" style="color: white;"></i></div>
-                <h4 style="margin-bottom: var(--space-2);">{{ translations.feature_news_item_3_title }}</h4>
-                <p style="font-size: 0.8125rem; color: var(--foreground-muted);">{{ translations.feature_news_item_3_desc }}</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section style="margin-top: var(--space-16);" class="scroll-reveal">
-    <div class="cta-section">
-        <h2 class="section-title">{{ translations.cta_title }}</h2>
-        <p class="section-subtitle" style="margin-bottom: var(--space-8);">{{ translations.cta_desc }}</p>
-        <a href="/download" class="btn btn-primary" style="padding: var(--space-5) var(--space-10); font-size: 1.125rem;"><i class="fas fa-download"></i> {{ translations.cta_button }}</a>
-    </div>
-</section>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-            }
-        });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.scroll-reveal').forEach(el => { observer.observe(el); });
-});
+(() => {
+  const cards = [...document.querySelectorAll('.story-card')];
+  const copy = [
+    ['01 / WRITE','El primer movimiento es tuyo.','Un espacio de trabajo claro convierte una idea en un proyecto que se puede tocar.','build preparado'],
+    ['02 / BUILD','De idea a paquete, sin perder el hilo.','El proceso se ordena en segundo plano para que tú decidas qué sale y cómo.','compilación en progreso'],
+    ['03 / SHIP','El resultado merece su momento.','Tu aplicación sale con una identidad clara, lista para instalar, compartir y recordar.','paquete listo para distribuir']
+  ];
+  const screen = document.getElementById('story-screen');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const activate = (index) => {
+    cards.forEach((card, i) => card.classList.toggle('is-active', i === index));
+    screen.dataset.scene = String(index);
+    document.getElementById('scene-label').textContent = copy[index][0];
+    document.getElementById('scene-title').textContent = copy[index][1];
+    document.getElementById('scene-copy').textContent = copy[index][2];
+    document.getElementById('scene-progress').textContent = copy[index][3];
+  };
+  cards.forEach((card, index) => card.addEventListener('click', () => activate(index)));
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) activate(Number(entry.target.dataset.scene)); }), {threshold:.7});
+    cards.forEach((card) => observer.observe(card));
+  }
+})();
 </script>
 {% endblock %}

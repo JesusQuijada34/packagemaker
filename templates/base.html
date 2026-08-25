@@ -2,7 +2,7 @@
 <html lang="{{ lang_code }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#020203">
     <meta name="description" content="Package Maker - El IDE definitivo para desarrolladores Influent OS">
     <title>{% block title %}{% endblock %} - Package Maker</title>
@@ -30,8 +30,9 @@
             --border-hover: rgba(255, 255, 255, 0.15);
             
             /* Typography */
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            --font-display: 'Space Grotesk', var(--font-sans);
+            --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --font-mono: 'SFMono-Regular', 'Cascadia Code', 'Roboto Mono', monospace;
             
             /* Spacing - 8pt grid */
             --space-1: 0.25rem;
@@ -504,7 +505,13 @@
                 padding: var(--space-3) var(--space-4);
             }
             
-            .nav-links { display: none; }
+            .nav-menu-toggle { display:grid; place-items:center; margin-left:auto; }
+            .nav-links { display:none; width:100%; order:4; padding-top:.65rem; }
+            .nav-links.is-open { display:grid; grid-template-columns:1fr 1fr; gap:.35rem; }
+            .nav-links a { padding:.7rem .75rem; }
+            .nav-controls { order:3; }
+            .nav-controls .language-form label { display:none; }
+            .nav-login { font-size:.8rem; padding-inline:.7rem; }
             
             .bento-grid { 
                 grid-template-columns: 1fr; 
@@ -515,6 +522,10 @@
             
             .container { padding: var(--space-6) var(--space-4); }
         }
+
+        .nav-menu-toggle { display:none; width:44px; height:44px; border:1px solid var(--border); border-radius:12px; background:var(--surface); color:var(--foreground); cursor:pointer; }
+        .nav-menu-toggle svg { width:20px; height:20px; }
+        .nav-login { white-space:nowrap; }
 
         /* Accessibility */
         @media (prefers-contrast: high) {
@@ -542,14 +553,23 @@
             <img src="/assets/product_logo.png" alt="" aria-hidden="true">
             <span>Package Maker</span>
         </a>
-        <div class="nav-links">
+        <button class="nav-menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="primary-navigation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="nav-links" id="primary-navigation">
             <a href="/" class="{% if request.path == '/' %}active{% endif %}">{{ translations.nav_home }}</a>
             <a href="/download" class="{% if request.path == '/download' %}active{% endif %}">{{ translations.nav_download }}</a>
+            <a href="/linkdevice" class="{% if request.path == '/linkdevice' %}active{% endif %}">Vincular app</a>
             <a href="/release-notes" class="{% if request.path == '/release-notes' %}active{% endif %}">{{ translations.nav_release_notes }}</a>
             <a href="/issues" class="{% if request.path == '/issues' %}active{% endif %}">{{ translations.nav_issues }}</a>
             <a href="/faq" class="{% if request.path == '/faq' %}active{% endif %}">{{ translations.nav_faq }}</a>
             <a href="/report" class="{% if request.path == '/report' %}active{% endif %}">Reportar</a>
             <a href="/privacy" class="{% if request.path == '/privacy' %}active{% endif %}">{{ translations.nav_privacy or 'Privacidad' }}</a>
+            {% if session.get('github_profile') %}
+            <a href="/logout" class="nav-login">@{{ session.get('github_profile', {}).get('login', 'GitHub') }}</a>
+            {% else %}
+            <a href="/login?next=/" class="nav-login">Entrar</a>
+            {% endif %}
         </div>
         <div class="nav-controls" style="margin-left: auto; display:flex; align-items:center; gap:0.75rem;">
             <form class="language-form" method="get" action="{{ request.path }}" style="display:flex; align-items:center; gap:0.5rem;">
@@ -602,6 +622,14 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             syncLanguageInUrl(effectiveLang);
+            const menuToggle = document.querySelector('.nav-menu-toggle');
+            const primaryNavigation = document.getElementById('primary-navigation');
+            if (menuToggle && primaryNavigation) {
+                menuToggle.addEventListener('click', () => {
+                    const open = primaryNavigation.classList.toggle('is-open');
+                    menuToggle.setAttribute('aria-expanded', String(open));
+                });
+            }
 
             document.querySelectorAll('a[href]').forEach((anchor) => {
                 try {

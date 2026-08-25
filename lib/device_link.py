@@ -49,6 +49,17 @@ class DeviceLinkStore:
         with self._connect() as connection:
             connection.execute(
                 """
+                CREATE TABLE IF NOT EXISTS github_sessions (
+                    session_id TEXT PRIMARY KEY,
+                    github_access_token TEXT NOT NULL,
+                    profile_json TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    expires_at REAL NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
                 CREATE TABLE IF NOT EXISTS device_links (
                     request_id TEXT PRIMARY KEY,
                     state_hash TEXT NOT NULL UNIQUE,
@@ -64,6 +75,9 @@ class DeviceLinkStore:
                     consumed_at REAL
                 )
                 """
+            )
+            connection.execute(
+                "CREATE INDEX IF NOT EXISTS idx_github_sessions_expiry ON github_sessions(expires_at)"
             )
             connection.execute(
                 "CREATE INDEX IF NOT EXISTS idx_device_links_code ON device_links(code_hash)"
@@ -87,9 +101,75 @@ class DeviceLinkStore:
     def purge(self) -> None:
         with self._connect() as connection:
             connection.execute(
+                "DELETE FROM github_sessions WHERE expires_at < ?",
+                (time.time(),),
+            )
+            connection.execute(
                 "DELETE FROM device_links WHERE expires_at < ?",
                 (time.time(),),
             )
+
+    def save_github_session(self, access_token: str, profile: dict[str, Any]) -> str:
+        self.purge()
+        session_id = secrets.token_urlsafe(30)
+        now = time.time()
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT INTO github_sessions (session_id, github_access_token, profile_json, created_at, expires_at) VALUES (?, ?, ?, ?, ?)",
+                (session_id, access_token, json.dumps(profile, ensure_ascii=False), now, now + LINK_TTL_SECONDS),
+            )
+        return session_id
+
+    def get_github_session(self, session_id: str) -> Optional[dict[str, Any]]:
+        if not session_id:
+            return None
+        self.purge()
+        now = time.time()
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM github_sessions WHERE session_id = ? AND expires_at >= ?",
+                (session_id, now),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "access_token": row["github_access_token"],
+            "profile": json.loads(row["profile_json"] or "{}"),
+            "expires_in": max(0, int(float(row["expires_at"]) - now)),
+        }
+
+    def create_ready_link(self, access_token: str, profile: dict[str, Any]) -> tuple[str, str]:
+        self.purge()
+        request_id = secrets.token_urlsafe(18)
+        state = secrets.token_urlsafe(24)
+        code_verifier = secrets.token_urlsafe(24)
+        code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(8))
+        display_code = f"{code[:4]}-{code[4:]}"
+        ticket = secrets.token_urlsafe(32)
+        now = time.time()
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO device_links
+                    (request_id, state_hash, code_verifier, pairing_code, code_hash,
+                     session_ticket_hash, github_access_token, profile_json, status,
+                     created_at, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ready', ?, ?)
+                """,
+                (
+                    request_id,
+                    self.digest(state),
+                    code_verifier,
+                    display_code,
+                    self.code_hash(display_code),
+                    self.digest(ticket),
+                    access_token,
+                    json.dumps(profile, ensure_ascii=False),
+                    now,
+                    now + LINK_TTL_SECONDS,
+                ),
+            )
+        return request_id, display_code
 
     def create_auth_request(self) -> AuthRequest:
         self.purge()
@@ -140,6 +220,16 @@ class DeviceLinkStore:
                 "SELECT * FROM device_links WHERE code_hash = ?",
                 (self.code_hash(code),),
             ).fetchone()
+
+    def complete_web_authorization(self, request_id: str, access_token: str, profile: dict[str, Any]) -> str:
+        session_id = self.save_github_session(access_token, profile)
+        now = time.time()
+        with self._connect() as connection:
+            connection.execute(
+                "UPDATE device_links SET github_access_token = ?, profile_json = ?, status = 'web_done', expires_at = ? WHERE request_id = ? AND status = 'authorizing'",
+                (access_token, json.dumps(profile, ensure_ascii=False), now + LINK_TTL_SECONDS, request_id),
+            )
+        return session_id
 
     def complete_authorization(self, request_id: str, access_token: str, profile: dict[str, Any]) -> str:
         code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(8))
@@ -228,13 +318,13 @@ def code_challenge(verifier: str) -> str:
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
 
 
-def build_github_url(base_url: str, request: AuthRequest) -> str:
+def build_github_url(base_url: str, request: AuthRequest, callback_path: str = "/auth/github/device-callback") -> str:
     client_id = os.getenv("GITHUB_CLIENT_ID", "").strip()
     if not client_id:
         raise RuntimeError("GITHUB_CLIENT_ID no está configurado")
     params = {
         "client_id": client_id,
-        "redirect_uri": f"{base_url.rstrip('/')}/auth/github/device-callback",
+        "redirect_uri": f"{base_url.rstrip('/')}{callback_path}",
         "state": request.state,
         "code_challenge": code_challenge(request.code_verifier),
         "code_challenge_method": "S256",
@@ -243,7 +333,7 @@ def build_github_url(base_url: str, request: AuthRequest) -> str:
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"
 
 
-def exchange_github_code(base_url: str, row: sqlite3.Row, code: str) -> tuple[str, dict[str, Any]]:
+def exchange_github_code(base_url: str, row: sqlite3.Row, code: str, callback_path: str = "/auth/github/device-callback") -> tuple[str, dict[str, Any]]:
     client_id = os.getenv("GITHUB_CLIENT_ID", "").strip()
     client_secret = os.getenv("GITHUB_CLIENT_SECRET", "").strip()
     if not client_id or not client_secret:
@@ -255,7 +345,7 @@ def exchange_github_code(base_url: str, row: sqlite3.Row, code: str) -> tuple[st
             "client_id": client_id,
             "client_secret": client_secret,
             "code": code,
-            "redirect_uri": f"{base_url.rstrip('/')}/auth/github/device-callback",
+            "redirect_uri": f"{base_url.rstrip('/')}{callback_path}",
             "code_verifier": row["code_verifier"],
         },
         timeout=15,

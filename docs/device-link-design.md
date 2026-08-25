@@ -1,28 +1,35 @@
-# Diseño de vinculación de dispositivo
+# Diseño de acceso y vinculación de dispositivo
 
-## Flujo
+## Flujo web
 
-1. El usuario abre `https://packagemaker.onrender.com/linkdevice` y pulsa **Vincular con GitHub**.
-2. Render crea una vinculación pendiente con un código corto, por ejemplo `AB7K-92QF`, y una caducidad de 15 minutos.
-3. GitHub autentica al usuario en el navegador. El secreto de la OAuth App vive solo en Render.
-4. Render guarda en caché durante 15 minutos la sesión mínima de GitHub y el perfil público asociado al código.
-5. PackageMaker muestra al arrancar una pantalla de vinculación. El usuario escribe el código que aparece en `/linkdevice`.
-6. PackageMaker hace ping a `POST /api/linkdevice/poll` cada dos segundos. Mientras GitHub no esté listo recibe `202 pending`; cuando la sesión esté disponible recibe `200 complete`.
-7. Render devuelve un ticket opaco de sesión y el perfil mínimo. El ticket no es la contraseña ni el access token de GitHub.
-8. PackageMaker guarda el ticket y el perfil en un archivo binario local con permisos restrictivos. El archivo se elimina o se ignora cuando la sesión expira.
-9. El servidor marca el código como consumido y `/linkdevice` muestra que la vinculación fue exitosa.
+1. Las rutas `/download`, `/api/download.sh` y `/linkdevice` comprueban la sesión web de GitHub.
+2. Si no existe una sesión válida, redirigen a `/login?next=...`.
+3. `/login` crea el estado OAuth y PKCE, y GitHub autentica al usuario directamente en el navegador.
+4. El callback de GitHub vuelve a `/auth/github/callback`. Render consulta el perfil público, guarda una sesión temporal de 15 minutos y coloca solamente un identificador de sesión firmado en la cookie persistente del navegador.
+5. El usuario vuelve al destino original (`/download` o `/linkdevice`).
 
-## Seguridad
+## Vinculación de PackageMaker
 
-El código se genera con aleatoriedad criptográfica, se guarda en Render únicamente como hash y se invalida después de un uso o de 15 minutos. Todo el intercambio ocurre por HTTPS. El navegador recibe la contraseña directamente en GitHub; PackageMaker nunca ve credenciales. Render conserva el access token solo en memoria/almacén temporal del servidor durante la ventana de vinculación y no lo devuelve a la aplicación.
+Cuando el usuario visita `/linkdevice` con una sesión web válida, Render crea un código de ocho caracteres y un ticket opaco con caducidad de 15 minutos. La página muestra el código y espera a que PackageMaker haga ping a `POST /api/linkdevice/poll` cada dos segundos.
 
-La sesión local es un ticket opaco con una fecha de expiración, no una copia de la contraseña ni del access token de GitHub. El archivo binario no debe utilizarse como mecanismo de autorización autónomo: para operaciones que requieran sesión, el servidor debe validar el ticket y su expiración.
+Cuando el código es válido, Render entrega el ticket opaco y el perfil mínimo de GitHub. PackageMaker guarda ese ticket y el perfil en `data/github.session` como archivo binario local privado. El token de GitHub nunca se envía a la aplicación de escritorio. Después de un consumo exitoso, la página cambia a **Vinculación exitosa** y el código no puede volver a utilizarse.
 
-## Variables de Render
+## Sesión web en caché
 
-- `FLASK_SECRET_KEY`: secreto largo y aleatorio para las cookies de Flask y la firma de tickets.
-- `GITHUB_CLIENT_ID`: identificador público de la OAuth App.
-- `GITHUB_CLIENT_SECRET`: secreto exclusivo del servicio Render.
-- `RENDER_AUTH_BASE_URL`: `https://packagemaker.onrender.com`.
+La tabla `github_sessions` mantiene temporalmente el token del servidor y el perfil mínimo durante 15 minutos. La cookie del navegador es HttpOnly, SameSite=Lax y persistente; no contiene el token de GitHub. Cuando la caché expira, `/login` vuelve a solicitar la autorización.
 
-El alcance OAuth se mantiene mínimo. Para rellenar el autor basta con el usuario autenticado; no se solicitan repositorios ni permisos de escritura.
+## Configuración de Render y GitHub
+
+- `FLASK_ENV=production`
+- `FLASK_SECRET_KEY`: secreto largo y aleatorio.
+- `GITHUB_CLIENT_ID`: Client ID de la OAuth App.
+- `GITHUB_CLIENT_SECRET`: secreto exclusivo de Render.
+- `RENDER_AUTH_BASE_URL=https://packagemaker.onrender.com`
+
+El callback registrado en GitHub debe ser exactamente:
+
+```text
+https://packagemaker.onrender.com/auth/github/callback
+```
+
+El servicio debe utilizar almacenamiento persistente o una base de datos compartida para que la caché no se pierda durante un reinicio o entre varias instancias.

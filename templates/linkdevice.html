@@ -38,8 +38,8 @@
     {% elif linked %}
       <div class="success"><strong>Vinculación exitosa.</strong><br>Ya puedes volver a PackageMaker. La aplicación recibió tu sesión de GitHub.</div>
     {% else %}
-      <div class="step"><div class="number">1</div><div><strong>Autoriza GitHub</strong><span>Se abrirá GitHub en una ventana segura del navegador.</span></div></div>
-      <div class="step"><div class="number">2</div><div><strong>Copia el código</strong><span>Cuando termine la autorización aparecerá aquí durante 15 minutos.</span></div></div>
+      <div class="step"><div class="number">1</div><div><strong>Sesión confirmada</strong><span>Tu cuenta de GitHub ya está lista para vincular el dispositivo.</span></div></div>
+      <div class="step"><div class="number">2</div><div><strong>Copia el código</strong><span>Aparecerá aquí durante 15 minutos y solo podrá utilizarse una vez.</span></div></div>
       <div class="step"><div class="number">3</div><div><strong>Escríbelo en PackageMaker</strong><span>La aplicación lo validará automáticamente.</span></div></div>
       {% if github_url %}<a class="button" href="{{ github_url }}">Continuar con GitHub</a>{% endif %}
       <div id="code-area" hidden>
