@@ -2,15 +2,15 @@
 {% block title %}Inicio{% endblock %}
 {% block extra_css %}
 .home-page { --home-accent:#ff7a1a; --home-violet:#8b7cff; --home-mint:#62e6c7; max-width:1240px; margin:0 auto; }
-.home-hero { min-height:calc(100vh - 92px); display:grid; grid-template-columns:minmax(0, .88fr) minmax(420px, 1.12fr); align-items:center; gap:clamp(2rem, 6vw, 7rem); padding:clamp(3rem, 8vw, 7rem) 0 5rem; }
+.home-hero { min-height:calc(100dvh - 92px); display:grid; grid-template-columns:minmax(0, .88fr) minmax(420px, 1.12fr); align-items:center; gap:clamp(2rem, 6vw, 7rem); padding:clamp(3rem, 8vw, 7rem) 0 5rem; }
 .hero-copy { position:relative; z-index:2; }
 .eyebrow { display:inline-flex; align-items:center; gap:.55rem; padding:.5rem .8rem; border:1px solid rgba(255,255,255,.13); border-radius:999px; background:rgba(255,255,255,.055); color:#d9e0e9; font-size:.74rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
 .eyebrow-dot { width:8px; height:8px; border-radius:50%; background:var(--home-mint); box-shadow:0 0 0 5px rgba(98,230,199,.1), 0 0 18px rgba(98,230,199,.8); }
 .home-hero h1 { max-width:720px; margin:1.5rem 0 1.25rem; font-size:clamp(3.2rem, 7.2vw, 7.3rem); line-height:.96; letter-spacing:-.075em; }
-.hero-gradient { background:linear-gradient(105deg,#f6f8fb 0%,#f6f8fb 28%,#ff9b58 54%,#a995ff 78%,#f6f8fb 100%); background-size:180% auto; -webkit-background-clip:text; background-clip:text; color:transparent; animation:hero-shimmer 7s ease-in-out infinite; }
+.hero-gradient { background:linear-gradient(105deg,#f6f8fb 0%,#f6f8fb 28%,#ff9b58 54%,#a995ff 78%,#f6f8fb 100%); background-size:180% auto; -webkit-background-clip:text; background-clip:text; color:transparent; }
 .hero-copy > p { max-width:54ch; color:#a8b1bd; font-size:clamp(1rem,1.5vw,1.18rem); line-height:1.75; }
 .hero-actions { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:2rem; }
-.hero-actions .btn { padding:.85rem 1.15rem; border-radius:14px; }
+.hero-actions .btn { min-height:44px; padding:.85rem 1.15rem; border-radius:14px; touch-action:manipulation; }
 .hero-actions .btn-primary { background:var(--home-accent); box-shadow:0 12px 34px rgba(255,122,26,.25); }
 .hero-actions .btn-primary:hover { box-shadow:0 18px 48px rgba(255,122,26,.34); }
 .hero-note { display:flex; gap:.7rem; align-items:center; margin-top:1.25rem; color:#7f8996; font-size:.84rem; }
@@ -31,17 +31,19 @@
 .window-main { padding:22px; }.main-kicker { color:var(--home-accent); font:700 10px var(--font-mono); letter-spacing:.1em; text-transform:uppercase; }.main-title { margin:8px 0 20px; color:#f6f8fb; font-size:28px; letter-spacing:-.05em; }
 .build-flow { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; align-items:center; margin:20px 0 26px; }.flow-line { position:absolute; top:25px; left:17%; right:17%; height:1px; background:linear-gradient(90deg,var(--home-accent),var(--home-violet),var(--home-mint)); opacity:.8; }.flow-node { position:relative; z-index:1; display:grid; justify-items:center; gap:8px; color:#8d99a6; font-size:10px; }.flow-icon { width:50px; height:50px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.15); border-radius:16px; background:#181e28; color:#f6f8fb; box-shadow:0 8px 22px rgba(0,0,0,.3); }.flow-node:nth-child(2) .flow-icon{color:var(--home-violet)}.flow-node:nth-child(3) .flow-icon{color:var(--home-mint)}.flow-icon svg{width:21px;height:21px}
 .code-preview { border:1px solid rgba(255,255,255,.09); border-radius:14px; background:#090b0e; padding:14px; color:#a8b1bd; font:11px/1.75 var(--font-mono); }.code-preview .accent{color:var(--home-accent)}.code-preview .mint{color:var(--home-mint)}.code-preview .violet{color:var(--home-violet)}
-.stage-pill { position:absolute; right:-4%; top:16%; display:flex; align-items:center; gap:.5rem; padding:.7rem .85rem; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(18,22,29,.8); color:#dfe5ec; font-size:.73rem; box-shadow:0 15px 35px rgba(0,0,0,.35); backdrop-filter:blur(16px); animation:badge-drift 6s ease-in-out infinite; }.stage-pill svg{width:16px;height:16px;color:var(--home-mint)}
-.scroll-cue { display:flex; justify-content:center; align-items:center; gap:.65rem; margin-top:-1rem; color:#778390; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; }.scroll-cue span{width:34px;height:52px;border:1px solid rgba(255,255,255,.2);border-radius:20px;position:relative}.scroll-cue span::after{content:'';position:absolute;width:4px;height:8px;border-radius:4px;background:var(--home-accent);left:50%;top:10px;transform:translateX(-50%);animation:scroll-dot 1.7s ease-in-out infinite}
+.stage-pill { position:absolute; right:-4%; top:16%; display:flex; align-items:center; gap:.5rem; padding:.7rem .85rem; border:1px solid rgba(255,255,255,.14); border-radius:14px; background:rgba(18,22,29,.8); color:#dfe5ec; font-size:.73rem; box-shadow:0 15px 35px rgba(0,0,0,.35); backdrop-filter:blur(16px); }.stage-pill svg{width:16px;height:16px;color:var(--home-mint)}
+.scroll-cue { display:flex; justify-content:center; align-items:center; gap:.65rem; margin-top:-1rem; color:#778390; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; }.scroll-cue span{width:34px;height:52px;border:1px solid rgba(255,255,255,.2);border-radius:20px;position:relative}.scroll-cue span::after{content:'';position:absolute;width:4px;height:8px;border-radius:4px;background:var(--home-accent);left:50%;top:10px;transform:translateX(-50%);}
 .home-section { padding:clamp(5rem,10vw,9rem) 0; }.section-intro { display:flex; align-items:end; justify-content:space-between; gap:2rem; margin-bottom:2.5rem; }.section-intro h2 { max-width:14ch; margin:0; font-size:clamp(2.3rem,5vw,4.4rem); line-height:1; letter-spacing:-.065em; }.section-intro p { max-width:42ch; margin:0; color:#8f9aa7; }
-.story-grid { display:grid; grid-template-columns:.8fr 1.4fr; gap:1.25rem; align-items:stretch; }.story-list { display:grid; gap:.75rem; }.story-card { display:flex; gap:1rem; align-items:flex-start; padding:1.2rem; border:1px solid rgba(255,255,255,.1); border-radius:18px; background:rgba(255,255,255,.045); transition:transform .25s var(--ease-out),border-color .25s var(--ease-out),background .25s var(--ease-out); }.story-card:hover,.story-card.is-active{transform:translateX(6px); border-color:rgba(255,122,26,.45); background:rgba(255,122,26,.08); }.story-index{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:11px;background:#202631;color:var(--home-accent);font:700 12px var(--font-mono)}.story-card h3{margin:0 0 .3rem;font-size:1rem}.story-card p{margin:0;font-size:.86rem;color:#8f9aa7;line-height:1.5}
+.story-grid { display:grid; grid-template-columns:.8fr 1.4fr; gap:1.25rem; align-items:stretch; }.story-list { display:grid; gap:.75rem; }.story-card { appearance:none; display:flex; width:100%; gap:1rem; align-items:flex-start; padding:1.2rem; border:1px solid rgba(255,255,255,.1); border-radius:18px; background:rgba(255,255,255,.045); color:inherit; font:inherit; text-align:left; cursor:pointer; transition:transform .25s var(--ease-out),border-color .25s var(--ease-out),background .25s var(--ease-out); }
+.story-card:hover,.story-card:focus-visible,.story-card.is-active{transform:translateX(6px); border-color:rgba(255,122,26,.45); background:rgba(255,122,26,.08); }.story-card:focus-visible{outline:3px solid rgba(98,230,199,.85); outline-offset:4px}
+.story-index{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:11px;background:#202631;color:var(--home-accent);font:700 12px var(--font-mono)}.story-card strong{display:block;margin:0 0 .3rem;font-size:1rem}.story-copy{display:block;font-size:.86rem;color:#8f9aa7;line-height:1.5}
 .story-screen { min-height:420px; padding:clamp(1.3rem,4vw,2rem); border:1px solid rgba(255,255,255,.13); border-radius:26px; background:radial-gradient(circle at 80% 10%,rgba(139,124,255,.18),transparent 40%),linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.03)); overflow:hidden; position:relative; }.story-screen::after{content:'';position:absolute;inset:auto -20% -55% 20%;height:80%;background:radial-gradient(circle,rgba(98,230,199,.12),transparent 65%);pointer-events:none}.screen-top{display:flex;justify-content:space-between;align-items:center;color:#7b8795;font:10px var(--font-mono)}.screen-status{display:inline-flex;align-items:center;gap:.45rem;color:var(--home-mint)}.screen-status i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}.screen-content{position:relative;z-index:1;display:grid;grid-template-columns:1fr .8fr;gap:2rem;align-items:center;min-height:330px}.screen-content h3{font-size:clamp(1.8rem,3.7vw,3rem);letter-spacing:-.06em;line-height:1.05;margin:.85rem 0}.screen-content p{color:#a8b1bd;max-width:34ch}.screen-label{color:var(--home-accent);font:700 11px var(--font-mono);text-transform:uppercase;letter-spacing:.1em}.progress-stack{display:grid;gap:.7rem}.progress-item{display:flex;align-items:center;gap:.7rem;padding:.85rem;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(0,0,0,.16);color:#c8d0d9;font-size:.82rem}.progress-item svg{width:18px;height:18px;color:var(--home-accent)}.progress-item.done svg{color:var(--home-mint)}
 .capability-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.capability-card{min-height:210px;padding:1.4rem;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));transition:transform .25s var(--ease-out),border-color .25s var(--ease-out)}.capability-card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.24)}.capability-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:rgba(255,122,26,.13);color:var(--home-accent);margin-bottom:1rem}.capability-icon svg{width:21px;height:21px}.capability-card h3{margin:0 0 .5rem}.capability-card p{font-size:.9rem;color:#8f9aa7;line-height:1.55}
 .home-cta{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2rem;padding:clamp(1.6rem,4vw,3rem);border:1px solid rgba(255,255,255,.13);border-radius:26px;background:linear-gradient(110deg,rgba(255,122,26,.16),rgba(139,124,255,.13) 60%,rgba(98,230,199,.1));overflow:hidden;position:relative}.home-cta::before{content:'';position:absolute;width:320px;height:320px;right:-90px;top:-170px;border:1px solid rgba(255,255,255,.17);border-radius:50%;box-shadow:0 0 0 30px rgba(255,255,255,.025),0 0 0 60px rgba(255,255,255,.02)}.home-cta h2{position:relative;z-index:1;margin:0 0 .5rem;font-size:clamp(1.8rem,4vw,3.4rem);letter-spacing:-.06em}.home-cta p{position:relative;z-index:1;margin:0;max-width:50ch}.home-cta .btn{position:relative;z-index:1;white-space:nowrap}
 @keyframes hero-shimmer{0%,100%{background-position:0% center}50%{background-position:100% center}}@keyframes stage-breathe{0%,100%{transform:scale(.95);opacity:.65}50%{transform:scale(1.08);opacity:1}}@keyframes window-float{0%,100%{transform:rotate(2deg) translateY(0)}50%{transform:rotate(1deg) translateY(-12px)}}@keyframes badge-drift{0%,100%{transform:translate(0,0)}50%{transform:translate(-8px,8px)}}@keyframes scroll-dot{0%,100%{transform:translate(-50%,0);opacity:.6}50%{transform:translate(-50%,19px);opacity:1}}
 @media (max-width:900px){.home-hero{grid-template-columns:1fr;min-height:auto;padding-top:4.5rem}.product-stage{min-height:480px}.stage-pill{right:0}.story-grid{grid-template-columns:1fr}.capability-grid{grid-template-columns:1fr 1fr}.home-cta{grid-template-columns:1fr}}
 @media (max-width:600px){.home-hero h1{font-size:clamp(3rem,16vw,5rem)}.product-stage{min-height:365px}.workspace-window{transform:none}.window-body{grid-template-columns:1fr}.window-sidebar{display:none}.window-main{padding:16px}.window-title{display:none}.build-flow{gap:4px}.flow-icon{width:42px;height:42px}.story-screen{min-height:520px}.screen-content{grid-template-columns:1fr;gap:1.3rem}.capability-grid{grid-template-columns:1fr}.section-intro{display:block}.section-intro p{margin-top:1rem}.home-cta .btn{width:100%}}
-@media (prefers-reduced-motion:reduce){.hero-gradient,.stage-glow,.workspace-window,.stage-pill,.scroll-cue span::after{animation:none}.story-card:hover,.story-card.is-active,.capability-card:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){.stage-glow,.workspace-window{animation:none}.story-card:hover,.story-card:focus-visible,.story-card.is-active,.capability-card:hover{transform:none}}
 {% endblock %}
 {% block content %}
 <div class="home-page">
@@ -73,12 +75,12 @@
   <section class="home-section" aria-labelledby="story-title">
     <div class="section-intro"><h2 id="story-title">Una mini película para tu workflow.</h2><p>La herramienta desaparece para que se sienta el resultado: menos fricción, más control y una salida lista para compartir.</p></div>
     <div class="story-grid">
-      <div class="story-list">
-        <article class="story-card is-active" data-scene="0"><div class="story-index">01</div><div><h3>Escribe sin ruido</h3><p>Tu proyecto empieza en un espacio limpio, enfocado y preparado.</p></div></article>
-        <article class="story-card" data-scene="1"><div class="story-index">02</div><div><h3>Construye con intención</h3><p>Dependencias, plataformas y limpieza en un solo movimiento.</p></div></article>
-        <article class="story-card" data-scene="2"><div class="story-index">03</div><div><h3>Distribuye con confianza</h3><p>Un paquete reconocible, documentado y listo para salir.</p></div></article>
+      <div class="story-list" role="tablist" aria-label="Etapas del flujo de PackageMaker">
+        <button type="button" class="story-card is-active" data-scene="0" role="tab" aria-selected="true" aria-controls="story-screen"><span class="story-index">01</span><span><strong>Escribe sin ruido</strong><span class="story-copy">Tu proyecto empieza en un espacio limpio, enfocado y preparado.</span></span></button>
+        <button type="button" class="story-card" data-scene="1" role="tab" aria-selected="false" aria-controls="story-screen"><span class="story-index">02</span><span><strong>Construye con intención</strong><span class="story-copy">Dependencias, plataformas y limpieza en un solo movimiento.</span></span></button>
+        <button type="button" class="story-card" data-scene="2" role="tab" aria-selected="false" aria-controls="story-screen"><span class="story-index">03</span><span><strong>Distribuye con confianza</strong><span class="story-copy">Un paquete reconocible, documentado y listo para salir.</span></span></button>
       </div>
-      <div class="story-screen" id="story-screen" data-scene="0"><div class="screen-top"><span>package-maker / narrative</span><span class="screen-status"><i></i> live preview</span></div><div class="screen-content"><div><div class="screen-label" id="scene-label">01 / WRITE</div><h3 id="scene-title">El primer movimiento es tuyo.</h3><p id="scene-copy">Un espacio de trabajo claro convierte una idea en un proyecto que se puede tocar.</p></div><div class="progress-stack"><div class="progress-item done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg><span>workspace creado</span></div><div class="progress-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg><span id="scene-progress">build preparado</span></div><div class="progress-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/></svg><span>resultado en camino</span></div></div></div></div></div>
+      <div class="story-screen" id="story-screen" data-scene="0" role="tabpanel" aria-live="polite"><div class="screen-top"><span>package-maker / narrative</span><span class="screen-status"><i></i> live preview</span></div><div class="screen-content"><div><div class="screen-label" id="scene-label">01 / WRITE</div><h3 id="scene-title">El primer movimiento es tuyo.</h3><p id="scene-copy">Un espacio de trabajo claro convierte una idea en un proyecto que se puede tocar.</p></div><div class="progress-stack"><div class="progress-item done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg><span>workspace creado</span></div><div class="progress-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg><span id="scene-progress">build preparado</span></div><div class="progress-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 2"/></svg><span>resultado en camino</span></div></div></div></div></div>
     </div>
   </section>
 
@@ -103,7 +105,7 @@
   ];
   const screen = document.getElementById('story-screen');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const activate = (index) => {
+  let activate = (index) => {
     cards.forEach((card, i) => card.classList.toggle('is-active', i === index));
     screen.dataset.scene = String(index);
     document.getElementById('scene-label').textContent = copy[index][0];
@@ -111,11 +113,24 @@
     document.getElementById('scene-copy').textContent = copy[index][2];
     document.getElementById('scene-progress').textContent = copy[index][3];
   };
-  cards.forEach((card, index) => card.addEventListener('click', () => activate(index)));
-  if (!reduceMotion && 'IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) activate(Number(entry.target.dataset.scene)); }), {threshold:.7});
-    cards.forEach((card) => observer.observe(card));
-  }
+      const syncTabs = (index) => cards.forEach((card, i) => card.setAttribute('aria-selected', String(i === index)));
+    cards.forEach((card, index) => {
+      card.addEventListener('click', () => activate(index));
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowRight') { event.preventDefault(); cards[(index + 1) % cards.length].focus(); activate((index + 1) % cards.length); }
+        if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') { event.preventDefault(); cards[(index - 1 + cards.length) % cards.length].focus(); activate((index - 1 + cards.length) % cards.length); }
+      });
+    });
+    const originalActivate = activate;
+    activate = (index) => { originalActivate(index); syncTabs(index); };
+    if (!reduceMotion && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) activate(Number(visible.target.dataset.scene));
+      }, {threshold:[.25,.6], rootMargin:'-18% 0px -38% 0px'});
+      cards.forEach((card) => observer.observe(card));
+    }
+
 })();
 </script>
 {% endblock %}
