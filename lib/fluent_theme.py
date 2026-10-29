@@ -1,8 +1,11 @@
 """Organized Fluent styles and animated controls shared by the desktop UI."""
 
+import os
+import sys
+
 try:
     from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, pyqtProperty
-    from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen
+    from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPainterPath, QPen
     from PyQt6.QtWidgets import QCheckBox, QStyle, QStyleOptionButton
     from lib.qml_animations import animate_property
     PYQT6_AVAILABLE = True
@@ -18,7 +21,14 @@ if PYQT6_AVAILABLE:
             super().__init__(text, parent)
             self._check_progress = float(self.isChecked())
             self._fallback_animation = None
-            self.stateChanged.connect(self._animate_check_state)
+            # Qt 6 emits the semantic enum through checkStateChanged.  Keep the
+            # visual progress synchronized with both user clicks and programmatic
+            # setChecked()/setCheckState() calls.
+            if hasattr(self, "checkStateChanged"):
+                self.checkStateChanged.connect(self._animate_check_state)
+            else:
+                self.stateChanged.connect(self._animate_check_state)
+            self._sync_check_state(self.checkState(), animate=False)
 
         @pyqtProperty(float)
         def checkProgress(self):
@@ -29,31 +39,38 @@ if PYQT6_AVAILABLE:
             self._check_progress = min(1.0, max(0.0, float(progress)))
             self.update()
 
-        def _animate_check_state(self, state):
-            end = 0.5 if state == Qt.CheckState.PartiallyChecked.value else float(bool(state))
+        def _sync_check_state(self, state, animate=True):
+            if isinstance(state, Qt.CheckState):
+                state_value = state.value
+            else:
+                state_value = int(state)
+            end = 0.5 if state_value == Qt.CheckState.PartiallyChecked.value else float(
+                state_value == Qt.CheckState.Checked.value
+            )
+            if not animate:
+                self._check_progress = end
+                self.update()
+                return
             if not self.isVisible():
                 self.checkProgress = end
                 return
-            try:
-                animate_property(
-                    self,
-                    "checkProgress",
-                    self._check_progress,
-                    end,
-                    190,
-                    QEasingCurve.Type.OutCubic,
-                )
-            except RuntimeError:
-                if self._fallback_animation is not None:
-                    self._fallback_animation.stop()
-                self._fallback_animation = QPropertyAnimation(
-                    self, b"checkProgress", self
-                )
-                self._fallback_animation.setDuration(190)
-                self._fallback_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
-                self._fallback_animation.setStartValue(self._check_progress)
-                self._fallback_animation.setEndValue(end)
-                self._fallback_animation.start()
+            if self._fallback_animation is not None:
+                self._fallback_animation.stop()
+            self._fallback_animation = QPropertyAnimation(self, b"checkProgress", self)
+            self._fallback_animation.setDuration(190)
+            self._fallback_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+            self._fallback_animation.setStartValue(self._check_progress)
+            self._fallback_animation.setEndValue(end)
+            self._fallback_animation.start()
+
+        def _animate_check_state(self, state):
+            self._sync_check_state(state, animate=True)
+
+        def showEvent(self, event):
+            # A checkbox can be initialized before it becomes visible; repaint
+            # from the actual Qt state when it enters the scene.
+            self._sync_check_state(self.checkState(), animate=False)
+            super().showEvent(event)
 
         def enterEvent(self, event):
             self.update()
@@ -75,7 +92,14 @@ if PYQT6_AVAILABLE:
             rect = self.style().subElementRect(
                 QStyle.SubElement.SE_CheckBoxIndicator, option, self
             ).adjusted(1, 1, -1, -1)
+            # Never infer the state from animation progress alone.  The Qt
+            # checkState is authoritative, including partially checked boxes.
+            actual_state = self.checkState()
             progress = self._check_progress
+            if actual_state == Qt.CheckState.Checked and progress <= 0:
+                progress = 1.0
+            elif actual_state == Qt.CheckState.Unchecked and progress >= 1:
+                progress = 0.0
             accent = QColor("#60CDFF")
             border = QColor("#b3b3b3")
             if not self.isEnabled():
@@ -100,7 +124,7 @@ if PYQT6_AVAILABLE:
                 painter.setPen(QPen(QColor("#ffffff"), 1.8, Qt.PenStyle.SolidLine,
                                     Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
                 center_y = rect.center().y()
-                if self.checkState() == Qt.CheckState.PartiallyChecked:
+                if actual_state == Qt.CheckState.PartiallyChecked:
                     painter.drawLine(rect.left() + 4, center_y, rect.right() - 4, center_y)
                 else:
                     mark = QPainterPath()
@@ -325,6 +349,87 @@ def set_qss(widget, stylesheet, values=(), append=False):
         current = widget.styleSheet().rstrip()
         stylesheet = f"{current}\n{stylesheet}" if current else stylesheet
     widget.setStyleSheet(stylesheet)
+
+
+def preferred_ui_font(size=11):
+    """Return the first preferred UI font installed on the host.
+
+    Roboto remains the project preference; Inter and SF Pro are useful native
+    fallbacks on systems where Roboto is not installed.
+    """
+    if not PYQT6_AVAILABLE:
+        return None
+    installed = {family.casefold(): family for family in QFontDatabase.families()}
+    for candidate in ("Roboto", "Inter Regular", "Inter", "SF Pro Display", "SF Pro", "Segoe UI Variable", "Segoe UI"):
+        if candidate.casefold() in installed:
+            return QFont(installed[candidate.casefold()], int(size))
+    return QFont("sans-serif", int(size))
+
+
+def system_theme_mode():
+    """Return ``dark`` or ``light`` using Qt's system color scheme first."""
+    if not PYQT6_AVAILABLE:
+        return "light"
+    app = QGuiApplication.instance()
+    if app is not None:
+        try:
+            hints = app.styleHints()
+            if hasattr(hints, "colorScheme"):
+                scheme = hints.colorScheme()
+                if scheme == Qt.ColorScheme.Dark:
+                    return "dark"
+                if scheme == Qt.ColorScheme.Light:
+                    return "light"
+        except (AttributeError, RuntimeError):
+            pass
+        try:
+            return "dark" if app.palette().color(app.palette().ColorRole.Window).lightness() < 128 else "light"
+        except (AttributeError, RuntimeError):
+            pass
+    if sys.platform.startswith("win"):
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize") as key:
+                value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+                return "light" if int(value) else "dark"
+        except (ImportError, OSError, ValueError):
+            pass
+    return "dark" if "dark" in os.environ.get("GTK_THEME", "").casefold() else "light"
+
+
+def sidebar_stylesheet(dark, accent="#0078d4"):
+    """Theme-aware sidebar frame and navigation button styles."""
+    if dark:
+        sidebar_bg, border, text, hover, selected = "#2b303a", "rgba(255,255,255,.10)", "#d8dee9", "rgba(255,255,255,.07)", "rgba(255,255,255,.11)"
+    else:
+        sidebar_bg, border, text, hover, selected = "#eef2f7", "rgba(15,23,42,.12)", "#334155", "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
+    return f"""
+        QWidget#NavigationSidebar {{ background:{sidebar_bg}; border-right:1px solid {border}; }}
+        QPushButton#SidebarCollapseButton {{ background:transparent; color:{text}; border:none; border-radius:7px; }}
+        QPushButton#SidebarCollapseButton:hover {{ background:{hover}; }}
+        QPushButton#SidebarCollapseButton:pressed {{ background:{selected}; }}
+        QWidget#SidebarContextCard {{ background:{hover}; border:1px solid {border}; border-radius:10px; }}
+        QWidget#NavigationSidebar QPushButton {{ color:{text}; font-family:'Roboto','Inter Regular','SF Pro Display','Segoe UI',sans-serif; }}
+        QWidget#NavigationSidebar QPushButton:hover {{ background:{hover}; color:{text}; }}
+        QWidget#NavigationSidebar QPushButton:checked {{ background:{selected}; color:{text}; border-left:3px solid {accent}; }}
+    """
+
+
+def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
+    """Return an explicit stylesheet for one sidebar navigation button."""
+    if dark:
+        text, hover, selected = "#c7ced8", "rgba(255,255,255,.06)", "rgba(255,255,255,.08)"
+    else:
+        text, hover, selected = "#334155", "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
+    return f"""
+        QPushButton {{ background:transparent; color:{text}; text-align:left; padding-left:17px;
+            border:none; border-left:{int(border_width)}px solid transparent; border-radius:9px;
+            font-family:'Roboto','Inter Regular','SF Pro Display','Segoe UI',sans-serif;
+            font-size:15px; font-weight:500; }}
+        QPushButton:hover {{ background:{hover}; color:{text}; }}
+        QPushButton:checked {{ background:{selected}; color:{text}; border-left:{int(border_width)}px solid {accent}; }}
+        QPushButton:focus {{ outline:none; }}
+    """
 
 
 def checkbox_stylesheet(accent="#60cdff"):

@@ -143,8 +143,12 @@ from lib.fluent_theme import (
     FluentCheckBox as QCheckBox,
     applyget,
     conf_field_stylesheet,
+    preferred_ui_font,
     qss_value,
+    sidebar_button_stylesheet,
+    sidebar_stylesheet,
     set_qss,
+    system_theme_mode,
 )
 from lib.qml_animations import animate_property
 
@@ -169,7 +173,7 @@ if sys.platform.startswith("win"):
         winreg = None
 
 if PYQT6_AVAILABLE:
-    APP_FONT = QFont('Roboto', 11)
+    APP_FONT = preferred_ui_font(11)
 else:
     APP_FONT = None
     print("font: none")
@@ -773,7 +777,17 @@ class PackageTodoGUI(QMainWindow):
         self.theme_timer = QTimer()
         self.theme_timer.timeout.connect(self.check_theme_change)
         self.theme_timer.start(1000)
-        self.last_theme_mode = detectar_modo_sistema()
+        self.last_theme_mode = system_theme_mode()
+        app_instance = QApplication.instance()
+        if app_instance is not None:
+            if hasattr(app_instance, "paletteChanged"):
+                app_instance.paletteChanged.connect(self._on_theme_signal)
+            try:
+                hints = app_instance.styleHints()
+                if hasattr(hints, "colorSchemeChanged"):
+                    hints.colorSchemeChanged.connect(self._on_theme_signal)
+            except (AttributeError, RuntimeError):
+                pass
 
         # Apply Global Styles
         self.apply_theme()
@@ -945,10 +959,14 @@ class PackageTodoGUI(QMainWindow):
         self._apply_display_mode_by_name(str(dm))
 
     def check_theme_change(self):
-        current_mode = detectar_modo_sistema()
+        current_mode = system_theme_mode()
         if current_mode != self.last_theme_mode:
             self.last_theme_mode = current_mode
             self.apply_theme()
+
+    def _on_theme_signal(self, *_args):
+        """Apply system theme changes immediately; timer remains a fallback."""
+        self.check_theme_change()
 
     def apply_theme(self):
         store = get_pm_data()
@@ -957,20 +975,29 @@ class PackageTodoGUI(QMainWindow):
         border_w = 3
         density = str(store.get_user("ui_density", "normal"))
         sidebar_h = 50 if density != "compact" else 42
-
-        base_bg = "#303641"
-        text_col = "#f8fbff"
+        dark = self.last_theme_mode == "dark"
+        base_bg = "#303641" if dark else "#f5f7fb"
+        text_col = "#f8fbff" if dark else "#1f2937"
 
         set_qss(self.central, applyget(accent), append=False)
         set_qss(self, 'packagemaker_010', values=(qss_value(base_bg, None, ''),), append=False)
 
         if hasattr(self.titlebar, "title_lbl"):
             self.titlebar.title_lbl.setText(self._fixed_title)
-            set_qss(self.titlebar.title_lbl, 'packagemaker_065', values=(qss_value(text_col, None, ''),), append=False)
+            self.titlebar.setStyleSheet(
+                f"QWidget {{ background-color:{base_bg}; border:none; }}"
+                " QLabel { background:transparent; border:none; }"
+            )
+            self.titlebar.title_lbl.setStyleSheet(
+                f"background:transparent; color:{text_col}; font-family:'Roboto','Inter Regular','SF Pro Display','Segoe UI',sans-serif; font-weight:600;"
+            )
 
         for btn in getattr(self, "_sidebar_btn_keys", {}):
             btn.setFixedHeight(sidebar_h)
-            set_qss(btn, 'packagemaker_066', values=(qss_value(border_w, None, ''), qss_value(border_w, None, ''), qss_value(accent, None, '')), append=False)
+            btn.setStyleSheet(sidebar_button_stylesheet(dark, accent, border_w))
+
+        if hasattr(self, "sidebar"):
+            self.sidebar.setStyleSheet(sidebar_stylesheet(dark, accent))
 
         if hasattr(self, "sidebar_collapse_toggle"):
             set_qss(self.sidebar_collapse_toggle, 'packagemaker_067', append=False)
