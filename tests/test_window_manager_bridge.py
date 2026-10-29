@@ -4,6 +4,7 @@ import unittest
 
 from PyQt6.QtCore import QPoint, QRect, Qt
 
+from lib import window_manager_bridge
 from lib.window_manager_bridge import (
     WindowManagerBridge,
     cursor_for_edges,
@@ -11,7 +12,10 @@ from lib.window_manager_bridge import (
     snap_geometry,
 )
 
+QT_AVAILABLE = window_manager_bridge.PYQT6_AVAILABLE
 
+
+@unittest.skipUnless(QT_AVAILABLE, "Qt no disponible en este entorno")
 class ResizeEdgeTests(unittest.TestCase):
     def setUp(self):
         self.rect = QRect(0, 0, 200, 100)
@@ -43,6 +47,7 @@ class ResizeEdgeTests(unittest.TestCase):
         self.assertIsNone(detect_resize_edges(QPoint(3, 50), self.rect, margin=2))
 
 
+@unittest.skipUnless(QT_AVAILABLE, "Qt no disponible en este entorno")
 class CursorTests(unittest.TestCase):
     def test_no_edges_has_no_cursor(self):
         self.assertIsNone(cursor_for_edges(None))
@@ -57,6 +62,7 @@ class CursorTests(unittest.TestCase):
         self.assertEqual(cursor_for_edges(edges), Qt.CursorShape.SizeFDiagCursor)
 
 
+@unittest.skipUnless(QT_AVAILABLE, "Qt no disponible en este entorno")
 class SnapTests(unittest.TestCase):
     def setUp(self):
         self.available = QRect(0, 0, 1920, 1080)
