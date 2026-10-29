@@ -32,6 +32,23 @@
   `anti-debug`, `obfuscate` y `resource`.
 - Comandos CLI `--dropper`, `--harden` y `--list-hardening`.
 
+### Fuentes de la interfaz
+- Gestor de fuentes (`lib/font_manager.py`): descarga Roboto, Inter, Noto Sans,
+  Open Sans y JetBrains Mono desde Google Fonts, verifica cada archivo por
+  SHA-256 y lo registra en Qt con `QFontDatabase.addApplicationFont`.
+- Varios espejos por fuente (raw.githubusercontent y CDN jsDelivr) con
+  tolerancia a fallos y arranque sin red usando la caché en `data/fonts/`.
+- Resolución de familia versátil: las fuentes descargadas tienen prioridad
+  sobre las del sistema, de modo que la interfaz se ve igual en cualquier
+  máquina; si no hay ninguna, se usa el fallback del sistema.
+- La fuente monoespaciada preferida (JetBrains Mono) se aplica al editor de
+  código, al visor de diferencias y a la terminal de salida.
+- Comandos CLI `--list-fonts`, `--download-fonts [KEYS]` y `--force-fonts`, y
+  sección de fuentes con botón de descarga en la pestaña de configuración.
+- Corrección del arranque: la fuente de UI ya no se resuelve antes de crear
+  `QApplication`, lo que eliminaba el aviso
+  `QFontDatabase: Must construct a QGuiApplication before accessing QFontDatabase`.
+
 ### Calidad
 - Reparación de lint en todo el repositorio: imports sin usar, f-strings sin
   marcadores, `except` desnudos y variables sin uso.

@@ -61,7 +61,13 @@
     "display_applied": "Leviathan window mode applied.",
     "reset": "Reset",
     "reset_confirm": "Are you sure you want to reset settings to default values?",
-    "reset_success": "Settings reset to default values."
+    "reset_success": "Settings reset to default values.",
+    "section_fonts": "Interface fonts",
+    "fonts_cached": "Cached",
+    "fonts_missing": "Missing",
+    "fonts_download": "Download fonts",
+    "fonts_downloading": "Downloading fonts from Google Fonts...",
+    "fonts_done": "{ok} of {total} fonts available"
   },
   "create": {
     "sandbox": "Secure sandbox"

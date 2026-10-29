@@ -61,7 +61,13 @@
     "display_applied": "Modo de ventana Leviathan aplicado.",
     "reset": "Restablecer",
     "reset_confirm": "¿Estás seguro de que deseas restablecer la configuración a los valores por defecto?",
-    "reset_success": "Configuración restablecida a los valores por defecto."
+    "reset_success": "Configuración restablecida a los valores por defecto.",
+    "section_fonts": "Fuentes de la interfaz",
+    "fonts_cached": "En caché",
+    "fonts_missing": "Ausente",
+    "fonts_download": "Descargar fuentes",
+    "fonts_downloading": "Descargando fuentes desde Google Fonts...",
+    "fonts_done": "{ok} de {total} fuentes disponibles"
   },
   "create": {
     "sandbox": "Sandbox seguro"

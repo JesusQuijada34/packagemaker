@@ -79,6 +79,12 @@ Los términos históricos `Simple Blind`, `Super Blind` y `.iflappb` no son opci
 - **Blindaje**: `--harden` aplica `strip,upx,checksum,anti-debug,obfuscate,resource`. Consulta el estado con `--list-hardening`.
 - **Compiladores**: consulta el estado con `--list-compilers`.
 
+### 🔤 Fuentes de la interfaz
+- **Descarga y caché**: `--download-fonts` obtiene Roboto, Inter, Noto Sans, Open Sans y JetBrains Mono desde Google Fonts, verifica cada archivo por SHA-256 y lo guarda en `data/fonts/`.
+- **Resolución versátil**: las fuentes descargadas tienen prioridad sobre las del sistema, así que la interfaz se ve igual en cualquier máquina; sin red se usa la caché y, si no existe, el fallback del sistema.
+- **Editor y terminal**: JetBrains Mono se aplica al editor de código, al visor de diferencias y a la terminal de salida.
+- **Comandos**: `--list-fonts` muestra el estado, `--download-fonts [KEYS]` descarga y `--force-fonts` fuerza la redescarga. La pestaña de configuración incluye una sección de fuentes con botón de descarga.
+
 ### 📱 Plataformas
 - **Windows**: requiere un runner Windows nativo para verificar el ejecutable y el paquete Knosthalij.
 - **Linux**: generación `.iflapp` Danenone verificada localmente.

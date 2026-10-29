@@ -361,16 +361,60 @@ def preferred_ui_font(size=11):
     query is skipped when no application exists yet and a default ``QFont`` is
     returned instead. Callers that need the preferred family must run after the
     application is constructed.
+
+    Las fuentes descargadas por :mod:`lib.font_manager` tienen prioridad sobre
+    las del sistema, de modo que la interfaz se ve igual en cualquier máquina.
     """
     if not PYQT6_AVAILABLE:
         return None
     if QGuiApplication.instance() is None:
         return QFont("sans-serif", int(size))
+
+    family = _preferred_family()
+    if family:
+        return QFont(family, int(size))
+    return QFont("sans-serif", int(size))
+
+
+def _preferred_family():
+    """Familia de UI preferida: caché del proyecto primero, luego el sistema."""
+    try:
+        from lib.font_manager import UI_PREFERENCE, resolve_family
+
+        family = resolve_family(UI_PREFERENCE, kind="ui")
+        if family:
+            return family
+    except Exception:
+        pass
+
     installed = {family.casefold(): family for family in QFontDatabase.families()}
     for candidate in ("Roboto", "Inter Regular", "Inter", "SF Pro Display", "SF Pro", "Segoe UI Variable", "Segoe UI"):
         if candidate.casefold() in installed:
+            return installed[candidate.casefold()]
+    return None
+
+
+def preferred_mono_font(size=10):
+    """Fuente monoespaciada preferida (JetBrains Mono si está disponible)."""
+    if not PYQT6_AVAILABLE:
+        return None
+    if QGuiApplication.instance() is None:
+        return QFont("monospace", int(size))
+
+    try:
+        from lib.font_manager import MONO_PREFERENCE, resolve_family
+
+        family = resolve_family(MONO_PREFERENCE, kind="mono")
+        if family:
+            return QFont(family, int(size))
+    except Exception:
+        pass
+
+    installed = {family.casefold(): family for family in QFontDatabase.families()}
+    for candidate in ("JetBrains Mono", "Cascadia Mono", "Consolas", "DejaVu Sans Mono"):
+        if candidate.casefold() in installed:
             return QFont(installed[candidate.casefold()], int(size))
-    return QFont("sans-serif", int(size))
+    return QFont("monospace", int(size))
 
 
 def system_theme_mode():

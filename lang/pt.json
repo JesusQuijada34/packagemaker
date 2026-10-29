@@ -62,7 +62,13 @@
     "display_applied": "Modo de janela Leviathan aplicado.",
     "reset": "Restaurar",
     "reset_confirm": "Tem certeza de que deseja restaurar as configurações para os valores padrão?",
-    "reset_success": "Configurações restauradas para os valores padrão."
+    "reset_success": "Configurações restauradas para os valores padrão.",
+    "section_fonts": "Fontes da interface",
+    "fonts_cached": "Em cache",
+    "fonts_missing": "Ausente",
+    "fonts_download": "Baixar fontes",
+    "fonts_downloading": "Baixando fontes do Google Fonts...",
+    "fonts_done": "{ok} de {total} fontes disponíveis"
   },
   "create": {
     "sandbox": "Sandbox seguro"

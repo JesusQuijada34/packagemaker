@@ -185,3 +185,6 @@ data/pm.data
 
 # pmCodeEditor - Python portables descargados (no versionar)
 data/pmCodeEditor/python/
+
+# Fuentes descargadas desde Google Fonts (caché local, no versionar)
+data/fonts/

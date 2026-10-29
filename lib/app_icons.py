@@ -62,6 +62,11 @@ ICONS_SVG = {
 <path d="M20 9L18.005 20.3463C17.8369 21.3026 17.0062 22 16.0353 22H7.96474C6.99379 22 6.1631 21.3026 5.99496 20.3463L4 9" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M21 6L15.375 6M3 6L8.625 6M8.625 6V4C8.625 2.89543 9.52043 2 10.625 2H13.375C14.4796 2 15.375 2.89543 15.375 4V6M8.625 6L15.375 6" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>""",
+    "download": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 3V15" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7 10L12 15L17 10" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 17V19C4 20.1046 4.89543 21 6 21H18C19.1046 21 20 20.1046 20 19V17" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
     "refresh": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M21.8883 13.5C21.1645 18.3113 17.013 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C16.1006 2 19.6248 4.46819 21.1679 8" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M17 8H21.4C21.7314 8 22 7.73137 22 7.4V3" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>

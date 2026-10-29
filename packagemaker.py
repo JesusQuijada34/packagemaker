@@ -143,6 +143,7 @@ from lib.fluent_theme import (
     FluentCheckBox as QCheckBox,
     applyget,
     conf_field_stylesheet,
+    preferred_mono_font,
     preferred_ui_font,
     qss_value,
     sidebar_button_stylesheet,
@@ -172,14 +173,38 @@ if sys.platform.startswith("win"):
     except ImportError:
         winreg = None
 
+def _register_bundled_fonts():
+    """Registra en Qt las fuentes descargadas en ``data/fonts``.
+
+    Se ejecuta después de crear ``QApplication`` porque ``addApplicationFont``
+    exige una ``QGuiApplication`` viva.
+    """
+    try:
+        from lib.font_manager import load_cached_fonts
+
+        return load_cached_fonts()
+    except Exception as exc:  # pragma: no cover - la UI no debe caer por fuentes
+        print(f"[FONT] No se pudieron registrar las fuentes: {exc}")
+        return {}
+
+
 if PYQT6_AVAILABLE:
     # La familia preferida sólo puede resolverse cuando existe una
     # QGuiApplication; app_font() se evalúa tras construir QApplication.
     def app_font():
         """Devuelve la fuente de UI preferida una vez creada la aplicación."""
+        _register_bundled_fonts()
         return preferred_ui_font(11)
+
+    def code_font():
+        """Fuente monoespaciada para editor y terminal."""
+        _register_bundled_fonts()
+        return preferred_mono_font(10)
 else:
     def app_font():
+        return None
+
+    def code_font():
         return None
 
     print("font: none")
@@ -2302,6 +2327,43 @@ class PackageTodoGUI(QMainWindow):
             sys_grid.addWidget(v_lbl, i, 1)
         layout.addLayout(sys_grid)
 
+        add_section("config.section_fonts")
+        fonts_grid = QGridLayout()
+        fonts_grid.setSpacing(6)
+        self.conf_fonts_labels = {}
+        try:
+            from lib.font_manager import FONT_REGISTRY, available_fonts_report
+
+            for row, (key, info) in enumerate(available_fonts_report().items()):
+                name_lbl = QLabel(info["family"])
+                set_qss(name_lbl, 'packagemaker_084', append=False)
+                state_lbl = QLabel(tr("config.fonts_cached") if info["cached"] else tr("config.fonts_missing"))
+                set_qss(state_lbl, 'packagemaker_085', append=False)
+                self.conf_fonts_labels[key] = state_lbl
+                fonts_grid.addWidget(name_lbl, row, 0)
+                fonts_grid.addWidget(state_lbl, row, 1)
+            layout.addLayout(fonts_grid)
+        except Exception:
+            self.conf_fonts_labels = {}
+
+        fonts_row = QHBoxLayout()
+        fonts_row.setSpacing(10)
+        self.conf_fonts_btn = QPushButton(tr("config.fonts_download"))
+        self.conf_fonts_btn.setFixedHeight(36)
+        self.conf_fonts_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        set_qss(self.conf_fonts_btn, 'packagemaker_051', append=False)
+        icon_button(self.conf_fonts_btn, "download", 16)
+        self.conf_fonts_btn.clicked.connect(self._download_ui_fonts)
+        self._config_tr_labels.append((self.conf_fonts_btn, "config.fonts_download"))
+        fonts_row.addWidget(self.conf_fonts_btn)
+        fonts_row.addStretch()
+        layout.addLayout(fonts_row)
+
+        self.conf_fonts_status = QLabel("")
+        set_qss(self.conf_fonts_status, 'packagemaker_050', append=False)
+        self.conf_fonts_status.setWordWrap(True)
+        layout.addWidget(self.conf_fonts_status)
+
         layout.addStretch()
         scroll.setWidget(scroll_content)
         outer.addWidget(scroll, 1)
@@ -2331,6 +2393,34 @@ class PackageTodoGUI(QMainWindow):
 
         btn_layout.addStretch()
         outer.addLayout(btn_layout)
+
+    def _download_ui_fonts(self) -> None:
+        """Descarga las fuentes de la interfaz y refresca su estado."""
+        try:
+            from lib.font_manager import (
+                FONT_REGISTRY,
+                ensure_fonts,
+                load_cached_fonts,
+                write_license_notice,
+            )
+        except Exception as exc:
+            self.conf_fonts_status.setText(f"[FONT] No disponible: {exc}")
+            return
+
+        self.conf_fonts_status.setText(tr("config.fonts_downloading"))
+        QApplication.processEvents()
+        results = ensure_fonts(list(FONT_REGISTRY), download=True, log_callback=print)
+        load_cached_fonts()
+        write_license_notice()
+
+        for key, label in getattr(self, "conf_fonts_labels", {}).items():
+            label.setText(
+                tr("config.fonts_cached") if results.get(key) else tr("config.fonts_missing")
+            )
+        ok = sum(1 for path in results.values() if path)
+        self.conf_fonts_status.setText(
+            tr("config.fonts_done").format(ok=ok, total=len(results))
+        )
 
     def _preview_display_mode(self, display_name: str) -> None:
         if not display_name:
@@ -4150,6 +4240,8 @@ def main():
                 'version_update',
                 'list_compilers',
                 'inspect_iflapp',
+                'list_fonts',
+                'download_fonts',
             ] or action_options.get('headless'):
                 result = handle_cli_action(action, data, None, **action_options)
                 if result is False:

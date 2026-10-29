@@ -166,6 +166,11 @@ class CLIHandler:
         inspect_group.add_argument('--list-compilers', action='store_true', help='Mostrar compiladores disponibles y su estado')
         inspect_group.add_argument('--list-hardening', action='store_true', help='Mostrar métodos de blindaje disponibles y su estado')
 
+        font_group = self.parser.add_argument_group('Fuentes')
+        font_group.add_argument('--list-fonts', action='store_true', help='Mostrar el estado de las fuentes de la interfaz')
+        font_group.add_argument('--download-fonts', nargs='?', const='all', metavar='KEYS', help='Descargar fuentes (todas o lista separada por comas)')
+        font_group.add_argument('--force-fonts', action='store_true', help='Forzar la redescarga aunque estén en caché')
+
     @staticmethod
     def _parse_hardening(value):
         """Convierte la lista de métodos de blindaje separada por comas.
@@ -319,6 +324,19 @@ class CLIHandler:
 
         elif getattr(args, 'list_hardening', False):
             return ('list_hardening', None, shell_options)
+
+        elif getattr(args, 'list_fonts', False):
+            return ('list_fonts', None, shell_options)
+
+        elif getattr(args, 'download_fonts', None):
+            return (
+                'download_fonts',
+                {
+                    'keys': args.download_fonts,
+                    'force': getattr(args, 'force_fonts', False),
+                },
+                shell_options,
+            )
         
         # === Version Update ===
         elif args.version_update:
@@ -497,6 +515,63 @@ class HardeningReportHelper:
         return True
 
 
+# === Font Report Helper ===
+class FontReportHelper:
+    """Lista y descarga las fuentes de la interfaz."""
+
+    @staticmethod
+    def report():
+        from lib.font_manager import available_fonts_report
+
+        print("Fuentes de la interfaz:")
+        for key, info in available_fonts_report().items():
+            cache = "EN CACHÉ" if info["cached"] else "AUSENTE"
+            registered = info["registered"] or "-"
+            print(
+                f"  - {key:14s} {info['family']:14s} {cache:9s} "
+                f"licencia={info['license']:11s} registrada={registered}"
+            )
+        return True
+
+    @staticmethod
+    def download(data):
+        from lib.font_manager import (
+            FONT_REGISTRY,
+            ensure_fonts,
+            write_license_notice,
+        )
+
+        raw = (data or {}).get("keys") or "all"
+        text = str(raw).strip().lower()
+        if text in ("", "all", "todas"):
+            keys = list(FONT_REGISTRY)
+        else:
+            keys = [part.strip() for part in text.split(",") if part.strip()]
+            unknown = [key for key in keys if key not in FONT_REGISTRY]
+            if unknown:
+                print(f"[ERROR] Fuentes desconocidas: {', '.join(unknown)}")
+                print(f"        Disponibles: {', '.join(FONT_REGISTRY)}")
+                return False
+
+        force = bool((data or {}).get("force"))
+        print(f"Descargando {len(keys)} fuente(s) desde Google Fonts...")
+        results = ensure_fonts(
+            keys,
+            download=True,
+            force=force,
+            log_callback=_safe_print,
+        )
+        ok = [key for key, path in results.items() if path]
+        missing = [key for key, path in results.items() if not path]
+        if ok:
+            notice = write_license_notice()
+            print(f"[OK] Fuentes disponibles: {', '.join(ok)}")
+            print(f"[OK] Aviso de licencias: {notice}")
+        if missing:
+            print(f"[WARN] No se pudieron obtener: {', '.join(missing)}")
+        return not missing
+
+
 # === Package Inspect Helper ===
 class PackageInspectHelper:
     """Lee la cabecera de un .iflapp sin descomprimir ni descifrar."""
@@ -581,6 +656,12 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'list_hardening':
         return HardeningReportHelper.report()
+
+    elif action == 'list_fonts':
+        return FontReportHelper.report()
+
+    elif action == 'download_fonts':
+        return FontReportHelper.download(data or {})
 
     elif action == 'inspect_iflapp':
         return PackageInspectHelper.inspect(data or {})

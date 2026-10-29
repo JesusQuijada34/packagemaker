@@ -65,6 +65,7 @@ from PyQt6.QtCore import (
     QProcess,
 )
 
+from lib.fluent_theme import preferred_mono_font
 from lib.python_portable_manager import get_python_manager
 from lib.dependency_manager import get_dependency_manager
 
@@ -533,8 +534,8 @@ class CodeEditor(QPlainTextEdit):
         self.update_line_number_area_width(0)
         self.highlight_current_line()
         
-        # Configuración de fuente
-        font = QFont("Consolas", 11)
+        # Configuración de fuente (JetBrains Mono si está disponible)
+        font = preferred_mono_font(11) or QFont("Consolas", 11)
         font.setFixedPitch(True)
         self.setFont(font)
         
@@ -1073,7 +1074,7 @@ class DiffDialog(QDialog):
         # Diff display
         self.diff_display = QTextEdit()
         self.diff_display.setReadOnly(True)
-        self.diff_display.setFont(QFont("Consolas", 10))
+        self.diff_display.setFont(preferred_mono_font(10) or QFont("Consolas", 10))
         layout.addWidget(self.diff_display)
         
         # Info label

@@ -13,6 +13,12 @@ except ImportError:
         def __init__(self, *args, **kwargs): pass
 from lib.TitleBar import TitleBar
 
+try:
+    from lib.fluent_theme import preferred_mono_font
+except ImportError:  # fluent_theme requiere PyQt6
+    def preferred_mono_font(size=10):
+        return None
+
 
 class OutputTerminalDialog(QDialog):
     """Dialogo de terminal para mostrar salida de scripts"""
@@ -61,7 +67,7 @@ class OutputTerminalDialog(QDialog):
         # Area de texto de terminal (solo última línea)
         self.terminal_output = QTextEdit()
         self.terminal_output.setReadOnly(True)
-        self.terminal_output.setFont(QFont("Consolas", 10))
+        self.terminal_output.setFont(preferred_mono_font(10) or QFont("Consolas", 10))
         self.terminal_output.setMaximumHeight(100)
         self.terminal_output.setStyleSheet("""
             QTextEdit {
