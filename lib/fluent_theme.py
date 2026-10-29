@@ -356,9 +356,16 @@ def preferred_ui_font(size=11):
 
     Roboto remains the project preference; Inter and SF Pro are useful native
     fallbacks on systems where Roboto is not installed.
+
+    ``QFontDatabase.families()`` requires a live ``QGuiApplication``, so the
+    query is skipped when no application exists yet and a default ``QFont`` is
+    returned instead. Callers that need the preferred family must run after the
+    application is constructed.
     """
     if not PYQT6_AVAILABLE:
         return None
+    if QGuiApplication.instance() is None:
+        return QFont("sans-serif", int(size))
     installed = {family.casefold(): family for family in QFontDatabase.families()}
     for candidate in ("Roboto", "Inter Regular", "Inter", "SF Pro Display", "SF Pro", "Segoe UI Variable", "Segoe UI"):
         if candidate.casefold() in installed:

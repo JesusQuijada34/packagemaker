@@ -173,9 +173,15 @@ if sys.platform.startswith("win"):
         winreg = None
 
 if PYQT6_AVAILABLE:
-    APP_FONT = preferred_ui_font(11)
+    # La familia preferida sólo puede resolverse cuando existe una
+    # QGuiApplication; app_font() se evalúa tras construir QApplication.
+    def app_font():
+        """Devuelve la fuente de UI preferida una vez creada la aplicación."""
+        return preferred_ui_font(11)
 else:
-    APP_FONT = None
+    def app_font():
+        return None
+
     print("font: none")
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
@@ -576,7 +582,9 @@ class PackageTodoGUI(QMainWindow):
         self.setWindowTitle(self._fixed_title)
         self._pending_restart_keys = []
         self.resize(1024, 720)
-        self.setFont(APP_FONT)
+        font = app_font()
+        if font is not None:
+            self.setFont(font)
         # Cargar icono con soporte para Linux
         icon_to_load = IPM_ICON_PATH
         if os.path.exists(icon_to_load):
@@ -4150,7 +4158,9 @@ def main():
 
             if PYQT6_AVAILABLE:
                 app = QApplication(sys.argv)
-                app.setFont(APP_FONT)
+                font = app_font()
+                if font is not None:
+                    app.setFont(font)
                 window = handle_cli_action(action, data, PackageTodoGUI, **action_options)
             else:
                 print("⚠️ PyQt6 no disponible. Forzando modo TUI...")
@@ -4177,7 +4187,9 @@ def main():
         return
 
     app = QApplication(sys.argv)
-    app.setFont(APP_FONT)
+    font = app_font()
+    if font is not None:
+        app.setFont(font)
 
     config = load_app_config()
     current_lang = config.get("LANGUAGE") or system_default_language()
