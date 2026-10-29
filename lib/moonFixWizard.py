@@ -5,7 +5,6 @@ MoonFix Wizard - Asistente de reparación para proyectos PackageMaker
 """
 
 import os
-import time
 import shutil
 import zipfile
 from lib.safe_zip import safe_extract_zip
@@ -21,7 +20,7 @@ import sys
 try:
     from PyQt6.QtWidgets import (
         QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-        QLineEdit, QStackedWidget, QScrollArea, QGridLayout, QFileDialog,
+        QLineEdit, QStackedWidget, QGridLayout, QFileDialog,
         QRadioButton, QButtonGroup, QApplication
     )
     from PyQt6.QtGui import QPixmap
@@ -485,7 +484,8 @@ class MoonFixWizard(QDialog):
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
                 xml_data = {child.tag: child.text for child in root if child.text}
-            except: pass
+            except ET.ParseError:
+                pass
 
         self.results[index] = {"inputs": {}, "is_invalid": any(i["type"] == "invalid_package" for i in proj_data["issues"])}
         
@@ -709,7 +709,6 @@ class MoonFixWizard(QDialog):
 
     def fade_to_page(self, index):
         """Transición suave con opacidad y desplazamiento lateral (W11 Inspired)."""
-        old_widget = self.stack.currentWidget()
         new_widget = self.stack.widget(index)
         
         # Clean previous page anims
@@ -876,7 +875,7 @@ def verificar_github_username(username):
         if e.code in (403, 429):
             return True, f"No se pudo verificar por límite de GitHub ({e.code}), se permite el username"
         return False, f"Error al verificar: {e.code}"
-    except urllib.error.URLError as e:
+    except urllib.error.URLError:
         # Si no hay internet, se permite el username
         return True, "Conexión a internet no disponible, se permite el username"
     except Exception as e:

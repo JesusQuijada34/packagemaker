@@ -40,7 +40,7 @@ try:
     from PyQt6.QtWidgets import (
         QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
         QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar, QTextEdit, QStackedWidget,
-        QCheckBox, QMessageBox, QInputDialog, QSwipeGesture, QSlider, QFrame
+        QSwipeGesture, QSlider, QFrame
     )
     from PyQt6.QtGui import QFont, QIcon
     from PyQt6.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
@@ -118,7 +118,7 @@ except ImportError:
     from lib.Updater import KillerLogic, InstallerWorker, ModernUpdaterWindow
 from lib.BuildThread import BuildThread, FlangCompiler
 from lib.TitleBar import AnimTitleButton, TitleBar
-from lib.app_icons import get_sidebar_icon, get_icon, icon_button
+from lib.app_icons import get_icon, icon_button
 from lib.window_chrome import (
     apply_display_mode,
     apply_personalization_effects,
@@ -356,7 +356,7 @@ def save_to_registry(key, value):
         winreg.SetValueEx(reg_key, key, 0, winreg.REG_SZ, str(value))
         winreg.CloseKey(reg_key)
         return True
-    except:
+    except OSError:
         return False
 
 def load_from_registry(key, default=""):
@@ -365,7 +365,7 @@ def load_from_registry(key, default=""):
         value, _ = winreg.QueryValueEx(reg_key, key)
         winreg.CloseKey(reg_key)
         return value
-    except:
+    except OSError:
         return default
 
 plataforma = plataforma_platform.capitalize()
@@ -408,7 +408,6 @@ AGE_RATINGS = {
     "adult" : "ADULTS ONLY",
     "sex" : "ADULTS ONLY",
     "sexual" : "ADULTS ONLY",
-    "social" : "TEENS ALL 18+",
     "violence" : "TEENS ALL 18+",
     "horror" : "TEENS ALL 18+",
     "obscene" : "TEENS ALL 18+",
@@ -1454,29 +1453,20 @@ class PackageTodoGUI(QMainWindow):
         linux_checked = self.checkbox_linux.isChecked()
 
         if win_checked and linux_checked:
-            # Multiplataforma
             plataforma_seleccionada = "AlphaCube"
-            xte = "nrdPkg"
         elif win_checked:
             plataforma_seleccionada = "Knosthalij"
-            xte = "exe"
         elif linux_checked:
             plataforma_seleccionada = "Danenone"
-            xte = "appImage"
         else:
-            # Por defecto Windows
             plataforma_seleccionada = "Knosthalij"
-            xte = "exe"
 
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         version = self.input_version.text().strip()
-        productversion = self.input_version.text().strip()
         if version == "":
-             version = f"1-{getversion()}-{plataforma_seleccionada}"
-             vso = f"1-{getversion()}"
+            version = f"1-{getversion()}-{plataforma_seleccionada}"
         else:
-            vso = f"{version}-{getversion()}"
             version = f"{version}-{getversion()}-{plataforma_seleccionada}"
         nombre_completo = self.input_nombre_completo.text() or nombre_logico.strip().upper()
         version_base = (self.input_version.text().strip() or "1").split("-")[0]
@@ -1664,8 +1654,28 @@ class PackageTodoGUI(QMainWindow):
 
         form_layout.addLayout(mode_layout, 4, 1) # Use addLayout directly for cleaner code
 
+        # Fila 4b: Compilador y blindaje
+        form_layout.addWidget(uwp_label("Compilador:"), 6, 0)
+        self.compiler_combo = QComboBox()
+        self.compiler_combo.setFixedHeight(35)
+        set_qss(self.compiler_combo, 'packagemaker_079', append=False)
+        self._populate_compilers()
+        self.compiler_combo.setToolTip("Backend de compilación (Nuitka recomendado para binarios nativos)")
+        form_layout.addWidget(self.compiler_combo, 6, 1)
+
+        options_row = QHBoxLayout()
+        options_row.setSpacing(18)
+        self.dropper_checkbox = QCheckBox("Generar dropper (.run)")
+        self.dropper_checkbox.setToolTip("Adjunta el .iflapp en un lanzador autoextraíble")
+        options_row.addWidget(self.dropper_checkbox)
+        self.hardening_checkbox = QCheckBox("Blindaje adicional")
+        self.hardening_checkbox.setToolTip("Aplica strip/UPX/checksum/anti-debug/ofuscación al paquete")
+        options_row.addWidget(self.hardening_checkbox)
+        options_row.addStretch()
+        form_layout.addLayout(options_row, 7, 0, 1, 2)
+
         # Fila 5: Carpeta Custom
-        form_layout.addWidget(uwp_label("Carpeta Externa:"), 5, 0)
+        form_layout.addWidget(uwp_label("Carpeta Externa:"), 8, 0)
 
         custom_box = QHBoxLayout()
         custom_box.setSpacing(8)
@@ -1683,7 +1693,7 @@ class PackageTodoGUI(QMainWindow):
         icon_button(self.btn_select_folder, "folder", 16)
         custom_box.addWidget(self.btn_select_folder)
 
-        form_layout.addLayout(custom_box, 5, 1)
+        form_layout.addLayout(custom_box, 8, 1)
 
         layout.addWidget(form_group)
 
@@ -1732,7 +1742,26 @@ class PackageTodoGUI(QMainWindow):
                      self.input_build_empresa.setText(root.findtext("publisher", ""))
                      self.input_build_nombre.setText(root.findtext("app", ""))
                      self.input_build_version.setText(root.findtext("version", "").replace("v", "").split("-")[0])
-                 except: pass
+                 except (OSError, ET.ParseError):
+                     pass
+
+    def _populate_compilers(self):
+        """Rellena el selector de compiladores con los backends disponibles."""
+        try:
+            from lib.compilers import available_backends
+
+            report = available_backends()
+            for name, info in report.items():
+                label = info["display_name"]
+                if not info["available"]:
+                    label += " (no instalado)"
+                self.compiler_combo.addItem(label, name)
+                if not info["available"]:
+                    index = self.compiler_combo.count() - 1
+                    self.compiler_combo.model().item(index).setEnabled(False)
+        except Exception as exc:
+            print(f"[WARN] No se pudieron listar compiladores: {exc}")
+            self.compiler_combo.addItem("Nuitka", "nuitka")
 
     def build_package_action(self):
         version = getversion()
@@ -1754,12 +1783,32 @@ class PackageTodoGUI(QMainWindow):
         self.build_progress.setVisible(True)
         self.build_progress.setMarquee(True)
 
-        self.build_thread = BuildThread(empresa, nombre, version_full, platformLineEdit, parent=self, custom_path=custom_path, base_dir=BASE_DIR, build_mode=build_mode)
+        compiler_name = self.compiler_combo.currentData() if hasattr(self, 'compiler_combo') else None
+        build_dropper = bool(getattr(self, 'dropper_checkbox', None) and self.dropper_checkbox.isChecked())
+        hardening = None
+        if getattr(self, 'hardening_checkbox', None) and self.hardening_checkbox.isChecked():
+            try:
+                from lib.hardening import method_names
+
+                hardening = method_names()
+            except Exception:
+                hardening = None
+
+        sandbox_enabled = True
+        if hasattr(self, 'sandbox_switch'):
+            sandbox_enabled = self.sandbox_switch.isChecked()
+
+        self.build_thread = BuildThread(
+            empresa, nombre, version_full, platformLineEdit, parent=self,
+            custom_path=custom_path, base_dir=BASE_DIR, build_mode=build_mode,
+            compiler_name=compiler_name, sandbox=sandbox_enabled,
+            build_dropper=build_dropper, hardening=hardening,
+        )
         self.build_thread.progress.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.finished.connect(lambda msg: [self.build_status.setText(msg), self.build_progress.setVisible(False)])
         self.build_thread.error.connect(lambda msg: [self.build_status.setText(f"❌ Error: {msg}"), self.build_progress.setVisible(False)])
         self.build_thread.start()
-        self.statusBar().showMessage(f"Iniciando compilación...")
+        self.statusBar().showMessage("Iniciando compilación...")
 
     def init_manager_tab(self, parent_widget=None):
         target = parent_widget if parent_widget else self.tab_manager
@@ -2012,8 +2061,13 @@ class PackageTodoGUI(QMainWindow):
             target_dir = os.path.join(Fluthin_APPS, pkg_name)
             os.makedirs(target_dir, exist_ok=True)
             try:
-                with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                    safe_extract_zip(zip_ref, target_dir)
+                from lib.iflapp_format import extract_iflapp, sniff_format
+
+                if sniff_format(file_path) == "iflapp2":
+                    extract_iflapp(file_path, target_dir)
+                else:
+                    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                        safe_extract_zip(zip_ref, target_dir)
                 self.manager_status.setText(f"✅ Instalado: {pkg_name} en Fluthin Apps")
                 # Asociación de extensión y menú inicio en Windows
                 if sys.platform.startswith('win'):
@@ -2043,7 +2097,6 @@ class PackageTodoGUI(QMainWindow):
                 import pythoncom
                 import win32com.client
                 from win32com.shell import shell, shellcon
-                desktop = os.path.join(os.environ["USERPROFILE"], "Desktop")
                 start_menu = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu", "Programs")
                 program_files = os.path.join(os.environ["ProgramFiles"], empresa, nombre)
                 os.makedirs(program_files, exist_ok=True)
@@ -2598,7 +2651,7 @@ class PackageTodoGUI(QMainWindow):
                 if not os.path.exists(os.path.join(project_path, "assets", "splash_Setup.png")):
                     issues.append({"type": "missing_splash_setup"})
 
-            except:
+            except (ET.ParseError, OSError):
                 issues.append({"type": "corrupt_xml"})
                 requires_wizard = True
 
@@ -3440,7 +3493,7 @@ class PackageTodoGUI(QMainWindow):
             app_id = xml_data.get("app", basename)
             name = xml_data.get("name", app_id)
             author = xml_data.get("author", "Unknown")
-            platform = normalize_platform(xml_data.get("platform", "Knosthalij"))
+            target_platform = normalize_platform(xml_data.get("platform", "Knosthalij"))
             version_raw = xml_data.get("version", "1.0.0").lstrip("v").split("-")[0] or "1.0.0"
 
             progressBar.setValue(40)
@@ -3451,7 +3504,7 @@ class PackageTodoGUI(QMainWindow):
                 app_id,
                 name,
                 author,
-                platform,
+                target_platform,
                 version_base=version_raw,
                 description=xml_data.get("description", "Proyecto reparado por MoonFix"),
             )
@@ -3466,7 +3519,7 @@ class PackageTodoGUI(QMainWindow):
                 txtLog.append("\n[2/2] Reparación estructural completada")
 
             progressBar.setValue(100)
-            txtLog.append(f"\n=== ✅ MoonFix Completado ===")
+            txtLog.append("\n=== ✅ MoonFix Completado ===")
             txtLog.append(f"Archivos restaurados: {problemasReparados}")
 
             btnCerrar.setEnabled(True)
@@ -3671,7 +3724,6 @@ class PackageTodoGUI(QMainWindow):
 
             # Información del archivo MEXF
             try:
-                import json
                 with open(filePath, 'r', encoding='utf-8') as f:
                     mexfData = json.load(f)
 
@@ -3683,7 +3735,7 @@ class PackageTodoGUI(QMainWindow):
                 set_qss(lblDetalles, 'packagemaker_157', append=False)
                 lblDetalles.setWordWrap(True)
                 contentLayout.addWidget(lblDetalles)
-            except:
+            except (OSError, KeyError, ET.ParseError):
                 pass
 
             # Barra de progreso
@@ -3745,7 +3797,6 @@ class PackageTodoGUI(QMainWindow):
             progressBar.setValue(10)
 
             txtLog.append("[1/4] Leyendo archivo MEXF...")
-            import json
             with open(filePath, 'r', encoding='utf-8') as f:
                 mexfData = json.load(f)
             txtLog.append(f"  ✓ Archivo leído: {mexfData.get('name', 'N/A')}")
@@ -3955,7 +4006,6 @@ class PackageTodoGUI(QMainWindow):
                 }
             }
 
-            import json
             with open(rutaMexf, 'w', encoding='utf-8') as f:
                 json.dump(contenidoMexf, f, indent=4, ensure_ascii=False)
 
@@ -4084,7 +4134,15 @@ def main():
                 action_options['headless'] = True
 
             # Acciones que no requieren GUI ni QApplication
-            if action in ['shellpatch_install', 'shellpatch_remove', 'shellpatch_shortcuts'] or action_options.get('headless'):
+            if action in [
+                'shellpatch_install',
+                'shellpatch_remove',
+                'shellpatch_shortcuts',
+                'show_version',
+                'version_update',
+                'list_compilers',
+                'inspect_iflapp',
+            ] or action_options.get('headless'):
                 result = handle_cli_action(action, data, None, **action_options)
                 if result is False:
                     sys.exit(1)

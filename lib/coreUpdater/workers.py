@@ -82,11 +82,11 @@ class InstallerWorker(QObject):
                     if os.path.abspath(dst) == os.path.abspath(sys.argv[0]): continue 
                     if os.path.exists(dst):
                         try: os.remove(dst)
-                        except: # Rename strategy for locked files
+                        except OSError:  # Rename strategy for locked files
                             try: os.rename(dst, dst + f".old.{int(time.time())}")
-                            except: continue
+                            except OSError: continue
                     try: shutil.move(src, dst)
-                    except: pass
+                    except OSError: pass
 
             # Sincronizar plantillas antes de borrar
             try:
@@ -101,9 +101,9 @@ class InstallerWorker(QObject):
                 log(f"[UPDATE] Error sincronizando plantillas: {sync_err}")
 
             try: shutil.rmtree(ext_dir)
-            except: pass
+            except OSError: pass
             try: os.remove(temp_zip)
-            except: pass
+            except OSError: pass
             
             self.status.emit("Finalizando...")
             self.finished.emit(True, "OK")
@@ -132,12 +132,19 @@ class IFLAPPInstallerWorker(QObject):
             # Crear directorio destino si no existe
             os.makedirs(self.target_dir, exist_ok=True)
             
-            # Extraer archivo .iflapp (zip)
-            with zipfile.ZipFile(self.iflapp_path, 'r') as zf:
-                files = safe_extract_zip(zf, self.target_dir)
-                total = len(files)
-                for i, _ in enumerate(files):
-                    self.progress.emit(int((i + 1) * 100 / total) if total else 100)
+            # Extraer archivo .iflapp (contenedor v2 o ZIP histórico)
+            from lib.iflapp_format import extract_iflapp, read_iflapp_header, sniff_format
+
+            if sniff_format(self.iflapp_path) == "iflapp2":
+                files = extract_iflapp(self.iflapp_path, self.target_dir)
+                header = read_iflapp_header(self.iflapp_path, include_blobs=False)
+                self.status.emit(f"{header.identity().get('name') or header.identity().get('app') or 'Aplicación'} instalado")
+            else:
+                with zipfile.ZipFile(self.iflapp_path, 'r') as zf:
+                    files = safe_extract_zip(zf, self.target_dir)
+            total = len(files)
+            for i, _ in enumerate(files):
+                self.progress.emit(int((i + 1) * 100 / total) if total else 100)
             
             self.status.emit("Configurando aplicación...")
             
@@ -305,7 +312,7 @@ class EXEInstallerWorker(QObject):
                 if self.temp_exe_path and os.path.exists(self.temp_exe_path):
                     os.remove(self.temp_exe_path)
                     log(f"[EXE] Temporal eliminado: {self.temp_exe_path}")
-            except: pass
+            except OSError: pass
             
         except Exception as e:
             log(traceback.format_exc())

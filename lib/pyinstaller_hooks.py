@@ -142,11 +142,11 @@ def create_runtime_hooks() -> dict:
         "rthooks": [
             {
                 "name": "rh_libpython.py",
-                "content": f"""
+                "content": """
 # Hook de runtime para libpython
 import sys
 import os
-python_version = f"{{sys.version_info.major}}.{{sys.version_info.minor}}"
+python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 # Intentar agregar ruta de libpython
 libpython_paths = [

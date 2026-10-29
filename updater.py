@@ -7,10 +7,9 @@ This script provides the main entry point for the PackageMaker updater system.
 It imports core functionality from lib.coreUpdater and provides CLI/GUI interfaces.
 """
 import sys
-import os
 import argparse
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton
-from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor, QGuiApplication
+from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtCore import Qt
 
 # Import core updater module
@@ -246,7 +245,7 @@ Modos de actualización:
             )
             if exe_url:
                 print(f"UPDATE_AVAILABLE: {app_data['version']} -> {remote}")
-                print(f"TYPE: EXE_SETUP")
+                print("TYPE: EXE_SETUP")
                 print(f"FILENAME: {exe_filename}")
                 print(f"DOWNLOAD_URL: {exe_url}")
                 sys.exit(0)
@@ -255,7 +254,7 @@ Modos de actualización:
             url = _fR(app_data["author"], app_data["app"], remote, app_data["platform"], app_data["publisher"])
             if url:
                 print(f"UPDATE_AVAILABLE: {app_data['version']} -> {remote}")
-                print(f"TYPE: IFLAPP_PACKAGE")
+                print("TYPE: IFLAPP_PACKAGE")
                 print(f"DOWNLOAD_URL: {url}")
                 sys.exit(0)
         

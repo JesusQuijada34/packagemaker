@@ -8,16 +8,16 @@ import os
 import sys
 import subprocess
 from pathlib import Path
-from typing import List, Tuple, Optional, Callable
+from typing import List, Tuple, Optional
 
 try:
     from PyQt6.QtWidgets import (
         QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
-        QWidget, QFrame, QScrollArea, QSizePolicy, QMessageBox,
+        QWidget, QFrame, QScrollArea, QMessageBox,
         QApplication
     )
-    from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent, QPoint, QPropertyAnimation, QEasingCurve
-    from PyQt6.QtGui import QIcon, QPixmap, QFont, QColor, QPainter, QBrush, QPen
+    from PyQt6.QtCore import Qt, pyqtSignal
+    from PyQt6.QtGui import QPixmap, QFont
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -41,12 +41,12 @@ except ImportError:
 
 # Importar detector de editores y utilidades de i18n
 try:
-    from .editorDetector import EditorDetector, EditorInfo, get_available_editors, save_default_editor, get_default_editor
+    from .editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
     from .i18n import tr
     from .iconManager import load_svg_icon
     from .projectConfig import get_project_config
 except ImportError:
-    from editorDetector import EditorDetector, EditorInfo, get_available_editors, save_default_editor, get_default_editor
+    from editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
     from i18n import tr
     try:
         from iconManager import load_svg_icon
@@ -73,7 +73,8 @@ def detect_executable_type(file_path: str) -> str:
         with open(file_path, 'rb') as f:
             header = f.read(4)
             if header == b'\x7fELF': return 'elf'
-    except: pass
+    except OSError:
+        pass
     
     if os.access(file_path, os.X_OK): return 'executable'
     return 'unknown'
@@ -225,7 +226,8 @@ class EditorCard(QFrame):
             try:
                 from lib.app_icons import svg_to_pixmap, ICONS_SVG
                 return svg_to_pixmap(ICONS_SVG["pmcodeeditor"], 40)
-            except: pass
+            except (ImportError, KeyError):
+                pass
         
         if load_svg_icon:
             icon = load_svg_icon("app", 40)
@@ -241,7 +243,8 @@ class EditorCard(QFrame):
                 provider = QFileIconProvider()
                 icon = provider.icon(QFileInfo(self.exe_path))
                 if not icon.isNull(): return icon.pixmap(40, 40)
-            except: pass
+            except (ImportError, RuntimeError):
+                pass
         return None
 
     def _update_style(self):
@@ -482,7 +485,8 @@ class OpenWithDialog(QDialog):
                 if exe_path and check_executable_exists(exe_path):
                     self.btn_edit_project.setVisible(True)
                     self.btn_edit_project.setText(f"{tr('Editar con')} {editor_name}")
-        except: pass
+        except (OSError, AttributeError):
+            pass
 
     def _on_edit_project(self):
         if not self.project_config or not self.project_path: return

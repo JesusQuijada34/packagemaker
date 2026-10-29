@@ -309,7 +309,7 @@ class EditorDetector:
                     paths = result.stdout.strip().split("\n")
                     if paths:
                         return paths[0].strip()
-            except:
+            except (OSError, subprocess.SubprocessError):
                 pass
                 
         else:
@@ -324,7 +324,7 @@ class EditorDetector:
                 )
                 if result.returncode == 0:
                     return result.stdout.strip()
-            except:
+            except (OSError, subprocess.SubprocessError):
                 pass
             
             # Buscar manualmente en rutas

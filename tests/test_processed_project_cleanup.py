@@ -3,6 +3,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
+from lib import iflapp_format
 from lib.BuildThread import FlangCompiler
 
 
@@ -83,8 +84,12 @@ class ProcessedProjectCleanupTests(unittest.TestCase):
             valid_artifact = output / "valid.iflapp"
             self.assertTrue(compiler.compress_to_iflapp(valid_package, valid_artifact))
             self.assertTrue(valid_artifact.exists())
-            with zipfile.ZipFile(valid_artifact) as archive:
-                self.assertEqual(archive.namelist(), ["details.xml"])
+            # El contenedor v2 es binario y firmado, ya no es un ZIP.
+            self.assertEqual(iflapp_format.sniff_format(valid_artifact), "iflapp2")
+            report = iflapp_format.verify_iflapp(valid_artifact)
+            self.assertTrue(report["valid"])
+            header = iflapp_format.read_iflapp_header(valid_artifact, include_blobs=False)
+            self.assertIn("details.xml", {entry["path"] for entry in header.manifest})
 
     def test_gui_compiler_runner_preserves_source_after_packaging(self):
         with tempfile.TemporaryDirectory() as temp_dir:

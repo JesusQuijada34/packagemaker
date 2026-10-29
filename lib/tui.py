@@ -69,7 +69,6 @@ def _hr(char: str = "─") -> str:
 
 def _banner() -> None:
     """Cabecera de la app."""
-    w = min(_cols(), 80)
     print()
     print(orange("█") * 2 + bold(orange("  Influent Package Maker")) + gray("  v" + _get_version()))
     print(_hr())
@@ -342,7 +341,6 @@ def _screen_create() -> None:
         folder_name = ProjectNameFormatter.format_project_folder(
             publisher_slug, app_slug, version_base, real_platform
         )
-        variables = build_variables(publisher_slug, app_slug, nombre, autor, real_platform, version_base)
         _ok(f"Proyecto creado en: {_base_dir() / folder_name}")
     else:
         _err(f"Falló con código {rc}")
@@ -560,7 +558,6 @@ def _build_project_command(proj: Path, python_exe: Optional[str] = None) -> List
 
 def _build_project_direct(proj: Path) -> None:
     """Lanza compilación sobre un proyecto del gestor."""
-    output_dir = str(proj.parent / "dist")
     detected = _detect_platform()
     print()
     _info(f"Compilando {orange(proj.name)} para {orange(detected)}…")

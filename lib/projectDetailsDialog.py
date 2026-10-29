@@ -1,5 +1,4 @@
 import os
-import os
 import sys
 import shutil
 import zipfile
@@ -190,8 +189,6 @@ class ProjectDetailsDialog(QDialog):
         # Title Bar
         title = f"App: {self.pkg.get('titulo', 'Unknown')}" if self.is_app else f"Proyecto: {self.pkg.get('titulo', 'Unknown')}"
         icon_path = self.pkg.get("icon")
-        icon_pm = QIcon(icon_path) if icon_path else None
-
         self.titlebar = CustomTitleBar(self, title=title, icon=icon_path or "")
         # Usamos el estilo nativo de LeviathanUI
         # self.titlebar.setStyleSheet(...)
@@ -423,8 +420,13 @@ class ProjectDetailsDialog(QDialog):
             os.makedirs(target_dir, exist_ok=True)
             
             self.install_console.log(f"Extrayendo a: {target_dir}")
-            with zipfile.ZipFile(valid_file, 'r') as zf:
-                safe_extract_zip(zf, target_dir)
+            from lib.iflapp_format import extract_iflapp, sniff_format
+
+            if sniff_format(valid_file) == "iflapp2":
+                extract_iflapp(valid_file, target_dir)
+            else:
+                with zipfile.ZipFile(valid_file, 'r') as zf:
+                    safe_extract_zip(zf, target_dir)
             
             self.install_console.log("Instalacion completada exitosamente!")
             if hasattr(self.manager, "load_manager_lists"): 

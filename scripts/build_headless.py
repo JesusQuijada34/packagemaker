@@ -23,7 +23,7 @@ def main():
     output_path = Path(args.output).resolve()
     target_platform = args.platform or ("Windows" if os.name == 'nt' else "Linux")
     
-    print(f"🚀 Iniciando compilación headless...")
+    print("🚀 Iniciando compilación headless...")
     print(f"📂 Proyecto: {project_path}")
     print(f"📦 Salida: {output_path}")
     print(f"💻 Plataforma objetivo: {target_platform}")

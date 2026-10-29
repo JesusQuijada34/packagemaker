@@ -3,11 +3,8 @@ import json
 import sys
 import time
 import shutil
-import zipfile
-import subprocess
 import platform
 import fnmatch
-import hashlib
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -33,12 +30,30 @@ except ImportError:
         def connect(self, func): pass
         def emit(self, *args, **kwargs): pass
 
-from lib.pyinstaller_embedded import get_pyinstaller, ensure_pyinstaller
+from lib import iflapp_format
+from lib.compilers import (
+    CompilerUnavailableError,
+    available_backends,
+    ensure_backend,
+    resolve_backend,
+)
+from lib.hardware_sandbox import HardwareSandbox
 
 class FlangCompiler:
     """Compilador principal unificado para el ecosistema Fluthin (Version Robusta)."""
 
-    def __init__(self, repo_path: Path, output_path: Optional[Path] = None, log_callback=None):
+    def __init__(
+        self,
+        repo_path: Path,
+        output_path: Optional[Path] = None,
+        log_callback=None,
+        compiler_name: Optional[str] = None,
+        sandbox: bool = True,
+        package_password: Optional[str] = None,
+        signing_key: Optional[bytes] = None,
+        build_dropper: bool = False,
+        hardening: Optional[List[str]] = None,
+    ):
         self.repo_path = Path(repo_path).resolve()
         self.output_path = Path(output_path or "./releases").resolve()
         self.log_callback = log_callback
@@ -49,10 +64,20 @@ class FlangCompiler:
         self.current_platform = platform.system()
         self.last_error = ""
         self.scripts_to_compile = self._load_scripts_to_compile()
+        self.compiler_name = compiler_name
+        self._backend = None
+        self.package_password = package_password
+        self.signing_key = signing_key or iflapp_format.DEFAULT_SIGNING_KEY
+        self.build_dropper = build_dropper
+        self.hardening_methods = list(hardening) if hardening else []
+        self.sandbox_enabled = sandbox
+        self._sandbox = HardwareSandbox(log_callback=self.log) if sandbox else None
 
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.log(f"[FlangCompiler IT] Inicializado en: {self.repo_path}")
         self.log(f"[FlangCompiler IT] Plataforma actual: {self.current_platform}")
+        if self._sandbox:
+            self.log(f"[FlangCompiler IT] Sandbox: {self._sandbox.backend}")
 
     def log(self, msg):
         if self.log_callback:
@@ -92,21 +117,59 @@ class FlangCompiler:
         return normalized
 
     def _check_pyinstaller_installed(self) -> bool:
-        pyi = get_pyinstaller()
-        if pyi.is_available():
-            self.log(f"[INFO] PyInstaller embebido: {pyi.get_version()}")
-            return True
-        return False
+        """Compatibilidad: indica si el backend PyInstaller está disponible."""
+        from lib.compilers import PyInstallerBackend
+
+        return PyInstallerBackend().is_available()
 
     def _ensure_pyinstaller(self) -> bool:
+        """Compatibilidad: garantiza el backend PyInstaller."""
         if self._check_pyinstaller_installed():
             return True
         self.log("[INFO] PyInstaller no encontrado. Iniciando instalación automática...")
-        if ensure_pyinstaller(log_callback=self.log):
+        if ensure_backend("pyinstaller", log_callback=self.log):
             return True
         self.last_error = "No se pudo instalar PyInstaller automáticamente."
         self.log("[ERROR] No se pudo instalar PyInstaller automáticamente")
         return False
+
+    def describe_compilers(self) -> dict:
+        """Informe de compiladores disponibles para la interfaz y el CLI."""
+        return available_backends(log_callback=self.log)
+
+    def _ensure_compiler(self):
+        """Resuelve y garantiza un backend de compilación operativo.
+
+        Prioriza el backend solicitado (``compiler_name``), cae a Nuitka y, si
+        no está disponible, intenta instalarlo; PyInstaller queda como último
+        recurso de compatibilidad.
+        """
+        if self._backend is not None and self._backend.is_available():
+            return self._backend
+        preferred = self.compiler_name
+        try:
+            self._backend = resolve_backend(preferred, log_callback=self.log)
+            self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
+            return self._backend
+        except CompilerUnavailableError:
+            pass
+
+        target = (preferred or "nuitka").strip().lower()
+        self.log(f"[INFO] Compilador {target!r} no disponible; instalando dependencias...")
+        if ensure_backend(target, log_callback=self.log):
+            self._backend = resolve_backend(target, log_callback=self.log)
+            self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
+            return self._backend
+
+        # Último recurso: PyInstaller histórico.
+        if ensure_backend("pyinstaller", log_callback=self.log):
+            self._backend = resolve_backend("pyinstaller", log_callback=self.log)
+            self.log(f"[WARN] Usando compilador de respaldo: {self._backend.display_name}")
+            return self._backend
+
+        self.last_error = "No hay ningún compilador disponible (Nuitka, PyInstaller, cx_Freeze)."
+        self.log(f"[ERROR] {self.last_error}")
+        return None
 
     def parse_details_xml(self) -> bool:
         if not self.details_xml_path.exists():
@@ -255,10 +318,11 @@ class FlangCompiler:
             )
             self.log(f"[ERROR] {self.last_error}")
             return False
-        if not self._ensure_pyinstaller():
+        backend = self._ensure_compiler()
+        if backend is None:
             return False
         self.log("--- / --- - WORKING FOR SQUAREROOM - --- / ---")
-        self.log(f"[INFO] Iniciando compilación para {target_platform}...")
+        self.log(f"[INFO] Iniciando compilación para {target_platform} con {backend.display_name}...")
         for script in self.scripts:
             self.log(f"[INFO] Compilando script: {script['name']}...")
             if target_platform == "Windows":
@@ -295,23 +359,21 @@ class FlangCompiler:
             add_data.append((str(self.details_xml_path), "."))
         hidden_imports = self._detect_hidden_imports(script_path)
 
-        pyi = get_pyinstaller()
-        if not pyi.is_available():
-            self.last_error = "PyInstaller no disponible"
-            self.log("[ERROR] PyInstaller no disponible")
+        backend = self._ensure_compiler()
+        if backend is None:
             return False
 
         dist_dir = self.repo_path / "dist"
         dist_dir.mkdir(exist_ok=True)
-        build_dir = tempfile.mkdtemp(prefix="pyi_build_")
-        # PyInstaller puede limpiar el directorio de salida entre ejecuciones.
-        # Cada script se compila en una salida aislada y luego su ejecutable se
-        # acumula en el `dist` compartido que consume create_package().
+        build_dir = tempfile.mkdtemp(prefix=f"{backend.name}_build_")
+        # Cada compilador puede limpiar su salida entre ejecuciones; compilar en
+        # un directorio aislado y acumular el binario en `dist` que consume
+        # create_package().
         script_dist_dir = Path(build_dir) / "dist"
         script_dist_dir.mkdir(parents=True, exist_ok=True)
 
         try:
-            self.log(f"[DEBUG] Compilando {script_name} con PyInstaller embebido...")
+            self.log(f"[DEBUG] Compilando {script_name} con {backend.display_name}...")
             
             # Preparar icono: convertir ICO a PNG en Linux si es necesario
             icon_to_use = script["icon"]
@@ -325,7 +387,7 @@ class FlangCompiler:
                 except Exception as e:
                     self.log(f"[WARNING] Error al convertir icono a PNG: {e}")
             
-            exe_path = pyi.compile_to_exe(
+            exe_path = backend.compile(
                 script_path=str(script_path),
                 output_name=script_name,
                 output_dir=str(script_dist_dir),
@@ -347,15 +409,15 @@ class FlangCompiler:
                         pass
                 self.log(f"[OK] {script_name} compilado.")
                 return True
-            self.last_error = pyi.get_last_error()
+            self.last_error = backend.last_error or "El compilador no generó el binario esperado."
             self.log(f"[ERROR] {self.last_error}")
             return False
         except Exception as e:
             self.last_error = str(e)
-            self.log(f"[ERROR] Excepción PyInstaller: {e}")
+            self.log(f"[ERROR] Excepción del compilador: {e}")
             return False
         finally:
-            pyi.cleanup()
+            backend.cleanup()
             shutil.rmtree(build_dir, ignore_errors=True)
 
     def create_package(self, target_platform: str) -> bool:
@@ -469,7 +531,7 @@ class FlangCompiler:
             elif item.is_file():
                 try:
                     shutil.copy2(item, dest)
-                except:
+                except OSError:
                     pass
         # Los archivos estructurales de PackageMaker son parte del contrato del paquete.
         # Se copian explícitamente después de aplicar .gitignore para evitar que un
@@ -505,7 +567,7 @@ class FlangCompiler:
                     shutil.copy2(binary, destination)
                     try:
                         destination.chmod(0o755)
-                    except:
+                    except OSError:
                         pass
 
     def _update_and_copy_details_xml(self, package_path: Path, platform_suffix: str) -> None:
@@ -539,37 +601,161 @@ class FlangCompiler:
             f.write('\n'.join(lines))
 
     def compress_to_iflapp(self, package_path: Path, output_file: Path) -> bool:
-        self.log(f"[INFO] Creando .iflapp: {output_file.name}")
+        """Crea el contenedor binario ``.iflapp`` v2 (reemplaza al ZIP histórico)."""
+        self.log(f"[INFO] Creando .iflapp blindado: {output_file.name}")
         try:
             if not package_path.is_dir():
                 self.last_error = f"No existe la carpeta de paquete: {package_path}"
                 self.log(f"[ERROR] {self.last_error}")
                 return False
 
-            files_added = 0
-            with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for root, dirs, files in os.walk(package_path):
-                    for file in files:
-                        fp = Path(root) / file
-                        arcname = fp.relative_to(package_path)
-                        zipf.write(fp, arcname)
-                        files_added += 1
+            details_bytes = None
+            details_path = package_path / "details.xml"
+            if details_path.is_file():
+                details_bytes = details_path.read_bytes()
 
-            if files_added == 0 or not zipfile.is_zipfile(output_file):
-                self.last_error = "El archivo .iflapp generado está vacío o no es un ZIP válido."
+            icon_bytes = None
+            icon_name = "app-icon.ico"
+            for candidate in (package_path / "app" / "app-icon.ico", package_path / "app-icon.ico"):
+                if candidate.is_file():
+                    icon_bytes = candidate.read_bytes()
+                    break
+
+            iflapp_format.pack_iflapp(
+                package_path,
+                output_file,
+                icon=icon_bytes,
+                icon_name=icon_name,
+                details=details_bytes,
+                identity=self.metadata,
+                password=self.package_password,
+                signing_key=self.signing_key,
+            )
+
+            report = iflapp_format.verify_iflapp(output_file, signing_key=self.signing_key)
+            if report.get("file_count", 0) <= 0:
+                self.last_error = "El contenedor .iflapp generado está vacío."
                 self.log(f"[ERROR] {self.last_error}")
                 output_file.unlink(missing_ok=True)
                 return False
-            with zipfile.ZipFile(output_file) as zipf:
-                if "details.xml" not in zipf.namelist():
-                    self.last_error = "El archivo .iflapp no contiene details.xml."
-                    self.log(f"[ERROR] {self.last_error}")
-                    output_file.unlink(missing_ok=True)
-                    return False
+
+            header = iflapp_format.read_iflapp_header(output_file, include_blobs=False)
+            names = {entry["path"] for entry in header.manifest}
+            if "details.xml" not in names:
+                self.last_error = "El archivo .iflapp no contiene details.xml."
+                self.log(f"[ERROR] {self.last_error}")
+                output_file.unlink(missing_ok=True)
+                return False
+
+            self.log(
+                f"[OK] Contenedor firmado ({report['file_count']} archivos, "
+                f"{header.compression}, {header.encryption})."
+            )
             return True
         except Exception as e:
-            self.log(f"[ERROR] Zip failed: {e}")
+            self.last_error = str(e)
+            self.log(f"[ERROR] Empaquetado fallido: {e}")
             return False
+
+    def create_dropper(self, iflapp_path: Path, output_file: Optional[Path] = None) -> Optional[Path]:
+        """Genera un dropper autoextraíble a partir del ``.iflapp`` validado."""
+        from lib.dropper import create_dropper
+
+        output_file = output_file or Path(iflapp_path).with_suffix(".run")
+        try:
+            create_dropper(iflapp_path, output_file, password=self.package_password)
+            self.log(f"[OK] Dropper autoextraíble generado: {output_file.name}")
+            return output_file
+        except Exception as e:
+            self.log(f"[WARN] No se pudo generar el dropper: {e}")
+            return None
+
+    def apply_hardening(self, package_path: Path) -> List:
+        """Aplica los métodos de blindaje solicitados sobre el paquete.
+
+        Se ejecuta antes del empaquetado final, cuando el árbol del paquete ya
+        está construido y los binarios existen en disco.
+        """
+        from lib import hardening as hardening_mod
+
+        if not self.hardening_methods:
+            return []
+
+        binaries = [
+            candidate
+            for candidate in Path(package_path).rglob("*")
+            if candidate.is_file()
+            and candidate.suffix.lower() in (".exe", "")
+            and candidate.parent.name in ("bin", package_path.name)
+        ]
+        binary = binaries[0] if binaries else None
+        icon = None
+        for candidate in (Path(package_path) / "app" / "app-icon.ico", Path(package_path) / "app-icon.ico"):
+            if candidate.is_file():
+                icon = candidate
+                break
+        script = next(
+            (candidate for candidate in Path(package_path).rglob("*.py") if candidate.is_file()),
+            None,
+        )
+        return hardening_mod.apply_all(
+            binary=binary,
+            script=script,
+            package_dir=package_path,
+            icon=icon,
+            methods=self.hardening_methods,
+            log_callback=self.log,
+        )
+
+    def verify_in_sandbox(self, iflapp_path: Path) -> bool:
+        """Valida el paquete en un entorno virtualizado a nivel de hardware/CPU.
+
+        La extracción y la comprobación del arranque se delegan al sandbox; la
+        fuente original nunca se expone directamente al código del paquete.
+        """
+        if not self._sandbox:
+            self.log("[INFO] Sandbox desactivado; se omite la verificación aislada.")
+            return True
+
+        info = self._sandbox.describe()
+        self.log(
+            f"[INFO] Verificando paquete en sandbox '{info['selected']}' "
+            f"(virtualización hardware: {info['hardware_virtualization']})."
+        )
+        workspace = None
+        try:
+            workspace = self._sandbox.prepare_workspace(self.output_path, writable=True)
+            extract_script = Path(workspace) / "_iflapp_verify.py"
+            extract_script.write_text(
+                "\n".join(
+                    [
+                        "import sys",
+                        "from lib.iflapp_format import extract_iflapp, verify_iflapp, read_iflapp_header",
+                        "pkg = sys.argv[1]",
+                        "dest = sys.argv[2]",
+                        "verify_iflapp(pkg)",
+                        "extract_iflapp(pkg, dest)",
+                        "header = read_iflapp_header(pkg, include_blobs=False)",
+                        "print('IFLAPP_OK', header.file_count, header.identity().get('app', ''))",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            result = self._sandbox.run(
+                [sys.executable, str(extract_script), str(iflapp_path), str(Path(workspace) / "unpacked")],
+                workspace,
+            )
+            if result.ok and "IFLAPP_OK" in result.stdout:
+                self.log(f"[OK] Verificación en sandbox correcta ({result.backend}).")
+                return True
+            self.log(f"[WARN] Verificación en sandbox incompleta: {result.stderr.strip()[:400]}")
+            return False
+        except Exception as e:
+            self.log(f"[WARN] Sandbox no disponible para verificación: {e}")
+            return False
+        finally:
+            if workspace:
+                self._sandbox.cleanup(workspace)
 
     def _cleanup_build_artifacts(self):
         """Limpia archivos generados por PyInstaller en el proyecto original."""
@@ -608,15 +794,15 @@ class FlangCompiler:
         """Elimina el proyecto fuente solo cuando el llamador lo autoriza.
 
         La conservación es el comportamiento seguro por defecto. Incluso con
-        autorización, el archivo `.iflapp` debe existir, ser un ZIP válido y
-        quedar fuera del directorio fuente.
+        autorización, el archivo ``.iflapp`` debe existir, ser un contenedor
+        válido (v2 o ZIP histórico) y quedar fuera del directorio fuente.
         """
         source_path = self.repo_path.resolve()
         artifact_path = Path(iflapp_path).resolve()
         if not allow_delete:
             self.log("[INFO] Proyecto fuente conservado; la eliminación requiere autorización explícita.")
             return False
-        if not artifact_path.is_file() or not zipfile.is_zipfile(artifact_path):
+        if not artifact_path.is_file() or not iflapp_format.is_valid_container(artifact_path):
             self.log("[WARN] Se conserva el proyecto: el archivo .iflapp no es válido.")
             return False
         if source_path == artifact_path.parent or source_path in artifact_path.parents:
@@ -654,7 +840,7 @@ class FlangCompiler:
                 if not self.create_package(platform_name):
                     return None
                 platform_suffix = "Knosthalij" if platform_name == "Windows" else "Danenone"
-                
+
                 # Usar ProjectNameFormatter para formato consistente
                 package_name = ProjectNameFormatter.format_package_folder(
                     self.metadata['publisher'],
@@ -663,6 +849,10 @@ class FlangCompiler:
                     platform_suffix
                 )
                 last_package_path = self.output_path / package_name
+
+                # Blindaje opcional del árbol de paquete antes de empaquetar.
+                if self.hardening_methods:
+                    self.apply_hardening(last_package_path)
                 
                 iflapp_name = ProjectNameFormatter.format_iflapp_filename(
                     self.metadata['publisher'],
@@ -675,6 +865,10 @@ class FlangCompiler:
                 if self.compress_to_iflapp(last_package_path, iflapp_path):
                     final_iflapp = iflapp_path
                     self.log(f"[SUCCESS] Package created: {iflapp_path}")
+                    # Verificar el contenedor en el sandbox antes de publicarlo.
+                    self.verify_in_sandbox(iflapp_path)
+                    if self.build_dropper:
+                        self.create_dropper(iflapp_path)
                     # Limpiar la carpeta temporal y el proyecto fuente tras validar el .iflapp.
                     self._cleanup_package_folder(last_package_path, iflapp_path)
                     self.cleanup_processed_project(iflapp_path)
@@ -689,7 +883,21 @@ class BuildThread(QThread):
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
 
-    def __init__(self, empresa, nombre, version, plataforma, parent=None, custom_path=None, base_dir=None, build_mode="portable"):
+    def __init__(
+        self,
+        empresa,
+        nombre,
+        version,
+        plataforma,
+        parent=None,
+        custom_path=None,
+        base_dir=None,
+        build_mode="portable",
+        compiler_name=None,
+        sandbox=True,
+        build_dropper=False,
+        hardening=None,
+    ):
         super().__init__(parent)
         self.empresa = empresa
         self.nombre = nombre
@@ -698,6 +906,10 @@ class BuildThread(QThread):
         self.custom_path = custom_path
         self.build_mode = build_mode
         self.base_dir = base_dir
+        self.compiler_name = compiler_name
+        self.sandbox = sandbox
+        self.build_dropper = build_dropper
+        self.hardening = list(hardening) if hardening else []
         self.curiosity_phrases = [
             "Sabias que el primer error de software fue causado por una polilla real atrapada en una computadora?",
             "Sabias que Python lleva el nombre de la serie de television Monty Python's Flying Circus?",
@@ -734,7 +946,15 @@ class BuildThread(QThread):
             if not repo_path.exists():
                 self.error.emit(f"No se encontró la carpeta: {folder}")
                 return
-        compiler = FlangCompiler(repo_path, Path(self.base_dir or Path.cwd()), log_callback=self.handle_compiler_log)
+        compiler = FlangCompiler(
+            repo_path,
+            Path(self.base_dir or Path.cwd()),
+            log_callback=self.handle_compiler_log,
+            compiler_name=self.compiler_name,
+            sandbox=self.sandbox,
+            build_dropper=self.build_dropper,
+            hardening=self.hardening,
+        )
         result = compiler.run(build_mode=self.build_mode)
         if result:
             self.finished.emit(f"Paquete construido con exito: {result.name}")

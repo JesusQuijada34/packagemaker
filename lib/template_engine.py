@@ -142,7 +142,7 @@ def build_variables(
         "VERSION_BASE": version_clean,
         "AUTHOR": author_val,
         "PLATFORM": plat,
-        "DESCRIPTION": description or f"Aplicacion creada con PackageMaker",
+        "DESCRIPTION": description or "Aplicacion creada con PackageMaker",
         "YEAR": year,
         "CORRELATIONID": correlation_id,
         "RATE": rating,

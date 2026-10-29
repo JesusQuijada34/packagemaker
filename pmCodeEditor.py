@@ -46,12 +46,12 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QPlainTextEdit, QWidget, QVBoxLayout,
     QHBoxLayout, QLabel, QPushButton, QFileDialog, QMessageBox,
     QDialog, QTextEdit, QLineEdit, QSplitter, QStatusBar,
-    QTreeView, QFrame, QSizePolicy, QMenuBar, QMenu, QGroupBox, QScrollArea, QGridLayout,
+    QTreeView, QFrame, QSizePolicy, QScrollArea, QGridLayout,
     QInputDialog, QRadioButton, QListWidget, QListWidgetItem, QProgressBar, QCheckBox,
 )
 from PyQt6.QtGui import (
     QFont, QSyntaxHighlighter, QTextCharFormat, QTextFormat, QColor, QKeySequence,
-    QPainter, QFileSystemModel, QIcon, QAction, QTextCursor, QPalette, QTextDocument,
+    QPainter, QFileSystemModel, QAction, QTextCursor, QPalette, QTextDocument,
 )
 from PyQt6.QtCore import (
     Qt,
@@ -59,16 +59,10 @@ from PyQt6.QtCore import (
     QDir,
     QSize,
     QModelIndex,
-    QPoint,
-    QUrl,
-    QByteArray,
     QRegularExpression,
     QTimer,
     pyqtSignal,
     QProcess,
-    QPropertyAnimation,
-    QEasingCurve,
-    QParallelAnimationGroup,
 )
 
 from lib.python_portable_manager import get_python_manager
@@ -257,7 +251,7 @@ def find_flarm_project(project_name: str) -> Optional[str]:
                            (empresa and empresa.lower() == project_name.lower()) or \
                            (pkg_id and pkg_id.lower() == project_name.lower()):
                             return item_path
-            except:
+            except (OSError, KeyError):
                 pass
     
     # Búsqueda parcial
@@ -275,7 +269,7 @@ def find_flarm_project(project_name: str) -> Optional[str]:
                         full_id = f"{config.get('empresa', '')}.{config.get('titulo', '')}.{config.get('id', '')}"
                         if project_name.lower() in full_id.lower():
                             return item_path
-            except:
+            except (OSError, KeyError):
                 pass
     
     return None
@@ -1034,7 +1028,7 @@ class ConsolePanel(QWidget):
         """Maneja la finalización del proceso."""
         self._set_running(False)
         if exit_code == 0:
-            self.append_output(f"[Proceso finalizado exitosamente]")
+            self.append_output("[Proceso finalizado exitosamente]")
         else:
             self.append_output(f"[Proceso finalizado con código: {exit_code}]", is_error=True)
 

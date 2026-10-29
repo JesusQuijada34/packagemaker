@@ -29,7 +29,8 @@ def log(msg):
     try:
         with open(LOG_PATH, "a", encoding="utf-8") as f:
             f.write(f"{ts} {msg}\n")
-    except: pass
+    except OSError:
+        pass
     print(f"{ts} {msg}")
 
 def _rXml(path):
@@ -43,7 +44,8 @@ def _rXml(path):
             "author": root.findtext("author", "").strip(),
             "publisher": root.findtext("publisher", "").strip()
         }
-    except: return {}
+    except (OSError, ET.ParseError):
+        return {}
 
 def _rXml_r(author, app):
     url = f"https://raw.githubusercontent.com/{author}/{app}/main/details.xml"
@@ -59,7 +61,8 @@ def _rXml_r(author, app):
                 if response.status == 200:
                     content = response.read().decode('utf-8')
                     return ET.fromstring(content).findtext("version", "").strip()
-    except: pass
+    except Exception:
+        pass
     return ""
 
 def _check_url_exists(url):
@@ -68,7 +71,8 @@ def _check_url_exists(url):
         try:
             r = requests.head(url, timeout=15, allow_redirects=True)
             return r.status_code == 200
-        except: pass
+        except requests.RequestException:
+            pass
     else:
         # Fallback usando urllib
         try:
@@ -76,7 +80,8 @@ def _check_url_exists(url):
             req = urllib.request.Request(url, method='HEAD')
             with urllib.request.urlopen(req, timeout=15) as response:
                 return response.status == 200
-        except: pass
+        except (OSError, urllib.error.URLError):
+            pass
     return False
 
 def _fR(author, app, version, platform, publisher):

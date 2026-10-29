@@ -107,14 +107,6 @@ class ToastNotifier:
             try:
                 notifier = cls._get_notifier()
                 if notifier:
-                    # Mapear tipos a iconos de Windows
-                    icon_map = {
-                        "info": "uri://{0}ms-resource://{0}/Files/Assets/Square44x44Logo.png".format(cls.APP_ID),
-                        "warning": "warning",
-                        "error": "error",
-                        "success": "checkmark"
-                    }
-                    
                     xml_content = f"""<?xml version="1.0" encoding="utf-8"?>
 <toast>
     <visual>

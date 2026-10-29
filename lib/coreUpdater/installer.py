@@ -296,7 +296,7 @@ def _update_from_exe(app_data, exe_url, exe_filename, silent=False, accept_licen
 def _update_from_iflapp(app_data, url, silent=False):
     """Realiza actualización desde paquete .iflapp (método alternativo)."""
     if silent:
-        log(f"Actualizando a través de .iflapp...")
+        log("Actualizando a través de .iflapp...")
         app = QApplication(sys.argv)
         window = ModernUpdaterWindow(app_data, url)
         window.show()

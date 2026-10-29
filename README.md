@@ -50,13 +50,34 @@ El tag y el título del release deben ser exactamente `v3.2.7-26.05-20.13`. Los 
 
 ### 📦 Sistema de Compilación Actual
 - **Detección de entrypoint**: Usa `details.xml` y el script principal del proyecto como fuente de identidad.
-- **Gestión de dependencias**: Construye con el flujo PyInstaller embebido del repositorio.
+- **Multi-backend**: Compila con **Nuitka** (por defecto), PyInstaller, cx_Freeze o PyOxidizer mediante `lib/compilers.py`. Selecciona el backend con `--compiler` o desde la GUI.
 - **Exclusión por `.gitignore`**: Aplica los patrones declarados para evitar incluir archivos de control y configuración no requeridos.
-- **Limpieza Post-Compilación**: Retira artefactos temporales de PyInstaller (`build/`, `dist/` y `.spec`) cuando el flujo los genera.
+- **Limpieza Post-Compilación**: Retira artefactos temporales (`build/`, `dist/` y `.spec`) cuando el flujo los genera.
 - **Entrega segura**: Valida el `.iflapp` antes de conservarlo en una salida externa; la fuente se conserva por defecto y no se elimina como efecto secundario.
 
 ### 📦 Formato de entrega
-El artefacto de distribución del flujo actual es un `.iflapp`, un ZIP con extensión personalizada que contiene metadatos, binarios y recursos. Los términos históricos `Simple Blind`, `Super Blind` y `.iflappb` no son opciones expuestas por el CLI v3.2.7.
+El artefacto de distribución es un `.iflapp` **v2**, un contenedor binario propio que reemplaza al ZIP histórico:
+
+```
+[MAGIC 8B][header_len uint32 LE][CABECERA JSON + firma HMAC]
+[ICONO][DETAILS][FIRMA][PAYLOAD TAR/LZMA (cifrado opcional)][COLA REDUNDANTE]
+```
+
+La cabecera se escribe en claro y contiene el icono, `details.xml` y el manifiesto de archivos, de modo que puede leerse **sin descifrar ni descomprimir** el payload:
+
+```bash
+python packagemaker.py --inspect paquete.iflapp          # resumen por cabecera
+python packagemaker.py --inspect paquete.iflapp --inspect-json
+python packagemaker.py --inspect paquete.iflapp --inspect-extract ./assets
+```
+
+Los términos históricos `Simple Blind`, `Super Blind` y `.iflappb` no son opciones expuestas por el CLI v3.2.7.
+
+### 🛡️ Sandbox, droppers y blindaje
+- **Sandbox hardware/CPU**: `--buildthis` verifica el paquete en un entorno aislado con selección jerárquica `qemu-kvm` → `systemd-nspawn` → `docker`/`podman` → `bwrap`/`firejail`/`unshare` → `local`. Desactívalo con `--no-sandbox`.
+- **Droppers**: `--dropper` genera un lanzador autoextraíble `.run` con el `.iflapp` adjunto.
+- **Blindaje**: `--harden` aplica `strip,upx,checksum,anti-debug,obfuscate,resource`. Consulta el estado con `--list-hardening`.
+- **Compiladores**: consulta el estado con `--list-compilers`.
 
 ### 📱 Plataformas
 - **Windows**: requiere un runner Windows nativo para verificar el ejecutable y el paquete Knosthalij.

@@ -78,8 +78,8 @@ class CLIHandler:
     def __init__(self, base_dir=None):
         self.base_dir = base_dir or os.path.join(os.path.expanduser("~"), "Documents", "Packagemaker Projects")
         self.parser = argparse.ArgumentParser(
-            description=f'\033[94mInfluent Package Maker - Sistema de gestión de paquetes Fluthin\033[0m',
-            epilog=f"""
+            description='\033[94mInfluent Package Maker - Sistema de gestión de paquetes Fluthin\033[0m',
+            epilog="""
 \033[96mEjemplos:\033[0m
   \033[1m\033[94mpython packagemaker.py create --name "Mi App" --shortname "mi-app" --author "GitHub" --publisher "Tesla-Inc" --version "1.0" --platform win\033[0m
   \033[1m\033[94mpython packagemaker.py compile --name "Mi App" --shortname "mi-app" --author "GitHub" --publisher "Tesla-Inc" --version "1.0"\033[0m
@@ -149,6 +149,40 @@ class CLIHandler:
         buildthis_group.add_argument('--buildthis', nargs='?', const='.', metavar='PATH', help='Compilar el proyecto en la carpeta actual o en la ruta especificada')
         buildthis_group.add_argument('--output', metavar='PATH', help='Directorio externo para el artefacto `.iflapp`')
         buildthis_group.add_argument('--platform', choices=['Linux', 'Windows'], help='Plataforma objetivo; por defecto se detecta el sistema actual')
+        buildthis_group.add_argument('--compiler', choices=['nuitka', 'pyinstaller', 'cx_freeze', 'pyoxidizer'], help='Backend de compilación (por defecto: nuitka)')
+        buildthis_group.add_argument('--password', metavar='PASS', help='Cifrar el payload del .iflapp con esta contraseña')
+        buildthis_group.add_argument('--no-sandbox', action='store_true', help='Desactivar la verificación en sandbox virtualizado')
+        buildthis_group.add_argument('--dropper', action='store_true', help='Generar además un dropper autoextraíble (.run)')
+        buildthis_group.add_argument(
+            '--harden', metavar='METHODS',
+            help='Métodos de blindaje separados por comas: strip,upx,checksum,anti-debug,obfuscate,resource (por defecto: todos)'
+        )
+
+        # === Inspección de paquetes ===
+        inspect_group = self.parser.add_argument_group('Inspección de paquetes')
+        inspect_group.add_argument('--inspect', metavar='IFLAPP', help='Leer cabecera, icono y detalles de un .iflapp sin descomprimir')
+        inspect_group.add_argument('--inspect-json', action='store_true', help='Salida JSON para --inspect')
+        inspect_group.add_argument('--inspect-extract', metavar='DIR', help='Extraer icono y detalles de la cabecera a DIR')
+        inspect_group.add_argument('--list-compilers', action='store_true', help='Mostrar compiladores disponibles y su estado')
+        inspect_group.add_argument('--list-hardening', action='store_true', help='Mostrar métodos de blindaje disponibles y su estado')
+
+    @staticmethod
+    def _parse_hardening(value):
+        """Convierte la lista de métodos de blindaje separada por comas.
+
+        ``None`` desactiva el blindaje; ``'all'`` o una cadena vacía solicitan
+        todos los métodos soportados.
+        """
+        if value is None:
+            return None
+        from lib.hardening import method_names
+
+        text = str(value).strip().lower()
+        if text in ('', 'all', 'todos'):
+            return method_names()
+        requested = [part.strip() for part in text.split(',') if part.strip()]
+        valid = set(method_names())
+        return [name for name in requested if name in valid]
 
     def parse(self):
         return self.parser.parse_args()
@@ -199,8 +233,6 @@ class CLIHandler:
         Determina la acción a ejecutar basada en los argumentos.
         Retorna: (action_name, data, action_options)
         """
-        # Opciones comunes para todas las acciones GUI
-        gui_options = {'compact': args.compact, 'shell_mode': args.shell_mode}
         # Opciones para acciones shell (sin GUI)
         shell_options = {'compact': False, 'shell_mode': False}
         
@@ -269,6 +301,24 @@ class CLIHandler:
         # === Versión ===
         elif args.app_version:
             return ('show_version', None, shell_options)
+
+        # === Inspección de paquetes ===
+        elif getattr(args, 'inspect', None):
+            return (
+                'inspect_iflapp',
+                {
+                    'path': args.inspect,
+                    'json': getattr(args, 'inspect_json', False),
+                    'extract': getattr(args, 'inspect_extract', None),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'list_compilers', False):
+            return ('list_compilers', None, shell_options)
+
+        elif getattr(args, 'list_hardening', False):
+            return ('list_hardening', None, shell_options)
         
         # === Version Update ===
         elif args.version_update:
@@ -285,6 +335,11 @@ class CLIHandler:
                     'headless': True,
                     'output': getattr(args, 'output', None),
                     'platform': getattr(args, 'platform', None),
+                    'compiler': getattr(args, 'compiler', None),
+                    'password': getattr(args, 'password', None),
+                    'sandbox': not getattr(args, 'no_sandbox', False),
+                    'dropper': getattr(args, 'dropper', False),
+                    'hardening': self._parse_hardening(getattr(args, 'harden', None)),
                 }
             )
 
@@ -303,6 +358,11 @@ class CLIHandler:
                     'headless': True,
                     'output': getattr(args, 'output', None),
                     'platform': getattr(args, 'platform', None),
+                    'compiler': getattr(args, 'compiler', None),
+                    'password': getattr(args, 'password', None),
+                    'sandbox': not getattr(args, 'no_sandbox', False),
+                    'dropper': getattr(args, 'dropper', False),
+                    'hardening': self._parse_hardening(getattr(args, 'harden', None)),
                 }
             )
         
@@ -405,8 +465,99 @@ class VersionUpdateHelper:
             return False
 
 
+# === Compiler Report Helper ===
+class CompilerReportHelper:
+    """Lista los backends de compilación disponibles."""
+
+    @staticmethod
+    def report():
+        from lib.compilers import available_backends
+
+        report = available_backends(log_callback=_safe_print)
+        print("Compiladores disponibles:")
+        for name, info in report.items():
+            status = "OK" if info["available"] else "NO DISPONIBLE"
+            print(f"  - {name:12s} {status:15s} {info['version']} ({info['display_name']})")
+        return True
+
+
+# === Hardening Report Helper ===
+class HardeningReportHelper:
+    """Lista los métodos de blindaje disponibles."""
+
+    @staticmethod
+    def report():
+        from lib.hardening import available_methods, method_names
+
+        status = available_methods()
+        print("Métodos de blindaje disponibles:")
+        for name in method_names():
+            state = "OK" if status.get(name) else "SIN HERRAMIENTA"
+            print(f"  - {name:12s} {state}")
+        return True
+
+
+# === Package Inspect Helper ===
+class PackageInspectHelper:
+    """Lee la cabecera de un .iflapp sin descomprimir ni descifrar."""
+
+    @staticmethod
+    def inspect(data):
+        import json as _json
+
+        from lib import iflapp_format
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar la ruta del .iflapp con --inspect")
+            return False
+        try:
+            header = iflapp_format.read_iflapp_header(path)
+        except Exception as exc:
+            print(f"[ERROR] No se pudo leer la cabecera: {exc}")
+            return False
+
+        identity = header.identity()
+        if data.get("json"):
+            print(
+                _json.dumps(
+                    {
+                        "identity": identity,
+                        "format_version": header.format_version,
+                        "compression": header.compression,
+                        "encryption": header.encryption,
+                        "file_count": header.file_count,
+                        "icon_bytes": len(header.icon),
+                        "details": header.details_text(),
+                        "manifest": header.manifest,
+                    },
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
+        else:
+            print(f"Paquete   : {path}")
+            print(f"Formato   : iflapp v{header.format_version} ({header.compression}/{header.encryption})")
+            print(f"Publisher : {identity['publisher']}")
+            print(f"App       : {identity['app']}  ({identity['name']})")
+            print(f"Version   : {identity['version']}")
+            print(f"Autor     : {identity['author']}")
+            print(f"Plataforma: {identity['platform']}")
+            print(f"Icono     : {len(header.icon)} bytes")
+            print(f"Archivos  : {header.file_count}")
+            print("Detalles  :")
+            for line in header.details_text().splitlines():
+                print(f"  {line}")
+
+        extract_dir = data.get("extract")
+        if extract_dir:
+            written = iflapp_format.export_header_assets(path, extract_dir)
+            print(f"[OK] Recursos de cabecera exportados: {written}")
+        return True
+
+
 # === Action Handlers ===
-def _handle_shell_actions(action):
+def _handle_shell_actions(action, data=None):
     """Maneja acciones de shell que no requieren GUI. Retorna True si se manejó."""
     if action == 'shellpatch_install':
         return ShellIntegrationHelper.install()
@@ -424,6 +575,15 @@ def _handle_shell_actions(action):
     
     elif action == 'version_update':
         return VersionUpdateHelper.update()
+
+    elif action == 'list_compilers':
+        return CompilerReportHelper.report()
+
+    elif action == 'list_hardening':
+        return HardeningReportHelper.report()
+
+    elif action == 'inspect_iflapp':
+        return PackageInspectHelper.inspect(data or {})
     
     return None  # No es acción de shell
 
@@ -509,14 +669,14 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
     """
     # Primero intentar manejar como acción de shell (sin GUI)
-    shell_result = _handle_shell_actions(action)
+    shell_result = _handle_shell_actions(action, data)
     if shell_result is not None:
         # Es acción de shell, no requiere GUI; propagar True/False al entrypoint.
         return shell_result
     
     # Manejar acciones headless (create, compile, repair)
     if action == 'create_project' and kwargs.get('headless'):
-        from lib.template_engine import create_project_from_templates, normalize_platform, build_variables
+        from lib.template_engine import create_project_from_templates, normalize_platform
         project_source = data if isinstance(data, dict) else {'path': data}
         base_path = Path(project_source.get('path')).resolve()
         
@@ -532,7 +692,6 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         folder_name = ProjectNameFormatter.format_project_folder(
             publisher, app_id, version_base, platform_value
         )
-        variables = build_variables(publisher, app_id, app_id, author_val, platform_value, version_base, description)
         project_path = base_path / folder_name
         
         print(f"[INFO] Creando proyecto en: {project_path}")
@@ -594,11 +753,20 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         scripts = kwargs.get('scripts')
         optimize = kwargs.get('optimize')
 
-        print(f"[INFO] Iniciando compilación headless...")
+        print("[INFO] Iniciando compilación headless...")
         print(f"[INFO] Proyecto: {project_path}")
         print(f"[INFO] Salida: {output_path}")
         print(f"[INFO] Plataforma objetivo (detectada): {target_platform}")
-        compiler = FlangCompiler(project_path, output_path, log_callback=print)
+        compiler = FlangCompiler(
+            project_path,
+            output_path,
+            log_callback=print,
+            compiler_name=kwargs.get('compiler'),
+            sandbox=kwargs.get('sandbox', True),
+            package_password=kwargs.get('password'),
+            build_dropper=kwargs.get('dropper', False),
+            hardening=kwargs.get('hardening'),
+        )
         if scripts:
             compiler.scripts_to_compile = [s.strip() for s in scripts.split(',') if s.strip()]
 
@@ -627,11 +795,15 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 sys.exit(1)
 
             if optimize:
-                print(f"[INFO] Optimizando binarios...")
+                print("[INFO] Optimizando binarios...")
                 if not compiler.optimize_binaries():
                     sys.exit(1)
 
-            print(f"[OK] Compilación completada exitosamente")
+            compiler.verify_in_sandbox(iflapp_file)
+            if kwargs.get('dropper'):
+                compiler.create_dropper(iflapp_file)
+
+            print("[OK] Compilación completada exitosamente")
             print(f"[INFO] Paquete generado: {iflapp_file}")
             
             # El artefacto ya existe; limpiar paquete temporal y proyecto fuente.
@@ -672,12 +844,21 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             'Windows' if sys.platform.startswith('win') else 'Linux'
         )
 
-        print(f"[INFO] Iniciando compilación del proyecto actual...")
+        print("[INFO] Iniciando compilación del proyecto actual...")
 
         print(f"[INFO] Proyecto: {project_path}")
         print(f"[INFO] Salida: {output_path}")
         print(f"[INFO] Plataforma objetivo (detectada): {target_platform}")
-        compiler = FlangCompiler(project_path, output_path, log_callback=print)
+        compiler = FlangCompiler(
+            project_path,
+            output_path,
+            log_callback=print,
+            compiler_name=kwargs.get('compiler'),
+            sandbox=kwargs.get('sandbox', True),
+            package_password=kwargs.get('password'),
+            build_dropper=kwargs.get('dropper', False),
+            hardening=kwargs.get('hardening'),
+        )
 
         if not compiler.parse_details_xml():
             sys.exit(1)
@@ -703,7 +884,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)
 
-            print(f"[OK] Compilación completada exitosamente")
+            compiler.verify_in_sandbox(iflapp_file)
+            if kwargs.get('dropper'):
+                compiler.create_dropper(iflapp_file)
+
+            print("[OK] Compilación completada exitosamente")
             print(f"[INFO] Paquete generado: {iflapp_file}")
             
             # El artefacto ya existe; limpiar paquete temporal y proyecto fuente.

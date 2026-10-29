@@ -67,7 +67,6 @@ class SystemTrayIcon(QSystemTrayIcon):
     
     def show_window(self):
         """Show the updater window."""
-        global _updater_window
         if _updater_window:
             _updater_window.show()
             _updater_window.raise_()
@@ -75,13 +74,11 @@ class SystemTrayIcon(QSystemTrayIcon):
     
     def hide_window(self):
         """Hide the updater window (minimize to tray)."""
-        global _updater_window
         if _updater_window:
             _updater_window.hide()
     
     def quit_app(self):
         """Quit the application."""
-        global _updater_window
         if _updater_window:
             _updater_window.close()
         from PyQt6.QtWidgets import QApplication
@@ -89,7 +86,6 @@ class SystemTrayIcon(QSystemTrayIcon):
 
 def get_tray_icon():
     """Get the global tray icon instance."""
-    global _tray_icon
     return _tray_icon
 
 def set_tray_icon(icon):
@@ -99,7 +95,6 @@ def set_tray_icon(icon):
 
 def get_updater_window():
     """Get the global updater window instance."""
-    global _updater_window
     return _updater_window
 
 def set_updater_window(window):

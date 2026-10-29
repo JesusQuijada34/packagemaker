@@ -9,7 +9,7 @@ try:
     from PyQt6.QtCore import Qt
     from PyQt6.QtWidgets import (
         QDialog, QWidget, QVBoxLayout, QHBoxLayout, 
-        QTextEdit, QPushButton, QLabel
+        QTextEdit, QPushButton
     )
     from leviathan_ui import CustomTitleBar
     PYQT6_AVAILABLE = True
@@ -148,7 +148,7 @@ class InstallConsoleDialog(QDialog):
             value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
             winreg.CloseKey(key)
             return value == 0
-        except:
+        except OSError:
             return False
     
     def log(self, message):

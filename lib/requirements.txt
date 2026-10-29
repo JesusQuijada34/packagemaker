@@ -1,4 +1,11 @@
 PyQt6
 Requests==2.32.5
 leviathan-ui
+# Backend de compilación recomendado (binarios nativos C/C++).
+nuitka
+# Backends alternativos soportados por lib/compilers.py.
 pyinstaller
+cx-Freeze
+pyoxidizer
+# Cifrado AES-256-GCM opcional para el payload .iflapp.
+cryptography

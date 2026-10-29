@@ -8,7 +8,6 @@ Todas las acciones del shell usan el launcher localizado en shell/packagemakerSh
 import os
 import sys
 import winreg
-import json
 import ctypes
 import subprocess
 
@@ -237,7 +236,7 @@ class ShellIntegration:
                 try:
                     self._delete_registry_key(winreg.HKEY_CLASSES_ROOT, keyPath)
                     print(f"  ✓ Eliminado: {keyPath}")
-                except:
+                except OSError:
                     pass
             self.notify_shell_change()
             print("[ShellIntegration] ✓ Desinstalación completada")
@@ -277,7 +276,6 @@ class ShellIntegration:
 
 
 if __name__ == "__main__":
-    import sys
     if len(sys.argv) > 1:
         if sys.argv[1] == "--install":
             ShellIntegration().install_all()
