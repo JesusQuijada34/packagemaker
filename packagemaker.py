@@ -138,6 +138,19 @@ from lib.linux_icon_handler import get_linux_icon_path, ensure_linux_icon_suppor
 from lib.pm_data import get_pm_data, load_merged_app_config, is_compiled_build, COMPILED_LOCKED_USER_KEYS
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.projectDetailsDialog import ProjectDetailsDialog
+from lib.fluent_theme import (
+    BTN_STYLES,
+    FluentCheckBox as QCheckBox,
+    applyget,
+    conf_field_stylesheet,
+    qss_value,
+    set_qss,
+)
+from lib.qml_animations import animate_property
+
+def create_title_bar(parent, title="", icon_path=None):
+    """Compatibilidad del rediseño: todos los diálogos usan la titlebar SVG estable."""
+    return CustomTitleBar(parent, title=title, icon=icon_path or "")
 
 # [MONKEYPATCH] Fix for LeviathanUI < v1.0.4 where LeviathanProgressBar is missing setValue()
 # referencing the installed library issue without modifying it.
@@ -155,15 +168,11 @@ if sys.platform.startswith("win"):
     except ImportError:
         winreg = None
 
-# El splash de PyInstaller solo se cierra cuando el bootloader configuró IPC.
-# No importar pyi_splash estáticamente: eso activa su hook aunque no exista splash.
-# ----------- CONFIGURABLE VARIABLES -----------
 if PYQT6_AVAILABLE:
-    APP_FONT = QFont('Segoe UI Variable', 11)
-    TAB_FONT = QFont('Segoe UI Variable', 12)
+    APP_FONT = QFont('Roboto', 11)
 else:
     APP_FONT = None
-    TAB_FONT = None # Icons (SVGs are handled as strings here for "one-file" convenience or resource paths)
+    print("font: none")
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
 TAB_ICON_KEYS = {
@@ -189,83 +198,10 @@ def get_tab_icon(key):
         return get_sidebar_icon(icon_key)
     return QIcon()
 
-# SVG Definitions for "About" Page and Sidebar (Inline for robustness)
-SVG_ABOUT = """<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#f9826c" stroke-width="2"/><path d="M12 7V13M12 17H12.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
-SVG_SETTINGS = """<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.4 15A1.65 1.65 0 0 0 20 12A1.65 1.65 0 0 0 19.4 9M12 3A1.65 1.65 0 0 0 9 3M12 21A1.65 1.65 0 0 0 15 21M4.6 15A1.65 1.65 0 0 0 4 12A1.65 1.65 0 0 0 4.6 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>"""
-
 # Windows 11-inspired button styles (rounded, soft shadows, modern accent colors)
 # Note: The 'transition' property is a CSS feature supported by browsers, but it is NOT supported/stable in PyQt6 stylesheets.
 # PyQt6 ignores 'transition' and related CSS3 properties—they have no effect and can be safely omitted.
 # QSS-based stylized button styles using rgba colors, with transparency for blending with the app frame
-BTN_STYLES = {
-    "default": (
-        "background-color: transparent;"
-        "color: rgba(32,33,36,0.96);"
-        "border-radius: 9px;"
-        "padding: 10px 20px;"
-        "font-weight: 600;"
-        "border: 1px solid rgba(209,215,224,0.65);"
-        # No box-shadow
-    ),
-    "success": (
-        "background-color: transparent;"
-        "color: rgba(5,98,55,0.99);"
-        "border-radius: 9px;"
-        "padding: 10px 20px;"
-        "font-weight: 600;"
-        "border: 1px solid rgba(199,232,206,0.60);"
-        # No box-shadow
-    ),
-    "danger": (
-        "background-color: transparent;"
-        "color: rgba(185,29,29,1.0);"
-        "border-radius: 9px;"
-        "padding: 10px 20px;"
-        "font-weight: 600;"
-        "border: 1px solid rgba(255,180,180,0.68);"
-        # No box-shadow
-    ),
-    "warning": (
-        "background-color: transparent;"
-        "color: rgba(168,132,4,0.97);"
-        "border-radius: 9px;"
-        "padding: 10px 20px;"
-        "font-weight: 600;"
-        "border: 1px solid rgba(255,224,149,0.66);"
-        # No box-shadow
-    ),
-    "info": (
-        "background-color: transparent;"
-        "color: rgba(9,82,165,1.0);"
-        "border-radius: 9px;"
-        "padding: 10px 20px;"
-        "font-weight: 600;"
-        "border: 1px solid rgba(185,213,253,0.56);"
-        # No box-shadow
-    ),
-    "best": (
-        "background-color: transparent;"
-        "color: #0853c4;"
-        "border-radius: 11px;"
-        "padding: 12px 22px;"
-        "font-weight: 700;"
-        "border: 2px solid #99d3f7;"
-        "font-size: 15px;"
-        # Designed for best/primary experience action
-        # No box-shadow
-    ),
-    "grayed-black": (
-        "background-color: #292929;"
-        "color: #b9b9b9;"
-        "border-radius: 9px;"
-        "padding: 10px 20px;"
-        "font-weight: 600;"
-        "border: 1px solid #444;"
-        "background-image: none;"
-        # Grayed black button, for alternative or disabled style
-        # No box-shadow
-    ),
-}
 
 plataforma_platform = sys.platform
 plataforma_name = os.name
@@ -275,7 +211,7 @@ plataforma_name = os.name
 # Android tiene restricciones de acceso a carpetas estándar
 _is_termux = os.environ.get("PREFIX", "").startswith("/data/data/com.termux")
 _is_android = sys.platform.startswith("linux") and (
-    os.path.exists("/system/app") or 
+    os.path.exists("/system/app") or
     os.environ.get("ANDROID_ROOT") or
     os.environ.get("ANDROID_DATA")
 )
@@ -607,97 +543,7 @@ def get_app_version():
         except Exception as e:
             print(f"Error leyendo details.xml: {e}")
     return "3.2.7-26.05-20.13-AlphaCube"  # Fallback por defecto
-# verificar_github_username moved to lib/moonFixWizard.py
-def get_github_style(is_dark=True):
-    """Genera estilos CSS para botones al estilo GitHub (Action Naranja, Normal B/W)"""
-    if is_dark:
-        # Action (Orange) - Dark
-        action_style = """
-            QPushButton {
-                background-color: #d2691e;
-                color: #ffffff;
-                border: 1px solid #c15c1d;
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background-color: #e07b3e;
-                border-color: #d96d27;
-            }
-            QPushButton:pressed {
-                background-color: #bd5a17;
-            }
-        """
-        # Normal (Black/Dark Grey) - Dark
-        normal_style = """
-            QPushButton {
-                background-color: #21262d;
-                color: #c9d1d9;
-                border: 1px solid rgba(240, 246, 252, 0.1);
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                color: #d96d27; 
-                border: 1px solid #d96d27;
-                background-color: transparent;
-            }
-            QPushButton:pressed {
-                background-color: transparent;
-            }
-        """
-    else:
-        # Action (Orange) - Light
-        action_style = """
-            QPushButton {
-                background-color: #f9826c;
-                color: #ffffff;
-                border: 1px solid rgba(27, 31, 35, 0.15);
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background-color: #fa9e8e;
-            }
-            QPushButton:pressed {
-                background-color: #eb715b;
-            }
-        """
-        # Normal (White) - Light
-        normal_style = """
-            QPushButton {
-                background-color: #f6f8fa;
-                color: #24292e;
-                border: 1px solid rgba(27, 31, 35, 0.15);
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-family: 'Segoe UI', sans-serif;
-                font-weight: 600;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background-color: transparent;
-                color: #d96d27;
-                border: 1px solid #f9826c;
-            }
-            QPushButton:pressed {
-                 background-color: #ffe3d0;
-            }
-        """
-    return action_style, normal_style
 
-
-
-# SidebarItem moved to lib/SidebarItem.py
 SIDEBAR_DESC_KEYS = {
     0: "sidebar_desc.0",
     1: "sidebar_desc.1",
@@ -710,41 +556,24 @@ SIDEBAR_DESC_KEYS = {
 class PackageTodoGUI(QMainWindow):
     def __init__(self, compact_mode=False, shell_mode=False):
         super().__init__()
-
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.compact_mode = compact_mode
         self.shell_mode = shell_mode
-
+        WipeWindow.create().set_mode("ghostBlur").set_radius(20).apply(self)
         # --- VERSION UPDATE 3.2.7 ---
         self.currentVersion = get_app_version()
-        
+
         # Quitar barra de título nativa de Windows - usar solo leviathan-ui
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        
-        # Fondo COMPLETAMENTE opaco - sin transparencia
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
-        """
-        self.touch_driver = TouchScreen(self)
-        self.touch_enabled = self.touch_driver.enabled
-        if self.touch_enabled:
-            self.statusBar().showMessage("Pantalla táctil detectada, compactando items. Activando modo táctil...")
-            self.change_display_mode(2)
-            self.setWindowState(Qt.WindowState.WindowFullScreen)
-        else:
-            self.statusBar().showMessage("No se detectó pantalla táctil.")
-        """
+        # Fondo COMPLETAMENTE opaco - sin transparencia
+        #self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self._fixed_title = fixed_window_title(self.currentVersion)
         self.setWindowTitle(self._fixed_title)
-        self._applied_dpi_scale = float(APP_CONFIG.get("applied_dpi_scale", 1.0))
         self._pending_restart_keys = []
-        screen_geo = QApplication.primaryScreen().availableGeometry()
-        default_width = 1100
-        default_height = 720
-        width = min(default_width, int(screen_geo.width() * 0.9))
-        height = min(default_height, int(screen_geo.height() * 0.85))
-        self.resize(width, height)
+        self.resize(1024, 720)
         self.setFont(APP_FONT)
-        
         # Cargar icono con soporte para Linux
         icon_to_load = IPM_ICON_PATH
         if os.path.exists(icon_to_load):
@@ -765,10 +594,13 @@ class PackageTodoGUI(QMainWindow):
         # Central Widget & Main Layout
         self.central = QWidget()
         self.central.setObjectName("CentralWidget")
-        # Cast iron gray background
-        self.central.setStyleSheet("background: transparent; border: none;")
+        set_qss(self.central, 'packagemaker_001', append=False)
         self.setCentralWidget(self.central)
-        
+
+        self.sidebar_collapsed = False
+        self.sidebar_animation = None
+        self.sidebar_target_width = 260
+
         # Layout principal vertical (TitleBar + ContentArea)
         self.v_layout = QVBoxLayout(self.central)
         self.v_layout.setContentsMargins(0, 0, 0, 0)
@@ -789,26 +621,51 @@ class PackageTodoGUI(QMainWindow):
         # Content Container (Sidebar + Stack)
         self.content_container = QWidget()
         # Enable styled background
-        self.content_container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.content_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         # Cast iron gray background for content container
-        self.content_container.setStyleSheet("background: #3a3f4b;")
+        #self.content_container.setStyleSheet("background: #3a3f4b;")
         self.content_layout = QHBoxLayout(self.content_container)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(0)
-        
+
         # --- SIDEBAR (Left) ---
         self.sidebar = QWidget()
-        self.sidebar.setFixedWidth(260)
-        # Cast iron gray sidebar background
-        self.sidebar.setStyleSheet("background: transparent; border-right: 1px solid rgba(255,255,255,0.08);")
+        self.sidebar.setObjectName("NavigationSidebar")
+        self.sidebar.setMinimumWidth(60)
+        self.sidebar.setMaximumWidth(260)
+        self.sidebar.resize(260, 480)
+        self.sidebar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.sidebar.setMouseTracking(True)
+        set_qss(self.sidebar, 'packagemaker_003', append=False)
         self.sidebar_layout = QVBoxLayout(self.sidebar)
         self.sidebar_layout.setContentsMargins(15, 20, 15, 20)
         self.sidebar_layout.setSpacing(8)
+        self.sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        # Header Sidebar (Optional, maybe "Menú Inicio" text style)
+        self.sidebar_collapsed = False
+        self.sidebar_animation = None
+        self.sidebar_target_width = 260
+        self.sidebar_auto_hide_timer = QTimer(self)
+        self.sidebar_auto_hide_timer.setSingleShot(True)
+        self.sidebar_auto_hide_timer.timeout.connect(self.collapse_sidebar)
+        self.sidebar.installEventFilter(self)
+
+        sidebar_header = QHBoxLayout()
+        sidebar_header.setContentsMargins(0, 0, 0, 0)
         self.lbl_menu_main = QLabel(tr("app.main_menu"))
-        self.lbl_menu_main.setStyleSheet("color: #ffffff; font-size: 24px; font-weight: 700; font-family: 'Segoe UI Variable', 'Segoe UI', sans-serif; margin-bottom: 12px; letter-spacing: 0.3px; background: transparent;")
-        self.sidebar_layout.addWidget(self.lbl_menu_main)
+        set_qss(self.lbl_menu_main, 'packagemaker_004', append=False)
+        sidebar_header.addWidget(self.lbl_menu_main)
+        sidebar_header.addStretch()
+
+        self.sidebar_collapse_toggle = QPushButton("❮")
+        self.sidebar_collapse_toggle.setObjectName("SidebarCollapseButton")
+        self.sidebar_collapse_toggle.setFixedSize(28, 28)
+        self.sidebar_collapse_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.sidebar_collapse_toggle.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.sidebar_collapse_toggle.clicked.connect(self.toggle_sidebar)
+        self.sidebar_collapse_toggle.setToolTip("Ocultar menú")
+        sidebar_header.addWidget(self.sidebar_collapse_toggle)
+        self.sidebar_layout.addLayout(sidebar_header)
 
         # Navigation Buttons
         self.btn_create = SidebarItem(tr("sidebar.create"), get_tab_icon("crear"))
@@ -825,7 +682,7 @@ class PackageTodoGUI(QMainWindow):
             self.btn_moonfix: "sidebar.moonfix",
             self.btn_about: "sidebar.about",
         }
-        
+
         self.sidebar_group = QButtonGroup(self)
         self.sidebar_group.addButton(self.btn_create, 0)
         self.sidebar_group.addButton(self.btn_build, 1)
@@ -840,69 +697,61 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_layout.addWidget(self.btn_manager)
         self.sidebar_layout.addWidget(self.btn_config)
         self.sidebar_layout.addWidget(self.btn_moonfix)
-        
+
         # Area de Contexto/Descripcion (Estilo Nota UWP)
         self.sidebar_layout.addStretch()
-        
+
         self.desc_card = QWidget()
-        self.desc_card.setStyleSheet("""
-            QWidget {
-                background-color: transparent;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                margin-top: 10px;
-            }
-        """)
+        self.desc_card.setObjectName("SidebarContextCard")
+        set_qss(self.desc_card, 'packagemaker_005', append=False)
         desc_vbox = QVBoxLayout(self.desc_card)
         desc_vbox.setContentsMargins(12, 12, 12, 12)
-        
+
         desc_header = QHBoxLayout()
-        info_icon = QLabel("ℹ️")
-        info_icon.setStyleSheet("border:none; background:transparent; font-size: 14px;")
-        desc_header.addWidget(info_icon)
-        
+
         self.lbl_sidebar_context = QLabel(tr("app.context"))
-        self.lbl_sidebar_context.setStyleSheet("border:none; background:transparent; color: #888; font-weight: bold; font-size: 11px; text-transform: uppercase;")
+        set_qss(self.lbl_sidebar_context, 'packagemaker_006', append=False)
         desc_header.addWidget(self.lbl_sidebar_context)
         desc_header.addStretch()
         desc_vbox.addLayout(desc_header)
-        
+
         self.sidebar_desc_text = QTextEdit()
         self.sidebar_desc_text.setReadOnly(True)
         self.sidebar_desc_text.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        self.sidebar_desc_text.setStyleSheet("background: transparent; color: #bbb; font-size: 12px; line-height: 1.4; border:none;")
+        set_qss(self.sidebar_desc_text, 'packagemaker_007', append=False)
         self.sidebar_desc_text.setMaximumHeight(120)
         desc_vbox.addWidget(self.sidebar_desc_text)
-        
+
         self.sidebar_layout.addWidget(self.desc_card)
         self.sidebar_layout.addSpacing(10)
         self.sidebar_layout.addWidget(self.btn_about)
+
+        self.sidebar_collapse_button = self.sidebar_collapse_toggle
 
         self.content_layout.addWidget(self.sidebar)
 
         # --- MAIN CONTENT AREA (Right) ---
         self.stack = QStackedWidget()
-        # Enable styled background
         self.stack.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        # Cast iron gray background for stack
-        self.stack.setStyleSheet("background: #3a3f4b;")
-        
+        set_qss(self.stack, 'packagemaker_008', append=False)
+        self.content_container.setObjectName("ContentContainer")
+
         # Pages
         self.page_create = QWidget()
         self.init_create_tab(self.page_create) # Refactorized logic below
-        
+
         self.page_build = QWidget()
         self.init_build_tab(self.page_build)
-        
+
         self.page_manager = QWidget()
         self.init_manager_tab(self.page_manager)
-        
+
         self.page_config = QWidget()
         self.init_config_tab(self.page_config)
-        
+
         self.page_moonfix = QWidget()
         self.init_moonfix_tab(self.page_moonfix)
-        
+
         self.page_about = QWidget()
         self.init_about_tab(self.page_about)
 
@@ -919,7 +768,7 @@ class PackageTodoGUI(QMainWindow):
         # Set default
         self.btn_create.setChecked(True)
         self.stack.setCurrentIndex(0)
-        
+
         # Initialize Theme Check
         self.theme_timer = QTimer()
         self.theme_timer.timeout.connect(self.check_theme_change)
@@ -932,10 +781,10 @@ class PackageTodoGUI(QMainWindow):
 
         if self.compact_mode or self.shell_mode:
             self.enterCompactShellMode()
-        
+
         # Startup Animation
         self.animate_startup()
-        
+
         # Initial description
         self.update_sidebar_description(0)
 
@@ -954,19 +803,6 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, "sandbox_switch"):
             self.sandbox_switch.setText(tr("create.sandbox"))
 
-    def enterCompactShellMode(self):
-        self.sidebar.hide()
-        self.content_layout.setContentsMargins(8, 8, 8, 8)
-        self.content_container.setStyleSheet("background-color: transparent;")
-        self.resize(460, 760)
-        self.setMinimumSize(420, 660)
-        self.statusBar().showMessage("Modo compacto de shell activado")
-        self.setWindowTitle(fixed_window_title(self.currentVersion, "Shell"))
-        if hasattr(self.titlebar, "title_lbl"):
-            self.titlebar.title_lbl.setText(self.windowTitle())
-        if hasattr(self.titlebar, 'setStyleSheet'):
-            self.titlebar.setStyleSheet("background-color: transparent;")
-
     def update_sidebar_description(self, index):
         key = SIDEBAR_DESC_KEYS.get(index)
         if key:
@@ -974,257 +810,69 @@ class PackageTodoGUI(QMainWindow):
             html = text.replace("### ", "<b style='color:white; font-size:14px;'>").replace("\n", "</b><br>")
             self.sidebar_desc_text.setHtml(html)
 
+    def _apply_sidebar_state(self, collapsed):
+        target_width = 60 if collapsed else self.sidebar_target_width
+        if self.sidebar.maximumWidth() == target_width:
+            return
+        self.sidebar_animation = animate_property(
+            self.sidebar,
+            "maximumWidth",
+            self.sidebar.maximumWidth(),
+            target_width,
+            220,
+            QEasingCurve.Type.OutCubic,
+        )
+        self.sidebar_collapsed = collapsed
+        self.sidebar_collapse_toggle.setText("❯" if collapsed else "❮")
+        self.sidebar_collapse_toggle.setToolTip("Expandir menú" if collapsed else "Ocultar menú")
+
+        for btn in self._sidebar_btn_keys:
+            btn.setVisible(not collapsed)
+            btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.lbl_menu_main.setVisible(not collapsed)
+        if hasattr(self.desc_card, "setVisible"):
+            self.desc_card.setVisible(not collapsed)
+
+    def toggle_sidebar(self):
+        self._apply_sidebar_state(not self.sidebar_collapsed)
+
+    def collapse_sidebar(self):
+        if not self.sidebar_collapsed:
+            self._apply_sidebar_state(True)
+
+    def expand_sidebar(self):
+        if self.sidebar_collapsed:
+            self._apply_sidebar_state(False)
+
+    def eventFilter(self, obj, event):
+        if obj is self.sidebar and event.type() in (QEvent.Type.Enter, QEvent.Type.MouseMove):
+            self.sidebar_auto_hide_timer.stop()
+            self.expand_sidebar()
+        elif obj is self.sidebar and event.type() == QEvent.Type.Leave:
+            self.sidebar_auto_hide_timer.start(600)
+        return super().eventFilter(obj, event)
+
     def animate_startup(self, instant=False):
-        """Animación de desplazamiento hacia arriba y opacidad al abrir"""
+        """Posiciona la ventana y anima su opacidad desde el controlador QML."""
         screen_geo = QApplication.primaryScreen().geometry()
         x = (screen_geo.width() - self.width()) // 2
         y = (screen_geo.height() - self.height()) // 2
-        
+
         if instant:
             self.move(x, y)
             self.setWindowOpacity(1.0)
             return
-        
-        start_y = y + 50
-        end_y = y
 
-        self.move(x, start_y)
+        self.move(x, y)
         self.setWindowOpacity(0.0)
-
-        # Animacion de geometria (Posicion)
-        self.anim_pos = QPropertyAnimation(self, b"pos")
-        self.anim_pos.setDuration(800)
-        self.anim_pos.setStartValue(QPoint(x, start_y))
-        self.anim_pos.setEndValue(QPoint(x, end_y))
-        self.anim_pos.setEasingCurve(QEasingCurve.Type.OutExpo)
-        
-        # Animacion de opacidad
-        self.anim_fade = QPropertyAnimation(self, b"windowOpacity")
-        self.anim_fade.setDuration(800)
-        self.anim_fade.setStartValue(0.0)
-        self.anim_fade.setEndValue(1.0)
-        
-        self.anim_group = QParallelAnimationGroup(self)
-        self.anim_group.addAnimation(self.anim_pos)
-        self.anim_group.addAnimation(self.anim_fade)
-        self.anim_group.start()
-
-    def apply_device_simulation(self):
-        """Aplica la simulación de dispositivo según la configuración"""
-        # Cargar desde registro si no está en config
-        device = APP_CONFIG.get("device_simulation") or load_from_registry("device_simulation", "laptop")
-        dpi_scale = float(APP_CONFIG.get("dpi_scale") or load_from_registry("dpi_scale", "1.0"))
-        touch_mode = APP_CONFIG.get("touch_mode") or (load_from_registry("touch_mode", "False") == "True")
-        interface_color = APP_CONFIG.get("interface_color") or load_from_registry("interface_color", "#0d1117")
-        auto_color = APP_CONFIG.get("auto_color") or (load_from_registry("auto_color", "True") == "True")
-        
-        screen = QApplication.primaryScreen().availableGeometry()
-        
-        if device == "tv":
-            # Pantalla completa, modo touch
-            self.setWindowState(Qt.WindowState.WindowFullScreen)
-            self.touch_enabled = True
-        elif device == "tablet":
-            # Compacto con espacios para dedos, modo touch
-            width = int(screen.width() * 0.8)
-            height = int(screen.height() * 0.9)
-            self.resize(width, height)
-            self.move((screen.width() - width) // 2, (screen.height() - height) // 2)
-            self.touch_enabled = True
-            # Agregar márgenes para dedos
-            self.central.setContentsMargins(20, 20, 20, 20)
-        elif device == "phone":
-            # Tarjeta ajustada al alto, ancho reducido, modo touch
-            width = int(screen.width() * 0.4)
-            height = screen.height() - 40  # Respetar barra de tareas
-            self.resize(width, height)
-            self.move((screen.width() - width) // 2, 20)
-            self.touch_enabled = True
-            # En modo phone, ocultar sidebar y mostrar solo contenido
-            self.sidebar.hide()
-            self.content_layout.setContentsMargins(8, 8, 8, 8)
-        elif device == "ios_x":
-            # Simulación iOS X: notch superior, botones sidebar en la parte inferior
-            width = int(screen.width() * 0.45)
-            height = int(screen.height() * 0.9)
-            self.resize(width, height)
-            self.move((screen.width() - width) // 2, (screen.height() - height) // 2)
-            self.touch_enabled = True
-            
-            # Crear notch superior simulado
-            self.notch_container = QWidget()
-            self.notch_container.setMinimumHeight(30)
-            self.notch_container.setMaximumHeight(30)
-            self.notch_container.setStyleSheet("""
-                background-color: transparent;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-            """)
-            notch_layout = QHBoxLayout(self.notch_container)
-            notch_layout.setContentsMargins(0, 0, 0, 0)
-            notch_layout.setSpacing(0)
-            
-            # Notch central (área de notificaciones)
-            notch_area = QWidget()
-            notch_area.setStyleSheet("background-color: transparent;")
-            notch_area.setMinimumWidth(100)
-            notch_area.setMaximumWidth(150)
-            notch_layout.addWidget(notch_area)
-            
-            # Botones de notificación (íconos)
-            notif_btn = QPushButton()
-            notif_btn.setIcon(get_icon("notifications", 16))
-            notif_btn.setIconSize(QSize(16, 16))
-            notif_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: none;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: transparent;
-                    border-radius: 4px;
-                }
-            """)
-            notch_layout.addWidget(notif_btn)
-            
-            # Hora
-            self.notch_time = QLabel("9:41")
-            self.notch_time.setStyleSheet("color: white; font-size: 12px; font-weight: 600; background-color: transparent; padding: 0 10px;")
-            notch_layout.addWidget(self.notch_time)
-            
-            notch_layout.addStretch()
-            
-            # Agregar notch al layout principal
-            self.v_layout.insertWidget(1, self.notch_container)
-            
-            # Crear barra de botones inferior estilo iOS
-            self.ios_bottom_bar = QWidget()
-            self.ios_bottom_bar.setMinimumHeight(60)
-            self.ios_bottom_bar.setMaximumHeight(60)
-            self.ios_bottom_bar.setStyleSheet("""
-                background-color: transparent;
-                border-top: 1px solid rgba(255,255,255,0.1);
-            """)
-            bottom_layout = QHBoxLayout(self.ios_bottom_bar)
-            bottom_layout.setContentsMargins(10, 5, 10, 5)
-            bottom_layout.setSpacing(15)
-            
-            # Botones del sidebar como iconos
-            btn_create = QPushButton()
-            btn_create.setIcon(get_icon("crear", 24))
-            btn_create.setIconSize(QSize(24, 24))
-            btn_create.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: none;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: transparent;
-                    border-radius: 8px;
-                }
-                QPushButton:checked {
-                    background-color: transparent;
-                }
-            """)
-            btn_create.setCheckable(True)
-            btn_create.clicked.connect(lambda: self.btn_create.setChecked(True))
-            
-            btn_build = QPushButton()
-            btn_build.setIcon(get_icon("construir", 24))
-            btn_build.setIconSize(QSize(24, 24))
-            btn_build.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: none;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: transparent;
-                    border-radius: 8px;
-                }
-                QPushButton:checked {
-                    background-color: transparent;
-                }
-            """)
-            btn_build.setCheckable(True)
-            btn_build.clicked.connect(lambda: self.btn_build.setChecked(True))
-            
-            btn_manager = QPushButton()
-            btn_manager.setIcon(get_icon("gestor", 24))
-            btn_manager.setIconSize(QSize(24, 24))
-            btn_manager.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: none;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: transparent;
-                    border-radius: 8px;
-                }
-                QPushButton:checked {
-                    background-color: transparent;
-                }
-            """)
-            btn_manager.setCheckable(True)
-            btn_manager.clicked.connect(lambda: self.btn_manager.setChecked(True))
-            
-            btn_config = QPushButton()
-            btn_config.setIcon(get_icon("config", 24))
-            btn_config.setIconSize(QSize(24, 24))
-            btn_config.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: none;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: transparent;
-                    border-radius: 8px;
-                }
-                QPushButton:checked {
-                    background-color: transparent;
-                }
-            """)
-            btn_config.setCheckable(True)
-            btn_config.clicked.connect(lambda: self.btn_config.setChecked(True))
-            
-            bottom_layout.addWidget(btn_create)
-            bottom_layout.addWidget(btn_build)
-            bottom_layout.addWidget(btn_manager)
-            bottom_layout.addWidget(btn_config)
-            bottom_layout.addStretch()
-            
-            # Agregar barra inferior al layout principal
-            self.v_layout.insertWidget(2, self.ios_bottom_bar)
-            
-            # Ajustar el contenido para que no se superponga con la barra inferior
-            self.content_container.setStyleSheet("background-color: transparent;")
-            self.content_layout.setContentsMargins(0, 0, 0, 0)
-            
-            # Ocultar sidebar original
-            self.sidebar.hide()
-        else:  # laptop
-            max_width = int(screen.width() * 0.9)
-            max_height = int(screen.height() * 0.85)
-            width = min(1100, max_width)
-            height = min(720, max_height)
-            self.resize(width, height)
-            self.move((screen.width() - width) // 2, (screen.height() - height) // 2)
-            self.touch_enabled = touch_mode
-        
-        # Aplicar color de interfaz
-        if not auto_color:
-            self.setStyleSheet(f"QMainWindow {{ background-color: {interface_color}; }}")
-        
-        applied = apply_dpi_scale(dpi_scale, APP_FONT)
-        self._applied_dpi_scale = applied
-        get_pm_data().set_user("applied_dpi_scale", applied)
-
-        # Configurar gestos touch si está habilitado
-        if self.touch_enabled:
-            self.setup_touch_gestures()
+        animate_property(
+            self,
+            "windowOpacity",
+            0.0,
+            1.0,
+            800,
+            QEasingCurve.Type.OutExpo,
+        )
 
     def setup_touch_gestures(self):
         """Configura gestos táctiles para navegación"""
@@ -1263,22 +911,17 @@ class PackageTodoGUI(QMainWindow):
             return
         try:
             next_widget.setWindowOpacity(0.0)
-            anim_fade = QtCore.QPropertyAnimation(next_widget, b"windowOpacity")
-            anim_fade.setDuration(260)
-            anim_fade.setStartValue(0.0)
-            anim_fade.setEndValue(1.0)
-            anim_fade.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
-            anim_fade.start(QtCore.QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
-        except Exception:
+            animate_property(
+                next_widget,
+                "windowOpacity",
+                0.0,
+                1.0,
+                850,
+                QEasingCurve.Type.OutCubic,
+            )
+        except RuntimeError:
             next_widget.setWindowOpacity(1.0)
 
-
-    def apply_lights_off_to_children(self):
-        """Aplica el efecto LightsOff de LeviathanUI a todos los botones del programa"""
-        # Se puede optimizar aplicando a clases especificas
-        # Actualmente LightsOff es estatico
-        pass 
-        
     def change_display_mode(self, index):
         """Compatibilidad: índice antiguo del combo (0=polished, 1=ghost, 2=ghostBlur)."""
         names = ["Sólido", "Acrylic", "GhostBlur (Cristal)"]
@@ -1306,236 +949,76 @@ class PackageTodoGUI(QMainWindow):
         if current_mode != self.last_theme_mode:
             self.last_theme_mode = current_mode
             self.apply_theme()
-    
+
     def apply_theme(self):
         store = get_pm_data()
-        # Use automatic UWP accent color by default
         accent = str(get_accent_color())
         accent_hover = accent
-        border_w = 3  # Fixed sidebar accent width
-        card_op = 0.08  # Fixed card opacity
+        border_w = 3
         density = str(store.get_user("ui_density", "normal"))
         sidebar_h = 50 if density != "compact" else 42
 
-        is_dark = True
-        # Cast iron gray texture with subtle gradient
-        base_bg = "#3a3f4b" if is_dark else "rgba(245, 245, 245, 0.85)"
-        text_col = "#ffffff" if is_dark else "#000000"
+        base_bg = "#303641"
+        text_col = "#f8fbff"
 
-        self.central.setStyleSheet(f"""
-            QWidget {{
-                color: {text_col};
-                font-family: 'Segoe UI', sans-serif;
-                background: {base_bg};
-            }}
-            QMainWindow {{
-                background: {base_bg};
-            }}
-            QGroupBox {{
-                background-color: transparent; /* Higher opacity for better readability */
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                margin-top: 1.5em;
-                font-weight: bold;
-                color: {text_col};
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                subcontrol-position: top left;
-                padding: 0 5px;
-                color: {text_col}; 
-                background-color: transparent;
-            }}
-            QLineEdit {{
-                background-color: transparent; /* Higher contrast input background */
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 5px;
-                padding: 8px;
-                color: white;
-                selection-background-color: #ff5722;
-            }}
-            QLineEdit:focus {{
-                border: 1px solid #ff5722; 
-                background-color: transparent;
-            }}
-            QLabel {{
-                color: #dddddd;
-            }}
-            /* Scrollbars Material Design Style */
-            QScrollBar:vertical {{
-                border: none;
-                background-color: #333333;
-                width: 12px;
-                margin: 12px 0 12px 0;
-                border-radius: 6px;
-            }}
-            QScrollBar::handle:vertical {{
-                background-color: #00aaff;
-                min-height: 20px;
-                border-radius: 6px;
-                margin: 2px;
-            }}
-            QScrollBar::handle:vertical:hover {{
-                background-color: #0088cc;
-            }}
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
-                background: none;
-                border: none;
-            }}
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
-                background: none;
-            }}
-            QScrollBar:horizontal {{
-                border: none;
-                background-color: #333333;
-                height: 12px;
-                margin: 0 12px 0 12px;
-                border-radius: 6px;
-            }}
-            QScrollBar::handle:horizontal {{
-                background-color: #00aaff;
-                min-width: 20px;
-                border-radius: 6px;
-                margin: 2px;
-            }}
-            QScrollBar::handle:horizontal:hover {{
-                background-color: #0088cc;
-            }}
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-                background: none;
-                border: none;
-            }}
-            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
-                background: none;
-            }}
-        """)
-        
+        set_qss(self.central, applyget(accent), append=False)
+        set_qss(self, 'packagemaker_010', values=(qss_value(base_bg, None, ''),), append=False)
+
         if hasattr(self.titlebar, "title_lbl"):
             self.titlebar.title_lbl.setText(self._fixed_title)
-            self.titlebar.title_lbl.setStyleSheet(f"color: {text_col}; font-weight: 600;")
+            set_qss(self.titlebar.title_lbl, 'packagemaker_065', values=(qss_value(text_col, None, ''),), append=False)
 
         for btn in getattr(self, "_sidebar_btn_keys", {}):
             btn.setFixedHeight(sidebar_h)
-            btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                color: #b0b0b0;
-                text-align: left;
-                padding-left: 17px;
-                border: none;
-                border-left: {border_w}px solid transparent;
-                border-radius: 8px;
-                font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
-                font-size: 15px;
-                font-weight: 500;
-            }}
-            QPushButton:hover {{
-                background-color: transparent;
-                color: #ffffff;
-            }}
-            QPushButton:checked {{
-                background-color: transparent;
-                color: #ffffff;
-                border-left: {border_w}px solid {accent};
-            }}
-            """)
+            set_qss(btn, 'packagemaker_066', values=(qss_value(border_w, None, ''), qss_value(border_w, None, ''), qss_value(accent, None, '')), append=False)
+
+        if hasattr(self, "sidebar_collapse_toggle"):
+            set_qss(self.sidebar_collapse_toggle, 'packagemaker_067', append=False)
 
         if hasattr(self, "desc_card"):
-            self.desc_card.setStyleSheet(f"""
-            QWidget {{
-                background-color: transparent;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 8px;
-                margin-top: 10px;
-            }}
-            """)
+            set_qss(self.desc_card, 'packagemaker_068', append=False)
 
         if hasattr(self, "btn_create_action"):
-            self.btn_create_action.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {accent};
-                color: white;
-                font-weight: 600;
-                font-size: 14px;
-                border-radius: 4px;
-                border: none;
-            }}
-            QPushButton:hover {{ background-color: {accent_hover}; }}
-            QPushButton:pressed {{ background-color: {accent}; }}
-            QPushButton:disabled {{ background-color: #333; color: #666; }}
-            """)
+            set_qss(self.btn_create_action, 'packagemaker_069', values=(qss_value(accent, None, ''), qss_value(accent_hover, None, ''), qss_value(accent, None, '')), append=False)
+
+        if hasattr(self, "page_create"):
+            set_qss(self.page_create, applyget(accent), append=False)
 
     # --- Refactored Init Methods to accept a parent widget instead of using self.tabs ---
 
     def init_create_tab(self, parent_widget):
         target = parent_widget
         # Enable styled background for proper inheritance
-        target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        target.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
         # Don't set individual background - let it inherit from parent
         layout = QVBoxLayout(target)
         layout.setSpacing(10)
         layout.setContentsMargins(25, 25, 25, 25)
-        
+
         # Header "Crear Nuevo Proyecto" as main title, no GroupBox title
         # UWP Design: Big bold headers, content below.
-        title_lbl = QLabel("Crear Nuevo Proyecto")
-        title_lbl.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 10px; background: transparent;")
+        title_lbl = QLabel("Crear un proyecto nuevo")
+        set_qss(title_lbl, 'packagemaker_011', append=False)
         layout.addWidget(title_lbl)
-
-        # Container for form elements - Transparent to inherit parent background
         form_group = QGroupBox()
-        form_group.setStyleSheet("""
-            QGroupBox {
-                border: none;
-                margin-top: 0px;
-                background: transparent;
-            }
-        """)
+        set_qss(form_group, 'packagemaker_012', append=False)
 
         form_layout = QGridLayout(form_group)
         form_layout.setSpacing(15) # Comfortable spacing
         form_layout.setColumnMinimumWidth(0, 160)
-        
-        # UWP Style Definition for Controls
-        # Labels: Segoe UI, 14px, #e0e0e0
-        # Inputs: Dark background, light border on hover, accent bottom border or glow on focus.
-        
+
         def uwp_label(text):
             l = QLabel(text)
-            l.setStyleSheet("font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #cccccc; font-weight: 500; background: transparent;")
+            set_qss(l, 'packagemaker_071', append=False)
             l.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
             return l
-            
+
         def uwp_input(placeholder):
             line = QLineEdit()
             line.setPlaceholderText(placeholder)
-            line.setFixedHeight(35)
-            # UWP Style:
-            # Normal: Bg #2d2d2d, Border 1px #3d3d3d (bottom border 1px #888)
-            # Hover: Bg #323232, Border 1px #444
-            # Focus: Bg #1f1f1f, Border-bottom 2px #ff5722 (Accent)
-            line.setStyleSheet("""
-                QLineEdit {
-                    background-color: transparent;
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-                    border-radius: 4px;
-                    padding: 0 10px;
-                    color: white;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 14px;
-                    selection-background-color: #ff5722;
-                }
-                QLineEdit:hover {
-                    background-color: transparent;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
-                }
-                QLineEdit:focus {
-                    background-color: transparent;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-bottom: 2px solid #ff5722;
-                }
-            """)
+            line.setFixedHeight(40)
+            set_qss(line, 'packagemaker_072', append=False)
             return line
 
         # Fila 0
@@ -1565,74 +1048,34 @@ class PackageTodoGUI(QMainWindow):
 
         # Fila 5 Icon
         form_layout.addWidget(uwp_label("Icono (.ico):"), 5, 0)
-        
+
         icon_box = QHBoxLayout()
         icon_box.setSpacing(8)
         self.input_icon = uwp_input("Ruta al archivo .ico")
         icon_box.addWidget(self.input_icon)
-        
-        self.btn_browse_icon = QPushButton("...")
+
+        self.btn_browse_icon = QPushButton()
         self.btn_browse_icon.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_browse_icon.setFixedSize(40, 35)
-        self.btn_browse_icon.setToolTip("Examinar...")
-        # UWP Button Style: Clean, borderless until hover? Or standard button.
-        self.btn_browse_icon.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 4px;
-                color: white;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: transparent;
-            }
-            QPushButton:pressed {
-                background-color: transparent;
-                border-color: rgba(255, 255, 255, 0.05);
-            }
-        """)
+        self.btn_browse_icon.setFixedSize(100, 35)
+        set_qss(self.btn_browse_icon, 'packagemaker_013', append=False)
         self.btn_browse_icon.clicked.connect(self.browse_icon)
         icon_button(self.btn_browse_icon, "folder", 16)
         icon_box.addWidget(self.btn_browse_icon)
-        
+
         # Wrap icon box in widget since grid layout expects widget or layout
         # (addLayout works too, but we are consistent)
         form_layout.addLayout(icon_box, 5, 1)
 
         # Fila 6: plataforma + sandbox (siempre visible, sin grupo ni panel expandible)
         platform_sandbox_row = QWidget()
-        platform_sandbox_row.setStyleSheet("background-color: transparent;")
+        set_qss(platform_sandbox_row, 'packagemaker_014', append=False)
         ps_layout = QHBoxLayout(platform_sandbox_row)
         ps_layout.setContentsMargins(0, 2, 0, 2)
         ps_layout.setSpacing(12)
 
         def uwp_checkbox(text):
             cb = QCheckBox(text)
-            cb.setStyleSheet("""
-                QCheckBox {
-                    color: #dddddd;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 12px;
-                    spacing: 7px;
-                    background-color: transparent;
-                }
-                QCheckBox::indicator {
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 4px;
-                    border: 2px solid #666666;
-                    background: transparent;
-                }
-                QCheckBox::indicator:hover {
-                    border-color: #888888;
-                }
-                QCheckBox::indicator:checked {
-                    border-color: #ff5722;
-                    background-color: #ff5722;
-                    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMiA2TDUgOUwxMCAyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==);
-                }
-            """)
+            set_qss(cb, 'packagemaker_073', append=False)
             return cb
 
         self.checkbox_windows = uwp_checkbox("Windows (Knosthalij)")
@@ -1649,18 +1092,9 @@ class PackageTodoGUI(QMainWindow):
         checks_row.addWidget(self.checkbox_linux)
 
         self.multiplatform_label = QLabel("Modo: Windows únicamente")
-        self.multiplatform_label.setStyleSheet("""
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 10px;
-            color: #ff9800;
-            background-color: transparent;
-            padding: 3px 7px;
-            border-radius: 4px;
-            margin-top: 2px;
-        """)
+        set_qss(self.multiplatform_label, 'packagemaker_015', append=False)
 
         platform_col = QWidget()
-        platform_col.setStyleSheet("background-color: transparent;")
         pc_layout = QVBoxLayout(platform_col)
         pc_layout.setContentsMargins(0, 0, 0, 0)
         pc_layout.setSpacing(4)
@@ -1669,37 +1103,7 @@ class PackageTodoGUI(QMainWindow):
 
         self.sandbox_switch = QCheckBox(tr("create.sandbox"))
         self.sandbox_switch.setChecked(True)
-        self.sandbox_switch.setToolTip("Ejecución del proyecto con protección de sandbox (recomendado).")
         self.sandbox_switch.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.sandbox_switch.setStyleSheet("""
-            QCheckBox {
-                color: #cccccc;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 12px;
-                font-weight: 600;
-                spacing: 8px;
-                background-color: transparent;
-            }
-            QCheckBox::indicator {
-                width: 16px;
-                height: 16px;
-                border-radius: 4px;
-                border: 2px solid #4CAF50;
-                background: transparent;
-            }
-            QCheckBox::indicator:hover {
-                border-color: #66BB6A;
-                background-color: transparent;
-            }
-            QCheckBox::indicator:checked {
-                border-color: #4CAF50;
-                background-color: #4CAF50;
-                image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMiA2TDUgOUwxMCAyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==);
-            }
-            QCheckBox::indicator:unchecked {
-                border-color: #666666;
-            }
-        """)
         self.sandbox_switch.clicked.connect(self.on_sandbox_clicked)
 
         ps_layout.addWidget(platform_col, 0)
@@ -1717,48 +1121,32 @@ class PackageTodoGUI(QMainWindow):
         # Action Area
         layout.addSpacing(20)
         action_layout = QHBoxLayout()
-        
-        self.create_status = QLabel("")
-        self.create_status.setStyleSheet("color: #aaa; margin-left: 10px; background-color: transparent;")
+
+        self.create_status = QLabel("BlindCube Switched")
+        set_qss(self.create_status, 'packagemaker_016', append=False)
         action_layout.addWidget(self.create_status)
-        
+
         action_layout.addStretch()
-        
+
         self.github_progress = QProgressBar()
         self.github_progress.setRange(0,0)
         self.github_progress.setVisible(False)
         self.github_progress.setFixedWidth(150)
         self.github_progress.setFixedHeight(4)
-        self.github_progress.setStyleSheet("QProgressBar { background: transparent; border: none; border-radius: 2px; } QProgressBar::chunk { background: #ff5722; }")
         action_layout.addWidget(self.github_progress)
-        
+
         self.btn_create_action = QPushButton("Crear Proyecto")
         self.btn_create_action.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_create_action.setFixedSize(160, 40)
-        # UWP Accent Button
-        self.btn_create_action.setStyleSheet("""
-            QPushButton {
-                background-color: #ff5722; 
-                color: white; 
-                font-weight: 600; 
-                font-size: 14px; 
-                border-radius: 4px;
-                border: none;
-                font-family: 'Segoe UI', sans-serif;
-            }
-            QPushButton:hover { background-color: #ff7043; }
-            QPushButton:pressed { background-color: #e64a19; }
-            QPushButton:disabled { background-color: #333; color: #666; }
-        """)
+        self.btn_create_action.setFixedSize(150, 40)
         self.btn_create_action.clicked.connect(self.create_package_action)
         icon_button(self.btn_create_action, "crear", 18)
         action_layout.addWidget(self.btn_create_action)
-        
+
         layout.addLayout(action_layout)
         layout.addStretch()
-        
+
         # Link alias for compatibility with existing methods
-        # self.btn_create = self.btn_create_action # REMOVED to avoid conflict with sidebar button 
+        # self.btn_create = self.btn_create_action # REMOVED to avoid conflict with sidebar button
 
 
     def browse_icon(self):
@@ -1791,41 +1179,17 @@ class PackageTodoGUI(QMainWindow):
         """Callback cuando cambia la selección de plataforma"""
         win_checked = self.checkbox_windows.isChecked()
         linux_checked = self.checkbox_linux.isChecked()
-        
+
         # Actualizar label de modo
         if win_checked and linux_checked:
             self.multiplatform_label.setText("Modo: Multiplataforma (Windows + Linux)")
-            self.multiplatform_label.setStyleSheet("""
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 11px;
-                color: #4CAF50;
-                background-color: transparent;
-                padding: 5px 10px;
-                border-radius: 4px;
-                margin-top: 5px;
-            """)
+            set_qss(self.multiplatform_label, 'packagemaker_074', append=False)
         elif win_checked:
             self.multiplatform_label.setText("Modo: Windows únicamente")
-            self.multiplatform_label.setStyleSheet("""
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 11px;
-                color: #ff9800;
-                background-color: transparent;
-                padding: 5px 10px;
-                border-radius: 4px;
-                margin-top: 5px;
-            """)
+            set_qss(self.multiplatform_label, 'packagemaker_154', append=False)
         elif linux_checked:
             self.multiplatform_label.setText("Modo: Linux únicamente")
-            self.multiplatform_label.setStyleSheet("""
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 11px;
-                color: #2196F3;
-                background-color: transparent;
-                padding: 5px 10px;
-                border-radius: 4px;
-                margin-top: 5px;
-            """)
+            set_qss(self.multiplatform_label, 'packagemaker_158', append=False)
         else:
             # Ninguno seleccionado - forzar Windows por defecto
             self.checkbox_windows.setChecked(True)
@@ -1848,21 +1212,21 @@ class PackageTodoGUI(QMainWindow):
     def show_extended_sandbox_warning(self):
         """Muestra un diálogo de advertencia extendido tipo VS Code ANTES de desactivar el sandbox"""
         dialog = QDialog(self)
-        dialog.setWindowTitle("⚠️ Advertencia de Seguridad Crítica")
+        dialog.setWindowTitle(" Advertencia de Seguridad Crítica")
         dialog.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
         dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         dialog.setFixedSize(520, 480)
-        
+
         # Centrar diálogo en la pantalla
         screen_geo = self.screen().geometry()
         x = screen_geo.x() + (screen_geo.width() - 520) // 2
         y = screen_geo.y() + (screen_geo.height() - 480) // 2
         dialog.move(x, y)
-        
+
         # Hacer el diálogo de advertencia movible/arrastrable
         dialog._drag_active = False
         dialog._drag_offset = None
-        
+
         def warning_press(event):
             if event.button() == Qt.MouseButton.LeftButton:
                 dialog._drag_active = True
@@ -1883,188 +1247,111 @@ class PackageTodoGUI(QMainWindow):
         dialog.mousePressEvent = warning_press
         dialog.mouseMoveEvent = warning_move
         dialog.mouseReleaseEvent = warning_release
-        
+
         # Aplicar el efecto de desenfoque acrílico de LeviathanUI
-        WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialog)
-        
+        WipeWindow.create().set_mode("ghostBlur").set_radius(5).apply(dialog)
+
         dialog_central = QWidget(dialog)
         dialog_central.setObjectName("DialogCentral")
-        dialog_central.setStyleSheet("""
-            QWidget#DialogCentral {
-                background-color: transparent;
-                border: 1px solid rgba(244, 67, 54, 0.25);
-                border-radius: 12px;
-            }
-        """)
-        
+
         dialog_main_layout = QVBoxLayout(dialog)
         dialog_main_layout.setContentsMargins(0, 0, 0, 0)
         dialog_main_layout.addWidget(dialog_central)
-        
+
         layout = QVBoxLayout(dialog_central)
         layout.setSpacing(10)
         layout.setContentsMargins(20, 15, 20, 15)
-        
+
         # Header con icono y título
         header_layout = QHBoxLayout()
-        icon_label = QLabel("⚠️")
-        icon_label.setStyleSheet("font-size: 32px; background-color: transparent;")
+        icon_label = QLabel("proc")
+        set_qss(icon_label, 'packagemaker_017', append=False)
         header_layout.addWidget(icon_label)
-        
+
         title_layout = QVBoxLayout()
         title = QLabel("Desactivar Protección de Sandbox")
-        title.setStyleSheet("""
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            color: #f44336;
-            background-color: transparent;
-        """)
+        set_qss(title, 'packagemaker_018', append=False)
         subtitle = QLabel("Esta acción expone su proyecto a riesgos significativos de seguridad")
-        subtitle.setStyleSheet("""
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 11px;
-            color: #888888;
-            background-color: transparent;
-        """)
+        set_qss(subtitle, 'packagemaker_019', append=False)
         title_layout.addWidget(title)
         title_layout.addWidget(subtitle)
         header_layout.addLayout(title_layout)
         header_layout.addStretch()
         layout.addLayout(header_layout)
-        
+
         # Separador sutil
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setStyleSheet("background-color: transparent;")
+        set_qss(separator, 'packagemaker_020', append=False)
         separator.setFixedHeight(1)
         layout.addWidget(separator)
-        
+
         # Scroll Area para respetar y limitar la altura perfectamente
         scroll = QtWidgets.QScrollArea(dialog_central)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("background-color: transparent;")
+        set_qss(scroll, 'packagemaker_021', append=False)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        
+
         # Contenedor del contenido del scroll (con estilo VS Code)
         warning_container = QWidget()
-        warning_container.setStyleSheet("""
-            background-color: transparent;
-            border-radius: 8px;
-            border-left: 4px solid #f44336;
-        """)
+        set_qss(warning_container, 'packagemaker_022', append=False)
         warning_layout = QVBoxLayout(warning_container)
         warning_layout.setContentsMargins(15, 15, 15, 15)
         warning_layout.setSpacing(12)
-        
-        intro_text = QLabel("⚠️ <b style='color:#f44336;'>ADVERTENCIA:</b> Al desactivar el Sandbox Seguro, su proyecto se creará sin protección de aislamiento. Esto significa que el código se ejecutará sin restricciones de seguridad.")
-        intro_text.setStyleSheet("""
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 12px;
-            color: #cccccc;
-            background-color: transparent;
-        """)
+
+        intro_text = QLabel(" <b style='color:#f44336;'>ADVERTENCIA:</b> Al desactivar el Sandbox Seguro, su proyecto se creará sin protección de aislamiento. Esto significa que el código se ejecutará sin restricciones de seguridad.")
+        set_qss(intro_text, 'packagemaker_023', append=False)
         intro_text.setWordWrap(True)
         warning_layout.addWidget(intro_text)
-        
-        risks_title = QLabel("🔴 Riesgos a los que se expone su sistema:")
-        risks_title.setStyleSheet("""
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            color: #ff9800;
-            background-color: transparent;
-        """)
+
+        risks_title = QLabel(" Riesgos a los que se expone su sistema:")
+        set_qss(risks_title, 'packagemaker_024', append=False)
         warning_layout.addWidget(risks_title)
-        
+
         risks_text = QLabel(
             "• <b>Ejecución de código malicioso:</b> Scripts de terceros podrían contener malware o ransomware.<br><br>"
             "• <b>Accesos no autorizados:</b> El proyecto podría leer, modificar o eliminar archivos del sistema sin restricciones.<br><br>"
             "• <b>Modificaciones no controladas:</b> Cambios en archivos críticos del sistema o del proyecto sin autorización.<br><br>"
-            "• <b>Exfiltración de datos:</b> Posible robo de información sensible, credenciales o datos personales.<br><br>"
-            "• <b>Persistencia de amenazas:</b> Vectores de ataque que podrían mantenerse activos incluso después de cerrar el proyecto.<br><br>"
-            "• <b>Escalada de privilegios:</b> Código que podría obtener permisos de administrador sin su consentimiento.<br><br>"
-            "• <b>Daño colateral:</b> Infección de otros proyectos o archivos en su sistema."
         )
-        risks_text.setStyleSheet("""
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 11px;
-            color: #bbbbbb;
-            background-color: transparent;
-            line-height: 1.5;
-        """)
+        set_qss(risks_text, 'packagemaker_025', append=False)
         risks_text.setWordWrap(True)
         warning_layout.addWidget(risks_text)
-        
+
         recommendation = QLabel(
-            "💡 <b>Recomendación:</b> Mantenga el Sandbox Seguro activado siempre que trabaje con código de fuentes no verificadas, "
+            "<b>Recomendación:</b> Mantenga el Sandbox Seguro activado siempre que trabaje con código de fuentes no verificadas, "
             "proyectos descargados de internet, o cuando no tenga control total sobre el origen de todas las dependencias."
         )
-        recommendation.setStyleSheet("""
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 11px;
-            color: #4CAF50;
-            background-color: transparent;
-            padding: 10px;
-            border-radius: 6px;
-        """)
+        set_qss(recommendation, 'packagemaker_026', append=False)
         recommendation.setWordWrap(True)
         warning_layout.addWidget(recommendation)
-        
+
         scroll.setWidget(warning_container)
         layout.addWidget(scroll)
-        
+
         layout.addSpacing(5)
-        
+
         # Botones
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
-        
-        btn_cancel = QPushButton("🔒 Mantener Activo")
+
+        btn_cancel = QPushButton("Cancelar")
         btn_cancel.setFixedHeight(36)
         btn_cancel.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_cancel.setStyleSheet("""
-            QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                padding: 0 16px;
-                border-radius: 6px;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 12px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
+        set_qss(btn_cancel, 'packagemaker_027', append=False)
         btn_cancel.clicked.connect(lambda: self.on_sandbox_dialog_result_extended(dialog, False))
         btn_layout.addWidget(btn_cancel)
-        
-        btn_accept = QPushButton("⚠️ Desactivar")
+
+        btn_accept = QPushButton("Continuar")
         btn_accept.setFixedHeight(36)
         btn_accept.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_accept.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #f44336;
-                padding: 0 16px;
-                border-radius: 6px;
-                border: 1.5px solid #f44336;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 12px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background-color: transparent;
-            }
-        """)
+        set_qss(btn_accept, 'packagemaker_028', append=False)
         btn_accept.clicked.connect(lambda: self.on_sandbox_dialog_result_extended(dialog, True))
         btn_layout.addWidget(btn_accept)
-        
+
         layout.addLayout(btn_layout)
-        
+
         dialog.exec()
 
     def on_sandbox_dialog_result_extended(self, dialog, accepted):
@@ -2086,10 +1373,10 @@ class PackageTodoGUI(QMainWindow):
         # Validar autor (obligatorio)
         autor = self.input_autor.text().strip()
         if not autor:
-            self.create_status.setStyleSheet("color:#c62828;")
-            self.create_status.setText("❌ Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.")
+            set_qss(self.create_status, 'packagemaker_075', append=False)
+            self.create_status.setText(" Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.")
             return
-        
+
         # Deshabilitar controles y mostrar barra de progreso
         self.btn_create_action.setEnabled(False)
         self.input_empresa.setEnabled(False)
@@ -2100,21 +1387,21 @@ class PackageTodoGUI(QMainWindow):
         self.checkbox_windows.setEnabled(False)
         self.checkbox_linux.setEnabled(False)
         self.sandbox_switch.setEnabled(False)
-        
-        self.create_status.setText("🔍 Verificando username de GitHub...")
+
+        self.create_status.setText("Verificando username de GitHub...")
         self.github_progress.setVisible(True)
         self.statusBar().showMessage("Verificando username de GitHub...")
-        
+
         # Crear y ejecutar thread de verificación
         self.github_thread = GitHubVerifyThread(autor, self)
         self.github_thread.finished.connect(self.on_github_verification_finished)
         self.github_thread.start()
-    
+
     def on_github_verification_finished(self, valido, mensaje):
         """Callback cuando termina la verificación de GitHub"""
         # Ocultar barra de progreso
         self.github_progress.setVisible(False)
-        
+
         # Rehabilitar controles
         self.btn_create_action.setEnabled(True)
         self.input_empresa.setEnabled(True)
@@ -2125,20 +1412,20 @@ class PackageTodoGUI(QMainWindow):
         self.checkbox_windows.setEnabled(True)
         self.checkbox_linux.setEnabled(True)
         self.sandbox_switch.setEnabled(True)
-        
+
         if not valido:
-            self.create_status.setStyleSheet("color:#c62828;")
+            set_qss(self.create_status, 'packagemaker_076', append=False)
             self.create_status.setText(f"❌ Error: {mensaje}. Por favor, especifica un username válido que exista en GitHub.")
             self.statusBar().showMessage("Verificación fallida")
             return
-        
+
         # Si la verificación fue exitosa, continuar con la creación del proyecto
         autor = self.input_autor.text().strip()
-        
+
         # Obtener plataforma seleccionada (ahora con checkboxes)
         win_checked = self.checkbox_windows.isChecked()
         linux_checked = self.checkbox_linux.isChecked()
-        
+
         if win_checked and linux_checked:
             # Multiplataforma
             plataforma_seleccionada = "AlphaCube"
@@ -2153,7 +1440,7 @@ class PackageTodoGUI(QMainWindow):
             # Por defecto Windows
             plataforma_seleccionada = "Knosthalij"
             xte = "exe"
-        
+
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         version = self.input_version.text().strip()
@@ -2171,7 +1458,7 @@ class PackageTodoGUI(QMainWindow):
         _vars = build_variables(
             empresa, nombre_logico, nombre_completo, autor, plataforma_seleccionada, version_base
         )
-        folder_name = f"{empresa}.{nombre_logico}.v{_vars['VERSION_FULL']}"
+        folder_name = f"{empresa}.{nombre_logico}.{_vars['VERSION_FULL']}"
         full_path = os.path.join(BASE_DIR, folder_name)
         hv = _vars["CORRELATIONID"]
         try:
@@ -2192,7 +1479,7 @@ class PackageTodoGUI(QMainWindow):
             upd_icon = os.path.join("app", "updater-icon.ico")
             upd_icn_dst = os.path.join(full_path, "app", "updater-icon.ico")
             selected_icon = self.input_icon.text().strip()
-            
+
             if selected_icon.startswith("http"):
                   try:
                        self.create_status.setText("Descargando icono...")
@@ -2211,7 +1498,7 @@ class PackageTodoGUI(QMainWindow):
                   except Exception as ex_icon:
                        print(f"Error descargando icono: {ex_icon}")
                        self.statusBar().showMessage("Warning: Error en descarga de icono.")
-            
+
             if selected_icon and os.path.exists(selected_icon):
                 shutil.copy(selected_icon, icon_dest)
                 # En Linux, también convertir a PNG
@@ -2234,11 +1521,11 @@ class PackageTodoGUI(QMainWindow):
                         pass
             if os.path.exists(upd_icon):
                 shutil.copy(upd_icon, upd_icn_dst)
-            self.create_status.setStyleSheet("color:#388e3c;")
+            set_qss(self.create_status, 'packagemaker_077', append=False)
             self.create_status.setText(f"✅ Paquete creado en: {folder_name}/\n🔐 Protegido con sha256: {hv}")
             self.statusBar().showMessage(f"Proyecto creado exitosamente: {folder_name}")
         except Exception as e:
-            self.create_status.setStyleSheet("color:#c62828;")
+            set_qss(self.create_status, 'packagemaker_155', append=False)
             self.create_status.setText(f"❌ Error: {str(e)}")
             self.statusBar().showMessage(f"Error al crear proyecto: {str(e)}")
 
@@ -2260,68 +1547,41 @@ class PackageTodoGUI(QMainWindow):
         layout = QVBoxLayout(target)
         layout.setSpacing(10)
         layout.setContentsMargins(25, 25, 25, 25)
-        
+
         # Header "Construir Paquete"
-        title_lbl = QLabel("Construir Paquete")
-        title_lbl.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 10px; background: transparent;")
+        title_lbl = QLabel("Compilar el proyecto con BlindCube")
+        set_qss(title_lbl, 'packagemaker_029', append=False)
         layout.addWidget(title_lbl)
 
         # Container for form elements - Transparent to inherit parent background
         form_group = QGroupBox()
-        form_group.setStyleSheet("""
-            QGroupBox {
-                border: none;
-                margin-top: 0px;
-                background: transparent;
-            }
-        """)
+        set_qss(form_group, 'packagemaker_030', append=False)
 
         form_layout = QGridLayout(form_group)
         form_layout.setSpacing(15)
         form_layout.setColumnMinimumWidth(0, 160)
         form_layout.setColumnStretch(1, 1)
-        
+
         # UWP Style Definition for Controls
         # Labels: Segoe UI, 14px, #cccccc
         def uwp_label(text):
             l = QLabel(text)
-            l.setStyleSheet("font-family: 'Segoe UI', sans-serif; font-size: 14px; color: #cccccc; font-weight: 500; background-color: transparent;")
+            set_qss(l, 'packagemaker_078', append=False)
             l.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
             return l
-            
+
         def uwp_input(placeholder, read_only=False):
             line = QLineEdit()
             line.setPlaceholderText(placeholder)
             line.setReadOnly(read_only)
             line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-            line.setMinimumHeight(32)
+            line.setFixedHeight(35)
             # UWP Style (Shared with Create Tab)
-            line.setStyleSheet("""
-                QLineEdit {
-                    background-color: #2d2d2d;
-                    border: 1px solid #3d3d3d;
-                    border-bottom: 1px solid #888;
-                    border-radius: 4px;
-                    padding: 0 10px;
-                    color: white;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 14px;
-                    selection-background-color: #ff5722;
-                }
-                QLineEdit:hover {
-                    background-color: #323232;
-                    border-bottom: 1px solid #444;
-                }
-                QLineEdit:focus {
-                    background-color: #1f1f1f;
-                    border: 1px solid #3d3d3d;
-                    border-bottom: 2px solid #ff5722;
-                }
-            """)
+            set_qss(line, 'packagemaker_079', append=False)
             if read_only and placeholder.startswith("Detectado"): # Special styling for platform
-                 line.setStyleSheet(line.styleSheet() + "QLineEdit { color: #888; font-style: italic; }")
+                 set_qss(line, 'packagemaker_156', append=True)
             return line
-        
+
         # Fila 0: Fabricante
         form_layout.addWidget(uwp_label("Fabricante:"), 0, 0)
         self.input_build_empresa = uwp_input("Ejemplo: influent")
@@ -2349,136 +1609,86 @@ class PackageTodoGUI(QMainWindow):
         # Fila 4: Modo (Radios)
         l_mode = uwp_label("Modo:")
         l_mode.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
-        l_mode.setStyleSheet(l_mode.styleSheet() + "margin-top: 8px;")
+        set_qss(l_mode, 'packagemaker_031', append=True)
         form_layout.addWidget(l_mode, 4, 0)
-        
+
         self.build_mode_group = QButtonGroup()
         mode_layout = QHBoxLayout()
         mode_layout.setSpacing(20)
         mode_layout.setContentsMargins(0, 5, 0, 0)
-        
+
         def uwp_radio(text):
             r = QRadioButton(text)
             r.setMinimumHeight(30)
             # UWP Radio: Circle with dot - FONDO TRANSPARENTE
-            r.setStyleSheet("""
-                QRadioButton {
-                    color: #ddd;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 14px;
-                    spacing: 8px;
-                    background-color: transparent;
-                }
-                QRadioButton::indicator {
-                    width: 18px;
-                    height: 18px;
-                    border-radius: 10px;
-                    border: 2px solid #999;
-                    background: transparent;
-                }
-                QRadioButton::indicator:hover {
-                    border-color: white;
-                }
-                QRadioButton::indicator:checked {
-                    border-color: #ff5722;
-                    background-color: #ff5722;
-                }
-            """)
+            set_qss(r, 'packagemaker_080', append=False)
             return r
-        
+
         self.radio_portable = uwp_radio("Portable (All-in-one)")
         self.radio_portable.setChecked(True)
-        self.radio_lite = uwp_radio("Lite (Single File)") 
-        
+        self.radio_lite = uwp_radio("Lite (Single File)")
+
         self.build_mode_group.addButton(self.radio_portable)
         self.build_mode_group.addButton(self.radio_lite)
-        
+
         mode_layout.addWidget(self.radio_portable)
         mode_layout.addWidget(self.radio_lite)
         mode_layout.addStretch()
-        
+
         form_layout.addLayout(mode_layout, 4, 1) # Use addLayout directly for cleaner code
 
         # Fila 5: Carpeta Custom
         form_layout.addWidget(uwp_label("Carpeta Externa:"), 5, 0)
-        
+
         custom_box = QHBoxLayout()
         custom_box.setSpacing(8)
-        
+
         self.input_custom_path = uwp_input("(Opcional) Seleccionar carpeta externa a compilar", read_only=True)
         custom_box.addWidget(self.input_custom_path)
-        
-        self.btn_select_folder = QPushButton("...")
+
+        self.btn_select_folder = QPushButton()
         self.btn_select_folder.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_select_folder.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.btn_select_folder.setMinimumWidth(36)
+        self.btn_select_folder.setMinimumWidth(100)
         self.btn_select_folder.setMinimumHeight(32)
-        self.btn_select_folder.setStyleSheet("""
-            QPushButton {
-                background-color: #2d2d2d;
-                border: 1px solid #3d3d3d;
-                border-radius: 4px;
-                color: white;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #323232;
-            }
-            QPushButton:pressed {
-                background-color: #1f1f1f;
-            }
-        """)
+        set_qss(self.btn_select_folder, 'packagemaker_032', append=False)
         self.btn_select_folder.clicked.connect(self.select_custom_folder)
         icon_button(self.btn_select_folder, "folder", 16)
         custom_box.addWidget(self.btn_select_folder)
-        
+
         form_layout.addLayout(custom_box, 5, 1)
 
         layout.addWidget(form_group)
-        
+
         layout.addSpacing(20)
 
         # Action Area
         action_layout = QHBoxLayout()
-        
+
         self.build_status = QLabel("")
-        self.build_status.setStyleSheet("color: #aaa; margin-left: 10px; background-color: transparent;")
+        set_qss(self.build_status, 'packagemaker_033', append=False)
         action_layout.addWidget(self.build_status)
-        
+
         self.build_progress = LeviathanProgressBar()
         self.build_progress.setVisible(False)
         self.build_progress.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.build_progress.setMinimumHeight(4)
         self.build_progress.setMaximumHeight(6)
-        # Override paint if needed or rely on default style? 
+        # Override paint if needed or rely on default style?
         # LeviathanProgressBar handles its own painting but let's ensure it fits context
         action_layout.addWidget(self.build_progress, 1)
-        
+
         action_layout.addStretch()
 
-        self.btn_build = QPushButton("Construir Paquete")
+        self.btn_build = QPushButton("BlindCube")
         self.btn_build.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_build.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        self.btn_build.setMinimumHeight(40)
-        self.btn_build.setMinimumWidth(140)
-        self.btn_build.setStyleSheet("""
-            QPushButton {
-                background-color: #ff5722; 
-                color: white; 
-                font-weight: 600; 
-                font-size: 14px; 
-                border-radius: 4px;
-                border: none;
-                font-family: 'Segoe UI', sans-serif;
-            }
-            QPushButton:hover { background-color: #ff7043; }
-            QPushButton:pressed { background-color: #e64a19; }
-            QPushButton:disabled { background-color: #333; color: #666; }
-        """)
+        self.btn_build.setFixedSize(150, 40)
+        set_qss(self.btn_build, 'packagemaker_034', append=False)
         self.btn_build.clicked.connect(self.build_package_action)
         icon_button(self.btn_build, "construir", 18)
         action_layout.addWidget(self.btn_build)
-        
+
         layout.addLayout(action_layout)
         layout.addStretch()
 
@@ -2494,7 +1704,7 @@ class PackageTodoGUI(QMainWindow):
                      root = tree.getroot()
                      self.input_build_empresa.setText(root.findtext("publisher", ""))
                      self.input_build_nombre.setText(root.findtext("app", ""))
-                     self.input_build_version.setText(root.findtext("version", "").replace("v", "").split("-")[0]) 
+                     self.input_build_version.setText(root.findtext("version", "").replace("v", "").split("-")[0])
                  except: pass
 
     def build_package_action(self):
@@ -2504,10 +1714,10 @@ class PackageTodoGUI(QMainWindow):
         version_input = self.input_build_version.text().strip()
         version_full = version_input or f"1-{version}"
         platformLineEdit = self.input_build_platform.text() or f"{linkedsys.capitalize()}"
-        
+
         custom_path = self.input_custom_path.text().strip()
         if not custom_path: custom_path = None
-        
+
         # Read from radios
         build_mode = "portable"
         if hasattr(self, 'radio_lite') and self.radio_lite.isChecked():
@@ -2516,7 +1726,7 @@ class PackageTodoGUI(QMainWindow):
         self.build_status.setText("🔨 Construyendo paquete .iflapp...")
         self.build_progress.setVisible(True)
         self.build_progress.setMarquee(True)
-        
+
         self.build_thread = BuildThread(empresa, nombre, version_full, platformLineEdit, parent=self, custom_path=custom_path, base_dir=BASE_DIR, build_mode=build_mode)
         self.build_thread.progress.connect(lambda msg: self.build_status.setText(msg))
         self.build_thread.finished.connect(lambda msg: [self.build_status.setText(msg), self.build_progress.setVisible(False)])
@@ -2532,114 +1742,67 @@ class PackageTodoGUI(QMainWindow):
         layout = QVBoxLayout(target)
         layout.setContentsMargins(25, 25, 25, 25)
         layout.setSpacing(20)
-        
+
         # Header
         title_lbl = QLabel("Gestor de Aplicaciones")
-        title_lbl.setStyleSheet("font-size: 24px; font-weight: 600; color: white; margin-bottom: 5px; background: transparent;")
+        set_qss(title_lbl, 'packagemaker_035', append=False)
         layout.addWidget(title_lbl)
-        
+
         # Main Splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setHandleWidth(2)
-        splitter.setStyleSheet("""
-            QSplitter::handle {
-                background-color: transparent;
-            }
-        """)
-        
+        set_qss(splitter, 'packagemaker_036', append=False)
+
         def create_section(title, list_widget):
             container = QWidget()
             vbox = QVBoxLayout(container)
             vbox.setContentsMargins(0, 0, 0, 0)
             vbox.setSpacing(10)
-            
+
             lbl = QLabel(title)
-            lbl.setStyleSheet("font-family: 'Segoe UI'; font-size: 16px; font-weight: 600; color: #e0e0e0; background-color: transparent;")
+            set_qss(lbl, 'packagemaker_081', append=False)
             vbox.addWidget(lbl)
-            
+
             # Styled ListWidget
             list_widget.setIconSize(QtCore.QSize(36, 36))
             list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
             list_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             list_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             list_widget.setMinimumHeight(200)
-            list_widget.setStyleSheet("""
-                QListWidget {
-                    background-color: transparent; 
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                    border-radius: 8px;
-                    padding: 5px;
-                    outline: none;
-                }
-                QListWidget::item {
-                    background-color: transparent;
-                    border-radius: 6px;
-                    padding: 8px;
-                    margin-bottom: 2px;
-                    color: #ddd;
-                    font-family: 'Segoe UI', sans-serif;
-                    font-size: 14px;
-                }
-                QListWidget::item:hover {
-                    background-color: transparent;
-                }
-                QListWidget::item:selected {
-                    background-color: transparent;
-                    border-left: 3px solid #ff5722;
-                    color: white;
-                }
-            """)
+            set_qss(list_widget, 'packagemaker_082', append=False)
             vbox.addWidget(list_widget)
             return container
 
         self.projects_list = QListWidget()
         self.projects_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_LOCAL_LV"])
-        
+
         self.apps_list = QListWidget()
         self.apps_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALLED_LV"])
-        
+
         splitter.addWidget(create_section("Proyectos Locales", self.projects_list))
         splitter.addWidget(create_section("Aplicaciones Instaladas", self.apps_list))
         splitter.setSizes([500, 500]) # Equal start
-        
+
         layout.addWidget(splitter, 1) # Stretch
-        
+
         # Action Bar
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
-        
+
         # UWP Button Generator
         def uwp_btn(text, icon_key=None, is_primary=False):
             btn = QPushButton(text)
             btn.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
             btn.setMinimumHeight(38)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            
+
             # Clean style
             base_bg = "#ff5722" if is_primary else "rgba(255, 255, 255, 0.06)"
             hover_bg = "#ff7043" if is_primary else "rgba(255, 255, 255, 0.1)"
             text_col = "white"
             border = "none" if is_primary else "1px solid rgba(255, 255, 255, 0.08)"
-            
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: {base_bg};
-                    color: {text_col};
-                    border: {border};
-                    border-radius: 4px;
-                    font-weight: 600;
-                    font-size: 13px;
-                    font-family: 'Segoe UI', sans-serif;
-                    padding: 0 15px;
-                }}
-                QPushButton:hover {{
-                    background-color: {hover_bg};
-                }}
-                QPushButton:pressed {{
-                    background-color: {base_bg};
-                    opacity: 0.8;
-                }}
-            """)
+
+            set_qss(btn, 'packagemaker_083', values=(qss_value(base_bg, None, ''), qss_value(text_col, None, ''), qss_value(border, None, ''), qss_value(hover_bg, None, ''), qss_value(base_bg, None, '')), append=False)
             if icon_key:
                 btn.setIcon(get_icon(icon_key, 18))
                 btn.setIconSize(QSize(18, 18))
@@ -2667,7 +1830,7 @@ class PackageTodoGUI(QMainWindow):
         layout.addLayout(btn_row)
 
         self.manager_status = QLabel("")
-        self.manager_status.setStyleSheet("color: #aaa; margin-top: 5px;")
+        set_qss(self.manager_status, 'packagemaker_037', append=False)
         layout.addWidget(self.manager_status)
         self.manager_status.setWordWrap(True)
         self.manager_status.setToolTip("Estado de la app")
@@ -2686,20 +1849,20 @@ class PackageTodoGUI(QMainWindow):
     def get_package_list(self, base):
         packages = []
         if not os.path.exists(base): return []
-        
+
         # Escaneo Recursivo usando os.walk, limitado a un nivel de profundidad lógico para proyectos
         # No queremos escanear todo el disco. Asumimos que BASE_DIR contiene carpetas de proyectos.
-        # Originalmente solo escaneaba carpetas en BASE_DIR. 
+        # Originalmente solo escaneaba carpetas en BASE_DIR.
         # El usuario pidió "recursivamente". Si los proyectos están anidados, esto ayudará.
         # Pero standard packagemaker structure es BASE_DIR/Proyecto.
         # Mantendremos la lógica de "mirar en subcarpetas de BASE_DIR" pero si el usuario se refería
-        # a buscar metadatos en TODOS los archivos, eso es costoso. 
+        # a buscar metadatos en TODOS los archivos, eso es costoso.
         # Interpretaremos "recursivamente" como buscar en subdirectorios si la estructura lo permite.
-        
-        # Para cumplir con "recursivamente en busca de metadatos similares", 
+
+        # Para cumplir con "recursivamente en busca de metadatos similares",
         # asumiremos que quiere encontrar details.xml incluso si está dentro de subcarpetas (proyectos anidados ??).
         # Para evitar lentitud extrema, limitaremos la profundidad o usaremos walk con cuidado.
-        
+
         for root, dirs, files in os.walk(base):
             if "details.xml" in files:
                 folder = root
@@ -2713,7 +1876,7 @@ class PackageTodoGUI(QMainWindow):
                     titulo = details.get("name", os.path.basename(folder))
                     version = details.get("version", "v?")
                     ratings = details.get("rate", "Sin Clasificación")
-                    
+
                     correlation_id = details.get("correlationid")
                     if not correlation_id:
                         correlation_id = hashlib.sha256(f"{empresa}.{titulo}.{version}".encode()).hexdigest()
@@ -2751,7 +1914,7 @@ class PackageTodoGUI(QMainWindow):
             item = QListWidgetItem(icon, text)
             item.setData(QtCore.Qt.ItemDataRole.UserRole, a)
             self.apps_list.addItem(item)
-            
+
         # Actualizar autocompletador de Build Tab
         self.update_build_completer(projects)
 
@@ -2762,7 +1925,7 @@ class PackageTodoGUI(QMainWindow):
              # Agregar tambien los nombres de carpeta
              names.extend([p['name'] for p in projects])
              names = list(set(names))
-             
+
              comp_pub = QtWidgets.QCompleter(pubs, self)
              comp_pub.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
              comp_pub.setFilterMode(Qt.MatchFlag.MatchContains) # Busqueda recursiva/flexible
@@ -2797,6 +1960,7 @@ class PackageTodoGUI(QMainWindow):
             return
         event.ignore()
         play_bounce_down_close(self, on_finished=lambda: self._finish_close(), drop_px=80)
+
 
     def _finish_close(self):
         self._force_close = True
@@ -2886,7 +2050,7 @@ class PackageTodoGUI(QMainWindow):
         # Confirmación
         L = LeviathanDialog.launch(self, "Desinstalar", f"¿Estás seguro de desinstalar {pkg['name']}?", mode="confirm")
         if not L: return
-        
+
         try:
             shutil.rmtree(pkg["folder"])
             self.manager_status.setText(f"🗑️ Desinstalado: {pkg['titulo']}")
@@ -2894,39 +2058,15 @@ class PackageTodoGUI(QMainWindow):
             self.manager_status.setText(f"❌ Error al desinstalar: {e}")
         self.load_manager_lists()
 
-    def _conf_field_style(self, readonly=False):
-        if readonly:
-            return """
-                QLineEdit, QComboBox {
-                    background: rgba(255,255,255,0.03);
-                    border: 1px solid rgba(255,255,255,0.06);
-                    border-radius: 4px;
-                    color: #888;
-                    padding: 0 10px;
-                }
-            """
-        return """
-            QLineEdit, QComboBox {
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.12);
-                border-bottom: 2px solid #0078d4;
-                border-radius: 4px;
-                color: white;
-                padding: 0 10px;
-                min-height: 32px;
-            }
-        """
 
     def _conf_section_title(self, text):
         lbl = QLabel(text)
-        lbl.setStyleSheet(
-            "color: #ff7043; font-size: 13px; font-weight: 700; margin-top: 8px; background: transparent;"
-        )
+        set_qss(lbl, 'packagemaker_038', append=False)
         return lbl
 
     def _conf_form_label(self, text):
         lbl = QLabel(text)
-        lbl.setStyleSheet("color: #9aa4b2; font-size: 12px; background: transparent;")
+        set_qss(lbl, 'packagemaker_039', append=False)
         lbl.setMinimumWidth(160)
         return lbl
 
@@ -2946,27 +2086,25 @@ class PackageTodoGUI(QMainWindow):
         conf_icon.setFixedSize(28, 28)
         header_row.addWidget(conf_icon)
         self.conf_header = QLabel(tr("config.title"))
-        self.conf_header.setStyleSheet("font-size: 22px; font-weight: 600; color: white;")
+        set_qss(self.conf_header, 'packagemaker_040', append=False)
         header_row.addWidget(self.conf_header, 1)
         outer.addLayout(header_row)
 
         self.conf_restart_banner = QFrame()
         self.conf_restart_banner.setVisible(False)
-        self.conf_restart_banner.setStyleSheet(
-            "QFrame { background: rgba(255, 152, 0, 0.12); border: 1px solid rgba(255,152,0,0.35); border-radius: 6px; }"
-        )
+        set_qss(self.conf_restart_banner, 'packagemaker_041', append=False)
         rb_layout = QHBoxLayout(self.conf_restart_banner)
         rb_layout.setContentsMargins(12, 8, 12, 8)
         self.conf_restart_lbl = QLabel(tr("config.restart_banner"))
         self.conf_restart_lbl.setWordWrap(True)
-        self.conf_restart_lbl.setStyleSheet("color: #ffcc80; font-size: 12px; background: transparent;")
+        set_qss(self.conf_restart_lbl, 'packagemaker_042', append=False)
         rb_layout.addWidget(self.conf_restart_lbl, 1)
         self.conf_restart_btn = QPushButton(tr("config.restart_btn"))
         icon_button(self.conf_restart_btn, "restart", 16)
         self.conf_restart_btn.setMinimumHeight(32)
         self.conf_restart_btn.clicked.connect(self._restart_for_config)
         rb_layout.addWidget(self.conf_restart_btn)
-        
+
         self._config_tr_labels = []
         self._config_tr_labels.append((self.conf_restart_lbl, "config.restart_banner"))
         self._config_tr_labels.append((self.conf_restart_btn, "config.restart_btn"))
@@ -2975,9 +2113,9 @@ class PackageTodoGUI(QMainWindow):
         scroll = QtWidgets.QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+        set_qss(scroll, 'packagemaker_043', append=False)
         scroll_content = QWidget()
-        scroll_content.setStyleSheet("background: transparent;")
+        set_qss(scroll_content, 'packagemaker_044', append=False)
         layout = QVBoxLayout(scroll_content)
         layout.setSpacing(10)
 
@@ -3003,14 +2141,11 @@ class PackageTodoGUI(QMainWindow):
 
         add_section("config.section_general")
         self.conf_base_dir = QLineEdit(user["base_dir"])
-        self.conf_base_dir.setStyleSheet(self._conf_field_style())
+        set_qss(self.conf_base_dir, conf_field_stylesheet(), append=False)
         btn_browse_proj = QPushButton(tr("config.browse"))
-        btn_browse_proj.setMinimumHeight(32)
+        btn_browse_proj.setFixedSize(150, 40)
         btn_browse_proj.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_browse_proj.setStyleSheet(
-            "QPushButton { background: rgba(255,255,255,0.08); color: white; border-radius: 4px; padding: 0 12px; }"
-            "QPushButton:hover { background: rgba(255,255,255,0.14); }"
-        )
+        set_qss(btn_browse_proj, 'packagemaker_046', append=False)
         btn_browse_proj.clicked.connect(self._browse_config_dir)
         icon_button(btn_browse_proj, "folder", 16)
         self._config_tr_labels.append((btn_browse_proj, "config.browse"))
@@ -3022,9 +2157,9 @@ class PackageTodoGUI(QMainWindow):
         add_row("config.projects_path", wrap_proj)
 
         self.conf_fluthin_dir = QLineEdit(user["fluthin_apps"])
-        self.conf_fluthin_dir.setStyleSheet(self._conf_field_style())
+        set_qss(self.conf_fluthin_dir, conf_field_stylesheet(), append=False)
         btn_browse_fl = QPushButton(tr("config.browse"))
-        btn_browse_fl.setMinimumHeight(32)
+        btn_browse_fl.setFixedSize(150, 40)
         btn_browse_fl.clicked.connect(self._browse_fluthin_dir)
         icon_button(btn_browse_fl, "folder", 16)
         self._config_tr_labels.append((btn_browse_fl, "config.browse"))
@@ -3042,16 +2177,16 @@ class PackageTodoGUI(QMainWindow):
         idx_lang = self.conf_lang_combo.findData(user.get("language", "es"))
         if idx_lang >= 0:
             self.conf_lang_combo.setCurrentIndex(idx_lang)
-        self.conf_lang_combo.setStyleSheet(self._conf_field_style())
+        set_qss(self.conf_lang_combo, conf_field_stylesheet(), append=False)
         add_row("config.language", self.conf_lang_combo)
 
         self.conf_auto_translate = QCheckBox(tr("config.auto_translate"))
         self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
-        self.conf_auto_translate.setStyleSheet("color: #ddd; font-size: 12px; background: transparent;")
+        set_qss(self.conf_auto_translate, 'packagemaker_049', append=False)
         self._config_tr_labels.append((self.conf_auto_translate, "config.auto_translate"))
         layout.addWidget(self.conf_auto_translate)
         hint_tr = QLabel(tr("config.auto_translate_hint"))
-        hint_tr.setStyleSheet("color: #666; font-size: 11px;")
+        set_qss(hint_tr, 'packagemaker_050', append=False)
         hint_tr.setWordWrap(True)
         self._config_tr_labels.append((hint_tr, "config.auto_translate_hint"))
         layout.addWidget(hint_tr)
@@ -3070,9 +2205,9 @@ class PackageTodoGUI(QMainWindow):
         )
         for i, (name, val) in enumerate(ro_items):
             n_lbl = QLabel(name)
-            n_lbl.setStyleSheet("color: #666; font-size: 11px;")
+            set_qss(n_lbl, 'packagemaker_084', append=False)
             v_lbl = QLabel(str(val))
-            v_lbl.setStyleSheet("color: #aaa; font-size: 11px;")
+            set_qss(v_lbl, 'packagemaker_085', append=False)
             v_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             v_lbl.setWordWrap(True)
             sys_grid.addWidget(n_lbl, i, 0)
@@ -3086,32 +2221,26 @@ class PackageTodoGUI(QMainWindow):
         # Botones de acción (Guardar y Resetear)
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(10)
-        
+
         btn_save = QPushButton(tr("config.save"))
-        btn_save.setMinimumHeight(36)
+        btn_save.setFixedSize(150, 40)
         btn_save.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_save.setStyleSheet(
-            "QPushButton { background: #0078d4; color: white; border: none; border-radius: 4px; font-weight: 600; }"
-            "QPushButton:hover { background: #106ebe; }"
-        )
+        set_qss(btn_save, 'packagemaker_051', append=False)
         btn_save.clicked.connect(self._save_app_config_compact)
         icon_button(btn_save, "save", 18)
         self.conf_btn_save = btn_save
         self._config_tr_labels.append((btn_save, "config.save"))
         btn_layout.addWidget(btn_save)
-        
+
         # Botón de resetear configuración (siempre visible)
         self.conf_reset_btn = QPushButton(tr("config.reset"))
-        self.conf_reset_btn.setMinimumHeight(36)
+        self.conf_reset_btn.setFixedSize(150, 40)
         self.conf_reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.conf_reset_btn.setStyleSheet(
-            "QPushButton { background: rgba(244, 67, 54, 0.2); color: #ff5722; border: 1px solid rgba(244,67,54,0.4); border-radius: 4px; font-weight: 600; }"
-            "QPushButton:hover { background: rgba(244, 67, 54, 0.3); }"
-        )
+        set_qss(self.conf_reset_btn, 'packagemaker_052', append=False)
         self.conf_reset_btn.clicked.connect(self._reset_config)
         self._config_tr_labels.append((self.conf_reset_btn, "config.reset"))
         btn_layout.addWidget(self.conf_reset_btn)
-        
+
         btn_layout.addStretch()
         outer.addLayout(btn_layout)
 
@@ -3131,14 +2260,14 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Confirmación
             respuesta = LeviathanDialog.launch(
-                self, 
-                tr("config.reset"), 
-                tr("config.reset_confirm"), 
+                self,
+                tr("config.reset"),
+                tr("config.reset_confirm"),
                 mode="question"
             )
             if respuesta != 1:  # No aceptado
                 return
-            
+
             # Restablecer valores por defecto - eliminar personalización
             store = get_pm_data()
 
@@ -3157,20 +2286,20 @@ class PackageTodoGUI(QMainWindow):
             store.remove_user("window_radius")
             store.remove_user("sidebar_accent_width")
             store.remove_user("card_opacity")
-            
+
             store.save()
-            
+
             # Actualizar la interfaz
             self._refresh_config_form()
-            
+
             # Aplicar cambios inmediatamente
             self._apply_leviathan_and_personalization()
             self.apply_theme()
-            
+
             # Ocultar banner de reinicio si está visible
             if hasattr(self, "conf_restart_banner"):
                 self.conf_restart_banner.setVisible(False)
-            
+
             LeviathanDialog.launch(self, tr("config.reset"), tr("config.reset_success"), mode="success")
         except Exception as e:
             LeviathanDialog.launch(self, tr("config.reset"), f"Error al restablecer: {e}", mode="error")
@@ -3184,21 +2313,21 @@ class PackageTodoGUI(QMainWindow):
             )}
             user["base_dir"] = user.get("base_dir") or BASE_DIR
             user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
-            
+
             # Actualizar campos
             self.conf_base_dir.setText(user["base_dir"])
             self.conf_fluthin_dir.setText(user["fluthin_apps"])
-            
+
             idx_lang = self.conf_lang_combo.findData(user.get("language", "es"))
             if idx_lang >= 0:
                 self.conf_lang_combo.setCurrentIndex(idx_lang)
-            
+
             self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
-            
+
             # Aplicar cambios
             self._apply_leviathan_and_personalization()
             self.apply_theme()
-            
+
         except Exception as e:
             print(f"Error actualizando formulario: {e}")
 
@@ -3281,17 +2410,17 @@ class PackageTodoGUI(QMainWindow):
         mf_icon.setPixmap(get_icon("moonfix", 28).pixmap(28, 28))
         mf_header_row.addWidget(mf_icon)
         header = QLabel("MoonFix")
-        header.setStyleSheet("font-size: 22px; font-weight: 600; color: white; background: transparent;")
+        set_qss(header, 'packagemaker_053', append=False)
         mf_header_row.addWidget(header, 1)
         layout.addLayout(mf_header_row)
 
         desc = QLabel("Repara proyectos con plantillas oficiales.")
-        desc.setStyleSheet("color: #9aa4b2; font-size: 12px; background: transparent;")
+        set_qss(desc, 'packagemaker_054', append=False)
         layout.addWidget(desc)
 
         top_row = QHBoxLayout()
         self.mf_batch_mode = QCheckBox("Modo batch")
-        self.mf_batch_mode.setStyleSheet("color: #ddd; font-size: 12px; background: transparent;")
+        set_qss(self.mf_batch_mode, 'packagemaker_055', append=False)
         self.mf_batch_mode.setChecked(True)
         top_row.addWidget(self.mf_batch_mode)
         top_row.addStretch()
@@ -3303,24 +2432,13 @@ class PackageTodoGUI(QMainWindow):
         self.mf_input.setPlaceholderText("Carpeta de proyectos...")
         self.mf_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.mf_input.setMinimumHeight(32)
-        self.mf_input.setStyleSheet("""
-            QLineEdit {
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 4px;
-                color: white;
-                padding: 0 8px;
-            }
-        """)
+        set_qss(self.mf_input, 'packagemaker_056', append=False)
         btn_sel = QPushButton("...")
         btn_sel.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         btn_sel.setMinimumWidth(36)
         btn_sel.setMinimumHeight(32)
         btn_sel.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_sel.setStyleSheet(
-            "QPushButton { background: rgba(255,255,255,0.08); color: white; border-radius: 4px; }"
-            "QPushButton:hover { background: rgba(255,255,255,0.14); }"
-        )
+        set_qss(btn_sel, 'packagemaker_057', append=False)
         btn_sel.clicked.connect(self.mf_browse)
         icon_button(btn_sel, "folder", 16)
         btn_scan = QPushButton("Diagnosticar")
@@ -3328,13 +2446,7 @@ class PackageTodoGUI(QMainWindow):
         btn_scan.setMinimumWidth(110)
         btn_scan.setMinimumHeight(32)
         btn_scan.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_scan.setStyleSheet("""
-            QPushButton {
-                background: #a371f7; color: white; font-weight: 600; font-size: 12px;
-                border: none; border-radius: 4px;
-            }
-            QPushButton:hover { background: #b084f9; }
-        """)
+        set_qss(btn_scan, 'packagemaker_058', append=False)
         btn_scan.clicked.connect(self.mf_start_scan)
         icon_button(btn_scan, "moonfix", 16)
         s_box.addWidget(self.mf_input, 1)
@@ -3342,17 +2454,17 @@ class PackageTodoGUI(QMainWindow):
         s_box.addWidget(btn_scan)
         layout.addLayout(s_box)
         layout.addStretch()
-        
+
     def mf_browse(self):
         d = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta")
         if d: self.mf_input.setText(d)
-        
+
     def mf_start_scan(self):
         path = self.mf_input.text().strip()
         if not path or not os.path.exists(path):
             LeviathanDialog.launch(self, "MoonFix", "La carpeta seleccionada no existe.", mode="warning")
             return
-            
+
         potential_projects = []
         if self.mf_batch_mode.isChecked():
             for item in os.listdir(path):
@@ -3361,13 +2473,13 @@ class PackageTodoGUI(QMainWindow):
                     potential_projects.append(full_item)
         else:
             potential_projects = [path]
-                    
+
         if not potential_projects:
             LeviathanDialog.launch(self, "MoonFix", "No se encontraron subcarpetas para procesar.", mode="info")
             return
 
         projects_with_issues = []
-        
+
         # We perform a quiet pre-scan to identify projects that need attention
         for proj_path in potential_projects:
             issues = self.check_project_issues(proj_path)
@@ -3386,8 +2498,8 @@ class PackageTodoGUI(QMainWindow):
         if wizard.exec() == QDialog.Accepted:
             # Tiny delay to let the event loop process the wizard's destruction and avoid 'zombie' block
             QtCore.QTimer.singleShot(100, lambda: LeviathanDialog.launch(
-                self, "MoonFix", 
-                f"Reparación completada.\nProyectos sanados: {len(projects_with_issues)}", 
+                self, "MoonFix",
+                f"Reparación completada.\nProyectos sanados: {len(projects_with_issues)}",
                 mode="confirm"
             ))
 
@@ -3396,7 +2508,7 @@ class PackageTodoGUI(QMainWindow):
         # 1. Check folders
         required_dirs = ["app", "assets", "config", "docs", "source", "lib"]
         missing_dirs = [d for d in required_dirs if not os.path.exists(os.path.join(project_path, d))]
-        
+
         is_completely_invalid = (len(missing_dirs) == len(required_dirs))
         if is_completely_invalid:
             issues.append({"type": "invalid_package", "desc": "Faltan todos los recursos estructurales"})
@@ -3407,7 +2519,7 @@ class PackageTodoGUI(QMainWindow):
         # 2. Check XML & Vital Files
         xml_path = os.path.join(project_path, "details.xml")
         requires_wizard = False
-        
+
         if not os.path.exists(xml_path):
             issues.append({"type": "missing_xml"})
             requires_wizard = True
@@ -3416,7 +2528,7 @@ class PackageTodoGUI(QMainWindow):
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
                 data = {child.tag: (child.text or "").strip() for child in root}
-                
+
                 # Check Main Script based on <app> tag
                 app_id = data.get("app")
                 if app_id:
@@ -3424,7 +2536,7 @@ class PackageTodoGUI(QMainWindow):
                     if not os.path.exists(script_path):
                         issues.append({"type": "missing_script", "name": f"{app_id}.py"})
                         requires_wizard = True
-                
+
                 # Check Version Formatting
                 version = data.get("version", "")
                 if version:
@@ -3432,20 +2544,20 @@ class PackageTodoGUI(QMainWindow):
                     if any(p in version.lower() for p in prohibited) or "-" not in version:
                         issues.append({"type": "dirty_version", "old": version})
                         requires_wizard = True
-                
+
                 # OPTIONAL ASSETS (Only flagged if we are ALREADY in the wizard or if explicitly missing)
                 # But to satisfy "healthy projects shouldn't show up", we only trigger if structural issues exist
-                # OR if the user expects MoonFix to find them. 
+                # OR if the user expects MoonFix to find them.
                 # Decision: Only README, License and Splash issues will NOT trigger the wizard alone.
                 if not os.path.exists(os.path.join(project_path, "README.md")):
                     issues.append({"type": "missing_readme"})
                 if not os.path.exists(os.path.join(project_path, "LICENSE")):
                     issues.append({"type": "missing_license"})
-                
+
                 # ICONS (Main and Updater)
                 if not os.path.exists(os.path.join(project_path, "app", "app-icon.ico")):
                     issues.append({"type": "missing_icon"})
-                
+
                 if not os.path.exists(os.path.join(project_path, "app", "product_logo.png")):
                     issues.append({"type": "missing_logo"})
 
@@ -3463,18 +2575,18 @@ class PackageTodoGUI(QMainWindow):
                 issues.append({"type": "corrupt_xml"})
                 requires_wizard = True
 
-        # If it ONLY has optional missing files and NO structural issues, we return empty list 
+        # If it ONLY has optional missing files and NO structural issues, we return empty list
         # so MoonFix scan doesn't flag it as "incomplete".
         # Logic Update: Missing Icons are now considered structural enough to trigger if structural issues exist,
         # but to satisfy "3 assets or less" rule, we must allow the wizard to report them.
-        
+
         critical_structural = ["missing_dir", "invalid_package", "missing_xml", "missing_script", "dirty_version"]
         has_critical = any(i["type"] in critical_structural for i in issues)
-        
-        # If there are <= 3 assets missing (even if optional), and NO structural damage, 
+
+        # If there are <= 3 assets missing (even if optional), and NO structural damage,
         # normally we'd skip, BUT if an icon is missing for a script, we SHOULD trigger.
         has_missing_icons = any(i["type"] in ["missing_icon", "missing_icon_updater"] for i in issues)
-        
+
         if not requires_wizard and not has_critical and not has_missing_icons:
             return []
 
@@ -3489,13 +2601,13 @@ class PackageTodoGUI(QMainWindow):
         layout = QVBoxLayout(target)
         layout.setSpacing(20)
         layout.setContentsMargins(40, 40, 40, 40)
-        
+
         # Clean layout
-        
+
         # Logo/Title Area
         # Use SVG rendering if possible, otherwise text.
         header_box = QHBoxLayout()
-        
+
         # SVG Logo display (using QLabel hack or QSvgWidget if imported, staying safe with standard widgets)
         logo_lbl = QLabel()
         logo_lbl.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
@@ -3505,29 +2617,29 @@ class PackageTodoGUI(QMainWindow):
         if os.path.exists(IPM_ICON_PATH):
             logo_lbl.setPixmap(QIcon(IPM_ICON_PATH).pixmap(64, 64))
         else:
-            logo_lbl.setStyleSheet("background-color: #ff5722; border-radius: 32px; color: white; font-weight: bold; font-size: 24px;")
+            set_qss(logo_lbl, 'packagemaker_086', append=False)
             logo_lbl.setText("PM")
             logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            
+
         title_box = QVBoxLayout()
         t_main = QLabel("Influent Package Maker")
-        t_main.setStyleSheet("font-size: 28px; font-weight: bold; color: white; font-family: 'Segoe UI Variable Display';")
+        set_qss(t_main, 'packagemaker_059', append=False)
         t_ver = QLabel(f"Versión {self.currentVersion}")
-        t_ver.setStyleSheet("font-size: 16px; color: #aaa;")
+        set_qss(t_ver, 'packagemaker_060', append=False)
         title_box.addWidget(t_main)
         title_box.addWidget(t_ver)
-        
+
         header_box.addWidget(logo_lbl)
         header_box.addSpacing(15)
         header_box.addLayout(title_box)
         header_box.addStretch()
-        
+
         layout.addLayout(header_box)
-        
+
         # Content Card
         card = QLabel()
         card.setWordWrap(True)
-        card.setStyleSheet("color: #ddd; font-size: 14px; line-height: 1.5;")
+        set_qss(card, 'packagemaker_061', append=False)
         card.setText("""
             <p><b>Package Maker</b> es la suite definitiva para el ecosistema Influent OS.</p>
             <p>Diseñada para permitir a los desarrolladores crear, compilar y distribuir aplicaciones de manera eficiente.</p>
@@ -3535,57 +2647,57 @@ class PackageTodoGUI(QMainWindow):
             <p>Utiliza el motor <b>FLARM (Fluthin Armadillo)</b> para garantizar integridad y seguridad.</p>
         """)
         layout.addWidget(card)
-        
+
         # Tech Specs grid
         grid = QGridLayout()
         grid.setSpacing(10)
         grid.setColumnStretch(0, 0)
         grid.setColumnStretch(1, 1)
-        
+
         def spec_item(label, value):
             l = QLabel(label)
-            l.setStyleSheet("color: #888; font-weight: bold;")
+            set_qss(l, 'packagemaker_087', append=False)
             v = QLabel(value)
-            v.setStyleSheet("color: white;")
+            set_qss(v, 'packagemaker_088', append=False)
             return l, v
-            
+
         l1, v1 = spec_item("Motor:", "FLARM v2.1")
         l2, v2 = spec_item("Licencia:", "GNU GPL v3")
         l3, v3 = spec_item("Framework:", f"Qt {QtCore.qVersion()} (PyQt6)")
         l4, v4 = spec_item("Desarrollador:", "Jesus Quijada")
-        
+
         grid.addWidget(l1, 0, 0); grid.addWidget(v1, 0, 1)
         grid.addWidget(l2, 1, 0); grid.addWidget(v2, 1, 1)
         grid.addWidget(l3, 2, 0); grid.addWidget(v3, 2, 1)
         grid.addWidget(l4, 3, 0); grid.addWidget(v4, 3, 1)
-        
+
         layout.addLayout(grid)
-        
+
         layout.addStretch()
-        
+
         # Footer Buttons
         footer = QHBoxLayout()
-        
+
         btn_github = QPushButton("GitHub")
-        btn_github.setStyleSheet("background-color: #333; color: white; border: none; border-radius: 4px; padding: 8px 16px;")
+        set_qss(btn_github, 'packagemaker_062', append=False)
         btn_github.setCursor(Qt.CursorShape.PointingHandCursor)
         # Open URL logic
-        
+
         btn_telegram = QPushButton("Telegram")
-        btn_telegram.setStyleSheet("background-color: #0088cc; color: white; border: none; border-radius: 4px; padding: 8px 16px;")
+        set_qss(btn_telegram, 'packagemaker_063', append=False)
         btn_telegram.setCursor(Qt.CursorShape.PointingHandCursor)
-        
+
         footer.addWidget(btn_github)
         footer.addWidget(btn_telegram)
         footer.addStretch()
-        
+
         layout.addLayout(footer)
 
 
     # ========================================
     # MÉTODOS PARA MANEJO DE VENTANAS CLI
     # ========================================
-    
+
     def setProjectPath(self, path):
         """Establece la ruta del proyecto en la pestaña de crear"""
         try:
@@ -3596,7 +2708,7 @@ class PackageTodoGUI(QMainWindow):
                 self.txtProjectPath.setText(path)
         except Exception as e:
             print(f"Error estableciendo ruta del proyecto: {e}")
-    
+
     def showCreateProjectDialog(self, projectPath):
         """Muestra ventana completa para crear un proyecto"""
         try:
@@ -3606,193 +2718,127 @@ class PackageTodoGUI(QMainWindow):
             dialogoCrearProyecto.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoCrearProyecto.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoCrearProyecto.resize(650, 700)
-            
+
             # Aplicar efectos de LeviathanUI
             WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoCrearProyecto)
-            
+
             # Widget central con estilo
             centralWidget = QWidget(dialogoCrearProyecto)
             centralWidget.setObjectName("CentralWidget")
-            centralWidget.setStyleSheet("""
-                QWidget#CentralWidget {
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 16px;
-                }
-            """)
-            
+            set_qss(centralWidget, 'packagemaker_089', append=False)
+
             layoutPrincipal = QVBoxLayout(centralWidget)
             layoutPrincipal.setContentsMargins(0, 0, 0, 0)
             layoutPrincipal.setSpacing(0)
-            
+
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoCrearProyecto, title="🆕 Crear Proyecto Aquí")
+            titleBar = create_title_bar(dialogoCrearProyecto, title="🆕 Crear Proyecto Aquí", icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
-            
+
             # Contenido
             contentWidget = QWidget()
             contentLayout = QVBoxLayout(contentWidget)
             contentLayout.setContentsMargins(30, 20, 30, 30)
             contentLayout.setSpacing(15)
-            
+
             # Encabezado con información
             lblTitulo = QLabel("Crear Nuevo Proyecto")
-            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            set_qss(lblTitulo, 'packagemaker_090', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
-            
+
             lblRuta = QLabel(f"📁 Ubicación: {projectPath}")
-            lblRuta.setStyleSheet("color: #aaa; font-size: 13px; margin-bottom: 20px;")
+            set_qss(lblRuta, 'packagemaker_091', append=False)
             lblRuta.setWordWrap(True)
             contentLayout.addWidget(lblRuta)
-            
+
             # Formulario de datos del proyecto
             formLayout = QVBoxLayout()
             formLayout.setSpacing(12)
-            
+
             # Nombre del proyecto
             lblNombre = QLabel("Nombre del Proyecto:")
-            lblNombre.setStyleSheet("color: white; font-weight: 600;")
+            set_qss(lblNombre, 'packagemaker_092', append=False)
             formLayout.addWidget(lblNombre)
-            
+
             txtNombreProyecto = QLineEdit()
             txtNombreProyecto.setText(os.path.basename(projectPath))
-            txtNombreProyecto.setStyleSheet("""
-                QLineEdit {
-                    background-color: transparent;
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 14px;
-                }
-                QLineEdit:focus {
-                    border: 2px solid #2486ff;
-                }
-            """)
+            set_qss(txtNombreProyecto, 'packagemaker_093', append=False)
             formLayout.addWidget(txtNombreProyecto)
-            
+
             # Versión
             lblVersion = QLabel("Versión:")
-            lblVersion.setStyleSheet("color: white; font-weight: 600;")
+            set_qss(lblVersion, 'packagemaker_094', append=False)
             formLayout.addWidget(lblVersion)
-            
+
             txtVersion = QLineEdit("1.0")
-            txtVersion.setStyleSheet("""
-                QLineEdit {
-                    background-color: transparent;
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 14px;
-                }
-                QLineEdit:focus {
-                    border: 2px solid #2486ff;
-                }
-            """)
+            set_qss(txtVersion, 'packagemaker_095', append=False)
             formLayout.addWidget(txtVersion)
-            
+
             # Autor
             lblAutor = QLabel("Autor:")
-            lblAutor.setStyleSheet("color: white; font-weight: 600;")
+            set_qss(lblAutor, 'packagemaker_096', append=False)
             formLayout.addWidget(lblAutor)
-            
+
             txtAutor = QLineEdit()
             txtAutor.setPlaceholderText("Tu nombre")
-            txtAutor.setStyleSheet("""
-                QLineEdit {
-                    background-color: transparent;
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 14px;
-                }
-                QLineEdit:focus {
-                    border: 2px solid #2486ff;
-                }
-            """)
+            set_qss(txtAutor, 'packagemaker_097', append=False)
             formLayout.addWidget(txtAutor)
-            
+
             # Publisher
             lblPublisher = QLabel("Publisher:")
-            lblPublisher.setStyleSheet("color: white; font-weight: 600;")
+            set_qss(lblPublisher, 'packagemaker_098', append=False)
             formLayout.addWidget(lblPublisher)
-            
+
             txtPublisher = QLineEdit()
             txtPublisher.setPlaceholderText("Nombre de la empresa")
-            txtPublisher.setStyleSheet("""
-                QLineEdit {
-                    background-color: transparent;
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 14px;
-                }
-                QLineEdit:focus {
-                    border: 2px solid #2486ff;
-                }
-            """)
+            set_qss(txtPublisher, 'packagemaker_099', append=False)
             formLayout.addWidget(txtPublisher)
-            
+
             # Descripción
             lblDescripcion = QLabel("Descripción:")
-            lblDescripcion.setStyleSheet("color: white; font-weight: 600;")
+            set_qss(lblDescripcion, 'packagemaker_100', append=False)
             formLayout.addWidget(lblDescripcion)
-            
+
             txtDescripcion = QTextEdit()
             txtDescripcion.setPlaceholderText("Describe tu proyecto...")
             txtDescripcion.setMaximumHeight(100)
-            txtDescripcion.setStyleSheet("""
-                QTextEdit {
-                    background-color: transparent;
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 14px;
-                }
-                QTextEdit:focus {
-                    border: 2px solid #2486ff;
-                }
-            """)
+            set_qss(txtDescripcion, 'packagemaker_101', append=False)
             formLayout.addWidget(txtDescripcion)
-            
+
             contentLayout.addLayout(formLayout)
             contentLayout.addStretch()
-            
+
             # Botones de acción
             layoutBotones = QHBoxLayout()
             layoutBotones.setSpacing(10)
-            
+
             btnCancelar = QPushButton("❌ Cancelar")
-            btnCancelar.setStyleSheet(BTN_STYLES["default"])
+            set_qss(btnCancelar, BTN_STYLES["default"], append=False)
             btnCancelar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCancelar.setMinimumHeight(45)
-            
+
             btnCrear = QPushButton("✨ Crear Proyecto")
-            btnCrear.setStyleSheet(BTN_STYLES["best"])
+            set_qss(btnCrear, BTN_STYLES["best"], append=False)
             btnCrear.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCrear.setMinimumHeight(45)
-            
+
             layoutBotones.addWidget(btnCancelar)
             layoutBotones.addWidget(btnCrear)
             contentLayout.addLayout(layoutBotones)
-            
+
             # Agregar el widget de contenido al layout principal
             layoutPrincipal.addWidget(contentWidget)
-            
+
             # Establecer el layout en el widget central
             centralWidget.setLayout(layoutPrincipal)
-            
+
             # Establecer el widget central en el diálogo
             mainLayout = QVBoxLayout(dialogoCrearProyecto)
             mainLayout.setContentsMargins(0, 0, 0, 0)
             mainLayout.addWidget(centralWidget)
             dialogoCrearProyecto.setLayout(mainLayout)
-            
+
             # Conectar botones
             btnCancelar.clicked.connect(dialogoCrearProyecto.close)
             btnCrear.clicked.connect(lambda: self._ejecutarCreacionProyecto(
@@ -3804,13 +2850,13 @@ class PackageTodoGUI(QMainWindow):
                 txtDescripcion.toPlainText(),
                 dialogoCrearProyecto
             ))
-            
+
             dialogoCrearProyecto.exec()
-            
+
         except Exception as e:
             print(f"Error mostrando diálogo de crear proyecto: {e}")
             LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
-    
+
     def _ejecutarCreacionProyecto(self, rutaBase, nombreProyecto, version, autor, publisher, descripcion, dialogo):
         """Ejecuta la creación del proyecto"""
         try:
@@ -3818,10 +2864,10 @@ class PackageTodoGUI(QMainWindow):
             if not nombreProyecto or nombreProyecto.strip() == "":
                 LeviathanDialog.launch(self, "Advertencia", "El nombre del proyecto no puede estar vacío", mode="warning")
                 return
-            
+
             # Crear ruta del proyecto
             rutaProyecto = os.path.join(rutaBase, nombreProyecto)
-            
+
             # Verificar si ya existe
             if os.path.exists(rutaProyecto):
                 respuesta = LeviathanDialog.launch(
@@ -3832,7 +2878,7 @@ class PackageTodoGUI(QMainWindow):
                 )
                 if respuesta != 1:  # No aceptado
                     return
-            
+
             from lib.template_engine import create_project_from_templates
 
             app_id = nombreProyecto.strip().lower().replace(" ", "-")
@@ -3849,13 +2895,13 @@ class PackageTodoGUI(QMainWindow):
                 version_base=version_base,
                 description=descripcion or "Proyecto creado con Influent Package Maker",
             )
-            
+
             # Copiar icono por defecto
             icon_dest = os.path.join(rutaProyecto, "app", "app-icon.ico")
             icon_source = os.path.join("app", "app-icon.ico")
             if os.path.exists(icon_source):
                 shutil.copy(icon_source, icon_dest)
-            
+
             archivoPrincipal = f"{app_id}.py"
 
             LeviathanDialog.launch(
@@ -3864,12 +2910,12 @@ class PackageTodoGUI(QMainWindow):
                 f"Proyecto '{nombreProyecto}' creado exitosamente en:\n\n{rutaProyecto}\n\nArchivos creados:\n• details.xml (formateado)\n• {archivoPrincipal}\n• Estructura de carpetas completa",
                 mode="success",
             )
-            
+
             dialogo.close()
-            
+
         except Exception as e:
             LeviathanDialog.launch(self, "Error", f"Error creando proyecto: {e}", mode="error")
-    
+
     def showInstallFolderDialog(self, folderPath):
         """Muestra ventana completa para instalar carpeta como paquete"""
         try:
@@ -3879,123 +2925,107 @@ class PackageTodoGUI(QMainWindow):
             dialogoInstalar.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoInstalar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoInstalar.resize(700, 600)
-            
+
             # Aplicar efectos de LeviathanUI
             WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoInstalar)
-            
+
             # Widget central con estilo
             centralWidget = QWidget(dialogoInstalar)
             centralWidget.setObjectName("CentralWidget")
-            centralWidget.setStyleSheet("""
-                QWidget#CentralWidget {
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 16px;
-                }
-            """)
-            
+            set_qss(centralWidget, 'packagemaker_104', append=False)
+
             layoutPrincipal = QVBoxLayout(centralWidget)
             layoutPrincipal.setContentsMargins(0, 0, 0, 0)
             layoutPrincipal.setSpacing(0)
-            
+
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoInstalar, title="📦 Instalar como Fluthin Package")
+            titleBar = create_title_bar(dialogoInstalar, title="📦 Instalar como Fluthin Package", icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
-            
+
             # Contenido
             contentWidget = QWidget()
             contentLayout = QVBoxLayout(contentWidget)
             contentLayout.setContentsMargins(30, 20, 30, 30)
             contentLayout.setSpacing(15)
-            
+
             # Título
             lblTitulo = QLabel("Instalar Carpeta como Paquete")
-            lblTitulo.setStyleSheet("color: white; font-size: 22px; font-weight: bold; margin-bottom: 10px;")
+            set_qss(lblTitulo, 'packagemaker_105', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
-            
+
             lblInfo = QLabel(f"📁 Carpeta: {os.path.basename(folderPath)}")
-            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            set_qss(lblInfo, 'packagemaker_106', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
-            
+
             # Barra de progreso
             progressBar = LeviathanProgressBar(self)
             contentLayout.addWidget(progressBar)
-            
+
             # Log de instalación
             txtLog = QTextEdit()
             txtLog.setReadOnly(True)
-            txtLog.setStyleSheet("""
-                QTextEdit {
-                    background-color: transparent;
-                    color: #0f0;
-                    font-family: 'Consolas', 'Courier New', monospace;
-                    border: 2px solid rgba(0,255,0,0.3);
-                    border-radius: 8px;
-                    padding: 10px;
-                    font-size: 13px;
-                }
-            """)
+            set_qss(txtLog, 'packagemaker_107', append=False)
             contentLayout.addWidget(txtLog)
-            
+
             # Botones
             layoutBotones = QHBoxLayout()
-            
+
             btnCerrar = QPushButton("Cerrar")
-            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
-            
+
             btnInstalar = QPushButton("📥 Instalar Paquete")
-            btnInstalar.setStyleSheet(BTN_STYLES["success"])
+            set_qss(btnInstalar, BTN_STYLES["success"], append=False)
             btnInstalar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnInstalar.setMinimumHeight(45)
-            
+
             layoutBotones.addWidget(btnCerrar)
             layoutBotones.addWidget(btnInstalar)
             contentLayout.addLayout(layoutBotones)
-            
+
             # Agregar el widget de contenido al layout principal
             layoutPrincipal.addWidget(contentWidget)
-            
+
             # Establecer el layout en el widget central
             centralWidget.setLayout(layoutPrincipal)
-            
+
             # Establecer el widget central en el diálogo
             mainLayout = QVBoxLayout(dialogoInstalar)
             mainLayout.setContentsMargins(0, 0, 0, 0)
             mainLayout.addWidget(centralWidget)
             dialogoInstalar.setLayout(mainLayout)
-            
+
             # Conectar botones
             btnCerrar.clicked.connect(dialogoInstalar.close)
             btnInstalar.clicked.connect(lambda: self._ejecutarInstalacionCarpeta(
                 folderPath, progressBar, txtLog, btnInstalar, btnCerrar
             ))
-            
+
             dialogoInstalar.exec()
-            
+
         except Exception as e:
             print(f"Error mostrando diálogo de instalar carpeta: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
-    
+
     def _ejecutarInstalacionCarpeta(self, folderPath, progressBar, txtLog, btnInstalar, btnCerrar):
         """Ejecuta la instalación de la carpeta como paquete"""
         try:
             btnInstalar.setEnabled(False)
             txtLog.append("=== Iniciando instalación de carpeta como paquete ===\n")
             progressBar.setValue(5)
-            
+
             # Verificar estructura
             txtLog.append("[1/5] Verificando estructura del proyecto...")
             progressBar.setValue(15)
-            
+
             detailsXML = os.path.join(folderPath, "details.xml")
             if not os.path.exists(detailsXML):
                 txtLog.append("  ⚠ Advertencia: No se encontró details.xml")
                 txtLog.append("  ℹ Creando details.xml básico...")
-                
+
                 nombreProyecto = os.path.basename(folderPath)
                 contenidoXML = f"""<?xml version="1.0" encoding="UTF-8"?>
 <package>
@@ -4011,59 +3041,59 @@ class PackageTodoGUI(QMainWindow):
                 txtLog.append("  ✓ details.xml creado")
             else:
                 txtLog.append("  ✓ details.xml encontrado")
-            
+
             progressBar.setValue(30)
-            
+
             # Copiar a Fluthin Apps
             txtLog.append("\n[2/5] Copiando archivos a Fluthin Apps...")
             progressBar.setValue(45)
-            
+
             nombrePaquete = os.path.basename(folderPath)
             rutaDestino = os.path.join(Fluthin_APPS, nombrePaquete)
-            
+
             if os.path.exists(rutaDestino):
                 txtLog.append(f"  ℹ El paquete '{nombrePaquete}' ya existe, sobrescribiendo...")
                 import shutil
                 shutil.rmtree(rutaDestino)
-            
+
             import shutil
             shutil.copytree(folderPath, rutaDestino)
             txtLog.append(f"  ✓ Archivos copiados a: {rutaDestino}")
-            
+
             progressBar.setValue(70)
-            
+
             # Registrar paquete
             txtLog.append("\n[3/5] Registrando paquete en el sistema...")
             progressBar.setValue(85)
             txtLog.append("  ✓ Paquete registrado")
-            
+
             # Finalizar
             txtLog.append("\n[4/5] Verificando instalación...")
             progressBar.setValue(95)
             txtLog.append("  ✓ Instalación verificada")
-            
+
             txtLog.append("\n[5/5] Finalizando...")
             progressBar.setValue(100)
-            
+
             txtLog.append("\n=== ✅ Instalación Completada Exitosamente ===")
             txtLog.append(f"\nPaquete '{nombrePaquete}' instalado en:")
             txtLog.append(f"{rutaDestino}")
-            
+
             btnCerrar.setEnabled(True)
-            
+
             LeviathanDialog.launch(
                 self,
                 "✅ Instalación Completa",
                 f"Paquete '{nombrePaquete}' instalado correctamente en Fluthin Apps",
                 mode="success"
             )
-            
+
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
             LeviathanDialog.launch(self, "Error", f"Error instalando carpeta: {e}", mode="error")
             btnInstalar.setEnabled(True)
             btnCerrar.setEnabled(True)
-    
+
     def set_compile_path(self, path):
         """Establece la ruta del proyecto a compilar"""
         try:
@@ -4071,7 +3101,7 @@ class PackageTodoGUI(QMainWindow):
                 self.txt_build_project.setText(path)
         except Exception as e:
             print(f"Error estableciendo ruta de compilación: {e}")
-    
+
     def showCompileDialog(self, projectPath):
         """Muestra ventana completa para compilar un proyecto"""
         try:
@@ -4081,186 +3111,156 @@ class PackageTodoGUI(QMainWindow):
             dialogoCompilar.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoCompilar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoCompilar.resize(750, 650)
-            
+
             # Aplicar efectos de LeviathanUI
             WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoCompilar)
-            
+
             # Widget central con estilo
             centralWidget = QWidget(dialogoCompilar)
             centralWidget.setObjectName("CentralWidget")
-            centralWidget.setStyleSheet("""
-                QWidget#CentralWidget {
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 16px;
-                }
-            """)
-            
+            set_qss(centralWidget, 'packagemaker_110', append=False)
+
             layoutPrincipal = QVBoxLayout(centralWidget)
             layoutPrincipal.setContentsMargins(0, 0, 0, 0)
             layoutPrincipal.setSpacing(0)
-            
+
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoCompilar, title="🔨 Compilar Proyecto")
+            titleBar = create_title_bar(dialogoCompilar, title="🔨 Compilar Proyecto", icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
-            
+
             # Contenido
             contentWidget = QWidget()
             contentLayout = QVBoxLayout(contentWidget)
             contentLayout.setContentsMargins(30, 20, 30, 30)
             contentLayout.setSpacing(15)
-            
+
             # Título
             lblTitulo = QLabel("Compilar Proyecto")
-            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            set_qss(lblTitulo, 'packagemaker_111', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
-            
+
             lblInfo = QLabel(f"📁 Proyecto: {os.path.basename(projectPath)}")
-            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            set_qss(lblInfo, 'packagemaker_112', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
-            
+
             # Opciones de compilación
             groupOpciones = QGroupBox("Opciones de Compilación")
-            groupOpciones.setStyleSheet("""
-                QGroupBox {
-                    color: white;
-                    font-weight: bold;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    margin-top: 10px;
-                    padding-top: 15px;
-                }
-                QGroupBox::title {
-                    subcontrol-origin: margin;
-                    left: 10px;
-                    padding: 0 5px;
-                }
-            """)
+            set_qss(groupOpciones, 'packagemaker_113', append=False)
             layoutOpciones = QVBoxLayout()
-            
+
             chkWindows = QCheckBox("🪟 Compilar para Windows")
             chkWindows.setChecked(True)
-            chkWindows.setStyleSheet("color: white; font-size: 14px;")
+            set_qss(chkWindows, 'packagemaker_114', append=False)
             layoutOpciones.addWidget(chkWindows)
-            
+
             chkKnosthalij = QCheckBox("🌐 Compilar para Knosthalij")
-            chkKnosthalij.setStyleSheet("color: white; font-size: 14px;")
+            set_qss(chkKnosthalij, 'packagemaker_115', append=False)
             layoutOpciones.addWidget(chkKnosthalij)
-            
+
             chkOptimizar = QCheckBox("⚡ Optimizar código")
             chkOptimizar.setChecked(True)
-            chkOptimizar.setStyleSheet("color: white; font-size: 14px;")
+            set_qss(chkOptimizar, 'packagemaker_116', append=False)
             layoutOpciones.addWidget(chkOptimizar)
-            
+
             groupOpciones.setLayout(layoutOpciones)
             contentLayout.addWidget(groupOpciones)
-            
+
             # Barra de progreso
             progressBar = LeviathanProgressBar(self)
             contentLayout.addWidget(progressBar)
-            
+
             # Log de compilación
             txtLog = QTextEdit()
             txtLog.setReadOnly(True)
-            txtLog.setStyleSheet("""
-                QTextEdit {
-                    background-color: transparent;
-                    color: #0f0;
-                    font-family: 'Consolas', 'Courier New', monospace;
-                    border: 2px solid rgba(0,255,0,0.3);
-                    border-radius: 8px;
-                    padding: 10px;
-                    font-size: 13px;
-                }
-            """)
+            set_qss(txtLog, 'packagemaker_117', append=False)
             contentLayout.addWidget(txtLog)
-            
+
             # Botones
             layoutBotones = QHBoxLayout()
-            
+
             btnCerrar = QPushButton("Cerrar")
-            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
-            
+
             btnCompilar = QPushButton("🔨 Compilar")
-            btnCompilar.setStyleSheet(BTN_STYLES["success"])
+            set_qss(btnCompilar, BTN_STYLES["success"], append=False)
             btnCompilar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCompilar.setMinimumHeight(45)
-            
+
             layoutBotones.addWidget(btnCerrar)
             layoutBotones.addWidget(btnCompilar)
             contentLayout.addLayout(layoutBotones)
-            
+
             # Agregar el widget de contenido al layout principal
             layoutPrincipal.addWidget(contentWidget)
-            
+
             # Establecer el layout en el widget central
             centralWidget.setLayout(layoutPrincipal)
-            
+
             # Establecer el widget central en el diálogo
             mainLayout = QVBoxLayout(dialogoCompilar)
             mainLayout.setContentsMargins(0, 0, 0, 0)
             mainLayout.addWidget(centralWidget)
             dialogoCompilar.setLayout(mainLayout)
-            
+
             # Conectar botones
             btnCerrar.clicked.connect(dialogoCompilar.close)
             btnCompilar.clicked.connect(lambda: self._ejecutarCompilacion(
                 projectPath, chkWindows.isChecked(), chkKnosthalij.isChecked(),
                 chkOptimizar.isChecked(), progressBar, txtLog, btnCompilar, btnCerrar
             ))
-            
+
             dialogoCompilar.exec()
-            
+
         except Exception as e:
             print(f"Error mostrando diálogo de compilar: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
-    
+
     def _ejecutarCompilacion(self, projectPath, compWindows, compKnosthalij, optimizar, progressBar, txtLog, btnCompilar, btnCerrar):
         """Ejecuta la compilación del proyecto"""
         try:
             btnCompilar.setEnabled(False)
             txtLog.append("=== Iniciando compilación del proyecto ===\n")
             progressBar.setValue(10)
-            
+
             txtLog.append(f"[1/5] Verificando proyecto en: {projectPath}")
             progressBar.setValue(25)
-            
+
             if compWindows:
                 txtLog.append("\n[2/5] Compilando para Windows...")
                 txtLog.append("  ✓ Compilación para Windows completada")
-            
+
             progressBar.setValue(50)
-            
+
             if compKnosthalij:
                 txtLog.append("\n[3/5] Compilando para Knosthalij...")
                 txtLog.append("  ✓ Compilación para Knosthalij completada")
-            
+
             progressBar.setValue(75)
-            
+
             if optimizar:
                 txtLog.append("\n[4/5] Optimizando código...")
                 txtLog.append("  ✓ Optimización completada")
-            
+
             progressBar.setValue(90)
-            
+
             txtLog.append("\n[5/5] Finalizando compilación...")
             progressBar.setValue(100)
-            
+
             txtLog.append("\n=== ✅ Compilación Completada Exitosamente ===")
-            
+
             btnCerrar.setEnabled(True)
             LeviathanDialog.launch(self, "Éxito", "Proyecto compilado correctamente", mode="success")
-            
+
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
             LeviathanDialog.launch(self, "Error", f"Error compilando: {e}", mode="error")
             btnCompilar.setEnabled(True)
             btnCerrar.setEnabled(True)
-    
+
     def showRepairDialog(self, projectPath):
         """Muestra ventana completa para reparar un proyecto con MoonFix"""
         try:
@@ -4270,142 +3270,112 @@ class PackageTodoGUI(QMainWindow):
             dialogoReparar.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoReparar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoReparar.resize(750, 700)
-            
+
             # Aplicar efectos de LeviathanUI
             WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoReparar)
-            
+
             # Widget central con estilo
             centralWidget = QWidget(dialogoReparar)
             centralWidget.setObjectName("CentralWidget")
-            centralWidget.setStyleSheet("""
-                QWidget#CentralWidget {
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 16px;
-                }
-            """)
-            
+            set_qss(centralWidget, 'packagemaker_120', append=False)
+
             layoutPrincipal = QVBoxLayout(centralWidget)
             layoutPrincipal.setContentsMargins(0, 0, 0, 0)
             layoutPrincipal.setSpacing(0)
-            
+
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoReparar, title="🌙 MoonFix - Reparar Proyecto")
+            titleBar = create_title_bar(dialogoReparar, title="🌙 MoonFix - Reparar Proyecto", icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
-            
+
             # Contenido
             contentWidget = QWidget()
             contentLayout = QVBoxLayout(contentWidget)
             contentLayout.setContentsMargins(30, 20, 30, 30)
             contentLayout.setSpacing(15)
-            
+
             # Título
             lblTitulo = QLabel("MoonFix - Reparación Automática")
-            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            set_qss(lblTitulo, 'packagemaker_121', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
-            
+
             lblInfo = QLabel(f"📁 Proyecto: {os.path.basename(projectPath)}")
-            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 10px;")
+            set_qss(lblInfo, 'packagemaker_122', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
-            
+
             lblDescripcion = QLabel("MoonFix analizará el proyecto en busca de archivos faltantes, configuraciones antiguas y errores de estructura.")
-            lblDescripcion.setStyleSheet("color: #888; font-size: 13px; margin-bottom: 20px;")
+            set_qss(lblDescripcion, 'packagemaker_123', append=False)
             lblDescripcion.setWordWrap(True)
             contentLayout.addWidget(lblDescripcion)
-            
+
             # Opciones de reparación
             groupOpciones = QGroupBox("Opciones de Reparación")
-            groupOpciones.setStyleSheet("""
-                QGroupBox {
-                    color: white;
-                    font-weight: bold;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    margin-top: 10px;
-                    padding-top: 15px;
-                }
-                QGroupBox::title {
-                    subcontrol-origin: margin;
-                    left: 10px;
-                    padding: 0 5px;
-                }
-            """)
+            set_qss(groupOpciones, 'packagemaker_124', append=False)
             layoutOpciones = QVBoxLayout()
-            
+
             chkArchivos = QCheckBox("📄 Verificar archivos faltantes")
             chkArchivos.setChecked(True)
-            chkArchivos.setStyleSheet("color: white; font-size: 14px;")
+            set_qss(chkArchivos, 'packagemaker_125', append=False)
             layoutOpciones.addWidget(chkArchivos)
-            
+
             chkConfig = QCheckBox("⚙️ Actualizar configuraciones antiguas")
             chkConfig.setChecked(True)
-            chkConfig.setStyleSheet("color: white; font-size: 14px;")
+            set_qss(chkConfig, 'packagemaker_126', append=False)
             layoutOpciones.addWidget(chkConfig)
-            
+
             chkEstructura = QCheckBox("🏗️ Reparar estructura de carpetas")
             chkEstructura.setChecked(True)
-            chkEstructura.setStyleSheet("color: white; font-size: 14px;")
+            set_qss(chkEstructura, 'packagemaker_127', append=False)
             layoutOpciones.addWidget(chkEstructura)
-            
+
             chkDependencias = QCheckBox("📦 Verificar dependencias")
             chkDependencias.setChecked(True)
-            chkDependencias.setStyleSheet("color: white; font-size: 14px;")
+            set_qss(chkDependencias, 'packagemaker_128', append=False)
             layoutOpciones.addWidget(chkDependencias)
-            
+
             groupOpciones.setLayout(layoutOpciones)
             contentLayout.addWidget(groupOpciones)
-            
+
             # Barra de progreso
             progressBar = LeviathanProgressBar(self)
             contentLayout.addWidget(progressBar)
-            
+
             # Log de reparación
             txtLog = QTextEdit()
             txtLog.setReadOnly(True)
-            txtLog.setStyleSheet("""
-                QTextEdit {
-                    background-color: transparent;
-                    color: #0ff;
-                    font-family: 'Consolas', 'Courier New', monospace;
-                    border: 2px solid rgba(0,255,255,0.3);
-                    border-radius: 8px;
-                    padding: 10px;
-                    font-size: 13px;
-                }
-            """)
+            set_qss(txtLog, 'packagemaker_129', append=False)
             contentLayout.addWidget(txtLog)
-            
+
             # Botones
             layoutBotones = QHBoxLayout()
-            
+
             btnCerrar = QPushButton("Cerrar")
-            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
-            
+
             btnReparar = QPushButton("🌙 Ejecutar MoonFix")
-            btnReparar.setStyleSheet(BTN_STYLES["best"])
+            set_qss(btnReparar, BTN_STYLES["best"], append=False)
             btnReparar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnReparar.setMinimumHeight(45)
-            
+
             layoutBotones.addWidget(btnCerrar)
             layoutBotones.addWidget(btnReparar)
             contentLayout.addLayout(layoutBotones)
-            
+
             # Agregar el widget de contenido al layout principal
             layoutPrincipal.addWidget(contentWidget)
-            
+
             # Establecer el layout en el widget central
             centralWidget.setLayout(layoutPrincipal)
-            
+
             # Establecer el widget central en el diálogo
             mainLayout = QVBoxLayout(dialogoReparar)
             mainLayout.setContentsMargins(0, 0, 0, 0)
             mainLayout.addWidget(centralWidget)
             dialogoReparar.setLayout(mainLayout)
-            
+
             # Conectar botones
             btnCerrar.clicked.connect(dialogoReparar.close)
             btnReparar.clicked.connect(lambda: self._ejecutarMoonFix(
@@ -4413,13 +3383,13 @@ class PackageTodoGUI(QMainWindow):
                 chkEstructura.isChecked(), chkDependencias.isChecked(),
                 progressBar, txtLog, btnReparar, btnCerrar
             ))
-            
+
             dialogoReparar.exec()
-            
+
         except Exception as e:
             print(f"Error mostrando diálogo de reparar: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
-    
+
     def _ejecutarMoonFix(self, projectPath, checkArchivos, checkConfig, checkEstructura, checkDeps, progressBar, txtLog, btnReparar, btnCerrar):
         """Ejecuta MoonFix para reparar el proyecto usando plantillas en src/templates/."""
         try:
@@ -4471,16 +3441,16 @@ class PackageTodoGUI(QMainWindow):
             progressBar.setValue(100)
             txtLog.append(f"\n=== ✅ MoonFix Completado ===")
             txtLog.append(f"Archivos restaurados: {problemasReparados}")
-            
+
             btnCerrar.setEnabled(True)
             LeviathanDialog.launch(self, "Éxito", f"MoonFix completado.\n{problemasReparados} problemas reparados.", mode="success")
-            
+
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
             LeviathanDialog.launch(self, "Error", f"Error ejecutando MoonFix: {e}", mode="error")
             btnReparar.setEnabled(True)
             btnCerrar.setEnabled(True)
-    
+
     def showInstallPackageDialog(self, filePath):
         """Muestra ventana completa para instalar un paquete .iflapp"""
         try:
@@ -4490,148 +3460,132 @@ class PackageTodoGUI(QMainWindow):
             dialogoInstalarPaquete.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoInstalarPaquete.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoInstalarPaquete.resize(700, 600)
-            
+
             # Aplicar efectos de LeviathanUI
             WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoInstalarPaquete)
-            
+
             # Widget central con estilo
             centralWidget = QWidget(dialogoInstalarPaquete)
             centralWidget.setObjectName("CentralWidget")
-            centralWidget.setStyleSheet("""
-                QWidget#CentralWidget {
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 16px;
-                }
-            """)
-            
+            set_qss(centralWidget, 'packagemaker_132', append=False)
+
             layoutPrincipal = QVBoxLayout(centralWidget)
             layoutPrincipal.setContentsMargins(0, 0, 0, 0)
             layoutPrincipal.setSpacing(0)
-            
+
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoInstalarPaquete, title="📦 Instalar Paquete")
+            titleBar = create_title_bar(dialogoInstalarPaquete, title="📦 Instalar Paquete", icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
-            
+
             # Contenido
             contentWidget = QWidget()
             contentLayout = QVBoxLayout(contentWidget)
             contentLayout.setContentsMargins(30, 20, 30, 30)
             contentLayout.setSpacing(15)
-            
+
             # Título
             lblTitulo = QLabel("Instalar Paquete Fluthin")
-            lblTitulo.setStyleSheet("color: white; font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+            set_qss(lblTitulo, 'packagemaker_133', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
-            
+
             lblInfo = QLabel(f"📄 Archivo: {os.path.basename(filePath)}")
-            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            set_qss(lblInfo, 'packagemaker_134', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
-            
+
             # Barra de progreso
             progressBar = LeviathanProgressBar(self)
             contentLayout.addWidget(progressBar)
-            
+
             # Log de instalación
             txtLog = QTextEdit()
             txtLog.setReadOnly(True)
-            txtLog.setStyleSheet("""
-                QTextEdit {
-                    background-color: transparent;
-                    color: #0f0;
-                    font-family: 'Consolas', 'Courier New', monospace;
-                    border: 2px solid rgba(0,255,0,0.3);
-                    border-radius: 8px;
-                    padding: 10px;
-                    font-size: 13px;
-                }
-            """)
+            set_qss(txtLog, 'packagemaker_135', append=False)
             contentLayout.addWidget(txtLog)
-            
+
             # Botones
             layoutBotones = QHBoxLayout()
-            
+
             btnCerrar = QPushButton("Cerrar")
-            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
-            
+
             btnInstalar = QPushButton("📥 Instalar")
-            btnInstalar.setStyleSheet(BTN_STYLES["success"])
+            set_qss(btnInstalar, BTN_STYLES["success"], append=False)
             btnInstalar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnInstalar.setMinimumHeight(45)
-            
+
             layoutBotones.addWidget(btnCerrar)
             layoutBotones.addWidget(btnInstalar)
             contentLayout.addLayout(layoutBotones)
-            
+
             # Agregar el widget de contenido al layout principal
             layoutPrincipal.addWidget(contentWidget)
-            
+
             # Establecer el layout en el widget central
             centralWidget.setLayout(layoutPrincipal)
-            
+
             # Establecer el widget central en el diálogo
             mainLayout = QVBoxLayout(dialogoInstalarPaquete)
             mainLayout.setContentsMargins(0, 0, 0, 0)
             mainLayout.addWidget(centralWidget)
             dialogoInstalarPaquete.setLayout(mainLayout)
-            
+
             # Conectar botones
             btnCerrar.clicked.connect(dialogoInstalarPaquete.close)
             btnInstalar.clicked.connect(lambda: self._ejecutarInstalacionPaquete(
                 filePath, progressBar, txtLog, btnInstalar, btnCerrar
             ))
-            
+
             dialogoInstalarPaquete.exec()
-            
+
         except Exception as e:
             print(f"Error mostrando diálogo de instalar paquete: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
-    
+
     def _ejecutarInstalacionPaquete(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
         """Ejecuta la instalación del paquete .iflapp"""
         try:
             btnInstalar.setEnabled(False)
             txtLog.append("=== Iniciando instalación de paquete .iflapp ===\n")
             progressBar.setValue(10)
-            
+
             txtLog.append("[1/5] Verificando archivo...")
             if not os.path.exists(filePath):
                 raise Exception("El archivo no existe")
             txtLog.append("  ✓ Archivo verificado")
             progressBar.setValue(30)
-            
+
             txtLog.append("\n[2/5] Extrayendo paquete...")
             nombrePaquete = os.path.splitext(os.path.basename(filePath))[0]
             txtLog.append(f"  ℹ Paquete: {nombrePaquete}")
             progressBar.setValue(50)
-            
+
             txtLog.append("\n[3/5] Copiando archivos a Fluthin Apps...")
             rutaDestino = os.path.join(Fluthin_APPS, nombrePaquete)
             txtLog.append(f"  ✓ Destino: {rutaDestino}")
             progressBar.setValue(70)
-            
+
             txtLog.append("\n[4/5] Registrando paquete...")
             txtLog.append("  ✓ Paquete registrado")
             progressBar.setValue(90)
-            
+
             txtLog.append("\n[5/5] Finalizando...")
             progressBar.setValue(100)
-            
+
             txtLog.append("\n=== ✅ Instalación Completada ===")
-            
+
             btnCerrar.setEnabled(True)
             LeviathanDialog.launch(self, "Éxito", f"Paquete '{nombrePaquete}' instalado correctamente", mode="success")
-            
+
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
             LeviathanDialog.launch(self, "Error", f"Error instalando paquete: {e}", mode="error")
             btnInstalar.setEnabled(True)
             btnCerrar.setEnabled(True)
-    
+
     def openPackageFile(self, filePath):
         """Abre un archivo de paquete en el gestor"""
         try:
@@ -4644,7 +3598,7 @@ class PackageTodoGUI(QMainWindow):
             )
         except Exception as e:
             LeviathanDialog.launch(self, "Error", f"Error abriendo paquete: {e}", mode="error")
-    
+
     def showInstallMexfDialog(self, filePath):
         """Muestra un diálogo para instalar extensiones desde .mexf"""
         try:
@@ -4654,169 +3608,146 @@ class PackageTodoGUI(QMainWindow):
             dialogoInstalarMexf.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoInstalarMexf.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoInstalarMexf.resize(700, 550)
-            
+
             # Aplicar efectos de LeviathanUI
             WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoInstalarMexf)
-            
+
             # Widget central con estilo
             centralWidget = QWidget(dialogoInstalarMexf)
             centralWidget.setObjectName("CentralWidget")
-            centralWidget.setStyleSheet("""
-                QWidget#CentralWidget {
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 16px;
-                }
-            """)
-            
+            set_qss(centralWidget, 'packagemaker_138', append=False)
+
             layoutPrincipal = QVBoxLayout(centralWidget)
             layoutPrincipal.setContentsMargins(0, 0, 0, 0)
             layoutPrincipal.setSpacing(0)
-            
+
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoInstalarMexf, title="🔧 Instalar Extensiones MEXF")
+            titleBar = create_title_bar(dialogoInstalarMexf, title="🔧 Instalar Extensiones MEXF", icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
-            
+
             # Contenido
             contentWidget = QWidget()
             contentLayout = QVBoxLayout(contentWidget)
             contentLayout.setContentsMargins(30, 20, 30, 30)
             contentLayout.setSpacing(15)
-            
+
             # Título
             lblTitulo = QLabel("Instalar Extensiones de Shell")
-            lblTitulo.setStyleSheet("color: white; font-size: 22px; font-weight: bold; margin-bottom: 10px;")
+            set_qss(lblTitulo, 'packagemaker_139', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
-            
+
             lblInfo = QLabel(f"📄 Archivo: {os.path.basename(filePath)}")
-            lblInfo.setStyleSheet("color: #aaa; font-size: 14px; margin-bottom: 20px;")
+            set_qss(lblInfo, 'packagemaker_140', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
-            
+
             # Información del archivo MEXF
             try:
                 import json
                 with open(filePath, 'r', encoding='utf-8') as f:
                     mexfData = json.load(f)
-                
+
                 infoText = f"Nombre: {mexfData.get('name', 'N/A')}\n"
                 infoText += f"Versión: {mexfData.get('version', 'N/A')}\n"
                 infoText += f"Descripción: {mexfData.get('description', 'N/A')}"
-                
+
                 lblDetalles = QLabel(infoText)
-                lblDetalles.setStyleSheet("""
-                    color: white;
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 8px;
-                    padding: 15px;
-                    font-size: 13px;
-                """)
+                set_qss(lblDetalles, 'packagemaker_157', append=False)
                 lblDetalles.setWordWrap(True)
                 contentLayout.addWidget(lblDetalles)
             except:
                 pass
-            
+
             # Barra de progreso
             progressBar = LeviathanProgressBar(self)
             contentLayout.addWidget(progressBar)
-            
+
             # Log de instalación
             txtLog = QTextEdit()
             txtLog.setReadOnly(True)
-            txtLog.setStyleSheet("""
-                QTextEdit {
-                    background-color: transparent;
-                    color: #0f0;
-                    font-family: 'Consolas', 'Courier New', monospace;
-                    border: 2px solid rgba(0,255,0,0.3);
-                    border-radius: 8px;
-                    padding: 10px;
-                    font-size: 13px;
-                }
-            """)
+            set_qss(txtLog, 'packagemaker_141', append=False)
             contentLayout.addWidget(txtLog)
-            
+
             # Botones
             layoutBotones = QHBoxLayout()
-            
+
             btnCerrar = QPushButton("Cerrar")
-            btnCerrar.setStyleSheet(BTN_STYLES["default"])
+            set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
-            
+
             btnInstalar = QPushButton("🔧 Instalar Extensiones")
-            btnInstalar.setStyleSheet(BTN_STYLES["success"])
+            set_qss(btnInstalar, BTN_STYLES["success"], append=False)
             btnInstalar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnInstalar.setMinimumHeight(45)
-            
+
             layoutBotones.addWidget(btnCerrar)
             layoutBotones.addWidget(btnInstalar)
             contentLayout.addLayout(layoutBotones)
-            
+
             # Agregar el widget de contenido al layout principal
             layoutPrincipal.addWidget(contentWidget)
-            
+
             # Establecer el layout en el widget central
             centralWidget.setLayout(layoutPrincipal)
-            
+
             # Establecer el widget central en el diálogo
             mainLayout = QVBoxLayout(dialogoInstalarMexf)
             mainLayout.setContentsMargins(0, 0, 0, 0)
             mainLayout.addWidget(centralWidget)
             dialogoInstalarMexf.setLayout(mainLayout)
-            
+
             # Conectar botones
             btnCerrar.clicked.connect(dialogoInstalarMexf.close)
             btnInstalar.clicked.connect(lambda: self._ejecutarInstalacionMexf(
                 filePath, progressBar, txtLog, btnInstalar, btnCerrar
             ))
-            
+
             dialogoInstalarMexf.exec()
-            
+
         except Exception as e:
             print(f"Error mostrando diálogo de instalar MEXF: {e}")
             LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
-    
+
     def _ejecutarInstalacionMexf(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
         """Ejecuta la instalación de extensiones MEXF"""
         try:
             btnInstalar.setEnabled(False)
             txtLog.append("=== Instalando extensiones MEXF ===\n")
             progressBar.setValue(10)
-            
+
             txtLog.append("[1/4] Leyendo archivo MEXF...")
             import json
             with open(filePath, 'r', encoding='utf-8') as f:
                 mexfData = json.load(f)
             txtLog.append(f"  ✓ Archivo leído: {mexfData.get('name', 'N/A')}")
             progressBar.setValue(30)
-            
+
             txtLog.append("\n[2/4] Registrando mimetypes...")
             mimetypes = mexfData.get('mimetypes', [])
             txtLog.append(f"  ℹ {len(mimetypes)} mimetypes encontrados")
             progressBar.setValue(55)
-            
+
             txtLog.append("\n[3/4] Instalando menús contextuales...")
             contextMenus = mexfData.get('context_menus', [])
             txtLog.append(f"  ℹ {len(contextMenus)} menús contextuales encontrados")
             progressBar.setValue(80)
-            
+
             txtLog.append("\n[4/4] Finalizando instalación...")
             progressBar.setValue(100)
-            
+
             txtLog.append("\n=== ✅ Extensiones Instaladas ===")
-            
+
             btnCerrar.setEnabled(True)
             LeviathanDialog.launch(self, "Éxito", "Extensiones MEXF instaladas correctamente", mode="success")
-            
+
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
             LeviathanDialog.launch(self, "Error", f"Error instalando MEXF: {e}", mode="error")
             btnInstalar.setEnabled(True)
             btnCerrar.setEnabled(True)
-    
+
     def openMexfEditor(self, filePath):
         """Abre el editor de archivos .mexf"""
         try:
@@ -4828,7 +3759,7 @@ class PackageTodoGUI(QMainWindow):
             )
         except Exception as e:
             LeviathanDialog.launch(self, "Error", f"Error abriendo editor MEXF: {e}", mode="error")
-    
+
     def showCreateMexfDialog(self, folderPath):
         """Muestra ventana completa para crear un archivo .mexf"""
         try:
@@ -4838,157 +3769,127 @@ class PackageTodoGUI(QMainWindow):
             dialogoCrearMexf.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoCrearMexf.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoCrearMexf.resize(650, 600)
-            
+
             # Aplicar efectos de LeviathanUI
             WipeWindow.create().set_mode("ghostBlur").set_radius(12).apply(dialogoCrearMexf)
-            
+
             # Widget central con estilo
             centralWidget = QWidget(dialogoCrearMexf)
             centralWidget.setObjectName("CentralWidget")
-            centralWidget.setStyleSheet("""
-                QWidget#CentralWidget {
-                    background-color: transparent;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 16px;
-                }
-            """)
-            
+            set_qss(centralWidget, 'packagemaker_144', append=False)
+
             layoutPrincipal = QVBoxLayout(centralWidget)
             layoutPrincipal.setContentsMargins(0, 0, 0, 0)
             layoutPrincipal.setSpacing(0)
-            
+
             # Barra de título personalizada
-            titleBar = CustomTitleBar(dialogoCrearMexf, title="📝 Crear Archivo MEXF")
+            titleBar = create_title_bar(dialogoCrearMexf, title="📝 Crear Archivo MEXF", icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
-            
+
             # Contenido
             contentWidget = QWidget()
             contentLayout = QVBoxLayout(contentWidget)
             contentLayout.setContentsMargins(30, 20, 30, 30)
             contentLayout.setSpacing(15)
-            
+
             # Título
             lblTitulo = QLabel("Crear Archivo de Extensiones MEXF")
-            lblTitulo.setStyleSheet("color: white; font-size: 22px; font-weight: bold; margin-bottom: 10px;")
+            set_qss(lblTitulo, 'packagemaker_145', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
-            
+
             lblInfo = QLabel(f"📁 Ubicación: {folderPath}")
-            lblInfo.setStyleSheet("color: #aaa; font-size: 13px; margin-bottom: 20px;")
+            set_qss(lblInfo, 'packagemaker_146', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
-            
+
             # Formulario
             formLayout = QVBoxLayout()
             formLayout.setSpacing(12)
-            
+
             # Nombre del archivo
             lblNombre = QLabel("Nombre del archivo:")
-            lblNombre.setStyleSheet("color: white; font-weight: 600;")
+            set_qss(lblNombre, 'packagemaker_147', append=False)
             formLayout.addWidget(lblNombre)
-            
+
             txtNombre = QLineEdit()
             txtNombre.setText("extension")
             txtNombre.setPlaceholderText("Nombre sin extensión")
-            txtNombre.setStyleSheet("""
-                QLineEdit {
-                    background-color: transparent;
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 14px;
-                }
-                QLineEdit:focus {
-                    border: 2px solid #2486ff;
-                }
-            """)
+            set_qss(txtNombre, 'packagemaker_148', append=False)
             formLayout.addWidget(txtNombre)
-            
+
             # Descripción
             lblDesc = QLabel("Descripción:")
-            lblDesc.setStyleSheet("color: white; font-weight: 600;")
+            set_qss(lblDesc, 'packagemaker_149', append=False)
             formLayout.addWidget(lblDesc)
-            
+
             txtDesc = QTextEdit()
             txtDesc.setPlaceholderText("Describe las extensiones que incluye este archivo...")
             txtDesc.setMaximumHeight(100)
-            txtDesc.setStyleSheet("""
-                QTextEdit {
-                    background-color: transparent;
-                    color: white;
-                    border: 2px solid rgba(255,255,255,0.2);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 14px;
-                }
-                QTextEdit:focus {
-                    border: 2px solid #2486ff;
-                }
-            """)
+            set_qss(txtDesc, 'packagemaker_150', append=False)
             formLayout.addWidget(txtDesc)
-            
+
             contentLayout.addLayout(formLayout)
-            
+
             # Información adicional
             lblAyuda = QLabel("ℹ️ Se creará un archivo .mexf de ejemplo con configuraciones básicas de integración con el shell.")
-            lblAyuda.setStyleSheet("color: #888; font-size: 12px; margin-top: 10px;")
+            set_qss(lblAyuda, 'packagemaker_151', append=False)
             lblAyuda.setWordWrap(True)
             contentLayout.addWidget(lblAyuda)
-            
+
             contentLayout.addStretch()
-            
+
             # Botones
             layoutBotones = QHBoxLayout()
-            
+
             btnCancelar = QPushButton("❌ Cancelar")
-            btnCancelar.setStyleSheet(BTN_STYLES["default"])
+            set_qss(btnCancelar, BTN_STYLES["default"], append=False)
             btnCancelar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCancelar.setMinimumHeight(45)
-            
+
             btnCrear = QPushButton("📝 Crear MEXF")
-            btnCrear.setStyleSheet(BTN_STYLES["best"])
+            set_qss(btnCrear, BTN_STYLES["best"], append=False)
             btnCrear.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCrear.setMinimumHeight(45)
-            
+
             layoutBotones.addWidget(btnCancelar)
             layoutBotones.addWidget(btnCrear)
             contentLayout.addLayout(layoutBotones)
-            
+
             # Agregar el widget de contenido al layout principal
             layoutPrincipal.addWidget(contentWidget)
-            
+
             # Establecer el layout en el widget central
             centralWidget.setLayout(layoutPrincipal)
-            
+
             # Establecer el widget central en el diálogo
             mainLayout = QVBoxLayout(dialogoCrearMexf)
             mainLayout.setContentsMargins(0, 0, 0, 0)
             mainLayout.addWidget(centralWidget)
             dialogoCrearMexf.setLayout(mainLayout)
-            
+
             # Conectar botones
             btnCancelar.clicked.connect(dialogoCrearMexf.close)
             btnCrear.clicked.connect(lambda: self._ejecutarCreacionMexf(
                 folderPath, txtNombre.text(), txtDesc.toPlainText(), dialogoCrearMexf
             ))
-            
+
             dialogoCrearMexf.exec()
-            
+
         except Exception as e:
             print(f"Error mostrando diálogo de crear MEXF: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
-    
+
     def _ejecutarCreacionMexf(self, folderPath, nombreArchivo, descripcion, dialogo):
         """Ejecuta la creación del archivo MEXF"""
         try:
             if not nombreArchivo or nombreArchivo.strip() == "":
                 LeviathanDialog.launch(self, "Advertencia", "El nombre del archivo no puede estar vacío", mode="warning")
                 return
-            
+
             # Crear ruta del archivo
             rutaMexf = os.path.join(folderPath, f"{nombreArchivo}.mexf")
-            
+
             # Verificar si ya existe
             if os.path.exists(rutaMexf):
                 respuesta = LeviathanDialog.launch(
@@ -4999,7 +3900,7 @@ class PackageTodoGUI(QMainWindow):
                 )
                 if respuesta != 1:  # No aceptado
                     return
-            
+
             # Crear contenido MEXF de ejemplo
             contenidoMexf = {
                 "name": nombreArchivo,
@@ -5026,20 +3927,20 @@ class PackageTodoGUI(QMainWindow):
                     "preview_handler": False
                 }
             }
-            
+
             import json
             with open(rutaMexf, 'w', encoding='utf-8') as f:
                 json.dump(contenidoMexf, f, indent=4, ensure_ascii=False)
-            
+
             LeviathanDialog.launch(
                 self,
                 "✅ Archivo Creado",
                 f"Archivo MEXF creado exitosamente:\n\n{rutaMexf}",
                 mode="success"
             )
-            
+
             dialogo.close()
-            
+
         except Exception as e:
             LeviathanDialog.launch(self, "Error", f"Error creando archivo MEXF: {e}", mode="error")
 
@@ -5049,9 +3950,9 @@ class PackageTodoGUI(QMainWindow):
 # =============================================================================
 class IntegratedSplash(QWidget):
     """Splash integrado estilo UWP - minimalista con solo icono centrado"""
-    
+
     finished = pyqtSignal()
-    
+
     def __init__(self, parent=None, icon_path=None, title="Package Maker"):
         super().__init__(parent)
         self.parent = parent
@@ -5064,18 +3965,18 @@ class IntegratedSplash(QWidget):
                 border-radius: 0px;
             }
         """)
-        
+
         container = QWidget(self)
         container.setObjectName("SplashContainer")
         container.setGeometry(0, 0, self.width(), self.height())
-        
+
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
+
         layout.addStretch()
-        
+
         self.icon_label = QLabel()
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         if icon_path and os.path.exists(icon_path):
@@ -5084,13 +3985,13 @@ class IntegratedSplash(QWidget):
                 scaled = pixmap.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
                 self.icon_label.setPixmap(scaled)
         layout.addWidget(self.icon_label)
-        
+
         layout.addStretch()
-        
+
         self.splash_timer = QTimer(self)
         self.splash_timer.timeout.connect(self._finish_splash)
         self.splash_timer.setSingleShot(True)
-    
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if self.parent:
@@ -5098,12 +3999,12 @@ class IntegratedSplash(QWidget):
             container = self.findChild(QWidget, "SplashContainer")
             if container:
                 container.setGeometry(0, 0, self.width(), self.height())
-    
+
     def start(self, delay_ms=5000):
         self.show()
         self.raise_()
         self.splash_timer.start(delay_ms)
-    
+
     def _finish_splash(self):
         self.fade_anim = QPropertyAnimation(self, b"windowOpacity")
         self.fade_anim.setDuration(600)
@@ -5112,7 +4013,7 @@ class IntegratedSplash(QWidget):
         self.fade_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
         self.fade_anim.finished.connect(self._close_and_emit)
         self.fade_anim.start()
-    
+
     def _close_and_emit(self):
         self.hide()
         self.finished.emit()
@@ -5123,14 +4024,14 @@ main_window = None
 
 def main():
     global main_window
-    
+
     from lib.cliHandler import CLIHandler, handle_cli_action
-    
+
     cli = CLIHandler(base_dir=BASE_DIR)
-    
+
     if cli.has_cli_args():
         args = cli.parse()
-        
+
         if hasattr(args, 'app_version') and args.app_version:
             # Intentar obtener versión de varias fuentes
             try:
@@ -5146,22 +4047,22 @@ def main():
             from lib.tui import run_tui
             run_tui()
             return
-        
+
         action, data, action_options = cli.get_action(args)
-        
+
         if action:
             # Los comandos create/compile/moonfix se ejecutan automáticamente en headless
             # cuando se usan los nuevos argumentos sin --headless explícito
             if action in ['create_project', 'compile_project', 'repair_project']:
                 action_options['headless'] = True
-            
+
             # Acciones que no requieren GUI ni QApplication
             if action in ['shellpatch_install', 'shellpatch_remove', 'shellpatch_shortcuts'] or action_options.get('headless'):
                 result = handle_cli_action(action, data, None, **action_options)
                 if result is False:
                     sys.exit(1)
                 return
-            
+
             if PYQT6_AVAILABLE:
                 app = QApplication(sys.argv)
                 app.setFont(APP_FONT)
@@ -5178,7 +4079,7 @@ def main():
                 main_window = window
                 sys.exit(app.exec())
             return
-    
+
     # ── Sin args: lanzar GUI o TUI según el entorno ───────────────────────────
     # En entornos sin display (SSH sin DISPLAY, CI, WSL puro) lanzar TUI automáticamente.
     _no_display = (
@@ -5192,7 +4093,7 @@ def main():
 
     app = QApplication(sys.argv)
     app.setFont(APP_FONT)
-    
+
     config = load_app_config()
     current_lang = config.get("LANGUAGE") or system_default_language()
     auto_translate = bool(config.get("auto_translate", True))
@@ -5200,13 +4101,13 @@ def main():
 
     main_window = PackageTodoGUI()
     main_window.apply_ui_language()
-    
+
     splash = IntegratedSplash(
         parent=main_window,
         icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
         title="Package Maker"
     )
-    
+
     def on_splash_finished():
         if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
             try:
@@ -5214,11 +4115,11 @@ def main():
                 importlib.import_module("pyi_splash").close()
             except (ImportError, OSError):
                 pass
-    
+
     splash.finished.connect(on_splash_finished)
     main_window.show()
     splash.start(5000)
-    
+
     sys.exit(app.exec())
 
 

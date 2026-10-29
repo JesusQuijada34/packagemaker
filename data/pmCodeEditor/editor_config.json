@@ -1,5 +1,7 @@
 {
-  "recent_projects": [],
+  "recent_projects": [
+    "C:/Users/Jesus Quijada/Documents/Packagemaker Projects/influent.fuarhub-jginv.v1.0-26.02-18.02-AlphaCube"
+  ],
   "default_interpreter": "C:\\Program Files\\Python314\\python.EXE",
   "exclude_pyqt": true,
   "exclude_local": true,

@@ -15,9 +15,11 @@ except ImportError:
         def __init__(self, *args, **kwargs): pass
 
 class SidebarItem(QPushButton):
-    """Boton de navegación lateral estilo Start11"""
+    """Botón de navegación lateral con modo compacto Fluent."""
     def __init__(self, text, icon=None, parent=None):
         super().__init__(text, parent)
+        self._label_text = text
+        self._compact = False
         self.setFixedHeight(50)
         self.setIconSize(QSize(24, 24))
         if isinstance(icon, QIcon):
@@ -27,31 +29,54 @@ class SidebarItem(QPushButton):
         self.setCheckable(True)
         self.setAutoExclusive(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._apply_style()
+
+    def set_label_text(self, text):
+        self._label_text = text
+        self.setText("" if self._compact else text)
+        self.setToolTip(text if self._compact else "")
+
+    def set_compact(self, compact):
+        self._compact = bool(compact)
+        self.set_label_text(self._label_text)
+        self._apply_style()
+
+    def _apply_style(self):
         self.setStyleSheet("""
             QPushButton {
                 background-color: transparent;
-                color: #b0b0b0;
+                color: #c4cad4;
                 text-align: left;
-                padding-left: 17px;
+                padding: 0 10px 0 16px;
                 border: none;
                 border-left: 3px solid transparent;
-                outline: none;
-                border-radius: 8px;
+                border-radius: 9px;
                 font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif;
                 font-size: 15px;
                 font-weight: 500;
             }
             QPushButton:hover {
-                background-color: transparent;
+                background-color: rgba(255, 255, 255, 0.07);
                 color: #ffffff;
             }
             QPushButton:checked {
-                background-color: transparent;
+                background-color: rgba(255, 255, 255, 0.09);
                 color: #ffffff;
-                border-left: 3px solid #ff5722;
+                border-left: 3px solid #ff7043;
             }
-            QPushButton:focus {
-                border: none;
-                outline: none;
+            QPushButton:checked:hover {
+                background-color: rgba(255, 255, 255, 0.12);
             }
         """)
+        if self._compact:
+            self.setStyleSheet(self.styleSheet() + """
+                QPushButton {
+                    text-align: center;
+                    padding: 0;
+                    border-left-color: transparent;
+                    border-radius: 10px;
+                }
+                QPushButton:checked {
+                    border-left-color: #ff7043;
+                }
+            """)
