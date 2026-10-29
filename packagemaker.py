@@ -5,7 +5,6 @@ import os
 import time
 import hashlib
 import shutil
-import zipfile
 import xml.etree.ElementTree as ET
 import urllib.request
 import urllib.error
@@ -21,7 +20,6 @@ from typing import Dict, List, Tuple, Optional
 import importlib
 import importlib.util
 
-from lib.safe_zip import safe_extract_zip
 
 # Importar detector de modo de ejecución
 try:
@@ -129,15 +127,16 @@ from lib.window_chrome import (
     is_frameless_maximized,
 )
 from lib.uwp_animations import play_bounce_down_close
-from lib.openWithDialog import show_open_with_dialog, open_project_with_editor
 from lib.SidebarItem import SidebarItem
+from lib.sidebar_resize import SidebarResizeHandle
+from lib.window_manager_bridge import install_window_manager_bridges
+from lib.ios_progress_dialog import show_ios_progress
 from lib.moonFixWizard import MoonFixWizard, QSetup, QInstaller, verificar_github_username, detectar_modo_sistema
 from lib.gitHubVerifyThread import GitHubVerifyThread
 from lib.i18n import i18n, tr, system_default_language, get_available_languages
 from lib.linux_icon_handler import get_linux_icon_path, ensure_linux_icon_support
 from lib.pm_data import get_pm_data, load_merged_app_config, is_compiled_build, COMPILED_LOCKED_USER_KEYS
 from lib.outputTerminalDialog import OutputTerminalDialog
-from lib.projectDetailsDialog import ProjectDetailsDialog
 from lib.fluent_theme import (
     BTN_STYLES,
     FluentCheckBox as QCheckBox,
@@ -418,18 +417,6 @@ LGDR_BUILD_MESSAGES = {
     "_LGDR_BUILD_BTN" : "Compilar proyecto"
 }
 
-LGDR_NAUFRAGIO_MESSAGES = {
-    "_LGDR_LOCAL_LV" : "Proyectos locales encontrados en la carpeta predeterminada",
-    "_LGDR_INSTALLED_LV" : "Paquetes instalados desde la ROM (Fluthin Packaged)",
-    "_LGDR_REFRESH_BTN" : "Refresca proyectos locales y paquetes instalados",
-    "_LGDR_INSTALL_BTN" : "Instala un paquete Fluthin desde ruta",
-    "_LGDR_UNINSTALL_BTN" : "Desinstala un paquete Fluthin instalado en el directorio de la tienda",
-    "_LGDR_RUNPY_BTN" : "Ejecuta/depura el script marcado",
-    "_LGDR_INSTALLPROJ_BTN" : "Instala la carpeta del proyecto si se encuentra compilado",
-    "_LGDR_UNINSTALLPROJ_BTN" : "Elimina definitivamente el proyecto desde el alamacenamiento",
-    "_LGDR_RUNPYAPP_BTN" : "Ejecuta el script instalado",
-    "_LGDR_UNINSTALLAPP_BTN" : "Desinstala definitivamente el Fluthin Seleccionado",
-}
 AGE_RATINGS = {
     "project1" : "NO SEGURO!",
     "editor" : "PERSONAL USE",
@@ -581,10 +568,9 @@ def get_app_version():
 SIDEBAR_DESC_KEYS = {
     0: "sidebar_desc.0",
     1: "sidebar_desc.1",
-    2: "sidebar_desc.2",
-    3: "sidebar_desc.3",
-    4: "sidebar_desc.4",
-    5: "sidebar_desc.5",
+    2: "sidebar_desc.3",
+    3: "sidebar_desc.4",
+    4: "sidebar_desc.5",
 }
 
 class PackageTodoGUI(QMainWindow):
@@ -654,6 +640,10 @@ class PackageTodoGUI(QMainWindow):
         self._pm_reapply_display_mode = self._apply_leviathan_and_personalization
         self.v_layout.addWidget(self.titlebar)
 
+        # Puentes con el gestor de ventanas del SO: arrastrar, redimensionar
+        # por bordes, doble clic para maximizar, menú del sistema y snap.
+        self.wm_bridge = install_window_manager_bridges(self, self.titlebar)
+
         # Content Container (Sidebar + Stack)
         self.content_container = QWidget()
         # Enable styled background
@@ -680,10 +670,14 @@ class PackageTodoGUI(QMainWindow):
 
         self.sidebar_collapsed = False
         self.sidebar_animation = None
-        self.sidebar_target_width = 260
-        self.sidebar_auto_hide_timer = QTimer(self)
-        self.sidebar_auto_hide_timer.setSingleShot(True)
-        self.sidebar_auto_hide_timer.timeout.connect(self.collapse_sidebar)
+        # Ancho manual (estilo VS Code): se ajusta arrastrando el borde y se
+        # recuerda entre sesiones en data/pm.data.
+        self.sidebar_target_width = int(
+            get_pm_data().get_user("sidebar_width", 260) or 260
+        )
+        self.sidebar_target_width = max(180, min(480, self.sidebar_target_width))
+        self.sidebar.setMinimumWidth(self.sidebar_target_width)
+        self.sidebar.setMaximumWidth(self.sidebar_target_width)
         self.sidebar.installEventFilter(self)
 
         sidebar_header = QHBoxLayout()
@@ -699,21 +693,19 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_collapse_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
         self.sidebar_collapse_toggle.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.sidebar_collapse_toggle.clicked.connect(self.toggle_sidebar)
-        self.sidebar_collapse_toggle.setToolTip("Ocultar menú")
+        self.sidebar_collapse_toggle.setToolTip("Ocultar menú (Ctrl+B)")
         sidebar_header.addWidget(self.sidebar_collapse_toggle)
         self.sidebar_layout.addLayout(sidebar_header)
 
         # Navigation Buttons
         self.btn_create = SidebarItem(tr("sidebar.create"), get_tab_icon("crear"))
         self.btn_build = SidebarItem(tr("sidebar.build"), get_tab_icon("construir"))
-        self.btn_manager = SidebarItem(tr("sidebar.manager"), get_tab_icon("gestor"))
         self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"))
         self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"))
         self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"))
         self._sidebar_btn_keys = {
             self.btn_create: "sidebar.create",
             self.btn_build: "sidebar.build",
-            self.btn_manager: "sidebar.manager",
             self.btn_config: "sidebar.config",
             self.btn_moonfix: "sidebar.moonfix",
             self.btn_about: "sidebar.about",
@@ -722,15 +714,13 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_group = QButtonGroup(self)
         self.sidebar_group.addButton(self.btn_create, 0)
         self.sidebar_group.addButton(self.btn_build, 1)
-        self.sidebar_group.addButton(self.btn_manager, 2)
-        self.sidebar_group.addButton(self.btn_config, 3)
-        self.sidebar_group.addButton(self.btn_moonfix, 4)
-        self.sidebar_group.addButton(self.btn_about, 5)
+        self.sidebar_group.addButton(self.btn_config, 2)
+        self.sidebar_group.addButton(self.btn_moonfix, 3)
+        self.sidebar_group.addButton(self.btn_about, 4)
         self.sidebar_group.idClicked.connect(self.switch_page)
 
         self.sidebar_layout.addWidget(self.btn_create)
         self.sidebar_layout.addWidget(self.btn_build)
-        self.sidebar_layout.addWidget(self.btn_manager)
         self.sidebar_layout.addWidget(self.btn_config)
         self.sidebar_layout.addWidget(self.btn_moonfix)
 
@@ -766,6 +756,16 @@ class PackageTodoGUI(QMainWindow):
 
         self.content_layout.addWidget(self.sidebar)
 
+        # Tirador de redimensionado manual (VS Code): arrastra el borde derecho.
+        self.sidebar_resize_handle = SidebarResizeHandle(
+            self.sidebar,
+            min_width=180,
+            max_width=480,
+            on_resized=self._persist_sidebar_width,
+            parent=self.content_container,
+        )
+        self.content_layout.addWidget(self.sidebar_resize_handle)
+
         # --- MAIN CONTENT AREA (Right) ---
         self.stack = QStackedWidget()
         self.stack.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -779,9 +779,6 @@ class PackageTodoGUI(QMainWindow):
         self.page_build = QWidget()
         self.init_build_tab(self.page_build)
 
-        self.page_manager = QWidget()
-        self.init_manager_tab(self.page_manager)
-
         self.page_config = QWidget()
         self.init_config_tab(self.page_config)
 
@@ -793,7 +790,6 @@ class PackageTodoGUI(QMainWindow):
 
         self.stack.addWidget(self.page_create)
         self.stack.addWidget(self.page_build)
-        self.stack.addWidget(self.page_manager)
         self.stack.addWidget(self.page_config)
         self.stack.addWidget(self.page_moonfix)
         self.stack.addWidget(self.page_about)
@@ -856,10 +852,26 @@ class PackageTodoGUI(QMainWindow):
             html = text.replace("### ", "<b style='color:white; font-size:14px;'>").replace("\n", "</b><br>")
             self.sidebar_desc_text.setHtml(html)
 
+    def _persist_sidebar_width(self, width):
+        """Guarda el ancho elegido a mano para la próxima sesión."""
+        width = max(180, min(480, int(width)))
+        self.sidebar_target_width = width
+        try:
+            store = get_pm_data()
+            store.set_user("sidebar_width", width)
+            store.save()
+        except Exception:
+            pass
+
     def _apply_sidebar_state(self, collapsed):
         target_width = 60 if collapsed else self.sidebar_target_width
-        if self.sidebar.maximumWidth() == target_width:
+        if self.sidebar_collapsed == collapsed and self.sidebar.maximumWidth() == target_width:
             return
+        # El tirador fija mínimo y máximo; el colapso debe liberar el mínimo.
+        if collapsed:
+            self.sidebar.setMinimumWidth(60)
+        else:
+            self.sidebar.setMinimumWidth(self.sidebar_target_width)
         self.sidebar_animation = animate_property(
             self.sidebar,
             "maximumWidth",
@@ -867,10 +879,15 @@ class PackageTodoGUI(QMainWindow):
             target_width,
             220,
             QEasingCurve.Type.OutCubic,
+            on_finished=(lambda: self.sidebar.setMinimumWidth(target_width)),
         )
         self.sidebar_collapsed = collapsed
         self.sidebar_collapse_toggle.setText("❯" if collapsed else "❮")
-        self.sidebar_collapse_toggle.setToolTip("Expandir menú" if collapsed else "Ocultar menú")
+        self.sidebar_collapse_toggle.setToolTip(
+            "Expandir menú (Ctrl+B)" if collapsed else "Ocultar menú (Ctrl+B)"
+        )
+        if hasattr(self, "sidebar_resize_handle"):
+            self.sidebar_resize_handle.setVisible(not collapsed)
 
         for btn in self._sidebar_btn_keys:
             btn.setVisible(not collapsed)
@@ -891,11 +908,8 @@ class PackageTodoGUI(QMainWindow):
             self._apply_sidebar_state(False)
 
     def eventFilter(self, obj, event):
-        if obj is self.sidebar and event.type() in (QEvent.Type.Enter, QEvent.Type.MouseMove):
-            self.sidebar_auto_hide_timer.stop()
-            self.expand_sidebar()
-        elif obj is self.sidebar and event.type() == QEvent.Type.Leave:
-            self.sidebar_auto_hide_timer.start(600)
+        # El sidebar se colapsa/expande solo a mano (estilo VS Code); no hay
+        # auto-ocultado por hover.
         return super().eventFilter(obj, event)
 
     def animate_startup(self, instant=False):
@@ -944,6 +958,17 @@ class PackageTodoGUI(QMainWindow):
                 if current_index > 0:
                     self.sidebar_group.button(current_index - 1).setChecked(True)
                     self.switch_page(current_index - 1)
+
+    def keyPressEvent(self, event):
+        """Atajos de ventana: Ctrl+B alterna el sidebar (estilo VS Code)."""
+        if (
+            event.key() == Qt.Key.Key_B
+            and event.modifiers() & Qt.KeyboardModifier.ControlModifier
+        ):
+            self.toggle_sidebar()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def switch_page(self, index):
         """Cambia la página (solo fundido; sin mover geometry del stack)."""
@@ -1194,19 +1219,66 @@ class PackageTodoGUI(QMainWindow):
         self.github_progress.setFixedHeight(4)
         action_layout.addWidget(self.github_progress)
 
-        self.btn_create_action = QPushButton("Crear Proyecto")
-        self.btn_create_action.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_create_action.setFixedSize(150, 40)
-        self.btn_create_action.clicked.connect(self.create_package_action)
-        icon_button(self.btn_create_action, "crear", 18)
-        action_layout.addWidget(self.btn_create_action)
-
         layout.addLayout(action_layout)
         layout.addStretch()
 
-        # Link alias for compatibility with existing methods
-        # self.btn_create = self.btn_create_action # REMOVED to avoid conflict with sidebar button
+        # El botón de crear vive ahora en la barra de título (solo icono,
+        # estilo macOS), a la derecha del título de la ventana.
+        self._install_titlebar_create_button()
 
+
+    def _install_titlebar_create_button(self):
+        """Botón de crear solo-icono (estilo macOS) junto al título de ventana."""
+        layout = self.titlebar.layout() if hasattr(self.titlebar, "layout") else None
+        if layout is None:
+            return
+        btn = QPushButton()
+        btn.setObjectName("TitlebarCreateButton")
+        btn.setFixedSize(30, 22)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        btn.setFlat(True)
+        icon_button(btn, "crear", 16)
+        btn.setToolTip("Crear proyecto nuevo")
+        btn.clicked.connect(self.open_create_project_dialog)
+        # Insertar justo después del título (antes del stretch de la derecha).
+        insert_at = 2 if layout.count() >= 2 else layout.count()
+        layout.insertWidget(insert_at, btn)
+        self.btn_titlebar_create = btn
+        self.btn_create_action = btn  # alias de compatibilidad
+        self._style_titlebar_create_button()
+
+    def _style_titlebar_create_button(self):
+        btn = getattr(self, "btn_titlebar_create", None)
+        if btn is None:
+            return
+        btn.setStyleSheet(
+            """
+            QPushButton#TitlebarCreateButton {
+                background: rgba(255, 255, 255, 0.10);
+                border: none;
+                border-radius: 6px;
+                padding: 0;
+            }
+            QPushButton#TitlebarCreateButton:hover {
+                background: #ff5722;
+            }
+            QPushButton#TitlebarCreateButton:pressed {
+                background: #e64a19;
+            }
+            """
+        )
+
+    def open_create_project_dialog(self):
+        """Abre el diálogo iOS de creación y ejecuta la verificación/creación."""
+        dialog = show_ios_progress(
+            self,
+            "Crear proyecto",
+            "Verificando el username de GitHub...",
+        )
+        self._create_progress_dialog = dialog
+        # Reutiliza el flujo existente; el diálogo refleja el estado.
+        self.create_package_action(dialog)
 
     def browse_icon(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icono", "", "Icon Files (*.ico)")
@@ -1427,13 +1499,41 @@ class PackageTodoGUI(QMainWindow):
             self.sandbox_switch.setChecked(False)
             self.sandbox_switch.blockSignals(False)
 
-    def create_package_action(self):
+    def _set_create_progress(self, title=None, message=None, value=None, maximum=None):
+        """Refleja el estado de creación en el diálogo iOS si está abierto."""
+        dialog = getattr(self, "_create_progress_dialog", None)
+        if dialog is None:
+            return
+        try:
+            if title is not None:
+                dialog.set_title(title)
+            if message is not None:
+                dialog.set_message(message)
+            if value is not None:
+                dialog.set_progress(value, maximum if maximum is not None else 100)
+        except RuntimeError:
+            self._create_progress_dialog = None
+
+    def _close_create_progress(self):
+        dialog = getattr(self, "_create_progress_dialog", None)
+        if dialog is not None:
+            try:
+                dialog.finish(400)
+            except RuntimeError:
+                pass
+            self._create_progress_dialog = None
+
+    def create_package_action(self, progress_dialog=None):
+        if progress_dialog is not None:
+            self._create_progress_dialog = progress_dialog
         self.statusBar().showMessage("Creando Proyecto Fluthin Packaged...")
         # Validar autor (obligatorio)
         autor = self.input_autor.text().strip()
         if not autor:
             set_qss(self.create_status, 'packagemaker_075', append=False)
             self.create_status.setText(" Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.")
+            self._set_create_progress("Error", "El campo Autor es obligatorio.")
+            self._close_create_progress()
             return
 
         # Deshabilitar controles y mostrar barra de progreso
@@ -1450,6 +1550,7 @@ class PackageTodoGUI(QMainWindow):
         self.create_status.setText("Verificando username de GitHub...")
         self.github_progress.setVisible(True)
         self.statusBar().showMessage("Verificando username de GitHub...")
+        self._set_create_progress("Creando proyecto", "Verificando el username de GitHub...")
 
         # Crear y ejecutar thread de verificación
         self.github_thread = GitHubVerifyThread(autor, self)
@@ -1476,10 +1577,13 @@ class PackageTodoGUI(QMainWindow):
             set_qss(self.create_status, 'packagemaker_076', append=False)
             self.create_status.setText(f"❌ Error: {mensaje}. Por favor, especifica un username válido que exista en GitHub.")
             self.statusBar().showMessage("Verificación fallida")
+            self._set_create_progress("Verificación fallida", str(mensaje))
+            self._close_create_progress()
             return
 
         # Si la verificación fue exitosa, continuar con la creación del proyecto
         autor = self.input_autor.text().strip()
+        self._set_create_progress("Creando proyecto", "Generando estructura y metadatos...")
 
         # Obtener plataforma seleccionada (ahora con checkboxes)
         win_checked = self.checkbox_windows.isChecked()
@@ -1574,10 +1678,14 @@ class PackageTodoGUI(QMainWindow):
             set_qss(self.create_status, 'packagemaker_077', append=False)
             self.create_status.setText(f"✅ Paquete creado en: {folder_name}/\n🔐 Protegido con sha256: {hv}")
             self.statusBar().showMessage(f"Proyecto creado exitosamente: {folder_name}")
+            self._set_create_progress("Proyecto creado", f"{folder_name}", value=100, maximum=100)
+            self._close_create_progress()
         except Exception as e:
             set_qss(self.create_status, 'packagemaker_155', append=False)
             self.create_status.setText(f"❌ Error: {str(e)}")
             self.statusBar().showMessage(f"Error al crear proyecto: {str(e)}")
+            self._set_create_progress("Error", str(e))
+            self._close_create_progress()
 
     def create_details_xml(self, path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada, vso=None):
         from lib.template_engine import build_variables, write_details_xml
@@ -1843,226 +1951,6 @@ class PackageTodoGUI(QMainWindow):
         self.build_thread.start()
         self.statusBar().showMessage("Iniciando compilación...")
 
-    def init_manager_tab(self, parent_widget=None):
-        target = parent_widget if parent_widget else self.tab_manager
-        # Enable styled background for proper inheritance
-        target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        # Don't set individual background - let it inherit from parent
-        layout = QVBoxLayout(target)
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(20)
-
-        # Header
-        title_lbl = QLabel("Gestor de Aplicaciones")
-        set_qss(title_lbl, 'packagemaker_035', append=False)
-        layout.addWidget(title_lbl)
-
-        # Main Splitter
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setHandleWidth(2)
-        set_qss(splitter, 'packagemaker_036', append=False)
-
-        def create_section(title, list_widget):
-            container = QWidget()
-            vbox = QVBoxLayout(container)
-            vbox.setContentsMargins(0, 0, 0, 0)
-            vbox.setSpacing(10)
-
-            lbl = QLabel(title)
-            set_qss(lbl, 'packagemaker_081', append=False)
-            vbox.addWidget(lbl)
-
-            # Styled ListWidget
-            list_widget.setIconSize(QtCore.QSize(36, 36))
-            list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
-            list_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            list_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            list_widget.setMinimumHeight(200)
-            set_qss(list_widget, 'packagemaker_082', append=False)
-            vbox.addWidget(list_widget)
-            return container
-
-        self.projects_list = QListWidget()
-        self.projects_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_LOCAL_LV"])
-
-        self.apps_list = QListWidget()
-        self.apps_list.setToolTip(LGDR_NAUFRAGIO_MESSAGES["_LGDR_INSTALLED_LV"])
-
-        splitter.addWidget(create_section("Proyectos Locales", self.projects_list))
-        splitter.addWidget(create_section("Aplicaciones Instaladas", self.apps_list))
-        splitter.setSizes([500, 500]) # Equal start
-
-        layout.addWidget(splitter, 1) # Stretch
-
-        # Action Bar
-        btn_row = QHBoxLayout()
-        btn_row.setSpacing(12)
-
-        # UWP Button Generator
-        def uwp_btn(text, icon_key=None, is_primary=False):
-            btn = QPushButton(text)
-            btn.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-            btn.setMinimumHeight(38)
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-
-            # Clean style
-            base_bg = "#ff5722" if is_primary else "rgba(255, 255, 255, 0.06)"
-            hover_bg = "#ff7043" if is_primary else "rgba(255, 255, 255, 0.1)"
-            text_col = "white"
-            border = "none" if is_primary else "1px solid rgba(255, 255, 255, 0.08)"
-
-            set_qss(btn, 'packagemaker_083', values=(qss_value(base_bg, None, ''), qss_value(text_col, None, ''), qss_value(border, None, ''), qss_value(hover_bg, None, ''), qss_value(base_bg, None, '')), append=False)
-            if icon_key:
-                btn.setIcon(get_icon(icon_key, 18))
-                btn.setIconSize(QSize(18, 18))
-            return btn
-
-        btn_refresh = uwp_btn("Refrescar", "refresh")
-        btn_refresh.clicked.connect(self.load_manager_lists)
-        btn_row.addWidget(btn_refresh)
-
-        self.btn_open_with = uwp_btn("Abrir con", "open_with")
-        self.btn_open_with.setEnabled(False)
-        self.btn_open_with.clicked.connect(self.open_selected_project_with_ide)
-        btn_row.addWidget(self.btn_open_with)
-
-        btn_row.addStretch()
-
-        btn_install = uwp_btn("Instalar", "instalar")
-        btn_install.clicked.connect(self.install_package_action)
-        btn_row.addWidget(btn_install)
-
-        btn_uninstall = uwp_btn("Desinstalar", "desinstalar")
-        btn_uninstall.clicked.connect(self.uninstall_package_action)
-        btn_row.addWidget(btn_uninstall)
-
-        layout.addLayout(btn_row)
-
-        self.manager_status = QLabel("")
-        set_qss(self.manager_status, 'packagemaker_037', append=False)
-        layout.addWidget(self.manager_status)
-        self.manager_status.setWordWrap(True)
-        self.manager_status.setToolTip("Estado de la app")
-        # self.tab_manager.setLayout(layout)
-        self.load_manager_lists()
-        self.projects_list.itemSelectionChanged.connect(self._on_project_selection_changed)
-        self.projects_list.itemDoubleClicked.connect(lambda item: self.on_project_double_click(item))
-        self.apps_list.itemDoubleClicked.connect(lambda item: self.on_app_double_click(item))
-
-        # Watcher en tiempo real
-        self.fs_watcher = QtCore.QFileSystemWatcher(self)
-        self.fs_watcher.addPath(BASE_DIR)
-        self.fs_watcher.addPath(Fluthin_APPS)
-        self.fs_watcher.directoryChanged.connect(self.load_manager_lists)
-
-    def get_package_list(self, base):
-        packages = []
-        if not os.path.exists(base): return []
-
-        # Escaneo Recursivo usando os.walk, limitado a un nivel de profundidad lógico para proyectos
-        # No queremos escanear todo el disco. Asumimos que BASE_DIR contiene carpetas de proyectos.
-        # Originalmente solo escaneaba carpetas en BASE_DIR.
-        # El usuario pidió "recursivamente". Si los proyectos están anidados, esto ayudará.
-        # Pero standard packagemaker structure es BASE_DIR/Proyecto.
-        # Mantendremos la lógica de "mirar en subcarpetas de BASE_DIR" pero si el usuario se refería
-        # a buscar metadatos en TODOS los archivos, eso es costoso.
-        # Interpretaremos "recursivamente" como buscar en subdirectorios si la estructura lo permite.
-
-        # Para cumplir con "recursivamente en busca de metadatos similares",
-        # asumiremos que quiere encontrar details.xml incluso si está dentro de subcarpetas (proyectos anidados ??).
-        # Para evitar lentitud extrema, limitaremos la profundidad o usaremos walk con cuidado.
-
-        for root, dirs, files in os.walk(base):
-            if "details.xml" in files:
-                folder = root
-                details_path = os.path.join(folder, "details.xml")
-                icon_path = os.path.join(folder, "app", "app-icon.ico")
-                try:
-                    tree = ET.parse(details_path)
-                    root_xml = tree.getroot()
-                    details = {child.tag: child.text for child in root_xml}
-                    empresa = details.get("publisher", "Origen Desconocido")
-                    titulo = details.get("name", os.path.basename(folder))
-                    version = details.get("version", "v?")
-                    ratings = details.get("rate", "Sin Clasificación")
-
-                    correlation_id = details.get("correlationid")
-                    if not correlation_id:
-                        correlation_id = hashlib.sha256(f"{empresa}.{titulo}.{version}".encode()).hexdigest()
-
-                    packages.append({
-                        "folder": folder,
-                        "empresa": empresa,
-                        "titulo": titulo,
-                        "version": version,
-                        "icon": icon_path if os.path.exists(icon_path) else None,
-                        "name": os.path.basename(folder),
-                        "rating": ratings,
-                        "sha": correlation_id
-                    })
-                except Exception:
-                    continue
-        return packages
-
-    def load_manager_lists(self):
-        self.projects_list.clear()
-        self.apps_list.clear()
-        projects = self.get_package_list(BASE_DIR)
-        for p in projects:
-            icon = QIcon(p["icon"]) if p["icon"] else self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
-            text = p['empresa'].capitalize()
-            text = f"{text} {p['titulo']} | {p['version']} [SHA: {p['sha'][:8]}...]"
-            item = QListWidgetItem(icon, text)
-            item.setData(QtCore.Qt.ItemDataRole.UserRole, p)
-            self.projects_list.addItem(item)
-        apps = self.get_package_list(Fluthin_APPS)
-        for a in apps:
-            icon = QIcon(a["icon"]) if a["icon"] else self.style().standardIcon(QStyle.StandardPixmap.SP_DesktopIcon)
-            text = a['empresa'].capitalize()
-            text = f"{text} {a['titulo']} | {a['version']}"
-            item = QListWidgetItem(icon, text)
-            item.setData(QtCore.Qt.ItemDataRole.UserRole, a)
-            self.apps_list.addItem(item)
-
-        # Actualizar autocompletador de Build Tab
-        self.update_build_completer(projects)
-
-    def update_build_completer(self, projects):
-        if hasattr(self, 'input_build_empresa') and hasattr(self, 'input_build_nombre'):
-             pubs = list(set([p['empresa'] for p in projects]))
-             names = list(set([p['titulo'] for p in projects])) # Usar titulo o name? Titulo es mas visual
-             # Agregar tambien los nombres de carpeta
-             names.extend([p['name'] for p in projects])
-             names = list(set(names))
-
-             comp_pub = QtWidgets.QCompleter(pubs, self)
-             comp_pub.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-             comp_pub.setFilterMode(Qt.MatchFlag.MatchContains) # Busqueda recursiva/flexible
-             self.input_build_empresa.setCompleter(comp_pub)
-
-             comp_name = QtWidgets.QCompleter(names, self)
-             comp_name.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
-             comp_name.setFilterMode(Qt.MatchFlag.MatchContains) # Busqueda recursiva/flexible
-             self.input_build_nombre.setCompleter(comp_name)
-
-    def _on_project_selection_changed(self):
-        item = self.projects_list.currentItem()
-        self.btn_open_with.setEnabled(bool(item and item.data(QtCore.Qt.ItemDataRole.UserRole)))
-
-    def open_selected_project_with_ide(self):
-        item = self.projects_list.currentItem()
-        if not item:
-            return
-        pkg = item.data(QtCore.Qt.ItemDataRole.UserRole)
-        if not pkg:
-            return
-        path = pkg.get("folder") or pkg.get("path")
-        if not path or not os.path.isdir(path):
-            LeviathanDialog.launch(self, "Abrir con", "Ruta de proyecto no válida.", mode="warning")
-            return
-        name = pkg.get("name") or pkg.get("titulo") or os.path.basename(path)
-        open_project_with_editor(self, path, name, use_default=False)
-
     def closeEvent(self, event):
         if getattr(self, "_force_close", False):
             super().closeEvent(event)
@@ -2074,103 +1962,6 @@ class PackageTodoGUI(QMainWindow):
     def _finish_close(self):
         self._force_close = True
         self.close()
-
-    def on_project_double_click(self, item):
-        pkg = item.data(QtCore.Qt.ItemDataRole.UserRole)
-        dlg = ProjectDetailsDialog(self, pkg, is_app=False, manager_ref=self)
-        dlg.exec()
-
-    def on_app_double_click(self, item):
-        pkg = item.data(QtCore.Qt.ItemDataRole.UserRole)
-        dlg = ProjectDetailsDialog(self, pkg, is_app=True, manager_ref=self)
-        dlg.exec()
-
-    def install_package_action(self):
-        files = QFileDialog.getOpenFileNames(self, "Selecciona paquetes para instalar", BASE_DIR, "Paquetes (*.iflapp)")[0]
-        for file_path in files:
-            if not file_path:
-                continue
-            pkg_name = os.path.basename(file_path).replace(".iflapp", "")
-            target_dir = os.path.join(Fluthin_APPS, pkg_name)
-            os.makedirs(target_dir, exist_ok=True)
-            try:
-                from lib.iflapp_format import extract_iflapp, sniff_format
-
-                if sniff_format(file_path) == "iflapp2":
-                    extract_iflapp(file_path, target_dir)
-                else:
-                    with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                        safe_extract_zip(zip_ref, target_dir)
-                self.manager_status.setText(f"✅ Instalado: {pkg_name} en Fluthin Apps")
-                # Asociación de extensión y menú inicio en Windows
-                if sys.platform.startswith('win'):
-                    self.setup_windows_shortcut(target_dir, pkg_name)
-            except Exception as e:
-                self.manager_status.setText(f"❌ Error al instalar {pkg_name}: {e}")
-        self.load_manager_lists()
-
-    def setup_windows_shortcut(self, target_dir, pkg_name):
-        details_path = os.path.join(target_dir, "details.xml")
-        if not os.path.exists(details_path):
-            return
-        try:
-            tree = ET.parse(details_path)
-            root = tree.getroot()
-            nombre = root.findtext("name", pkg_name)
-            empresa = root.findtext("publisher", "Influent")
-            icon_path = os.path.join(target_dir, "app", "app-icon.ico")
-            py_scripts = []
-            for root_dir, _, files in os.walk(target_dir):
-                for f in files:
-                    if f.endswith(".py"):
-                        py_scripts.append(os.path.join(root_dir, f))
-            main_script = py_scripts[0] if py_scripts else None
-            shortcut_name = f"{nombre} - Influent"
-            try:
-                import pythoncom
-                import win32com.client
-                from win32com.shell import shell, shellcon
-                start_menu = os.path.join(os.environ["APPDATA"], "Microsoft", "Windows", "Start Menu", "Programs")
-                program_files = os.path.join(os.environ["ProgramFiles"], empresa, nombre)
-                os.makedirs(program_files, exist_ok=True)
-                for item in os.listdir(target_dir):
-                    s = os.path.join(target_dir, item)
-                    d = os.path.join(program_files, item)
-                    if os.path.isdir(s):
-                        shutil.copytree(s, d, dirs_exist_ok=True)
-                    else:
-                        shutil.copy2(s, d)
-                if main_script:
-                    shell_obj = win32com.client.Dispatch("WScript.Shell")
-                    shortcut = shell_obj.CreateShortcut(os.path.join(start_menu, f"{shortcut_name}.lnk"))
-                    shortcut.TargetPath = sys.executable
-                    shortcut.Arguments = f'"{main_script}"'
-                    shortcut.WorkingDirectory = os.path.dirname(main_script)
-                    shortcut.IconLocation = icon_path if os.path.exists(icon_path) else sys.executable
-                    shortcut.Description = f"Influent App: {nombre}"
-                    shortcut.Save()
-            except Exception as e:
-                self.manager_status.setText(self.manager_status.text() + f"\n⚠️ Error instalando accesos directos: {str(e)}")
-        except Exception as e:
-            self.manager_status.setText(self.manager_status.text() + f"\n⚠️ Error a llamada a XML/meta: {str(e)}")
-
-    def uninstall_package_action(self):
-        item = self.apps_list.currentItem()
-        if not item:
-            self.manager_status.setText("Selecciona un paquete instalado para desinstalar.")
-            return
-        pkg = item.data(QtCore.Qt.ItemDataRole.UserRole)
-        # Confirmación
-        L = LeviathanDialog.launch(self, "Desinstalar", f"¿Estás seguro de desinstalar {pkg['name']}?", mode="confirm")
-        if not L: return
-
-        try:
-            shutil.rmtree(pkg["folder"])
-            self.manager_status.setText(f"🗑️ Desinstalado: {pkg['titulo']}")
-        except Exception as e:
-            self.manager_status.setText(f"❌ Error al desinstalar: {e}")
-        self.load_manager_lists()
-
 
     def _conf_section_title(self, text):
         lbl = QLabel(text)
@@ -3765,13 +3556,15 @@ class PackageTodoGUI(QMainWindow):
             btnCerrar.setEnabled(True)
 
     def openPackageFile(self, filePath):
-        """Abre un archivo de paquete en el gestor"""
+        """Muestra las cabeceras de un .iflapp sin descifrar ni descompilar."""
         try:
-            self.switch_page(2)
+            from lib.iflapp_reader import IflappReader
+
+            info = IflappReader(filePath).info().summary()
             LeviathanDialog.launch(
                 self,
                 "Paquete Abierto",
-                f"Abriendo paquete:\n{os.path.basename(filePath)}",
+                info,
                 mode="info"
             )
         except Exception as e:

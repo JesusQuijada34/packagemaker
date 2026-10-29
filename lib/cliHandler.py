@@ -673,10 +673,10 @@ def _handle_gui_actions(window, action, data):
     """Maneja acciones que requieren GUI."""
     action_map = {
         'create_project': (0, 'showCreateProjectDialog'),
-        'install_folder': (2, 'showInstallFolderDialog'),
+        'install_folder': (None, 'showInstallFolderDialog'),
         'compile_project': (1, 'showCompileDialog'),
-        'repair_project': (4, 'showRepairDialog'),
-        'install_package': (2, 'showInstallPackageDialog'),
+        'repair_project': (3, 'showRepairDialog'),
+        'install_package': (None, 'showInstallPackageDialog'),
         'install_mexf': (None, 'showInstallMexfDialog'),
         'edit_mexf': (None, 'openMexfEditor'),
         'create_mexf': (None, 'showCreateMexfDialog'),
