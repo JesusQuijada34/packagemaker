@@ -52,10 +52,15 @@ except ImportError:
 # Leviathan UI imports
 try:
     from leviathan_ui import WipeWindow
-    from leviathan_ui.dialogs import LeviathanDialog
 except (ImportError, SyntaxError):
     class WipeWindow: pass
-    class LeviathanDialog: pass
+
+try:
+    from lib.alert_dialog import AlertDialog as LeviathanDialog
+except (ImportError, SyntaxError):
+    class LeviathanDialog:
+        @staticmethod
+        def launch(*args, **kwargs): pass
 from lib.uwp_animations import play_bounce_down_close
 
 class FixedProxy:
@@ -331,9 +336,9 @@ class MoonFixWizard(QDialog):
                         applied += 1
             
             if applied > 0:
-                self.statusBar().showMessage(f"Icon Pack aplicado: {applied} iconos vinculados.")
+                print(f"[MoonFix] Icon Pack aplicado: {applied} iconos vinculados.")
             else:
-                self.statusBar().showMessage("Icon Pack cargado, pero no se encontraron nombres de archivos válidos.")
+                print("[MoonFix] Icon Pack cargado, pero no se encontraron nombres de archivos válidos.")
         except Exception as e:
             LeviathanDialog.launch(self, "Error de Icon Pack", str(e), mode="error")
 
@@ -387,9 +392,9 @@ class MoonFixWizard(QDialog):
                                     applied_count += 1
                 
                 if applied_count > 0:
-                    self.statusBar().showMessage(f"Asset Pack aplicado: {applied_count} imágenes convertidas y vinculadas.")
+                    print(f"[MoonFix] Asset Pack aplicado: {applied_count} imágenes convertidas y vinculadas.")
                 else:
-                    self.statusBar().showMessage("Asset Pack cargado, pero no hay campos faltantes compatibles.")
+                    print("[MoonFix] Asset Pack cargado, pero no hay campos faltantes compatibles.")
         except Exception as e:
             LeviathanDialog.launch(self, "Error de Pack", f"No se pudo parsear el Asset Pack: {str(e)}", mode="error")
 

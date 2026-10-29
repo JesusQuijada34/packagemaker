@@ -37,7 +37,7 @@ try:
     from PyQt6 import QtWidgets, QtGui, QtCore
     from PyQt6.QtWidgets import (
         QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-        QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QProgressBar, QTextEdit, QStackedWidget,
+        QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget,
         QSwipeGesture, QSlider, QFrame
     )
     from PyQt6.QtGui import QFont, QIcon
@@ -99,15 +99,12 @@ except ImportError:
     winreg = None
 
 try:
-    from leviathan_ui import InmersiveSplash, LightsOff, LeviathanDialog, WipeWindow, LeviathanProgressBar, CustomTitleBar, get_accent_color
+    from leviathan_ui import InmersiveSplash, LightsOff, WipeWindow, LeviathanProgressBar, CustomTitleBar, get_accent_color
     from leviathan_ui.touchscreen import TouchScreen
     LEVIATHAN_AVAILABLE = True
 except (ImportError, SyntaxError) as e:
     LEVIATHAN_AVAILABLE = False
     print(f"[WARN] Leviathan UI no disponible o error de sintaxis: {e}")
-    class LeviathanDialog:
-        @staticmethod
-        def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")
     class LeviathanProgressBar: pass
 # Updater - usar coreUpdater si está disponible, sino fallback a lib.Updater
 try:
@@ -131,6 +128,11 @@ from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
 from lib.window_manager_bridge import install_window_manager_bridges
 from lib.ios_progress_dialog import show_ios_progress
+from lib.alert_dialog import AlertDialog, pm_alert, pm_confirm
+# Los avisos usan el diálogo temático propio (blanco/negro, botones verticales
+# de ancho completo con separadores). ``LeviathanDialog`` queda como alias para
+# no tocar los puntos de llamada existentes.
+LeviathanDialog = AlertDialog
 from lib.moonFixWizard import MoonFixWizard, QSetup, QInstaller, verificar_github_username, detectar_modo_sistema
 from lib.gitHubVerifyThread import GitHubVerifyThread
 from lib.i18n import i18n, tr, system_default_language, get_available_languages
@@ -687,11 +689,12 @@ class PackageTodoGUI(QMainWindow):
         sidebar_header.addWidget(self.lbl_menu_main)
         sidebar_header.addStretch()
 
-        self.sidebar_collapse_toggle = QPushButton("❮")
+        self.sidebar_collapse_toggle = QPushButton()
         self.sidebar_collapse_toggle.setObjectName("SidebarCollapseButton")
         self.sidebar_collapse_toggle.setFixedSize(28, 28)
         self.sidebar_collapse_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
         self.sidebar_collapse_toggle.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        icon_button(self.sidebar_collapse_toggle, "collapse", 18)
         self.sidebar_collapse_toggle.clicked.connect(self.toggle_sidebar)
         self.sidebar_collapse_toggle.setToolTip("Ocultar menú (Ctrl+B)")
         sidebar_header.addWidget(self.sidebar_collapse_toggle)
@@ -882,7 +885,7 @@ class PackageTodoGUI(QMainWindow):
             on_finished=(lambda: self.sidebar.setMinimumWidth(target_width)),
         )
         self.sidebar_collapsed = collapsed
-        self.sidebar_collapse_toggle.setText("❯" if collapsed else "❮")
+        icon_button(self.sidebar_collapse_toggle, "expand" if collapsed else "collapse", 18)
         self.sidebar_collapse_toggle.setToolTip(
             "Expandir menú (Ctrl+B)" if collapsed else "Ocultar menú (Ctrl+B)"
         )
@@ -1202,30 +1205,21 @@ class PackageTodoGUI(QMainWindow):
 
         layout.addWidget(form_group)
 
-        # Action Area
-        layout.addSpacing(20)
-        action_layout = QHBoxLayout()
-
-        self.create_status = QLabel("BlindCube Switched")
-        set_qss(self.create_status, 'packagemaker_016', append=False)
-        action_layout.addWidget(self.create_status)
-
-        action_layout.addStretch()
-
-        self.github_progress = QProgressBar()
-        self.github_progress.setRange(0,0)
-        self.github_progress.setVisible(False)
-        self.github_progress.setFixedWidth(150)
-        self.github_progress.setFixedHeight(4)
-        action_layout.addWidget(self.github_progress)
-
-        layout.addLayout(action_layout)
+        # La retroalimentación de estado vive ahora en el diálogo iOS y en la
+        # consola; se retiró el área de estado que ocupaba el antiguo botón.
         layout.addStretch()
 
         # El botón de crear vive ahora en la barra de título (solo icono,
         # estilo macOS), a la derecha del título de la ventana.
         self._install_titlebar_create_button()
 
+    def _set_create_status(self, text, qss_key=None):
+        """Estado de creación solo a consola: ya no hay barra de estado.
+
+        ``qss_key`` se acepta por compatibilidad con las llamadas antiguas
+        que aplicaban un estilo al rótulo retirado.
+        """
+        print(f"[PackageMaker] {text}")
 
     def _install_titlebar_create_button(self):
         """Botón de crear solo-icono (estilo macOS) junto al título de ventana."""
@@ -1526,12 +1520,13 @@ class PackageTodoGUI(QMainWindow):
     def create_package_action(self, progress_dialog=None):
         if progress_dialog is not None:
             self._create_progress_dialog = progress_dialog
-        self.statusBar().showMessage("Creando Proyecto Fluthin Packaged...")
         # Validar autor (obligatorio)
         autor = self.input_autor.text().strip()
         if not autor:
-            set_qss(self.create_status, 'packagemaker_075', append=False)
-            self.create_status.setText(" Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.")
+            self._set_create_status(
+                "Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.",
+                'packagemaker_075',
+            )
             self._set_create_progress("Error", "El campo Autor es obligatorio.")
             self._close_create_progress()
             return
@@ -1547,9 +1542,7 @@ class PackageTodoGUI(QMainWindow):
         self.checkbox_linux.setEnabled(False)
         self.sandbox_switch.setEnabled(False)
 
-        self.create_status.setText("Verificando username de GitHub...")
-        self.github_progress.setVisible(True)
-        self.statusBar().showMessage("Verificando username de GitHub...")
+        self._set_create_status("Verificando username de GitHub...")
         self._set_create_progress("Creando proyecto", "Verificando el username de GitHub...")
 
         # Crear y ejecutar thread de verificación
@@ -1559,9 +1552,6 @@ class PackageTodoGUI(QMainWindow):
 
     def on_github_verification_finished(self, valido, mensaje):
         """Callback cuando termina la verificación de GitHub"""
-        # Ocultar barra de progreso
-        self.github_progress.setVisible(False)
-
         # Rehabilitar controles
         self.btn_create_action.setEnabled(True)
         self.input_empresa.setEnabled(True)
@@ -1574,9 +1564,10 @@ class PackageTodoGUI(QMainWindow):
         self.sandbox_switch.setEnabled(True)
 
         if not valido:
-            set_qss(self.create_status, 'packagemaker_076', append=False)
-            self.create_status.setText(f"❌ Error: {mensaje}. Por favor, especifica un username válido que exista en GitHub.")
-            self.statusBar().showMessage("Verificación fallida")
+            self._set_create_status(
+                f"Error: {mensaje}. Por favor, especifica un username válido que exista en GitHub.",
+                'packagemaker_076',
+            )
             self._set_create_progress("Verificación fallida", str(mensaje))
             self._close_create_progress()
             return
@@ -1636,7 +1627,7 @@ class PackageTodoGUI(QMainWindow):
 
             if selected_icon.startswith("http"):
                   try:
-                       self.create_status.setText("Descargando icono...")
+                       self._set_create_status("Descargando icono...")
                        QApplication.processEvents()
                        # AÑADIR USER-AGENT (Importante para evitar bloqueos)
                        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
@@ -1648,10 +1639,9 @@ class PackageTodoGUI(QMainWindow):
                                f.write(r_icon.content)
                            selected_icon = tmp_icon
                        else:
-                           self.statusBar().showMessage(f"Warning: No se pudo descargar icono (HTTP {r_icon.status_code})")
+                           print(f"[WARNING] No se pudo descargar icono (HTTP {r_icon.status_code})")
                   except Exception as ex_icon:
                        print(f"Error descargando icono: {ex_icon}")
-                       self.statusBar().showMessage("Warning: Error en descarga de icono.")
 
             if selected_icon and os.path.exists(selected_icon):
                 shutil.copy(selected_icon, icon_dest)
@@ -1675,15 +1665,14 @@ class PackageTodoGUI(QMainWindow):
                         pass
             if os.path.exists(upd_icon):
                 shutil.copy(upd_icon, upd_icn_dst)
-            set_qss(self.create_status, 'packagemaker_077', append=False)
-            self.create_status.setText(f"✅ Paquete creado en: {folder_name}/\n🔐 Protegido con sha256: {hv}")
-            self.statusBar().showMessage(f"Proyecto creado exitosamente: {folder_name}")
+            self._set_create_status(
+                f"Paquete creado en: {folder_name}/ (sha256: {hv})",
+                'packagemaker_077',
+            )
             self._set_create_progress("Proyecto creado", f"{folder_name}", value=100, maximum=100)
             self._close_create_progress()
         except Exception as e:
-            set_qss(self.create_status, 'packagemaker_155', append=False)
-            self.create_status.setText(f"❌ Error: {str(e)}")
-            self.statusBar().showMessage(f"Error al crear proyecto: {str(e)}")
+            self._set_create_status(f"Error: {str(e)}", 'packagemaker_155')
             self._set_create_progress("Error", str(e))
             self._close_create_progress()
 
@@ -1695,7 +1684,7 @@ class PackageTodoGUI(QMainWindow):
             empresa, nombre_logico, nombre_completo, autor, plataforma_seleccionada, version_base
         )
         write_details_xml(Path(path), variables)
-        self.statusBar().showMessage(f"Proyecto creado como {empresa}.{nombre_logico}.v{variables['VERSION_FULL']}!")
+        print(f"[PackageMaker] Proyecto creado como {empresa}.{nombre_logico}.v{variables['VERSION_FULL']}!")
 
     def init_build_tab(self, parent_widget=None):
         target = parent_widget if parent_widget else self.tab_build
@@ -1949,7 +1938,6 @@ class PackageTodoGUI(QMainWindow):
         self.build_thread.finished.connect(lambda msg: [self.build_status.setText(msg), self.build_progress.setVisible(False)])
         self.build_thread.error.connect(lambda msg: [self.build_status.setText(f"❌ Error: {msg}"), self.build_progress.setVisible(False)])
         self.build_thread.start()
-        self.statusBar().showMessage("Iniciando compilación...")
 
     def closeEvent(self, event):
         if getattr(self, "_force_close", False):

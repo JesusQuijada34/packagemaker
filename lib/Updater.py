@@ -42,7 +42,7 @@ except ImportError:
 
 # Leviathan UI
 try:
-    from leviathan_ui import WipeWindow, CustomTitleBar, LeviathanProgressBar, LeviathanDialog
+    from leviathan_ui import WipeWindow, CustomTitleBar, LeviathanProgressBar
     HAS_LEVIATHAN = True
 except (ImportError, SyntaxError):
     HAS_LEVIATHAN = False
@@ -56,10 +56,15 @@ except (ImportError, SyntaxError):
     class CustomTitleBar:
         def __init__(self, *args, **kwargs): pass
         def set_color(self, *args): pass
+    class LeviathanProgressBar: pass
+
+# Diálogos temáticos propios (blanco/negro, botones verticales).
+try:
+    from lib.alert_dialog import AlertDialog as LeviathanDialog
+except (ImportError, SyntaxError):
     class LeviathanDialog:
         @staticmethod
         def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")
-    class LeviathanProgressBar: pass
 
 # Notificaciones nativas de Windows
 try:

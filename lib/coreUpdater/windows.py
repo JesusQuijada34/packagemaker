@@ -46,15 +46,19 @@ from .workers import InstallerWorker, IFLAPPInstallerWorker, EXEInstallerWorker
 from .system_tray import get_tray_icon, set_tray_icon, get_updater_window, set_updater_window
 from .core import log
 
-# --- LEVIATHAN UI CHECK ---
 try:
-    from leviathan_ui import LeviathanDialog, WipeWindow, LeviathanProgressBar, CustomTitleBar, InmersiveSplash
-    HAS_LEVIATHAN = True
-except ImportError:
-    HAS_LEVIATHAN = False
+    from lib.alert_dialog import AlertDialog as LeviathanDialog
+except (ImportError, SyntaxError):
     class LeviathanDialog:
         @staticmethod
         def launch(*args, **kwargs): print(f"[MOCK] LeviathanDialog: {args}")
+
+# --- LEVIATHAN UI CHECK ---
+try:
+    from leviathan_ui import WipeWindow, LeviathanProgressBar, CustomTitleBar, InmersiveSplash
+    HAS_LEVIATHAN = True
+except ImportError:
+    HAS_LEVIATHAN = False
     class WipeWindow:
         @staticmethod
         def create():

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Diálogo de progreso estilo iOS con blur temporal y fundido.
+"""Diálogo de progreso estilo iOS con efecto parcial (blur + atenuado) y fundido.
 
 Pensado para operaciones largas (crear proyecto, compilar, verificar):
-- Oscurece el fondo detrás del diálogo y aplica un desenfoque temporal.
+
+- Aplica un efecto **parcial** detrás del diálogo: no solo oscurece, también
+  desenfoca el contenido de la ventana principal.
 - El texto de estado es el título de la barra.
 - Barra de progreso marquee mientras la duración es desconocida; si el
   entorno es lento se cambia a progreso en vivo con valor real.
@@ -13,15 +15,15 @@ from __future__ import annotations
 
 from typing import Optional
 
+from lib.dialog_effect import install_partial_effect
+
 try:
     from PyQt6.QtCore import (
         QEasingCurve,
-        QEvent,
         QPropertyAnimation,
         Qt,
         QTimer,
     )
-    from PyQt6.QtGui import QColor, QPainter
     from PyQt6.QtWidgets import (
         QApplication,
         QDialog,
@@ -50,23 +52,9 @@ DIALOG_HEIGHT = 150
 FADE_MS = 220
 
 
-class _DimOverlay(QWidget):
-    """Capa que oscurece el fondo detrás del diálogo."""
-
-    def __init__(self, parent: QWidget, alpha: int = 140):
-        super().__init__(parent)
-        self._alpha = alpha
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
-
-    def paintEvent(self, event):  # noqa: N802 (API Qt)
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor(0, 0, 0, self._alpha))
-        painter.end()
-
 
 class IOSProgressDialog(QDialog):
-    """Diálogo modal tipo iOS: título de estado + barra + blur + fundido."""
+    """Diálogo modal tipo iOS: título de estado + barra + blur parcial + fundido."""
 
     def __init__(self, parent: Optional[QWidget], title: str = "", message: str = ""):
         super().__init__(parent)
@@ -79,6 +67,7 @@ class IOSProgressDialog(QDialog):
         self._blur_builder = None
         self._overlay = None
         self._fade = None
+        self._cleaned_up = False
 
         self._build_ui(title, message)
         self._slow_timer = QTimer(self)
@@ -187,7 +176,7 @@ class IOSProgressDialog(QDialog):
 
     # -- efectos ------------------------------------------------------
     def _apply_blur(self) -> None:
-        """Blur temporal (macOS advantage) sobre el diálogo."""
+        """Blur temporal (macOS advantage) sobre el propio diálogo."""
         try:
             from leviathan_ui import WipeWindow
 
@@ -200,10 +189,7 @@ class IOSProgressDialog(QDialog):
         parent = self.parent()
         if parent is None:
             return
-        self._overlay = _DimOverlay(parent)
-        self._overlay.setGeometry(parent.rect())
-        self._overlay.show()
-        self._overlay.raise_()
+        self._overlay = install_partial_effect(self, parent)
 
     def _center_on_parent(self) -> None:
         parent = self.parent()
@@ -227,19 +213,47 @@ class IOSProgressDialog(QDialog):
 
     def showEvent(self, event):  # noqa: N802 (API Qt)
         super().showEvent(event)
+        self._cleaned_up = False
         self._create_overlay()
         self._apply_blur()
         self._center_on_parent()
         self._fade_in()
         self.start_slow_watchdog()
 
-    def closeEvent(self, event):  # noqa: N802 (API Qt)
+    def _teardown(self) -> None:
+        """Quita overlay, blur y watchdog una sola vez, cierre como cierre."""
+        if self._cleaned_up:
+            return
+        self._cleaned_up = True
         self.stop_slow_watchdog()
-        if self._overlay is not None:
-            self._overlay.hide()
-            self._overlay.deleteLater()
-            self._overlay = None
+        overlay = self._overlay
+        self._overlay = None
+        if overlay is not None:
+            overlay.teardown()
+        if self._blur_builder is not None:
+            try:
+                self._blur_builder.deleteLater()
+            except Exception:
+                pass
+            self._blur_builder = None
+
+    def closeEvent(self, event):  # noqa: N802 (API Qt)
+        self._teardown()
         super().closeEvent(event)
+
+    def accept(self) -> None:
+        # QDialog.accept() no dispara closeEvent: limpiamos aquí para que el
+        # overlay y el blur no se queden pegados en la ventana principal.
+        self._teardown()
+        super().accept()
+
+    def reject(self) -> None:
+        self._teardown()
+        super().reject()
+
+    def done(self, result: int) -> None:
+        self._teardown()
+        super().done(result)
 
     def finish(self, delay_ms: int = 0) -> None:
         """Cierra el diálogo con fundido de salida."""
@@ -250,7 +264,8 @@ class IOSProgressDialog(QDialog):
 
     def _fade_out_and_close(self) -> None:
         effect = self.graphicsEffect()
-        if effect is None:
+        if effect is None or not isinstance(effect, QGraphicsOpacityEffect):
+            self._teardown()
             self.accept()
             return
         anim = QPropertyAnimation(effect, b"opacity", self)

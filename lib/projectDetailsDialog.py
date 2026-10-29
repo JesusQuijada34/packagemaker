@@ -8,7 +8,7 @@ try:
     from PyQt6 import QtCore
     from PyQt6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton
     from PyQt6.QtGui import QPixmap, QIcon
-    from leviathan_ui import CustomTitleBar, LeviathanDialog
+    from leviathan_ui import CustomTitleBar
     PYQT6_AVAILABLE = True
 except (ImportError, SyntaxError):
     PYQT6_AVAILABLE = False
@@ -19,7 +19,15 @@ except (ImportError, SyntaxError):
         def resize(self, *args, **kwargs): pass
     class QWidget:
         def __init__(self, *args, **kwargs): pass
-    class LeviathanDialog: pass
+    class LeviathanDialog:
+        @staticmethod
+        def launch(*args, **kwargs): pass
+try:
+    from lib.alert_dialog import AlertDialog as LeviathanDialog
+except (ImportError, SyntaxError):
+    class LeviathanDialog:
+        @staticmethod
+        def launch(*args, **kwargs): pass
 from lib.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.moonFixWizard import detectar_modo_sistema

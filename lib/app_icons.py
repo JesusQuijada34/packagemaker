@@ -147,6 +147,12 @@ ICONS_SVG = {
 <path d="M2.5 17.5L7 15" stroke="{ACCENT}"  stroke-linejoin="round"/>
 <path d="M7 15L12 23L17 15" stroke="{ACCENT}"  stroke-linejoin="round"/>
 </svg>""",
+    "collapse": f"""<svg width="24" height="24" viewBox="0 0 24 24" stroke-width="1.8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.5 7L9.5 12L14.5 17" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+    "expand": f"""<svg width="24" height="24" viewBox="0 0 24 24" stroke-width="1.8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.5 7L14.5 12L9.5 17" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
 }
 
 

@@ -22,7 +22,6 @@ try:
         QMessageBox,
         QDialog,
         QLineEdit,
-        QStatusBar,
         QGroupBox,
         QGridLayout,
         QListWidget,
@@ -317,10 +316,6 @@ class DashboardWindow(QMainWindow):
 
         layout.addWidget(self._create_recent_panel())
         layout.addStretch()
-
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage("Listo")
 
     def _create_header(self) -> QWidget:
         header = QWidget()
