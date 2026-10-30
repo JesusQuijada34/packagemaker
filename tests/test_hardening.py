@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,12 +12,26 @@ class HardeningTests(unittest.TestCase):
     def test_method_names_and_availability(self):
         self.assertEqual(
             hardening.method_names(),
-            ["strip", "upx", "checksum", "anti-debug", "obfuscate", "resource"],
+            [
+                "strip",
+                "upx",
+                "checksum",
+                "anti-debug",
+                "obfuscate",
+                "resource",
+                "sign",
+                "integrity",
+                "compile-only",
+                "rename-symbols",
+            ],
         )
         status = hardening.available_methods()
         self.assertTrue(status["checksum"])
         self.assertTrue(status["anti-debug"])
         self.assertTrue(status["obfuscate"])
+        self.assertTrue(status["sign"])
+        self.assertTrue(status["integrity"])
+        self.assertTrue(status["compile-only"])
 
     def test_checksum_manifest_is_written_and_stable(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -68,3 +83,39 @@ class HardeningTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NewHardeningMethodTests(unittest.TestCase):
+    def test_sign_writes_a_verifiable_seal(self):
+        import hashlib
+        import hmac
+
+        with tempfile.TemporaryDirectory() as tmp:
+            binary = Path(tmp) / "demo.bin"
+            binary.write_bytes(b"\x7fELF" + b"\x00" * 64)
+            report = hardening.sign_binary(binary)
+            self.assertTrue(report.applied, report.detail)
+            seal = json.loads(Path(report.artifacts[0]).read_text(encoding="utf-8"))
+            expected = hmac.new(
+                b"influent-hardening-signature", binary.read_bytes(), hashlib.sha256
+            ).hexdigest()
+            self.assertEqual(seal["hmac_sha256"], expected)
+
+    def test_integrity_manifest_records_a_merkle_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "a.txt").write_text("uno", encoding="utf-8")
+            (root / "b.txt").write_text("dos", encoding="utf-8")
+            report = hardening.embed_integrity_manifest(root)
+            self.assertTrue(report.applied, report.detail)
+            manifest = json.loads((root / ".iflapp.integrity").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["count"], 2)
+            self.assertEqual(len(manifest["root_sha256"]), 64)
+
+    def test_compile_only_emits_optimized_bytecode(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "app.py"
+            script.write_text("print('hola')\n", encoding="utf-8")
+            report = hardening.compile_to_bytecode(script)
+            self.assertTrue(report.applied, report.detail)
+            self.assertTrue(Path(report.artifacts[0]).is_file())

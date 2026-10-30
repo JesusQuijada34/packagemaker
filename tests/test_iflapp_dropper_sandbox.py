@@ -39,6 +39,26 @@ class DropperTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("dropper-ok", result.stdout)
 
+    def test_dropper_launches_generic_main_entrypoint(self):
+        # Regresión: con un ``main.py`` (sin ``app`` en la cabecera) el stub no
+        # encontraba punto de entrada y sólo imprimía la ruta de extracción.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = root / "pkg"
+            package.mkdir(parents=True)
+            (package / "details.xml").write_text("<app><name>Demo</name></app>", encoding="utf-8")
+            (package / "main.py").write_text("print('main-entrypoint-ok')\n", encoding="utf-8")
+            out = root / "demo.iflapp"
+            iflapp_format.pack_iflapp(package, out)
+            dropper = create_dropper(out, root / "demo.run")
+            result = subprocess.run(
+                [sys.executable, str(dropper)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("main-entrypoint-ok", result.stdout)
+
     def test_dropper_with_encrypted_package(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

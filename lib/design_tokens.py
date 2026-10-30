@@ -61,6 +61,10 @@ SIDEBAR_PADDING = 16
 SIDEBAR_ITEM_HEIGHT = 40
 SIDEBAR_ICON_INSET = 16
 SIDEBAR_ICON_TEXT_GAP = 12
+# Indicador de selección: barra corta y redondeada pegada al borde izquierdo,
+# centrada verticalmente (no un ``border-left`` de altura completa).
+SIDEBAR_INDICATOR_WIDTH = 3
+SIDEBAR_INDICATOR_HEIGHT = 18
 
 CONTENT_PADDING = 32
 TITLE_SIZE = 20

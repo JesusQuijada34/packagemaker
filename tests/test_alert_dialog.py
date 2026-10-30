@@ -1,8 +1,9 @@
-"""Regresión: diálogo de alerta temático, botones verticales y efecto parcial.
+"""Regresión: diálogo de alerta temático estilo iOS/UWP y efecto parcial.
 
 Comprueba que:
 - el fondo del diálogo es blanco o negro según el tema del sistema;
-- los botones ocupan el ancho completo y se apilan en vertical con separadores;
+- los botones flotan en píldora (sin líneas divisorias ni ancho completo) y el
+  borde punteado de foco queda anulado con ``outline: none``;
 - el efecto parcial (blur + atenuado) se instala al mostrar y se retira al
   cerrar, incluso cuando el cierre pasa por ``accept()``.
 """
@@ -24,12 +25,22 @@ class AlertDialogSourceTests(unittest.TestCase):
         self.assertIn('"bg": "#ffffff"', text)  # blanco en tema claro
         self.assertIn("system_theme_mode", text)
 
-    def test_buttons_are_full_width_vertical_with_separators(self):
+    def test_buttons_float_as_pills_without_separators(self):
         text = source("lib/alert_dialog.py")
-        self.assertIn("def _make_separator", text)
         self.assertIn("_default_index", text)
-        # Los botones no llevan radio ni margen lateral: ancho completo.
-        self.assertIn("border-radius: 0px", text)
+        # Píldora, no ancho completo: sin separadores ni radio cero.
+        self.assertIn("border-radius: {PILL_RADIUS}px", text)
+        self.assertNotIn("_make_separator", text)
+        self.assertNotIn("border-radius: 0px", text)
+
+    def test_focus_outline_is_removed(self):
+        text = source("lib/alert_dialog.py")
+        self.assertIn("QPushButton:focus {{ outline: none; }}", text)
+
+    def test_icon_is_a_filled_circle(self):
+        text = source("lib/alert_dialog.py")
+        self.assertIn("ICON_DIAMETER", text)
+        self.assertIn("border-radius:{ICON_DIAMETER // 2}px", text)
 
     def test_all_button_states_are_styled(self):
         text = source("lib/alert_dialog.py")
@@ -67,12 +78,12 @@ class AlertDialogQtTests(unittest.TestCase):
         self.app.processEvents()
         return dialog
 
-    def test_buttons_stack_full_width(self):
+    def test_buttons_are_pills_that_do_not_fill_the_width(self):
         dialog = self._dialog()
         buttons = dialog.findChildren(QPushButton)
         self.assertEqual([b.text() for b in buttons], ["Cancelar", "Aceptar"])
         for button in buttons:
-            self.assertEqual(button.width(), dialog.width())
+            self.assertLess(button.width(), dialog.width())
         dialog.accept()
 
     def test_default_button_is_the_accepting_one(self):
@@ -109,6 +120,20 @@ class AlertDialogQtTests(unittest.TestCase):
         from lib.alert_dialog import _palette
 
         self.assertNotEqual(_palette(True)["bg"], _palette(False)["bg"])
+
+    def test_single_button_is_centered(self):
+        from lib.alert_dialog import AlertDialog
+
+        dialog = AlertDialog(None, "Titulo", "Mensaje", mode="info")
+        dialog.show()
+        self.app.processEvents()
+        buttons = dialog.findChildren(QPushButton)
+        self.assertEqual([b.text() for b in buttons], ["Entendido"])
+        # Centrado: el margen izquierdo y el derecho del botón coinciden.
+        left = buttons[0].mapTo(dialog, buttons[0].rect().topLeft()).x()
+        right = dialog.width() - (left + buttons[0].width())
+        self.assertLessEqual(abs(left - right), 2)
+        dialog.accept()
 
 
 if __name__ == "__main__":

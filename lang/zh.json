@@ -43,8 +43,6 @@
     "auto_color": "跟随系统的自动颜色",
     "notifications": "通知",
     "accent_color": "强调色",
-    "blur_intensity": "模糊强度",
-    "window_radius": "圆角半径",
     "sidebar_accent": "侧边栏活动边框宽度",
     "card_opacity": "UI 卡片不透明度",
     "ui_density": "界面密度",

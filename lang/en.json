@@ -43,8 +43,6 @@
     "auto_color": "Automatic color from system theme",
     "notifications": "Notifications",
     "accent_color": "Accent color",
-    "blur_intensity": "Blur intensity",
-    "window_radius": "Corner radius",
     "sidebar_accent": "Active sidebar border width",
     "card_opacity": "UI card opacity",
     "ui_density": "Interface density",

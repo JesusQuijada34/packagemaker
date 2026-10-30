@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Diálogo de alerta temático con botones verticales de ancho completo.
+"""Diálogo de alerta temático estilo iOS/UWP.
 
 Reemplazo de ``LeviathanDialog`` para los avisos de la aplicación:
 
-- El fondo del diálogo es blanco o negro según el tema del sistema.
-- Los botones ocupan todo el ancho y se apilan en vertical, separados por
-  finas líneas divisorias.
-- Cada botón responde a los estados normal, hover, pressed, disabled y
-  default (el botón principal resaltado).
+- Tarjeta con esquinas redondeadas sobre un efecto parcial (blur + atenuado).
+- Icono de confirmación en **círculo relleno** con el glifo en blanco, no un
+  emoji ni un glifo suelto.
+- Los botones **flotan**: sin líneas divisorias y sin ocupar todo el ancho.
+  Con un solo botón se muestra centrado en píldora; con dos, se alinean a la
+  derecha (UWP) con el principal a la derecha.
+- ``outline: none`` en ``:focus`` para eliminar el borde punteado de Qt.
 """
 
 from __future__ import annotations
@@ -20,7 +22,7 @@ try:
     from PyQt6.QtCore import Qt
     from PyQt6.QtWidgets import (
         QDialog,
-        QFrame,
+        QHBoxLayout,
         QLabel,
         QPushButton,
         QVBoxLayout,
@@ -40,10 +42,14 @@ except ImportError:  # pragma: no cover - entorno sin Qt
 
 
 DIALOG_WIDTH = 400
+CARD_RADIUS = 16
+ICON_DIAMETER = 48
+PILL_RADIUS = 18
+
 ICON_FOR_MODE = {
-    "info": "ℹ",
+    "info": "i",
     "success": "✓",
-    "warning": "⚠",
+    "warning": "!",
     "error": "✕",
     "question": "?",
     "confirm": "?",
@@ -87,18 +93,16 @@ def _is_dark() -> bool:
 
 
 def _palette(dark: bool) -> dict:
-    """Colores del diálogo según el tema: negro u blanco."""
+    """Colores del diálogo según el tema: negro o blanco."""
     if dark:
         return {
             "bg": "#1c1c1e",
             "border": "rgba(255, 255, 255, 0.12)",
             "title": "#ffffff",
             "message": "rgba(235, 235, 245, 0.72)",
-            "separator": "rgba(255, 255, 255, 0.10)",
-            "btn": "#1c1c1e",
             "btn_text": "#ffffff",
-            "btn_hover": "rgba(255, 255, 255, 0.08)",
-            "btn_pressed": "rgba(255, 255, 255, 0.16)",
+            "ghost_hover": "rgba(255, 255, 255, 0.06)",
+            "ghost_pressed": "rgba(255, 255, 255, 0.12)",
             "btn_disabled": "rgba(255, 255, 255, 0.30)",
         }
     return {
@@ -106,17 +110,15 @@ def _palette(dark: bool) -> dict:
         "border": "rgba(0, 0, 0, 0.12)",
         "title": "#1c1c1e",
         "message": "rgba(60, 60, 67, 0.72)",
-        "separator": "rgba(0, 0, 0, 0.10)",
-        "btn": "#ffffff",
         "btn_text": "#1c1c1e",
-        "btn_hover": "rgba(0, 0, 0, 0.06)",
-        "btn_pressed": "rgba(0, 0, 0, 0.12)",
+        "ghost_hover": "rgba(0, 0, 0, 0.05)",
+        "ghost_pressed": "rgba(0, 0, 0, 0.10)",
         "btn_disabled": "rgba(0, 0, 0, 0.30)",
     }
 
 
 class AlertDialog(QDialog):
-    """Alerta modal con botones verticales de ancho completo."""
+    """Alerta modal con icono circular y botones en píldora que flotan."""
 
     def __init__(
         self,
@@ -165,58 +167,55 @@ class AlertDialog(QDialog):
             QWidget#AlertCard {{
                 background: {pal['bg']};
                 border: 1px solid {pal['border']};
-                border-radius: 14px;
+                border-radius: {CARD_RADIUS}px;
             }}
             """
         )
         outer.addWidget(card)
 
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(0, 0, 0, 0)
+        card_layout.setContentsMargins(28, 26, 28, 18)
         card_layout.setSpacing(0)
 
-        # Cabecera: icono + título
-        header = QWidget()
-        header_layout = QVBoxLayout(header)
-        header_layout.setContentsMargins(24, 22, 24, 6)
-        header_layout.setSpacing(8)
-
+        # Icono en círculo relleno con el glifo en blanco.
         icon_label = QLabel(ICON_FOR_MODE[self._mode])
+        icon_label.setObjectName("AlertIcon")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_label.setFixedSize(ICON_DIAMETER, ICON_DIAMETER)
         icon_label.setStyleSheet(
-            f"color: {self._accent}; font-size: 30px; font-weight: 700; background: transparent;"
+            f"QLabel#AlertIcon{{background:{self._accent};color:#ffffff;"
+            f"border:none;border-radius:{ICON_DIAMETER // 2}px;"
+            f"font-size:24px;font-weight:700;}}"
         )
-        header_layout.addWidget(icon_label)
+        card_layout.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignHCenter)
 
+        # Título
         title_label = QLabel(title)
+        title_label.setObjectName("AlertTitle")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setWordWrap(True)
         title_label.setStyleSheet(
-            f"color: {pal['title']}; font-size: 16px; font-weight: 600; background: transparent;"
+            f"QLabel#AlertTitle{{color:{pal['title']};font-size:17px;"
+            f"font-weight:600;background:transparent;margin-top:14px;}}"
         )
-        header_layout.addWidget(title_label)
-
-        card_layout.addWidget(header)
+        card_layout.addWidget(title_label)
 
         # Mensaje
         msg_label = QLabel(message)
+        msg_label.setObjectName("AlertMessage")
         msg_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         msg_label.setWordWrap(True)
         msg_label.setStyleSheet(
-            f"color: {pal['message']}; font-size: 13px; background: transparent;"
+            f"QLabel#AlertMessage{{color:{pal['message']};font-size:13px;"
+            f"background:transparent;margin-top:8px;}}"
         )
-        msg_wrap = QWidget()
-        msg_layout = QVBoxLayout(msg_wrap)
-        msg_layout.setContentsMargins(24, 6, 24, 18)
-        msg_layout.addWidget(msg_label)
-        card_layout.addWidget(msg_wrap)
+        card_layout.addWidget(msg_label)
 
-        # Botones: ancho completo, verticales, con separadores
+        card_layout.addSpacing(22)
+
+        # Botones: flotan, sin separadores ni líneas duras.
         default_index = self._default_index()
-        for index, text in enumerate(self._buttons):
-            is_default = index == default_index
-            card_layout.addWidget(self._make_separator(pal))
-            card_layout.addWidget(self._make_button(text, is_default, pal))
+        card_layout.addLayout(self._make_button_row(pal, default_index))
 
     def _default_index(self) -> int:
         """Índice del botón principal (el que acepta)."""
@@ -225,40 +224,54 @@ class AlertDialog(QDialog):
                 return index
         return len(self._buttons) - 1
 
-    def _make_separator(self, pal: dict) -> QFrame:
-        line = QFrame()
-        line.setFixedHeight(1)
-        line.setStyleSheet(f"background: {pal['separator']}; border: none;")
-        return line
+    def _make_button_row(self, pal: dict, default_index: int) -> QHBoxLayout:
+        """Un solo botón centrado (iOS); dos o más alineados a la derecha (UWP)."""
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+        # Margen inferior del diálogo: el botón no toca el borde de la tarjeta.
+        if len(self._buttons) == 1:
+            row.addStretch()
+            row.addWidget(self._make_button(self._buttons[0], 0 == default_index, pal))
+            row.addStretch()
+        else:
+            row.addStretch()
+            for index, text in enumerate(self._buttons):
+                row.addWidget(self._make_button(text, index == default_index, pal))
+        return row
 
     def _make_button(self, text: str, is_default: bool, pal: dict) -> QPushButton:
         btn = QPushButton(text)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn.setMinimumHeight(48)
+        btn.setMinimumHeight(40)
+        btn.setMinimumWidth(96)
         btn.setDefault(is_default)
         btn.setAutoDefault(False)
-        color = self._accent if is_default else pal["btn_text"]
-        weight = 600 if is_default else 500
+        if is_default:
+            background = self._accent
+            color = "#ffffff"
+            hover = "rgba(255, 255, 255, 0.18)"
+            pressed = "rgba(0, 0, 0, 0.16)"
+        else:
+            background = "transparent"
+            color = pal["btn_text"]
+            hover = pal["ghost_hover"]
+            pressed = pal["ghost_pressed"]
         btn.setStyleSheet(
             f"""
             QPushButton {{
-                background: {pal['btn']};
+                background: {background};
                 color: {color};
                 border: none;
-                border-radius: 0px;
+                border-radius: {PILL_RADIUS}px;
                 font-size: 14px;
-                font-weight: {weight};
-                padding: 12px 16px;
+                font-weight: 600;
+                padding: 8px 20px;
             }}
-            QPushButton:hover {{
-                background: {pal['btn_hover']};
-            }}
-            QPushButton:pressed {{
-                background: {pal['btn_pressed']};
-            }}
-            QPushButton:disabled {{
-                color: {pal['btn_disabled']};
-            }}
+            QPushButton:hover {{ background: {hover}; }}
+            QPushButton:pressed {{ background: {pressed}; }}
+            QPushButton:focus {{ outline: none; }}
+            QPushButton:disabled {{ color: {pal['btn_disabled']}; }}
             """
         )
         btn.clicked.connect(lambda _=False, t=text: self._on_clicked(t))

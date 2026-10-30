@@ -188,6 +188,11 @@ class _HoverFade(QObject):
         self._base_color = _base_background_color(self._base_qss)
         self._progress = 0.0
 
+    def set_hover_color(self, hover_color: str) -> None:
+        """Cambia el color de destino (p. ej. al alternar el tema)."""
+        self._hover_color = hover_color
+        self.refresh()
+
     # -- eventos ---------------------------------------------------------- #
     def eventFilter(self, obj, event):  # noqa: N802 - firma de Qt
         if QEvent is None:  # pragma: no cover - entorno sin Qt

@@ -110,6 +110,14 @@ class IflappReader:
     def icon_bytes(self) -> bytes:
         return self.header().icon
 
+    def summary(self) -> str:
+        """Resumen legible del paquete, derivado sólo de la cabecera.
+
+        Se documentaba en el encabezado del módulo pero no existía; el CLI y
+        las pruebas lo esperan.
+        """
+        return self.info().summary()
+
     def details_xml(self) -> str:
         return self.header().details_text()
 

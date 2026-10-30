@@ -8,17 +8,40 @@ try:
     from PyQt6 import QtCore
     from PyQt6.QtWidgets import QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton
     from PyQt6.QtGui import QPixmap, QIcon
-    from leviathan_ui import CustomTitleBar
     PYQT6_AVAILABLE = True
 except (ImportError, SyntaxError):
     PYQT6_AVAILABLE = False
+    Qt = QtCore = None
     class QDialog:
         def __init__(self, *args, **kwargs): pass
         def setWindowFlags(self, *args): pass
         def setAttribute(self, *args): pass
         def resize(self, *args, **kwargs): pass
+        def accept(self): pass
+        def reject(self): pass
     class QWidget:
         def __init__(self, *args, **kwargs): pass
+    QVBoxLayout = QHBoxLayout = QLabel = QListWidget = QListWidgetItem = QPushButton = object
+    QPixmap = QIcon = object
+
+# ``leviathan_ui`` se importa aparte del bloque de PyQt6: si se acoplaba y el
+# paquete no estaba instalado, se perdía también Qt y el diálogo crasheaba en
+# ``setWindowFlags``.
+try:
+    from leviathan_ui import CustomTitleBar
+except (ImportError, SyntaxError):
+    class CustomTitleBar(QWidget):
+        """Barra de título mínima cuando ``leviathan_ui`` no está instalado.
+
+        Hereda de ``QWidget`` porque se inserta en un layout con ``addWidget``.
+        """
+
+        def __init__(self, parent=None, title="", icon="", **kwargs):
+            super().__init__(parent)
+            self.title_lbl = QLabel(title, self)
+
+        def set_title(self, text):
+            self.title_lbl.setText(text)
 try:
     from lib.alert_dialog import AlertDialog as LeviathanDialog
 except (ImportError, SyntaxError):

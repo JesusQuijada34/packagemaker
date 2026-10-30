@@ -43,8 +43,6 @@
     "auto_color": "Automatyczny kolor wg systemu",
     "notifications": "Powiadomienia",
     "accent_color": "Kolor akcentu",
-    "blur_intensity": "Intensywność rozmycia",
-    "window_radius": "Promień narożników",
     "sidebar_accent": "Grubość aktywnej krawędzi panelu",
     "card_opacity": "Krycie kart UI",
     "ui_density": "Gęstość interfejsu",

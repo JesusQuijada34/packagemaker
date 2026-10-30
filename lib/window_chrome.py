@@ -47,6 +47,13 @@ if TYPE_CHECKING:
 # Título fijo de ventana (no se personaliza desde pm.data)
 APP_TITLE_PREFIX = "Influent Package Maker"
 
+# Desenfoque y radio de esquinas son parte del lenguaje visual, no ajustes del
+# usuario: se aplican siempre con estos valores (igual que los radios de los
+# controles). Antes eran deslizadores en Configuración y permitían dejar la
+# ventana ilegible.
+FIXED_BLUR_INTENSITY = 14
+FIXED_WINDOW_RADIUS = 12
+
 DISPLAY_MODE_SPECS: Dict[str, Dict[str, Any]] = {
     "GhostBlur (Cristal)": {"mode": "ghostBlur", "radius": 12, "blur": 14},
     "Acrylic": {"mode": "ghost", "radius": 10, "blur": 10},
@@ -70,11 +77,10 @@ def apply_display_mode(window: QWidget, display_name: str) -> Any:
             pass
 
     spec = DISPLAY_MODE_SPECS.get(display_name, DISPLAY_MODE_SPECS["GhostBlur (Cristal)"])
-    builder = WipeWindow.create().set_mode(spec["mode"]).set_radius(int(spec.get("radius", 12)))
-    blur = spec.get("blur", 0)
-    if blur and hasattr(builder, "set_blur"):
+    builder = WipeWindow.create().set_mode(spec["mode"]).set_radius(FIXED_WINDOW_RADIUS)
+    if hasattr(builder, "set_blur"):
         try:
-            builder = builder.set_blur(int(blur))
+            builder = builder.set_blur(FIXED_BLUR_INTENSITY)
         except Exception:
             pass
     effects = builder.apply(window)
@@ -82,16 +88,20 @@ def apply_display_mode(window: QWidget, display_name: str) -> Any:
     return effects
 
 
-def apply_personalization_effects(window: QWidget, blur_intensity: int, window_radius: int) -> None:
-    """Ajusta blur/radio según personalización (requiere effects activos)."""
+def apply_personalization_effects(window: QWidget, blur_intensity=None, window_radius=None) -> None:
+    """Aplica el desenfoque y radio fijos (los argumentos se ignoran).
+
+    Se conserva la firma por compatibilidad con llamadas antiguas que pasaban
+    los valores guardados en ``data/pm.data``.
+    """
     effects = getattr(window, "window_effects", None)
     if not effects:
         return
     try:
         if hasattr(effects, "set_radius"):
-            effects.set_radius(int(window_radius))
-        if blur_intensity > 0 and hasattr(effects, "set_blur"):
-            effects.set_blur(int(blur_intensity))
+            effects.set_radius(FIXED_WINDOW_RADIUS)
+        if hasattr(effects, "set_blur"):
+            effects.set_blur(FIXED_BLUR_INTENSITY)
         effects.apply(window)
     except Exception:
         pass

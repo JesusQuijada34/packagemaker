@@ -15,21 +15,29 @@ from lib import compilers  # noqa: E402
 
 
 class CompilerRegistryTests(unittest.TestCase):
-    def test_only_two_backends_are_exposed(self):
-        self.assertEqual(compilers.backend_names(), ["nuitka", "pyinstaller"])
+    def test_expected_backends_are_exposed(self):
+        self.assertEqual(
+            compilers.backend_names(),
+            ["nuitka", "pyinstaller", "zipapp", "cxfreeze", "pyoxidizer"],
+        )
 
-    def test_both_backends_are_embedded(self):
+    def test_available_backends_cover_the_registry(self):
         report = compilers.available_backends()
-        self.assertEqual(set(report), {"nuitka", "pyinstaller"})
-        for info in report.values():
-            self.assertTrue(info["embedded"])
+        self.assertEqual(set(report), set(compilers.backend_names()))
+        # Nuitka y PyInstaller son embebidos; zipapp es stdlib; el resto externo.
+        self.assertTrue(report["nuitka"]["embedded"])
+        self.assertTrue(report["pyinstaller"]["embedded"])
+        self.assertTrue(report["zipapp"]["available"])
 
-    def test_legacy_names_alias_to_live_backends(self):
+    def test_aliases_resolve_to_their_own_backends(self):
         self.assertIsInstance(
-            compilers.get_backend("cx_freeze"), compilers.PyInstallerBackend
+            compilers.get_backend("cx_freeze"), compilers.CxFreezeBackend
         )
         self.assertIsInstance(
-            compilers.get_backend("pyoxidizer"), compilers.NuitkaBackend
+            compilers.get_backend("pyoxidizer"), compilers.PyOxidizerBackend
+        )
+        self.assertIsInstance(
+            compilers.get_backend("zip"), compilers.ZipappBackend
         )
 
     def test_unknown_backend_raises(self):
@@ -163,3 +171,32 @@ class LanguagePackTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ZipappBackendTests(unittest.TestCase):
+    def test_zipapp_backend_is_always_available(self):
+        backend = compilers.get_backend("zipapp")
+        self.assertTrue(backend.is_available())
+
+    def test_zipapp_produces_a_runnable_archive(self):
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "main.py").write_text(
+                "def main():\n    print('zipapp-ok')\n\nif __name__ == '__main__':\n    main()\n",
+                encoding="utf-8",
+            )
+            backend = compilers.get_backend("zipapp")
+            out = backend.compile(
+                script_path=str(root / "main.py"),
+                output_name="demo",
+                output_dir=str(root / "dist"),
+            )
+            self.assertIsNotNone(out, backend.last_error)
+            result = subprocess.run(
+                [sys.executable, out], capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("zipapp-ok", result.stdout)

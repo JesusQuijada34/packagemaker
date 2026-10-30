@@ -43,8 +43,6 @@
     "auto_color": "Automatische kleur volgens systeem",
     "notifications": "Meldingen",
     "accent_color": "Accentkleur",
-    "blur_intensity": "Vervagingsintensiteit",
-    "window_radius": "Hoekradius",
     "sidebar_accent": "Breedte actieve zijbalkrand",
     "card_opacity": "Doorzichtigheid UI-kaarten",
     "ui_density": "Interfacedichtheid",

@@ -733,9 +733,15 @@ def _screen_config() -> None:
         return
 
     new_base = _prompt("Nueva carpeta de proyectos (Enter = sin cambios)", base_dir)
-    lang_idx = _prompt_choice("Idioma", ["Español", "English", "Português"], default=0)
-    lang_map = {0: "es", 1: "en", 2: "pt"}
-    new_lang = lang_map[lang_idx]
+    try:
+        from lib.i18n import get_available_languages
+
+        lang_options = get_available_languages()
+    except Exception:
+        lang_options = [("es", "Español"), ("en", "English")]
+    lang_names = [name for _code, name in lang_options]
+    lang_idx = _prompt_choice("Idioma", lang_names, default=0)
+    new_lang = lang_options[lang_idx][0] if 0 <= lang_idx < len(lang_options) else "es"
 
     if not _prompt_bool("¿Guardar cambios?", True):
         _warn("Cancelado.")
@@ -826,7 +832,7 @@ def _screen_help() -> None:
     print(bold("  5. Configuración"))
     print("     Ajusta la configuración global de la aplicación:")
     print("     - Carpeta de proyectos (donde se guardan los nuevos proyectos)")
-    print("     - Idioma de la interfaz (Español, English, Português)")
+    print("     - Idioma de la interfaz (el que tenga traducción en lang/)")
     print()
     print(bold("  6. Acerca de"))
     print("     Muestra información del sistema y versión de la aplicación.")

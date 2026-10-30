@@ -40,10 +40,11 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   seleccionado no se anima).
 
 ## Arquitectura relevante
-- `lib/compilers.py` — **solo dos** backends embebidos: `nuitka` (por defecto,
-  traduce a C/C++) y `pyinstaller` (bytecode). `available_backends()` reporta
-  estado real. Los nombres históricos `cx_freeze`/`pyoxidizer` siguen
-  resolviendo por alias, pero ya no se anuncian.
+- `lib/compilers.py` — backends de compilación: `nuitka` (por defecto, traduce
+  a C/C++), `pyinstaller` (bytecode), `zipapp` (stdlib, siempre disponible),
+  `cxfreeze` y `pyoxidizer` (herramientas externas). `available_backends()`
+  reporta estado real. `resolve_backend()` cae a Nuitka → PyInstaller → zipapp,
+  así que siempre hay un backend operativo.
 - `lib/nuitka_embedded.py` — backend Nuitka embebido (`build_arguments()`
   construye la línea de comandos sin lanzar procesos).
 - `lib/page_action_bar.py` — barra de acciones superior estilo macOS compartida
@@ -57,8 +58,12 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
 - `lib/hardware_sandbox.py` — aislamiento jerárquico
   (qemu-kvm → systemd-nspawn → docker/podman → bwrap/firejail → unshare → local).
   `qemu-kvm` sólo se anuncia con kernel/initrd (`IFLAPP_QEMU_KERNEL`/`_INITRD`).
-- `lib/hardening.py` — `strip/upx/checksum/anti-debug/obfuscate/resource`.
-- `lib/dropper.py` — dropper `.run` con el `.iflapp` embebido.
+- `lib/hardening.py` — blindaje: `strip/upx/checksum/anti-debug/obfuscate/resource`
+  más `sign` (sello HMAC-SHA256 + Authenticode opcional), `integrity` (manifiesto
+  con raíz Merkle), `compile-only` (`.pyc` O2) y `rename-symbols`.
+- `lib/dropper.py` — dropper `.run` con el `.iflapp` embebido. El stub resuelve
+  el punto de entrada probando `app`/`main`/`app`/`run`/`__main__`/`start` en
+  raíz y `bin/`; sin esto sólo extraía e imprimía la ruta.
 - `lib/BuildThread.py` — orquesta build + `verify_in_sandbox()`.
 
 ## Trampas conocidas
@@ -80,5 +85,9 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
 - `iflapp_format.pack_iflapp()` acepta `icon`/`details` como `bytes` **o** ruta
   (`_as_bytes` los normaliza); pasar una ruta sin coercer daba un `TypeError`
   críptico en `len(icon)`.
+- `IflappHeader.identity()` deriva la identidad del `details.xml` de la cabecera
+  cuando no hay campos planos (empaquetado sin `identity`); así `--inspect`
+  muestra publisher/app reales sin descifrar. `IflappReader.summary()` existe y
+  delega en `IflappInfo.summary()`.
 - Las capturas de `assets/screenshots/` se regeneran con
   `QT_QPA_PLATFORM=offscreen python scripts/capture_screenshots.py`.

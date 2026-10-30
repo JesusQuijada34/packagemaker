@@ -43,8 +43,6 @@
     "auto_color": "لون تلقائي حسب النظام",
     "notifications": "الإشعارات",
     "accent_color": "لون التمييز",
-    "blur_intensity": "شدة التمويه",
-    "window_radius": "نصف قطر الزوايا",
     "sidebar_accent": "سماكة حد الشريط النشط",
     "card_opacity": "عتامة بطاقات الواجهة",
     "ui_density": "كثافة الواجهة",

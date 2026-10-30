@@ -43,8 +43,6 @@
     "auto_color": "Color automático según el sistema",
     "notifications": "Notificaciones",
     "accent_color": "Color de acento",
-    "blur_intensity": "Intensidad de desenfoque",
-    "window_radius": "Radio de esquinas",
     "sidebar_accent": "Grosor borde activo (sidebar)",
     "card_opacity": "Opacidad tarjetas UI",
     "ui_density": "Densidad de interfaz",

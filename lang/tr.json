@@ -43,8 +43,6 @@
     "auto_color": "Sisteme göre otomatik renk",
     "notifications": "Bildirimler",
     "accent_color": "Vurgu rengi",
-    "blur_intensity": "Bulanıklık yoğunluğu",
-    "window_radius": "Köşe yarıçapı",
     "sidebar_accent": "Etkin kenar çubuğu kenarlık kalınlığı",
     "card_opacity": "UI kart opaklığı",
     "ui_density": "Arayüz yoğunluğu",

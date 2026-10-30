@@ -149,13 +149,19 @@ class CLIHandler:
         buildthis_group.add_argument('--buildthis', nargs='?', const='.', metavar='PATH', help='Compilar el proyecto en la carpeta actual o en la ruta especificada')
         buildthis_group.add_argument('--output', metavar='PATH', help='Directorio externo para el artefacto `.iflapp`')
         buildthis_group.add_argument('--platform', choices=['Linux', 'Windows'], help='Plataforma objetivo; por defecto se detecta el sistema actual')
-        buildthis_group.add_argument('--compiler', choices=['nuitka', 'pyinstaller'], help='Backend de compilación embebido (por defecto: nuitka)')
+        try:
+            from lib.compilers import backend_names as _backend_names
+
+            _compiler_choices = _backend_names()
+        except Exception:
+            _compiler_choices = ['nuitka', 'pyinstaller']
+        buildthis_group.add_argument('--compiler', choices=_compiler_choices, help='Backend de compilación (por defecto: nuitka)')
         buildthis_group.add_argument('--password', metavar='PASS', help='Cifrar el payload del .iflapp con esta contraseña')
         buildthis_group.add_argument('--no-sandbox', action='store_true', help='Desactivar la verificación en sandbox virtualizado')
         buildthis_group.add_argument('--dropper', action='store_true', help='Generar además un dropper autoextraíble (.run)')
         buildthis_group.add_argument(
             '--harden', metavar='METHODS',
-            help='Métodos de blindaje separados por comas: strip,upx,checksum,anti-debug,obfuscate,resource (por defecto: todos)'
+            help='Métodos de blindaje separados por comas: strip,upx,checksum,anti-debug,obfuscate,resource,sign,integrity,compile-only,rename-symbols (por defecto: todos)'
         )
 
         # === Inspección de paquetes ===

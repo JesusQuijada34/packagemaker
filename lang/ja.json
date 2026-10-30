@@ -43,8 +43,6 @@
     "auto_color": "システムに合わせた自動色",
     "notifications": "通知",
     "accent_color": "アクセントカラー",
-    "blur_intensity": "ぼかしの強さ",
-    "window_radius": "角の半径",
     "sidebar_accent": "サイドバー選択枠の太さ",
     "card_opacity": "UI カードの不透明度",
     "ui_density": "インターフェースの密度",

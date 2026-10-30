@@ -758,6 +758,8 @@ class PackageTodoGUI(QMainWindow):
 
         self.sidebar_collapsed = False
         self.sidebar_animation = None
+        self._page_fade = None
+        self._page_fade_widget = None
         self.sidebar_target_width = 260
 
         # Layout principal vertical (TitleBar + ContentArea)
@@ -838,11 +840,12 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_layout.addLayout(sidebar_header)
 
         # Navigation Buttons
-        self.btn_create = SidebarItem(tr("sidebar.create"), get_tab_icon("crear"))
-        self.btn_build = SidebarItem(tr("sidebar.build"), get_tab_icon("construir"))
-        self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"))
-        self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"))
-        self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"))
+        dark_now = system_theme_mode() != "light"
+        self.btn_create = SidebarItem(tr("sidebar.create"), get_tab_icon("crear"), dark=dark_now)
+        self.btn_build = SidebarItem(tr("sidebar.build"), get_tab_icon("construir"), dark=dark_now)
+        self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"), dark=dark_now)
+        self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"), dark=dark_now)
+        self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"), dark=dark_now)
         self._sidebar_btn_keys = {
             self.btn_create: "sidebar.create",
             self.btn_build: "sidebar.build",
@@ -1039,6 +1042,16 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self.desc_card, "setVisible"):
             self.desc_card.setVisible(not collapsed)
 
+    def enterCompactShellMode(self):
+        """Arranca con el sidebar colapsado (modos ``--compact`` / ``--shell-mode``).
+
+        ``--shell-mode`` deja además la ventana en modo compacto para que el
+        contenido ocupe el ancho completo desde el primer frame.
+        """
+        self._apply_sidebar_state(True)
+        if self.shell_mode:
+            self.sidebar_target_width = 60
+
     def toggle_sidebar(self):
         self._apply_sidebar_state(not self.sidebar_collapsed)
 
@@ -1108,7 +1121,12 @@ class PackageTodoGUI(QMainWindow):
         super().keyPressEvent(event)
 
     def switch_page(self, index):
-        """Cambia la página (solo fundido; sin mover geometry del stack)."""
+        """Cambia de página con un fundido real de opacidad.
+
+        Animar ``windowOpacity`` sobre un widget hijo no tenía efecto: esa
+        propiedad sólo actúa sobre ventanas de nivel superior. Aquí se aplica un
+        ``QGraphicsOpacityEffect`` al widget entrante y se anima su ``opacity``.
+        """
         self.update_sidebar_description(index)
         current_widget = self.stack.currentWidget()
         next_widget = self.stack.widget(index)
@@ -1117,27 +1135,47 @@ class PackageTodoGUI(QMainWindow):
         self.stack.setCurrentIndex(index)
         if is_frameless_maximized(self):
             return
+        self._fade_in_widget(next_widget)
+
+    def _fade_in_widget(self, widget, duration_ms: int = 220):
+        """Aplica y anima un fundido de entrada sobre *widget*."""
+        # Un cambio de página rápido puede dejar el efecto de la anterior sin
+        # retirar si su animación se descarta a mitad; limpia antes de empezar.
+        self._clear_page_fade()
         try:
-            next_widget.setWindowOpacity(0.0)
-            animate_property(
-                next_widget,
-                "windowOpacity",
+            effect = QtWidgets.QGraphicsOpacityEffect(widget)
+            widget.setGraphicsEffect(effect)
+            effect.setOpacity(0.0)
+            self._page_fade_widget = widget
+            animation = animate_property(
+                effect,
+                "opacity",
                 0.0,
                 1.0,
-                850,
+                duration_ms,
                 QEasingCurve.Type.OutCubic,
+                on_finished=self._clear_page_fade,
             )
-        except RuntimeError:
-            next_widget.setWindowOpacity(1.0)
+            # Mantén viva la animación mientras corre.
+            self._page_fade = animation
+        except Exception:
+            self._clear_page_fade()
+
+    def _clear_page_fade(self):
+        """Retira el efecto de fundido y libera la animación pendiente."""
+        self._page_fade = None
+        widget = getattr(self, "_page_fade_widget", None)
+        self._page_fade_widget = None
+        if widget is not None:
+            try:
+                widget.setGraphicsEffect(None)
+            except Exception:
+                pass
 
     def _apply_display_mode_by_name(self, display_name: str) -> None:
         apply_display_mode(self, display_name)
-        store = get_pm_data()
-        apply_personalization_effects(
-            self,
-            int(store.get_user("blur_intensity", 14)),
-            int(store.get_user("window_radius", 12)),
-        )
+        # Desenfoque y radio son fijos (ver lib/window_chrome.py).
+        apply_personalization_effects(self)
         self.apply_theme()
 
     def _apply_leviathan_and_personalization(self) -> None:
@@ -1181,7 +1219,12 @@ class PackageTodoGUI(QMainWindow):
 
         for btn in getattr(self, "_sidebar_btn_keys", {}):
             btn.setFixedHeight(sidebar_h)
-            btn.setStyleSheet(sidebar_button_stylesheet(dark, accent, border_w))
+            if hasattr(btn, "set_dark"):
+                # ``SidebarItem`` pinta su propio indicador y elige sus colores
+                # según el tema; aplicar aquí el QSS genérico lo pisaría.
+                btn.set_dark(dark)
+            else:
+                btn.setStyleSheet(sidebar_button_stylesheet(dark, accent, border_w))
 
         if hasattr(self, "sidebar"):
             self.sidebar.setStyleSheet(sidebar_stylesheet(dark, accent))
@@ -2197,14 +2240,6 @@ class PackageTodoGUI(QMainWindow):
         set_qss(self.conf_ui_density, conf_field_stylesheet(), append=False)
         add_row("config.ui_density", self.conf_ui_density)
 
-        self.conf_blur_slider = add_slider_row(
-            "config.blur_intensity", "blur_intensity", 0, 40,
-            user.get("blur_intensity", 14), "",
-        )
-        self.conf_radius_slider = add_slider_row(
-            "config.window_radius", "window_radius", 0, 28,
-            user.get("window_radius", 12), " px",
-        )
         self.conf_sidebar_accent_slider = add_slider_row(
             "config.sidebar_accent", "sidebar_accent_width", 0, 8,
             user.get("sidebar_accent_width", 3), " px",
@@ -2363,8 +2398,6 @@ class PackageTodoGUI(QMainWindow):
             store.remove_user("interface_color")
             store.remove_user("auto_color")
             store.remove_user("custom_accent_color")
-            store.remove_user("blur_intensity")
-            store.remove_user("window_radius")
             store.remove_user("sidebar_accent_width")
             store.remove_user("card_opacity")
 
@@ -2422,10 +2455,6 @@ class PackageTodoGUI(QMainWindow):
                 self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
             if hasattr(self, "conf_touch_mode"):
                 self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
-            if hasattr(self, "conf_blur_slider"):
-                self.conf_blur_slider.setValue(int(user.get("blur_intensity", 14)))
-            if hasattr(self, "conf_radius_slider"):
-                self.conf_radius_slider.setValue(int(user.get("window_radius", 12)))
             if hasattr(self, "conf_sidebar_accent_slider"):
                 self.conf_sidebar_accent_slider.setValue(int(user.get("sidebar_accent_width", 3)))
             if hasattr(self, "conf_card_opacity_slider"):
@@ -2467,10 +2496,6 @@ class PackageTodoGUI(QMainWindow):
             settings["ui_density"] = self.conf_ui_density.currentData()
         if hasattr(self, "conf_default_editor"):
             settings["default_editor"] = self.conf_default_editor.text().strip()
-        if hasattr(self, "conf_blur_slider"):
-            settings["blur_intensity"] = int(self.conf_blur_slider.value())
-        if hasattr(self, "conf_radius_slider"):
-            settings["window_radius"] = int(self.conf_radius_slider.value())
         if hasattr(self, "conf_sidebar_accent_slider"):
             settings["sidebar_accent_width"] = int(self.conf_sidebar_accent_slider.value())
         if hasattr(self, "conf_card_opacity_slider"):

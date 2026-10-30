@@ -7,9 +7,16 @@ Todas las acciones del shell usan el launcher localizado en shell/packagemakerSh
 
 import os
 import sys
-import winreg
 import ctypes
 import subprocess
+
+# Módulo exclusivo de Windows: usa el registro y APIs win32. Debe fallar al
+# importarse en otras plataformas para que ``lib.shell_integration`` pueda
+# informar de que la acción no está disponible, en vez de reventar al usarla.
+if not sys.platform.startswith("win"):
+    raise ImportError("shellIntegration requiere Windows")
+
+import winreg
 
 class ShellIntegration:
     """Maneja la integración con el shell de Windows."""

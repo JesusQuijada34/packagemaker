@@ -481,7 +481,12 @@ def system_theme_mode():
 
 
 def sidebar_stylesheet(dark, accent="#0078d4"):
-    """Theme-aware sidebar frame and navigation button styles."""
+    """Theme-aware sidebar frame and navigation button styles.
+
+    Los botones del sidebar ya no usan ``border-left``: el indicador de
+    selección lo pinta ``SidebarItem`` (barra corta y centrada). Aquí sólo
+    quedan el marco, el botón de colapso y la tarjeta de contexto.
+    """
     if dark:
         sidebar_bg, border, text, hover, selected = SIDEBAR_BG, "#333333", TEXT_MUTED, "rgba(255,255,255,.06)", "rgba(255,255,255,.10)"
     else:
@@ -493,25 +498,38 @@ def sidebar_stylesheet(dark, accent="#0078d4"):
         QPushButton#SidebarCollapseButton:pressed {{ background:{selected}; }}
         QWidget#SidebarContextCard {{ background:{hover}; border:1px solid {border}; border-radius:{CARD_RADIUS}px; }}
         QWidget#NavigationSidebar QPushButton {{ color:{text}; font-family:{FONT_STACK}; font-size:14px; }}
-        QWidget#NavigationSidebar QPushButton:hover {{ background:{hover}; color:{text}; }}
-        QWidget#NavigationSidebar QPushButton:checked {{ background:{selected}; color:{text}; border-left:3px solid {accent}; }}
         QWidget#NavigationSidebar QPushButton:focus {{ outline:none; }}
     """
 
 
 def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
-    """Return an explicit stylesheet for one sidebar navigation button."""
+    """Return an explicit stylesheet for one sidebar navigation button.
+
+    El color del texto seleccionado sigue al tema: blanco sobre el fondo oscuro
+    y azul de acento sobre el fondo claro. Fijarlo siempre a ``TEXT`` dejaba el
+    ítem seleccionado invisible en tema claro.
+    """
     if dark:
-        text, hover, selected = TEXT_MUTED, "rgba(255,255,255,.06)", "rgba(255,255,255,.10)"
+        text, hover, selected, selected_text = (
+            TEXT_MUTED,
+            "rgba(255,255,255,.06)",
+            "rgba(255,255,255,.10)",
+            TEXT,
+        )
     else:
-        text, hover, selected = "#334155", "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
+        text, hover, selected, selected_text = (
+            "#334155",
+            "rgba(15,23,42,.07)",
+            "rgba(0,120,212,.14)",
+            accent,
+        )
     return f"""
         QPushButton {{ background:transparent; color:{text}; text-align:left; padding-left:{SIDEBAR_ICON_INSET}px;
             border:none; border-left:{int(border_width)}px solid transparent; border-radius:{CONTROL_RADIUS}px;
             font-family:{FONT_STACK};
             font-size:14px; font-weight:500; }}
         QPushButton:hover {{ background:{hover}; color:{text}; }}
-        QPushButton:checked {{ background:{selected}; color:{TEXT}; border-left:{int(border_width)}px solid {accent}; }}
+        QPushButton:checked {{ background:{selected}; color:{selected_text}; border-left:{int(border_width)}px solid {accent}; }}
         QPushButton:focus {{ outline:none; }}
     """
 

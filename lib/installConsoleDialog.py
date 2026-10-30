@@ -8,16 +8,40 @@ import sys
 try:
     from PyQt6.QtCore import Qt
     from PyQt6.QtWidgets import (
-        QDialog, QWidget, QVBoxLayout, QHBoxLayout, 
-        QTextEdit, QPushButton
+        QDialog, QWidget, QVBoxLayout, QHBoxLayout,
+        QTextEdit, QPushButton, QLabel
     )
-    from leviathan_ui import CustomTitleBar
     PYQT6_AVAILABLE = True
 except (ImportError, SyntaxError):
     PYQT6_AVAILABLE = False
     class QDialog:
         def __init__(self, *args, **kwargs): pass
+        def setWindowFlags(self, *args): pass
+        def setAttribute(self, *args): pass
+        def resize(self, *args, **kwargs): pass
     class QWidget: pass
+    QVBoxLayout = QHBoxLayout = QTextEdit = QPushButton = QLabel = object
+    Qt = None
+
+# ``leviathan_ui`` se importa aparte: acoplarlo al bloque de PyQt6 hacía que
+# faltara el propio Qt (y el diálogo crasheara) cuando el paquete de UI no está
+# instalado.
+try:
+    from leviathan_ui import CustomTitleBar
+except (ImportError, SyntaxError):
+    class CustomTitleBar(QWidget):
+        """Barra de título mínima cuando ``leviathan_ui`` no está instalado.
+
+        Debe heredar de ``QWidget``: si es un objeto plano, ``addWidget`` falla
+        con un ``TypeError`` al construir el diálogo.
+        """
+
+        def __init__(self, parent=None, title="", icon="", **kwargs):
+            super().__init__(parent)
+            self.title_lbl = QLabel(title, self)
+
+        def set_title(self, text):
+            self.title_lbl.setText(text)
 
 
 class InstallConsoleDialog(QDialog):
@@ -140,15 +164,18 @@ class InstallConsoleDialog(QDialog):
         content_layout.addLayout(btn_layout)
         
     def _is_dark_mode(self):
-        """Detectar si el sistema está en modo oscuro"""
+        """Detectar si el sistema está en modo oscuro.
+
+        Usa el helper compartido en vez de leer el registro directamente: el
+        ``import winreg`` suelto sólo capturaba ``OSError``, así que en Linux y
+        macOS (donde el módulo no existe) el diálogo crasheaba con
+        ``ModuleNotFoundError``.
+        """
         try:
-            import winreg
-            registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
-            key = winreg.OpenKey(registry, r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
-            value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
-            winreg.CloseKey(key)
-            return value == 0
-        except OSError:
+            from lib.fluent_theme import system_theme_mode
+
+            return system_theme_mode() == "dark"
+        except Exception:
             return False
     
     def log(self, message):

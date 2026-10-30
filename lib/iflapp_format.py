@@ -64,6 +64,30 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _parse_details_identity(details: bytes) -> Dict[str, str]:
+    """Extrae la identidad de un ``details.xml`` ya leído de la cabecera.
+
+    Tolera XML malformado: devuelve lo que pueda y nunca lanza, porque se usa
+    en la ruta de lectura de cabecera que debe funcionar incluso con archivos
+    parcialmente dañados.
+    """
+    if not details:
+        return {}
+    try:
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(details)
+    except Exception:
+        return {}
+    out: Dict[str, str] = {}
+    for child in root:
+        tag = str(child.tag).split("}")[-1].strip().lower()
+        text = (child.text or "").strip()
+        if tag and text:
+            out[tag] = text
+    return out
+
+
 def _as_bytes(value, *, what: str) -> bytes:
     """Normaliza un blob de cabecera: acepta ``bytes`` o una ruta a archivo.
 
@@ -151,17 +175,25 @@ class IflappHeader:
         return int(self.raw.get("payload", {}).get("file_count", len(self.manifest)))
 
     def identity(self) -> Dict[str, str]:
-        """Identidad del paquete tomada de la cabecera (sin descompilar)."""
-        return {
-            "publisher": self.raw.get("publisher", ""),
-            "app": self.raw.get("app", ""),
-            "name": self.raw.get("name", ""),
-            "version": self.raw.get("version", ""),
-            "author": self.raw.get("author", ""),
-            "platform": self.raw.get("platform", ""),
-            "created": self.raw.get("created", ""),
-            "generator": self.raw.get("generator", ""),
-        }
+        """Identidad del paquete tomada de la cabecera (sin descompilar).
+
+        Los campos planos de la cabecera tienen prioridad; si faltan (por
+        ejemplo, cuando se empaquetó sin pasar ``identity``), se completan
+        parseando el ``details.xml`` que viaja en claro en la cabecera. Así un
+        lector puede mostrar la identidad real del paquete sin descifrar ni
+        descomprimir nada.
+        """
+        fields = ("publisher", "app", "name", "version", "author", "platform", "correlationid")
+        data = {key: str(self.raw.get(key, "") or "") for key in fields}
+        data["created"] = str(self.raw.get("created", "") or "")
+        data["generator"] = str(self.raw.get("generator", "") or "")
+        if any(data[key] for key in fields):
+            return data
+        for key, value in _parse_details_identity(self.details).items():
+            data.setdefault(key, "")
+            if not data[key]:
+                data[key] = value
+        return data
 
     def details_text(self) -> str:
         try:

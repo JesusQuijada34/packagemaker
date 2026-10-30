@@ -157,3 +157,42 @@ class IflappHeaderHandlerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HeaderIdentityFallbackTests(unittest.TestCase):
+    """La identidad debe derivarse de details.xml sin descifrar el payload."""
+
+    def test_identity_falls_back_to_details_xml_in_header(self):
+        from lib import iflapp_format
+        from lib.iflapp_reader import IflappReader
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pkg = root / "pkg"
+            pkg.mkdir()
+            (pkg / "main.py").write_text("print('x')\n", encoding="utf-8")
+            details = (
+                b"<?xml version='1.0'?><app><publisher>Influent</publisher>"
+                b"<app>packagemaker</app><name>Package Maker</name></app>"
+            )
+            out = root / "Demo.iflapp"
+            # Sin ``identity``: la cabecera no lleva campos planos.
+            iflapp_format.pack_iflapp(pkg, out, icon=b"\x89PNG" + b"x" * 32, details=details)
+            info = IflappReader(out).info()
+            self.assertEqual(info.identity["publisher"], "Influent")
+            self.assertEqual(info.identity["app"], "packagemaker")
+
+    def test_reader_exposes_summary(self):
+        from lib import iflapp_format
+        from lib.iflapp_reader import IflappReader
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pkg = root / "pkg"
+            pkg.mkdir()
+            (pkg / "main.py").write_text("print('x')\n", encoding="utf-8")
+            out = root / "Demo.iflapp"
+            iflapp_format.pack_iflapp(pkg, out, identity={"name": "Demo"})
+            text = IflappReader(out).summary()
+            self.assertIn("Demo", text)
+            self.assertIn("Formato", text)

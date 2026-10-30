@@ -43,8 +43,6 @@
     "auto_color": "Automatische Farbe nach System",
     "notifications": "Benachrichtigungen",
     "accent_color": "Akzentfarbe",
-    "blur_intensity": "Unschärfe-Intensität",
-    "window_radius": "Eckenradius",
     "sidebar_accent": "Breite des aktiven Sidebar-Rands",
     "card_opacity": "Deckkraft der UI-Karten",
     "ui_density": "Oberflächendichte",

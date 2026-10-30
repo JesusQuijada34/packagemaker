@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import json
 import re
 import shutil
@@ -79,7 +80,18 @@ class HardeningReport:
 
 def method_names() -> List[str]:
     """Nombres canónicos de los métodos de blindaje soportados."""
-    return ["strip", "upx", "checksum", "anti-debug", "obfuscate", "resource"]
+    return [
+        "strip",
+        "upx",
+        "checksum",
+        "anti-debug",
+        "obfuscate",
+        "resource",
+        "sign",
+        "integrity",
+        "compile-only",
+        "rename-symbols",
+    ]
 
 
 def _run(argv: Sequence[str], *, timeout: int = 300) -> subprocess.CompletedProcess:
@@ -261,6 +273,109 @@ def attach_resource(binary: Path | str, icon: Optional[Path | str] = None) -> Ha
     return HardeningReport("resource", True, "sección .iflapp.ico añadida", [str(binary)])
 
 
+def sign_binary(
+    binary: Path | str,
+    *,
+    signing_key: bytes = b"",
+    output: Optional[Path | str] = None,
+) -> HardeningReport:
+    """Adjunta una firma HMAC-SHA256 al binario (sidecar ``.sig``).
+
+    Es un *sello de integridad*, no una firma Authenticode: sirve para que el
+    dropper y el lector puedan verificar que el artefacto no se alteró. Cuando
+    hay ``osslsigncode`` disponible se intenta además la firma Authenticode.
+    """
+    binary = Path(binary)
+    if not binary.is_file():
+        return HardeningReport("sign", False, f"no existe el binario: {binary}")
+    digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+    key = signing_key or b"influent-hardening-signature"
+    mac = hmac.new(key, binary.read_bytes(), hashlib.sha256).hexdigest()
+    sig_path = Path(output) if output else binary.with_suffix(binary.suffix + ".sig")
+    payload = {
+        "file": binary.name,
+        "sha256": digest,
+        "hmac_sha256": mac,
+        "alg": "hmac-sha256",
+        "hardening_version": HARDENING_VERSION,
+    }
+    sig_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    artifacts = [str(sig_path)]
+    detail = "sello HMAC-SHA256 generado"
+    tool = shutil.which("osslsigncode")
+    if tool and binary.suffix.lower() == ".exe":
+        signed = binary.with_suffix(".signed.exe")
+        proc = _run([tool, "sign", "-in", str(binary), "-out", str(signed)])
+        if proc.returncode == 0:
+            artifacts.append(str(signed))
+            detail += "; Authenticode aplicado"
+    return HardeningReport("sign", True, detail, artifacts)
+
+
+def embed_integrity_manifest(package_dir: Path | str) -> HardeningReport:
+    """Escribe un manifiesto de integridad recursivo (``.iflapp.integrity``).
+
+    A diferencia de ``checksum``, incluye tamaños y una raíz Merkle simple que
+    permite verificar el conjunto completo con un único valor.
+    """
+    package_dir = Path(package_dir)
+    if not package_dir.is_dir():
+        return HardeningReport("integrity", False, f"no existe el directorio: {package_dir}")
+    entries: List[Dict[str, object]] = []
+    leaves: List[str] = []
+    for path in sorted(package_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(package_dir).as_posix()
+        data = path.read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        entries.append({"path": rel, "size": len(data), "sha256": digest})
+        leaves.append(digest)
+    root = hashlib.sha256("".join(sorted(leaves)).encode("ascii")).hexdigest()
+    manifest = {
+        "hardening_version": HARDENING_VERSION,
+        "root_sha256": root,
+        "count": len(entries),
+        "files": entries,
+    }
+    out = package_dir / ".iflapp.integrity"
+    out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return HardeningReport("integrity", True, f"raíz Merkle {root[:16]}…", [str(out)])
+
+
+def compile_to_bytecode(script: Path | str, *, optimize: int = 2) -> HardeningReport:
+    """Compila un script a ``.pyc`` optimizado (sin fuentes legibles)."""
+    script = Path(script)
+    if not script.is_file():
+        return HardeningReport("compile-only", False, f"no existe el script: {script}")
+    import py_compile
+
+    target = script.with_suffix(".pyc")
+    try:
+        py_compile.compile(str(script), cfile=str(target), doraise=True, optimize=optimize)
+    except py_compile.PyCompileError as exc:
+        return HardeningReport("compile-only", False, str(exc))
+    return HardeningReport("compile-only", True, f"bytecode optimizado (O{optimize})", [str(target)])
+
+
+def rename_symbols(binary: Path | str) -> HardeningReport:
+    """Elimina símbolos locales y de depuración (``strip --strip-all``).
+
+    Complementa ``strip`` (que quita la tabla de símbolos) borrando además los
+    nombres locales, lo que dificulta la ingeniería inversa del binario.
+    """
+    binary = Path(binary)
+    tool = shutil.which("strip") or shutil.which("llvm-strip")
+    if not tool:
+        return HardeningReport("rename-symbols", False, "strip no disponible")
+    if not binary.is_file():
+        return HardeningReport("rename-symbols", False, f"no existe el binario: {binary}")
+    proc = _run([tool, "--strip-all", "--strip-unneeded", str(binary)])
+    if proc.returncode != 0:
+        return HardeningReport("rename-symbols", False, (proc.stderr or proc.stdout).strip()[:400])
+    return HardeningReport("rename-symbols", True, "símbolos locales eliminados", [str(binary)])
+
+
 def apply_all(
     *,
     binary: Optional[Path | str] = None,
@@ -296,6 +411,14 @@ def apply_all(
                 report = obfuscate_strings(script)
             elif method == "resource" and binary:
                 report = attach_resource(binary, icon)
+            elif method == "sign" and binary:
+                report = sign_binary(binary)
+            elif method == "integrity" and package_dir:
+                report = embed_integrity_manifest(package_dir)
+            elif method == "compile-only" and script:
+                report = compile_to_bytecode(script)
+            elif method == "rename-symbols" and binary:
+                report = rename_symbols(binary)
             else:
                 report = HardeningReport(method, False, "artefacto no aplicable")
         except Exception as exc:  # el blindaje nunca debe abortar la compilación
@@ -315,4 +438,8 @@ def available_methods() -> Dict[str, bool]:
         "anti-debug": True,
         "obfuscate": True,
         "resource": bool(shutil.which("objcopy") or shutil.which("llvm-objcopy")),
+        "sign": True,
+        "integrity": True,
+        "compile-only": True,
+        "rename-symbols": bool(shutil.which("strip") or shutil.which("llvm-strip")),
     }

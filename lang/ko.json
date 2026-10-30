@@ -43,8 +43,6 @@
     "auto_color": "시스템에 따른 자동 색상",
     "notifications": "알림",
     "accent_color": "강조 색상",
-    "blur_intensity": "블러 강도",
-    "window_radius": "모서리 반경",
     "sidebar_accent": "사이드바 활성 테두리 두께",
     "card_opacity": "UI 카드 불투명도",
     "ui_density": "인터페이스 밀도",

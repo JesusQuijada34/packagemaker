@@ -257,11 +257,42 @@ def tr(text: str, context: str = "@default") -> str:
     return i18n.translate(text, context)
 
 
+def _lang_names() -> Dict[str, str]:
+    """Nombre nativo de cada idioma (para el selector de Configuración)."""
+    return dict(SUPPORTED_LANGUAGES)
+
+
+def available_language_files() -> list:
+    """Idiomas realmente presentes en disco, ordenados y con su nombre nativo.
+
+    Sólo se ofrecen los idiomas cuyo ``lang/<código>.json`` existe; así el
+    selector nunca muestra un idioma sin traducción local (antes la lista era
+    fija y podía incluir códigos sin fichero).
+    """
+    lang_dir = _get_lang_dir()
+    names = _lang_names()
+    codes = []
+    try:
+        for entry in os.listdir(lang_dir):
+            if not entry.endswith(".json"):
+                continue
+            code = entry[:-5].lower()
+            if code in names:
+                codes.append(code)
+    except OSError:
+        pass
+    codes.sort(key=lambda c: (c != "es", c != "en", names.get(c, c)))
+    return [(code, names[code]) for code in codes]
+
+
 def get_available_languages() -> list:
-    return [(code, name) for code, name in SUPPORTED_LANGUAGES.items()]
+    """Idiomas disponibles para la interfaz (sólo los que tienen fichero local)."""
+    files = available_language_files()
+    return files if files else [("es", SUPPORTED_LANGUAGES["es"])]
 
 
 def system_default_language() -> str:
     loc = QLocale.system().name().lower()
     code = loc.split("_")[0] if loc else "es"
-    return code if code in SUPPORTED_LANGUAGES else "es"
+    available = {c for c, _ in available_language_files()}
+    return code if code in available else "es"
