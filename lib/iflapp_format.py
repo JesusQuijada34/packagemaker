@@ -64,6 +64,23 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _as_bytes(value, *, what: str) -> bytes:
+    """Normaliza un blob de cabecera: acepta ``bytes`` o una ruta a archivo.
+
+    ``icon`` y ``details`` se documentan como bytes, pero desde la GUI es fácil
+    pasar una ruta. Sin esta coerción el error sería un ``TypeError`` críptico
+    en ``len(icon)``.
+    """
+    if value is None:
+        return b""
+    if isinstance(value, (bytes, bytearray)):
+        return bytes(value)
+    path = Path(value)
+    if path.is_file():
+        return path.read_bytes()
+    raise IflappError(f"{what} debe ser bytes o una ruta existente: {value!r}")
+
+
 def _align_up(value: int, alignment: int) -> int:
     if alignment <= 1:
         return value
@@ -360,8 +377,8 @@ def pack_iflapp(
             if candidate.is_file():
                 icon = candidate.read_bytes()
                 break
-    icon = icon or b""
-    details = details or b""
+    icon = _as_bytes(icon, what="icon")
+    details = _as_bytes(details, what="details")
 
     compressed = _compress(tar_bytes, compression)
     payload_bytes, enc_params = _encrypt_payload(compressed, password)

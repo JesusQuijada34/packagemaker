@@ -10,6 +10,7 @@ from lib.design_tokens import (
     BORDER,
     BUTTON_PADDING_H,
     CARD_RADIUS,
+    CONTENT_BG,
     CONTROL_RADIUS,
     FONT_STACK,
     INPUT_HEIGHT,
@@ -22,6 +23,7 @@ from lib.design_tokens import (
     TEXT,
     TEXT_DIM,
     TEXT_MUTED,
+    TITLEBAR_BG,
     TITLE_SIZE,
     WINDOW_BG,
     checkbox_qss,
@@ -176,7 +178,7 @@ WINDOW_CHROME_STYLES = {
     'packagemaker_005': 'QWidget{background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;margin-top:10px;}',
     'packagemaker_006': 'border:none;background:transparent;color:#888;font-weight:bold;font-size:11px;text-transform:uppercase;',
     'packagemaker_007': 'background:transparent;color:#bbb;font-size:12px;line-height:1.2;border:none;',
-    'packagemaker_008': 'background:#3a3f4b;border:none;',
+    'packagemaker_008': f'background:{CONTENT_BG};border:none;',
     'packagemaker_010': 'QMainWindow{background:\x00QSS_SLOT_0\x00;}',
     'packagemaker_065': 'color:\x00QSS_SLOT_0\x00;font-weight:600;',
     'packagemaker_066': "QPushButton{background-color:transparent;color:#c7ced8;text-align:left;padding-left:17px;border:none;border-left:\x00QSS_SLOT_0\x00px solid transparent;border-radius:9px;font-family:'Segoe UI Variable Display','Segoe UI',sans-serif;font-size:15px;font-weight:500;}QPushButton:hover{background-color:rgba(255,255,255,0.06);color:#ffffff;}QPushButton:checked{background-color:rgba(255,255,255,0.08);color:#ffffff;border-left:\x00QSS_SLOT_1\x00px solid \x00QSS_SLOT_2\x00;}QPushButton:focus{outline:none;}",
@@ -584,40 +586,40 @@ BTN_STYLES = {'default': 'background-color: transparent;color: rgba(32,33,36,0.9
  'grayed-black': 'background-color: #292929;color: #b9b9b9;border-radius: 9px;padding: 10px '
                  '20px;font-weight: 600;border: 1px solid #444;background-image: none;'}
 
-TITLE_BAR_STYLESHEET = """
-    QWidget#SharedTitleBar {
-        background-color: rgba(26, 30, 37, 0.96);
+TITLE_BAR_STYLESHEET = f"""
+    QWidget#SharedTitleBar {{
+        background-color: {TITLEBAR_BG};
         border: none;
-    }
-    QLabel#SharedTitleLabel {
+    }}
+    QLabel#SharedTitleLabel {{
         color: #f3f5f8;
-        font-family: 'Segoe UI Variable', 'Segoe UI', sans-serif;
+        font-family: {FONT_STACK};
         font-size: 13px;
         font-weight: 500;
         background: transparent;
-    }
-    QLabel#SharedIconFallback {
+    }}
+    QLabel#SharedIconFallback {{
         color: #0078D4;
         font-size: 20px;
         font-weight: 600;
         background: transparent;
-    }
+    }}
     QPushButton#TitleMinimizeButton, QPushButton#TitleMaximizeButton,
-    QPushButton#TitleCloseButton {
+    QPushButton#TitleCloseButton {{
         color: #f3f5f8;
         background: transparent;
         border: none;
         border-radius: 0;
         font-size: 13px;
         padding: 0;
-    }
+    }}
     QPushButton#TitleMinimizeButton:hover,
-    QPushButton#TitleMaximizeButton:hover {
+    QPushButton#TitleMaximizeButton:hover {{
         background: rgba(255, 255, 255, 0.12);
-    }
-    QPushButton#TitleCloseButton:hover {
+    }}
+    QPushButton#TitleCloseButton:hover {{
         background: #c42b1c;
-    }
+    }}
 """
 
 SPLASH_STYLESHEET = """

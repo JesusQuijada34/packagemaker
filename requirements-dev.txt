@@ -1,0 +1,10 @@
+# Dependencias solo para desarrollo, CI y auditoría. Nunca en producción.
+# Instalar con: pip install -r requirements-dev.txt
+-r lib/requirements.txt
+
+# Pruebas
+pytest
+
+# Análisis estático y limpieza del código
+pyflakes
+autoflake

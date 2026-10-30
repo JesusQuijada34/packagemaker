@@ -257,6 +257,7 @@ from lib.design_tokens import (
     SIDEBAR_PADDING,
     SIDEBAR_TOP_MARGIN,
     TEXT,
+    TITLEBAR_BG,
     WINDOW_BG,
 )
 from lib.SidebarItem import SidebarItem
@@ -770,7 +771,9 @@ class PackageTodoGUI(QMainWindow):
             title=self._fixed_title,
             icon=(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""),
         )
-        self.titlebar.setStyleSheet("background-color: #3a3f4b; border: none;")
+        self.titlebar.setStyleSheet(
+            f"background-color: {TITLEBAR_BG}; border: none;"
+        )
         self.titlebar.title_lbl.setText(self._fixed_title)
         patch_titlebar_maximize(self.titlebar, self)
         self._pm_reapply_display_mode = self._apply_leviathan_and_personalization
@@ -784,8 +787,6 @@ class PackageTodoGUI(QMainWindow):
         self.content_container = QWidget()
         # Enable styled background
         self.content_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        # Cast iron gray background for content container
-        #self.content_container.setStyleSheet("background: #3a3f4b;")
         self.content_layout = QHBoxLayout(self.content_container)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(0)

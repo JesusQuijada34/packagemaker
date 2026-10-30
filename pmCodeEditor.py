@@ -75,138 +75,177 @@ from lib.dependency_manager import get_dependency_manager
 VERSION = "3.0.0"
 APP_NAME = "pmCodeEditor"
 
+
+def _editor_accent() -> str:
+    """Acento activo del editor: preferencia del usuario, luego token de diseño."""
+    try:
+        from lib.pm_data import get_pm_data
+
+        value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
+        if value:
+            return value
+    except Exception:
+        pass
+    try:
+        from lib.design_tokens import ACCENT
+
+        return ACCENT
+    except Exception:
+        return "#0078D4"
+
+
+def _shade(color: str, factor: float) -> str:
+    """Aclara (factor > 1) u oscurece (factor < 1) un color hexadecimal."""
+    try:
+        from PyQt6.QtGui import QColor
+
+        c = QColor(color)
+        if not c.isValid():
+            return color
+        r = max(0, min(255, round(c.red() * factor)))
+        g = max(0, min(255, round(c.green() * factor)))
+        b = max(0, min(255, round(c.blue() * factor)))
+        return f"#{r:02x}{g:02x}{b:02x}"
+    except Exception:
+        return color
+
+
+EDITOR_ACCENT = _editor_accent()
+EDITOR_ACCENT_HOVER = _shade(EDITOR_ACCENT, 1.25)
+EDITOR_ACCENT_PRESSED = _shade(EDITOR_ACCENT, 0.8)
+
 # Hoja de estilos global oscura
-DARK_QSS = """
-QMainWindow, QDialog, QWidget {
+DARK_QSS = f"""
+QMainWindow, QDialog, QWidget {{
     background-color: #1E1E2E;
     color: #D4D4D4;
-}
-QLabel {
+}}
+QLabel {{
     color: #D4D4D4;
-}
-QTreeView, QListView, QPlainTextEdit, QTextEdit {
+}}
+QTreeView, QListView, QPlainTextEdit, QTextEdit {{
     background-color: #252526;
     color: #D4D4D4;
     border: 1px solid #3C3C3C;
-    selection-background-color: #ff5722;
-}
-QTreeView::item:selected {
-    background-color: #ff5722;
+    selection-background-color: {EDITOR_ACCENT};
+}}
+QTreeView::item:selected {{
+    background-color: {EDITOR_ACCENT};
     color: white;
-}
-QPushButton {
-    background-color: #ff5722;
+}}
+QPushButton {{
+    background-color: {EDITOR_ACCENT};
     color: white;
     border: none;
     padding: 5px 10px;
     border-radius: 4px;
-}
-QPushButton:hover {
-    background-color: #ff784e;
-}
-QPushButton:pressed {
-    background-color: #e64a19;
-}
-QPushButton:disabled {
+}}
+QPushButton:hover {{
+    background-color: {EDITOR_ACCENT_HOVER};
+}}
+QPushButton:pressed {{
+    background-color: {EDITOR_ACCENT_PRESSED};
+}}
+QPushButton:disabled {{
     background-color: #555555;
     color: #888888;
-}
-QTabWidget::pane {
+}}
+QTabWidget::pane {{
     border: 1px solid #3C3C3C;
     background: #1E1E2E;
-}
-QTabBar::tab {
+}}
+QTabBar::tab {{
     background: #2D2D30;
     color: #CCCCCC;
     padding: 6px 12px;
-}
-QTabBar::tab:selected {
+}}
+QTabBar::tab:selected {{
     background: #1E1E2E;
-    border-bottom: 2px solid #ff5722;
-}
-QTabBar::tab:hover:!selected {
+    border-bottom: 2px solid {EDITOR_ACCENT};
+}}
+QTabBar::tab:hover:!selected {{
     background: #3E3E42;
-}
-QStatusBar {
-    background-color: #ff5722;
+}}
+QStatusBar {{
+    background-color: {EDITOR_ACCENT};
     color: white;
-}
-QLineEdit {
+}}
+QLineEdit {{
     background-color: #252526;
     color: #D4D4D4;
     border: 1px solid #3C3C3C;
     border-radius: 3px;
     padding: 4px;
-}
-QLineEdit:focus {
-    border: 1px solid #ff5722;
-}
-QMenuBar {
+}}
+QLineEdit:focus {{
+    border: 1px solid {EDITOR_ACCENT};
+}}
+QMenuBar {{
     background-color: #252526;
     color: #D4D4D4;
     border-bottom: 1px solid #3C3C3C;
-}
-QMenuBar::item:selected {
-    background-color: #ff5722;
+}}
+QMenuBar::item:selected {{
+    background-color: {EDITOR_ACCENT};
     color: white;
-}
-QMenu {
+}}
+QMenu {{
     background-color: #252526;
     color: #D4D4D4;
     border: 1px solid #3C3C3C;
-}
-QMenu::item:selected {
-    background-color: #ff5722;
+}}
+QMenu::item:selected {{
+    background-color: {EDITOR_ACCENT};
     color: white;
-}
-QMenu::separator {
+}}
+QMenu::separator {{
     height: 1px;
     background-color: #3C3C3C;
     margin: 4px 0px;
-}
-QGroupBox {
+}}
+QGroupBox {{
     border: 1px solid #3C3C3C;
     border-radius: 4px;
     margin-top: 8px;
     padding-top: 8px;
-    color: #ff5722;
+    color: {EDITOR_ACCENT};
     font-weight: bold;
-}
-QGroupBox::title {
+}}
+QGroupBox::title {{
     subcontrol-origin: margin;
     left: 8px;
     padding: 0 4px;
-}
-QScrollArea {
+}}
+QScrollArea {{
     border: none;
-}
-QComboBox {
+}}
+QComboBox {{
     background-color: #252526;
     color: #D4D4D4;
     border: 1px solid #3C3C3C;
     padding: 4px;
-}
-QComboBox:focus {
-    border: 1px solid #ff5722;
-}
-QCheckBox {
+}}
+QComboBox:focus {{
+    border: 1px solid {EDITOR_ACCENT};
+}}
+QCheckBox {{
     color: #D4D4D4;
-}
-QSpinBox {
+}}
+QSpinBox {{
     background-color: #252526;
     color: #D4D4D4;
     border: 1px solid #3C3C3C;
-}
-QProgressBar {
+}}
+QProgressBar {{
     border: 1px solid #3C3C3C;
     border-radius: 4px;
     text-align: center;
     color: white;
-}
-QProgressBar::chunk {
-    background-color: #ff5722;
+}}
+QProgressBar::chunk {{
+    background-color: {EDITOR_ACCENT};
     border-radius: 4px;
-}
+}}
 """
 
 # =============================================================================
@@ -643,7 +682,7 @@ class FileExplorer(QWidget):
         
         # Header con nombre de proyecto
         self.header = QLabel("Proyecto")
-        self.header.setStyleSheet("font-weight: bold; padding: 5px; color: #ff5722;")
+        self.header.setStyleSheet(f"font-weight: bold; padding: 5px; color: {EDITOR_ACCENT};")
         layout.addWidget(self.header)
         
         # Tree view
@@ -716,7 +755,7 @@ class ConsolePanel(QWidget):
         # Header
         header = QHBoxLayout()
         title = QLabel("Consola")
-        title.setStyleSheet("font-weight: bold; padding: 5px; color: #ff5722;")
+        title.setStyleSheet(f"font-weight: bold; padding: 5px; color: {EDITOR_ACCENT};")
         header.addWidget(title)
         
         # Botones de control
@@ -760,7 +799,7 @@ class ConsolePanel(QWidget):
         input_layout.setContentsMargins(5, 2, 5, 2)
         
         prompt = QLabel(">")
-        prompt.setStyleSheet("color: #ff5722; font-weight: bold; font-family: Consolas;")
+        prompt.setStyleSheet(f"color: {EDITOR_ACCENT}; font-weight: bold; font-family: Consolas;")
         input_layout.addWidget(prompt)
         
         self.input_field = QLineEdit()
@@ -1273,7 +1312,7 @@ class MetricsDialog(QDialog):
         layout = QVBoxLayout(self)
         
         title = QLabel("Métricas del Archivo")
-        title.setStyleSheet("font-size: 16px; font-weight: bold; color: #ff5722;")
+        title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {EDITOR_ACCENT};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
@@ -1315,7 +1354,7 @@ class MetricsDialog(QDialog):
             label_widget = QLabel(f"<b>{label}:</b>")
             label_widget.setStyleSheet("color: #D4D4D4;")
             value_widget = QLabel(value)
-            value_widget.setStyleSheet("color: #ff5722; font-weight: bold;")
+            value_widget.setStyleSheet(f"color: {EDITOR_ACCENT}; font-weight: bold;")
             value_widget.setAlignment(Qt.AlignmentFlag.AlignRight)
             
             self.grid.addWidget(label_widget, i, 0)
@@ -1649,53 +1688,53 @@ class PythonSetupDialog(QDialog):
         )
         self.radio_recommended.setChecked(True)
         self.radio_recommended.setEnabled(sys.platform == "win32")
-        self.radio_recommended.setStyleSheet("""
-            QRadioButton {
+        self.radio_recommended.setStyleSheet(f"""
+            QRadioButton {{
                 font-size: 13px;
                 color: #cccccc;
                 spacing: 8px;
                 font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            }
-            QRadioButton::indicator {
+            }}
+            QRadioButton::indicator {{
                 width: 18px;
                 height: 18px;
                 border-radius: 9px;
                 border: 2px solid #555555;
                 background-color: #1e1e1e;
-            }
-            QRadioButton::indicator:checked {
-                background-color: #ff5722;
-                border: 2px solid #ff5722;
-            }
-            QRadioButton::indicator:hover {
-                border: 2px solid #ff5722;
-            }
+            }}
+            QRadioButton::indicator:checked {{
+                background-color: {EDITOR_ACCENT};
+                border: 2px solid {EDITOR_ACCENT};
+            }}
+            QRadioButton::indicator:hover {{
+                border: 2px solid {EDITOR_ACCENT};
+            }}
         """)
         content_layout.addWidget(self.radio_recommended)
 
         self.radio_choose = QRadioButton("Choose specific version")
         self.radio_choose.setEnabled(sys.platform == "win32")
-        self.radio_choose.setStyleSheet("""
-            QRadioButton {
+        self.radio_choose.setStyleSheet(f"""
+            QRadioButton {{
                 font-size: 13px;
                 color: #cccccc;
                 spacing: 8px;
                 font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            }
-            QRadioButton::indicator {
+            }}
+            QRadioButton::indicator {{
                 width: 18px;
                 height: 18px;
                 border-radius: 9px;
                 border: 2px solid #555555;
                 background-color: #1e1e1e;
-            }
-            QRadioButton::indicator:checked {
-                background-color: #ff5722;
-                border: 2px solid #ff5722;
-            }
-            QRadioButton::indicator:hover {
-                border: 2px solid #ff5722;
-            }
+            }}
+            QRadioButton::indicator:checked {{
+                background-color: {EDITOR_ACCENT};
+                border: 2px solid {EDITOR_ACCENT};
+            }}
+            QRadioButton::indicator:hover {{
+                border: 2px solid {EDITOR_ACCENT};
+            }}
         """)
         content_layout.addWidget(self.radio_choose)
 
@@ -1703,8 +1742,8 @@ class PythonSetupDialog(QDialog):
         self.version_list = QListWidget()
         self.version_list.setMaximumHeight(140)
         self.version_list.setVisible(False)
-        self.version_list.setStyleSheet("""
-            QListWidget {
+        self.version_list.setStyleSheet(f"""
+            QListWidget {{
                 background-color: #252526;
                 border: 1px solid #3c3c3c;
                 border-radius: 6px;
@@ -1712,19 +1751,19 @@ class PythonSetupDialog(QDialog):
                 font-size: 12px;
                 color: #cccccc;
                 font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            }
-            QListWidget::item {
+            }}
+            QListWidget::item {{
                 padding: 8px;
                 border-radius: 4px;
                 margin: 2px;
-            }
-            QListWidget::item:selected {
-                background-color: #ff5722;
+            }}
+            QListWidget::item:selected {{
+                background-color: {EDITOR_ACCENT};
                 color: white;
-            }
-            QListWidget::item:hover {
+            }}
+            QListWidget::item:hover {{
                 background-color: #3c3c3c;
-            }
+            }}
         """)
         content_layout.addWidget(self.version_list)
 
@@ -1732,17 +1771,17 @@ class PythonSetupDialog(QDialog):
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         self.progress_bar.setTextVisible(False)
-        self.progress_bar.setStyleSheet("""
-            QProgressBar {
+        self.progress_bar.setStyleSheet(f"""
+            QProgressBar {{
                 background-color: #252526;
                 border: none;
                 border-radius: 4px;
                 height: 6px;
-            }
-            QProgressBar::chunk {
-                background-color: #ff5722;
+            }}
+            QProgressBar::chunk {{
+                background-color: {EDITOR_ACCENT};
                 border-radius: 4px;
-            }
+            }}
         """)
         content_layout.addWidget(self.progress_bar)
 
@@ -1799,9 +1838,9 @@ class PythonSetupDialog(QDialog):
         self.btn_next = QPushButton("Continue")
         self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_next.setMinimumSize(120, 36)
-        self.btn_next.setStyleSheet("""
-            QPushButton {
-                background-color: #ff5722;
+        self.btn_next.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {EDITOR_ACCENT};
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -1809,17 +1848,17 @@ class PythonSetupDialog(QDialog):
                 font-size: 13px;
                 font-weight: 600;
                 font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-            }
-            QPushButton:hover {
-                background-color: #ff784e;
-            }
-            QPushButton:pressed {
-                background-color: #e64a19;
-            }
-            QPushButton:disabled {
+            }}
+            QPushButton:hover {{
+                background-color: {EDITOR_ACCENT_HOVER};
+            }}
+            QPushButton:pressed {{
+                background-color: {EDITOR_ACCENT_PRESSED};
+            }}
+            QPushButton:disabled {{
                 background-color: #3c3c3c;
                 color: #666666;
-            }
+            }}
         """)
         self.btn_next.clicked.connect(self.on_next)
         button_bar.addWidget(self.btn_next)

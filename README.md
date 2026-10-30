@@ -43,10 +43,10 @@ El tag y el título del release deben ser exactamente `v3.2.7-26.05-20.13`. Los 
 
 ### 🎨 Interface Moderna Windows 11
 - **Barra de título personalizada**: Basada en `Leviathan-UI` con diseño limpio
-- **Efectos visuales**: Soporte para acrílico, mica y blur
-- **Tema oscuro**: Paleta consistente #3a3f4b (fondo) / #ff5722 (acento)
+- **Efectos visuales**: Mica y Acrylic reales (`WipeWindow`), con fondos translúcidos en la barra de título, la barra lateral y el área de contenido para que el desenfoque se vea a través de ellos
+- **Tokens de diseño**: Paleta, radios, espaciados y tipografía centralizados en `lib/design_tokens.py`; el acento por defecto es el azul UWP #0078D4 y el fondo #1C1C1E
+- **Transiciones suaves**: Botones de acción e ítems de la barra lateral con desvanecido de fondo al pasar el ratón (`lib/hover_animation.py`)
 - **Sin gradientes**: Interfaz limpia y consistente sin gradientes
-- **Fondos sólidos**: Optimizados para evitar artifacts visuales
 
 ### 📦 Sistema de Compilación Actual
 - **Detección de entrypoint**: Usa `details.xml` y el script principal del proyecto como fuente de identidad.
@@ -117,17 +117,39 @@ Los términos históricos `Simple Blind`, `Super Blind` y `.iflappb` no son opci
 git clone https://github.com/JesusQuijada34/packagemaker.git
 cd packagemaker
 
-# Instalar dependencias
+# Instalar dependencias de producción
 pip install -r lib/requirements.txt
 
 # Ejecutar IDE
 python packagemaker.py
 ```
 
+Las herramientas de desarrollo (pruebas y análisis estático) **no** se instalan en
+el entorno de producción. Para contribuir, instálalas aparte:
+
+```bash
+pip install -r requirements-dev.txt   # pytest, pyflakes, autoflake
+QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q
+```
+
 ### Requisitos
 - **Python 3.8+** 🐍
 - **PyQt6 6.5+** 🎨
 - **Windows 10/11** (Linux/macOS parcial) 💻
+
+### Capturas
+
+Las imágenes de `assets/screenshots/` se regeneran en modo *offscreen*:
+
+```bash
+QT_QPA_PLATFORM=offscreen python scripts/capture_screenshots.py
+```
+
+![Crear proyecto](assets/screenshots/gui-1.png)
+![Compilar](assets/screenshots/gui-2.png)
+![Configuración](assets/screenshots/gui-3.png)
+![MoonFix](assets/screenshots/gui-4.png)
+![Acerca de](assets/screenshots/gui-5.png)
 
 ---
 

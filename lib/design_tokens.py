@@ -32,6 +32,12 @@ DIVIDER = "#333333"
 SIDEBAR_BG = "rgba(40, 40, 40, 0.85)"
 SIDEBAR_BG_SOLID = "#282828"
 
+# Fondos translúcidos para que el efecto Mica/Acrylic (Leviathan WipeWindow)
+# se vea a través de ellos. Deben seguir siendo lo bastante opacos para que el
+# texto conserve contraste sobre cualquier fondo de escritorio.
+TITLEBAR_BG = "rgba(40, 40, 40, 0.85)"
+CONTENT_BG = "rgba(28, 28, 30, 0.82)"
+
 TEXT = "#FFFFFF"
 TEXT_MUTED = "#DDDDDD"
 TEXT_DIM = "#8E8E93"

@@ -93,5 +93,67 @@ class IflappReaderTests(unittest.TestCase):
             self.assertTrue(Path(exported["details"]).is_file())
 
 
+class IflappHeaderHandlerTests(unittest.TestCase):
+    """El handler debe leer icono y detalles de la cabecera sin descifrar."""
+
+    PNG = bytes.fromhex(
+        "89504e470d0a1a0a0000000d4948445200000001000000010806000000"
+        "1f15c4890000000d4944415478da63f8cfc0f01f00050001ff9d5c1b7e"
+        "0000000049454e44ae426082"
+    )
+
+    def _pack(self, root, *, icon, details):
+        package = root / "pkg"
+        package.mkdir()
+        (package / "main.py").write_text("print('hola')", encoding="utf-8")
+        out = root / "demo.iflapp"
+        iflapp_format.pack_iflapp(
+            package_dir=package,
+            output_file=out,
+            icon=icon,
+            details=details,
+            identity={"name": "Demo", "version": "1.0.0", "author": "me"},
+        )
+        return out
+
+    def test_header_exposes_icon_and_details_without_decrypting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            details = b"<details><name>Demo</name></details>"
+            out = self._pack(root, icon=self.PNG, details=details)
+
+            header = iflapp_format.read_iflapp_header(out)
+            self.assertEqual(header.icon, self.PNG)
+            self.assertEqual(header.details, details)
+            self.assertEqual(header.identity()["name"], "Demo")
+            # Con contraseña: el payload queda cifrado, la cabecera no.
+            locked = root / "locked.iflapp"
+            iflapp_format.pack_iflapp(
+                package_dir=root / "pkg",
+                output_file=locked,
+                icon=self.PNG,
+                details=details,
+                password="secreto",
+                identity={"name": "Demo"},
+            )
+            self.assertEqual(iflapp_format.read_iflapp_header(locked).icon, self.PNG)
+
+    def test_accepts_paths_or_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            icon_path = root / "icon.png"
+            icon_path.write_bytes(self.PNG)
+            details_path = root / "details.xml"
+            details_path.write_text("<details/>", encoding="utf-8")
+
+            from_paths = self._pack(root, icon=icon_path, details=details_path)
+            self.assertTrue(iflapp_format.is_iflapp_v2(from_paths))
+            self.assertEqual(iflapp_format.read_iflapp_header(from_paths).icon, self.PNG)
+
+    def test_bad_blob_raises_clear_error(self):
+        with self.assertRaises(iflapp_format.IflappError):
+            iflapp_format._as_bytes("/no/existe/icono.png", what="icon")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -29,6 +29,7 @@ except ImportError:  # pragma: no cover - entorno sin Qt
 
 from lib.design_tokens import (
     ACCENT,
+    ACCENT_HOVER,
     BORDER,
     BUTTON_HEIGHT,
     FONT_STACK,
@@ -40,6 +41,15 @@ from lib.design_tokens import (
     primary_button_qss,
     secondary_button_qss,
 )
+from lib.hover_animation import enable_hover_fade
+
+# Color de resalte al pasar el ratón por cada tipo de botón. La animación parte
+# del fondo declarado en el QSS del propio botón.
+HOVER_COLORS = {
+    "primary": ACCENT_HOVER,
+    "secondary": SURFACE_HOVER,
+    "destructive": "rgba(255, 69, 58, 0.28)",
+}
 
 # Geometría de la barra. Los botones van en la parte superior de cada página,
 # con la misma altura y radios en todas (ver tests/test_page_action_bar.py).
@@ -79,6 +89,7 @@ def make_action_button(text: str, kind: str = "primary", icon=None) -> "QPushBut
             btn.setIcon(icon)
         except Exception:
             pass
+    enable_hover_fade(btn, HOVER_COLORS.get(kind, SURFACE_HOVER))
     return btn
 
 
@@ -100,6 +111,7 @@ def make_icon_button(icon, tooltip: str = "", size: int = 34) -> "QPushButton":
             btn.setIcon(icon)
         except Exception:
             pass
+    enable_hover_fade(btn, SURFACE_HOVER)
     return btn
 
 

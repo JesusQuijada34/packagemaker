@@ -47,35 +47,55 @@ except ImportError:
 
 EDITOR_CONFIG_PATH = Path(__file__).resolve().parent.parent / "data" / "pmCodeEditor" / "editor_config.json"
 
-DARK_QSS = """
-QMainWindow, QDialog, QWidget {
+from lib.design_tokens import ACCENT
+
+
+def _accent() -> str:
+    """Acento activo: preferencia del usuario, luego el token de diseño."""
+    try:
+        from lib.pm_data import get_pm_data
+
+        value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
+        if value:
+            return value
+    except Exception:
+        pass
+    return ACCENT
+
+
+ACCENT_COLOR = _accent()
+ACCENT_HOVER = "#1084D8"
+ACCENT_SOFT = "rgba(0, 120, 212, 0.25)"
+
+DARK_QSS = f"""
+QMainWindow, QDialog, QWidget {{
     background-color: #1E1E2E;
     color: #D4D4D4;
-}
-QLabel { color: #D4D4D4; }
-QPushButton {
-    background-color: #ff5722;
+}}
+QLabel {{ color: #D4D4D4; }}
+QPushButton {{
+    background-color: {ACCENT_COLOR};
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
-}
-QPushButton:hover { background-color: #ff784e; }
-QLineEdit, QComboBox {
+}}
+QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}
+QLineEdit, QComboBox {{
     background-color: #252526;
     color: #D4D4D4;
     border: 1px solid #3C3C3C;
     padding: 6px;
     border-radius: 4px;
-}
-QGroupBox {
+}}
+QGroupBox {{
     border: 1px solid #3C3C3C;
     border-radius: 8px;
     margin-top: 12px;
     padding-top: 10px;
-    color: #ff5722;
+    color: {ACCENT_COLOR};
     font-weight: bold;
-}
+}}
 """
 
 
@@ -150,7 +170,7 @@ class NewProjectWizard(QDialog):
         layout.setSpacing(16)
 
         title = QLabel("Crear nuevo proyecto")
-        title.setStyleSheet("font-size: 22px; font-weight: bold; color: #ff5722;")
+        title.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {ACCENT_COLOR};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
@@ -322,7 +342,7 @@ class DashboardWindow(QMainWindow):
         row.setContentsMargins(0, 0, 0, 8)
 
         title = QLabel("PackageMaker IDE")
-        title.setStyleSheet("font-size: 30px; font-weight: bold; color: #ff5722;")
+        title.setStyleSheet(f"font-size: 30px; font-weight: bold; color: {ACCENT_COLOR};")
         row.addWidget(title)
         row.addStretch()
 
@@ -350,17 +370,17 @@ class DashboardWindow(QMainWindow):
         box = QVBoxLayout(group)
         self.recent_list = QListWidget()
         self.recent_list.setMaximumHeight(140)
-        self.recent_list.setStyleSheet("""
-            QListWidget {
+        self.recent_list.setStyleSheet(f"""
+            QListWidget {{
                 background: transparent;
                 border: none;
                 color: #cccccc;
-            }
-            QListWidget::item { padding: 6px; border-radius: 4px; }
-            QListWidget::item:selected {
-                background: rgba(255, 87, 34, 0.25);
-                color: #ff5722;
-            }
+            }}
+            QListWidget::item {{ padding: 6px; border-radius: 4px; }}
+            QListWidget::item:selected {{
+                background: {ACCENT_SOFT};
+                color: {ACCENT_COLOR};
+            }}
         """)
         self.recent_list.itemDoubleClicked.connect(self._on_recent_double_click)
         box.addWidget(self.recent_list)

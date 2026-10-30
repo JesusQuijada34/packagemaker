@@ -29,6 +29,15 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
 - `lib/fluent_theme.py` mantiene los grupos de QSS por área
   (`WINDOW_CHROME_STYLES`, `PROJECT_CREATION_STYLES`, ...) pero sus valores
   salen de los tokens.
+- **Ningún QSS con acento se escribe literal**: `pmCodeEditor.py`,
+  `lib/pm_dashboard.py` e `lib/interpreter_config_dialog.py` exponen un
+  `ACCENT_COLOR`/`EDITOR_ACCENT` calculado una vez (preferencia del usuario →
+  token `ACCENT`) y lo interpolan con f-strings. Al añadir un bloque QSS con
+  llaves, recuerda convertirlo a `f"""..."""` y duplicar las llaves (`{{ }}`).
+- `lib/hover_animation.py` aplica un desvanecido de fondo al pasar el ratón.
+  Reescribe **sólo** la regla `:hover` pura y respeta `:checked:hover`. Para
+  saltarte un estado usa `only_when` (p. ej. el ítem de la barra lateral
+  seleccionado no se anima).
 
 ## Arquitectura relevante
 - `lib/compilers.py` — **solo dos** backends embebidos: `nuitka` (por defecto,
@@ -65,3 +74,11 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
 - Los tests de UI necesitan `PyQt6` y las libs de sistema `libegl1`,
   `libgl1`, `libxkbcommon-x11-0` (en un contenedor Debian:
   `sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0`).
+- En tests con Qt, conserva una referencia a la `QApplication` (patrón
+  `_ensure_app`): si se recolecta, Qt aborta el proceso con *Fatal Python
+  error: Aborted* en la siguiente llamada.
+- `iflapp_format.pack_iflapp()` acepta `icon`/`details` como `bytes` **o** ruta
+  (`_as_bytes` los normaliza); pasar una ruta sin coercer daba un `TypeError`
+  críptico en `len(icon)`.
+- Las capturas de `assets/screenshots/` se regeneran con
+  `QT_QPA_PLATFORM=offscreen python scripts/capture_screenshots.py`.

@@ -34,78 +34,96 @@ except ImportError:
         def emit(self, *args): pass
 
 from lib.python_portable_manager import get_python_manager
+from lib.design_tokens import ACCENT
 
-DARK_PANEL_QSS = """
-QDialog {
+
+def _accent() -> str:
+    """Acento activo: preferencia del usuario, luego el token de diseño."""
+    try:
+        from lib.pm_data import get_pm_data
+
+        value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
+        if value:
+            return value
+    except Exception:
+        pass
+    return ACCENT
+
+
+ACCENT_COLOR = _accent()
+ACCENT_HOVER = "#1084D8"
+
+DARK_PANEL_QSS = f"""
+QDialog {{
     background-color: #1e1e2e;
     color: #d4d4d4;
-}
-QGroupBox {
+}}
+QGroupBox {{
     border: 1px solid #3c3c3c;
     border-radius: 8px;
     margin-top: 12px;
     padding-top: 8px;
     font-weight: bold;
-    color: #ff5722;
-}
-QGroupBox::title {
+    color: {ACCENT_COLOR};
+}}
+QGroupBox::title {{
     subcontrol-origin: margin;
     left: 10px;
     padding: 0 8px;
-}
-QListWidget {
+}}
+QListWidget {{
     background-color: #252526;
     border: 1px solid #3c3c3c;
     border-radius: 6px;
     padding: 5px;
-}
-QListWidget::item {
+}}
+QListWidget::item {{
     padding: 8px;
     border-radius: 4px;
-}
-QListWidget::item:selected {
-    background-color: #ff5722;
+}}
+QListWidget::item:selected {{
+    background-color: {ACCENT_COLOR};
     color: white;
-}
-QPushButton {
+}}
+QPushButton {{
     background-color: #2d2d2d;
     color: #cccccc;
     border: 1px solid #3c3c3c;
     border-radius: 4px;
     padding: 8px 16px;
     font-weight: bold;
-}
-QPushButton:hover {
+}}
+QPushButton:hover {{
     background-color: #3c3c3c;
-}
-QPushButton#primary {
-    background-color: #ff5722;
+}}
+QPushButton#primary {{
+    background-color: {ACCENT_COLOR};
     color: white;
     border: none;
-}
-QPushButton#primary:hover {
-    background-color: #ff7043;
-}
-QPushButton#danger {
+}}
+QPushButton#primary:hover {{
+    background-color: {ACCENT_HOVER};
+}}
+QPushButton#danger {{
     background-color: #d32f2f;
     color: white;
-}
-QPushButton#danger:hover {
+}}
+QPushButton#danger:hover {{
     background-color: #f44336;
-}
-QProgressBar {
+}}
+QProgressBar {{
     background-color: #333;
     border: none;
     border-radius: 4px;
     height: 6px;
-}
-QProgressBar::chunk {
-    background-color: #ff5722;
+}}
+QProgressBar::chunk {{
+    background-color: {ACCENT_COLOR};
     border-radius: 4px;
-}
-QComboBox, QCheckBox {
+}}
+QComboBox, QCheckBox {{
     color: #cccccc;
-}
+}}
 """
 
 
@@ -129,7 +147,7 @@ class InterpreterConfigDialog(QDialog):
         layout.setSpacing(15)
 
         title = QLabel("Gestión de intérpretes Python")
-        title.setStyleSheet("font-size: 20px; font-weight: bold; color: #ff5722;")
+        title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {ACCENT_COLOR};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
