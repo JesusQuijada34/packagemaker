@@ -233,11 +233,13 @@ def obfuscate_strings(source: Path | str, *, output: Optional[Path | str] = None
 
 
 def attach_resource(binary: Path | str, icon: Optional[Path | str] = None) -> HardeningReport:
-    """Adjunta el icono a un binario PE con ``objcopy`` cuando es posible.
+    """Adjunta el icono como sección ``.iflapp.ico`` con ``objcopy``.
 
-    ``objcopy`` sólo puede inyectar secciones de recursos en binarios PE
-    preparados; cuando la operación no es viable el método se marca como no
-    aplicado y el flujo continúa.
+    Es una incrustación de sección cruda (válida en ELF y aceptada por
+    ``objcopy`` en PE). No sustituye el recurso de icono nativo de Windows: para
+    eso el icono debe pasarse al compilador (Nuitka ``--windows-icon-from-ico``).
+    Cuando la operación no es viable el método se marca como no aplicado y el
+    flujo continúa.
     """
     binary = Path(binary)
     tool = shutil.which("objcopy") or shutil.which("llvm-objcopy")

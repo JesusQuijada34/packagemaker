@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from lib.iflapp_format import (
+    DEFAULT_SIGNING_KEY,
     IflappError,
     IflappHeader,
     export_header_assets,
@@ -115,9 +116,9 @@ class IflappReader:
     def manifest(self) -> List[Dict]:
         return list_iflapp(self.path)
 
-    def verify(self) -> Dict:
+    def verify(self, signing_key: bytes = DEFAULT_SIGNING_KEY) -> Dict:
         """Verifica estructura y firma del contenedor (sin extraerlo)."""
-        return verify_iflapp(self.path)
+        return verify_iflapp(self.path, signing_key=signing_key)
 
     def export_assets(self, out_dir: Path | str) -> Dict[str, Optional[str]]:
         """Exporta icono y detalles leídos de la cabecera a *out_dir*."""

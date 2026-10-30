@@ -741,9 +741,16 @@ class FlangCompiler:
                 ),
                 encoding="utf-8",
             )
+            # El script aislado importa ``lib.iflapp_format``; hay que exponer el
+            # directorio de PackageMaker en el entorno del sandbox.
+            project_root = Path(__file__).resolve().parent.parent
+            sandbox_env = {"PYTHONPATH": os.pathsep.join(
+                [str(project_root), os.environ.get("PYTHONPATH", "")]
+            ).rstrip(os.pathsep)}
             result = self._sandbox.run(
                 [sys.executable, str(extract_script), str(iflapp_path), str(Path(workspace) / "unpacked")],
                 workspace,
+                env=sandbox_env,
             )
             if result.ok and "IFLAPP_OK" in result.stdout:
                 self.log(f"[OK] Verificación en sandbox correcta ({result.backend}).")

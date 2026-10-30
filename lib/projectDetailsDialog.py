@@ -19,9 +19,6 @@ except (ImportError, SyntaxError):
         def resize(self, *args, **kwargs): pass
     class QWidget:
         def __init__(self, *args, **kwargs): pass
-    class LeviathanDialog:
-        @staticmethod
-        def launch(*args, **kwargs): pass
 try:
     from lib.alert_dialog import AlertDialog as LeviathanDialog
 except (ImportError, SyntaxError):

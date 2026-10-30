@@ -31,6 +31,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
 
+class SandboxError(RuntimeError):
+    """Error de configuración o ejecución del sandbox."""
+
+
 @dataclass
 class SandboxCapabilities:
     """Capacidades detectadas en el host."""
@@ -109,12 +113,37 @@ def _unshare_supported() -> bool:
     return probe.returncode == 0
 
 
+def _qemu_guest_assets() -> Optional[tuple]:
+    """Assets de arranque para la microVM (kernel + initrd), si existen.
+
+    Se pueden fijar con ``IFLAPP_QEMU_KERNEL`` / ``IFLAPP_QEMU_INITRD`` o dejar
+    en las rutas habituales. Sin ellos no se puede arrancar un huésped, así que
+    ``qemu-kvm`` no se anuncia como disponible: preferimos degradar a un backend
+    real antes que reportar virtualización por hardware que no ocurriría.
+    """
+    kernel = os.environ.get("IFLAPP_QEMU_KERNEL", "")
+    initrd = os.environ.get("IFLAPP_QEMU_INITRD", "")
+    if kernel and Path(kernel).is_file() and initrd and Path(initrd).is_file():
+        return kernel, initrd
+    for candidate_kernel, candidate_initrd in (
+        ("/boot/vmlinuz", "/boot/initrd.img"),
+        ("/boot/vmlinuz-linux", "/boot/initramfs-linux.img"),
+    ):
+        if Path(candidate_kernel).is_file() and Path(candidate_initrd).is_file():
+            return candidate_kernel, candidate_initrd
+    return None
+
+
 def detect_capabilities() -> SandboxCapabilities:
     """Inspecciona el host y devuelve los backends de aislamiento disponibles."""
     is_root = hasattr(os, "geteuid") and os.geteuid() == 0
     has_kvm = Path("/dev/kvm").exists() and os.access("/dev/kvm", os.R_OK | os.W_OK)
     backends = {
-        "qemu-kvm": shutil.which("qemu-system-x86_64") is not None and has_kvm,
+        "qemu-kvm": (
+            shutil.which("qemu-system-x86_64") is not None
+            and has_kvm
+            and _qemu_guest_assets() is not None
+        ),
         "systemd-nspawn": shutil.which("systemd-nspawn") is not None and is_root,
         "docker": _container_runtime_ready("docker"),
         "podman": _container_runtime_ready("podman"),
@@ -198,9 +227,39 @@ class HardwareSandbox:
         return workspace
 
     # -- construcción del comando ----------------------------------------- #
+    def _qemu_command(self, argv: Sequence[str], workspace: Path) -> List[str]:
+        """Arranca una microVM con KVM y comparte *workspace* por virtio-9p.
+
+        El huésped ejecuta ``argv`` dentro del directorio compartido. Requiere
+        ``qemu-system-x86_64``, ``/dev/kvm`` y assets de arranque (ver
+        ``_qemu_guest_assets``); si falta cualquiera, ``qemu-kvm`` no se marca
+        como disponible y nunca se llega aquí.
+        """
+        assets = _qemu_guest_assets()
+        if assets is None:
+            raise SandboxError("qemu-kvm no tiene kernel/initrd de arranque configurados.")
+        kernel, initrd = assets
+        guest_argv = " ".join(shlex.quote(part) for part in argv)
+        cpus = max(1, min(self.capabilities.cpu_count, 4))
+        return [
+            "qemu-system-x86_64",
+            "-enable-kvm",
+            "-cpu", "host",
+            "-m", "2048",
+            "-smp", str(cpus),
+            "-nographic",
+            "-no-reboot",
+            "-kernel", kernel,
+            "-initrd", initrd,
+            "-append", f"console=ttyS0 quiet panic=-1 init=/bin/sh -- -c {shlex.quote(guest_argv)}",
+            "-virtfs", f"local,path={workspace},mount_tag=workspace,security_model=none,readonly=off",
+        ]
+
     def build_command(self, argv: Sequence[str], workspace: Path) -> List[str]:
         backend = self.backend
         ws = str(workspace)
+        if backend == "qemu-kvm":
+            return self._qemu_command(argv, workspace)
         if backend == "systemd-nspawn":
             return ["systemd-nspawn", "--quiet", "--private-users=pick", "--bind", ws, "--chdir", ws, *argv]
         if backend == "docker":
@@ -269,7 +328,16 @@ class HardwareSandbox:
     ) -> SandboxResult:
         """Ejecuta *argv* dentro del aislamiento seleccionado."""
         workspace = Path(workspace)
-        command = self._cpu_prefix(cpus) + self.build_command(argv, workspace)
+        try:
+            command = self._cpu_prefix(cpus) + self.build_command(argv, workspace)
+        except SandboxError as exc:
+            return SandboxResult(
+                returncode=127,
+                stdout="",
+                stderr=str(exc),
+                backend=self.backend,
+                command=[],
+            )
         self.log(f"[sandbox:{self.backend}] {' '.join(shlex.quote(part) for part in command)}")
 
         run_env = os.environ.copy()

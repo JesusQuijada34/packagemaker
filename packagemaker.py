@@ -3,22 +3,13 @@
 import sys
 import os
 import time
-import hashlib
 import shutil
 import xml.etree.ElementTree as ET
 import urllib.request
-import urllib.error
-import subprocess
-import platform
-import fnmatch
-import re
 import json
-import ssl
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 import importlib
-import importlib.util
 
 
 # Importar detector de modo de ejecución
@@ -4020,6 +4011,7 @@ def main():
                 'show_version',
                 'version_update',
                 'list_compilers',
+                'list_hardening',
                 'inspect_iflapp',
                 'list_fonts',
                 'download_fonts',
@@ -4042,10 +4034,12 @@ def main():
                 return
             if window is None: # Si es headless o acción de shell ya terminada
                 return
-            if window:
-                window.show()
-                main_window = window
-                sys.exit(app.exec())
+            if not hasattr(window, "show"):
+                # Acción de shell: el helper devolvió un booleano, no una ventana.
+                return
+            window.show()
+            main_window = window
+            sys.exit(app.exec())
             return
 
     # ── Sin args: lanzar GUI o TUI según el entorno ───────────────────────────

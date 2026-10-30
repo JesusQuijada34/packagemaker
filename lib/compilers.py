@@ -186,7 +186,7 @@ class NuitkaBackend(CompilerBackend):
         os.makedirs(output_dir, exist_ok=True)
 
         command = self._base_command()
-        command.append("--standalone" if onefile else "--standalone")
+        command.append("--standalone")
         command.append("--assume-yes-for-downloads")
         command.append(f"--output-dir={output_dir}")
         command.append(f"--output-filename={output_name}")
