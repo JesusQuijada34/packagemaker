@@ -5,7 +5,6 @@ Panel de configuración de intérpretes Python para pmCodeEditor.
 import os
 import sys
 import shutil
-from pathlib import Path
 from typing import List, Optional, Tuple
 
 try:

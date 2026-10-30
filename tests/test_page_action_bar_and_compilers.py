@@ -87,10 +87,13 @@ class NuitkaEmbeddedTests(unittest.TestCase):
 class PageActionBarTests(unittest.TestCase):
     def test_bar_geometry_is_shared_across_pages(self):
         from lib import page_action_bar as pab
+        from lib.design_tokens import BUTTON_HEIGHT, PILL_RADIUS
 
-        self.assertEqual(pab.BAR_HEIGHT, 44)
-        self.assertEqual(pab.BUTTON_HEIGHT, 30)
-        self.assertGreaterEqual(pab.BUTTON_RADIUS * 2, pab.BUTTON_HEIGHT - 1)
+        self.assertEqual(pab.BAR_HEIGHT, 48)
+        self.assertEqual(pab.BUTTON_HEIGHT, BUTTON_HEIGHT)
+        self.assertEqual(BUTTON_HEIGHT, 36)
+        # Píldora: el radio es la mitad de la altura.
+        self.assertEqual(PILL_RADIUS * 2, BUTTON_HEIGHT)
 
     def test_button_kinds_have_distinct_styles(self):
         from lib import page_action_bar as pab

@@ -4,18 +4,18 @@ Notificaciones fluidas que aparecen desde el borde derecho con animaciones suave
 """
 import os
 import sys
-from typing import Optional, List, Callable, Dict, Any
+from typing import Optional, List, Callable, Dict
 from dataclasses import dataclass, field
 try:
     from PyQt6.QtCore import (
-        Qt, QTimer, QPropertyAnimation, QEasingCurve, QPoint, QSize,
-        pyqtSignal, QObject, QParallelAnimationGroup, QSequentialAnimationGroup
+        Qt, QTimer, QPropertyAnimation, QEasingCurve, QPoint, pyqtSignal,
+        QObject, QParallelAnimationGroup
     )
     from PyQt6.QtWidgets import (
         QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
         QGraphicsDropShadowEffect, QApplication, QFrame, QSizePolicy
     )
-    from PyQt6.QtGui import QColor, QIcon, QPixmap, QPainter, QFont, QFontMetrics
+    from PyQt6.QtGui import QColor, QPixmap
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -717,8 +717,6 @@ def error_handler(title: str, error_message: str, error_details: str = "", durat
 
 # Ejemplo de uso:
 if __name__ == "__main__":
-    from PyQt6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
-    
     app = QApplication(sys.argv)
     
     # Ventana de prueba

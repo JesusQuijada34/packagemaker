@@ -6,7 +6,6 @@ seguía como si fuera una ventana, terminando en
 que la acción se reconoce como "sin GUI" y que el flujo principal tolera un
 valor que no es ventana.
 """
-import inspect
 import unittest
 from pathlib import Path
 from unittest.mock import patch

@@ -10,7 +10,6 @@ import shutil
 import zipfile
 import traceback
 import subprocess
-from pathlib import Path
 
 from lib.safe_zip import safe_extract_zip
 
@@ -22,7 +21,7 @@ except ImportError:
 
 try:
     from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QProgressBar
-    from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor
+    from PyQt6.QtGui import QColor
     from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QObject
     PYQT6_AVAILABLE = True
 except ImportError:
@@ -68,7 +67,6 @@ except (ImportError, SyntaxError):
 
 # Notificaciones nativas de Windows
 try:
-    import winreg
     from winrt.windows.ui.notifications import ToastNotificationManager, ToastNotification
     from winrt.windows.data.xml.dom import XmlDocument
     HAS_WIN_TOAST = True

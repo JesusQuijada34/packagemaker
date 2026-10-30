@@ -9,12 +9,12 @@ de modo que gestos y pulsaciones se comporten como en una ventana nativa.
 from __future__ import annotations
 
 import sys
-from typing import Optional, Tuple
+from typing import Optional
 
 try:
     from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, Qt
     from PyQt6.QtGui import QCursor
-    from PyQt6.QtWidgets import QApplication, QMenu, QWidget
+    from PyQt6.QtWidgets import QMenu, QWidget
 
     PYQT6_AVAILABLE = True
 except ImportError:  # pragma: no cover - entorno sin Qt

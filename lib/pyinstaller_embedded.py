@@ -7,7 +7,6 @@ import os
 import sys
 import tempfile
 import shutil
-from pathlib import Path
 from typing import List, Optional, Tuple
 
 PYINSTALLER_AVAILABLE = False

@@ -4,10 +4,8 @@ Script de validación y optimización de PackageMaker para Linux.
 Ejecutar antes de compilar para asegurar configuración correcta.
 """
 
-import os
 import sys
 import subprocess
-import json
 from pathlib import Path
 
 

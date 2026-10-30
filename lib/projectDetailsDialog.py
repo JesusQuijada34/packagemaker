@@ -27,8 +27,7 @@ except (ImportError, SyntaxError):
         def launch(*args, **kwargs): pass
 from lib.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog
-from lib.moonFixWizard import detectar_modo_sistema
-from lib.notificationSystem import info, warning, error, success, NotificationAction
+from lib.notificationSystem import warning, error, success, NotificationAction
 from lib.safe_zip import safe_extract_zip
 
 # Default empty - icons should be passed from caller if needed

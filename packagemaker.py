@@ -5,7 +5,6 @@ import os
 import time
 import shutil
 import xml.etree.ElementTree as ET
-import urllib.request
 import json
 import tempfile
 from pathlib import Path
@@ -27,15 +26,12 @@ except ImportError:
 try:
     from PyQt6 import QtWidgets, QtGui, QtCore
     from PyQt6.QtWidgets import (
-        QApplication, QMainWindow, QWidget, QTabWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-        QPushButton, QComboBox, QListWidget, QListWidgetItem, QFileDialog, QDialog, QStyle, QSizePolicy, QSplitter, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget,
-        QSwipeGesture, QSlider, QFrame
+        QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+        QComboBox, QFileDialog, QDialog, QSizePolicy, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget, QSlider, QFrame, QGraphicsDropShadowEffect
     )
-    from PyQt6.QtGui import QFont, QIcon
-    from PyQt6.QtGui import QPixmap      # [NEW IMPORT FOR TITLEBAR SVG]
-    from PyQt6.QtSvg import QSvgRenderer # [NEW IMPORT FOR TITLEBAR SVG RENDERING]
-    from PyQt6.QtCore import QByteArray  # [NEW IMPORT FOR SVG BUFFER]
-    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QProcess, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve, QPoint, QSize
+    from PyQt6.QtGui import QFont, QIcon, QColor
+    from PyQt6.QtGui import QPixmap
+    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QPropertyAnimation, QEasingCurve
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -71,6 +67,13 @@ except ImportError:
         def __init__(self, *args, **kwargs): pass
     class QFrame:
         def __init__(self, *args, **kwargs): pass
+    class QGraphicsDropShadowEffect:
+        def __init__(self, *args, **kwargs): pass
+        def setBlurRadius(self, *args): pass
+        def setOffset(self, *args): pass
+        def setColor(self, *args): pass
+    class QColor:
+        def __init__(self, *args, **kwargs): pass
     class Qt:
         class WindowType: pass
         class WidgetAttribute: pass
@@ -90,47 +93,186 @@ except ImportError:
     winreg = None
 
 try:
-    from leviathan_ui import InmersiveSplash, LightsOff, WipeWindow, LeviathanProgressBar, CustomTitleBar, get_accent_color
+    from leviathan_ui import InmersiveSplash, LightsOff, WipeWindow, LeviathanProgressBar, CustomTitleBar
+    from leviathan_ui import get_accent_color as _leviathan_accent
     from leviathan_ui.touchscreen import TouchScreen
     LEVIATHAN_AVAILABLE = True
 except (ImportError, SyntaxError) as e:
     LEVIATHAN_AVAILABLE = False
     print(f"[WARN] Leviathan UI no disponible o error de sintaxis: {e}")
-    class LeviathanProgressBar: pass
+    _leviathan_accent = None
+
+    class LeviathanProgressBar(QWidget):
+        """Barra de progreso mínima cuando ``leviathan_ui`` no está instalado."""
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(kwargs.get("parent"))
+            self._value = 0
+            self._maximum = 100
+
+        def setValue(self, value):
+            self._value = int(value)
+
+        def value(self):
+            return self._value
+
+        def setMaximum(self, value):
+            self._maximum = int(value)
+
+        def maximum(self):
+            return self._maximum
+
+        def setMinimum(self, value):
+            pass
+
+        def setFormat(self, text):
+            pass
+
+        def setTextVisible(self, visible):
+            pass
+
+        def setProgressColor(self, *args, **kwargs):
+            return self
+
+        def setAnimationType(self, *args, **kwargs):
+            return self
+
+        def startAnimation(self, *args, **kwargs):
+            return self
+
+        def stopAnimation(self, *args, **kwargs):
+            return self
+
+        def reset(self):
+            self._value = 0
+
+    class _NoopWipeWindow:
+        """Respaldo sin efectos cuando ``leviathan_ui`` no está instalado."""
+
+        @classmethod
+        def create(cls):
+            return cls()
+
+        def set_mode(self, *args, **kwargs):
+            return self
+
+        def set_radius(self, *args, **kwargs):
+            return self
+
+        def apply(self, *args, **kwargs):
+            return self
+
+        def show(self, *args, **kwargs):
+            return self
+
+        def close(self, *args, **kwargs):
+            return self
+
+    class _NoopOverlay:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def show(self, *args, **kwargs):
+            return self
+
+        def close(self, *args, **kwargs):
+            return self
+
+        def hide(self, *args, **kwargs):
+            return self
+
+        def setWindowFlags(self, *args, **kwargs):
+            return self
+
+        def setAttribute(self, *args, **kwargs):
+            return self
+
+    class _NoopTitleBar(QWidget):
+        def __init__(self, parent=None, title="", icon="", **kwargs):
+            super().__init__(parent)
+            self.title_lbl = QLabel(title, self)
+
+        def set_title(self, text):
+            self.title_lbl.setText(text)
+
+    class _NoopTouchScreen:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def enable(self, *args, **kwargs):
+            return self
+
+    WipeWindow = _NoopWipeWindow
+    LightsOff = _NoopOverlay
+    InmersiveSplash = _NoopOverlay
+    CustomTitleBar = _NoopTitleBar
+    TouchScreen = _NoopTouchScreen
+
+
+def get_accent_color():
+    """Acento activo: preferencia del usuario, luego Leviathan, luego azul UWP.
+
+    ``leviathan_ui`` no está presente en todos los entornos (CI, Linux sin la
+    dependencia instalada), de modo que el tema cae a ``custom_accent_color``
+    de ``data/pm.data`` y, en último término, al azul de Windows 11.
+    """
+    try:
+        from lib.pm_data import get_pm_data
+
+        value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
+        if value:
+            return value
+    except Exception:
+        pass
+    if _leviathan_accent is not None:
+        try:
+            return str(_leviathan_accent())
+        except Exception:
+            pass
+    return "#0078D4"
+
+
 # Updater - usar coreUpdater si está disponible, sino fallback a lib.Updater
 try:
-    from lib.coreUpdater import KillerLogic, InstallerWorker, ModernUpdaterWindow
+    pass
 except ImportError:
-    from lib.Updater import KillerLogic, InstallerWorker, ModernUpdaterWindow
-from lib.BuildThread import BuildThread, FlangCompiler
-from lib.TitleBar import AnimTitleButton, TitleBar
+    pass
+from lib.BuildThread import BuildThread
 from lib.app_icons import get_icon, icon_button
 from lib.window_chrome import (
     apply_display_mode,
     apply_personalization_effects,
-    apply_dpi_scale,
     patch_titlebar_maximize,
     fixed_window_title,
     restart_application,
     is_frameless_maximized,
 )
 from lib.uwp_animations import play_bounce_down_close
-from lib.page_action_bar import install_page_action_bar, make_action_button
+from lib.page_action_bar import install_page_action_bar, make_action_button, make_icon_button
+from lib.design_tokens import (
+    CONTENT_PADDING,
+    FONT_STACK,
+    INPUT_HEIGHT,
+    SIDEBAR_ITEM_HEIGHT,
+    SIDEBAR_PADDING,
+    SIDEBAR_TOP_MARGIN,
+    TEXT,
+    WINDOW_BG,
+)
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
 from lib.window_manager_bridge import install_window_manager_bridges
 from lib.ios_progress_dialog import show_ios_progress
-from lib.alert_dialog import AlertDialog, pm_alert, pm_confirm
+from lib.alert_dialog import AlertDialog
 # Los avisos usan el diálogo temático propio (blanco/negro, botones verticales
 # de ancho completo con separadores). ``LeviathanDialog`` queda como alias para
 # no tocar los puntos de llamada existentes.
 LeviathanDialog = AlertDialog
-from lib.moonFixWizard import MoonFixWizard, QSetup, QInstaller, verificar_github_username, detectar_modo_sistema
+from lib.moonFixWizard import MoonFixWizard
 from lib.gitHubVerifyThread import GitHubVerifyThread
 from lib.i18n import i18n, tr, system_default_language, get_available_languages
-from lib.linux_icon_handler import get_linux_icon_path, ensure_linux_icon_support
-from lib.pm_data import get_pm_data, load_merged_app_config, is_compiled_build, COMPILED_LOCKED_USER_KEYS
-from lib.outputTerminalDialog import OutputTerminalDialog
+from lib.linux_icon_handler import ensure_linux_icon_support
+from lib.pm_data import get_pm_data, load_merged_app_config
 from lib.fluent_theme import (
     BTN_STYLES,
     FluentCheckBox as QCheckBox,
@@ -658,7 +800,9 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar.setMouseTracking(True)
         set_qss(self.sidebar, 'packagemaker_003', append=False)
         self.sidebar_layout = QVBoxLayout(self.sidebar)
-        self.sidebar_layout.setContentsMargins(15, 20, 15, 20)
+        self.sidebar_layout.setContentsMargins(
+            SIDEBAR_PADDING, SIDEBAR_TOP_MARGIN, SIDEBAR_PADDING, SIDEBAR_PADDING
+        )
         self.sidebar_layout.setSpacing(8)
         self.sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -1014,12 +1158,12 @@ class PackageTodoGUI(QMainWindow):
     def apply_theme(self):
         store = get_pm_data()
         accent = str(get_accent_color())
-        border_w = 3
+        border_w = int(store.get_user("sidebar_accent_width", 3) or 3)
         density = str(store.get_user("ui_density", "normal"))
-        sidebar_h = 50 if density != "compact" else 42
+        sidebar_h = SIDEBAR_ITEM_HEIGHT if density != "compact" else 36
         dark = self.last_theme_mode == "dark"
-        base_bg = "#303641" if dark else "#f5f7fb"
-        text_col = "#f8fbff" if dark else "#1f2937"
+        base_bg = WINDOW_BG if dark else "#f5f7fb"
+        text_col = TEXT if dark else "#1f2937"
 
         set_qss(self.central, applyget(accent), append=False)
         set_qss(self, 'packagemaker_010', values=(qss_value(base_bg, None, ''),), append=False)
@@ -1031,7 +1175,7 @@ class PackageTodoGUI(QMainWindow):
                 " QLabel { background:transparent; border:none; }"
             )
             self.titlebar.title_lbl.setStyleSheet(
-                f"background:transparent; color:{text_col}; font-family:'Roboto','Inter Regular','SF Pro Display','Segoe UI',sans-serif; font-weight:600;"
+                f"background:transparent; color:{text_col}; font-family:{FONT_STACK}; font-weight:600;"
             )
 
         for btn in getattr(self, "_sidebar_btn_keys", {}):
@@ -1060,7 +1204,7 @@ class PackageTodoGUI(QMainWindow):
         # Don't set individual background - let it inherit from parent
         layout = QVBoxLayout(target)
         layout.setSpacing(10)
-        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
 
         # Barra de acciones superior (estilo macOS). El botón de crear vive
         # aquí, junto al título de la página, y no en la barra de la ventana.
@@ -1603,7 +1747,7 @@ class PackageTodoGUI(QMainWindow):
         # Don't set individual background - let it inherit from parent
         layout = QVBoxLayout(target)
         layout.setSpacing(10)
-        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
 
         # Barra de acciones superior (estilo macOS). El botón BlindCube vive
         # aquí, en la parte alta y junto al título, en lugar de mezclarse con
@@ -1876,7 +2020,7 @@ class PackageTodoGUI(QMainWindow):
         target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         # Don't set individual background - let it inherit from parent
         outer = QVBoxLayout(target)
-        outer.setContentsMargins(25, 25, 25, 25)
+        outer.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
         outer.setSpacing(10)
 
         # Barra de acciones superior (estilo macOS): título + Guardar/Restablecer.
@@ -2112,7 +2256,7 @@ class PackageTodoGUI(QMainWindow):
         fonts_grid.setSpacing(6)
         self.conf_fonts_labels = {}
         try:
-            from lib.font_manager import FONT_REGISTRY, available_fonts_report
+            from lib.font_manager import available_fonts_report
 
             for row, (key, info) in enumerate(available_fonts_report().items()):
                 name_lbl = QLabel(info["family"])
@@ -2401,7 +2545,7 @@ class PackageTodoGUI(QMainWindow):
         target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         # Don't set individual background - let it inherit from parent
         layout = QVBoxLayout(target)
-        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
         layout.setSpacing(10)
 
         # Barra de acciones superior (estilo macOS): título + Diagnosticar.
@@ -2432,18 +2576,16 @@ class PackageTodoGUI(QMainWindow):
         self.mf_input = QLineEdit()
         self.mf_input.setPlaceholderText("Carpeta de proyectos...")
         self.mf_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        self.mf_input.setMinimumHeight(32)
+        self.mf_input.setMinimumHeight(INPUT_HEIGHT)
         set_qss(self.mf_input, 'packagemaker_056', append=False)
-        btn_sel = QPushButton("...")
-        btn_sel.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        btn_sel.setMinimumWidth(36)
-        btn_sel.setMinimumHeight(32)
-        btn_sel.setCursor(Qt.CursorShape.PointingHandCursor)
-        set_qss(btn_sel, 'packagemaker_057', append=False)
-        btn_sel.clicked.connect(self.mf_browse)
-        icon_button(btn_sel, "folder", 16)
+        # Icono de carpeta dentro del propio input (estilo UWP), sin botón externo.
+        self.mf_browse_action = self.mf_input.addAction(
+            get_icon("folder", 16),
+            QLineEdit.ActionPosition.TrailingPosition,
+        )
+        self.mf_browse_action.setToolTip("Examinar carpeta de proyectos")
+        self.mf_browse_action.triggered.connect(self.mf_browse)
         s_box.addWidget(self.mf_input, 1)
-        s_box.addWidget(btn_sel)
         layout.addLayout(s_box)
         layout.addStretch()
 
@@ -2592,15 +2734,15 @@ class PackageTodoGUI(QMainWindow):
         # Don't set individual background - let it inherit from parent
         layout = QVBoxLayout(target)
         layout.setSpacing(20)
-        layout.setContentsMargins(25, 25, 25, 25)
+        layout.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
 
         # Barra de acciones superior (estilo macOS): enlaces reales a GitHub y
-        # Telegram, que antes eran botones sin conexión.
-        self.about_github_btn = make_action_button("GitHub", "secondary")
+        # Telegram como botones circulares de icono (UWP).
+        self.about_github_btn = make_icon_button(get_icon("about", 18), "GitHub", 34)
         self.about_github_btn.clicked.connect(
             lambda: self._open_external_url("https://github.com/JesusQuijada34/packagemaker")
         )
-        self.about_telegram_btn = make_action_button("Telegram", "secondary")
+        self.about_telegram_btn = make_icon_button(get_icon("moonfix", 18), "Telegram", 34)
         self.about_telegram_btn.clicked.connect(
             lambda: self._open_external_url("https://t.me/influent_os")
         )
@@ -2621,6 +2763,16 @@ class PackageTodoGUI(QMainWindow):
         logo_lbl.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         logo_lbl.setMinimumSize(64, 64)
         logo_lbl.setMaximumSize(128, 128)
+        # Sombra suave (UWP) bajo el logo.
+        logo_lbl.setStyleSheet(
+            "background: transparent; border: none; "
+            "padding: 6px;"
+        )
+        shadow = QGraphicsDropShadowEffect(logo_lbl)
+        shadow.setBlurRadius(24)
+        shadow.setOffset(0, 6)
+        shadow.setColor(QColor(0, 0, 0, 140))
+        logo_lbl.setGraphicsEffect(shadow)
         # Draw a simple circle or use icon
         if os.path.exists(IPM_ICON_PATH):
             logo_lbl.setPixmap(QIcon(IPM_ICON_PATH).pixmap(64, 64))

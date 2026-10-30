@@ -7,7 +7,6 @@ Separa valores editables por el usuario y metadatos de solo lectura (build/compi
 from __future__ import annotations
 
 import json
-import os
 import sys
 import uuid
 from copy import deepcopy
@@ -43,7 +42,7 @@ DEFAULT_USER: Dict[str, Any] = {
     "auto_color": True,
     "notifications_enabled": False,
     "default_editor": "",
-    "custom_accent_color": "#ff5722",
+    "custom_accent_color": "#0078D4",
     "blur_intensity": 14,
     "window_radius": 12,
     "sidebar_accent_width": 3,
@@ -228,7 +227,7 @@ class PMDataStore:
             "auto_color": u.get("auto_color", True),
             "auto_translate": u.get("auto_translate", True),
             "notifications_enabled": u.get("notifications_enabled", False),
-            "custom_accent_color": u.get("custom_accent_color", "#ff5722"),
+            "custom_accent_color": u.get("custom_accent_color", "#0078D4"),
             "blur_intensity": u.get("blur_intensity", 14),
             "window_radius": u.get("window_radius", 12),
             "sidebar_accent_width": u.get("sidebar_accent_width", 3),

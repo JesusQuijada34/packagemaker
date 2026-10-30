@@ -23,7 +23,6 @@ try:
         QDialog,
         QLineEdit,
         QGroupBox,
-        QGridLayout,
         QListWidget,
         QListWidgetItem,
         QComboBox,

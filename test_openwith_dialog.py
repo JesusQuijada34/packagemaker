@@ -14,7 +14,6 @@ sys.path.insert(0, str(lib_path))
 
 try:
     from PyQt6.QtWidgets import QApplication
-    from PyQt6.QtCore import Qt
     from lib.openWithDialog import OpenWithDialog
     print("[OK] Successfully imported OpenWithDialog")
 except ImportError as e:

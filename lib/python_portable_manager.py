@@ -7,7 +7,6 @@ import json
 import platform
 import shutil
 import subprocess
-import tarfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path

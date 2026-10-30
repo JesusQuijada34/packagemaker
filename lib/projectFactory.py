@@ -4,24 +4,18 @@
 Project Factory - Creacion de proyectos PackageMaker via plantillas externas.
 """
 
-import hashlib
 import os
-import time
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 from lib.template_engine import (
     DEFAULT_FOLDERS,
     build_variables,
     create_project_from_templates,
     get_templates_root,
-    getversion,
     load_template,
     render_template,
-    save_pretty_xml_from_string,
     write_details_xml,
     write_template,
-    detect_rating,
 )
 
 try:

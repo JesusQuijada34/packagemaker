@@ -4,9 +4,7 @@
 Window classes for the updater GUI.
 """
 import os
-import sys
 import subprocess
-import time
 
 # PyQt6 imports con fallback para entornos sin GUI
 try:
@@ -43,8 +41,7 @@ except ImportError:
     QTimer = object
 
 from .workers import InstallerWorker, IFLAPPInstallerWorker, EXEInstallerWorker
-from .system_tray import get_tray_icon, set_tray_icon, get_updater_window, set_updater_window
-from .core import log
+from .system_tray import get_tray_icon, set_tray_icon, set_updater_window
 
 try:
     from lib.alert_dialog import AlertDialog as LeviathanDialog

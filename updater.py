@@ -14,29 +14,13 @@ from PyQt6.QtCore import Qt
 
 # Import core updater module
 from lib.coreUpdater import (
-    log,
     _rXml,
     _rXml_r,
     _fR,
     _fR_exe,
     XML_PATH,
-    LOG_PATH,
-    GITHUB_API,
-    SystemTrayIcon,
-    KillerLogic,
-    InstallerWorker,
-    IFLAPPInstallerWorker,
-    EXEInstallerWorker,
-    ModernUpdaterWindow,
-    IFLAPPInstallerWindow,
-    LicenseTermsDialog,
-    EXEInstallerWindow,
     install_iflapp,
     update_app,
-    get_tray_icon,
-    set_tray_icon,
-    get_updater_window,
-    set_updater_window,
 )
 
 

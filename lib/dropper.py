@@ -17,10 +17,8 @@ El stub generado es autónomo (sólo biblioteca estándar) e incluye:
 from __future__ import annotations
 
 import base64
-import os
 import shutil
 import stat
-import struct
 import subprocess
 import sys
 import tempfile
@@ -28,10 +26,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from lib.iflapp_format import (
-    MAGIC,
-    TRAILER_MAGIC,
     IflappError,
-    extract_iflapp,
     read_iflapp_header,
     sniff_format,
     verify_iflapp,

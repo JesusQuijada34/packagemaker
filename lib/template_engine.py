@@ -4,12 +4,9 @@ Carga archivos desde src/templates/ y sustituye variables __NOMBRE__.
 """
 
 import hashlib
-import re
 import sys
 import time
-import xml.etree.ElementTree as ET
 from pathlib import Path
-from string import Template
 from typing import Any, Dict, List, Optional
 from xml.dom import minidom
 

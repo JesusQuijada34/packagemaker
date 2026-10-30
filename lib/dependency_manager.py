@@ -3,7 +3,6 @@ Gestor de dependencias automático para pmCodeEditor.
 Detecta imports, genera requirements.txt, instala librerías faltantes.
 """
 
-import os
 import re
 import subprocess
 import sys

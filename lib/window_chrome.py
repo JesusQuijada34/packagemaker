@@ -8,10 +8,9 @@ import sys
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 try:
-    from PyQt6.QtCore import QRect, Qt
+    from PyQt6.QtCore import QRect
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication, QWidget
-    from leviathan_ui import WipeWindow
     PYQT6_AVAILABLE = True
 except (ImportError, SyntaxError):
     PYQT6_AVAILABLE = False
@@ -20,8 +19,30 @@ except (ImportError, SyntaxError):
         @staticmethod
         def instance(): return None
 
+try:
+    from leviathan_ui import WipeWindow
+    LEVIATHAN_WIPE_AVAILABLE = True
+except (ImportError, SyntaxError):
+    LEVIATHAN_WIPE_AVAILABLE = False
+
+    class WipeWindow:
+        """Respaldo sin efectos cuando ``leviathan_ui`` no está instalado."""
+
+        @classmethod
+        def create(cls):
+            return cls()
+
+        def set_mode(self, *args, **kwargs):
+            return self
+
+        def set_radius(self, *args, **kwargs):
+            return self
+
+        def apply(self, *args, **kwargs):
+            return None
+
 if TYPE_CHECKING:
-    from PyQt6.QtWidgets import QMainWindow
+    pass
 
 # Título fijo de ventana (no se personaliza desde pm.data)
 APP_TITLE_PREFIX = "Influent Package Maker"

@@ -6,8 +6,7 @@ Focus Indication Filter for Package Maker
 
 try:
     from PyQt6.QtWidgets import QWidget
-    from PyQt6.QtCore import QObject, QEvent, QPoint, QRect, Qt
-    from PyQt6.QtGui import QColor, QPainter
+    from PyQt6.QtCore import QObject, QEvent, Qt
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False

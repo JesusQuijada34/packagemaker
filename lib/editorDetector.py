@@ -7,11 +7,10 @@ Detecta editores instalados en Windows y Linux.
 import os
 import sys
 import glob
-import platform
 import shlex
 from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Tuple
 
 
 @dataclass
@@ -349,7 +348,6 @@ class EditorDetector:
                 # Intentar extraer icono usando win32api si está disponible
                 try:
                     import win32api
-                    import win32con
                     
                     # Cargar el icono del ejecutable
                     large_icon, small_icon = win32api.ExtractIconEx(exe_path, 0, 1, 1)

@@ -36,7 +36,6 @@ def find_python_shared_library() -> Optional[str]:
     
     # Agregar rutas multiarch de Debian/Ubuntu
     if sys.platform.startswith("linux"):
-        import sysconfig
         try:
             # Obtener la arquitectura multiarch de Debian/Ubuntu
             result = subprocess.run(

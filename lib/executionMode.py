@@ -7,7 +7,6 @@ Detecta si la aplicación está ejecutándose como script Python o como ejecutab
 import sys
 import os
 import platform
-from pathlib import Path
 
 
 class ExecutionMode:

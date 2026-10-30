@@ -12,7 +12,7 @@ quedan enlazados (ni sobrescritos) por los de otra.
 
 from __future__ import annotations
 
-from typing import Iterable, Optional, Sequence, Tuple
+from typing import Sequence, Tuple
 
 try:
     from PyQt6.QtCore import Qt
@@ -27,36 +27,33 @@ except ImportError:  # pragma: no cover - entorno sin Qt
             pass
 
 
-# Geometría de la barra. Valores explícitos para que el alto y los márgenes
-# sean idénticos en todas las páginas (ver tests/test_page_action_bar.py).
-BAR_HEIGHT = 44
-BUTTON_HEIGHT = 30
+from lib.design_tokens import (
+    ACCENT,
+    BORDER,
+    BUTTON_HEIGHT,
+    FONT_STACK,
+    SURFACE,
+    SURFACE_HOVER,
+    TITLE_SIZE,
+    WINDOW_RADIUS,
+    destructive_button_qss,
+    primary_button_qss,
+    secondary_button_qss,
+)
+
+# Geometría de la barra. Los botones van en la parte superior de cada página,
+# con la misma altura y radios en todas (ver tests/test_page_action_bar.py).
+BAR_HEIGHT = 48
 BUTTON_MIN_WIDTH = 96
-BUTTON_RADIUS = 15
-TITLE_FONT_PX = 15
+TITLE_FONT_PX = TITLE_SIZE
 
 # Colores macOS translúcidos.
-STYLE_PRIMARY = (
-    "QPushButton{background:#0a84ff;color:#ffffff;border:none;border-radius:%dpx;"
-    "padding:0 16px;font-size:13px;font-weight:600;}"
-    "QPushButton:hover{background:#3395ff;}"
-    "QPushButton:pressed{background:#0060df;}"
-    "QPushButton:disabled{background:rgba(120,120,128,0.32);color:rgba(255,255,255,0.5);}"
-) % BUTTON_RADIUS
-STYLE_SECONDARY = (
-    "QPushButton{background:rgba(120,120,128,0.24);color:#ffffff;border:none;"
-    "border-radius:%dpx;padding:0 16px;font-size:13px;font-weight:500;}"
-    "QPushButton:hover{background:rgba(120,120,128,0.36);}"
-    "QPushButton:pressed{background:rgba(120,120,128,0.48);}"
-) % BUTTON_RADIUS
-STYLE_DESTRUCTIVE = (
-    "QPushButton{background:rgba(255,69,58,0.22);color:#ff6b60;border:none;"
-    "border-radius:%dpx;padding:0 16px;font-size:13px;font-weight:600;}"
-    "QPushButton:hover{background:rgba(255,69,58,0.34);}"
-    "QPushButton:pressed{background:rgba(255,69,58,0.46);}"
-) % BUTTON_RADIUS
+STYLE_PRIMARY = primary_button_qss(ACCENT)
+STYLE_SECONDARY = secondary_button_qss()
+STYLE_DESTRUCTIVE = destructive_button_qss()
 STYLE_TITLE = (
-    "color:#f5f7fb;font-size:%dpx;font-weight:600;background:transparent;" % TITLE_FONT_PX
+    f"color:#f5f7fb;font-size:{TITLE_FONT_PX}px;font-weight:600;"
+    f"background:transparent;font-family:{FONT_STACK};"
 )
 
 
@@ -85,6 +82,27 @@ def make_action_button(text: str, kind: str = "primary", icon=None) -> "QPushBut
     return btn
 
 
+def make_icon_button(icon, tooltip: str = "", size: int = 34) -> "QPushButton":
+    """Botón circular que sólo muestra un icono (redes sociales, acciones)."""
+    btn = QPushButton()
+    btn.setCursor(Qt.CursorShape.PointingHandCursor)
+    btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    btn.setFixedSize(size, size)
+    btn.setToolTip(tooltip or "")
+    btn.setStyleSheet(
+        f"QPushButton{{background:{SURFACE};border:1px solid {BORDER};"
+        f"border-radius:{size // 2}px;}}"
+        f"QPushButton:hover{{background:{SURFACE_HOVER};}}"
+        f"QPushButton:pressed{{background:#242426;}}"
+    )
+    if icon is not None:
+        try:
+            btn.setIcon(icon)
+        except Exception:
+            pass
+    return btn
+
+
 def install_page_action_bar(
     parent_layout,
     title: str,
@@ -100,8 +118,8 @@ def install_page_action_bar(
     bar.setFixedHeight(BAR_HEIGHT)
     bar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
     bar.setStyleSheet(
-        "QWidget#PageActionBar{background:rgba(255,255,255,0.04);"
-        "border:1px solid rgba(255,255,255,0.07);border-radius:12px;}"
+        f"QWidget#PageActionBar{{background:rgba(255,255,255,0.04);"
+        f"border:1px solid rgba(255,255,255,0.07);border-radius:{WINDOW_RADIUS}px;}}"
     )
 
     row = QHBoxLayout(bar)

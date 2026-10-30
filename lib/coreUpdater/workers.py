@@ -9,8 +9,7 @@ import shutil
 import zipfile
 import time
 import traceback
-from io import BytesIO
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
 from .core import log, KillerLogic, cache_get, cache_set
 from lib.safe_zip import safe_extract_zip
 

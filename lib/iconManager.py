@@ -4,15 +4,13 @@ IconManager - Sistema de carga de iconos SVG dinámicos con color adaptable.
 Implementa iconos estilo Fluent System Icons con soporte para currentColor.
 """
 
-import os
 import re
 from pathlib import Path
 from typing import Optional
-from xml.etree import ElementTree as ET
 
 try:
-    from PyQt6.QtGui import QIcon, QPixmap, QPainter, QColor
-    from PyQt6.QtCore import Qt, QSize
+    from PyQt6.QtGui import QPixmap, QPainter
+    from PyQt6.QtCore import Qt
     from PyQt6.QtSvgWidgets import QSvgRenderer
     PYQT6_AVAILABLE = True
 except ImportError:

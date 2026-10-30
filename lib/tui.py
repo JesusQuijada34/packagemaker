@@ -327,7 +327,7 @@ def _screen_create() -> None:
     rc = _run_live(cmd)
     if rc == 0:
         # Calcular nombre de carpeta correcto igual que cliHandler.py
-        from lib.template_engine import build_variables
+        pass
         
         # Mapear de código técnico a nombre real para la visualización
         real_platform_map = {"win": "Knosthalij", "linux": "Danenone", "all": "AlphaCube"}
