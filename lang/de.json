@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "lang": "de",
+    "name": "Deutsch"
+  },
+  "app": {
+    "title": "Influent Package Maker",
+    "main_menu": "Hauptmenü",
+    "context": "Kontext"
+  },
+  "sidebar": {
+    "create": "Projekt erstellen",
+    "build": "Paket kompilieren",
+    "config": "Einstellungen",
+    "moonfix": "MoonFix",
+    "about": "Über"
+  },
+  "sidebar_desc": {
+    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
+    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
+    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
+    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+  },
+  "config": {
+    "title": "Einstellungen",
+    "section_general": "Allgemein",
+    "section_language": "Sprache",
+    "section_appearance": "Aussehen",
+    "section_system": "Systeminformationen",
+    "projects_path": "Projektordner",
+    "fluthin_path": "Fluthin Apps Ordner",
+    "browse": "Durchsuchen",
+    "save": "Speichern",
+    "language": "Sprache der Oberfläche",
+    "auto_translate": "Automatische Übersetzung bei fehlendem Text",
+    "auto_translate_hint": "Nutzt Online-Übersetzung und speichert das Ergebnis in data/pm.data.",
+    "display_mode": "Fenstermodus",
+    "touch_mode": "Touch-Modus",
+    "dpi_scale": "DPI-Skalierung",
+    "device_sim": "Gerätesimulation",
+    "interface_color": "Farbe der Oberfläche",
+    "auto_color": "Automatische Farbe nach System",
+    "notifications": "Benachrichtigungen",
+    "accent_color": "Akzentfarbe",
+    "blur_intensity": "Unschärfe-Intensität",
+    "window_radius": "Eckenradius",
+    "sidebar_accent": "Breite des aktiven Sidebar-Rands",
+    "card_opacity": "Deckkraft der UI-Karten",
+    "ui_density": "Oberflächendichte",
+    "density_normal": "Normal",
+    "density_compact": "Kompakt",
+    "locked_hint": "Locked in compiled build. Customize before building the executable.",
+    "personalization_hint": "Ändert weder Fenstertitel noch Firmennamen (Influent).",
+    "saved_ok": "Einstellungen in data/pm.data gespeichert.",
+    "saved_error": "Einstellungen konnten nicht gespeichert werden.",
+    "saved_restart": "Gespeichert. Einige Änderungen erfordern einen Neustart.",
+    "readonly_compiled": "Read-only (compiled executable)",
+    "restart_banner": "Ausstehende Änderungen erfordern einen Neustart von PackageMaker.",
+    "restart_btn": "Jetzt neu starten",
+    "dpi_restart_hint": "Full DPI scaling is applied after restart.",
+    "display_applied": "Leviathan window mode applied.",
+    "reset": "Zurücksetzen",
+    "reset_confirm": "Einstellungen wirklich zurücksetzen?",
+    "reset_success": "Einstellungen auf Standardwerte zurückgesetzt.",
+    "section_fonts": "Schriftarten der Oberfläche",
+    "fonts_cached": "Cached",
+    "fonts_missing": "Missing",
+    "fonts_download": "Download fonts",
+    "fonts_downloading": "Downloading fonts from Google Fonts...",
+    "fonts_done": "{ok} of {total} fonts available",
+    "section_notifications": "Notifications and alerts",
+    "default_editor": "Standard-Editor",
+    "editor_placeholder": "Z. B.: code, gedit, notepad",
+    "touch_mode_hint": "Swipe to switch sections."
+  },
+  "create": {
+    "sandbox": "Sichere Sandbox"
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "ok": "OK"
+  }
+}

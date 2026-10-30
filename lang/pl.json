@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "lang": "pl",
+    "name": "Polski"
+  },
+  "app": {
+    "title": "Influent Package Maker",
+    "main_menu": "Menu główne",
+    "context": "Kontekst"
+  },
+  "sidebar": {
+    "create": "Utwórz projekt",
+    "build": "Kompiluj pakiet",
+    "config": "Ustawienia",
+    "moonfix": "MoonFix",
+    "about": "O programie"
+  },
+  "sidebar_desc": {
+    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
+    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
+    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
+    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+  },
+  "config": {
+    "title": "Ustawienia",
+    "section_general": "Ogólne",
+    "section_language": "Język",
+    "section_appearance": "Wygląd",
+    "section_system": "Informacje o systemie",
+    "projects_path": "Folder projektów",
+    "fluthin_path": "Folder Fluthin Apps",
+    "browse": "Przeglądaj",
+    "save": "Zapisz",
+    "language": "Język interfejsu",
+    "auto_translate": "Automatyczne tłumaczenie przy braku tekstu",
+    "auto_translate_hint": "Używa tłumaczenia online i zapisuje wynik w data/pm.data.",
+    "display_mode": "Tryb okna",
+    "touch_mode": "Tryb dotykowy",
+    "dpi_scale": "Skala DPI",
+    "device_sim": "Symulacja urządzenia",
+    "interface_color": "Kolor interfejsu",
+    "auto_color": "Automatyczny kolor wg systemu",
+    "notifications": "Powiadomienia",
+    "accent_color": "Kolor akcentu",
+    "blur_intensity": "Intensywność rozmycia",
+    "window_radius": "Promień narożników",
+    "sidebar_accent": "Grubość aktywnej krawędzi panelu",
+    "card_opacity": "Krycie kart UI",
+    "ui_density": "Gęstość interfejsu",
+    "density_normal": "Normalna",
+    "density_compact": "Kompaktowa",
+    "locked_hint": "Locked in compiled build. Customize before building the executable.",
+    "personalization_hint": "Nie zmienia tytułu okna ani nazwy firmy (Influent).",
+    "saved_ok": "Ustawienia zapisane w data/pm.data.",
+    "saved_error": "Nie udało się zapisać ustawień.",
+    "saved_restart": "Zapisano. Niektóre zmiany wymagają restartu.",
+    "readonly_compiled": "Read-only (compiled executable)",
+    "restart_banner": "Oczekujące zmiany wymagają restartu PackageMaker.",
+    "restart_btn": "Uruchom ponownie",
+    "dpi_restart_hint": "Full DPI scaling is applied after restart.",
+    "display_applied": "Leviathan window mode applied.",
+    "reset": "Resetuj",
+    "reset_confirm": "Zresetować ustawienia do domyślnych?",
+    "reset_success": "Ustawienia przywrócone do domyślnych.",
+    "section_fonts": "Czcionki interfejsu",
+    "fonts_cached": "Cached",
+    "fonts_missing": "Missing",
+    "fonts_download": "Download fonts",
+    "fonts_downloading": "Downloading fonts from Google Fonts...",
+    "fonts_done": "{ok} of {total} fonts available",
+    "section_notifications": "Notifications and alerts",
+    "default_editor": "Domyślny edytor",
+    "editor_placeholder": "Np.: code, gedit, notepad",
+    "touch_mode_hint": "Swipe to switch sections."
+  },
+  "create": {
+    "sandbox": "Bezpieczna piaskownica"
+  },
+  "common": {
+    "cancel": "Anuluj",
+    "ok": "OK"
+  }
+}

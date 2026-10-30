@@ -1,11 +1,11 @@
 PyQt6
 Requests==2.32.5
 leviathan-ui
-# Backend de compilación recomendado (binarios nativos C/C++).
+# Los dos backends de compilación soportados, ambos embebidos (sin subproceso).
+# Nuitka traduce a C/C++ (recomendado); PyInstaller empaqueta bytecode.
 nuitka
-# Backends alternativos soportados por lib/compilers.py.
+ordered-set
+zstandard
 pyinstaller
-cx-Freeze
-pyoxidizer
 # Cifrado AES-256-GCM opcional para el payload .iflapp.
 cryptography

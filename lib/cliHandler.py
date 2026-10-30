@@ -149,7 +149,7 @@ class CLIHandler:
         buildthis_group.add_argument('--buildthis', nargs='?', const='.', metavar='PATH', help='Compilar el proyecto en la carpeta actual o en la ruta especificada')
         buildthis_group.add_argument('--output', metavar='PATH', help='Directorio externo para el artefacto `.iflapp`')
         buildthis_group.add_argument('--platform', choices=['Linux', 'Windows'], help='Plataforma objetivo; por defecto se detecta el sistema actual')
-        buildthis_group.add_argument('--compiler', choices=['nuitka', 'pyinstaller', 'cx_freeze', 'pyoxidizer'], help='Backend de compilación (por defecto: nuitka)')
+        buildthis_group.add_argument('--compiler', choices=['nuitka', 'pyinstaller'], help='Backend de compilación embebido (por defecto: nuitka)')
         buildthis_group.add_argument('--password', metavar='PASS', help='Cifrar el payload del .iflapp con esta contraseña')
         buildthis_group.add_argument('--no-sandbox', action='store_true', help='Desactivar la verificación en sandbox virtualizado')
         buildthis_group.add_argument('--dropper', action='store_true', help='Generar además un dropper autoextraíble (.run)')

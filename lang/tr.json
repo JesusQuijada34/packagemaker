@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "lang": "tr",
+    "name": "Türkçe"
+  },
+  "app": {
+    "title": "Influent Package Maker",
+    "main_menu": "Ana menü",
+    "context": "Bağlam"
+  },
+  "sidebar": {
+    "create": "Proje oluştur",
+    "build": "Paketi derle",
+    "config": "Ayarlar",
+    "moonfix": "MoonFix",
+    "about": "Hakkında"
+  },
+  "sidebar_desc": {
+    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
+    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
+    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
+    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+  },
+  "config": {
+    "title": "Ayarlar",
+    "section_general": "Genel",
+    "section_language": "Dil",
+    "section_appearance": "Görünüm",
+    "section_system": "Sistem bilgisi",
+    "projects_path": "Projeler klasörü",
+    "fluthin_path": "Fluthin Apps klasörü",
+    "browse": "Gözat",
+    "save": "Kaydet",
+    "language": "Arayüz dili",
+    "auto_translate": "Metin eksikse otomatik çeviri",
+    "auto_translate_hint": "Çevrimiçi çeviriyi kullanır ve sonucu data/pm.data'ya kaydeder.",
+    "display_mode": "Pencere modu",
+    "touch_mode": "Dokunma modu",
+    "dpi_scale": "DPI ölçeği",
+    "device_sim": "Cihaz simülasyonu",
+    "interface_color": "Arayüz rengi",
+    "auto_color": "Sisteme göre otomatik renk",
+    "notifications": "Bildirimler",
+    "accent_color": "Vurgu rengi",
+    "blur_intensity": "Bulanıklık yoğunluğu",
+    "window_radius": "Köşe yarıçapı",
+    "sidebar_accent": "Etkin kenar çubuğu kenarlık kalınlığı",
+    "card_opacity": "UI kart opaklığı",
+    "ui_density": "Arayüz yoğunluğu",
+    "density_normal": "Normal",
+    "density_compact": "Kompakt",
+    "locked_hint": "Locked in compiled build. Customize before building the executable.",
+    "personalization_hint": "Pencere başlığını veya şirket adını (Influent) değiştirmez.",
+    "saved_ok": "Ayarlar data/pm.data'ya kaydedildi.",
+    "saved_error": "Ayarlar kaydedilemedi.",
+    "saved_restart": "Kaydedildi. Bazı değişiklikler yeniden başlatma gerektirir.",
+    "readonly_compiled": "Read-only (compiled executable)",
+    "restart_banner": "Bekleyen değişiklikler PackageMaker'ın yeniden başlatılmasını gerektirir.",
+    "restart_btn": "Şimdi yeniden başlat",
+    "dpi_restart_hint": "Full DPI scaling is applied after restart.",
+    "display_applied": "Leviathan window mode applied.",
+    "reset": "Sıfırla",
+    "reset_confirm": "Ayarlar varsayılana sıfırlansın mı?",
+    "reset_success": "Ayarlar varsayılan değerlere sıfırlandı.",
+    "section_fonts": "Arayüz yazı tipleri",
+    "fonts_cached": "Cached",
+    "fonts_missing": "Missing",
+    "fonts_download": "Download fonts",
+    "fonts_downloading": "Downloading fonts from Google Fonts...",
+    "fonts_done": "{ok} of {total} fonts available",
+    "section_notifications": "Notifications and alerts",
+    "default_editor": "Varsayılan düzenleyici",
+    "editor_placeholder": "Örn.: code, gedit, notepad",
+    "touch_mode_hint": "Swipe to switch sections."
+  },
+  "create": {
+    "sandbox": "Güvenli sanal alan"
+  },
+  "common": {
+    "cancel": "İptal",
+    "ok": "Tamam"
+  }
+}

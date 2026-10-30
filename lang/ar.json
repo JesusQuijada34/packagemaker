@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "lang": "ar",
+    "name": "العربية"
+  },
+  "app": {
+    "title": "Influent Package Maker",
+    "main_menu": "القائمة الرئيسية",
+    "context": "السياق"
+  },
+  "sidebar": {
+    "create": "إنشاء مشروع",
+    "build": "ترجمة الحزمة",
+    "config": "الإعدادات",
+    "moonfix": "MoonFix",
+    "about": "حول"
+  },
+  "sidebar_desc": {
+    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
+    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
+    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
+    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+  },
+  "config": {
+    "title": "الإعدادات",
+    "section_general": "عام",
+    "section_language": "اللغة",
+    "section_appearance": "المظهر",
+    "section_system": "معلومات النظام",
+    "projects_path": "مجلد المشاريع",
+    "fluthin_path": "مجلد Fluthin Apps",
+    "browse": "استعراض",
+    "save": "حفظ",
+    "language": "لغة الواجهة",
+    "auto_translate": "ترجمة تلقائية عند فقدان نص",
+    "auto_translate_hint": "يستخدم الترجمة عبر الإنترنت ويحفظ النتيجة في data/pm.data.",
+    "display_mode": "وضع النافذة",
+    "touch_mode": "الوضع اللمسي",
+    "dpi_scale": "مقياس DPI",
+    "device_sim": "محاكاة الجهاز",
+    "interface_color": "لون الواجهة",
+    "auto_color": "لون تلقائي حسب النظام",
+    "notifications": "الإشعارات",
+    "accent_color": "لون التمييز",
+    "blur_intensity": "شدة التمويه",
+    "window_radius": "نصف قطر الزوايا",
+    "sidebar_accent": "سماكة حد الشريط النشط",
+    "card_opacity": "عتامة بطاقات الواجهة",
+    "ui_density": "كثافة الواجهة",
+    "density_normal": "عادي",
+    "density_compact": "مضغوط",
+    "locked_hint": "Locked in compiled build. Customize before building the executable.",
+    "personalization_hint": "لا يغيّر عنوان النافذة أو اسم الشركة (Influent).",
+    "saved_ok": "تم حفظ الإعدادات في data/pm.data.",
+    "saved_error": "تعذّر حفظ الإعدادات.",
+    "saved_restart": "تم الحفظ. تتطلب بعض التغييرات إعادة التشغيل.",
+    "readonly_compiled": "Read-only (compiled executable)",
+    "restart_banner": "هناك تغييرات معلّقة تتطلب إعادة تشغيل PackageMaker.",
+    "restart_btn": "إعادة التشغيل الآن",
+    "dpi_restart_hint": "Full DPI scaling is applied after restart.",
+    "display_applied": "Leviathan window mode applied.",
+    "reset": "إعادة تعيين",
+    "reset_confirm": "هل تريد إعادة الإعدادات إلى القيم الافتراضية؟",
+    "reset_success": "تمت إعادة الإعدادات إلى القيم الافتراضية.",
+    "section_fonts": "خطوط الواجهة",
+    "fonts_cached": "Cached",
+    "fonts_missing": "Missing",
+    "fonts_download": "Download fonts",
+    "fonts_downloading": "Downloading fonts from Google Fonts...",
+    "fonts_done": "{ok} of {total} fonts available",
+    "section_notifications": "Notifications and alerts",
+    "default_editor": "المحرر الافتراضي",
+    "editor_placeholder": "مثال: code، gedit، notepad",
+    "touch_mode_hint": "Swipe to switch sections."
+  },
+  "create": {
+    "sandbox": "بيئة معزولة آمنة"
+  },
+  "common": {
+    "cancel": "إلغاء",
+    "ok": "موافق"
+  }
+}

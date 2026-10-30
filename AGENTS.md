@@ -14,8 +14,17 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   seguirá como si fuera una ventana.
 
 ## Arquitectura relevante
-- `lib/compilers.py` — backends `nuitka` (por defecto), `pyinstaller`,
-  `cx_freeze`, `pyoxidizer`. `available_backends()` reporta estado real.
+- `lib/compilers.py` — **solo dos** backends embebidos: `nuitka` (por defecto,
+  traduce a C/C++) y `pyinstaller` (bytecode). `available_backends()` reporta
+  estado real. Los nombres históricos `cx_freeze`/`pyoxidizer` siguen
+  resolviendo por alias, pero ya no se anuncian.
+- `lib/nuitka_embedded.py` — backend Nuitka embebido (`build_arguments()`
+  construye la línea de comandos sin lanzar procesos).
+- `lib/page_action_bar.py` — barra de acciones superior estilo macOS compartida
+  por las 5 páginas (`install_page_action_bar`/`make_action_button`). Cada
+  página instala la suya; no reutilices nombres de atributo entre páginas
+  (p. ej. `btn_build` es del sidebar, el botón de la página es
+  `btn_build_action`).
 - `lib/iflapp_format.py` — contenedor `.iflapp` v2 (cabecera en claro con icono
   y `details.xml`, firma HMAC-SHA256). `verify_iflapp()` devuelve clave `"valid"`.
 - `lib/iflapp_reader.py` — `IflappReader` lee cabecera sin descompilar.

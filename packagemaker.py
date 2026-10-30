@@ -115,6 +115,7 @@ from lib.window_chrome import (
     is_frameless_maximized,
 )
 from lib.uwp_animations import play_bounce_down_close
+from lib.page_action_bar import install_page_action_bar, make_action_button
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
 from lib.window_manager_bridge import install_window_manager_bridges
@@ -824,6 +825,9 @@ class PackageTodoGUI(QMainWindow):
         # Initial description
         self.update_sidebar_description(0)
 
+        # Gestos táctiles (solo si el ajuste touch_mode está activo).
+        self.setup_touch_gestures()
+
         i18n.register_ui_refresh(self.apply_ui_language)
 
     def apply_ui_language(self):
@@ -893,14 +897,6 @@ class PackageTodoGUI(QMainWindow):
     def toggle_sidebar(self):
         self._apply_sidebar_state(not self.sidebar_collapsed)
 
-    def collapse_sidebar(self):
-        if not self.sidebar_collapsed:
-            self._apply_sidebar_state(True)
-
-    def expand_sidebar(self):
-        if self.sidebar_collapsed:
-            self._apply_sidebar_state(False)
-
     def eventFilter(self, obj, event):
         # El sidebar se colapsa/expande solo a mano (estilo VS Code); no hay
         # auto-ocultado por hover.
@@ -929,7 +925,9 @@ class PackageTodoGUI(QMainWindow):
         )
 
     def setup_touch_gestures(self):
-        """Configura gestos táctiles para navegación"""
+        """Activa los gestos táctiles de navegación (según el ajuste touch_mode)."""
+        if not get_pm_data().get_user("touch_mode", False):
+            return
         self.grabGesture(Qt.GestureType.SwipeGesture)
         self.installEventFilter(self)
 
@@ -987,12 +985,6 @@ class PackageTodoGUI(QMainWindow):
         except RuntimeError:
             next_widget.setWindowOpacity(1.0)
 
-    def change_display_mode(self, index):
-        """Compatibilidad: índice antiguo del combo (0=polished, 1=ghost, 2=ghostBlur)."""
-        names = ["Sólido", "Acrylic", "GhostBlur (Cristal)"]
-        if 0 <= index < len(names):
-            self._apply_display_mode_by_name(names[index])
-
     def _apply_display_mode_by_name(self, display_name: str) -> None:
         apply_display_mode(self, display_name)
         store = get_pm_data()
@@ -1022,7 +1014,6 @@ class PackageTodoGUI(QMainWindow):
     def apply_theme(self):
         store = get_pm_data()
         accent = str(get_accent_color())
-        accent_hover = accent
         border_w = 3
         density = str(store.get_user("ui_density", "normal"))
         sidebar_h = 50 if density != "compact" else 42
@@ -1056,9 +1047,6 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, "desc_card"):
             set_qss(self.desc_card, 'packagemaker_068', append=False)
 
-        if hasattr(self, "btn_create_action"):
-            set_qss(self.btn_create_action, 'packagemaker_069', values=(qss_value(accent, None, ''), qss_value(accent_hover, None, ''), qss_value(accent, None, '')), append=False)
-
         if hasattr(self, "page_create"):
             set_qss(self.page_create, applyget(accent), append=False)
 
@@ -1074,11 +1062,19 @@ class PackageTodoGUI(QMainWindow):
         layout.setSpacing(10)
         layout.setContentsMargins(25, 25, 25, 25)
 
-        # Header "Crear Nuevo Proyecto" as main title, no GroupBox title
-        # UWP Design: Big bold headers, content below.
-        title_lbl = QLabel("Crear un proyecto nuevo")
-        set_qss(title_lbl, 'packagemaker_011', append=False)
-        layout.addWidget(title_lbl)
+        # Barra de acciones superior (estilo macOS). El botón de crear vive
+        # aquí, junto al título de la página, y no en la barra de la ventana.
+        self.btn_create_action = make_action_button(
+            "Crear Proyecto", "primary", get_icon("crear", 16)
+        )
+        self.btn_create_action.clicked.connect(self.open_create_project_dialog)
+        self.create_action_bar, self.create_bar_title = install_page_action_bar(
+            layout,
+            "Crear un proyecto nuevo",
+            [self.btn_create_action],
+        )
+
+        # Don't set individual background - let it inherit from parent
         form_group = QGroupBox()
         set_qss(form_group, 'packagemaker_012', append=False)
 
@@ -1200,10 +1196,6 @@ class PackageTodoGUI(QMainWindow):
         # consola; se retiró el área de estado que ocupaba el antiguo botón.
         layout.addStretch()
 
-        # El botón de crear vive ahora en la barra de título (solo icono,
-        # estilo macOS), a la derecha del título de la ventana.
-        self._install_titlebar_create_button()
-
     def _set_create_status(self, text, qss_key=None):
         """Estado de creación solo a consola: ya no hay barra de estado.
 
@@ -1211,48 +1203,6 @@ class PackageTodoGUI(QMainWindow):
         que aplicaban un estilo al rótulo retirado.
         """
         print(f"[PackageMaker] {text}")
-
-    def _install_titlebar_create_button(self):
-        """Botón de crear solo-icono (estilo macOS) junto al título de ventana."""
-        layout = self.titlebar.layout() if hasattr(self.titlebar, "layout") else None
-        if layout is None:
-            return
-        btn = QPushButton()
-        btn.setObjectName("TitlebarCreateButton")
-        btn.setFixedSize(30, 22)
-        btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        btn.setFlat(True)
-        icon_button(btn, "crear", 16)
-        btn.setToolTip("Crear proyecto nuevo")
-        btn.clicked.connect(self.open_create_project_dialog)
-        # Insertar justo después del título (antes del stretch de la derecha).
-        insert_at = 2 if layout.count() >= 2 else layout.count()
-        layout.insertWidget(insert_at, btn)
-        self.btn_titlebar_create = btn
-        self.btn_create_action = btn  # alias de compatibilidad
-        self._style_titlebar_create_button()
-
-    def _style_titlebar_create_button(self):
-        btn = getattr(self, "btn_titlebar_create", None)
-        if btn is None:
-            return
-        btn.setStyleSheet(
-            """
-            QPushButton#TitlebarCreateButton {
-                background: rgba(255, 255, 255, 0.10);
-                border: none;
-                border-radius: 6px;
-                padding: 0;
-            }
-            QPushButton#TitlebarCreateButton:hover {
-                background: #ff5722;
-            }
-            QPushButton#TitlebarCreateButton:pressed {
-                background: #e64a19;
-            }
-            """
-        )
 
     def open_create_project_dialog(self):
         """Abre el diálogo iOS de creación y ejecuta la verificación/creación."""
@@ -1269,27 +1219,6 @@ class PackageTodoGUI(QMainWindow):
         filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icono", "", "Icon Files (*.ico)")
         if filename:
             self.input_icon.setText(filename)
-
-    def download_avatar(self, url):
-        try:
-             import urllib.request
-             data = urllib.request.urlopen(url).read()
-             pixmap = QPixmap()
-             pixmap.loadFromData(data)
-             # Mask circular
-             size = 64
-             target = QPixmap(size, size)
-             target.fill(Qt.transparent)
-             p = QtGui.QPainter(target)
-             p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-             path = QtGui.QPainterPath()
-             path.addEllipse(0, 0, size, size)
-             p.setClipPath(path)
-             p.drawPixmap(0, 0, size, size, pixmap)
-             p.end()
-             self.avatar_label.setPixmap(target)
-        except Exception as e:
-             print(f"Error descargando avatar: {e}")
 
     def on_platform_changed(self, state):
         """Callback cuando cambia la selección de plataforma"""
@@ -1667,16 +1596,6 @@ class PackageTodoGUI(QMainWindow):
             self._set_create_progress("Error", str(e))
             self._close_create_progress()
 
-    def create_details_xml(self, path, empresa, nombre_logico, nombre_completo, version, autor, plataforma_seleccionada, vso=None):
-        from lib.template_engine import build_variables, write_details_xml
-
-        version_base = str(version).split("-")[0] if version else "1.0.0"
-        variables = build_variables(
-            empresa, nombre_logico, nombre_completo, autor, plataforma_seleccionada, version_base
-        )
-        write_details_xml(Path(path), variables)
-        print(f"[PackageMaker] Proyecto creado como {empresa}.{nombre_logico}.v{variables['VERSION_FULL']}!")
-
     def init_build_tab(self, parent_widget=None):
         target = parent_widget if parent_widget else self.tab_build
         # Enable styled background for proper inheritance
@@ -1686,10 +1605,16 @@ class PackageTodoGUI(QMainWindow):
         layout.setSpacing(10)
         layout.setContentsMargins(25, 25, 25, 25)
 
-        # Header "Construir Paquete"
-        title_lbl = QLabel("Compilar el proyecto con BlindCube")
-        set_qss(title_lbl, 'packagemaker_029', append=False)
-        layout.addWidget(title_lbl)
+        # Barra de acciones superior (estilo macOS). El botón BlindCube vive
+        # aquí, en la parte alta y junto al título, en lugar de mezclarse con
+        # los controles del formulario.
+        self.btn_blindcube = make_action_button("BlindCube", "primary", get_icon("construir", 16))
+        self.btn_blindcube.clicked.connect(self.build_package_action)
+        self.build_action_bar, self.build_bar_title = install_page_action_bar(
+            layout,
+            "Compilar el proyecto con BlindCube",
+            [self.btn_blindcube],
+        )
 
         # Container for form elements - Transparent to inherit parent background
         form_group = QGroupBox()
@@ -1838,15 +1763,6 @@ class PackageTodoGUI(QMainWindow):
 
         action_layout.addStretch()
 
-        self.btn_build = QPushButton("BlindCube")
-        self.btn_build.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_build.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        self.btn_build.setFixedSize(150, 40)
-        set_qss(self.btn_build, 'packagemaker_034', append=False)
-        self.btn_build.clicked.connect(self.build_package_action)
-        icon_button(self.btn_build, "construir", 18)
-        action_layout.addWidget(self.btn_build)
-
         layout.addLayout(action_layout)
         layout.addStretch()
 
@@ -1963,15 +1879,20 @@ class PackageTodoGUI(QMainWindow):
         outer.setContentsMargins(25, 25, 25, 25)
         outer.setSpacing(10)
 
-        header_row = QHBoxLayout()
-        conf_icon = QLabel()
-        conf_icon.setPixmap(get_icon("config", 28).pixmap(28, 28))
-        conf_icon.setFixedSize(28, 28)
-        header_row.addWidget(conf_icon)
-        self.conf_header = QLabel(tr("config.title"))
-        set_qss(self.conf_header, 'packagemaker_040', append=False)
-        header_row.addWidget(self.conf_header, 1)
-        outer.addLayout(header_row)
+        # Barra de acciones superior (estilo macOS): título + Guardar/Restablecer.
+        self.conf_btn_save = make_action_button(
+            tr("config.save"), "primary", get_icon("save", 16)
+        )
+        self.conf_btn_save.clicked.connect(self._save_app_config_compact)
+        self.conf_reset_btn = make_action_button(
+            tr("config.reset"), "destructive", get_icon("restart", 16)
+        )
+        self.conf_reset_btn.clicked.connect(self._reset_config)
+        self.config_action_bar, self.conf_header = install_page_action_bar(
+            outer,
+            tr("config.title"),
+            [self.conf_reset_btn, self.conf_btn_save],
+        )
 
         self.conf_restart_banner = QFrame()
         self.conf_restart_banner.setVisible(False)
@@ -1991,6 +1912,8 @@ class PackageTodoGUI(QMainWindow):
         self._config_tr_labels = []
         self._config_tr_labels.append((self.conf_restart_lbl, "config.restart_banner"))
         self._config_tr_labels.append((self.conf_restart_btn, "config.restart_btn"))
+        self._config_tr_labels.append((self.conf_btn_save, "config.save"))
+        self._config_tr_labels.append((self.conf_reset_btn, "config.reset"))
         outer.addWidget(self.conf_restart_banner)
 
         scroll = QtWidgets.QScrollArea()
@@ -2005,6 +1928,9 @@ class PackageTodoGUI(QMainWindow):
         store = get_pm_data()
         user = {k: store.get_user(k) for k in (
             "language", "auto_translate", "base_dir", "fluthin_apps",
+            "display_mode", "ui_density", "blur_intensity", "window_radius",
+            "sidebar_accent_width", "card_opacity", "notifications_enabled",
+            "default_editor", "touch_mode",
         )}
         user["base_dir"] = user.get("base_dir") or BASE_DIR
         user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
@@ -2021,6 +1947,36 @@ class PackageTodoGUI(QMainWindow):
             row.addWidget(lbl)
             row.addWidget(widget, 1)
             layout.addLayout(row)
+
+        def add_hint(key):
+            hint = QLabel(tr(key))
+            set_qss(hint, 'packagemaker_050', append=False)
+            hint.setWordWrap(True)
+            self._config_tr_labels.append((hint, key))
+            layout.addWidget(hint)
+
+        def add_slider_row(label_key, key, minimum, maximum, value, suffix=""):
+            """Fila con etiqueta + deslizador + valor numérico en vivo."""
+            wrap = QWidget()
+            row = QHBoxLayout(wrap)
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(10)
+            slider = QSlider(Qt.Orientation.Horizontal)
+            slider.setMinimum(minimum)
+            slider.setMaximum(maximum)
+            slider.setValue(int(value))
+            slider.setFixedHeight(24)
+            value_lbl = QLabel(f"{int(value)}{suffix}")
+            value_lbl.setMinimumWidth(46)
+            value_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            set_qss(value_lbl, 'packagemaker_085', append=False)
+            slider.valueChanged.connect(
+                lambda v, l=value_lbl, s=suffix: l.setText(f"{int(v)}{s}")
+            )
+            row.addWidget(slider, 1)
+            row.addWidget(value_lbl)
+            add_row(label_key, wrap)
+            return slider
 
         add_section("config.section_general")
         self.conf_base_dir = QLineEdit(user["base_dir"])
@@ -2053,6 +2009,11 @@ class PackageTodoGUI(QMainWindow):
         wrap_fl.setLayout(row_fl)
         add_row("config.fluthin_path", wrap_fl)
 
+        self.conf_default_editor = QLineEdit(user.get("default_editor") or "")
+        self.conf_default_editor.setPlaceholderText(tr("config.editor_placeholder"))
+        set_qss(self.conf_default_editor, conf_field_stylesheet(), append=False)
+        add_row("config.default_editor", self.conf_default_editor)
+
         add_section("config.section_language")
         self.conf_lang_combo = QComboBox()
         for code, name in get_available_languages():
@@ -2068,11 +2029,60 @@ class PackageTodoGUI(QMainWindow):
         set_qss(self.conf_auto_translate, 'packagemaker_049', append=False)
         self._config_tr_labels.append((self.conf_auto_translate, "config.auto_translate"))
         layout.addWidget(self.conf_auto_translate)
-        hint_tr = QLabel(tr("config.auto_translate_hint"))
-        set_qss(hint_tr, 'packagemaker_050', append=False)
-        hint_tr.setWordWrap(True)
-        self._config_tr_labels.append((hint_tr, "config.auto_translate_hint"))
-        layout.addWidget(hint_tr)
+        add_hint("config.auto_translate_hint")
+
+        add_section("config.section_appearance")
+        self.conf_display_mode = QComboBox()
+        for name in ("Sólido", "Acrylic", "GhostBlur (Cristal)"):
+            self.conf_display_mode.addItem(name, name)
+        idx_dm = self.conf_display_mode.findData(
+            str(user.get("display_mode") or "GhostBlur (Cristal)")
+        )
+        if idx_dm >= 0:
+            self.conf_display_mode.setCurrentIndex(idx_dm)
+        set_qss(self.conf_display_mode, conf_field_stylesheet(), append=False)
+        add_row("config.display_mode", self.conf_display_mode)
+
+        self.conf_ui_density = QComboBox()
+        self.conf_ui_density.addItem(tr("config.density_normal"), "normal")
+        self.conf_ui_density.addItem(tr("config.density_compact"), "compact")
+        idx_den = self.conf_ui_density.findData(str(user.get("ui_density") or "normal"))
+        if idx_den >= 0:
+            self.conf_ui_density.setCurrentIndex(idx_den)
+        set_qss(self.conf_ui_density, conf_field_stylesheet(), append=False)
+        add_row("config.ui_density", self.conf_ui_density)
+
+        self.conf_blur_slider = add_slider_row(
+            "config.blur_intensity", "blur_intensity", 0, 40,
+            user.get("blur_intensity", 14), "",
+        )
+        self.conf_radius_slider = add_slider_row(
+            "config.window_radius", "window_radius", 0, 28,
+            user.get("window_radius", 12), " px",
+        )
+        self.conf_sidebar_accent_slider = add_slider_row(
+            "config.sidebar_accent", "sidebar_accent_width", 0, 8,
+            user.get("sidebar_accent_width", 3), " px",
+        )
+        self.conf_card_opacity_slider = add_slider_row(
+            "config.card_opacity", "card_opacity", 0, 40,
+            int(float(user.get("card_opacity", 0.08)) * 100), " %",
+        )
+        add_hint("config.personalization_hint")
+
+        add_section("config.section_notifications")
+        self.conf_notifications = QCheckBox(tr("config.notifications"))
+        self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
+        set_qss(self.conf_notifications, 'packagemaker_049', append=False)
+        self._config_tr_labels.append((self.conf_notifications, "config.notifications"))
+        layout.addWidget(self.conf_notifications)
+
+        self.conf_touch_mode = QCheckBox(tr("config.touch_mode"))
+        self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
+        set_qss(self.conf_touch_mode, 'packagemaker_049', append=False)
+        self._config_tr_labels.append((self.conf_touch_mode, "config.touch_mode"))
+        layout.addWidget(self.conf_touch_mode)
+        add_hint("config.touch_mode_hint")
 
         add_section("config.section_system")
         ro = store.get_readonly()
@@ -2138,32 +2148,6 @@ class PackageTodoGUI(QMainWindow):
         scroll.setWidget(scroll_content)
         outer.addWidget(scroll, 1)
 
-        # Botones de acción (Guardar y Resetear)
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(10)
-
-        btn_save = QPushButton(tr("config.save"))
-        btn_save.setFixedSize(150, 40)
-        btn_save.setCursor(Qt.CursorShape.PointingHandCursor)
-        set_qss(btn_save, 'packagemaker_051', append=False)
-        btn_save.clicked.connect(self._save_app_config_compact)
-        icon_button(btn_save, "save", 18)
-        self.conf_btn_save = btn_save
-        self._config_tr_labels.append((btn_save, "config.save"))
-        btn_layout.addWidget(btn_save)
-
-        # Botón de resetear configuración (siempre visible)
-        self.conf_reset_btn = QPushButton(tr("config.reset"))
-        self.conf_reset_btn.setFixedSize(150, 40)
-        self.conf_reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        set_qss(self.conf_reset_btn, 'packagemaker_052', append=False)
-        self.conf_reset_btn.clicked.connect(self._reset_config)
-        self._config_tr_labels.append((self.conf_reset_btn, "config.reset"))
-        btn_layout.addWidget(self.conf_reset_btn)
-
-        btn_layout.addStretch()
-        outer.addLayout(btn_layout)
-
     def _download_ui_fonts(self) -> None:
         """Descarga las fuentes de la interfaz y refresca su estado."""
         try:
@@ -2192,16 +2176,20 @@ class PackageTodoGUI(QMainWindow):
             tr("config.fonts_done").format(ok=ok, total=len(results))
         )
 
-    def _preview_display_mode(self, display_name: str) -> None:
-        if not display_name:
-            return
-        self._apply_display_mode_by_name(display_name)
+    def _update_restart_banner(self) -> None:
+        """Muestra el aviso de reinicio si hay claves que lo requieren.
 
-    def _show_restart_banner(self) -> None:
-        if hasattr(self, "conf_restart_banner"):
-            self.conf_restart_banner.setVisible(True)
-        if hasattr(self, "conf_reset_btn"):
-            self.conf_reset_btn.setVisible(True)
+        Compara el valor guardado en ``applied_dpi_scale`` con el actual: si
+        difieren, el cambio solo surte efecto al reiniciar la aplicación.
+        """
+        if not hasattr(self, "conf_restart_banner"):
+            return
+        store = get_pm_data()
+        pending = abs(
+            float(store.get_user("dpi_scale", 1.0))
+            - float(store.get_user("applied_dpi_scale", 1.0))
+        ) > 1e-6
+        self.conf_restart_banner.setVisible(pending)
 
     def _reset_config(self) -> None:
         """Restablece la configuración a los valores por defecto (elimina personalización)"""
@@ -2258,6 +2246,9 @@ class PackageTodoGUI(QMainWindow):
             store = get_pm_data()
             user = {k: store.get_user(k) for k in (
                 "language", "auto_translate", "base_dir", "fluthin_apps",
+                "display_mode", "ui_density", "blur_intensity", "window_radius",
+                "sidebar_accent_width", "card_opacity", "notifications_enabled",
+                "default_editor",
             )}
             user["base_dir"] = user.get("base_dir") or BASE_DIR
             user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
@@ -2265,12 +2256,37 @@ class PackageTodoGUI(QMainWindow):
             # Actualizar campos
             self.conf_base_dir.setText(user["base_dir"])
             self.conf_fluthin_dir.setText(user["fluthin_apps"])
+            if hasattr(self, "conf_default_editor"):
+                self.conf_default_editor.setText(user.get("default_editor") or "")
 
             idx_lang = self.conf_lang_combo.findData(user.get("language", "es"))
             if idx_lang >= 0:
                 self.conf_lang_combo.setCurrentIndex(idx_lang)
 
             self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
+
+            if hasattr(self, "conf_display_mode"):
+                idx_dm = self.conf_display_mode.findData(str(user.get("display_mode") or ""))
+                if idx_dm >= 0:
+                    self.conf_display_mode.setCurrentIndex(idx_dm)
+            if hasattr(self, "conf_ui_density"):
+                idx_den = self.conf_ui_density.findData(str(user.get("ui_density") or "normal"))
+                if idx_den >= 0:
+                    self.conf_ui_density.setCurrentIndex(idx_den)
+            if hasattr(self, "conf_notifications"):
+                self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
+            if hasattr(self, "conf_touch_mode"):
+                self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
+            if hasattr(self, "conf_blur_slider"):
+                self.conf_blur_slider.setValue(int(user.get("blur_intensity", 14)))
+            if hasattr(self, "conf_radius_slider"):
+                self.conf_radius_slider.setValue(int(user.get("window_radius", 12)))
+            if hasattr(self, "conf_sidebar_accent_slider"):
+                self.conf_sidebar_accent_slider.setValue(int(user.get("sidebar_accent_width", 3)))
+            if hasattr(self, "conf_card_opacity_slider"):
+                self.conf_card_opacity_slider.setValue(
+                    int(float(user.get("card_opacity", 0.08)) * 100)
+                )
 
             # Aplicar cambios
             self._apply_leviathan_and_personalization()
@@ -2290,9 +2306,33 @@ class PackageTodoGUI(QMainWindow):
             "Fluthin_APPS": self.conf_fluthin_dir.text().strip() or Fluthin_APPS,
             "LANGUAGE": self.conf_lang_combo.currentData() or "es",
             "auto_translate": self.conf_auto_translate.isChecked(),
-            "notifications_enabled": False,
+            "notifications_enabled": bool(
+                getattr(self, "conf_notifications", None)
+                and self.conf_notifications.isChecked()
+            ),
         }
         return cfg
+
+    def _collect_user_settings_from_form(self) -> dict:
+        """Ajustes de usuario (apariencia/editor) leídos del formulario."""
+        settings = {}
+        if hasattr(self, "conf_display_mode"):
+            settings["display_mode"] = self.conf_display_mode.currentData()
+        if hasattr(self, "conf_ui_density"):
+            settings["ui_density"] = self.conf_ui_density.currentData()
+        if hasattr(self, "conf_default_editor"):
+            settings["default_editor"] = self.conf_default_editor.text().strip()
+        if hasattr(self, "conf_blur_slider"):
+            settings["blur_intensity"] = int(self.conf_blur_slider.value())
+        if hasattr(self, "conf_radius_slider"):
+            settings["window_radius"] = int(self.conf_radius_slider.value())
+        if hasattr(self, "conf_sidebar_accent_slider"):
+            settings["sidebar_accent_width"] = int(self.conf_sidebar_accent_slider.value())
+        if hasattr(self, "conf_card_opacity_slider"):
+            settings["card_opacity"] = round(self.conf_card_opacity_slider.value() / 100.0, 3)
+        if hasattr(self, "conf_touch_mode"):
+            settings["touch_mode"] = bool(self.conf_touch_mode.isChecked())
+        return settings
 
     def _refresh_config_tab_labels(self):
         if hasattr(self, "conf_header"):
@@ -2330,6 +2370,14 @@ class PackageTodoGUI(QMainWindow):
             Fluthin_APPS = APP_CONFIG["Fluthin_APPS"]
             os.makedirs(BASE_DIR, exist_ok=True)
             os.makedirs(Fluthin_APPS, exist_ok=True)
+
+            # Ajustes de usuario (apariencia, editor, notificaciones).
+            store = get_pm_data()
+            for key, value in self._collect_user_settings_from_form().items():
+                store.set_user(key, value)
+            store.set_user("notifications_enabled", new_config["notifications_enabled"])
+            store.save()
+
             prev_lang = i18n.get_current_lang()
             i18n.set_auto_translate(self.conf_auto_translate.isChecked())
             if lang != prev_lang:
@@ -2337,6 +2385,9 @@ class PackageTodoGUI(QMainWindow):
             self.apply_ui_language()
             self._apply_leviathan_and_personalization()
             self.apply_theme()
+
+            # Si hay ajustes que solo se aplican al reiniciar, mostrar el aviso.
+            self._update_restart_banner()
 
             LeviathanDialog.launch(self, tr("config.title"), tr("config.saved_ok"), mode="success")
         else:
@@ -2353,14 +2404,16 @@ class PackageTodoGUI(QMainWindow):
         layout.setContentsMargins(25, 25, 25, 25)
         layout.setSpacing(10)
 
-        mf_header_row = QHBoxLayout()
-        mf_icon = QLabel()
-        mf_icon.setPixmap(get_icon("moonfix", 28).pixmap(28, 28))
-        mf_header_row.addWidget(mf_icon)
-        header = QLabel("MoonFix")
-        set_qss(header, 'packagemaker_053', append=False)
-        mf_header_row.addWidget(header, 1)
-        layout.addLayout(mf_header_row)
+        # Barra de acciones superior (estilo macOS): título + Diagnosticar.
+        self.mf_scan_btn = make_action_button(
+            "Diagnosticar", "primary", get_icon("moonfix", 16)
+        )
+        self.mf_scan_btn.clicked.connect(self.mf_start_scan)
+        self.moonfix_action_bar, self.mf_bar_title = install_page_action_bar(
+            layout,
+            "MoonFix",
+            [self.mf_scan_btn],
+        )
 
         desc = QLabel("Repara proyectos con plantillas oficiales.")
         set_qss(desc, 'packagemaker_054', append=False)
@@ -2389,17 +2442,8 @@ class PackageTodoGUI(QMainWindow):
         set_qss(btn_sel, 'packagemaker_057', append=False)
         btn_sel.clicked.connect(self.mf_browse)
         icon_button(btn_sel, "folder", 16)
-        btn_scan = QPushButton("Diagnosticar")
-        btn_scan.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        btn_scan.setMinimumWidth(110)
-        btn_scan.setMinimumHeight(32)
-        btn_scan.setCursor(Qt.CursorShape.PointingHandCursor)
-        set_qss(btn_scan, 'packagemaker_058', append=False)
-        btn_scan.clicked.connect(self.mf_start_scan)
-        icon_button(btn_scan, "moonfix", 16)
         s_box.addWidget(self.mf_input, 1)
         s_box.addWidget(btn_sel)
-        s_box.addWidget(btn_scan)
         layout.addLayout(s_box)
         layout.addStretch()
 
@@ -2548,7 +2592,23 @@ class PackageTodoGUI(QMainWindow):
         # Don't set individual background - let it inherit from parent
         layout = QVBoxLayout(target)
         layout.setSpacing(20)
-        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setContentsMargins(25, 25, 25, 25)
+
+        # Barra de acciones superior (estilo macOS): enlaces reales a GitHub y
+        # Telegram, que antes eran botones sin conexión.
+        self.about_github_btn = make_action_button("GitHub", "secondary")
+        self.about_github_btn.clicked.connect(
+            lambda: self._open_external_url("https://github.com/JesusQuijada34/packagemaker")
+        )
+        self.about_telegram_btn = make_action_button("Telegram", "secondary")
+        self.about_telegram_btn.clicked.connect(
+            lambda: self._open_external_url("https://t.me/influent_os")
+        )
+        self.about_action_bar, self.about_bar_title = install_page_action_bar(
+            layout,
+            "Acerca de",
+            [self.about_telegram_btn, self.about_github_btn],
+        )
 
         # Clean layout
 
@@ -2623,39 +2683,20 @@ class PackageTodoGUI(QMainWindow):
 
         layout.addStretch()
 
-        # Footer Buttons
-        footer = QHBoxLayout()
+    def _open_external_url(self, url: str) -> None:
+        """Abre una URL en el navegador del sistema."""
+        try:
+            from PyQt6.QtGui import QDesktopServices
+            from PyQt6.QtCore import QUrl
 
-        btn_github = QPushButton("GitHub")
-        set_qss(btn_github, 'packagemaker_062', append=False)
-        btn_github.setCursor(Qt.CursorShape.PointingHandCursor)
-        # Open URL logic
-
-        btn_telegram = QPushButton("Telegram")
-        set_qss(btn_telegram, 'packagemaker_063', append=False)
-        btn_telegram.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        footer.addWidget(btn_github)
-        footer.addWidget(btn_telegram)
-        footer.addStretch()
-
-        layout.addLayout(footer)
+            QDesktopServices.openUrl(QUrl(url))
+        except Exception as exc:
+            print(f"[PackageMaker] No se pudo abrir {url}: {exc}")
 
 
     # ========================================
     # MÉTODOS PARA MANEJO DE VENTANAS CLI
     # ========================================
-
-    def setProjectPath(self, path):
-        """Establece la ruta del proyecto en la pestaña de crear"""
-        try:
-            if hasattr(self, 'txtProjectName'):
-                projectName = os.path.basename(path)
-                self.txtProjectName.setText(projectName)
-            if hasattr(self, 'txtProjectPath'):
-                self.txtProjectPath.setText(path)
-        except Exception as e:
-            print(f"Error estableciendo ruta del proyecto: {e}")
 
     def showCreateProjectDialog(self, projectPath):
         """Muestra ventana completa para crear un proyecto"""
@@ -3041,14 +3082,6 @@ class PackageTodoGUI(QMainWindow):
             LeviathanDialog.launch(self, "Error", f"Error instalando carpeta: {e}", mode="error")
             btnInstalar.setEnabled(True)
             btnCerrar.setEnabled(True)
-
-    def set_compile_path(self, path):
-        """Establece la ruta del proyecto a compilar"""
-        try:
-            if hasattr(self, 'txt_build_project'):
-                self.txt_build_project.setText(path)
-        except Exception as e:
-            print(f"Error estableciendo ruta de compilación: {e}")
 
     def showCompileDialog(self, projectPath):
         """Muestra ventana completa para compilar un proyecto"""
@@ -4075,7 +4108,6 @@ def main():
     def on_splash_finished():
         if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
             try:
-                import importlib
                 importlib.import_module("pyi_splash").close()
             except (ImportError, OSError):
                 pass

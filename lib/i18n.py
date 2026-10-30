@@ -34,6 +34,11 @@ SUPPORTED_LANGUAGES = {
     "ru": "Русский",
     "zh": "中文",
     "ja": "日本語",
+    "ko": "한국어",
+    "ar": "العربية",
+    "nl": "Nederlands",
+    "pl": "Polski",
+    "tr": "Türkçe",
 }
 
 _translation_cache: Dict[str, Dict[str, str]] = {}
