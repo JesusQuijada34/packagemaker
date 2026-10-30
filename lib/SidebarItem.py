@@ -50,15 +50,18 @@ from lib.design_tokens import (
     SIDEBAR_INDICATOR_HEIGHT,
     SIDEBAR_INDICATOR_WIDTH,
     SIDEBAR_ITEM_HEIGHT,
-    TEXT,
-    TEXT_MUTED,
+    SIDEBAR_TEXT_DARK,
+    SIDEBAR_TEXT_LIGHT,
+    SIDEBAR_TEXT_SELECTED_DARK,
+    SIDEBAR_TEXT_SELECTED_LIGHT,
 )
 from lib.hover_animation import enable_hover_fade
 
-# Paletas por tema para el texto del ítem (normal, seleccionado).
+# Paletas por tema para el texto del ítem (normal, seleccionado). En modo claro
+# el texto y el icono van en gris; en oscuro, en blanco.
 TEXT_COLORS = {
-    True: {"normal": TEXT_MUTED, "selected": TEXT},
-    False: {"normal": "#334155", "selected": ACCENT},
+    True: {"normal": SIDEBAR_TEXT_DARK, "selected": SIDEBAR_TEXT_SELECTED_DARK},
+    False: {"normal": SIDEBAR_TEXT_LIGHT, "selected": SIDEBAR_TEXT_SELECTED_LIGHT},
 }
 HOVER_COLORS = {
     True: {"bg": "rgba(255, 255, 255, 0.07)", "selected_bg": "rgba(255, 255, 255, 0.12)"},
@@ -69,17 +72,15 @@ HOVER_COLORS = {
 class SidebarItem(QPushButton):
     """Botón de navegación lateral con modo compacto Fluent."""
 
-    def __init__(self, text, icon=None, parent=None, dark=True):
+    def __init__(self, text, icon=None, parent=None, dark=True, icon_key=None):
         super().__init__(text, parent)
         self._label_text = text
         self._compact = False
         self._dark = bool(dark)
+        self._icon_key = icon_key
         self.setFixedHeight(SIDEBAR_ITEM_HEIGHT)
         self.setIconSize(QSize(24, 24))
-        if isinstance(icon, QIcon):
-            self.setIcon(icon)
-        elif icon and os.path.exists(str(icon)):
-            self.setIcon(QIcon(str(icon)))
+        self._set_icon(icon)
         self.setCheckable(True)
         self.setAutoExclusive(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -90,6 +91,22 @@ class SidebarItem(QPushButton):
             HOVER_COLORS[self._dark]["bg"],
             only_when=lambda: not self.isChecked(),
         )
+
+    def _set_icon(self, icon=None):
+        """Asigna el icono, repintando el SVG según el tema activo.
+
+        Cuando se conoce la clave del icono (``icon_key``) se regenera con el
+        color del tema; así el mismo SVG es blanco en oscuro y gris en claro.
+        """
+        if self._icon_key:
+            from lib.app_icons import get_sidebar_icon
+
+            self.setIcon(get_sidebar_icon(self._icon_key, 24, dark=self._dark))
+            return
+        if isinstance(icon, QIcon):
+            self.setIcon(icon)
+        elif icon and os.path.exists(str(icon)):
+            self.setIcon(QIcon(str(icon)))
 
     def set_label_text(self, text):
         self._label_text = text
@@ -110,6 +127,7 @@ class SidebarItem(QPushButton):
         if dark == self._dark:
             return
         self._dark = dark
+        self._set_icon()
         self._apply_style()
         fade = getattr(self, "_hover_fade", None)
         if fade is not None:

@@ -42,6 +42,19 @@ TEXT = "#FFFFFF"
 TEXT_MUTED = "#DDDDDD"
 TEXT_DIM = "#8E8E93"
 
+# --- Paleta de modo claro -------------------------------------------------- #
+# El texto y los iconos de la barra lateral usan una paleta propia por tema: en
+# modo claro los SVG se pintan en gris y en oscuro en blanco (antes eran
+# ``#ffffff`` fijos y desaparecían sobre fondo claro).
+TEXT_LIGHT = "#1C1C1E"
+TEXT_MUTED_LIGHT = "#5A5A5E"
+SIDEBAR_ICON_LIGHT = "#8A8A8E"
+SIDEBAR_ICON_DARK = "#FFFFFF"
+SIDEBAR_TEXT_LIGHT = SIDEBAR_ICON_LIGHT
+SIDEBAR_TEXT_DARK = "#FFFFFF"
+SIDEBAR_TEXT_SELECTED_LIGHT = "#1C1C1E"
+SIDEBAR_TEXT_SELECTED_DARK = "#FFFFFF"
+
 DANGER = "#FF453A"
 DANGER_SOFT = "rgba(255, 69, 58, 0.16)"
 DANGER_TEXT = "#FF6B60"

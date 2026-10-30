@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Iconos SVG a medida para PackageMaker."""
 
+from typing import Optional
+
 try:
     from PyQt6.QtCore import Qt, QByteArray, QSize
     from PyQt6.QtWidgets import QPushButton
@@ -15,6 +17,8 @@ except ImportError:
         def __init__(self, *args, **kwargs): pass
     class QPushButton:
         def __init__(self, *args, **kwargs): pass
+
+from lib.design_tokens import SIDEBAR_ICON_DARK, SIDEBAR_ICON_LIGHT
 
 ACCENT = "#ffffff"
 ACCENT_LIGHT = "#ff8a65"
@@ -162,6 +166,13 @@ def icon_button(btn, key: str, size: int = 18) -> None:
     btn.setIconSize(QSize(size, size))
 
 
+def _with_color(svg: str, color: str) -> str:
+    """Sustituye el color incrustado de un SVG por *color*."""
+    if not color:
+        return svg
+    return svg.replace(ACCENT, color)
+
+
 def svg_to_pixmap(svg_data: str, size: int = 24) -> 'QPixmap':
     try:
         renderer = QSvgRenderer(QByteArray(svg_data.encode("utf-8")))
@@ -187,10 +198,19 @@ def svg_to_icon(svg_data: str, size: int = 24) -> 'QIcon':
         return QIcon()
 
 
-def get_sidebar_icon(key: str, size: int = 24) -> 'QIcon':
+def get_sidebar_icon(key: str, size: int = 24, dark: Optional[bool] = None) -> 'QIcon':
+    """Icono de la barra lateral, con color según el tema.
+
+    ``dark=None`` conserva el color original del SVG (blanco). Con ``dark``
+    booleano se pinta en blanco (oscuro) o gris (claro) para que el icono sea
+    visible sobre el fondo correspondiente.
+    """
     svg = ICONS_SVG.get(key, ICONS_SVG["about"])
+    if dark is not None:
+        color = SIDEBAR_ICON_DARK if dark else SIDEBAR_ICON_LIGHT
+        svg = _with_color(svg, color)
     return svg_to_icon(svg, size)
 
 
-def get_icon(key: str, size: int = 24) -> 'QIcon':
-    return get_sidebar_icon(key, size)
+def get_icon(key: str, size: int = 24, dark: Optional[bool] = None) -> 'QIcon':
+    return get_sidebar_icon(key, size, dark=dark)

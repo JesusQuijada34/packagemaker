@@ -841,11 +841,11 @@ class PackageTodoGUI(QMainWindow):
 
         # Navigation Buttons
         dark_now = system_theme_mode() != "light"
-        self.btn_create = SidebarItem(tr("sidebar.create"), get_tab_icon("crear"), dark=dark_now)
-        self.btn_build = SidebarItem(tr("sidebar.build"), get_tab_icon("construir"), dark=dark_now)
-        self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"), dark=dark_now)
-        self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"), dark=dark_now)
-        self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"), dark=dark_now)
+        self.btn_create = SidebarItem(tr("sidebar.create"), get_tab_icon("crear"), dark=dark_now, icon_key="crear")
+        self.btn_build = SidebarItem(tr("sidebar.build"), get_tab_icon("construir"), dark=dark_now, icon_key="construir")
+        self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"), dark=dark_now, icon_key="config")
+        self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"), dark=dark_now, icon_key="moonfix")
+        self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"), dark=dark_now, icon_key="about")
         self._sidebar_btn_keys = {
             self.btn_create: "sidebar.create",
             self.btn_build: "sidebar.build",

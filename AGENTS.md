@@ -37,7 +37,34 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
 - `lib/hover_animation.py` aplica un desvanecido de fondo al pasar el ratón.
   Reescribe **sólo** la regla `:hover` pura y respeta `:checked:hover`. Para
   saltarte un estado usa `only_when` (p. ej. el ítem de la barra lateral
-  seleccionado no se anima).
+  seleccionado no se anima). El animador **reutiliza una sola
+  `QPropertyAnimation`** creada en `__init__`: con
+  `DeletionPolicy.DeleteWhenStopped` Qt destruía el objeto C++ al terminar y el
+  siguiente `stop()` lanzaba
+  `RuntimeError: wrapped C/C++ object of type QPropertyAnimation has been deleted`.
+- `lib/app_icons.py` genera los SVG con un color incrustado. `get_sidebar_icon(key,
+  size, dark=...)` lo sustituye: **gris** (`SIDEBAR_ICON_LIGHT`) en claro y
+  **blanco** (`SIDEBAR_ICON_DARK`) en oscuro. `SidebarItem(..., icon_key=...)`
+  guarda la clave para poder repintar el icono en `set_dark()`; sin `icon_key` el
+  icono se queda con el color fijo `#ffffff` y desaparece en tema claro.
+
+## Ley de nombres canónicos y estructura
+- Todo artefacto público debe ser exactamente
+  `publisher.appname.vX.x[.z]-YY.MM-HH.MM-Platform`. Las tres únicas
+  plataformas válidas son `Danenone`, `Knosthalij` y `AlphaCube` (los alias
+  `Linux`/`Windows`/`multi` se normalizan a ellas). El publisher conserva su
+  capitalización; el appname se pasa a minúsculas. El sufijo de plataforma
+  **pertenece al nombre, no a la versión** (`version_full` nunca lo lleva).
+- `lib/projectNameFormatter.py` es la autoridad; `parse_project_folder()`
+  devuelve `None` si el nombre no es canónico (p. ej. sin sufijo de plataforma).
+- Estructura obligatoria del proyecto/paquete: `details.xml`, `version.res`,
+  `autorun`, `autorun.bat`, `.storedetail`, `updater.py`,
+  `config/settings.json` y los marcadores `.container` de cada subdirectorio.
+- `tests/test_canonical_law_and_structure.py` ejerce la ley de extremo a extremo
+  con las funciones reales: `format_*` → `create_project_from_templates()` →
+  `pack_iflapp()` → `read_iflapp_header()` → `verify_iflapp()`, incluyendo que el
+  payload cifrado no filtre texto en claro y que el manifiesto no acepte
+  traversal.
 
 ## Arquitectura relevante
 - `lib/compilers.py` — backends de compilación: `nuitka` (por defecto, traduce
@@ -76,9 +103,12 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   `TouchScreen` o `LeviathanProgressBar` debe definir un respaldo no-op en su
   propio `except ImportError` (`packagemaker.py` y `lib/window_chrome.py` ya lo
   hacen). Sin ese respaldo la app revienta al construir la ventana.
-- Los tests de UI necesitan `PyQt6` y las libs de sistema `libegl1`,
-  `libgl1`, `libxkbcommon-x11-0` (en un contenedor Debian:
-  `sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0`).
+- Los tests de UI necesitan `PyQt6` y las libs de sistema `libegl1`, `libgl1`,
+  `libxkbcommon-x11-0` (en un contenedor Debian:
+  `sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0`).
+  `PyQt6` sin `libEGL.so.1` falla al importar `PyQt6.QtSvg`. El entorno puede
+  reiniciarse y perder `pytest`/`pyflakes`/`requests`/`PyQt6`: reinstálalos con
+  `pip install -r requirements-dev.txt requests PyQt6`.
 - En tests con Qt, conserva una referencia a la `QApplication` (patrón
   `_ensure_app`): si se recolecta, Qt aborta el proceso con *Fatal Python
   error: Aborted* en la siguiente llamada.

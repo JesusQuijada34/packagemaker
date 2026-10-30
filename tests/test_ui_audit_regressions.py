@@ -50,18 +50,36 @@ def test_sidebar_item_selected_text_follows_theme():
     text = source("lib/SidebarItem.py")
     assert "TEXT_COLORS" in text
     assert "def set_dark(self, dark)" in text
-    # El color seleccionado ya no es siempre blanco: en claro usa el acento.
-    assert "selected" in text and "ACCENT" in text
+    # El color seleccionado ya no es siempre blanco: depende del tema.
+    assert "SIDEBAR_TEXT_SELECTED_LIGHT" in text
+    assert "SIDEBAR_TEXT_SELECTED_DARK" in text
 
 
-def test_sidebar_item_light_selected_color_is_not_white(qapp):
+def test_sidebar_item_light_text_and_icon_are_gray(qapp):
+    """En modo claro el texto y el icono del sidebar van en gris."""
     from lib.SidebarItem import SidebarItem
+    from lib.design_tokens import SIDEBAR_ICON_LIGHT, SIDEBAR_TEXT_LIGHT
 
     item = SidebarItem("x", dark=False)
     qss = item.styleSheet().lower()
+    base_block = qss.split(":hover")[0].split("{")[1].split("}")[0]
     checked_block = qss.split(":checked")[1].split("}")[0]
+    assert "#ffffff" not in base_block
+    assert SIDEBAR_TEXT_LIGHT.lower() in base_block
     assert "#ffffff" not in checked_block
-    assert "#0078d4" in checked_block
+    assert SIDEBAR_ICON_LIGHT.lower() != "#ffffff"
+
+
+def test_sidebar_item_dark_text_and_icon_are_white(qapp):
+    """En modo oscuro el texto y el icono del sidebar van en blanco."""
+    from lib.SidebarItem import SidebarItem
+    from lib.design_tokens import SIDEBAR_ICON_DARK, SIDEBAR_TEXT_DARK
+
+    item = SidebarItem("x", dark=True)
+    qss = item.styleSheet().lower()
+    base_block = qss.split(":hover")[0].split("{")[1].split("}")[0]
+    assert SIDEBAR_TEXT_DARK.lower() in base_block
+    assert SIDEBAR_ICON_DARK.lower() == "#ffffff"
 
 
 def test_sidebar_item_indicator_is_short_and_centered():

@@ -167,7 +167,15 @@ class _HoverFade(QObject):
         self._base_qss = widget.styleSheet()
         self._base_color = _base_background_color(self._base_qss)
         self._hovered = False
+        # Una sola animación reutilizada durante toda la vida del animador. Con
+        # ``DeleteWhenStopped`` Qt destruía el objeto C++ al terminar y la
+        # referencia quedaba colgando: el siguiente ``stop()`` lanzaba
+        # ``RuntimeError: wrapped C/C++ object ... has been deleted``.
         self._animation: Optional[QPropertyAnimation] = None
+        if PYQT6_AVAILABLE:
+            self._animation = QPropertyAnimation(self, b"progress")
+            self._animation.setDuration(self._duration_ms)
+            self._animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         widget.installEventFilter(self)
 
     # -- propiedad animada ------------------------------------------------ #
@@ -214,15 +222,15 @@ class _HoverFade(QObject):
             if self._base_color is None:
                 return
         self._hovered = target > 0.5
-        if self._animation is not None:
-            self._animation.stop()
-        animation = QPropertyAnimation(self, b"progress")
+        animation = self._animation
+        if animation is None:  # entorno sin Qt
+            self._set_progress(target)
+            return
+        animation.stop()
         animation.setDuration(self._duration_ms)
         animation.setStartValue(self._progress)
         animation.setEndValue(target)
-        animation.setEasingCurve(QEasingCurve.Type.OutCubic)
-        animation.start(QPropertyAnimation.DeletionPolicy.DeleteWhenStopped)
-        self._animation = animation
+        animation.start()
 
 
 def enable_hover_fade(

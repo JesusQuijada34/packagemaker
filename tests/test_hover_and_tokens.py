@@ -90,6 +90,36 @@ class HoverWidgetTests(unittest.TestCase):
         fade._animate(1.0)
         self.assertFalse(fade._hovered)
 
+    def test_animation_object_survives_repeated_hover(self):
+        """Regresión: ``DeleteWhenStopped`` destruía el objeto C++ y el
+        siguiente ``stop()`` lanzaba
+        ``RuntimeError: wrapped C/C++ object ... has been deleted``."""
+        if importlib.util.find_spec("PyQt6.QtWidgets") is None:
+            self.skipTest("PyQt6 no disponible")
+        app = _ensure_app()
+        from lib.hover_animation import enable_hover_fade
+        from PyQt6.QtCore import QEventLoop, QTimer
+        from PyQt6.QtWidgets import QPushButton
+
+        btn = QPushButton("x")
+        btn.setStyleSheet("QPushButton{background:#2D2D2D;}QPushButton:hover{background:#3A3A3C;}")
+        fade = enable_hover_fade(btn, "rgba(255,255,255,0.10)")
+        self.assertIsNotNone(fade)
+        animation = fade._animation
+        # Varios ciclos completos: hay que dejar que la animación *termine*,
+        # que es cuando el patrón antiguo liberaba el objeto C++.
+        for _ in range(5):
+            fade._animate(1.0)
+            loop = QEventLoop()
+            QTimer.singleShot(250, loop.quit)
+            loop.exec()
+            fade._animate(0.0)
+            loop = QEventLoop()
+            QTimer.singleShot(250, loop.quit)
+            loop.exec()
+            app.processEvents()
+        self.assertIs(fade._animation, animation, "la animación debe reutilizarse")
+
 
 class TokenConsistencyTests(unittest.TestCase):
     """No deben quedar colores de la paleta antigua en la interfaz."""
