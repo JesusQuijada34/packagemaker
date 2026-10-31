@@ -1,8 +1,10 @@
-import os
 import sys
-import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from lib.iflapp_format import pack_iflapp
 
 def get_metadata():
     details_path = Path("details.xml")
@@ -44,22 +46,21 @@ def create_iflapp(metadata, platform=None):
     output_dir = Path("dist")
     output_dir.mkdir(exist_ok=True)
     iflapp_path = output_dir / iflapp_name
-    
-    print(f"📦 Creando paquete: {iflapp_name}...")
-    
-    exclude_dirs = {".git", ".github", ".gitlab", ".vscode", "dist", "build", "__pycache__", ".pytest_cache"}
-    exclude_files = {".gitignore", ".gitattributes"}
-    
-    with zipfile.ZipFile(iflapp_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-        for root, dirs, files in os.walk("."):
-            dirs[:] = [d for d in dirs if d not in exclude_dirs]
-            for file in files:
-                if file.endswith(".pyc") or file in exclude_files:
-                    continue
-                file_path = Path(root) / file
-                arcname = file_path.relative_to(".")
-                zf.write(file_path, arcname)
-    
+
+    print(f"📦 Creando paquete blindado: {iflapp_name}...")
+
+    # Contenedor ``.iflapp`` v2 (cabecera indexada + payload LZMA firmado), no un
+    # ZIP. La identidad viaja en claro en la cabecera para poder inspeccionarla
+    # sin descifrar ni descomprimir.
+    identity = {
+        "publisher": publisher,
+        "app": app_name,
+        "name": app_name,
+        "version": version,
+        "platform": platform,
+    }
+    pack_iflapp(Path("."), iflapp_path, identity=identity)
+
     print(f"✅ Paquete creado con éxito en: {iflapp_path}")
     return iflapp_path
 
