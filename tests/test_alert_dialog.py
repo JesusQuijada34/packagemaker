@@ -81,7 +81,7 @@ class AlertDialogQtTests(unittest.TestCase):
     def test_buttons_are_pills_that_do_not_fill_the_width(self):
         dialog = self._dialog()
         buttons = dialog.findChildren(QPushButton)
-        self.assertEqual([b.text() for b in buttons], ["Cancelar", "Aceptar"])
+        self.assertEqual([b.text() for b in buttons], ["Cancelar", "OK"])
         for button in buttons:
             self.assertLess(button.width(), dialog.width())
         dialog.accept()
@@ -128,7 +128,7 @@ class AlertDialogQtTests(unittest.TestCase):
         dialog.show()
         self.app.processEvents()
         buttons = dialog.findChildren(QPushButton)
-        self.assertEqual([b.text() for b in buttons], ["Entendido"])
+        self.assertEqual([b.text() for b in buttons], ["OK"])
         # Centrado: el margen izquierdo y el derecho del botón coinciden.
         left = buttons[0].mapTo(dialog, buttons[0].rect().topLeft()).x()
         right = dialog.width() - (left + buttons[0].width())

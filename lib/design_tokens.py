@@ -222,13 +222,17 @@ def destructive_button_qss() -> str:
     """
 
 
-def checkbox_qss(accent: str = ACCENT) -> str:
-    """Checkbox estilo macOS: cuadrado de 4px con tick blanco sobre acento."""
+def checkbox_qss(accent: str = ACCENT, color: str = TEXT_MUTED, size: int = 13) -> str:
+    """Checkbox estilo macOS: cuadrado de 4px con tick blanco sobre acento.
+
+    ``color`` y ``size`` permiten ajustar la etiqueta sin perder las reglas del
+    indicador, que son las que mantienen el control igual en toda la interfaz.
+    """
     return f"""
     QCheckBox {{
-        color: {TEXT_MUTED};
+        color: {color};
         font-family: {FONT_STACK};
-        font-size: 13px;
+        font-size: {size}px;
         spacing: 8px;
         background: transparent;
         border: none;
