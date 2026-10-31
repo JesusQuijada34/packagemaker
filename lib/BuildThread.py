@@ -38,6 +38,7 @@ from lib.compilers import (
     resolve_backend,
 )
 from lib.hardware_sandbox import HardwareSandbox
+from lib.project_locator import describe_available, locate_project
 
 class FlangCompiler:
     """Compilador principal unificado para el ecosistema Fluthin (Version Robusta)."""
@@ -837,7 +838,15 @@ class FlangCompiler:
             if self.should_compile_for_platform("Linux"):
                 platforms_to_compile.append("Linux")
         if not platforms_to_compile:
-            self.log("[WARN] Nothing to compile for this platform/config.")
+            # Knosthalij sólo se compila en Windows y Danenone sólo en Linux;
+            # AlphaCube (multiplataforma) usa el sistema operativo anfitrión.
+            self.last_error = (
+                f"El proyecto está marcado como {self.platform_type}, que no se puede "
+                f"compilar en {self.current_platform}. "
+                "Compílalo en su sistema operativo nativo o marca el proyecto como "
+                "AlphaCube (multiplataforma)."
+            )
+            self.log(f"[ERROR] {self.last_error}")
             return None
         final_iflapp = None
         try:
@@ -938,20 +947,25 @@ class BuildThread(QThread):
 
     def run(self):
         self.emit_random_curiosity()
-        p_map = {"Windows": "Knosthalij", "Linux": "Danenone", "Multiplataforma": "AlphaCube"}
-        plat_suffix = p_map.get(self.plataforma, "AlphaCube")
-        repo_path = None
         if self.custom_path:
             repo_path = Path(self.custom_path)
             if not repo_path.exists():
                 self.error.emit(f"No se encontró la carpeta personalizada: {self.custom_path}")
                 return
         else:
-            folder = f"{self.empresa}.{self.nombre}.v{self.version}-{plat_suffix}"
-            base_dir = self.base_dir or Path.cwd()
-            repo_path = Path(base_dir) / folder
-            if not repo_path.exists():
-                self.error.emit(f"No se encontró la carpeta: {folder}")
+            base_dir = Path(self.base_dir or Path.cwd())
+            # El nombre de la carpeta lleva la marca temporal de creación, así que
+            # reconstruirlo a mano no coincide con el proyecto real: se localiza
+            # leyendo los metadatos de cada candidato.
+            repo_path = locate_project(
+                base_dir, publisher=self.empresa, app_id=self.nombre
+            )
+            if repo_path is None:
+                self.error.emit(
+                    f"No se encontró ningún proyecto de {self.empresa}.{self.nombre} "
+                    f"en {base_dir}.\n\nProyectos disponibles:\n"
+                    f"{describe_available(base_dir)}"
+                )
                 return
         compiler = FlangCompiler(
             repo_path,

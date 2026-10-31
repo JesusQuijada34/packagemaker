@@ -160,7 +160,37 @@ class InstallConsoleDialog(QDialog):
             """)
         
         btn_layout.addStretch()
+
+        self.btn_close = QPushButton("Cerrar")
+        self.btn_close.setFixedHeight(32)
+        self.btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_close.clicked.connect(self.accept)
+        if is_dark:
+            self.btn_close.setStyleSheet("""
+                QPushButton {
+                    background-color: #238636;
+                    color: #ffffff;
+                    border: 1px solid #2ea043;
+                    border-radius: 6px;
+                    padding: 5px 16px;
+                    font-weight: 600;
+                }
+                QPushButton:hover { background-color: #2ea043; }
+            """)
+        else:
+            self.btn_close.setStyleSheet("""
+                QPushButton {
+                    background-color: #1f883d;
+                    color: #ffffff;
+                    border: 1px solid #1a7f37;
+                    border-radius: 6px;
+                    padding: 5px 16px;
+                    font-weight: 600;
+                }
+                QPushButton:hover { background-color: #1a7f37; }
+            """)
         btn_layout.addWidget(self.btn_clear)
+        btn_layout.addWidget(self.btn_close)
         content_layout.addLayout(btn_layout)
         
     def _is_dark_mode(self):

@@ -118,13 +118,23 @@ if PYQT6_AVAILABLE:
             self.initStyleOption(option)
             painter = QPainter(self)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            self.style().drawControl(
-                QStyle.ControlElement.CE_CheckBoxLabel, option, painter, self
-            )
 
+            contents = self.style().subElementRect(
+                QStyle.SubElement.SE_CheckBoxContents, option, self
+            )
             rect = self.style().subElementRect(
                 QStyle.SubElement.SE_CheckBoxIndicator, option, self
             ).adjusted(1, 1, -1, -1)
+            # El indicador nunca invade la etiqueta: se recorta al hueco que
+            # queda a su izquierda. Sin esto, con QSS que agrandan el cuadro,
+            # el control se dibujaba sobre el texto.
+            gap = 4
+            max_right = contents.x() - gap
+            if rect.right() > max_right:
+                rect.setRight(max_right)
+            if rect.width() < 12:
+                rect.setWidth(12)
+
             # Never infer the state from animation progress alone.  The Qt
             # checkState is authoritative, including partially checked boxes.
             actual_state = self.checkState()
@@ -143,6 +153,8 @@ if PYQT6_AVAILABLE:
             if progress > 0:
                 border = accent
 
+            # El indicador se dibuja primero y la etiqueta después, de modo que
+            # el texto quede siempre por delante y a la derecha del control.
             painter.setPen(QPen(border, 1.4))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRoundedRect(rect, 4, 4)
@@ -165,6 +177,13 @@ if PYQT6_AVAILABLE:
                     mark.lineTo(rect.left() + 7, center_y + 3)
                     mark.lineTo(rect.right() - 3, center_y - 4)
                     painter.drawPath(mark)
+                painter.setOpacity(1.0)
+
+            # Etiqueta al final: Qt la coloca en el rect de contenido, ya
+            # garantizado a la derecha del indicador.
+            self.style().drawControl(
+                QStyle.ControlElement.CE_CheckBoxLabel, option, painter, self
+            )
             painter.end()
 else:
     class FluentCheckBox:
@@ -250,9 +269,9 @@ BUILD_AND_INSTALL_STYLES = {
     'packagemaker_111': 'color:white;font-size:24px;font-weight:bold;margin-bottom:10px;',
     'packagemaker_112': 'color:#aaa;font-size:14px;margin-bottom:20px;',
     'packagemaker_113': 'QGroupBox{color:white;font-weight:bold;border:2px solid rgba(255,255,255,0.2);border-radius:8px;margin-top:10px;padding-top:15px;}QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 5px;}',
-    'packagemaker_114': 'color:white;font-size:14px;',
-    'packagemaker_115': 'color:white;font-size:14px;',
-    'packagemaker_116': 'color:white;font-size:14px;',
+    'packagemaker_114': checkbox_qss(ACCENT, "#ffffff", 14),
+    'packagemaker_115': checkbox_qss(ACCENT, "#ffffff", 14),
+    'packagemaker_116': checkbox_qss(ACCENT, "#ffffff", 14),
     'packagemaker_117': "QTextEdit{background-color:transparent;color:#0f0;font-family:'Consolas','Courier New',monospace;border:2px solid rgba(0,255,0,0.3);border-radius:8px;padding:10px;font-size:13px;}",
     'packagemaker_156': 'QLineEdit{color:#888;font-style:italic;}',
 }
@@ -275,7 +294,7 @@ CONFIGURATION_STYLES = {
     'packagemaker_043': 'QScrollArea{background:transparent;border:none;}',
     'packagemaker_044': 'background:transparent;',
     'packagemaker_046': 'QPushButton{background:rgba(255,255,255,0.08);color:white;border-radius:4px;padding:0 12px;}QPushButton:hover{background:rgba(255,255,255,0.14);}',
-    'packagemaker_049': 'color:#ddd;font-size:12px;background:transparent;',
+    'packagemaker_049': checkbox_qss(ACCENT, "#ddd", 12),
     'packagemaker_050': f'color:{TEXT_DIM};font-size:11px;background:transparent;',
     'packagemaker_051': 'QPushButton{background:#0078d4;color:white;border:none;border-radius:4px;font-weight:600;}QPushButton:hover{background:#106ebe;}',
     'packagemaker_052': destructive_button_qss(),
@@ -286,7 +305,7 @@ CONFIGURATION_STYLES = {
 MAINTENANCE_STYLES = {
     'packagemaker_053': 'font-size:22px;font-weight:600;color:white;background:transparent;',
     'packagemaker_054': 'color:#9aa4b2;font-size:12px;background:transparent;',
-    'packagemaker_055': 'color:#ddd;font-size:12px;background:transparent;',
+    'packagemaker_055': checkbox_qss(ACCENT, "#ddd", 12),
     'packagemaker_056': input_qss(ACCENT),
     'packagemaker_057': secondary_button_qss(),
     'packagemaker_058': 'QPushButton{background:#a371f7;color:white;font-weight:600;font-size:12px;border:none;border-radius:4px;}QPushButton:hover{background:#b084f9;}',
@@ -295,10 +314,10 @@ MAINTENANCE_STYLES = {
     'packagemaker_122': 'color:#aaa;font-size:14px;margin-bottom:10px;',
     'packagemaker_123': 'color:#888;font-size:13px;margin-bottom:20px;',
     'packagemaker_124': 'QGroupBox{color:white;font-weight:bold;border:2px solid rgba(255,255,255,0.2);border-radius:8px;margin-top:10px;padding-top:15px;}QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 5px;}',
-    'packagemaker_125': 'color:white;font-size:14px;',
-    'packagemaker_126': 'color:white;font-size:14px;',
-    'packagemaker_127': 'color:white;font-size:14px;',
-    'packagemaker_128': 'color:white;font-size:14px;',
+    'packagemaker_125': checkbox_qss(ACCENT, "#ffffff", 14),
+    'packagemaker_126': checkbox_qss(ACCENT, "#ffffff", 14),
+    'packagemaker_127': checkbox_qss(ACCENT, "#ffffff", 14),
+    'packagemaker_128': checkbox_qss(ACCENT, "#ffffff", 14),
     'packagemaker_129': "QTextEdit{background-color:transparent;color:#0ff;font-family:'Consolas','Courier New',monospace;border:2px solid rgba(0,255,255,0.3);border-radius:8px;padding:10px;font-size:13px;}",
 }
 

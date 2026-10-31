@@ -27,7 +27,7 @@ try:
     from PyQt6 import QtWidgets, QtGui, QtCore
     from PyQt6.QtWidgets import (
         QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-        QComboBox, QFileDialog, QDialog, QSizePolicy, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget, QSlider, QFrame, QGraphicsDropShadowEffect
+        QComboBox, QFileDialog, QDialog, QSizePolicy, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget, QSlider, QFrame, QGraphicsDropShadowEffect, QStatusBar
     )
     from PyQt6.QtGui import QFont, QIcon, QColor
     from PyQt6.QtGui import QPixmap
@@ -72,6 +72,9 @@ except ImportError:
         def setBlurRadius(self, *args): pass
         def setOffset(self, *args): pass
         def setColor(self, *args): pass
+    class QStatusBar:
+        def __init__(self, *args, **kwargs): pass
+        def showMessage(self, *args, **kwargs): pass
     class QColor:
         def __init__(self, *args, **kwargs): pass
     class Qt:
@@ -265,6 +268,7 @@ from lib.sidebar_resize import SidebarResizeHandle
 from lib.window_manager_bridge import install_window_manager_bridges
 from lib.ios_progress_dialog import show_ios_progress
 from lib.alert_dialog import AlertDialog
+from lib.report import Reporter, classify_build_message
 # Los avisos usan el diálogo temático propio (blanco/negro, botones verticales
 # de ancho completo con separadores). ``LeviathanDialog`` queda como alias para
 # no tocar los puntos de llamada existentes.
@@ -940,6 +944,23 @@ class PackageTodoGUI(QMainWindow):
         self.content_layout.addWidget(self.stack)
         self.v_layout.addWidget(self.content_container)
 
+        # Barra de estado inferior: publica el último aviso sin interrumpir y
+        # acompaña al diálogo con botón OK que sí exige lectura.
+        self.status_bar = QStatusBar(self)
+        self.status_bar.setObjectName("MainStatusBar")
+        self.status_bar.setSizeGripEnabled(False)
+        self.status_bar.setStyleSheet(
+            "QStatusBar{background:rgba(255,255,255,0.04);color:#c7ced8;"
+            "border-top:1px solid rgba(255,255,255,0.08);font-size:12px;"
+            "padding:2px 10px;} QStatusBar::item{border:none;}"
+        )
+        self.v_layout.addWidget(self.status_bar)
+        self.reporter = Reporter(
+            status_bar=self.status_bar,
+            dialog_parent=self,
+            dialog_launcher=AlertDialog.launch,
+        )
+
         # Set default
         self.btn_create.setChecked(True)
         self.stack.setCurrentIndex(0)
@@ -1385,12 +1406,23 @@ class PackageTodoGUI(QMainWindow):
         layout.addStretch()
 
     def _set_create_status(self, text, qss_key=None):
-        """Estado de creación solo a consola: ya no hay barra de estado.
+        """Publica el estado de creación en la barra de estado.
 
-        ``qss_key`` se acepta por compatibilidad con las llamadas antiguas
-        que aplicaban un estilo al rótulo retirado.
+        Los mensajes de error/advertencia llevan además un diálogo con botón OK
+        para que se lean con calma. ``qss_key`` se acepta por compatibilidad con
+        las llamadas antiguas que aplicaban un estilo a un rótulo retirado.
         """
         print(f"[PackageMaker] {text}")
+        reporter = getattr(self, "reporter", None)
+        if reporter is None:
+            return
+        mode = classify_build_message(text)
+        if mode == "error":
+            reporter.error("Error al crear el proyecto", text)
+        elif mode == "warning":
+            reporter.warning("Advertencia", text)
+        else:
+            reporter.notify(text)
 
     def open_create_project_dialog(self):
         """Abre el diálogo iOS de creación y ejecuta la verificación/creación."""
@@ -1967,10 +1999,8 @@ class PackageTodoGUI(QMainWindow):
         # Action Area
         action_layout = QHBoxLayout()
 
-        self.build_status = QLabel("")
-        set_qss(self.build_status, 'packagemaker_033', append=False)
-        action_layout.addWidget(self.build_status)
-
+        # El estado de la compilación se publica en la barra de estado inferior
+        # (y en un diálogo con OK al terminar); ya no hay rótulo en la pestaña.
         self.build_progress = LeviathanProgressBar()
         self.build_progress.setVisible(False)
         self.build_progress.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -2035,7 +2065,7 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, 'radio_lite') and self.radio_lite.isChecked():
             build_mode = "lite"
 
-        self.build_status.setText("🔨 Construyendo paquete .iflapp...")
+        self.reporter.progress("🔨 Construyendo paquete .iflapp...")
         self.build_progress.setVisible(True)
         self.build_progress.setMarquee(True)
 
@@ -2060,10 +2090,22 @@ class PackageTodoGUI(QMainWindow):
             compiler_name=compiler_name, sandbox=sandbox_enabled,
             build_dropper=build_dropper, hardening=hardening,
         )
-        self.build_thread.progress.connect(lambda msg: self.build_status.setText(msg))
-        self.build_thread.finished.connect(lambda msg: [self.build_status.setText(msg), self.build_progress.setVisible(False)])
-        self.build_thread.error.connect(lambda msg: [self.build_status.setText(f"❌ Error: {msg}"), self.build_progress.setVisible(False)])
+        self.build_thread.progress.connect(self._on_build_progress)
+        self.build_thread.finished.connect(self._on_build_finished)
+        self.build_thread.error.connect(self._on_build_error)
         self.build_thread.start()
+
+    def _on_build_progress(self, msg):
+        """Progreso continuo: solo barra de estado, sin abrir diálogos."""
+        self.reporter.progress(msg)
+
+    def _on_build_finished(self, msg):
+        self.build_progress.setVisible(False)
+        self.reporter.success("Compilación completada", msg, dialog=True)
+
+    def _on_build_error(self, msg):
+        self.build_progress.setVisible(False)
+        self.reporter.error("Error de compilación", msg, dialog=True)
 
     def closeEvent(self, event):
         if getattr(self, "_force_close", False):

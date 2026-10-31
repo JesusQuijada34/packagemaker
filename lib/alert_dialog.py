@@ -149,8 +149,8 @@ class AlertDialog(QDialog):
     @staticmethod
     def _default_buttons(mode: str) -> List[str]:
         if mode in ("question", "confirm"):
-            return ["Cancelar", "Aceptar"]
-        return ["Entendido"]
+            return ["Cancelar", "OK"]
+        return ["OK"]
 
     # -- construcción -------------------------------------------------
     def _build_ui(self, title: str, message: str) -> None:
