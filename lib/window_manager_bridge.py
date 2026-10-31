@@ -122,6 +122,24 @@ class WindowManagerBridge(QObject):
         self._hover_edges = None
         self._enabled = PYQT6_AVAILABLE
 
+    def _position_over_titlebar(self, pos: QPoint) -> bool:
+        """``True`` si *pos* (coordenadas de la ventana) cae sobre la titlebar.
+
+        La titlebar vive en el borde superior, dentro del margen de
+        redimensionado; sin esta comprobación basta pasar el ratón por encima
+        para que la ventana adopte el cursor de redimensionado vertical.
+        """
+        titlebar = self.titlebar
+        if titlebar is None:
+            return False
+        try:
+            if not titlebar.isVisible():
+                return False
+            geometry = titlebar.geometry()
+            return geometry.contains(pos)
+        except (RuntimeError, AttributeError):
+            return False
+
     # -- instalación -------------------------------------------------
     def install(self) -> None:
         if not self._enabled:
@@ -129,6 +147,14 @@ class WindowManagerBridge(QObject):
         self.window.setMouseTracking(True)
         self.window.installEventFilter(self)
         if self.titlebar is not None:
+            # La titlebar es hija de la ventana y hereda su cursor cuando no
+            # define uno propio; sin vigilarla, el cursor de redimensionado se
+            # quedaba pegado al pasar el ratón por encima.
+            try:
+                self.titlebar.setMouseTracking(True)
+                self.titlebar.installEventFilter(self)
+            except (RuntimeError, AttributeError):
+                pass
             self._wire_titlebar()
 
     def _wire_titlebar(self) -> None:
@@ -211,26 +237,60 @@ class WindowManagerBridge(QObject):
 
     # -- filtro de eventos -------------------------------------------
     def eventFilter(self, obj, event):  # noqa: N802 (API Qt)
-        if not self._enabled or obj is not self.window:
+        if not self._enabled:
+            return False
+        if obj is not self.window and obj is not self.titlebar:
+            return False
+        if obj is self.titlebar:
+            # La titlebar nunca redimensiona: al pasar el ratón por ella el
+            # cursor debe volver a la flecha normal (heredaba el de la ventana).
+            if event.type() in (QEvent.Type.MouseMove, QEvent.Type.Enter):
+                self._reset_cursor()
             return False
         etype = event.type()
         if etype == QEvent.Type.MouseMove:
             if self.window.isMaximized():
+                if self._hover_edges is not None:
+                    self._reset_cursor()
                 return False
-            edges = detect_resize_edges(event.position().toPoint(), self.window.rect())
+            pos = event.position().toPoint()
+            if self._position_over_titlebar(pos):
+                # La titlebar no redimensiona: moverla es cosa de
+                # ``start_system_move``. Sin esto el cursor quedaba en
+                # redimensionado al pasar por encima.
+                if self._hover_edges is not None:
+                    self._reset_cursor()
+                return False
+            edges = detect_resize_edges(pos, self.window.rect())
             if edges != self._hover_edges:
                 self._hover_edges = edges
-                cursor = cursor_for_edges(edges)
-                if cursor is not None:
-                    self.window.setCursor(QCursor(cursor))
+                if edges is None:
+                    # Al abandonar el borde hay que devolver el cursor normal;
+                    # antes se quedaba pegado y parecía un fallo del titlebar.
+                    self._reset_cursor()
+                else:
+                    cursor = cursor_for_edges(edges)
+                    if cursor is not None:
+                        self.window.setCursor(QCursor(cursor))
         elif etype == QEvent.Type.MouseButtonPress:
             if event.button() == Qt.MouseButton.LeftButton and not self.window.isMaximized():
-                edges = detect_resize_edges(event.position().toPoint(), self.window.rect())
+                pos = event.position().toPoint()
+                if self._position_over_titlebar(pos):
+                    return False
+                edges = detect_resize_edges(pos, self.window.rect())
                 if edges is not None:
                     self.start_system_resize(edges)
         elif etype == QEvent.Type.MouseButtonRelease:
-            self._hover_edges = None
+            self._reset_cursor()
         return False
+
+    def _reset_cursor(self) -> None:
+        """Devuelve el cursor de la ventana a la flecha normal."""
+        self._hover_edges = None
+        try:
+            self.window.unsetCursor()
+        except (RuntimeError, AttributeError):
+            pass
 
 
 def install_window_manager_bridges(window: QWidget, titlebar: Optional[QWidget] = None) -> WindowManagerBridge:

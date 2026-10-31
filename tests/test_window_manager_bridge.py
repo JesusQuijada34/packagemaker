@@ -116,5 +116,88 @@ class BridgeToggleTests(unittest.TestCase):
         self.assertEqual(window.calls, ["helper"])
 
 
+@unittest.skipUnless(QT_AVAILABLE, "Qt no disponible en este entorno")
+class TitlebarCursorTests(unittest.TestCase):
+    """Bug real: el cursor se quedaba en redimensionado sobre la titlebar."""
+
+    class _FakeTitlebar:
+        def __init__(self, geometry):
+            self._geometry = geometry
+            self._visible = True
+
+        def isVisible(self):
+            return self._visible
+
+        def geometry(self):
+            return self._geometry
+
+    class _CursorWindow:
+        """Ventana mínima que registra las llamadas de cursor."""
+
+        def __init__(self):
+            self.cursor_calls = []
+            self.maximized = False
+
+        def isMaximized(self):
+            return self.maximized
+
+        def setCursor(self, cursor):
+            self.cursor_calls.append(("set", cursor))
+
+        def unsetCursor(self):
+            self.cursor_calls.append(("unset", None))
+
+        def rect(self):
+            return QRect(0, 0, 200, 100)
+
+    def test_titlebar_hit_test_detects_position(self):
+        window = self._CursorWindow()
+        titlebar = self._FakeTitlebar(QRect(0, 0, 200, 30))
+        bridge = WindowManagerBridge(window, titlebar)
+        self.assertTrue(bridge._position_over_titlebar(QPoint(100, 15)))
+        self.assertFalse(bridge._position_over_titlebar(QPoint(100, 60)))
+
+    def test_no_titlebar_never_reports_hit(self):
+        window = self._CursorWindow()
+        bridge = WindowManagerBridge(window, None)
+        self.assertFalse(bridge._position_over_titlebar(QPoint(100, 5)))
+
+    def test_hidden_titlebar_never_reports_hit(self):
+        window = self._CursorWindow()
+        titlebar = self._FakeTitlebar(QRect(0, 0, 200, 30))
+        titlebar._visible = False
+        bridge = WindowManagerBridge(window, titlebar)
+        self.assertFalse(bridge._position_over_titlebar(QPoint(100, 5)))
+
+    def test_reset_cursor_restores_the_default_arrow(self):
+        window = self._CursorWindow()
+        bridge = WindowManagerBridge(window, None)
+        bridge._hover_edges = Qt.Edge.TopEdge
+        bridge._reset_cursor()
+        self.assertIsNone(bridge._hover_edges)
+        self.assertIn(("unset", None), window.cursor_calls)
+
+    def test_leaving_an_edge_resets_the_cursor(self):
+        """Al salir del borde el cursor vuelve a la flecha, no se queda pegado."""
+        from PyQt6.QtCore import QEvent
+        from PyQt6.QtGui import QMouseEvent
+
+        window = self._CursorWindow()
+        bridge = WindowManagerBridge(window, None)
+        # Entra en el borde izquierdo: cursor de redimensionado horizontal.
+        bridge._hover_edges = Qt.Edge.LeftEdge
+        move_center = QMouseEvent(
+            QEvent.Type.MouseMove,
+            QPoint(100, 50).toPointF(),
+            QPoint(100, 50).toPointF(),
+            Qt.MouseButton.NoButton,
+            Qt.MouseButton.NoButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        bridge.eventFilter(window, move_center)
+        self.assertIsNone(bridge._hover_edges)
+        self.assertIn(("unset", None), window.cursor_calls)
+
+
 if __name__ == "__main__":
     unittest.main()

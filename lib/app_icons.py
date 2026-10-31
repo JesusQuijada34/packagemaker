@@ -202,8 +202,9 @@ def get_sidebar_icon(key: str, size: int = 24, dark: Optional[bool] = None) -> '
     """Icono de la barra lateral, con color según el tema.
 
     ``dark=None`` conserva el color original del SVG (blanco). Con ``dark``
-    booleano se pinta en blanco (oscuro) o gris (claro) para que el icono sea
-    visible sobre el fondo correspondiente.
+    booleano se pinta con el gris de la barra lateral; el tono es el mismo en
+    ambos temas (ver ``SIDEBAR_TEXT_GRAY``), de modo que el icono nunca
+    desaparece sobre el fondo claro.
     """
     svg = ICONS_SVG.get(key, ICONS_SVG["about"])
     if dark is not None:

@@ -19,6 +19,7 @@ from lib.design_tokens import (
     SECTION_LABEL_SIZE,
     SIDEBAR_BG,
     SIDEBAR_ICON_INSET,
+    SIDEBAR_TEXT_GRAY,
     SURFACE,
     TEXT,
     TEXT_DIM,
@@ -488,16 +489,16 @@ def sidebar_stylesheet(dark, accent="#0078d4"):
     quedan el marco, el botón de colapso y la tarjeta de contexto.
     """
     if dark:
-        sidebar_bg, border, text, hover, selected = SIDEBAR_BG, "#333333", TEXT_MUTED, "rgba(255,255,255,.06)", "rgba(255,255,255,.10)"
+        sidebar_bg, border, hover, selected = SIDEBAR_BG, "#333333", "rgba(255,255,255,.06)", "rgba(255,255,255,.10)"
     else:
-        sidebar_bg, border, text, hover, selected = "rgba(242,242,247,.9)", "#D1D1D6", "#1C1C1E", "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
+        sidebar_bg, border, hover, selected = "rgba(242,242,247,.9)", "#D1D1D6", "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
     return f"""
         QWidget#NavigationSidebar {{ background:{sidebar_bg}; border-right:1px solid {border}; }}
-        QPushButton#SidebarCollapseButton {{ background:transparent; color:{text}; border:none; border-radius:7px; }}
+        QPushButton#SidebarCollapseButton {{ background:transparent; color:{SIDEBAR_TEXT_GRAY}; border:none; border-radius:7px; }}
         QPushButton#SidebarCollapseButton:hover {{ background:{hover}; }}
         QPushButton#SidebarCollapseButton:pressed {{ background:{selected}; }}
         QWidget#SidebarContextCard {{ background:{hover}; border:1px solid {border}; border-radius:{CARD_RADIUS}px; }}
-        QWidget#NavigationSidebar QPushButton {{ color:{text}; font-family:{FONT_STACK}; font-size:14px; }}
+        QWidget#NavigationSidebar QPushButton {{ color:{SIDEBAR_TEXT_GRAY}; font-family:{FONT_STACK}; font-size:14px; }}
         QWidget#NavigationSidebar QPushButton:focus {{ outline:none; }}
     """
 
@@ -505,31 +506,21 @@ def sidebar_stylesheet(dark, accent="#0078d4"):
 def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
     """Return an explicit stylesheet for one sidebar navigation button.
 
-    El color del texto seleccionado sigue al tema: blanco sobre el fondo oscuro
-    y azul de acento sobre el fondo claro. Fijarlo siempre a ``TEXT`` dejaba el
-    ítem seleccionado invisible en tema claro.
+    El texto usa el mismo gris en ambos temas (ver ``SIDEBAR_TEXT_GRAY``); la
+    selección se marca con el fondo y con el indicador que pinta
+    ``SidebarItem``, no cambiando el color del texto.
     """
     if dark:
-        text, hover, selected, selected_text = (
-            TEXT_MUTED,
-            "rgba(255,255,255,.06)",
-            "rgba(255,255,255,.10)",
-            TEXT,
-        )
+        hover, selected = "rgba(255,255,255,.06)", "rgba(255,255,255,.10)"
     else:
-        text, hover, selected, selected_text = (
-            "#334155",
-            "rgba(15,23,42,.07)",
-            "rgba(0,120,212,.14)",
-            accent,
-        )
+        hover, selected = "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
     return f"""
-        QPushButton {{ background:transparent; color:{text}; text-align:left; padding-left:{SIDEBAR_ICON_INSET}px;
+        QPushButton {{ background:transparent; color:{SIDEBAR_TEXT_GRAY}; text-align:left; padding-left:{SIDEBAR_ICON_INSET}px;
             border:none; border-left:{int(border_width)}px solid transparent; border-radius:{CONTROL_RADIUS}px;
             font-family:{FONT_STACK};
             font-size:14px; font-weight:500; }}
-        QPushButton:hover {{ background:{hover}; color:{text}; }}
-        QPushButton:checked {{ background:{selected}; color:{selected_text}; border-left:{int(border_width)}px solid {accent}; }}
+        QPushButton:hover {{ background:{hover}; color:{SIDEBAR_TEXT_GRAY}; }}
+        QPushButton:checked {{ background:{selected}; color:{SIDEBAR_TEXT_GRAY}; border-left:{int(border_width)}px solid {accent}; }}
         QPushButton:focus {{ outline:none; }}
     """
 

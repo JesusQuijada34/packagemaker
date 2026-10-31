@@ -70,8 +70,93 @@ def test_sidebar_item_light_text_and_icon_are_gray(qapp):
     assert SIDEBAR_ICON_LIGHT.lower() != "#ffffff"
 
 
-def test_sidebar_item_dark_text_and_icon_are_white(qapp):
-    """En modo oscuro el texto y el icono del sidebar van en blanco."""
+def test_sidebar_text_and_icon_are_the_same_gray_in_both_themes(qapp):
+    """El texto y el icono usan el mismo gris oscuro en claro y en oscuro."""
+    from lib.design_tokens import (
+        SIDEBAR_ICON_DARK,
+        SIDEBAR_ICON_LIGHT,
+        SIDEBAR_TEXT_DARK,
+        SIDEBAR_TEXT_GRAY,
+        SIDEBAR_TEXT_LIGHT,
+    )
+    from lib.SidebarItem import SidebarItem
+
+    assert SIDEBAR_ICON_DARK == SIDEBAR_ICON_LIGHT == SIDEBAR_TEXT_GRAY
+    assert SIDEBAR_TEXT_DARK == SIDEBAR_TEXT_LIGHT == SIDEBAR_TEXT_GRAY
+    assert SIDEBAR_TEXT_GRAY.lower() != "#ffffff"
+    for dark in (True, False):
+        item = SidebarItem("x", dark=dark)
+        assert SIDEBAR_TEXT_GRAY.lower() in item.styleSheet().lower()
+
+
+def test_sidebar_indicator_is_blue_and_transitions_on_toggle(qapp):
+    """El indicador azul aparece con una transición al cambiar de página.
+
+    Los ítems son ``autoExclusive``: no se pueden desmarcar directamente, así
+    que el deseleccionado se produce al marcar otro ítem del mismo grupo.
+    """
+    from PyQt6.QtCore import QEventLoop, QTimer
+    from PyQt6.QtWidgets import QButtonGroup
+
+    from lib.SidebarItem import SidebarItem
+
+    group = QButtonGroup()
+    first = SidebarItem("Config")
+    second = SidebarItem("Build")
+    group.addButton(first, 0)
+    group.addButton(second, 1)
+
+    assert first._indicator_progress == 0.0
+    first.setChecked(True)
+    loop = QEventLoop()
+    QTimer.singleShot(300, loop.quit)
+    loop.exec()
+    assert first._indicator_progress == 1.0
+
+    # Marcar el segundo desmarca el primero y su indicador se desvanece.
+    second.setChecked(True)
+    loop = QEventLoop()
+    QTimer.singleShot(300, loop.quit)
+    loop.exec()
+    assert first._indicator_progress == 0.0
+    assert second._indicator_progress == 1.0
+    # La animación se reutiliza (no se recrea en cada transición).
+    assert first._indicator_animation is not None
+
+
+def test_sidebar_indicator_animation_is_reused_not_deleted(qapp):
+    """Regresión: la animación del indicador no debe destruirse al terminar."""
+    from PyQt6.QtCore import QEventLoop, QTimer
+    from PyQt6.QtWidgets import QButtonGroup
+
+    from lib.SidebarItem import SidebarItem
+
+    group = QButtonGroup()
+    items = [SidebarItem(name) for name in ("A", "B")]
+    for index, item in enumerate(items):
+        group.addButton(item, index)
+
+    # La animación se crea de forma perezosa en el primer toggle y luego se
+    # reutiliza; ninguna debe recrearse ni destruirse.
+    seen = {}
+    for index in (0, 1, 0, 1, 0):
+        items[index].setChecked(True)
+        loop = QEventLoop()
+        QTimer.singleShot(250, loop.quit)
+        loop.exec()
+        for position, item in enumerate(items):
+            animation = item._indicator_animation
+            if animation is None:
+                continue
+            if position in seen:
+                assert animation is seen[position]
+            else:
+                seen[position] = animation
+    assert set(seen) == {0, 1}
+
+
+def test_sidebar_item_dark_text_and_icon_share_the_gray(qapp):
+    """En modo oscuro el texto y el icono ya no son blanco puro."""
     from lib.SidebarItem import SidebarItem
     from lib.design_tokens import SIDEBAR_ICON_DARK, SIDEBAR_TEXT_DARK
 
@@ -79,7 +164,8 @@ def test_sidebar_item_dark_text_and_icon_are_white(qapp):
     qss = item.styleSheet().lower()
     base_block = qss.split(":hover")[0].split("{")[1].split("}")[0]
     assert SIDEBAR_TEXT_DARK.lower() in base_block
-    assert SIDEBAR_ICON_DARK.lower() == "#ffffff"
+    assert "#ffffff" not in base_block
+    assert SIDEBAR_ICON_DARK.lower() != "#ffffff"
 
 
 def test_sidebar_item_indicator_is_short_and_centered():
@@ -89,12 +175,17 @@ def test_sidebar_item_indicator_is_short_and_centered():
     assert "def paintEvent" in text
 
 
-def test_sidebar_button_stylesheet_selected_text_is_theme_aware():
+def test_sidebar_button_stylesheet_uses_the_uniform_gray():
+    """El QSS del sidebar pinta el texto con el gris uniforme en ambos temas."""
     text = source("lib/fluent_theme.py")
-    assert "selected_text" in text
+    assert "SIDEBAR_TEXT_GRAY" in text
     # El sidebar_stylesheet ya no impone un border-left a los botones.
     sidebar_fn = text.split("def sidebar_stylesheet")[1].split("def sidebar_button_stylesheet")[0]
     assert "border-left:3px solid" not in sidebar_fn
+    # El texto seleccionado ya no cambia de color: es el mismo gris.
+    button_fn = text.split("def sidebar_button_stylesheet")[1].split("def checkbox_stylesheet")[0]
+    assert "selected_text" not in button_fn
+    assert "color:{SIDEBAR_TEXT_GRAY}" in button_fn
 
 
 # --- Bug real: el fundido de página no se veía ni se limpiaba --------------- #

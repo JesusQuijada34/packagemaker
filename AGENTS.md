@@ -43,10 +43,21 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   siguiente `stop()` lanzaba
   `RuntimeError: wrapped C/C++ object of type QPropertyAnimation has been deleted`.
 - `lib/app_icons.py` genera los SVG con un color incrustado. `get_sidebar_icon(key,
-  size, dark=...)` lo sustituye: **gris** (`SIDEBAR_ICON_LIGHT`) en claro y
-  **blanco** (`SIDEBAR_ICON_DARK`) en oscuro. `SidebarItem(..., icon_key=...)`
+  size, dark=...)` lo sustituye por el **gris uniforme** `SIDEBAR_TEXT_GRAY`
+  (`#6E6E73`), el mismo en tema claro y oscuro. `SidebarItem(..., icon_key=...)`
   guarda la clave para poder repintar el icono en `set_dark()`; sin `icon_key` el
   icono se queda con el color fijo `#ffffff` y desaparece en tema claro.
+- `lib/SidebarItem.py` pinta el indicador azul en `paintEvent` con un progreso
+  animado (`indicatorProgress`, 0→1). La selección **no** cambia el color del
+  texto: el texto y el icono son siempre gris y lo que distingue al ítem activo
+  es el fondo más el indicador. La animación se crea de forma perezosa y se
+  reutiliza (misma razón que en `hover_animation`).
+- `lib/window_manager_bridge.py`: la titlebar queda **excluida** del área de
+  redimensionado (`_position_over_titlebar`) y el cursor se **restaura** al salir
+  de un borde o de la ventana (`_reset_cursor`). Sin eso el cursor de
+  redimensionado se quedaba pegado al pasar el ratón por la titlebar, porque los
+  hijos heredan el cursor de la ventana. El filtro se instala también sobre la
+  titlebar.
 
 ## Ley de nombres canónicos y estructura
 - Todo artefacto público debe ser exactamente
