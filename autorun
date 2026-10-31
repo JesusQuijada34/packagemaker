@@ -1,4 +1,0 @@
-#!/usr/bin/env sh
-pip install -r "./lib/requirements.txt"
-clear
-/usr/bin/python3 "./packagemaker.py"

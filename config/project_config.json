@@ -1,0 +1,8 @@
+{
+    "projects": {
+        "C:\\test\\project.exe": "pmcodeeditor"
+    },
+    "editors": {
+        "pmcodeeditor": "C:\\Users\\Jesus Quijada\\Documents\\GitHub\\packagemaker\\pmCodeEditor.py"
+    }
+}

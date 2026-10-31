@@ -199,25 +199,6 @@ class MoonFixWizard(QDialog):
         t_layout.addWidget(btn_close)
         
         self.main_layout.addWidget(self.title_bar)
-        
-        # Drag Logic for custom title bar
-        def title_press(event):
-            if event.button() == Qt.LeftButton:
-                self._dragging = True
-                self._drag_pos = event.globalPos() - self.pos()
-                event.accept()
-
-        def title_move(event):
-            if self._dragging and event.buttons() & Qt.LeftButton:
-                self.move(event.globalPos() - self._drag_pos)
-                event.accept()
-
-        def title_release(event):
-            self._dragging = False
-
-        self.title_bar.mousePressEvent = title_press
-        self.title_bar.mouseMoveEvent = title_move
-        self.title_bar.mouseReleaseEvent = title_release
 
         # Stack de Páginas
         self.stack = QStackedWidget()
