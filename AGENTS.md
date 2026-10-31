@@ -133,8 +133,8 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
 - Las capturas de `assets/screenshots/` se regeneran con
   `QT_QPA_PLATFORM=offscreen python scripts/capture_screenshots.py`.
 - **Ley de nombres**: el nombre de la carpeta de proyecto debe salir siempre de
-  `ProjectNameFormatter.format_project_folder(...)` (o de `build_variables(...)[
-  "FOLDER_NAME"]`). Nunca lo recompongas a mano con `f"{publisher}.{app}.{VERSION_FULL}"`:
+  `ProjectNameFormatter.format_project_folder(...)` (o de la clave `FOLDER_NAME`
+  de `build_variables(...)`). Nunca lo recompongas a mano con `f"{publisher}.{app}.{VERSION_FULL}"`:
   `VERSION_FULL` **no** lleva el sufijo de plataforma y el nombre deja de ser
   canónico (regresión histórica del commit `60c5cc0`). Toda ruta que cree un
   proyecto (`create_package_action`, `pm_dashboard`, diálogo de creación, CLI
