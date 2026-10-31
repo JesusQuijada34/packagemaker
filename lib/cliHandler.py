@@ -776,8 +776,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         author_val = project_source.get('author') or 'Unknown'
         
         # Usar ProjectNameFormatter para formato consistente
+        timestamp = ProjectNameFormatter.get_timestamp()
         folder_name = ProjectNameFormatter.format_project_folder(
-            publisher, app_id, version_base, platform_value
+            publisher, app_id, version_base, platform_value, timestamp
         )
         project_path = base_path / folder_name
         
@@ -791,6 +792,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             platform_value,
             version_base=version_base,
             description=description,
+            timestamp=timestamp,
         )
         
         # Copiar icono por defecto

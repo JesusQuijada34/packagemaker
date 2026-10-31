@@ -1699,35 +1699,66 @@ class PackageTodoGUI(QMainWindow):
 
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
-        version = self.input_version.text().strip()
-        if version == "":
-            version = f"1-{getversion()}-{plataforma_seleccionada}"
-        else:
-            version = f"{version}-{getversion()}-{plataforma_seleccionada}"
         nombre_completo = self.input_nombre_completo.text() or nombre_logico.strip().upper()
         version_base = (self.input_version.text().strip() or "1").split("-")[0]
+        from lib.projectNameFormatter import ProjectNameFormatter
         from lib.template_engine import build_variables
 
+        try:
+            timestamp = ProjectNameFormatter.get_timestamp()
+        except ValueError as exc:  # pragma: no cover - get_timestamp no falla
+            self._set_create_status(f"Error: {exc}", 'packagemaker_155')
+            self._close_create_progress()
+            return
+
+        # La carpeta y los metadatos se generan con la **misma** marca temporal;
+        # el nombre canónico (con sufijo de plataforma) sale del formatter, que
+        # es la única fuente de la ley de nombres.
         _vars = build_variables(
-            empresa, nombre_logico, nombre_completo, autor, plataforma_seleccionada, version_base
+            empresa,
+            nombre_logico,
+            nombre_completo,
+            autor,
+            plataforma_seleccionada,
+            version_base,
+            timestamp=timestamp,
         )
-        folder_name = f"{empresa}.{nombre_logico}.{_vars['VERSION_FULL']}"
+        folder_name = _vars["FOLDER_NAME"]
         full_path = os.path.join(BASE_DIR, folder_name)
         hv = _vars["CORRELATIONID"]
         try:
             from pathlib import Path as _Path
-            from lib.template_engine import create_project_from_templates
-
-            os.makedirs(full_path, exist_ok=True)
-            create_project_from_templates(
-                _Path(full_path),
-                empresa,
-                nombre_logico,
-                nombre_completo,
-                autor,
-                plataforma_seleccionada,
-                version_base=version_base,
+            from lib.template_engine import (
+                create_project_from_templates,
+                templates_available,
             )
+
+            # Comprobar las plantillas **antes** de crear nada: si faltan (p. ej.
+            # en un bundle mal empaquetado) antes quedaba una carpeta vacía.
+            if not templates_available():
+                raise FileNotFoundError(
+                    "No se encontraron las plantillas de proyecto (src/templates). "
+                    "Reinstala PackageMaker o compílalo incluyendo src/templates."
+                )
+
+            created_new = not os.path.isdir(full_path)
+            os.makedirs(full_path, exist_ok=True)
+            try:
+                create_project_from_templates(
+                    _Path(full_path),
+                    empresa,
+                    nombre_logico,
+                    nombre_completo,
+                    autor,
+                    plataforma_seleccionada,
+                    version_base=version_base,
+                    timestamp=timestamp,
+                )
+            except Exception:
+                # No dejar un proyecto a medias o vacío si la generación falla.
+                if created_new:
+                    shutil.rmtree(full_path, ignore_errors=True)
+                raise
             icon_dest = os.path.join(full_path, "app", "app-icon.ico")
             upd_icon = os.path.join("app", "updater-icon.ico")
             upd_icn_dst = os.path.join(full_path, "app", "updater-icon.ico")
@@ -3052,6 +3083,20 @@ class PackageTodoGUI(QMainWindow):
             pub = (publisher or autor or "influent").strip().lower().replace(" ", "-")
             version_base = (version or "1.0.0").strip().split("-")[0]
 
+            # El nombre de la carpeta debe ser el canónico (con versión y
+            # plataforma), no ``publisher.app`` a secas.
+            from lib.projectNameFormatter import ProjectNameFormatter
+
+            try:
+                timestamp = ProjectNameFormatter.get_timestamp()
+                folder_name = ProjectNameFormatter.format_project_folder(
+                    pub, app_id, version_base, "Knosthalij", timestamp
+                )
+            except ValueError as exc:
+                LeviathanDialog.launch(self, "Error", str(exc), mode="error")
+                return
+            rutaProyecto = os.path.join(rutaBase, folder_name)
+
             create_project_from_templates(
                 Path(rutaProyecto),
                 pub,
@@ -3061,6 +3106,7 @@ class PackageTodoGUI(QMainWindow):
                 "Knosthalij",
                 version_base=version_base,
                 description=descripcion or "Proyecto creado con Influent Package Maker",
+                timestamp=timestamp,
             )
 
             # Copiar icono por defecto

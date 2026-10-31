@@ -250,7 +250,19 @@ class NewProjectWizard(QDialog):
             Path.home() / "Documents" / "Packagemaker Projects"
         )
         pub_slug = publisher.strip().lower().replace(" ", "-")
-        project_path = Path(base_dir) / f"{pub_slug}.{app_id}"
+        # Nombre canónico completo (con versión y sufijo de plataforma), no
+        # ``publisher.app`` a secas: la carpeta debe cumplir la ley de nombres.
+        from lib.projectNameFormatter import ProjectNameFormatter
+
+        try:
+            timestamp = ProjectNameFormatter.get_timestamp()
+            folder_name = ProjectNameFormatter.format_project_folder(
+                pub_slug, app_id, version, plat, timestamp
+            )
+        except ValueError as exc:
+            QMessageBox.critical(self, "Error", str(exc))
+            return
+        project_path = Path(base_dir) / folder_name
 
         if project_path.exists():
             QMessageBox.warning(self, "Ya existe", f"La carpeta ya existe:\n{project_path}")
@@ -268,6 +280,7 @@ class NewProjectWizard(QDialog):
                 plat,
                 version_base=version,
                 description="Aplicacion creada con PackageMaker IDE",
+                timestamp=timestamp,
             )
             self.project_path = str(project_path)
             self.accept()

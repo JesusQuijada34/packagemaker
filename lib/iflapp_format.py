@@ -417,6 +417,11 @@ def pack_iflapp(
     payload_digest = _sha256(payload_bytes)
 
     meta = dict(identity or {})
+    if not any(meta.get(key) for key in ("publisher", "app", "name", "version")):
+        # Sin identidad explícita, la tomamos del ``details.xml`` en claro para
+        # que la cabecera siempre permita leer el paquete sin descifrar.
+        for key, value in _parse_details_identity(details).items():
+            meta.setdefault(key, value)
     flags = 0
     if compression != "none":
         flags |= _FLAG_COMPRESSED
@@ -564,7 +569,10 @@ def _read_section(handle, header: Dict, key: str) -> bytes:
 def verify_iflapp(path: Path | str, *, signing_key: bytes = DEFAULT_SIGNING_KEY) -> Dict:
     """Verifica estructura, digests y firma sin extraer el payload."""
     path = Path(path)
-    header = read_iflapp_header(path, include_blobs=False)
+    # ``include_blobs=True`` lee icono y ``details.xml`` de la cabecera (van en
+    # claro, no son el payload), de modo que la identidad se puede reconstruir
+    # aun cuando el empaquetador no escribió los campos planos.
+    header = read_iflapp_header(path, include_blobs=True)
     size = path.stat().st_size
     payload = header.raw.get("payload", {})
     payload_off = int(payload.get("offset", 0))

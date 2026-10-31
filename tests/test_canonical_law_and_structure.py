@@ -328,5 +328,86 @@ class IflappPipelineLawTests(unittest.TestCase):
                 self.assertNotIn("..", Path(name).parts, name)
 
 
+class CreatedProjectNamingRegressionTests(unittest.TestCase):
+    """Regresión: la carpeta creada debe salir del formatter canónico.
+
+    El bug era que ``create_package_action`` componía el nombre a mano con
+    ``VERSION_FULL`` y perdía el sufijo de plataforma, así que la carpeta no
+    cumplía la ley.
+    """
+
+    def test_build_variables_exposes_the_canonical_folder_name(self):
+        variables = build_variables(
+            "gfff", "ddghgyh", "DDGHGYH", "JesusQuijada34", "knosthalij", "1.0",
+            timestamp=TIMESTAMP,
+        )
+        self.assertEqual(
+            variables["FOLDER_NAME"],
+            f"gfff.ddghgyh.v1.0-{TIMESTAMP}-Knosthalij",
+        )
+        # El nombre canónico es analizable por el formatter (ley cumplida).
+        self.assertIsNotNone(
+            ProjectNameFormatter.parse_project_folder(variables["FOLDER_NAME"])
+        )
+        # La versión sigue sin plataforma; el sufijo pertenece al nombre.
+        self.assertNotIn("Knosthalij", variables["VERSION_FULL"])
+
+    def test_timestamp_is_shared_between_folder_and_details(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            variables = create_project_from_templates(
+                project,
+                publisher="Influent",
+                app_id="packagemaker",
+                name="PackageMaker",
+                author="JesusQuijada34",
+                platform="AlphaCube",
+                version_base="3.2.7",
+                timestamp=TIMESTAMP,
+            )["variables"]
+            self.assertEqual(
+                variables["FOLDER_NAME"],
+                f"Influent.packagemaker.v3.2.7-{TIMESTAMP}-AlphaCube",
+            )
+            root = ET.parse(project / "details.xml").getroot()
+            flat = {
+                node.tag.split("}")[-1]: (node.text or "").strip()
+                for node in root.iter()
+                if node.text and node.text.strip()
+            }
+            self.assertEqual(flat.get("version"), f"v3.2.7-{TIMESTAMP}")
+
+    def test_missing_templates_are_detected_before_creating_folders(self):
+        """Sin plantillas no debe quedar un proyecto vacío en disco."""
+        from lib import template_engine
+
+        with patch.object(
+            template_engine, "get_templates_root", return_value=Path("/no/existe")
+        ):
+            self.assertFalse(template_engine.templates_available())
+        # Con las plantillas reales del repo sí está disponible.
+        self.assertTrue(template_engine.templates_available())
+
+    def test_creation_aborts_without_writing_when_templates_are_missing(self):
+        """``create_project_from_templates`` no deja restos si falla."""
+        from lib import template_engine
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            with patch.object(
+                template_engine, "get_templates_root", return_value=Path("/no/existe")
+            ):
+                with self.assertRaises(FileNotFoundError):
+                    create_project_from_templates(
+                        project,
+                        publisher="Influent",
+                        app_id="packagemaker",
+                        name="PackageMaker",
+                        author="JesusQuijada34",
+                        platform="AlphaCube",
+                        version_base="3.2.7",
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()

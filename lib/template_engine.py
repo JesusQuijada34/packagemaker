@@ -60,6 +60,17 @@ def load_template(relative_path: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def templates_available() -> bool:
+    """``True`` si la raíz de plantillas existe y trae el marcador mínimo.
+
+    Se comprueba antes de crear ninguna carpeta: sin plantillas, el flujo
+    anterior dejaba un proyecto **vacío** porque ``os.makedirs`` ya había
+    creado el directorio y la excepción se silenciaba.
+    """
+    root = get_templates_root()
+    return (root / "project" / "container.marker.template").is_file()
+
+
 def render_template(relative_path: str, variables: Dict[str, str]) -> str:
     return _safe_substitute(load_template(relative_path), variables)
 
@@ -104,8 +115,13 @@ def build_variables(
     version_base: str = "1.0.0",
     description: str = "",
     license_year: Optional[str] = None,
+    timestamp: Optional[str] = None,
 ) -> Dict[str, str]:
-    """Construye todas las variables __*__ para plantillas de proyecto."""
+    """Construye todas las variables __*__ para plantillas de proyecto.
+
+    ``timestamp`` permite fijar la marca temporal; quien crea la carpeta debe
+    pasar la misma para que el nombre canónico y los metadatos coincidan.
+    """
     publisher_slug = ProjectNameFormatter.normalize_publisher(publisher)
     app_slug = ProjectNameFormatter.normalize_app_id(app_id)
     display_name = name.strip() or app_slug
@@ -113,7 +129,7 @@ def build_variables(
     plat = ProjectNameFormatter.normalize_platform(platform)
 
     version_clean, existing_timestamp = ProjectNameFormatter.version_components(version_base)
-    timestamp = existing_timestamp or ProjectNameFormatter.get_timestamp()
+    timestamp = timestamp or existing_timestamp or ProjectNameFormatter.get_timestamp()
     version_vso = ProjectNameFormatter.format_version_vso(version_clean, timestamp)
     version_full = ProjectNameFormatter.format_version_full(version_clean, platform, timestamp)
 
@@ -156,6 +172,9 @@ def build_variables(
         "PRODUCT_NAME": f"{company} {display_name} {version_full}",
         "PRODUCT_VERSION": product_version,
         "XTE": xte,
+        # Nombre canónico completo, para que ninguna capa lo recomponga a mano.
+        "FOLDER_NAME": folder_key,
+        "TIMESTAMP": timestamp,
     }
 
 
@@ -186,16 +205,27 @@ def create_project_from_templates(
     platform: str,
     version_base: str = "1.0.0",
     description: str = "",
+    timestamp: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Crea un proyecto completo usando plantillas en src/templates/.
     Retorna metadatos del proyecto creado.
+
+    ``timestamp`` fija la marca temporal; pásalo junto con el nombre de carpeta
+    para que ``details.xml`` y el directorio compartan el mismo sufijo.
     """
     project_path = Path(project_path)
+    # Validar las plantillas antes de tocar el disco: si faltan, no debe quedar
+    # una carpeta vacía (bug de "proyectos vacíos").
+    if not templates_available():
+        raise FileNotFoundError(
+            f"No se encontraron las plantillas de proyecto en {get_templates_root()}"
+        )
     project_path.mkdir(parents=True, exist_ok=True)
 
     variables = build_variables(
-        publisher, app_id, name, author, platform, version_base, description
+        publisher, app_id, name, author, platform, version_base, description,
+        timestamp=timestamp,
     )
     created: List[str] = []
 
