@@ -543,21 +543,6 @@ plataforma = plataforma_platform.capitalize()
 nombre = plataforma_name.capitalize()
 plataforma = f"{plataforma} in {nombre}"
 
-LGDR_MAKE_MESSAGES = {
-    "_LGDR_PUBLISHER_E" : "Nombre de la empresa de creación.",
-    "_LGDR_NAME_E" : "Nombre acortado del proyecto. Se permiten guiones y pisos, no espacios",
-    "_LGDR_VERSION_E" :"Versión del proyecto, como 1 o 1.0, no es permitido guiones ni espacios",
-    "_LGDR_TITLE_E" : "Título del proyecto, formato libre",
-    "_LGDR_MAKE_BTN" : "Crear proyecto y firmar"
-}
-LGDR_BUILD_MESSAGES = {
-    "_LGDR_PUBLISHER_E" : "Empresa quien hizo el proyecto",
-    "_LGDR_NAME_E" : "Shortname del proyecto a construir",
-    "_LGDR_VERSION_E" : "Versión del proyecto a detectar",
-    "_LGDR_PLATFORM_E" : "Plataforma a compilar",
-    "_LGDR_BUILD_BTN" : "Compilar proyecto"
-}
-
 AGE_RATINGS = {
     "project1" : "NO SEGURO!",
     "editor" : "PERSONAL USE",
@@ -704,7 +689,7 @@ def get_app_version():
             return version
         except Exception as e:
             print(f"Error leyendo details.xml: {e}")
-    return "3.2.7-26.05-20.13-AlphaCube"  # Fallback por defecto
+    return "Not available"  # Fallback por defecto
 
 SIDEBAR_DESC_KEYS = {
     0: "sidebar_desc.0",
@@ -839,7 +824,7 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_collapse_toggle.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         icon_button(self.sidebar_collapse_toggle, "collapse", 18)
         self.sidebar_collapse_toggle.clicked.connect(self.toggle_sidebar)
-        self.sidebar_collapse_toggle.setToolTip("Ocultar menú (Ctrl+B)")
+        self.sidebar_collapse_toggle.setToolTip(tr("sidebar.toggle_collapse"))
         sidebar_header.addWidget(self.sidebar_collapse_toggle)
         self.sidebar_layout.addLayout(sidebar_header)
 
@@ -1034,11 +1019,14 @@ class PackageTodoGUI(QMainWindow):
         target_width = 60 if collapsed else self.sidebar_target_width
         if self.sidebar_collapsed == collapsed and self.sidebar.maximumWidth() == target_width:
             return
-        # El tirador fija mínimo y máximo; el colapso debe liberar el mínimo.
+        # Mantener el ancho objetivo estable y no reescalar el sidebar al maximizar.
+        # El maximizado de la ventana no debe mutar el ancho base del widget ni
+        # volver a aplicar el mismo estado visual iterativamente.
         if collapsed:
             self.sidebar.setMinimumWidth(60)
         else:
             self.sidebar.setMinimumWidth(self.sidebar_target_width)
+        self.sidebar.setMaximumWidth(target_width)
         self.sidebar_animation = animate_property(
             self.sidebar,
             "maximumWidth",
@@ -1051,7 +1039,7 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_collapsed = collapsed
         icon_button(self.sidebar_collapse_toggle, "expand" if collapsed else "collapse", 18)
         self.sidebar_collapse_toggle.setToolTip(
-            "Expandir menú (Ctrl+B)" if collapsed else "Ocultar menú (Ctrl+B)"
+            tr("sidebar.toggle_expand") if collapsed else tr("sidebar.toggle_collapse")
         )
         if hasattr(self, "sidebar_resize_handle"):
             self.sidebar_resize_handle.setVisible(not collapsed)
@@ -1274,12 +1262,12 @@ class PackageTodoGUI(QMainWindow):
         # Barra de acciones superior (estilo macOS). El botón de crear vive
         # aquí, junto al título de la página, y no en la barra de la ventana.
         self.btn_create_action = make_action_button(
-            "Crear Proyecto", "primary", get_icon("crear", 16)
+            tr("create.action"), "primary", get_icon("crear", 16)
         )
         self.btn_create_action.clicked.connect(self.open_create_project_dialog)
         self.create_action_bar, self.create_bar_title = install_page_action_bar(
             layout,
-            "Crear un proyecto nuevo",
+            tr("create.page_title"),
             [self.btn_create_action],
         )
 
@@ -1305,36 +1293,36 @@ class PackageTodoGUI(QMainWindow):
             return line
 
         # Fila 0
-        form_layout.addWidget(uwp_label("Empresa / Publisher:"), 0, 0)
-        self.input_empresa = uwp_input("Ej. influent")
+        form_layout.addWidget(uwp_label(tr("create.form.company")), 0, 0)
+        self.input_empresa = uwp_input(tr("create.form.placeholder_company"))
         form_layout.addWidget(self.input_empresa, 0, 1)
 
         # Fila 1
-        form_layout.addWidget(uwp_label("ID Interno (Slug):"), 1, 0)
-        self.input_nombre_logico = uwp_input("Ej. my-app-tool")
+        form_layout.addWidget(uwp_label(tr("create.form.slug")), 1, 0)
+        self.input_nombre_logico = uwp_input(tr("create.form.placeholder_slug"))
         form_layout.addWidget(self.input_nombre_logico, 1, 1)
 
         # Fila 2
-        form_layout.addWidget(uwp_label("Nombre Visible:"), 2, 0)
-        self.input_nombre_completo = uwp_input("Ej. My Super App")
+        form_layout.addWidget(uwp_label(tr("create.form.visible_name")), 2, 0)
+        self.input_nombre_completo = uwp_input(tr("create.form.placeholder_name"))
         form_layout.addWidget(self.input_nombre_completo, 2, 1)
 
         # Fila 3
-        form_layout.addWidget(uwp_label("Versión Inicial:"), 3, 0)
-        self.input_version = uwp_input("1.0.0")
+        form_layout.addWidget(uwp_label(tr("create.form.initial_version")), 3, 0)
+        self.input_version = uwp_input(tr("create.form.placeholder_version"))
         form_layout.addWidget(self.input_version, 3, 1)
 
         # Fila 4
-        form_layout.addWidget(uwp_label("Autor (GitHub User):"), 4, 0)
-        self.input_autor = uwp_input("GitHub Username")
+        form_layout.addWidget(uwp_label(tr("create.form.author")), 4, 0)
+        self.input_autor = uwp_input(tr("create.form.placeholder_author"))
         form_layout.addWidget(self.input_autor, 4, 1)
 
         # Fila 5 Icon
-        form_layout.addWidget(uwp_label("Icono (.ico):"), 5, 0)
+        form_layout.addWidget(uwp_label(tr("create.form.icon")), 5, 0)
 
         icon_box = QHBoxLayout()
         icon_box.setSpacing(8)
-        self.input_icon = uwp_input("Ruta al archivo .ico")
+        self.input_icon = uwp_input(tr("create.form.placeholder_icon"))
         icon_box.addWidget(self.input_icon)
 
         self.btn_browse_icon = QPushButton()
@@ -1358,14 +1346,14 @@ class PackageTodoGUI(QMainWindow):
 
         def uwp_checkbox(text):
             cb = QCheckBox(text)
-            set_qss(cb, 'packagemaker_073', append=False)
+            #set_qss(cb, 'packagemaker_073', append=False)
             return cb
 
-        self.checkbox_windows = uwp_checkbox("Windows (Knosthalij)")
+        self.checkbox_windows = uwp_checkbox(tr("create.platform.windows"))
         self.checkbox_windows.setChecked(True)
         self.checkbox_windows.stateChanged.connect(self.on_platform_changed)
 
-        self.checkbox_linux = uwp_checkbox("Linux (Danenone)")
+        self.checkbox_linux = uwp_checkbox(tr("create.platform.linux"))
         self.checkbox_linux.stateChanged.connect(self.on_platform_changed)
 
         checks_row = QHBoxLayout()
@@ -1374,7 +1362,7 @@ class PackageTodoGUI(QMainWindow):
         checks_row.addWidget(self.checkbox_windows)
         checks_row.addWidget(self.checkbox_linux)
 
-        self.multiplatform_label = QLabel("Modo: Windows únicamente")
+        self.multiplatform_label = QLabel(tr("create.platform.mode_windows"))
         set_qss(self.multiplatform_label, 'packagemaker_015', append=False)
 
         platform_col = QWidget()
@@ -1418,9 +1406,9 @@ class PackageTodoGUI(QMainWindow):
             return
         mode = classify_build_message(text)
         if mode == "error":
-            reporter.error("Error al crear el proyecto", text)
+            reporter.error(tr("create.status_error_project"), text)
         elif mode == "warning":
-            reporter.warning("Advertencia", text)
+            reporter.warning(tr("create.status_warning"), text)
         else:
             reporter.notify(text)
 
@@ -1428,15 +1416,20 @@ class PackageTodoGUI(QMainWindow):
         """Abre el diálogo iOS de creación y ejecuta la verificación/creación."""
         dialog = show_ios_progress(
             self,
-            "Crear proyecto",
-            "Verificando el username de GitHub...",
+            tr("create.progress_title"),
+            tr("create.progress_checking"),
         )
         self._create_progress_dialog = dialog
         # Reutiliza el flujo existente; el diálogo refleja el estado.
         self.create_package_action(dialog)
 
     def browse_icon(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icono", "", "Icon Files (*.ico)")
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            tr("create.browse_icon"),
+            "",
+            "Icon Files (*.ico)",
+        )
         if filename:
             self.input_icon.setText(filename)
 
@@ -1447,18 +1440,18 @@ class PackageTodoGUI(QMainWindow):
 
         # Actualizar label de modo
         if win_checked and linux_checked:
-            self.multiplatform_label.setText("Modo: Multiplataforma (Windows + Linux)")
+            self.multiplatform_label.setText(tr("create.platform.mode_both"))
             set_qss(self.multiplatform_label, 'packagemaker_074', append=False)
         elif win_checked:
-            self.multiplatform_label.setText("Modo: Windows únicamente")
+            self.multiplatform_label.setText(tr("create.platform.mode_windows"))
             set_qss(self.multiplatform_label, 'packagemaker_154', append=False)
         elif linux_checked:
-            self.multiplatform_label.setText("Modo: Linux únicamente")
+            self.multiplatform_label.setText(tr("create.platform.mode_linux"))
             set_qss(self.multiplatform_label, 'packagemaker_158', append=False)
         else:
             # Ninguno seleccionado - forzar Windows por defecto
             self.checkbox_windows.setChecked(True)
-            self.multiplatform_label.setText("Modo: Windows únicamente")
+            self.multiplatform_label.setText(tr("create.platform.mode_windows"))
 
     def on_sandbox_clicked(self, checked):
         """Se ejecuta cuando el usuario hace clic en el switch"""
@@ -1477,7 +1470,7 @@ class PackageTodoGUI(QMainWindow):
     def show_extended_sandbox_warning(self):
         """Muestra un diálogo de advertencia extendido tipo VS Code ANTES de desactivar el sandbox"""
         dialog = QDialog(self)
-        dialog.setWindowTitle(" Advertencia de Seguridad Crítica")
+        dialog.setWindowTitle(tr("create.security_warning.title"))
         dialog.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
         dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         dialog.setFixedSize(520, 480)
@@ -1534,9 +1527,9 @@ class PackageTodoGUI(QMainWindow):
         header_layout.addWidget(icon_label)
 
         title_layout = QVBoxLayout()
-        title = QLabel("Desactivar Protección de Sandbox")
+        title = QLabel(tr("create.security_warning.heading"))
         set_qss(title, 'packagemaker_018', append=False)
-        subtitle = QLabel("Esta acción expone su proyecto a riesgos significativos de seguridad")
+        subtitle = QLabel(tr("create.security_warning.subtitle"))
         set_qss(subtitle, 'packagemaker_019', append=False)
         title_layout.addWidget(title)
         title_layout.addWidget(subtitle)
@@ -1566,28 +1559,28 @@ class PackageTodoGUI(QMainWindow):
         warning_layout.setContentsMargins(15, 15, 15, 15)
         warning_layout.setSpacing(12)
 
-        intro_text = QLabel(" <b style='color:#f44336;'>ADVERTENCIA:</b> Al desactivar el Sandbox Seguro, su proyecto se creará sin protección de aislamiento. Esto significa que el código se ejecutará sin restricciones de seguridad.")
+        intro_text = QLabel(tr("create.security_warning.intro"))
         set_qss(intro_text, 'packagemaker_023', append=False)
         intro_text.setWordWrap(True)
         warning_layout.addWidget(intro_text)
 
-        risks_title = QLabel(" Riesgos a los que se expone su sistema:")
+        risks_title = QLabel(tr("create.security_warning.risks_title"))
         set_qss(risks_title, 'packagemaker_024', append=False)
         warning_layout.addWidget(risks_title)
 
         risks_text = QLabel(
-            "• <b>Ejecución de código malicioso:</b> Scripts de terceros podrían contener malware o ransomware.<br><br>"
-            "• <b>Accesos no autorizados:</b> El proyecto podría leer, modificar o eliminar archivos del sistema sin restricciones.<br><br>"
-            "• <b>Modificaciones no controladas:</b> Cambios en archivos críticos del sistema o del proyecto sin autorización.<br><br>"
+            tr("create.security_warning.risk_malware")
+            + "<br><br>"
+            + tr("create.security_warning.risk_access")
+            + "<br><br>"
+            + tr("create.security_warning.risk_changes")
+            + "<br><br>"
         )
         set_qss(risks_text, 'packagemaker_025', append=False)
         risks_text.setWordWrap(True)
         warning_layout.addWidget(risks_text)
 
-        recommendation = QLabel(
-            "<b>Recomendación:</b> Mantenga el Sandbox Seguro activado siempre que trabaje con código de fuentes no verificadas, "
-            "proyectos descargados de internet, o cuando no tenga control total sobre el origen de todas las dependencias."
-        )
+        recommendation = QLabel(tr("create.security_warning.recommendation"))
         set_qss(recommendation, 'packagemaker_026', append=False)
         recommendation.setWordWrap(True)
         warning_layout.addWidget(recommendation)
@@ -1601,14 +1594,14 @@ class PackageTodoGUI(QMainWindow):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
 
-        btn_cancel = QPushButton("Cancelar")
+        btn_cancel = QPushButton(tr("common.cancel"))
         btn_cancel.setFixedHeight(36)
         btn_cancel.setCursor(Qt.CursorShape.PointingHandCursor)
         set_qss(btn_cancel, 'packagemaker_027', append=False)
         btn_cancel.clicked.connect(lambda: self.on_sandbox_dialog_result_extended(dialog, False))
         btn_layout.addWidget(btn_cancel)
 
-        btn_accept = QPushButton("Continuar")
+        btn_accept = QPushButton(tr("create.security_warning.continue"))
         btn_accept.setFixedHeight(36)
         btn_accept.setCursor(Qt.CursorShape.PointingHandCursor)
         set_qss(btn_accept, 'packagemaker_028', append=False)
@@ -1667,7 +1660,7 @@ class PackageTodoGUI(QMainWindow):
                 "Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.",
                 'packagemaker_075',
             )
-            self._set_create_progress("Error", "El campo Autor es obligatorio.")
+            self._set_create_progress(tr("common.error"), tr("create.form.author_required"))
             self._close_create_progress()
             return
 
@@ -1682,8 +1675,8 @@ class PackageTodoGUI(QMainWindow):
         self.checkbox_linux.setEnabled(False)
         self.sandbox_switch.setEnabled(False)
 
-        self._set_create_status("Verificando username de GitHub...")
-        self._set_create_progress("Creando proyecto", "Verificando el username de GitHub...")
+        self._set_create_status(tr("create.progress_checking"))
+        self._set_create_progress(tr("create.status_creating"), tr("create.progress_checking"))
 
         # Crear y ejecutar thread de verificación
         self.github_thread = GitHubVerifyThread(autor, self)
@@ -1705,16 +1698,16 @@ class PackageTodoGUI(QMainWindow):
 
         if not valido:
             self._set_create_status(
-                f"Error: {mensaje}. Por favor, especifica un username válido que exista en GitHub.",
+                tr("create.invalid_username").format(message=mensaje),
                 'packagemaker_076',
             )
-            self._set_create_progress("Verificación fallida", str(mensaje))
+            self._set_create_progress(tr("create.status_verification_failed"), str(mensaje))
             self._close_create_progress()
             return
 
         # Si la verificación fue exitosa, continuar con la creación del proyecto
         autor = self.input_autor.text().strip()
-        self._set_create_progress("Creando proyecto", "Generando estructura y metadatos...")
+        self._set_create_progress(tr("create.status_creating"), tr("create.progress_generating"))
 
         # Obtener plataforma seleccionada (ahora con checkboxes)
         win_checked = self.checkbox_windows.isChecked()
@@ -1769,8 +1762,7 @@ class PackageTodoGUI(QMainWindow):
             # en un bundle mal empaquetado) antes quedaba una carpeta vacía.
             if not templates_available():
                 raise FileNotFoundError(
-                    "No se encontraron las plantillas de proyecto (src/templates). "
-                    "Reinstala PackageMaker o compílalo incluyendo src/templates."
+                    tr("create.templates_missing")
                 )
 
             created_new = not os.path.isdir(full_path)
@@ -1798,7 +1790,7 @@ class PackageTodoGUI(QMainWindow):
 
             if selected_icon.startswith("http"):
                   try:
-                       self._set_create_status("Descargando icono...")
+                       self._set_create_status(tr("create.downloading_icon"))
                        QApplication.processEvents()
                        # AÑADIR USER-AGENT (Importante para evitar bloqueos)
                        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
@@ -1837,14 +1829,14 @@ class PackageTodoGUI(QMainWindow):
             if os.path.exists(upd_icon):
                 shutil.copy(upd_icon, upd_icn_dst)
             self._set_create_status(
-                f"Paquete creado en: {folder_name}/ (sha256: {hv})",
+                tr("create.project_created").format(folder=folder_name, sha256=hv),
                 'packagemaker_077',
             )
-            self._set_create_progress("Proyecto creado", f"{folder_name}", value=100, maximum=100)
+            self._set_create_progress(tr("create.status_created"), f"{folder_name}", value=100, maximum=100)
             self._close_create_progress()
         except Exception as e:
             self._set_create_status(f"Error: {str(e)}", 'packagemaker_155')
-            self._set_create_progress("Error", str(e))
+            self._set_create_progress(tr("common.error"), str(e))
             self._close_create_progress()
 
     def init_build_tab(self, parent_widget=None):
@@ -1859,11 +1851,11 @@ class PackageTodoGUI(QMainWindow):
         # Barra de acciones superior (estilo macOS). El botón BlindCube vive
         # aquí, en la parte alta y junto al título, en lugar de mezclarse con
         # los controles del formulario.
-        self.btn_blindcube = make_action_button("BlindCube", "primary", get_icon("construir", 16))
+        self.btn_blindcube = make_action_button(tr("build.button"), "primary", get_icon("construir", 16))
         self.btn_blindcube.clicked.connect(self.build_package_action)
         self.build_action_bar, self.build_bar_title = install_page_action_bar(
             layout,
-            "Compilar el proyecto con BlindCube",
+            tr("build.page_title"),
             [self.btn_blindcube],
         )
 
@@ -1897,31 +1889,31 @@ class PackageTodoGUI(QMainWindow):
             return line
 
         # Fila 0: Fabricante
-        form_layout.addWidget(uwp_label("Fabricante:"), 0, 0)
-        self.input_build_empresa = uwp_input("Ejemplo: influent")
+        form_layout.addWidget(uwp_label(tr("build.manufacturer")), 0, 0)
+        self.input_build_empresa = uwp_input(tr("build.placeholder_company"))
         form_layout.addWidget(self.input_build_empresa, 0, 1)
 
         # Fila 1: Nombre interno
-        form_layout.addWidget(uwp_label("Nombre interno:"), 1, 0)
-        self.input_build_nombre = uwp_input("Ejemplo: mycoolapp")
+        form_layout.addWidget(uwp_label(tr("build.internal_name")), 1, 0)
+        self.input_build_nombre = uwp_input(tr("build.placeholder_app"))
         form_layout.addWidget(self.input_build_nombre, 1, 1)
 
         # Fila 2: Versión
-        form_layout.addWidget(uwp_label("Versión:"), 2, 0)
-        self.input_build_version = uwp_input("Ejemplo: 1.0")
+        form_layout.addWidget(uwp_label(tr("build.version")), 2, 0)
+        self.input_build_version = uwp_input(tr("build.placeholder_version"))
         form_layout.addWidget(self.input_build_version, 2, 1)
 
         # Fila 3: Plataforma (AUTOMATIZADO)
-        form_layout.addWidget(uwp_label("Entorno de compilación:"), 3, 0)
-        self.input_build_platform = uwp_input("Detectando...", read_only=True)
+        form_layout.addWidget(uwp_label(tr("build.environment")), 3, 0)
+        self.input_build_platform = uwp_input(tr("build.platform_detecting"), read_only=True)
         # Auto-detectar plataforma actual
         detected_plat = "Windows" if sys.platform.startswith("win") else "Linux"
         self.input_build_platform.setText(detected_plat)
-        self.input_build_platform.setToolTip("Detectado automáticamente según el sistema operativo actual")
+        self.input_build_platform.setToolTip(tr("build.platform_auto_tooltip"))
         form_layout.addWidget(self.input_build_platform, 3, 1)
 
         # Fila 4: Modo (Radios)
-        l_mode = uwp_label("Modo:")
+        l_mode = uwp_label(tr("build.mode"))
         l_mode.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
         set_qss(l_mode, 'packagemaker_031', append=True)
         form_layout.addWidget(l_mode, 4, 0)
@@ -1938,9 +1930,9 @@ class PackageTodoGUI(QMainWindow):
             set_qss(r, 'packagemaker_080', append=False)
             return r
 
-        self.radio_portable = uwp_radio("Portable (All-in-one)")
+        self.radio_portable = uwp_radio(tr("build.mode_portable"))
         self.radio_portable.setChecked(True)
-        self.radio_lite = uwp_radio("Lite (Single File)")
+        self.radio_lite = uwp_radio(tr("build.mode_lite"))
 
         self.build_mode_group.addButton(self.radio_portable)
         self.build_mode_group.addButton(self.radio_lite)
@@ -1952,32 +1944,32 @@ class PackageTodoGUI(QMainWindow):
         form_layout.addLayout(mode_layout, 4, 1) # Use addLayout directly for cleaner code
 
         # Fila 4b: Compilador y blindaje
-        form_layout.addWidget(uwp_label("Compilador:"), 6, 0)
+        form_layout.addWidget(uwp_label(tr("build.compiler")), 6, 0)
         self.compiler_combo = QComboBox()
         self.compiler_combo.setFixedHeight(35)
         set_qss(self.compiler_combo, 'packagemaker_079', append=False)
         self._populate_compilers()
-        self.compiler_combo.setToolTip("Backend de compilación (Nuitka recomendado para binarios nativos)")
+        self.compiler_combo.setToolTip(tr("build.backend_tooltip"))
         form_layout.addWidget(self.compiler_combo, 6, 1)
 
         options_row = QHBoxLayout()
         options_row.setSpacing(18)
-        self.dropper_checkbox = QCheckBox("Generar dropper (.run)")
-        self.dropper_checkbox.setToolTip("Adjunta el .iflapp en un lanzador autoextraíble")
+        self.dropper_checkbox = QCheckBox(tr("build.dropper"))
+        self.dropper_checkbox.setToolTip(tr("build.dropper_tooltip"))
         options_row.addWidget(self.dropper_checkbox)
-        self.hardening_checkbox = QCheckBox("Blindaje adicional")
-        self.hardening_checkbox.setToolTip("Aplica strip/UPX/checksum/anti-debug/ofuscación al paquete")
+        self.hardening_checkbox = QCheckBox(tr("build.hardening"))
+        self.hardening_checkbox.setToolTip(tr("build.hardening_tooltip"))
         options_row.addWidget(self.hardening_checkbox)
         options_row.addStretch()
         form_layout.addLayout(options_row, 7, 0, 1, 2)
 
         # Fila 5: Carpeta Custom
-        form_layout.addWidget(uwp_label("Carpeta Externa:"), 8, 0)
+        form_layout.addWidget(uwp_label(tr("build.external_folder")), 8, 0)
 
         custom_box = QHBoxLayout()
         custom_box.setSpacing(8)
 
-        self.input_custom_path = uwp_input("(Opcional) Seleccionar carpeta externa a compilar", read_only=True)
+        self.input_custom_path = uwp_input(tr("build.custom_path_placeholder"), read_only=True)
         custom_box.addWidget(self.input_custom_path)
 
         self.btn_select_folder = QPushButton()
@@ -2016,7 +2008,7 @@ class PackageTodoGUI(QMainWindow):
         layout.addStretch()
 
     def select_custom_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta del Proyecto")
+        folder = QFileDialog.getExistingDirectory(self, tr("build.select_project_folder"))
         if folder:
             self.input_custom_path.setText(folder)
             # Try to parse details.xml to fill fields?
@@ -2040,14 +2032,14 @@ class PackageTodoGUI(QMainWindow):
             for name, info in report.items():
                 label = info["display_name"]
                 if not info["available"]:
-                    label += " (no instalado)"
+                    label += f" ({tr('common.not_installed')})"
                 self.compiler_combo.addItem(label, name)
                 if not info["available"]:
                     index = self.compiler_combo.count() - 1
                     self.compiler_combo.model().item(index).setEnabled(False)
         except Exception as exc:
-            print(f"[WARN] No se pudieron listar compiladores: {exc}")
-            self.compiler_combo.addItem("Nuitka", "nuitka")
+            print(f"[WARN] {tr('build.compiler_warn')}: {exc}")
+            self.compiler_combo.addItem(tr("build.compiler_default"), "nuitka")
 
     def build_package_action(self):
         version = getversion()
@@ -2065,7 +2057,7 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, 'radio_lite') and self.radio_lite.isChecked():
             build_mode = "lite"
 
-        self.reporter.progress("🔨 Construyendo paquete .iflapp...")
+        self.reporter.progress(tr("build.progress_building"))
         self.build_progress.setVisible(True)
         self.build_progress.setMarquee(True)
 
@@ -2101,11 +2093,11 @@ class PackageTodoGUI(QMainWindow):
 
     def _on_build_finished(self, msg):
         self.build_progress.setVisible(False)
-        self.reporter.success("Compilación completada", msg, dialog=True)
+        self.reporter.success(tr("build.compilation_complete"), msg, dialog=True)
 
     def _on_build_error(self, msg):
         self.build_progress.setVisible(False)
-        self.reporter.error("Error de compilación", msg, dialog=True)
+        self.reporter.error(tr("build.compilation_error"), msg, dialog=True)
 
     def closeEvent(self, event):
         if getattr(self, "_force_close", False):
@@ -2343,7 +2335,7 @@ class PackageTodoGUI(QMainWindow):
         sys_grid.setSpacing(6)
         ro_items = (
             ("app_version", ro.get("app_version", "")),
-            ("is_compiled", "Sí" if ro.get("is_compiled") else "No"),
+            ("is_compiled", tr("common.yes") if ro.get("is_compiled") else tr("common.no")),
             ("platform_os", ro.get("platform_os", "")),
             ("python_version", ro.get("python_version", "")),
             ("install_id", ro.get("install_id", "")),
@@ -2658,12 +2650,12 @@ class PackageTodoGUI(QMainWindow):
             [self.mf_scan_btn],
         )
 
-        desc = QLabel("Repara proyectos con plantillas oficiales.")
+        desc = QLabel(tr("moonfix.description"))
         set_qss(desc, 'packagemaker_054', append=False)
         layout.addWidget(desc)
 
         top_row = QHBoxLayout()
-        self.mf_batch_mode = QCheckBox("Modo batch")
+        self.mf_batch_mode = QCheckBox(tr("moonfix.batch"))
         set_qss(self.mf_batch_mode, 'packagemaker_055', append=False)
         self.mf_batch_mode.setChecked(True)
         top_row.addWidget(self.mf_batch_mode)
@@ -2673,7 +2665,7 @@ class PackageTodoGUI(QMainWindow):
         s_box = QHBoxLayout()
         s_box.setSpacing(6)
         self.mf_input = QLineEdit()
-        self.mf_input.setPlaceholderText("Carpeta de proyectos...")
+        self.mf_input.setPlaceholderText(tr("moonfix.project_folder_placeholder"))
         self.mf_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.mf_input.setMinimumHeight(INPUT_HEIGHT)
         set_qss(self.mf_input, 'packagemaker_056', append=False)
@@ -2682,20 +2674,20 @@ class PackageTodoGUI(QMainWindow):
             get_icon("folder", 16),
             QLineEdit.ActionPosition.TrailingPosition,
         )
-        self.mf_browse_action.setToolTip("Examinar carpeta de proyectos")
+        self.mf_browse_action.setToolTip(tr("moonfix.browse_folder"))
         self.mf_browse_action.triggered.connect(self.mf_browse)
         s_box.addWidget(self.mf_input, 1)
         layout.addLayout(s_box)
         layout.addStretch()
 
     def mf_browse(self):
-        d = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta")
+        d = QFileDialog.getExistingDirectory(self, tr("common.select_folder"))
         if d: self.mf_input.setText(d)
 
     def mf_start_scan(self):
         path = self.mf_input.text().strip()
         if not path or not os.path.exists(path):
-            LeviathanDialog.launch(self, "MoonFix", "La carpeta seleccionada no existe.", mode="warning")
+            LeviathanDialog.launch(self, tr("moonfix.title"), tr("moonfix.path_missing"), mode="warning")
             return
 
         potential_projects = []
@@ -2708,7 +2700,7 @@ class PackageTodoGUI(QMainWindow):
             potential_projects = [path]
 
         if not potential_projects:
-            LeviathanDialog.launch(self, "MoonFix", "No se encontraron subcarpetas para procesar.", mode="info")
+            LeviathanDialog.launch(self, tr("moonfix.title"), tr("moonfix.no_subfolders"), mode="info")
             return
 
         projects_with_issues = []
@@ -2723,7 +2715,7 @@ class PackageTodoGUI(QMainWindow):
                 })
 
         if not projects_with_issues:
-            LeviathanDialog.launch(self, "MoonFix", "Todos los proyectos están optimizados. No se requieren acciones.", mode="info")
+            LeviathanDialog.launch(self, tr("moonfix.title"), tr("moonfix.optimized"), mode="info")
             return
 
         # Launch the single Wizard window
@@ -2731,8 +2723,8 @@ class PackageTodoGUI(QMainWindow):
         if wizard.exec() == QDialog.Accepted:
             # Tiny delay to let the event loop process the wizard's destruction and avoid 'zombie' block
             QtCore.QTimer.singleShot(100, lambda: LeviathanDialog.launch(
-                self, "MoonFix",
-                f"Reparación completada.\nProyectos sanados: {len(projects_with_issues)}",
+                self, tr("moonfix.title"),
+                tr("moonfix.completed").format(count=len(projects_with_issues)),
                 mode="confirm"
             ))
 
@@ -2847,7 +2839,7 @@ class PackageTodoGUI(QMainWindow):
         )
         self.about_action_bar, self.about_bar_title = install_page_action_bar(
             layout,
-            "Acerca de",
+            tr("sidebar.about"),
             [self.about_telegram_btn, self.about_github_btn],
         )
 
@@ -2881,9 +2873,9 @@ class PackageTodoGUI(QMainWindow):
             logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         title_box = QVBoxLayout()
-        t_main = QLabel("Influent Package Maker")
+        t_main = QLabel(tr("app.title"))
         set_qss(t_main, 'packagemaker_059', append=False)
-        t_ver = QLabel(f"Versión {self.currentVersion}")
+        t_ver = QLabel(tr("about.version").format(version=self.currentVersion))
         set_qss(t_ver, 'packagemaker_060', append=False)
         title_box.addWidget(t_main)
         title_box.addWidget(t_ver)
@@ -2899,12 +2891,7 @@ class PackageTodoGUI(QMainWindow):
         card = QLabel()
         card.setWordWrap(True)
         set_qss(card, 'packagemaker_061', append=False)
-        card.setText("""
-            <p><b>Package Maker</b> es la suite definitiva para el ecosistema Influent OS.</p>
-            <p>Diseñada para permitir a los desarrolladores crear, compilar y distribuir aplicaciones de manera eficiente.</p>
-            <br>
-            <p>Utiliza el motor <b>FLARM (Fluthin Armadillo)</b> para garantizar integridad y seguridad.</p>
-        """)
+        card.setText(tr("about.description"))
         layout.addWidget(card)
 
         # Tech Specs grid
@@ -2954,7 +2941,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Crear diálogo personalizado con QDialog
             dialogoCrearProyecto = QDialog(self)
-            dialogoCrearProyecto.setWindowTitle("🆕 Crear Proyecto Aquí")
+            dialogoCrearProyecto.setWindowTitle(tr("dialog.create_project_title"))
             dialogoCrearProyecto.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoCrearProyecto.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoCrearProyecto.resize(650, 700)
@@ -2972,7 +2959,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
 
             # Barra de título personalizada
-            titleBar = create_title_bar(dialogoCrearProyecto, title="🆕 Crear Proyecto Aquí", icon_path=IPM_ICON_PATH)
+            titleBar = create_title_bar(dialogoCrearProyecto, title=tr("dialog.create_project_title"), icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
 
             # Contenido
@@ -2982,12 +2969,12 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.setSpacing(15)
 
             # Encabezado con información
-            lblTitulo = QLabel("Crear Nuevo Proyecto")
+            lblTitulo = QLabel(tr("dialog.create_project"))
             set_qss(lblTitulo, 'packagemaker_090', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
 
-            lblRuta = QLabel(f"📁 Ubicación: {projectPath}")
+            lblRuta = QLabel(tr("dialog.location").format(path=projectPath))
             set_qss(lblRuta, 'packagemaker_091', append=False)
             lblRuta.setWordWrap(True)
             contentLayout.addWidget(lblRuta)
@@ -2997,7 +2984,7 @@ class PackageTodoGUI(QMainWindow):
             formLayout.setSpacing(12)
 
             # Nombre del proyecto
-            lblNombre = QLabel("Nombre del Proyecto:")
+            lblNombre = QLabel(tr("dialog.project_name"))
             set_qss(lblNombre, 'packagemaker_092', append=False)
             formLayout.addWidget(lblNombre)
 
@@ -3007,7 +2994,7 @@ class PackageTodoGUI(QMainWindow):
             formLayout.addWidget(txtNombreProyecto)
 
             # Versión
-            lblVersion = QLabel("Versión:")
+            lblVersion = QLabel(tr("dialog.project_version"))
             set_qss(lblVersion, 'packagemaker_094', append=False)
             formLayout.addWidget(lblVersion)
 
@@ -3016,32 +3003,32 @@ class PackageTodoGUI(QMainWindow):
             formLayout.addWidget(txtVersion)
 
             # Autor
-            lblAutor = QLabel("Autor:")
+            lblAutor = QLabel(tr("dialog.author_name"))
             set_qss(lblAutor, 'packagemaker_096', append=False)
             formLayout.addWidget(lblAutor)
 
             txtAutor = QLineEdit()
-            txtAutor.setPlaceholderText("Tu nombre")
+            txtAutor.setPlaceholderText(tr("dialog.author_placeholder"))
             set_qss(txtAutor, 'packagemaker_097', append=False)
             formLayout.addWidget(txtAutor)
 
             # Publisher
-            lblPublisher = QLabel("Publisher:")
+            lblPublisher = QLabel(tr("dialog.publisher_name"))
             set_qss(lblPublisher, 'packagemaker_098', append=False)
             formLayout.addWidget(lblPublisher)
 
             txtPublisher = QLineEdit()
-            txtPublisher.setPlaceholderText("Nombre de la empresa")
+            txtPublisher.setPlaceholderText(tr("dialog.company_placeholder"))
             set_qss(txtPublisher, 'packagemaker_099', append=False)
             formLayout.addWidget(txtPublisher)
 
             # Descripción
-            lblDescripcion = QLabel("Descripción:")
+            lblDescripcion = QLabel(tr("dialog.description"))
             set_qss(lblDescripcion, 'packagemaker_100', append=False)
             formLayout.addWidget(lblDescripcion)
 
             txtDescripcion = QTextEdit()
-            txtDescripcion.setPlaceholderText("Describe tu proyecto...")
+            txtDescripcion.setPlaceholderText(tr("dialog.description_placeholder"))
             txtDescripcion.setMaximumHeight(100)
             set_qss(txtDescripcion, 'packagemaker_101', append=False)
             formLayout.addWidget(txtDescripcion)
@@ -3053,12 +3040,12 @@ class PackageTodoGUI(QMainWindow):
             layoutBotones = QHBoxLayout()
             layoutBotones.setSpacing(10)
 
-            btnCancelar = QPushButton("❌ Cancelar")
+            btnCancelar = QPushButton(tr("common.cancel"))
             set_qss(btnCancelar, BTN_STYLES["default"], append=False)
             btnCancelar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCancelar.setMinimumHeight(45)
 
-            btnCrear = QPushButton("✨ Crear Proyecto")
+            btnCrear = QPushButton(tr("dialog.create_button"))
             set_qss(btnCrear, BTN_STYLES["best"], append=False)
             btnCrear.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCrear.setMinimumHeight(45)
@@ -3102,7 +3089,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Validar nombre
             if not nombreProyecto or nombreProyecto.strip() == "":
-                LeviathanDialog.launch(self, "Advertencia", "El nombre del proyecto no puede estar vacío", mode="warning")
+                LeviathanDialog.launch(self, tr("common.warning"), tr("dialog.project_name_required"), mode="warning")
                 return
 
             # Crear ruta del proyecto
@@ -3176,7 +3163,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Crear diálogo personalizado con QDialog
             dialogoInstalar = QDialog(self)
-            dialogoInstalar.setWindowTitle("📦 Instalar como Fluthin Package")
+            dialogoInstalar.setWindowTitle(tr("app.install_as_package"))
             dialogoInstalar.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoInstalar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoInstalar.resize(700, 600)
@@ -3194,7 +3181,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
 
             # Barra de título personalizada
-            titleBar = create_title_bar(dialogoInstalar, title="📦 Instalar como Fluthin Package", icon_path=IPM_ICON_PATH)
+            titleBar = create_title_bar(dialogoInstalar, title=tr("app.install_as_package"), icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
 
             # Contenido
@@ -3204,7 +3191,7 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.setSpacing(15)
 
             # Título
-            lblTitulo = QLabel("Instalar Carpeta como Paquete")
+            lblTitulo = QLabel(tr("app.install_folder_as_package"))
             set_qss(lblTitulo, 'packagemaker_105', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
@@ -3232,7 +3219,7 @@ class PackageTodoGUI(QMainWindow):
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
 
-            btnInstalar = QPushButton("📥 Instalar Paquete")
+            btnInstalar = QPushButton(tr("app.install_package"))
             set_qss(btnInstalar, BTN_STYLES["success"], append=False)
             btnInstalar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnInstalar.setMinimumHeight(45)
@@ -3354,7 +3341,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Crear diálogo personalizado con QDialog
             dialogoCompilar = QDialog(self)
-            dialogoCompilar.setWindowTitle("🔨 Compilar Proyecto")
+            dialogoCompilar.setWindowTitle(tr("app.compile_project"))
             dialogoCompilar.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoCompilar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoCompilar.resize(750, 650)
@@ -3372,7 +3359,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
 
             # Barra de título personalizada
-            titleBar = create_title_bar(dialogoCompilar, title="🔨 Compilar Proyecto", icon_path=IPM_ICON_PATH)
+            titleBar = create_title_bar(dialogoCompilar, title=tr("app.compile_project"), icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
 
             # Contenido
@@ -3382,7 +3369,7 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.setSpacing(15)
 
             # Título
-            lblTitulo = QLabel("Compilar Proyecto")
+            lblTitulo = QLabel(tr("app.compile_project"))
             set_qss(lblTitulo, 'packagemaker_111', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
@@ -3513,7 +3500,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Crear diálogo personalizado con QDialog
             dialogoReparar = QDialog(self)
-            dialogoReparar.setWindowTitle("🌙 MoonFix - Reparar Proyecto")
+            dialogoReparar.setWindowTitle(tr("app.moonfix_repair_project"))
             dialogoReparar.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoReparar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoReparar.resize(750, 700)
@@ -3531,7 +3518,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
 
             # Barra de título personalizada
-            titleBar = create_title_bar(dialogoReparar, title="🌙 MoonFix - Reparar Proyecto", icon_path=IPM_ICON_PATH)
+            titleBar = create_title_bar(dialogoReparar, title=tr("app.moonfix_repair_project"), icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
 
             # Contenido
@@ -3551,7 +3538,7 @@ class PackageTodoGUI(QMainWindow):
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
 
-            lblDescripcion = QLabel("MoonFix analizará el proyecto en busca de archivos faltantes, configuraciones antiguas y errores de estructura.")
+            lblDescripcion = QLabel(tr("app.moonfix_scan_description"))
             set_qss(lblDescripcion, 'packagemaker_123', append=False)
             lblDescripcion.setWordWrap(True)
             contentLayout.addWidget(lblDescripcion)
@@ -3703,7 +3690,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Crear diálogo personalizado con QDialog
             dialogoInstalarPaquete = QDialog(self)
-            dialogoInstalarPaquete.setWindowTitle("📦 Instalar Paquete .iflapp")
+            dialogoInstalarPaquete.setWindowTitle(tr("app.install_iflapp_package"))
             dialogoInstalarPaquete.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoInstalarPaquete.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoInstalarPaquete.resize(700, 600)

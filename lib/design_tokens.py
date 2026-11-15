@@ -233,12 +233,16 @@ def checkbox_qss(accent: str = ACCENT, color: str = TEXT_MUTED, size: int = 13) 
         color: {color};
         font-family: {FONT_STACK};
         font-size: {size}px;
-        spacing: 8px;
+        spacing: 10px;
+        margin: 0;
         background: transparent;
         border: none;
     }}
     QCheckBox::indicator {{
-        width: 18px; height: 18px;
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        padding: 0;
         border-radius: 4px;
         border: 1px solid #6E6E73;
         background: transparent;

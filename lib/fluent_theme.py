@@ -119,24 +119,22 @@ if PYQT6_AVAILABLE:
             painter = QPainter(self)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
+            indicator = self.style().subElementRect(
+                QStyle.SubElement.SE_CheckBoxIndicator, option, self
+            )
             contents = self.style().subElementRect(
                 QStyle.SubElement.SE_CheckBoxContents, option, self
             )
-            rect = self.style().subElementRect(
-                QStyle.SubElement.SE_CheckBoxIndicator, option, self
-            ).adjusted(1, 1, -1, -1)
-            # El indicador nunca invade la etiqueta: se recorta al hueco que
-            # queda a su izquierda. Sin esto, con QSS que agrandan el cuadro,
-            # el control se dibujaba sobre el texto.
-            gap = 4
-            max_right = contents.x() - gap
-            if rect.right() > max_right:
-                rect.setRight(max_right)
+            rect = indicator.adjusted(1, 1, -1, -1)
+
+            # Keep the label clearly to the right of the indicator. Qt's native
+            # checkbox layout already places the text after the box; if we draw the
+            # custom box, we must not override the geometry or let the box overlap.
+            if rect.right() > contents.x() - 4:
+                rect.setRight(contents.x() - 4)
             if rect.width() < 12:
                 rect.setWidth(12)
 
-            # Never infer the state from animation progress alone.  The Qt
-            # checkState is authoritative, including partially checked boxes.
             actual_state = self.checkState()
             progress = self._check_progress
             if actual_state == Qt.CheckState.Checked and progress <= 0:
@@ -153,8 +151,6 @@ if PYQT6_AVAILABLE:
             if progress > 0:
                 border = accent
 
-            # El indicador se dibuja primero y la etiqueta después, de modo que
-            # el texto quede siempre por delante y a la derecha del control.
             painter.setPen(QPen(border, 1.4))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRoundedRect(rect, 4, 4)
@@ -179,8 +175,6 @@ if PYQT6_AVAILABLE:
                     painter.drawPath(mark)
                 painter.setOpacity(1.0)
 
-            # Etiqueta al final: Qt la coloca en el rect de contenido, ya
-            # garantizado a la derecha del indicador.
             self.style().drawControl(
                 QStyle.ControlElement.CE_CheckBoxLabel, option, painter, self
             )

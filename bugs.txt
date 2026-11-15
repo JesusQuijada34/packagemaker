@@ -1,0 +1,30 @@
+Encontre varios bugs en el codigo
+. los checkboxes deben de crearse desde cero y uniformarlos bien en todas las paginas
+. no se limpian los scripts al compilar
+. cuando hay errores largos el cuadro de mensaje no resume el error basado en terminos y a veces un hover en el boton del dialogo lo vuelve blanco
+. sigue aumentando los tonos del blur a blanco al maximizar varias veces y restaurar
+. el fondo del splash deber de pintarse al color de acento del sistema
+. hay gris en algunos textos y es incomodo leer en el modo claro, pasa a negro
+. mientras se compila, debe de aparecer en la barra de estado cada linea de la salida del compilador y al final el procedimiento real detras del iflapp
+. terminar el sistema i18n y que no falte nada ni quede incompleto el sistema i18n ni mucho menos texto en español dentro del codigo ni strings faltantes
+. la pestaña crear es fondo medio transparente y las otras son fondo opaco. cual mantendrias?
+. y el problema de apariencia de los checkboxes se debe por un conflicto de codigo y de qss, fijate que hasta yo mismo comente una linea dentro de la funcion. referencia a packagemaker.py:L1347
+. hay otro bug mas, asi comente las lineas que contengan setqss, los checkboxes siguen adoptando esa apariencia y se debe a que no hay un qss en la carpeta de assets centralizado, como si el script principal fuera el html5 y importa directamente el qss para dar apariencia centralizada, eso si, se debe recoger todo y se debe colocar en una sola hoja de estilos y en el punto de entrada principal se importará como objeto raíz el qss como si fuera un root, y debes de hacer un instalador de iflapps aparte qué instale el iflapp como si fuera un appx, con Accesos directos y registro de instalación usando updater.py/exe/elf o mejor usando nueva estructura, vamos a activar los mexf qué son puro yaml qué definen triggers, comandos, registros, extensiones, accesos directos, strings, entornos, comando y/o tipo de desinstalación/instalación, asociaciones de archivos y ruta de ícono de la extensión, menus contextuales de shell (icono del elemento de menú, comando, si debe de estar agrupado todos los elementos y que nombre e ícono colocar), acciones (como ejecutar al inicio, comandos de inicio, trigger all presionar cualquier tecla o hacer cualquier gesto o estando en un programa etc.). Entre muchas cosas, El lenguaje debe ser yaml, El implementado de iflapp debe ser estructurado y se debe pasar por el archivo details.xml luego por /.mexf/main.mexf y por todo los mexf dentro de la carpeta, también se puede importar otros mexf como librerías add-ons. Luciría algo así un importe y sus funciones
+
+meg (lib/adata.mexf/:[Trigger.example; Trigger.*] !some 'trig': .@! Como importar en python y renombrar su uso, some, bsome cuando la condición es renombrable llamando el método pero invocando el nombre de la variable a la vez como, !some 'trig' bsome 'trignuevo'
+- (trig.Main) bsome ['trig']: .@! Clase en cascada
+  trig.onStartup(bsome.self) bsome ['trig.run']: .@! Función desde allí y llamando la librería 
+   trig.run(powershell['echo hello world welcome to your user desktop'] if trig.some::[Calenverath.defaults]) .@! Ejecuta powershell y sus argumentos desde la cascada condicional de que si se enciende la pc
+- !endsome 'trig.main' keepb 'trig' .@! Termina la clase y la función y globaliza la función y sus variables (keepb), y (keepsome) la mantiene aislada y privada, y (keep) la deja normal pero sin acceso a sus variables desde adentro (pero son expuestas de solo lectura desde afuera)
+
+Limpiaras Cualquier rastro de shell viejo de packagemaker y emplear otro nuevo escrito en mexf basándote en los comandos, luego crearás un compilador de mexf, convertirá mexf en un binario propio .asksome, separará todo, creará un paquete con manifiesto basado en el titulo y Metadata del .mexf y generará archivos de registros multiplataforma y scripts de comando para cada plataforma, El paquete asksome pesará más de lo normal por los engines, Los encabezados dentro del binario, encriptado, launcher independiente y preparado, assets basado en rutas, entre muchas cosas más. El compilador mexf compila antes de compilar el iflapp, al terminar de compilar todos los .asksome procederá a crear envoltorios para probar sintaxis y entorno y luego a compilar los iflapp.
+
+Pero crearás una plantilla para un desinstalador llamado removeme.py, El cual eliminará el shell asksome, integraciones, archivos y accesos directos, osea un proceso inverso al de instalar un paquete, así mismo, tendrá lineas de comandos silenciosas y personalizadas y una interfaz en pyqt6 basado en leviathan-ui para los pasos y el procedimiento en tiempo real
+
+Ahora Si, al instalar un iflapp se procederá el shell desde .asksome y luego la implementación de los accesos directos. Y haz un editor mexf con debugger y compilador y probado de sintaxis. Planea
+
+Otra Idea de que se haga un shell en pyyhon/dll/so para revelar los iconos de cada paquete y su info al pasar hover en el sistema operativo al igual de sus detalles en el panel de propiedades de cada sistema operativo
+
+Hacer Desde cero un editor de proyectos iflapp con debugger y compilador usando los engines de packagemaker
+Luego agregar un apartado para requerir inicio de sesión en Github via token para firmar paquetes con el username y mostrar el logo de mi perfil en el sidebar junto a mi nombre
+Luego se harán pruebas y bugfixes

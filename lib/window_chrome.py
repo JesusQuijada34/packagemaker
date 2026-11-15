@@ -119,7 +119,8 @@ def patch_titlebar_maximize(titlebar, window: QWidget) -> None:
 
 
 def toggle_frameless_maximize(window: QWidget) -> None:
-    if getattr(window, "_pm_maximized", False):
+    maximized = bool(getattr(window, "_pm_maximized", False))
+    if maximized:
         window._pm_maximized = False
         restore = getattr(window, "_pm_restore_geometry", None)
         if restore and restore.isValid():
@@ -136,6 +137,9 @@ def toggle_frameless_maximize(window: QWidget) -> None:
         window._pm_restore_geometry = QRect(geo)
     screen = window.screen() or QApplication.primaryScreen()
     if screen:
+        # Preserve the last non-maximized size and avoid reapplying the same
+        # display styling repeatedly; the visual state is already refreshed from
+        # the single reapply callback and should not be chained on each toggle.
         window.setGeometry(screen.availableGeometry())
     window._pm_maximized = True
     reapply = getattr(window, "_pm_reapply_display_mode", None)

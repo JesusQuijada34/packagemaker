@@ -77,15 +77,15 @@ class UpdaterInfoWindow(QMainWindow):
             if app_data:
                 version_text = f"""
                 <div style='color: #aaa; font-size: 14px; text-align: center;'>
-                    <p><b>Aplicación:</b> {app_data.get('app', 'N/A')}</p>
-                    <p><b>Versión Actual:</b> {app_data.get('version', 'N/A')}</p>
-                    <p><b>Plataforma:</b> {app_data.get('platform', 'N/A')}</p>
-                    <p><b>Autor:</b> {app_data.get('author', 'N/A')}</p>
+                    <p><b>Application:</b> {app_data.get('app', 'N/A')}</p>
+                    <p><b>Current Version:</b> {app_data.get('version', 'N/A')}</p>
+                    <p><b>Platform:</b> {app_data.get('platform', 'N/A')}</p>
+                    <p><b>Author:</b> {app_data.get('author', 'N/A')}</p>
                     <p><b>Publisher:</b> {app_data.get('publisher', 'N/A')}</p>
                 </div>
                 """
             else:
-                version_text = "<p style='color: #ff5252; text-align: center;'>No se pudo leer details.xml</p>"
+                version_text = "<p style='color: #ff5252; text-align: center;'>Could not read details.xml</p>"
         except Exception as e:
             version_text = f"<p style='color: #ff5252; text-align: center;'>Error: {e}</p>"
         
@@ -98,15 +98,15 @@ class UpdaterInfoWindow(QMainWindow):
         btn_layout = QVBoxLayout()
         btn_layout.setSpacing(10)
         
-        self.btn_check = QPushButton("🔍 Verificar Actualizaciones")
+        self.btn_check = QPushButton("🔍 Check for Updates")
         self.btn_check.clicked.connect(self.check_updates)
         btn_layout.addWidget(self.btn_check)
         
-        self.btn_update = QPushButton("⬇️ Actualizar Ahora")
+        self.btn_update = QPushButton("⬇️ Update Now")
         self.btn_update.clicked.connect(self.run_update)
         btn_layout.addWidget(self.btn_update)
         
-        self.btn_exit = QPushButton("❌ Salir")
+        self.btn_exit = QPushButton("❌ Exit")
         self.btn_exit.setStyleSheet("""
             QPushButton {
                 background: transparent;
@@ -129,19 +129,19 @@ class UpdaterInfoWindow(QMainWindow):
         try:
             app_data = _rXml(XML_PATH)
             if not app_data:
-                self.show_message("Error", "No se pudo leer details.xml")
+                self.show_message("Error", "Could not read details.xml")
                 return
             
             remote_version = _rXml_r(app_data["author"], app_data["app"])
             if not remote_version:
-                self.show_message("Información", "No se pudo verificar la versión remota")
+                self.show_message("Information", "Could not verify the remote version")
                 return
             
             if remote_version == app_data["version"]:
-                self.show_message("✅ Actualizado", f"Ya tienes la última versión: {app_data['version']}")
+                self.show_message("✅ Updated", f"You already have the latest version: {app_data['version']}")
             else:
-                self.show_message("🔄 Actualización Disponible", 
-                    f"Versión actual: {app_data['version']}\nNueva versión: {remote_version}")
+                self.show_message("🔄 Update Available", 
+                    f"Current version: {app_data['version']}\nNew version: {remote_version}")
         except Exception as e:
             self.show_message("Error", str(e))
     
@@ -150,7 +150,7 @@ class UpdaterInfoWindow(QMainWindow):
         try:
             success = update_app(silent=False, accept_license=False, cache_in_memory=True)
             if not success:
-                self.show_message("Información", "No se encontraron actualizaciones o el proceso fue cancelado")
+                self.show_message("Information", "No updates were found or the process was cancelled")
         except Exception as e:
             self.show_message("Error", str(e))
     

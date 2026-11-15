@@ -215,12 +215,14 @@ class WindowManagerBridge(QObject):
         if sys.platform.startswith("win"):
             if self._send_windows_system_menu():
                 return
+        from lib.i18n import tr
+
         menu = QMenu(self.window)
-        menu.addAction("Restaurar", self.window.showNormal)
-        menu.addAction("Minimizar", self.window.showMinimized)
-        menu.addAction("Maximizar", self.toggle_maximize)
+        menu.addAction(tr("window.restore"), self.window.showNormal)
+        menu.addAction(tr("window.minimize"), self.window.showMinimized)
+        menu.addAction(tr("window.maximize"), self.toggle_maximize)
         menu.addSeparator()
-        menu.addAction("Cerrar", self.window.close)
+        menu.addAction(tr("window.close"), self.window.close)
         menu.exec(global_pos)
 
     def _send_windows_system_menu(self) -> bool:

@@ -13,7 +13,9 @@
     "build": "Construir Paquete",
     "config": "Configuración",
     "moonfix": "MoonFix",
-    "about": "Acerca de"
+    "about": "Acerca de",
+    "toggle_expand": "Expandir menú (Ctrl+B)",
+    "toggle_collapse": "Ocultar menú (Ctrl+B)"
   },
   "sidebar_desc": {
     "0": "### Crear Proyecto\nDiseña aplicaciones desde cero. Establece identidades únicas, versiones y metadatos para el ecosistema **Influent OS** de forma guiada.",
@@ -73,10 +75,152 @@
     "touch_mode_hint": "Desliza con dos dedos para cambiar de sección."
   },
   "create": {
-    "sandbox": "Sandbox seguro"
+    "sandbox": "Sandbox seguro",
+    "action": "Crear Proyecto",
+    "page_title": "Crear un proyecto nuevo",
+    "progress_title": "Crear proyecto",
+    "progress_checking": "Verificando el username de GitHub...",
+    "progress_generating": "Generando estructura y metadatos...",
+    "status_creating": "Creando proyecto",
+    "status_verification_failed": "Verificación fallida",
+    "status_created": "Proyecto creado",
+    "status_error_project": "Error al crear el proyecto",
+    "status_warning": "Advertencia",
+    "browse_icon": "Seleccionar Icono",
+    "form": {
+      "company": "Empresa / Publisher:",
+      "slug": "ID Interno (Slug):",
+      "visible_name": "Nombre Visible:",
+      "initial_version": "Versión Inicial:",
+      "author": "Autor (GitHub User):",
+      "icon": "Icono (.ico):",
+      "placeholder_company": "Ej. influent",
+      "placeholder_slug": "Ej. my-app-tool",
+      "placeholder_name": "Ej. My Super App",
+      "placeholder_version": "1.0.0",
+      "placeholder_author": "GitHub Username",
+      "placeholder_icon": "Ruta al archivo .ico",
+      "author_required": "El campo Autor es obligatorio."
+    },
+    "platform": {
+      "windows": "Windows (Knosthalij)",
+      "linux": "Linux (Danenone)",
+      "mode_windows": "Modo: Windows únicamente",
+      "mode_linux": "Modo: Linux únicamente",
+      "mode_both": "Modo: Multiplataforma (Windows + Linux)"
+    },
+    "security_warning": {
+      "title": "Advertencia de Seguridad Crítica",
+      "heading": "Desactivar Protección de Sandbox",
+      "subtitle": "Esta acción expone su proyecto a riesgos significativos de seguridad",
+      "intro": "<b style='color:#f44336;'>ADVERTENCIA:</b> Al desactivar el Sandbox Seguro, su proyecto se creará sin protección de aislamiento. Esto significa que el código se ejecutará sin restricciones de seguridad.",
+      "risks_title": "Riesgos a los que se expone su sistema:",
+      "risk_malware": "• <b>Ejecución de código malicioso:</b> Scripts de terceros podrían contener malware o ransomware.",
+      "risk_access": "• <b>Accesos no autorizados:</b> El proyecto podría leer, modificar o eliminar archivos del sistema sin restricciones.",
+      "risk_changes": "• <b>Modificaciones no controladas:</b> Cambios en archivos críticos del sistema o del proyecto sin autorización.",
+      "recommendation": "<b>Recomendación:</b> Mantenga el Sandbox Seguro activado siempre que trabaje con código de fuentes no verificadas, proyectos descargados de internet, o cuando no tenga control total sobre el origen de todas las dependencias.",
+      "continue": "Continuar"
+    },
+    "invalid_username": "Error: {message}. Por favor, especifica un username válido que exista en GitHub.",
+    "templates_missing": "No se encontraron las plantillas de proyecto (src/templates). Reinstala PackageMaker o compílalo incluyendo src/templates.",
+    "downloading_icon": "Descargando icono...",
+    "project_created": "Proyecto creado en: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Cancelar",
-    "ok": "Aceptar"
+    "ok": "Aceptar",
+    "error": "Error",
+    "warning": "Advertencia",
+    "yes": "Sí",
+    "no": "No",
+    "select_folder": "Seleccionar carpeta",
+    "version": "Versión"
+  },
+  "about": {
+    "version": "Versión {version}",
+    "description": "<p><b>Package Maker</b> es la suite definitiva para el ecosistema Influent OS.</p><p>Diseñada para permitir a los desarrolladores crear, compilar y distribuir aplicaciones de manera eficiente.</p><br><p>Utiliza el motor <b>FLARM (Fluthin Armadillo)</b> para garantizar integridad y seguridad.</p>"
+  },
+  "moonfix": {
+    "title": "MoonFix",
+    "description": "Repara proyectos con plantillas oficiales.",
+    "batch": "Modo por lotes",
+    "project_folder_placeholder": "Carpeta de proyectos...",
+    "browse_folder": "Examinar carpeta de proyectos",
+    "path_missing": "La carpeta seleccionada no existe.",
+    "no_subfolders": "No se encontraron subcarpetas para procesar.",
+    "optimized": "Todos los proyectos ya están optimizados. No se requieren acciones.",
+    "completed": "Reparación completada.\nProyectos sanados: {count}",
+    "warning": "Advertencia"
+  },
+  "editor": {
+    "project": "Proyecto",
+    "no_project": "Sin proyecto"
+  },
+  "updater": {
+    "title": "Actualizador de PackageMaker",
+    "application": "Aplicación",
+    "current_version": "Versión actual",
+    "platform": "Plataforma",
+    "author": "Autor",
+    "publisher": "Publisher",
+    "read_error": "No se pudo leer details.xml",
+    "error": "Error",
+    "check_updates": "Buscar actualizaciones",
+    "update_now": "Actualizar ahora",
+    "exit": "Salir",
+    "updated": "Actualizado",
+    "latest": "Ya tienes la última versión: {version}",
+    "update_available": "Actualización disponible",
+    "remote_version": "Versión actual: {current}\nNueva versión: {new}",
+    "no_updates": "No se encontraron actualizaciones o el proceso fue cancelado",
+    "info": "Información",
+    "check_remote": "No se pudo verificar la versión remota",
+    "checking_updates": "Comprobando actualizaciones..."
+  },
+  "dialog": {
+    "create_project_title": "Crear proyecto",
+    "create_project": "Crear un proyecto nuevo",
+    "project_name": "Nombre del proyecto:",
+    "project_version": "Versión:",
+    "author_name": "Autor:",
+    "author_placeholder": "Tu nombre",
+    "publisher_name": "Publisher:",
+    "company_placeholder": "Nombre de la empresa",
+    "description": "Descripción:",
+    "description_placeholder": "Describe tu proyecto...",
+    "location": "Ubicación: {path}",
+    "create_button": "Crear proyecto",
+    "project_name_required": "El nombre del proyecto no puede estar vacío."
+  },
+  "build": {
+    "page_title": "Compilar el proyecto con BlindCube",
+    "button": "BlindCube",
+    "manufacturer": "Fabricante:",
+    "internal_name": "Nombre interno:",
+    "version": "Versión:",
+    "environment": "Entorno de compilación:",
+    "mode": "Modo:",
+    "mode_portable": "Portable (All-in-one)",
+    "mode_lite": "Lite (Single File)",
+    "compiler": "Compilador:",
+    "dropper": "Generar dropper (.run)",
+    "hardening": "Blindaje adicional",
+    "external_folder": "Carpeta Externa:",
+    "custom_path_placeholder": "(Opcional) Seleccionar carpeta externa a compilar",
+    "select_project_folder": "Seleccionar Carpeta del Proyecto",
+    "platform_detecting": "Detectando...",
+    "platform_auto_tooltip": "Detectado automáticamente según el sistema operativo actual",
+    "backend_tooltip": "Backend de compilación (Nuitka recomendado para binarios nativos)",
+    "dropper_tooltip": "Adjunta el .iflapp en un lanzador autoextraíble",
+    "hardening_tooltip": "Aplica strip/UPX/checksum/anti-debug/ofuscación al paquete",
+    "placeholder_company": "Ejemplo: influent",
+    "placeholder_app": "Ejemplo: mycoolapp",
+    "placeholder_version": "Ejemplo: 1.0"
+  },
+  "window": {
+    "restore": "Restaurar",
+    "minimize": "Minimizar",
+    "maximize": "Maximizar",
+    "close": "Cerrar"
   }
 }
