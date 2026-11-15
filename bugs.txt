@@ -1,4 +1,16 @@
 Encontre varios bugs en el codigo
+
+Traceback (most recent call last):
+  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\packagemaker.py", line 4374, in <module>
+    main()
+  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\packagemaker.py", line 4350, in main
+    main_window = PackageTodoGUI()
+  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\packagemaker.py", line 834, in __init__
+    dark_now = system_theme_mode() != "light"
+  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\lib\fluent_theme.py", line 345, in system_theme_mode
+    if scheme == Qt.ColorScheme.Dark:
+NameError: name 'Qt' is not defined
+
 . los checkboxes deben de crearse desde cero y uniformarlos bien en todas las paginas
 . no se limpian los scripts al compilar
 . cuando hay errores largos el cuadro de mensaje no resume el error basado en terminos y a veces un hover en el boton del dialogo lo vuelve blanco
