@@ -16,6 +16,8 @@ Sin dependencias de PyQt6: sólo devuelve cadenas QSS y números.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 # --------------------------------------------------------------------------- #
 # Paleta
 # --------------------------------------------------------------------------- #
@@ -222,37 +224,24 @@ def destructive_button_qss() -> str:
     """
 
 
-def checkbox_qss(accent: str = ACCENT, color: str = TEXT_MUTED, size: int = 13) -> str:
-    """Checkbox estilo macOS: cuadrado de 4px con tick blanco sobre acento.
+_ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+_CHECKBOX_QSS = (_ASSETS_DIR / "checkbox.qss").read_text(encoding="utf-8")
 
-    ``color`` y ``size`` permiten ajustar la etiqueta sin perder las reglas del
-    indicador, que son las que mantienen el control igual en toda la interfaz.
-    """
-    return f"""
-    QCheckBox {{
-        color: {color};
-        font-family: {FONT_STACK};
-        font-size: {size}px;
-        spacing: 10px;
-        margin: 0;
-        background: transparent;
-        border: none;
-    }}
-    QCheckBox::indicator {{
-        width: 18px;
-        height: 18px;
-        margin: 0;
-        padding: 0;
-        border-radius: 4px;
-        border: 1px solid #6E6E73;
-        background: transparent;
-    }}
-    QCheckBox::indicator:hover {{ border-color: {accent}; }}
-    QCheckBox::indicator:pressed {{ background: rgba(0, 120, 212, 0.24); border-color: {accent}; }}
-    QCheckBox::indicator:checked {{ background: {accent}; border-color: {accent}; }}
-    QCheckBox::indicator:disabled {{ background: #333; border-color: #555; }}
-    QCheckBox:disabled {{ color: #777; }}
-    """
+
+def checkbox_qss(accent: str = ACCENT, color: str = TEXT_MUTED, size: int = 13) -> str:
+    """Load the shared checkbox QSS and resolve theme-specific values."""
+    replacements = {
+        "__ACCENT__": str(accent),
+        "__TEXT_COLOR__": str(color),
+        "__FONT_STACK__": FONT_STACK,
+        "__FONT_SIZE__": str(int(size)),
+        "__CHECK_ICON__": str((_ASSETS_DIR / "icons" / "checkbox-check.svg").resolve()).replace("\\", "/"),
+        "__PARTIAL_ICON__": str((_ASSETS_DIR / "icons" / "checkbox-indeterminate.svg").resolve()).replace("\\", "/"),
+    }
+    stylesheet = _CHECKBOX_QSS
+    for token, value in replacements.items():
+        stylesheet = stylesheet.replace(token, value)
+    return stylesheet
 
 
 def radio_qss(accent: str = ACCENT) -> str:

@@ -9,13 +9,18 @@ def source(name):
     return (ROOT / name).read_text(encoding="utf-8")
 
 
-def test_checkbox_uses_authoritative_qt_state_and_events():
-    text = source("lib/fluent_theme.py")
-    assert "checkStateChanged" in text
-    assert "self.checkState()" in text
-    assert "setCheckState" not in text or "checkStateChanged" in text
-    assert "QPropertyAnimation(self, b\"checkProgress\", self)" in text
-    assert "Qt.CheckState.PartiallyChecked" in text
+def test_checkbox_uses_native_painting_and_shared_root_stylesheet():
+    theme = source("lib/fluent_theme.py")
+    tokens = source("lib/design_tokens.py")
+    stylesheet = source("assets/checkbox.qss")
+    entrypoint = source("packagemaker.py")
+    checkbox_class = theme.split("class FluentCheckBox", 1)[1].split("\nelse:", 1)[0]
+
+    assert "def paintEvent" not in checkbox_class
+    assert "checkbox.qss" in tokens
+    assert "image: url(\"__CHECK_ICON__\")" in stylesheet
+    assert "image: url(\"__PARTIAL_ICON__\")" in stylesheet
+    assert "app.setStyleSheet(checkbox_stylesheet" in entrypoint
 
 
 def test_theme_and_font_have_system_fallbacks():

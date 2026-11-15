@@ -130,24 +130,28 @@ class CheckboxSpacingTests(unittest.TestCase):
             self.skipTest("PyQt6 no disponible")
 
         app = QApplication.instance() or QApplication([])
-        from lib.fluent_theme import applyget
+        from lib.fluent_theme import checkbox_stylesheet
 
-        cb = QCheckBox("Windows (Knosthalij)")
-        cb.setStyleSheet(applyget("#ff5722"))
-        cb.show()
-        app.processEvents()
+        original_stylesheet = app.styleSheet()
+        app.setStyleSheet(checkbox_stylesheet("#ff5722"))
+        try:
+            cb = QCheckBox("Windows (Knosthalij)")
+            cb.show()
+            app.processEvents()
 
-        option = QStyleOptionButton()
-        cb.initStyleOption(option)
-        indicator = cb.style().subElementRect(
-            QStyle.SubElement.SE_CheckBoxIndicator, option, cb
-        )
-        contents = cb.style().subElementRect(
-            QStyle.SubElement.SE_CheckBoxContents, option, cb
-        )
-        # El texto empieza después del borde derecho del indicador.
-        self.assertGreaterEqual(contents.x(), indicator.x() + indicator.width())
-        cb.close()
+            option = QStyleOptionButton()
+            cb.initStyleOption(option)
+            indicator = cb.style().subElementRect(
+                QStyle.SubElement.SE_CheckBoxIndicator, option, cb
+            )
+            contents = cb.style().subElementRect(
+                QStyle.SubElement.SE_CheckBoxContents, option, cb
+            )
+            # El texto empieza después del borde derecho del indicador.
+            self.assertGreaterEqual(contents.x(), indicator.x() + indicator.width())
+            cb.close()
+        finally:
+            app.setStyleSheet(original_stylesheet)
 
 
 class LanguagePackTests(unittest.TestCase):

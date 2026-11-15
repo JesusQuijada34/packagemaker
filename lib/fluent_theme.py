@@ -38,9 +38,8 @@ from lib.design_tokens import (
 )
 
 try:
-    from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, pyqtProperty
-    from PyQt6.QtGui import QColor, QFont, QFontDatabase, QGuiApplication, QPainter, QPainterPath, QPen
-    from PyQt6.QtWidgets import QCheckBox, QStyle, QStyleOptionButton
+    from PyQt6.QtGui import QFont, QFontDatabase, QGuiApplication
+    from PyQt6.QtWidgets import QCheckBox
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -48,137 +47,7 @@ except ImportError:
 
 if PYQT6_AVAILABLE:
     class FluentCheckBox(QCheckBox):
-        """WinUI 3 checkbox with a smooth, native Qt state transition."""
-
-        def __init__(self, text="", parent=None):
-            super().__init__(text, parent)
-            self._check_progress = float(self.isChecked())
-            self._fallback_animation = None
-            # Qt 6 emits the semantic enum through checkStateChanged.  Keep the
-            # visual progress synchronized with both user clicks and programmatic
-            # setChecked()/setCheckState() calls.
-            if hasattr(self, "checkStateChanged"):
-                self.checkStateChanged.connect(self._animate_check_state)
-            else:
-                self.stateChanged.connect(self._animate_check_state)
-            self._sync_check_state(self.checkState(), animate=False)
-
-        @pyqtProperty(float)
-        def checkProgress(self):
-            return self._check_progress
-
-        @checkProgress.setter
-        def checkProgress(self, progress):
-            self._check_progress = min(1.0, max(0.0, float(progress)))
-            self.update()
-
-        def _sync_check_state(self, state, animate=True):
-            if isinstance(state, Qt.CheckState):
-                state_value = state.value
-            else:
-                state_value = int(state)
-            end = 0.5 if state_value == Qt.CheckState.PartiallyChecked.value else float(
-                state_value == Qt.CheckState.Checked.value
-            )
-            if not animate:
-                self._check_progress = end
-                self.update()
-                return
-            if not self.isVisible():
-                self.checkProgress = end
-                return
-            if self._fallback_animation is not None:
-                self._fallback_animation.stop()
-            self._fallback_animation = QPropertyAnimation(self, b"checkProgress", self)
-            self._fallback_animation.setDuration(190)
-            self._fallback_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
-            self._fallback_animation.setStartValue(self._check_progress)
-            self._fallback_animation.setEndValue(end)
-            self._fallback_animation.start()
-
-        def _animate_check_state(self, state):
-            self._sync_check_state(state, animate=True)
-
-        def showEvent(self, event):
-            # A checkbox can be initialized before it becomes visible; repaint
-            # from the actual Qt state when it enters the scene.
-            self._sync_check_state(self.checkState(), animate=False)
-            super().showEvent(event)
-
-        def enterEvent(self, event):
-            self.update()
-            super().enterEvent(event)
-
-        def leaveEvent(self, event):
-            self.update()
-            super().leaveEvent(event)
-
-        def paintEvent(self, event):
-            option = QStyleOptionButton()
-            self.initStyleOption(option)
-            painter = QPainter(self)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-            indicator = self.style().subElementRect(
-                QStyle.SubElement.SE_CheckBoxIndicator, option, self
-            )
-            contents = self.style().subElementRect(
-                QStyle.SubElement.SE_CheckBoxContents, option, self
-            )
-            rect = indicator.adjusted(1, 1, -1, -1)
-
-            # Keep the label clearly to the right of the indicator. Qt's native
-            # checkbox layout already places the text after the box; if we draw the
-            # custom box, we must not override the geometry or let the box overlap.
-            if rect.right() > contents.x() - 4:
-                rect.setRight(contents.x() - 4)
-            if rect.width() < 12:
-                rect.setWidth(12)
-
-            actual_state = self.checkState()
-            progress = self._check_progress
-            if actual_state == Qt.CheckState.Checked and progress <= 0:
-                progress = 1.0
-            elif actual_state == Qt.CheckState.Unchecked and progress >= 1:
-                progress = 0.0
-            accent = QColor(ACCENT)
-            border = QColor("#6E6E73")
-            if not self.isEnabled():
-                accent = QColor("#626262")
-                border = QColor("#555555")
-            elif self.underMouse():
-                border = QColor(ACCENT)
-            if progress > 0:
-                border = accent
-
-            painter.setPen(QPen(border, 1.4))
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawRoundedRect(rect, 4, 4)
-            if progress > 0:
-                fill = QColor(accent)
-                fill.setAlphaF(progress)
-                painter.setPen(Qt.PenStyle.NoPen)
-                painter.setBrush(fill)
-                painter.drawRoundedRect(rect, 4, 4)
-
-                painter.setOpacity(progress)
-                painter.setPen(QPen(QColor("#ffffff"), 1.8, Qt.PenStyle.SolidLine,
-                                    Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
-                center_y = rect.center().y()
-                if actual_state == Qt.CheckState.PartiallyChecked:
-                    painter.drawLine(rect.left() + 4, center_y, rect.right() - 4, center_y)
-                else:
-                    mark = QPainterPath()
-                    mark.moveTo(rect.left() + 4, center_y)
-                    mark.lineTo(rect.left() + 7, center_y + 3)
-                    mark.lineTo(rect.right() - 3, center_y - 4)
-                    painter.drawPath(mark)
-                painter.setOpacity(1.0)
-
-            self.style().drawControl(
-                QStyle.ControlElement.CE_CheckBoxLabel, option, painter, self
-            )
-            painter.end()
+        """Native Qt checkbox rendered by the shared application-level QSS."""
 else:
     class FluentCheckBox:
         def __init__(self, *args, **kwargs):
@@ -263,9 +132,9 @@ BUILD_AND_INSTALL_STYLES = {
     'packagemaker_111': 'color:white;font-size:24px;font-weight:bold;margin-bottom:10px;',
     'packagemaker_112': 'color:#aaa;font-size:14px;margin-bottom:20px;',
     'packagemaker_113': 'QGroupBox{color:white;font-weight:bold;border:2px solid rgba(255,255,255,0.2);border-radius:8px;margin-top:10px;padding-top:15px;}QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 5px;}',
-    'packagemaker_114': checkbox_qss(ACCENT, "#ffffff", 14),
-    'packagemaker_115': checkbox_qss(ACCENT, "#ffffff", 14),
-    'packagemaker_116': checkbox_qss(ACCENT, "#ffffff", 14),
+    'packagemaker_114': checkbox_qss(ACCENT),
+    'packagemaker_115': checkbox_qss(ACCENT),
+    'packagemaker_116': checkbox_qss(ACCENT),
     'packagemaker_117': "QTextEdit{background-color:transparent;color:#0f0;font-family:'Consolas','Courier New',monospace;border:2px solid rgba(0,255,0,0.3);border-radius:8px;padding:10px;font-size:13px;}",
     'packagemaker_156': 'QLineEdit{color:#888;font-style:italic;}',
 }
@@ -288,7 +157,7 @@ CONFIGURATION_STYLES = {
     'packagemaker_043': 'QScrollArea{background:transparent;border:none;}',
     'packagemaker_044': 'background:transparent;',
     'packagemaker_046': 'QPushButton{background:rgba(255,255,255,0.08);color:white;border-radius:4px;padding:0 12px;}QPushButton:hover{background:rgba(255,255,255,0.14);}',
-    'packagemaker_049': checkbox_qss(ACCENT, "#ddd", 12),
+    'packagemaker_049': checkbox_qss(ACCENT),
     'packagemaker_050': f'color:{TEXT_DIM};font-size:11px;background:transparent;',
     'packagemaker_051': 'QPushButton{background:#0078d4;color:white;border:none;border-radius:4px;font-weight:600;}QPushButton:hover{background:#106ebe;}',
     'packagemaker_052': destructive_button_qss(),
@@ -299,7 +168,7 @@ CONFIGURATION_STYLES = {
 MAINTENANCE_STYLES = {
     'packagemaker_053': 'font-size:22px;font-weight:600;color:white;background:transparent;',
     'packagemaker_054': 'color:#9aa4b2;font-size:12px;background:transparent;',
-    'packagemaker_055': checkbox_qss(ACCENT, "#ddd", 12),
+    'packagemaker_055': checkbox_qss(ACCENT),
     'packagemaker_056': input_qss(ACCENT),
     'packagemaker_057': secondary_button_qss(),
     'packagemaker_058': 'QPushButton{background:#a371f7;color:white;font-weight:600;font-size:12px;border:none;border-radius:4px;}QPushButton:hover{background:#b084f9;}',
@@ -308,10 +177,10 @@ MAINTENANCE_STYLES = {
     'packagemaker_122': 'color:#aaa;font-size:14px;margin-bottom:10px;',
     'packagemaker_123': 'color:#888;font-size:13px;margin-bottom:20px;',
     'packagemaker_124': 'QGroupBox{color:white;font-weight:bold;border:2px solid rgba(255,255,255,0.2);border-radius:8px;margin-top:10px;padding-top:15px;}QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 5px;}',
-    'packagemaker_125': checkbox_qss(ACCENT, "#ffffff", 14),
-    'packagemaker_126': checkbox_qss(ACCENT, "#ffffff", 14),
-    'packagemaker_127': checkbox_qss(ACCENT, "#ffffff", 14),
-    'packagemaker_128': checkbox_qss(ACCENT, "#ffffff", 14),
+    'packagemaker_125': checkbox_qss(ACCENT),
+    'packagemaker_126': checkbox_qss(ACCENT),
+    'packagemaker_127': checkbox_qss(ACCENT),
+    'packagemaker_128': checkbox_qss(ACCENT),
     'packagemaker_129': "QTextEdit{background-color:transparent;color:#0ff;font-family:'Consolas','Courier New',monospace;border:2px solid rgba(0,255,255,0.3);border-radius:8px;padding:10px;font-size:13px;}",
 }
 
@@ -538,9 +407,9 @@ def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
     """
 
 
-def checkbox_stylesheet(accent="#0078d4"):
-    """Return the complete checkbox states for native and custom controls."""
-    return checkbox_qss(accent)
+def checkbox_stylesheet(accent=ACCENT, color=TEXT_MUTED, size=13):
+    """Return the shared checkbox QSS loaded from the central asset."""
+    return checkbox_qss(accent, color, size)
 
 
 def splash_titlebar_stylesheet():
@@ -717,7 +586,6 @@ def applyget(accent: str) -> str:
     QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}
     QPushButton:pressed {{ background-color: {ACCENT_PRESSED}; border-color: rgba(255, 255, 255, 0.05); }}
     QPushButton:disabled {{ background-color: #3A3A3C; color: {TEXT_DIM}; }}
-    {checkbox_stylesheet(accent)}
     {slider_qss(accent)}
     QProgressBar {{
         background: transparent;

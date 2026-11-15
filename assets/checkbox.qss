@@ -1,0 +1,48 @@
+QCheckBox {
+    color: __TEXT_COLOR__;
+    font-family: __FONT_STACK__;
+    font-size: __FONT_SIZE__px;
+    spacing: 10px;
+    background: transparent;
+    border: none;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #6E6E73;
+    border-radius: 4px;
+    background: transparent;
+}
+
+QCheckBox::indicator:hover {
+    border-color: __ACCENT__;
+}
+
+QCheckBox::indicator:pressed {
+    border-color: __ACCENT__;
+    background: rgba(0, 120, 212, 0.24);
+}
+
+QCheckBox::indicator:checked {
+    border-color: __ACCENT__;
+    background: __ACCENT__;
+    image: url("__CHECK_ICON__");
+}
+
+QCheckBox::indicator:indeterminate {
+    border-color: __ACCENT__;
+    background: __ACCENT__;
+    image: url("__PARTIAL_ICON__");
+}
+
+QCheckBox::indicator:disabled {
+    border-color: #555555;
+    background: #333333;
+}
+
+QCheckBox:disabled {
+    color: #777777;
+}

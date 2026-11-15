@@ -65,7 +65,7 @@ from PyQt6.QtCore import (
     QProcess,
 )
 
-from lib.fluent_theme import preferred_mono_font
+from lib.fluent_theme import checkbox_stylesheet, preferred_mono_font
 from lib.python_portable_manager import get_python_manager
 from lib.dependency_manager import get_dependency_manager
 
@@ -228,9 +228,6 @@ QComboBox {{
 QComboBox:focus {{
     border: 1px solid {EDITOR_ACCENT};
 }}
-QCheckBox {{
-    color: #D4D4D4;
-}}
 QSpinBox {{
     background-color: #252526;
     color: #D4D4D4;
@@ -246,7 +243,7 @@ QProgressBar::chunk {{
     background-color: {EDITOR_ACCENT};
     border-radius: 4px;
 }}
-"""
+""" + checkbox_stylesheet(EDITOR_ACCENT, "#D4D4D4")
 
 # =============================================================================
 # FUNCIONES UTILITARIAS
@@ -2769,4 +2766,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

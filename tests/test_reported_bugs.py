@@ -226,6 +226,7 @@ class CheckboxStyleTests(unittest.TestCase):
     def test_all_checkbox_style_keys_share_indicator(self):
         from lib import fluent_theme
 
+        styles = []
         for key in (
             "packagemaker_049",
             "packagemaker_055",
@@ -242,38 +243,93 @@ class CheckboxStyleTests(unittest.TestCase):
             qss = fluent_theme.INLINE_STYLES[key]
             self.assertIn("QCheckBox::indicator", qss, f"{key} sin regla de indicador")
             self.assertIn("spacing:", qss, f"{key} sin separación entre control y texto")
+            styles.append(qss)
+        self.assertEqual(len(set(styles)), 1, "Las páginas deben compartir exactamente el mismo QSS")
 
     def test_indicator_does_not_overlap_label(self):
         from PyQt6.QtWidgets import (
             QApplication,
+            QCheckBox,
             QStyle,
             QStyleOptionButton,
         )
 
         app = QApplication.instance() or QApplication([])
-        from lib.fluent_theme import FluentCheckBox, set_qss
+        from lib.fluent_theme import FluentCheckBox, checkbox_stylesheet
 
-        for key in ("packagemaker_049", "packagemaker_073", "packagemaker_114"):
-            cb = FluentCheckBox("Windows (Knosthalij)")
-            set_qss(cb, key, append=False)
-            cb.resize(300, 20)
-            cb.show()
-            app.processEvents()
+        original_stylesheet = app.styleSheet()
+        app.setStyleSheet(checkbox_stylesheet("#ff5722"))
+        try:
+            for checkbox_type in (QCheckBox, FluentCheckBox):
+                cb = checkbox_type("Windows (Knosthalij)")
+                cb.resize(300, 24)
+                cb.show()
+                app.processEvents()
+
+                option = QStyleOptionButton()
+                cb.initStyleOption(option)
+                indicator = cb.style().subElementRect(
+                    QStyle.SubElement.SE_CheckBoxIndicator, option, cb
+                )
+                contents = cb.style().subElementRect(
+                    QStyle.SubElement.SE_CheckBoxContents, option, cb
+                )
+                self.assertGreaterEqual(
+                    contents.x(),
+                    indicator.x() + indicator.width(),
+                    f"{checkbox_type.__name__}: el texto no queda a la derecha del indicador",
+                )
+                self.assertEqual(
+                    cb.styleSheet(),
+                    "",
+                    "Only the application root should style the checkbox",
+                )
+                cb.close()
+        finally:
+            app.setStyleSheet(original_stylesheet)
+
+    def test_checked_indicator_uses_the_central_checkmark_asset(self):
+        from PyQt6.QtGui import QColor, QImage, QPainter
+        from PyQt6.QtWidgets import QApplication, QStyle, QStyleOptionButton
+
+        app = QApplication.instance() or QApplication([])
+        from lib.fluent_theme import FluentCheckBox, checkbox_stylesheet
+
+        original_stylesheet = app.styleSheet()
+        app.setStyleSheet(checkbox_stylesheet("#ff5722"))
+        checkbox = FluentCheckBox("Selected")
+        checkbox.setChecked(True)
+        checkbox.resize(140, 28)
+        checkbox.show()
+        app.processEvents()
+        try:
+            image = QImage(
+                checkbox.size(),
+                QImage.Format.Format_ARGB32_Premultiplied,
+            )
+            image.fill(QColor("transparent"))
+            painter = QPainter(image)
+            checkbox.render(painter)
+            painter.end()
 
             option = QStyleOptionButton()
-            cb.initStyleOption(option)
-            indicator = cb.style().subElementRect(
-                QStyle.SubElement.SE_CheckBoxIndicator, option, cb
+            checkbox.initStyleOption(option)
+            indicator = checkbox.style().subElementRect(
+                QStyle.SubElement.SE_CheckBoxIndicator, option, checkbox
             )
-            contents = cb.style().subElementRect(
-                QStyle.SubElement.SE_CheckBoxContents, option, cb
+            white_pixels = sum(
+                1
+                for x in range(indicator.left(), indicator.right() + 1)
+                for y in range(indicator.top(), indicator.bottom() + 1)
+                if image.pixelColor(x, y).alpha() > 0
+                and image.pixelColor(x, y).red() > 230
+                and image.pixelColor(x, y).green() > 230
+                and image.pixelColor(x, y).blue() > 230
             )
-            self.assertGreaterEqual(
-                contents.x(),
-                indicator.x() + indicator.width(),
-                f"{key}: el texto no queda a la derecha del indicador",
-            )
-            cb.close()
+            self.assertGreater(white_pixels, 0, "The checked state must draw its white checkmark")
+        finally:
+            checkbox.close()
+            app.setStyleSheet(original_stylesheet)
 
 
 if __name__ == "__main__":

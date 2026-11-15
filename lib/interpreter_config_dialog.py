@@ -121,7 +121,7 @@ QProgressBar::chunk {{
     background-color: {ACCENT_COLOR};
     border-radius: 4px;
 }}
-QComboBox, QCheckBox {{
+QComboBox {{
     color: #cccccc;
 }}
 """

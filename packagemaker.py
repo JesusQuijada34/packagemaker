@@ -260,6 +260,7 @@ from lib.design_tokens import (
     SIDEBAR_PADDING,
     SIDEBAR_TOP_MARGIN,
     TEXT,
+    TEXT_LIGHT,
     TITLEBAR_BG,
     WINDOW_BG,
 )
@@ -282,6 +283,7 @@ from lib.fluent_theme import (
     BTN_STYLES,
     FluentCheckBox as QCheckBox,
     applyget,
+    checkbox_stylesheet,
     conf_field_stylesheet,
     preferred_mono_font,
     preferred_ui_font,
@@ -1213,6 +1215,12 @@ class PackageTodoGUI(QMainWindow):
         base_bg = WINDOW_BG if dark else "#f5f7fb"
         text_col = TEXT if dark else "#1f2937"
 
+        app = QApplication.instance()
+        if app is not None:
+            app.setStyleSheet(
+                checkbox_stylesheet(accent, TEXT if dark else TEXT_LIGHT)
+            )
+
         set_qss(self.central, applyget(accent), append=False)
         set_qss(self, 'packagemaker_010', values=(qss_value(base_bg, None, ''),), append=False)
 
@@ -1346,7 +1354,6 @@ class PackageTodoGUI(QMainWindow):
 
         def uwp_checkbox(text):
             cb = QCheckBox(text)
-            #set_qss(cb, 'packagemaker_073', append=False)
             return cb
 
         self.checkbox_windows = uwp_checkbox(tr("create.platform.windows"))
@@ -2279,7 +2286,6 @@ class PackageTodoGUI(QMainWindow):
 
         self.conf_auto_translate = QCheckBox(tr("config.auto_translate"))
         self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
-        set_qss(self.conf_auto_translate, 'packagemaker_049', append=False)
         self._config_tr_labels.append((self.conf_auto_translate, "config.auto_translate"))
         layout.addWidget(self.conf_auto_translate)
         add_hint("config.auto_translate_hint")
@@ -2318,13 +2324,11 @@ class PackageTodoGUI(QMainWindow):
         add_section("config.section_notifications")
         self.conf_notifications = QCheckBox(tr("config.notifications"))
         self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
-        set_qss(self.conf_notifications, 'packagemaker_049', append=False)
         self._config_tr_labels.append((self.conf_notifications, "config.notifications"))
         layout.addWidget(self.conf_notifications)
 
         self.conf_touch_mode = QCheckBox(tr("config.touch_mode"))
         self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
-        set_qss(self.conf_touch_mode, 'packagemaker_049', append=False)
         self._config_tr_labels.append((self.conf_touch_mode, "config.touch_mode"))
         layout.addWidget(self.conf_touch_mode)
         add_hint("config.touch_mode_hint")
@@ -2656,7 +2660,6 @@ class PackageTodoGUI(QMainWindow):
 
         top_row = QHBoxLayout()
         self.mf_batch_mode = QCheckBox(tr("moonfix.batch"))
-        set_qss(self.mf_batch_mode, 'packagemaker_055', append=False)
         self.mf_batch_mode.setChecked(True)
         top_row.addWidget(self.mf_batch_mode)
         top_row.addStretch()
@@ -3386,16 +3389,13 @@ class PackageTodoGUI(QMainWindow):
 
             chkWindows = QCheckBox("🪟 Compilar para Windows")
             chkWindows.setChecked(True)
-            set_qss(chkWindows, 'packagemaker_114', append=False)
             layoutOpciones.addWidget(chkWindows)
 
             chkKnosthalij = QCheckBox("🌐 Compilar para Knosthalij")
-            set_qss(chkKnosthalij, 'packagemaker_115', append=False)
             layoutOpciones.addWidget(chkKnosthalij)
 
             chkOptimizar = QCheckBox("⚡ Optimizar código")
             chkOptimizar.setChecked(True)
-            set_qss(chkOptimizar, 'packagemaker_116', append=False)
             layoutOpciones.addWidget(chkOptimizar)
 
             groupOpciones.setLayout(layoutOpciones)
@@ -3550,22 +3550,18 @@ class PackageTodoGUI(QMainWindow):
 
             chkArchivos = QCheckBox("📄 Verificar archivos faltantes")
             chkArchivos.setChecked(True)
-            set_qss(chkArchivos, 'packagemaker_125', append=False)
             layoutOpciones.addWidget(chkArchivos)
 
             chkConfig = QCheckBox("⚙️ Actualizar configuraciones antiguas")
             chkConfig.setChecked(True)
-            set_qss(chkConfig, 'packagemaker_126', append=False)
             layoutOpciones.addWidget(chkConfig)
 
             chkEstructura = QCheckBox("🏗️ Reparar estructura de carpetas")
             chkEstructura.setChecked(True)
-            set_qss(chkEstructura, 'packagemaker_127', append=False)
             layoutOpciones.addWidget(chkEstructura)
 
             chkDependencias = QCheckBox("📦 Verificar dependencias")
             chkDependencias.setChecked(True)
-            set_qss(chkDependencias, 'packagemaker_128', append=False)
             layoutOpciones.addWidget(chkDependencias)
 
             groupOpciones.setLayout(layoutOpciones)
@@ -4309,6 +4305,7 @@ def main():
 
             if PYQT6_AVAILABLE:
                 app = QApplication(sys.argv)
+                app.setStyleSheet(checkbox_stylesheet(get_accent_color()))
                 font = app_font()
                 if font is not None:
                     app.setFont(font)
@@ -4340,6 +4337,7 @@ def main():
         return
 
     app = QApplication(sys.argv)
+    app.setStyleSheet(checkbox_stylesheet(get_accent_color()))
     font = app_font()
     if font is not None:
         app.setFont(font)

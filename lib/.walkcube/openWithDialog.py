@@ -39,23 +39,49 @@ except ImportError:
         class MouseButton: LeftButton = 0
         class Shape: NoFrame = 0
 
-# Importar detector de editores y utilidades de i18n
+# Importar detector de editores y utilidades de i18n.
+# El módulo se puede cargar como paquete ``lib._walkcube`` o como script
+# legacy aislado; en ambos casos apoyamos importaciones absolutas y relativas.
 try:
-    from .editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
-    from .i18n import tr
-    from .iconManager import load_svg_icon
-    from .projectConfig import get_project_config
+    try:
+        from lib.editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
+    except ImportError:
+        from .editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
+    try:
+        from lib.i18n import tr
+    except ImportError:
+        from .i18n import tr
+    try:
+        from lib.iconManager import load_svg_icon
+    except ImportError:
+        from .iconManager import load_svg_icon
+    try:
+        from lib.projectConfig import get_project_config
+    except ImportError:
+        from .projectConfig import get_project_config
 except ImportError:
-    from editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
-    from i18n import tr
     try:
-        from iconManager import load_svg_icon
+        from editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
+        from i18n import tr
+        try:
+            from iconManager import load_svg_icon
+        except ImportError:
+            load_svg_icon = None
+        try:
+            from projectConfig import get_project_config
+        except ImportError:
+            get_project_config = None
     except ImportError:
-        load_svg_icon = None
-    try:
-        from projectConfig import get_project_config
-    except ImportError:
-        get_project_config = None
+        from .editorDetector import EditorDetector, EditorInfo, save_default_editor, get_default_editor
+        from .i18n import tr
+        try:
+            from .iconManager import load_svg_icon
+        except ImportError:
+            load_svg_icon = None
+        try:
+            from .projectConfig import get_project_config
+        except ImportError:
+            get_project_config = None
 
 
 def detect_executable_type(file_path: str) -> str:
