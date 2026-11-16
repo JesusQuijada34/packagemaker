@@ -589,6 +589,10 @@ def applyget(accent: str, dark: bool = True) -> str:
     # se conmutan los textos al negro y se conserva el resto del QSS.
     text = TEXT if dark else "#000000"
     label = "#cccccc" if dark else "#1f2937"
+    page = WINDOW_BG if dark else "#F5F7FB"
+    surface = SURFACE if dark else "#FFFFFF"
+    border = BORDER if dark else "#D1D1D6"
+    muted = TEXT_DIM if dark else label
     group_text = "#f3f5f8" if dark else "#000000"
     stack_text = "#bbb" if dark else "#333333"
     scroll_handle = "rgba(255, 255, 255, 0.24)" if dark else "rgba(0, 0, 0, 0.28)"
@@ -622,6 +626,85 @@ def applyget(accent: str, dark: bool = True) -> str:
         background-color: {SIDEBAR_BG};
         border-right: 1px solid #333333;
     }}
+
+    /* El QSS local de CentralWidget prevalece sobre el de QApplication.
+       Por eso los controles del landing deben vivir también en esta hoja raíz. */
+    QWidget#GitHubLoginLanding {{
+        background-color: {page};
+        color: {text};
+        border: none;
+        border-radius: 0;
+    }}
+    QFrame#GitHubLoginCard {{
+        background-color: {surface};
+        border: 1px solid {border};
+        border-radius: 18px;
+    }}
+    QLabel#GitHubLandingAvatar {{
+        background-color: {accent};
+        color: #FFFFFF;
+        border-radius: 56px;
+        font-size: 30px;
+        font-weight: 700;
+    }}
+    QLabel#GitHubLandingName {{
+        color: {text};
+        font-size: 22px;
+        font-weight: 700;
+    }}
+    QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus {{
+        color: {muted};
+    }}
+    QLabel#GitHubWelcomeLabel {{
+        color: {accent};
+        font-size: 16px;
+        font-weight: 600;
+    }}
+    QPushButton#GitHubLoginButton {{
+        background-color: {accent};
+        color: #FFFFFF;
+        border: none;
+        border-radius: {PILL_RADIUS}px;
+        padding: 9px 20px;
+        min-height: 40px;
+    }}
+    QPushButton#GitHubLoginButton:hover {{
+        background-color: {ACCENT_HOVER};
+    }}
+    QLineEdit#GitHubTokenInput {{
+        background-color: {surface};
+        color: {text};
+        border: 1px solid {border};
+        border-radius: {CONTROL_RADIUS}px;
+        padding: 9px 12px;
+        min-height: 40px;
+    }}
+    QLabel#GitHubProfileAvatar {{
+        background: {accent}33;
+        border-radius: 17px;
+    }}
+    QLabel#GitHubProfileName {{
+        color: {label};
+        font-weight: 600;
+    }}
+    QLabel#GitHubProfileLogin {{
+        color: {muted};
+        font-size: 11px;
+    }}
+    QPushButton#GitHubProfileAction {{
+        background: {surface};
+        color: {label};
+        border: 1px solid {border};
+        border-radius: {CONTROL_RADIUS}px;
+        padding: 4px 10px;
+        min-height: 26px;
+        font-size: 12px;
+    }}
+    QPushButton#GitHubProfileAction:hover {{
+        border-color: {accent};
+        background: {surface};
+    }}
+
     QWidget#DialogCentral {{
         background-color: transparent;
         border: none;
