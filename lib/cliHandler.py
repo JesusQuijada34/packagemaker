@@ -175,6 +175,11 @@ class CLIHandler:
         mexf_group = self.parser.add_argument_group('Proyectos .mexf')
         mexf_group.add_argument('--compile-mexf', metavar='PATH', help='Compilar un proyecto .mexf a un artefacto .asksome (carpeta con details.xml y .mexf/main.mexf)')
         mexf_group.add_argument('--mexf-output', metavar='FILE', help='Ruta del .asksome de salida para --compile-mexf')
+        mexf_group.add_argument('--install-asksome', metavar='FILE', help='Instalar un artefacto .asksome (extrae payload firmado y crea accesos directos)')
+        mexf_group.add_argument('--uninstall-asksome', metavar='APP_ID', help='Desinstalar un .asksome instalado por su app id')
+        mexf_group.add_argument('--install-root', metavar='DIR', help='Carpeta raíz de instalación para --install-asksome/--uninstall-asksome')
+        mexf_group.add_argument('--list-asksome', action='store_true', help='Listar los artefactos .asksome instalados')
+        mexf_group.add_argument('--no-shortcuts', action='store_true', help='No crear accesos directos al instalar')
 
         font_group = self.parser.add_argument_group('Fuentes')
         font_group.add_argument('--list-fonts', action='store_true', help='Mostrar el estado de las fuentes de la interfaz')
@@ -345,6 +350,34 @@ class CLIHandler:
                     'path': args.compile_mexf,
                     'output': getattr(args, 'mexf_output', None),
                 },
+                shell_options,
+            )
+
+        elif getattr(args, 'install_asksome', None):
+            return (
+                'install_asksome',
+                {
+                    'path': args.install_asksome,
+                    'root': getattr(args, 'install_root', None),
+                    'shortcuts': not getattr(args, 'no_shortcuts', False),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'uninstall_asksome', None):
+            return (
+                'uninstall_asksome',
+                {
+                    'app_id': args.uninstall_asksome,
+                    'root': getattr(args, 'install_root', None),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'list_asksome', False):
+            return (
+                'list_asksome',
+                {'root': getattr(args, 'install_root', None)},
                 shell_options,
             )
 
@@ -688,6 +721,85 @@ class MexfCompileHelper:
         return True
 
 
+class AsksomeInstallHelper:
+    """Instala, desinstala y lista artefactos ``.asksome``."""
+
+    @staticmethod
+    def _root(data):
+        from pathlib import Path
+
+        root = data.get("root")
+        if root:
+            return Path(root).expanduser().resolve()
+        return Path.home() / ".packagemaker" / "apps"
+
+    @staticmethod
+    def install(data):
+        from pathlib import Path
+
+        from lib.asksome_format import AsksomeError
+        from lib.asksome_installer import AsksomeInstallError, install_asksome
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar el artefacto .asksome con --install-asksome")
+            return False
+        artifact = Path(path).expanduser().resolve()
+        if not artifact.is_file():
+            print(f"[ERROR] No existe el artefacto: {artifact}")
+            return False
+        root = AsksomeInstallHelper._root(data)
+        try:
+            record = install_asksome(
+                artifact,
+                root,
+                create_desktop_shortcuts=bool(data.get("shortcuts", True)),
+            )
+        except (AsksomeError, AsksomeInstallError) as exc:
+            print(f"[ERROR] Instalación .asksome fallida: {exc}")
+            return False
+        print(f"App       : {record.name} ({record.app_id})")
+        print(f"Version   : {record.version}")
+        print(f"Instalado : {record.install_dir}")
+        if record.shortcuts:
+            print(f"Accesos   : {', '.join(record.shortcuts)}")
+        print(f"[OK] Desinstala con: {record.install_dir}/removeme.py")
+        return True
+
+    @staticmethod
+    def uninstall(data):
+        from lib.asksome_installer import AsksomeInstallError, uninstall_asksome
+
+        app_id = data.get("app_id")
+        if not app_id:
+            print("[ERROR] Debes indicar el app id con --uninstall-asksome")
+            return False
+        root = AsksomeInstallHelper._root(data)
+        try:
+            removed = uninstall_asksome(app_id, root)
+        except AsksomeInstallError as exc:
+            print(f"[ERROR] Desinstalación .asksome fallida: {exc}")
+            return False
+        for item in removed:
+            print(f"eliminado: {item}")
+        print(f"[OK] {app_id} desinstalado")
+        return True
+
+    @staticmethod
+    def list_installed(data):
+        from lib.asksome_installer import list_installed
+
+        root = AsksomeInstallHelper._root(data)
+        records = list_installed(root)
+        if not records:
+            print(f"Sin artefactos .asksome instalados en {root}")
+            return True
+        print(f"Instalados en {root}:")
+        for record in records:
+            print(f"  - {record.app_id}  {record.name}  {record.version}")
+        return True
+
+
 # === Action Handlers ===
 def _handle_shell_actions(action, data=None):
     """Maneja acciones de shell que no requieren GUI. Retorna True si se manejó."""
@@ -725,6 +837,15 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'compile_mexf':
         return MexfCompileHelper.compile(data or {})
+
+    elif action == 'install_asksome':
+        return AsksomeInstallHelper.install(data or {})
+
+    elif action == 'uninstall_asksome':
+        return AsksomeInstallHelper.uninstall(data or {})
+
+    elif action == 'list_asksome':
+        return AsksomeInstallHelper.list_installed(data or {})
     
     return None  # No es acción de shell
 

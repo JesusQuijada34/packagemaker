@@ -176,3 +176,81 @@ def test_buildthread_skips_mexf_when_absent(tmp_path):
     assert compiler.procedure == []
 
 
+def _install_fixture(tmp_path):
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    artifact = compile_mexf_project(root, tmp_path / "demo.asksome").output
+    install_root = tmp_path / "installed"
+    shortcuts = tmp_path / "shortcuts"
+    shortcuts.mkdir()
+    return artifact, install_root, shortcuts
+
+
+def test_install_asksome_extracts_and_records(tmp_path):
+    from lib.asksome_installer import install_asksome, list_installed, read_record
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    assert record.app_id == "influent.demo"
+    assert Path(record.install_dir).is_dir()
+    assert (Path(record.install_dir) / "launcher.py").is_file()
+    assert (Path(record.install_dir) / "install.json").is_file()
+    assert (Path(record.install_dir) / "removeme.py").is_file()
+    assert record.shortcuts and Path(record.shortcuts[0]).is_file()
+    assert [item.app_id for item in list_installed(install_root)] == ["influent.demo"]
+    assert read_record("influent.demo", install_root).version == "v1.0"
+
+
+def test_uninstall_asksome_purges_files_and_shortcuts(tmp_path):
+    from lib.asksome_installer import install_asksome, list_installed, uninstall_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    removed = uninstall_asksome(record.app_id, install_root)
+    assert not Path(record.install_dir).exists()
+    assert all(not Path(item).exists() for item in record.shortcuts)
+    assert removed
+    assert list_installed(install_root) == []
+
+
+def test_uninstall_silent_on_missing(tmp_path):
+    from lib.asksome_installer import AsksomeInstallError, uninstall_asksome
+
+    assert uninstall_asksome("nope", tmp_path / "installed", silent=True) == []
+    with pytest.raises(AsksomeInstallError):
+        uninstall_asksome("nope", tmp_path / "installed")
+
+
+def test_generated_removeme_runs_silently(tmp_path):
+    import subprocess
+    import sys as _sys
+
+    from lib.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    script = Path(record.install_dir) / "removeme.py"
+    result = subprocess.run(
+        [_sys.executable, str(script), "--silent"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result.returncode == 0
+    assert not Path(record.install_dir).exists()
+
+
+def test_install_rejects_tampered_artifact(tmp_path):
+    from lib.asksome_format import AsksomeError
+    from lib.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    data = bytearray(artifact.read_bytes())
+    data[-1] ^= 1
+    artifact.write_bytes(data)
+    with pytest.raises(AsksomeError):
+        install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+
+
+

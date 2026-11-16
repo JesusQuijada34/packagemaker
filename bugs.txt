@@ -89,8 +89,8 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 ### 4.4. Instalador y Desinstalador Avanzado
 
-* [ ] **Instalador de `iflapps`:** Crear un instalador robusto que ejecute el shell desde `.asksome`, cree accesos directos, registre la instalación (usando estructuras modernizadas tipo `updater`) y configure variables, comandos y extensiones.
-* [ ] **Plantilla de Desinstalación (`removeme.py`):**
+* [x] **Instalador de `iflapps`:** Instalador de `.asksome` que verifica la firma, extrae el payload, crea accesos directos multiplataforma y registra la instalación (`install.json`) con lanzador y purga (`removeme.py`).
+* [x] **Plantilla de Desinstalación (`removeme.py`):**
 * Desarrollar un script inverso encargado de purgar el shell `.asksome`, integraciones, archivos y accesos directos.
 * Soporte para ejecución mediante comandos silenciosos y personalizados.
 * Interfaz gráfica en PyQt6 basada en `leviathan-ui` para guiar al usuario en tiempo real durante el proceso de desinstalación.
