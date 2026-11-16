@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Compatibility shim for OpenWithDialog.
 
-The dialog historically lived under lib/.walkcube; tests and callers import it
-from lib.openWithDialog, so keep a thin re-export layer here.
+The dialog historically lived under lib/.walkcube. This shim loads that module
+and then **aliases itself to it in ``sys.modules``**, so ``lib.openWithDialog``
+*is* the real module object. Copying the names into this namespace would break
+``unittest.mock.patch("lib.openWithDialog.<name>")``: the patched attribute would
+land on the shim while the functions keep resolving names in the real module.
 """
 
 from __future__ import annotations
@@ -12,27 +15,20 @@ import sys
 from pathlib import Path
 
 _module_path = Path(__file__).resolve().parent / ".walkcube" / "openWithDialog.py"
-
-if _module_path.exists():
-    package_name = "lib._walkcube.openWithDialog"
-    parent_name = "lib._walkcube"
-    parent_pkg = sys.modules.get(parent_name)
-    if parent_pkg is None:
-        parent_pkg = type(sys)(parent_name)
-        parent_pkg.__path__ = [str(_module_path.parent)]
-        sys.modules[parent_name] = parent_pkg
-
-    spec = importlib.util.spec_from_file_location(package_name, _module_path)
-    if spec and spec.loader:
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        module.__package__ = parent_name
-        spec.loader.exec_module(module)
-        for name in dir(module):
-            if name.startswith("__") and name not in {"__doc__", "__file__", "__name__"}:
-                continue
-            globals()[name] = getattr(module, name)
-    else:
-        raise ImportError(f"Could not load OpenWithDialog from {_module_path}")
-else:
+if not _module_path.exists():
     raise ImportError(f"OpenWithDialog not found at {_module_path}")
+
+_pkg = sys.modules.get("lib._walkcube")
+if _pkg is None:
+    _pkg = type(sys)("lib._walkcube")
+    _pkg.__path__ = [str(_module_path.parent)]
+    sys.modules["lib._walkcube"] = _pkg
+
+_spec = importlib.util.spec_from_file_location("lib._walkcube.openWithDialog", _module_path)
+if _spec is None or _spec.loader is None:
+    raise ImportError(f"Could not load OpenWithDialog from {_module_path}")
+
+_module = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = _module
+_spec.loader.exec_module(_module)
+sys.modules[__name__] = _module

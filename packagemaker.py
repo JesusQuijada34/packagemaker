@@ -1221,7 +1221,7 @@ class PackageTodoGUI(QMainWindow):
                 checkbox_stylesheet(accent, TEXT if dark else TEXT_LIGHT)
             )
 
-        set_qss(self.central, applyget(accent), append=False)
+        set_qss(self.central, applyget(accent, dark), append=False)
         set_qss(self, 'packagemaker_010', values=(qss_value(base_bg, None, ''),), append=False)
 
         if hasattr(self.titlebar, "title_lbl"):
@@ -1253,14 +1253,15 @@ class PackageTodoGUI(QMainWindow):
             set_qss(self.desc_card, 'packagemaker_068', append=False)
 
         if hasattr(self, "page_create"):
-            set_qss(self.page_create, applyget(accent), append=False)
+            set_qss(self.page_create, applyget(accent, dark), append=False)
 
     # --- Refactored Init Methods to accept a parent widget instead of using self.tabs ---
 
     def init_create_tab(self, parent_widget):
         target = parent_widget
-        # Enable styled background for proper inheritance
-        target.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # Fondo opaco como el resto de páginas (antes usaba
+        # ``WA_TranslucentBackground`` y se veía medio transparente).
+        target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         # Don't set individual background - let it inherit from parent
         layout = QVBoxLayout(target)
@@ -4044,7 +4045,7 @@ class PackageTodoGUI(QMainWindow):
 
             txtNombre = QLineEdit()
             txtNombre.setText("extension")
-            txtNombre.setPlaceholderText("Nombre sin extensión")
+            txtNombre.setPlaceholderText(tr("dialog.extension_name_placeholder"))
             set_qss(txtNombre, 'packagemaker_148', append=False)
             formLayout.addWidget(txtNombre)
 
@@ -4188,12 +4189,15 @@ class IntegratedSplash(QWidget):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setGeometry(0, 0, parent.width(), parent.height())
-        self.setStyleSheet("""
-            QWidget#SplashContainer {
-                background-color: #1a1a1a;
-                border-radius: 0px;
-            }
-        """)
+        # El fondo se pinta con el acento activo (preferencia del usuario →
+        # Leviathan → azul UWP), no con un gris fijo.
+        self._accent = str(get_accent_color())
+        self.setStyleSheet(
+            f"QWidget#SplashContainer {{"
+            f"background-color: {self._accent};"
+            f"border-radius: 0px;"
+            f"}}"
+        )
 
         container = QWidget(self)
         container.setObjectName("SplashContainer")

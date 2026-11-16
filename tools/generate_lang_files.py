@@ -331,6 +331,35 @@ TRANSLATIONS = {
         "create": {"sandbox": "Güvenli sanal alan"},
         "common": {"ok": "Tamam", "cancel": "İptal"},
     },
+    "pt": {
+        "_meta": {"lang": "pt", "name": "Português"},
+        "app": {"main_menu": "Menu Principal", "context": "Contexto"},
+        "sidebar": {"create": "Criar Projeto", "build": "Construir Pacote", "config": "Configuração", "moonfix": "MoonFix", "about": "Sobre"},
+        "config": {
+            "title": "Configuração", "section_general": "Geral", "section_language": "Idioma",
+            "section_appearance": "Aparência", "section_system": "Informação do sistema",
+            "section_fonts": "Tipos de letra da interface", "projects_path": "Pasta de projetos",
+            "fluthin_path": "Pasta Fluthin Apps", "browse": "Procurar", "save": "Salvar",
+            "reset": "Redefinir", "language": "Idioma da interface",
+            "auto_translate": "Tradução automática quando faltar texto",
+            "auto_translate_hint": "Usa tradução online e salva o resultado em data/pm.data.",
+            "display_mode": "Modo da janela", "touch_mode": "Modo touch", "dpi_scale": "Escala DPI",
+            "device_sim": "Simulação de dispositivo", "interface_color": "Cor da interface",
+            "auto_color": "Cor automática conforme o sistema", "notifications": "Notificações",
+            "accent_color": "Cor de destaque", "sidebar_accent": "Espessura da borda ativa (sidebar)",
+            "card_opacity": "Opacidade dos cartões UI", "ui_density": "Densidade da interface",
+            "density_normal": "Normal", "density_compact": "Compacta",
+            "personalization_hint": "Não altera o título da janela nem o nome da empresa (Influent).",
+            "saved_ok": "Configurações salvas em data/pm.data.", "saved_error": "Não foi possível salvar as configurações.",
+            "saved_restart": "Salvo. Algumas alterações exigem reinício.",
+            "restart_banner": "Alterações pendentes exigem reiniciar o PackageMaker.",
+            "restart_btn": "Reiniciar agora", "reset_confirm": "Redefinir as configurações para o padrão?",
+            "reset_success": "Configurações redefinidas para os valores padrão.",
+            "default_editor": "Editor padrão", "editor_placeholder": "Ex.: code, gedit, notepad",
+        },
+        "create": {"sandbox": "Sandbox segura"},
+        "common": {"ok": "OK", "cancel": "Cancelar"},
+    },
 }
 
 
@@ -344,12 +373,31 @@ def _deep_merge(base: dict, overlay: dict) -> dict:
     return result
 
 
+def _existing_overlay(code: str) -> dict:
+    """Traducciones curadas ya presentes en disco (p. ej. ``pt.json`` a mano).
+
+    Se toman como capa intermedia para no perderlas al regenerar: sólo se
+    rellenan con inglés las claves que falten, y el overlay de ``TRANSLATIONS``
+    sigue teniendo la última palabra.
+    """
+    path = LANG_DIR / f"{code}.json"
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    data.pop("_meta", None)
+    return data
+
+
 def main() -> None:
     source = json.loads((LANG_DIR / "es.json").read_text(encoding="utf-8"))
     fallback = json.loads((LANG_DIR / "en.json").read_text(encoding="utf-8"))
 
     for code, overlay in TRANSLATIONS.items():
-        merged = _deep_merge(_deep_merge(source, fallback), overlay)
+        merged = _deep_merge(_deep_merge(source, fallback), _existing_overlay(code))
+        merged = _deep_merge(merged, overlay)
         merged["_meta"] = overlay["_meta"]
         out = LANG_DIR / f"{code}.json"
         out.write_text(

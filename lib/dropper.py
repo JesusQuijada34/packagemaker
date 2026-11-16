@@ -106,6 +106,15 @@ def _decrypt(data, password, params):
         if params.get("mac") and not hmac.compare_digest(params["mac"], hmac.new(key, nonce + plain, hashlib.sha256).hexdigest()):
             raise SystemExit("Firma del payload inválida.")
         return plain
+    if mode == "aes-256-gcm":
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        except ImportError:
+            raise SystemExit("El paquete usa AES-256-GCM; instala 'cryptography' para abrirlo.")
+        try:
+            return AESGCM(key).decrypt(nonce, data, None)
+        except Exception:
+            raise SystemExit("No se pudo descifrar el payload: contraseña incorrecta o datos alterados.")
     raise SystemExit("Modo de cifrado no soportado por el stub: " + mode)
 
 

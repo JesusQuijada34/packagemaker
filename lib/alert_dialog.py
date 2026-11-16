@@ -82,6 +82,27 @@ def _is_accept_text(text: str) -> bool:
     return text.strip().lower().rstrip(".") in ACCEPT_WORDS
 
 
+def _shift_color(hex_color: str, factor: float) -> str:
+    """Aclara (``factor>1``) u oscurece (``factor<1``) un color ``#rrggbb``.
+
+    Se usa para el estado ``:hover`` del botón principal sin introducir un
+    blanco translúcido que se vería como un botón blanco.
+    """
+    value = str(hex_color).lstrip("#")
+    if len(value) == 3:
+        value = "".join(ch * 2 for ch in value)
+    if len(value) != 6:
+        return hex_color
+    try:
+        r, g, b = (int(value[i : i + 2], 16) for i in (0, 2, 4))
+    except ValueError:
+        return hex_color
+    r = max(0, min(255, round(r * factor)))
+    g = max(0, min(255, round(g * factor)))
+    b = max(0, min(255, round(b * factor)))
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
 def _is_dark() -> bool:
     """Tema activo del sistema (``True`` = oscuro)."""
     try:
@@ -250,8 +271,11 @@ class AlertDialog(QDialog):
         if is_default:
             background = self._accent
             color = "#ffffff"
-            hover = "rgba(255, 255, 255, 0.18)"
-            pressed = "rgba(0, 0, 0, 0.16)"
+            # El realce debe oscurecer/aclarar el propio acento, no pintar un
+            # blanco translúcido que se ve como un botón blanco al pasar el
+            # ratón. ``hover`` se calcula a partir del acento.
+            hover = _shift_color(self._accent, 1.18)
+            pressed = _shift_color(self._accent, 0.82)
         else:
             background = "transparent"
             color = pal["btn_text"]

@@ -139,7 +139,9 @@ class InterpreterConfigDialog(QDialog):
         self.load_interpreters()
 
     def init_ui(self):
-        self.setWindowTitle("Configuración de intérpretes Python")
+        from lib.i18n import tr
+
+        self.setWindowTitle(tr("dialog.interpreter_config_title"))
         self.setMinimumSize(650, 500)
         self.setStyleSheet(DARK_PANEL_QSS)
 

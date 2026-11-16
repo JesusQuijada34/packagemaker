@@ -67,14 +67,33 @@ def fixed_window_title(version: str, suffix: str = "") -> str:
     return f"{base} - {suffix}" if suffix else base
 
 
+def _release_effects(window: QWidget) -> None:
+    """Retira el filtro de eventos del WipeWindow anterior.
+
+    ``WipeWindow.apply()`` instala un filtro de eventos sobre la ventana y
+    ``WipeWindow.create()`` devuelve un objeto **nuevo** en cada llamada. Si no
+    se retira el filtro anterior, cada maximizar/restaurar deja uno más pintando
+    el tinte blanco de ``ghostBlur`` y la ventana se vuelve progresivamente
+    blanca.
+    """
+    previous = getattr(window, "window_effects", None)
+    if previous is None:
+        return
+    try:
+        window.removeEventFilter(previous)
+    except Exception:
+        pass
+    try:
+        previous.setParent(None)
+    except Exception:
+        pass
+    window.window_effects = None
+
+
 def apply_display_mode(window: QWidget, display_name: str) -> Any:
     """Aplica modo Leviathan WipeWindow a la ventana principal."""
-    # Clear existing effects before applying new ones to prevent accumulation
-    if hasattr(window, 'window_effects') and window.window_effects:
-        try:
-            window.window_effects = None
-        except Exception:
-            pass
+    # Retirar el filtro anterior antes de crear uno nuevo para no acumular tintes.
+    _release_effects(window)
 
     spec = DISPLAY_MODE_SPECS.get(display_name, DISPLAY_MODE_SPECS["GhostBlur (Cristal)"])
     builder = WipeWindow.create().set_mode(spec["mode"]).set_radius(FIXED_WINDOW_RADIUS)
@@ -89,10 +108,12 @@ def apply_display_mode(window: QWidget, display_name: str) -> Any:
 
 
 def apply_personalization_effects(window: QWidget, blur_intensity=None, window_radius=None) -> None:
-    """Aplica el desenfoque y radio fijos (los argumentos se ignoran).
+    """Ajusta el desenfoque y radio fijos (los argumentos se ignoran).
 
     Se conserva la firma por compatibilidad con llamadas antiguas que pasaban
-    los valores guardados en ``data/pm.data``.
+    los valores guardados en ``data/pm.data``. No vuelve a llamar a ``apply``:
+    el filtro de eventos ya está instalado y reinstalarlo lo duplicaría (Qt no
+    deduplica los filtros), acumulando tintes en cada maximizar.
     """
     effects = getattr(window, "window_effects", None)
     if not effects:
@@ -102,7 +123,6 @@ def apply_personalization_effects(window: QWidget, blur_intensity=None, window_r
             effects.set_radius(FIXED_WINDOW_RADIUS)
         if hasattr(effects, "set_blur"):
             effects.set_blur(FIXED_BLUR_INTENSITY)
-        effects.apply(window)
     except Exception:
         pass
 

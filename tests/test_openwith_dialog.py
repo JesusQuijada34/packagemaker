@@ -1,47 +1,50 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Test script for OpenWithDialog improvements.
-Tests the orange selection indicator and animations.
+"""Prueba del diálogo "Abrir con" (indicador de selección y animaciones).
+
+Antes era un script de demostración que llamaba a ``app.exec()``: bajo pytest
+eso bloqueaba el proceso para siempre. Ahora construye el diálogo, comprueba lo
+básico y lo cierra sin entrar en el bucle de eventos.
 """
 
+import os
 import sys
 from pathlib import Path
 
-# Add lib directory to path
-lib_path = Path(__file__).parent / "lib"
-sys.path.insert(0, str(lib_path))
+import pytest
 
-try:
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+pytest.importorskip("PyQt6.QtWidgets")
+
+
+@pytest.fixture(scope="module")
+def qapp():
     from PyQt6.QtWidgets import QApplication
-    from lib.openWithDialog import OpenWithDialog
-    print("[OK] Successfully imported OpenWithDialog")
-except ImportError as e:
-    print(f"[ERROR] Error importing OpenWithDialog: {e}")
-    sys.exit(1)
 
-def test_dialog():
-    """Test the OpenWithDialog with improved UI."""
-    app = QApplication(sys.argv)
-    
-    # Create dialog with sample project info
+    app = QApplication.instance() or QApplication([])
+    yield app
+    app.processEvents()
+
+
+def test_dialog_constructs_with_project_metadata(qapp):
+    from lib.openWithDialog import OpenWithDialog
+
     dialog = OpenWithDialog(
         parent=None,
-        project_path="C:\\test\\project.exe",
-        project_name="Test Project"
+        project_path="/tmp/test-project",
+        project_name="Test Project",
     )
-    
-    # Show dialog
-    dialog.show()
-    
-    print("[OK] Dialog launched successfully")
-    print("[INFO] Check for:")
-    print("  - Orange selection indicator (#FF6B00) on left side")
-    print("  - Smooth fade-in animation on dialog open")
-    print("  - Smooth selection animation when clicking items")
-    print("  - Orange hover states on items")
-    
-    sys.exit(app.exec())
+    try:
+        dialog.show()
+        qapp.processEvents()
+        assert dialog.windowTitle()
+    finally:
+        dialog.close()
+        qapp.processEvents()
+
 
 if __name__ == "__main__":
-    test_dialog()
+    raise SystemExit(pytest.main([__file__, "-q"]))

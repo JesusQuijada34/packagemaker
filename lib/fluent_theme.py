@@ -38,6 +38,7 @@ from lib.design_tokens import (
 )
 
 try:
+    from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QFont, QFontDatabase, QGuiApplication
     from PyQt6.QtWidgets import QCheckBox
     PYQT6_AVAILABLE = True
@@ -535,7 +536,17 @@ SPLASH_STYLESHEET = """
 """ + splash_titlebar_stylesheet()
 
 
-def applyget(accent: str) -> str:
+def applyget(accent: str, dark: bool = True) -> str:
+    # En tema claro el gris por defecto queda ilegible sobre el fondo claro:
+    # se conmutan los textos al negro y se conserva el resto del QSS.
+    text = TEXT if dark else "#000000"
+    label = "#cccccc" if dark else "#1f2937"
+    group_text = "#f3f5f8" if dark else "#000000"
+    stack_text = "#bbb" if dark else "#333333"
+    scroll_handle = "rgba(255, 255, 255, 0.24)" if dark else "rgba(0, 0, 0, 0.28)"
+    scroll_handle_hover = "rgba(255, 255, 255, 0.38)" if dark else "rgba(0, 0, 0, 0.42)"
+    disabled_bg = "#3A3A3C" if dark else "#d8dae0"
+    line_hover = "#5A5A5C" if dark else "#b9bcc4"
     return f"""
     * {{
         outline: none;
@@ -568,24 +579,24 @@ def applyget(accent: str) -> str:
         border: none;
     }}
     QWidget#SidebarContextCard {{ background-color: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.09); border-radius: {CARD_RADIUS}px; }}
-    QGroupBox {{ color: #f3f5f8; background-color: transparent; border: none; font-weight: 600; }}
-    QHBoxLayout {{ color: {TEXT}; font-size: 20px; font-weight: 600; font-family: {FONT_STACK}; letter-spacing: 0.3px; background: transparent; border: none; }}
+    QGroupBox {{ color: {group_text}; background-color: transparent; border: none; font-weight: 600; }}
+    QHBoxLayout {{ color: {text}; font-size: 20px; font-weight: 600; font-family: {FONT_STACK}; letter-spacing: 0.3px; background: transparent; border: none; }}
     QWidget {{ background-color: transparent ; border: none; border-radius: 5px; }}
-    QLineEdit, QTextEdit, QPlainTextEdit {{ background-color: {SURFACE}; border: 1px solid {BORDER}; border-radius: {CONTROL_RADIUS}px; color: {TEXT}; font-family: {FONT_STACK}; font-size: 14px; padding: 0 {INPUT_PADDING}px; min-height: {INPUT_HEIGHT - 2}px; selection-background-color: {accent};}}
-    QLineEdit:hover {{ border-color: #5A5A5C; }}
+    QLineEdit, QTextEdit, QPlainTextEdit {{ background-color: {SURFACE}; border: 1px solid {BORDER}; border-radius: {CONTROL_RADIUS}px; color: {text}; font-family: {FONT_STACK}; font-size: 14px; padding: 0 {INPUT_PADDING}px; min-height: {INPUT_HEIGHT - 2}px; selection-background-color: {accent};}}
+    QLineEdit:hover {{ border-color: {line_hover}; }}
     QLineEdit:focus {{ background-color: {SURFACE}; border: 2px solid {accent}; }}
     QScrollBar:vertical {{ width: 10px; margin: 2px; background: transparent; }}
     QScrollBar:horizontal {{ height: 10px; margin: 2px; background: transparent; }}
-    QScrollBar::handle:vertical, QScrollBar::handle:horizontal {{ background: rgba(255, 255, 255, 0.24); border-radius: 4px; min-height: 24px; min-width: 24px; }}
-    QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {{ background: rgba(255, 255, 255, 0.38); }}
+    QScrollBar::handle:vertical, QScrollBar::handle:horizontal {{ background: {scroll_handle}; border-radius: 4px; min-height: 24px; min-width: 24px; }}
+    QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {{ background: {scroll_handle_hover}; }}
     QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page {{ background: transparent; border: none; }}
     QWidget:focus, QPushButton:focus, QCheckBox:focus, QRadioButton:focus, QComboBox:focus, QListWidget:focus, QSlider:focus {{ outline: none; }}
-    QLabel {{ font-family: {FONT_STACK}; font-size: 14px; color: #cccccc; font-weight: 500; background: transparent; border: none}}
-    QStackedWidget {{ background: transparent; color: #bbb; font-size: 12px; line-height: 1.2; border:none; }}
-    QPushButton {{ background-color: {accent}; color: {TEXT}; font-weight: 600; font-size: 14px; border-radius: {PILL_RADIUS}px; border: none; padding: 0 {BUTTON_PADDING_H}px; font-family: {FONT_STACK}; }}
+    QLabel {{ font-family: {FONT_STACK}; font-size: 14px; color: {label}; font-weight: 500; background: transparent; border: none}}
+    QStackedWidget {{ background: transparent; color: {stack_text}; font-size: 12px; line-height: 1.2; border:none; }}
+    QPushButton {{ background-color: {accent}; color: {text}; font-weight: 600; font-size: 14px; border-radius: {PILL_RADIUS}px; border: none; padding: 0 {BUTTON_PADDING_H}px; font-family: {FONT_STACK}; }}
     QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}
     QPushButton:pressed {{ background-color: {ACCENT_PRESSED}; border-color: rgba(255, 255, 255, 0.05); }}
-    QPushButton:disabled {{ background-color: #3A3A3C; color: {TEXT_DIM}; }}
+    QPushButton:disabled {{ background-color: {disabled_bg}; color: {TEXT_DIM}; }}
     {slider_qss(accent)}
     QProgressBar {{
         background: transparent;

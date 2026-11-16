@@ -66,6 +66,7 @@ from PyQt6.QtCore import (
 )
 
 from lib.fluent_theme import checkbox_stylesheet, preferred_mono_font
+from lib.i18n import tr
 from lib.python_portable_manager import get_python_manager
 from lib.dependency_manager import get_dependency_manager
 
@@ -1299,7 +1300,7 @@ class MetricsDialog(QDialog):
     
     def __init__(self, code: str, file_path: Optional[str] = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Métricas de Código")
+        self.setWindowTitle(tr("editor.metrics_title"))
         self.setMinimumSize(500, 400)
         self.setStyleSheet(DARK_QSS)
         self._setup_ui()
@@ -2533,7 +2534,7 @@ class EditorWindow(QMainWindow):
             return interpreters[0][1]
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Seleccionar intérprete Python")
+        dialog.setWindowTitle(tr("editor.select_interpreter"))
         dialog.setMinimumWidth(520)
         dialog.setStyleSheet(DARK_QSS)
 

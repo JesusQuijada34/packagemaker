@@ -19,6 +19,67 @@ from typing import Callable, Optional
 # Modos válidos de ``AlertDialog``; se mapean a un icono y color propios.
 _MODES = {"info", "success", "warning", "error", "question"}
 
+# Términos que delatan la línea útil de un log largo (tracebacks, errores de
+# compilador, fallos de Python). Se buscan sin distinguir mayúsculas.
+_ERROR_TERMS = (
+    "error",
+    "traceback",
+    "exception",
+    "failed",
+    "fallo",
+    "falló",
+    "no se pudo",
+    "no se encontró",
+    "cannot",
+    "not found",
+    "permission denied",
+    "refused",
+    "timeout",
+    "fatal",
+)
+
+# Cuántas líneas significativas se conservan como máximo en el resumen.
+_SUMMARY_MAX_LINES = 6
+# Por debajo de estos umbrales el mensaje ya es legible y no se resume.
+_SUMMARY_MAX_CHARS = 400
+_SUMMARY_MAX_LINES_RAW = 6
+
+
+def summarize_message(message: str, *, max_lines: int = _SUMMARY_MAX_LINES) -> str:
+    """Condensa un mensaje largo en sus líneas relevantes.
+
+    Los logs del compilador o los ``traceback`` de Python pueden ocupar cientos
+    de líneas y no caben en un diálogo. Si el mensaje es corto se devuelve tal
+    cual; si es largo se conservan, en orden, las líneas que contienen términos
+    de error (``ERROR``, ``Traceback``, ``Exception``...) y se antepone un aviso
+    con cuántas líneas se omitieron. Sin coincidencias se devuelven la primera y
+    la última línea, que suelen enmarcar el fallo.
+    """
+    text = str(message or "").strip()
+    if not text:
+        return text
+    lines = [line.rstrip() for line in text.splitlines() if line.strip()]
+    if len(lines) <= _SUMMARY_MAX_LINES_RAW and len(text) <= _SUMMARY_MAX_CHARS:
+        return text
+
+    matched = [line for line in lines if any(term in line.lower() for term in _ERROR_TERMS)]
+    if matched:
+        picked = matched[:max_lines]
+        if len(matched) > max_lines:
+            picked = picked[: max_lines - 1] + [
+                f"... ({len(matched) - (max_lines - 1)} líneas de error más)"
+            ]
+    else:
+        head = lines[0]
+        tail = lines[-1] if len(lines) > 1 else ""
+        picked = [head] if not tail else [head, "...", tail]
+
+    omitted = max(0, len(lines) - len(picked))
+    summary = "\n".join(picked)
+    if omitted:
+        summary = f"({omitted} líneas omitidas; resumen del error)\n{summary}"
+    return summary
+
 
 class Reporter:
     """Publica avisos en la barra de estado y en un diálogo con OK."""
@@ -85,8 +146,11 @@ class Reporter:
         launcher = self._dialog_launcher
         if launcher is None:
             return
+        # Un error largo (log de compilador, traceback) no cabe en el diálogo:
+        # se resume a sus líneas significativas antes de mostrarlo.
+        detail = summarize_message(message) if mode in ("error", "warning") else message
         try:
-            launcher(self._dialog_parent, title, message, mode=mode)
+            launcher(self._dialog_parent, title, detail, mode=mode)
         except Exception:
             pass
 

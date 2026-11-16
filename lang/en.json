@@ -6,7 +6,14 @@
   "app": {
     "title": "Influent Package Maker",
     "main_menu": "Main Menu",
-    "context": "Context"
+    "context": "Context",
+    "compile_project": "Compile the project",
+    "install_as_package": "Install as package",
+    "install_folder_as_package": "Install folder as package",
+    "install_iflapp_package": "Install .iflapp package",
+    "install_package": "Install package",
+    "moonfix_repair_project": "MoonFix: Repair project",
+    "moonfix_scan_description": "Scans the package for inconsistencies and repairs them."
   },
   "sidebar": {
     "create": "Create Project",
@@ -154,7 +161,9 @@
   },
   "editor": {
     "project": "Project",
-    "no_project": "No project"
+    "no_project": "No project",
+    "metrics_title": "Code Metrics",
+    "select_interpreter": "Select Python interpreter"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -190,7 +199,9 @@
     "description_placeholder": "Describe your project...",
     "location": "Location: {path}",
     "create_button": "Create Project",
-    "project_name_required": "Project name cannot be empty."
+    "project_name_required": "Project name cannot be empty.",
+    "interpreter_config_title": "Python interpreters configuration",
+    "extension_name_placeholder": "Name without extension"
   },
   "build": {
     "page_title": "Compile the project with BlindCube",
@@ -215,7 +226,11 @@
     "hardening_tooltip": "Apply strip/UPX/checksum/anti-debug/obfuscation to the package",
     "placeholder_company": "Example: influent",
     "placeholder_app": "Example: mycoolapp",
-    "placeholder_version": "Example: 1.0"
+    "placeholder_version": "Example: 1.0",
+    "compilation_complete": "Compilation complete",
+    "compilation_error": "Compilation error",
+    "compiler_default": "Nuitka (default)",
+    "progress_building": "Building..."
   },
   "window": {
     "restore": "Restore",

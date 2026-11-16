@@ -73,6 +73,9 @@ class FlangCompiler:
         self.hardening_methods = list(hardening) if hardening else []
         self.sandbox_enabled = sandbox
         self._sandbox = HardwareSandbox(log_callback=self.log) if sandbox else None
+        # Registro del procedimiento real detrás del ``.iflapp``: cada paso que
+        # produce el artefacto final, para volcarlo al terminar la compilación.
+        self.procedure: List[str] = []
 
         self.output_path.mkdir(parents=True, exist_ok=True)
         self.log(f"[FlangCompiler IT] Inicializado en: {self.repo_path}")
@@ -83,6 +86,11 @@ class FlangCompiler:
     def log(self, msg):
         if self.log_callback:
             self.log_callback(msg)
+
+    def _record_procedure(self, step: str) -> None:
+        """Añade un paso al procedimiento real y lo publica en la barra."""
+        self.procedure.append(step)
+        self.log(f"[STEP] {step}")
 
     def _load_scripts_to_compile(self) -> Optional[List[str]]:
         """Carga una lista opcional de entry points desde config/settings.json.
@@ -766,7 +774,12 @@ class FlangCompiler:
                 self._sandbox.cleanup(workspace)
 
     def _cleanup_build_artifacts(self):
-        """Limpia archivos generados por PyInstaller en el proyecto original."""
+        """Limpia los artefactos que dejan los compiladores en el proyecto.
+
+        Además de ``dist``/``build``/``*.spec`` de PyInstaller, Nuitka crea
+        directorios ``*.build``, ``*.onefile-build`` y ``*.dist`` junto al
+        script; se eliminan para no dejar restos de compilación.
+        """
         self.log("[INFO] Limpiando archivos de compilación...")
         dist_dir = self.repo_path / "dist"
         build_dir = self.repo_path / "build"
@@ -787,6 +800,17 @@ class FlangCompiler:
                 self.log(f"[INFO] Archivo eliminado: {spec_file.name}")
             except Exception as e:
                 self.log(f"[WARN] No se pudo eliminar {spec_file.name}: {e}")
+
+        # Artefactos intermedios de Nuitka (carpetas junto al script fuente).
+        for pattern in ("*.build", "*.onefile-build", "*.dist", "*.build-cache"):
+            for leftover in self.repo_path.glob(pattern):
+                if not leftover.is_dir():
+                    continue
+                try:
+                    shutil.rmtree(leftover)
+                    self.log(f"[INFO] Carpeta eliminada: {leftover.name}")
+                except Exception as e:
+                    self.log(f"[WARN] No se pudo eliminar {leftover.name}: {e}")
 
     def _cleanup_package_folder(self, package_path: Path, iflapp_path: Path):
         """Elimina la carpeta temporal del paquete tras crear el `.iflapp`."""
@@ -851,8 +875,13 @@ class FlangCompiler:
         final_iflapp = None
         try:
             for platform_name in platforms_to_compile:
+                self._record_procedure(
+                    f"Compilar binarios para {platform_name} "
+                    f"({', '.join(script['name'] for script in self.scripts)})"
+                )
                 if not self.compile_binaries(platform_name):
                     return None
+                self._record_procedure(f"Construir la carpeta de paquete ({platform_name})")
                 if not self.create_package(platform_name):
                     return None
                 platform_suffix = "Knosthalij" if platform_name == "Windows" else "Danenone"
@@ -868,6 +897,9 @@ class FlangCompiler:
 
                 # Blindaje opcional del árbol de paquete antes de empaquetar.
                 if self.hardening_methods:
+                    self._record_procedure(
+                        f"Aplicar blindaje ({', '.join(self.hardening_methods)})"
+                    )
                     self.apply_hardening(last_package_path)
                 
                 iflapp_name = ProjectNameFormatter.format_iflapp_filename(
@@ -878,20 +910,31 @@ class FlangCompiler:
                 )
                 iflapp_path = self.output_path / iflapp_name
                 
+                self._record_procedure(
+                    f"Comprimir a .iflapp v2 (cabecera + payload firmado): {iflapp_name}"
+                )
                 if self.compress_to_iflapp(last_package_path, iflapp_path):
                     final_iflapp = iflapp_path
                     self.log(f"[SUCCESS] Package created: {iflapp_path}")
                     # Verificar el contenedor en el sandbox antes de publicarlo.
+                    self._record_procedure("Verificar el .iflapp en el sandbox aislado")
                     self.verify_in_sandbox(iflapp_path)
                     if self.build_dropper:
+                        self._record_procedure("Generar dropper .run autoextraíble")
                         self.create_dropper(iflapp_path)
                     # Limpiar la carpeta temporal y el proyecto fuente tras validar el .iflapp.
+                    self._record_procedure("Limpiar artefactos temporales y carpeta de paquete")
                     self._cleanup_package_folder(last_package_path, iflapp_path)
                     self.cleanup_processed_project(iflapp_path)
         finally:
             # Limpiar siempre al finalizar, sea éxito o error
             self._cleanup_build_artifacts()
             
+        if final_iflapp is not None:
+            self._record_procedure("Procedimiento completado")
+            self.log("--- Procedimiento real detrás del .iflapp ---")
+            for index, step in enumerate(self.procedure, 1):
+                self.log(f"  {index}. {step}")
         return final_iflapp
 
 class BuildThread(QThread):
@@ -978,7 +1021,13 @@ class BuildThread(QThread):
         )
         result = compiler.run(build_mode=self.build_mode)
         if result:
-            self.finished.emit(f"Paquete construido con exito: {result.name}")
+            summary = f"Paquete construido con exito: {result.name}"
+            if compiler.procedure:
+                steps = "\n".join(
+                    f"{index}. {step}" for index, step in enumerate(compiler.procedure, 1)
+                )
+                summary += f"\n\nProcedimiento detrás del .iflapp:\n{steps}"
+            self.finished.emit(summary)
         else:
             error_message = compiler.last_error or "Fallo la compilacion. Verifique los logs y los iconos .ico"
             self.error.emit(error_message)

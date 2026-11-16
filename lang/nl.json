@@ -6,7 +6,14 @@
   "app": {
     "title": "Influent Package Maker",
     "main_menu": "Hoofdmenu",
-    "context": "Context"
+    "context": "Context",
+    "compile_project": "Compile the project",
+    "install_as_package": "Install as package",
+    "install_folder_as_package": "Install folder as package",
+    "install_iflapp_package": "Install .iflapp package",
+    "install_package": "Install package",
+    "moonfix_repair_project": "MoonFix: Repair project",
+    "moonfix_scan_description": "Scans the package for inconsistencies and repairs them."
   },
   "sidebar": {
     "create": "Project aanmaken",
@@ -76,10 +83,6 @@
   },
   "create": {
     "sandbox": "Veilige sandbox",
-    "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
-    "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
-    "downloading_icon": "Downloading icon...",
-    "project_created": "Project created in: {folder}/ (sha256: {sha256})",
     "action": "Create Project",
     "page_title": "Create a new project",
     "progress_title": "Create project",
@@ -124,12 +127,81 @@
       "risk_changes": "• <b>Uncontrolled changes:</b> Critical system or project files could be altered without authorization.",
       "recommendation": "<b>Recommendation:</b> Keep the Secure Sandbox enabled whenever you work with code from unverified sources, downloaded projects from the internet, or when you do not fully control the origin of every dependency.",
       "continue": "Continue"
-    }
+    },
+    "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
+    "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
+    "downloading_icon": "Downloading icon...",
+    "project_created": "Project created in: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Annuleren",
     "ok": "OK",
-    "error": "Error"
+    "error": "Error",
+    "warning": "Warning",
+    "yes": "Yes",
+    "no": "No",
+    "select_folder": "Select Folder",
+    "version": "Version"
+  },
+  "about": {
+    "version": "Version {version}",
+    "description": "<p><b>Package Maker</b> is the definitive suite for the Influent OS ecosystem.</p><p>Designed to help developers create, build, and distribute applications efficiently.</p><br><p>It uses the <b>FLARM (Fluthin Armadillo)</b> engine to ensure integrity and security.</p>"
+  },
+  "moonfix": {
+    "title": "MoonFix",
+    "description": "Repairs projects using official templates.",
+    "batch": "Batch mode",
+    "project_folder_placeholder": "Project folder...",
+    "browse_folder": "Browse project folder",
+    "path_missing": "The selected folder does not exist.",
+    "no_subfolders": "No subfolders were found to process.",
+    "optimized": "All projects are already optimized. No action is required.",
+    "completed": "Repair completed.\nProjects fixed: {count}",
+    "warning": "Warning"
+  },
+  "editor": {
+    "project": "Project",
+    "no_project": "No project",
+    "metrics_title": "Code Metrics",
+    "select_interpreter": "Select Python interpreter"
+  },
+  "updater": {
+    "title": "PackageMaker Updater",
+    "application": "Application",
+    "current_version": "Current Version",
+    "platform": "Platform",
+    "author": "Author",
+    "publisher": "Publisher",
+    "read_error": "Could not read details.xml",
+    "error": "Error",
+    "check_updates": "Check for Updates",
+    "update_now": "Update Now",
+    "exit": "Exit",
+    "updated": "Updated",
+    "latest": "You already have the latest version: {version}",
+    "update_available": "Update Available",
+    "remote_version": "Current version: {current}\nNew version: {new}",
+    "no_updates": "No updates were found or the process was cancelled",
+    "info": "Information",
+    "check_remote": "Could not verify the remote version",
+    "checking_updates": "Checking for updates..."
+  },
+  "dialog": {
+    "create_project_title": "Create Project",
+    "create_project": "Create a new project",
+    "project_name": "Project name:",
+    "project_version": "Version:",
+    "author_name": "Author:",
+    "author_placeholder": "Your name",
+    "publisher_name": "Publisher:",
+    "company_placeholder": "Company name",
+    "description": "Description:",
+    "description_placeholder": "Describe your project...",
+    "location": "Location: {path}",
+    "create_button": "Create Project",
+    "project_name_required": "Project name cannot be empty.",
+    "interpreter_config_title": "Python interpreters configuration",
+    "extension_name_placeholder": "Name without extension"
   },
   "build": {
     "page_title": "Compile the project with BlindCube",
@@ -154,7 +226,11 @@
     "hardening_tooltip": "Apply strip/UPX/checksum/anti-debug/obfuscation to the package",
     "placeholder_company": "Example: influent",
     "placeholder_app": "Example: mycoolapp",
-    "placeholder_version": "Example: 1.0"
+    "placeholder_version": "Example: 1.0",
+    "compilation_complete": "Compilation complete",
+    "compilation_error": "Compilation error",
+    "compiler_default": "Nuitka (default)",
+    "progress_building": "Building..."
   },
   "window": {
     "restore": "Restore",
