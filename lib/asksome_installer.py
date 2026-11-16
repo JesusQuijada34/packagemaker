@@ -131,6 +131,7 @@ def install_asksome(
     *,
     create_desktop_shortcuts: bool = True,
     shortcut_dirs: Optional[List[Path]] = None,
+    password: str | None = None,
 ) -> InstallRecord:
     """Instala un ``.asksome`` verificando su firma antes de extraer."""
     source = Path(artifact).resolve()
@@ -148,7 +149,7 @@ def install_asksome(
         shutil.rmtree(target)
     target.mkdir(parents=True)
 
-    extracted = extract_asksome(source, target)
+    extracted = extract_asksome(source, target, password=password)
     files = sorted(str(Path(item).relative_to(target)) for item in extracted)
 
     record = InstallRecord(

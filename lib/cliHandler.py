@@ -175,9 +175,12 @@ class CLIHandler:
         mexf_group = self.parser.add_argument_group('Proyectos .mexf')
         mexf_group.add_argument('--compile-mexf', metavar='PATH', help='Compilar un proyecto .mexf a un artefacto .asksome (carpeta con details.xml y .mexf/main.mexf)')
         mexf_group.add_argument('--mexf-output', metavar='FILE', help='Ruta del .asksome de salida para --compile-mexf')
+        mexf_group.add_argument('--mexf-password', metavar='PASS', help='Cifra el payload del .asksome con esta contraseña')
+        mexf_group.add_argument('--mexf-wrappers', action='store_true', help='Generar envoltorios de prueba de sintaxis y entorno junto al .asksome')
         mexf_group.add_argument('--install-asksome', metavar='FILE', help='Instalar un artefacto .asksome (extrae payload firmado y crea accesos directos)')
         mexf_group.add_argument('--uninstall-asksome', metavar='APP_ID', help='Desinstalar un .asksome instalado por su app id')
         mexf_group.add_argument('--install-root', metavar='DIR', help='Carpeta raíz de instalación para --install-asksome/--uninstall-asksome')
+        mexf_group.add_argument('--asksome-password', metavar='PASS', help='Contraseña del payload cifrado para --install-asksome')
         mexf_group.add_argument('--list-asksome', action='store_true', help='Listar los artefactos .asksome instalados')
         mexf_group.add_argument('--no-shortcuts', action='store_true', help='No crear accesos directos al instalar')
 
@@ -349,6 +352,8 @@ class CLIHandler:
                 {
                     'path': args.compile_mexf,
                     'output': getattr(args, 'mexf_output', None),
+                    'password': getattr(args, 'mexf_password', None),
+                    'wrappers': getattr(args, 'mexf_wrappers', False),
                 },
                 shell_options,
             )
@@ -360,6 +365,7 @@ class CLIHandler:
                     'path': args.install_asksome,
                     'root': getattr(args, 'install_root', None),
                     'shortcuts': not getattr(args, 'no_shortcuts', False),
+                    'password': getattr(args, 'asksome_password', None),
                 },
                 shell_options,
             )
@@ -706,7 +712,12 @@ class MexfCompileHelper:
         output = data.get("output")
         output_path = Path(output).expanduser().resolve() if output else None
         try:
-            result = compile_mexf_project(project_root, output_path)
+            result = compile_mexf_project(
+                project_root,
+                output_path,
+                password=data.get("password"),
+                wrappers=bool(data.get("wrappers")),
+            )
         except MexfCompileError as exc:
             print(f"[ERROR] Compilación .mexf fallida: {exc}")
             return False
@@ -739,6 +750,7 @@ class AsksomeInstallHelper:
 
         from lib.asksome_format import AsksomeError
         from lib.asksome_installer import AsksomeInstallError, install_asksome
+        from lib.iflapp_format import IflappError
 
         path = data.get("path")
         if not path:
@@ -754,8 +766,9 @@ class AsksomeInstallHelper:
                 artifact,
                 root,
                 create_desktop_shortcuts=bool(data.get("shortcuts", True)),
+                password=data.get("password"),
             )
-        except (AsksomeError, AsksomeInstallError) as exc:
+        except (AsksomeError, AsksomeInstallError, IflappError) as exc:
             print(f"[ERROR] Instalación .asksome fallida: {exc}")
             return False
         print(f"App       : {record.name} ({record.app_id})")

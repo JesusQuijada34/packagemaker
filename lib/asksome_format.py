@@ -48,13 +48,19 @@ def _tar_bytes(root: Path) -> tuple[bytes, list[dict[str, Any]]]:
     return stream.getvalue(), manifest
 
 
-def pack_asksome(staging_dir: Path | str, output_file: Path | str, *, metadata: dict | None = None, launcher: str = "launcher.py") -> Path:
+def pack_asksome(staging_dir: Path | str, output_file: Path | str, *, metadata: dict | None = None, launcher: str = "launcher.py", password: str | None = None) -> Path:
     root = Path(staging_dir).resolve()
     if not root.is_dir():
         raise AsksomeError(f"No existe staging: {root}")
     tar_data, manifest = _tar_bytes(root)
     payload = lzma.compress(tar_data, format=lzma.FORMAT_ALONE, preset=6)
-    header = {"format": "asksome", "format_version": 1, "launcher": launcher, "manifest": manifest, "metadata": metadata or {}, "compression": "lzma", "payload_sha256": hashlib.sha256(payload).hexdigest()}
+    # El cifrado reutiliza exactamente la cripto del contenedor .iflapp
+    # (AES-256-GCM si hay ``cryptography``, si no HMAC-SHA256-CTR), de modo que
+    # la cabecera del .asksome describe el modo real aplicado.
+    from lib import iflapp_format
+
+    payload, encryption = iflapp_format._encrypt_payload(payload, password)
+    header = {"format": "asksome", "format_version": 1, "launcher": launcher, "manifest": manifest, "metadata": metadata or {}, "compression": "lzma", "encryption": encryption.get("encryption", "none"), "encryption_params": encryption, "payload_sha256": hashlib.sha256(payload).hexdigest()}
     signature = hmac.new(KEY, _canonical(header) + payload, hashlib.sha256).hexdigest()
     header["signature"] = signature
     header_bytes = _canonical(header)
@@ -91,11 +97,16 @@ def verify_asksome(path: Path | str) -> dict:
     return header
 
 
-def extract_asksome(path: Path | str, destination: Path | str) -> list[Path]:
+def extract_asksome(path: Path | str, destination: Path | str, *, password: str | None = None) -> list[Path]:
     header = verify_asksome(path)
     data = Path(path).read_bytes()
     start = len(MAGIC) + 4 + len(_canonical(header))
-    raw = lzma.decompress(data[start:], format=lzma.FORMAT_ALONE)
+    payload = data[start:]
+    if header.get("encryption", "none") != "none":
+        from lib import iflapp_format
+
+        payload = iflapp_format._decrypt_payload(payload, password, header.get("encryption_params", {}))
+    raw = lzma.decompress(payload, format=lzma.FORMAT_ALONE)
     target = Path(destination)
     target.mkdir(parents=True, exist_ok=True)
     files = []

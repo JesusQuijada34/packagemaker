@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -307,6 +308,67 @@ def test_compile_source_rejects_invalid_text(tmp_path):
 
     with pytest.raises(MexfError):
         compile_source("format: mexf\nmetadata: {}\n", tmp_path / "bad.asksome")
+
+
+def test_encrypted_asksome_round_trips_with_password(tmp_path):
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    result = compile_mexf_project(root, tmp_path / "enc.asksome", password="s3cret")
+    header = verify_asksome(result.output)
+    assert header["encryption"] != "none"
+    # El payload cifrado no filtra texto en claro.
+    assert b"demo.hello" not in result.output.read_bytes()
+    staged = extract_asksome(result.output, tmp_path / "unpacked", password="s3cret")
+    assert {path.name for path in staged} >= {"main.mexf", "launcher.py"}
+
+
+def test_encrypted_asksome_requires_correct_password(tmp_path):
+    from lib.iflapp_format import IflappSignatureError
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    result = compile_mexf_project(root, tmp_path / "enc.asksome", password="s3cret")
+    with pytest.raises(IflappSignatureError):
+        extract_asksome(result.output, tmp_path / "nope", password="wrong")
+
+
+def test_encrypted_asksome_needs_password(tmp_path):
+    from lib.iflapp_format import IflappError
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    result = compile_mexf_project(root, tmp_path / "enc.asksome", password="s3cret")
+    with pytest.raises(IflappError):
+        extract_asksome(result.output, tmp_path / "nope")
+
+
+def test_wrappers_are_generated_and_valid_python(tmp_path):
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    result = compile_mexf_project(root, tmp_path / "out.asksome", wrappers=True)
+    names = {wrapper.name for wrapper in result.wrappers}
+    assert names == {"out.check-syntax.py", "out.check-env.py"}
+    for wrapper in result.wrappers:
+        assert wrapper.is_file()
+        compile(wrapper.read_text(encoding="utf-8"), str(wrapper), "exec")
+
+
+def test_syntax_wrapper_runs_against_valid_artifact(tmp_path):
+    import subprocess
+    import sys
+
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    result = compile_mexf_project(root, tmp_path / "out.asksome", wrappers=True)
+    wrapper = next(w for w in result.wrappers if w.name.endswith("check-syntax.py"))
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
+    proc = subprocess.run([sys.executable, str(wrapper)], capture_output=True, text=True, env=env)
+    assert proc.returncode == 0, proc.stderr
+    assert "[syntax] OK" in proc.stdout
+
 
 
 

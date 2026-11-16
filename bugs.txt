@@ -84,8 +84,8 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 3. Procesamiento de los sub-módulos y add-ons dentro de la carpeta.
 
 
-* [ ] Transformar los archivos `.mexf` en un binario empaquetado propio con extensión `.asksome` (incluyendo motores embebidos, encabezados encriptados, *launcher* independiente y gestión de assets por rutas).
-* [ ] Integrar el flujo de compilación para que el compilador de `.mexf` se ejecute previo a la compilación del `iflapp`, generando envoltorios de prueba de sintaxis y entorno.
+* [x] Transformar los archivos `.mexf` en un binario empaquetado propio con extensión `.asksome` (cabecera en claro firmada, *payload* comprimido y cifrable con contraseña vía la cripto de `.iflapp`, *launcher* independiente y gestión de assets por rutas validadas contra la raíz).
+* [x] Integrar el flujo de compilación para que el compilador de `.mexf` se ejecute previo a la compilación del `iflapp`, generando envoltorios de prueba de sintaxis y entorno (`write_test_wrappers` / `--mexf-wrappers`).
 
 ### 4.4. Instalador y Desinstalador Avanzado
 
