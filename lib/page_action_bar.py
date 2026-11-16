@@ -28,8 +28,6 @@ except ImportError:  # pragma: no cover - entorno sin Qt
 
 
 from lib.design_tokens import (
-    ACCENT,
-    ACCENT_HOVER,
     BORDER,
     BUTTON_HEIGHT,
     FONT_STACK,
@@ -37,11 +35,17 @@ from lib.design_tokens import (
     SURFACE_HOVER,
     TITLE_SIZE,
     WINDOW_RADIUS,
+    accent_states,
+    active_accent,
     destructive_button_qss,
     primary_button_qss,
     secondary_button_qss,
 )
 from lib.hover_animation import enable_hover_fade
+
+
+ACCENT_COLOR = active_accent()
+ACCENT_HOVER = accent_states(ACCENT_COLOR)[1]
 
 # Color de resalte al pasar el ratón por cada tipo de botón. La animación parte
 # del fondo declarado en el QSS del propio botón.
@@ -58,8 +62,8 @@ BUTTON_MIN_WIDTH = 96
 TITLE_FONT_PX = TITLE_SIZE
 
 # Colores macOS translúcidos.
-STYLE_PRIMARY = primary_button_qss(ACCENT)
-STYLE_SECONDARY = secondary_button_qss()
+STYLE_PRIMARY = primary_button_qss(ACCENT_COLOR)
+STYLE_SECONDARY = secondary_button_qss(ACCENT_COLOR)
 STYLE_DESTRUCTIVE = destructive_button_qss()
 STYLE_TITLE = (
     f"color:#f5f7fb;font-size:{TITLE_FONT_PX}px;font-weight:600;"

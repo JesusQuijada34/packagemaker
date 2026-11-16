@@ -5,8 +5,6 @@ import sys
 
 from lib.design_tokens import (
     ACCENT,
-    ACCENT_HOVER,
-    ACCENT_PRESSED,
     BORDER,
     BUTTON_PADDING_H,
     CARD_RADIUS,
@@ -29,6 +27,7 @@ from lib.design_tokens import (
     TITLEBAR_BG,
     TITLE_SIZE,
     WINDOW_BG,
+    accent_states,
     checkbox_qss,
     destructive_button_qss,
     input_qss,
@@ -162,7 +161,6 @@ CONFIGURATION_STYLES = {
     'packagemaker_046': 'QPushButton{background:rgba(255,255,255,0.08);color:white;border-radius:4px;padding:0 12px;}QPushButton:hover{background:rgba(255,255,255,0.14);}',
     'packagemaker_049': checkbox_qss(ACCENT),
     'packagemaker_050': f'color:{TEXT_DIM};font-size:11px;background:transparent;',
-    'packagemaker_051': 'QPushButton{background:#0078d4;color:white;border:none;border-radius:4px;font-weight:600;}QPushButton:hover{background:#106ebe;}',
     'packagemaker_052': destructive_button_qss(),
     'packagemaker_084': f'color:{TEXT_DIM};font-size:{SECTION_LABEL_SIZE}px;font-family:{FONT_STACK};',
     'packagemaker_085': mono_value_qss(),
@@ -427,6 +425,7 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
     text = TEXT if dark else TEXT_LIGHT
     muted = TEXT_MUTED if dark else TEXT_MUTED_LIGHT
     border = BORDER if dark else "#D1D1D6"
+    _, accent_hover, accent_pressed = accent_states(accent)
     return f"""
         QWidget {{ font-family: {FONT_STACK}; color: {text}; }}
         QLineEdit, QComboBox, QPlainTextEdit, QTextEdit {{
@@ -453,8 +452,8 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
         QPushButton#GitHubLoginButton {{ background-color: {accent}; color: #FFFFFF;
             border: none; border-radius: {PILL_RADIUS}px; padding: 12px 20px;
             font-size: 15px; font-weight: 600; min-height: 44px; }}
-        QPushButton#GitHubLoginButton:hover {{ background-color: {ACCENT_HOVER}; color: #FFFFFF; }}
-        QPushButton#GitHubLoginButton:pressed {{ background-color: {ACCENT_PRESSED}; }}
+        QPushButton#GitHubLoginButton:hover {{ background-color: {accent_hover}; color: #FFFFFF; }}
+        QPushButton#GitHubLoginButton:pressed {{ background-color: {accent_pressed}; }}
         QPushButton#GitHubLoginButton:disabled {{ background-color: {border}; color: {muted}; }}
         QLineEdit#GitHubTokenInput, QLineEdit#GitHubUsernameInput {{ background-color: {surface};
             color: {text}; border: 1px solid {border}; border-radius: {CONTROL_RADIUS}px;
@@ -549,7 +548,7 @@ TITLE_BAR_STYLESHEET = f"""
         background: transparent;
     }}
     QLabel#SharedIconFallback {{
-        color: #0078D4;
+        color: {ACCENT};
         font-size: 20px;
         font-weight: 600;
         background: transparent;
@@ -572,26 +571,32 @@ TITLE_BAR_STYLESHEET = f"""
     }}
 """
 
-SPLASH_STYLESHEET = """
-    QWidget#SharedSplash {
+
+def splash_stylesheet(accent: str = ACCENT) -> str:
+    """QSS del splash compartido, con el acento del sistema en el icono."""
+    return f"""
+    QWidget#SharedSplash {{
         background-color: #202630;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 12px;
-    }
-    QLabel#SplashIconFallback {
-        color: #0078D4;
+    }}
+    QLabel#SplashIconFallback {{
+        color: {accent};
         font-size: 72px;
         font-weight: 300;
         background: transparent;
-    }
-    QLabel#SplashTitle {
+    }}
+    QLabel#SplashTitle {{
         color: #f3f5f8;
         font-family: 'Segoe UI Variable', 'Segoe UI', sans-serif;
         font-size: 17px;
         font-weight: 600;
         background: transparent;
-    }
-""" + splash_titlebar_stylesheet()
+    }}
+    """ + splash_titlebar_stylesheet()
+
+
+SPLASH_STYLESHEET = splash_stylesheet()
 
 
 def applyget(accent: str, dark: bool = True) -> str:
@@ -609,6 +614,7 @@ def applyget(accent: str, dark: bool = True) -> str:
     scroll_handle_hover = "rgba(255, 255, 255, 0.38)" if dark else "rgba(0, 0, 0, 0.42)"
     disabled_bg = "#3A3A3C" if dark else "#d8dae0"
     line_hover = "#5A5A5C" if dark else "#b9bcc4"
+    _, accent_hover, accent_pressed = accent_states(accent)
     return f"""
     * {{
         outline: none;
@@ -692,10 +698,10 @@ def applyget(accent: str, dark: bool = True) -> str:
         min-height: 44px;
     }}
     QPushButton#GitHubLoginButton:hover {{
-        background-color: {ACCENT_HOVER};
+        background-color: {accent_hover};
     }}
     QPushButton#GitHubLoginButton:pressed {{
-        background-color: {ACCENT_PRESSED};
+        background-color: {accent_pressed};
     }}
     QPushButton#GitHubLoginButton:disabled {{
         background-color: {border};
@@ -759,8 +765,8 @@ def applyget(accent: str, dark: bool = True) -> str:
     QLabel {{ font-family: {FONT_STACK}; font-size: 14px; color: {label}; font-weight: 500; background: transparent; border: none}}
     QStackedWidget {{ background: transparent; color: {stack_text}; font-size: 12px; line-height: 1.2; border:none; }}
     QPushButton {{ background-color: {accent}; color: {text}; font-weight: 600; font-size: 14px; border-radius: {PILL_RADIUS}px; border: none; padding: 0 {BUTTON_PADDING_H}px; font-family: {FONT_STACK}; }}
-    QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}
-    QPushButton:pressed {{ background-color: {ACCENT_PRESSED}; border-color: rgba(255, 255, 255, 0.05); }}
+    QPushButton:hover {{ background-color: {accent_hover}; }}
+    QPushButton:pressed {{ background-color: {accent_pressed}; border-color: rgba(255, 255, 255, 0.05); }}
     QPushButton:disabled {{ background-color: {disabled_bg}; color: {TEXT_DIM}; }}
     {slider_qss(accent)}
     QProgressBar {{

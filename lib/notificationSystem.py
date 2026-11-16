@@ -5,6 +5,7 @@ Notificaciones fluidas que aparecen desde el borde derecho con animaciones suave
 import os
 import sys
 from typing import Optional, List, Callable, Dict
+from lib.design_tokens import active_accent
 from dataclasses import dataclass, field
 try:
     from PyQt6.QtCore import (
@@ -67,13 +68,15 @@ class NotificationWidget(QWidget):
     closed = pyqtSignal()
     clicked = pyqtSignal()
     
-    # Colores estilo Windows 11
+    # Colores estilo Windows 11. El acento de "info" sigue al del sistema para
+    # que las notificaciones no desentonen con el resto de la interfaz.
+    _ACCENT = active_accent()
     COLORS = {
         "info": {
             "bg": "#ffffff",
             "border": "#e1e4e8",
-            "accent": "#0078d4",
-            "icon": "#0078d4",
+            "accent": _ACCENT,
+            "icon": _ACCENT,
             "text": "#1f1f1f",
             "subtext": "#5f5f5f"
         },

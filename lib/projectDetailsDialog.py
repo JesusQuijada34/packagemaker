@@ -52,6 +52,10 @@ from lib.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.notificationSystem import warning, error, success, NotificationAction
 from lib.safe_zip import safe_extract_zip
+from lib.design_tokens import active_accent
+
+
+ACCENT_COLOR = active_accent()
 
 # Default empty - icons should be passed from caller if needed
 TAB_ICONS = {}
@@ -180,29 +184,29 @@ class ProjectDetailsDialog(QDialog):
         self.container = QWidget(self)
         self.container.setObjectName("DetailsContainer")
         # Base container style - siempre gris
-        self.container.setStyleSheet("""
-            #DetailsContainer {
+        self.container.setStyleSheet(f"""
+            #DetailsContainer {{
                 background-color: #2d2d2d;
                 border: 1px solid #404040;
                 border-radius: 8px;
                 color: #c9d1d9;
-            }
-            QLabel { color: #c9d1d9; font-family: 'Segoe UI', sans-serif; }
-            QListWidget {
+            }}
+            QLabel {{ color: #c9d1d9; font-family: 'Segoe UI', sans-serif; }}
+            QListWidget {{
                 background-color: #1f1f1f;
                 border: 1px solid #404040;
                 color: #c9d1d9;
                 border-radius: 6px;
                 padding: 4px;
-            }
-            QListWidget::item {
+            }}
+            QListWidget::item {{
                 padding: 5px;
-            }
-            QListWidget::item:selected {
+            }}
+            QListWidget::item:selected {{
                 background-color: #404040;
-                border: 1px solid #0078d4;
+                border: 1px solid {ACCENT_COLOR};
                 border-radius: 4px;
-            }
+            }}
         """)
 
         main_layout = QVBoxLayout(self)

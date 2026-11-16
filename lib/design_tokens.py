@@ -107,6 +107,84 @@ MONO_STACK = "'Cascadia Code','Consolas','JetBrains Mono','DejaVu Sans Mono',mon
 # --------------------------------------------------------------------------- #
 # Constructores QSS
 # --------------------------------------------------------------------------- #
+def shade_color(color: str, factor: float) -> str:
+    """Aclara (``factor > 1``) u oscurece (``factor < 1``) un ``#RRGGBB``.
+
+    Devuelve la entrada sin cambios si no es un color reconocible, para que un
+    valor raro del usuario no rompa la hoja de estilos.
+    """
+    try:
+        red = int(color[1:3], 16)
+        green = int(color[3:5], 16)
+        blue = int(color[5:7], 16)
+    except (ValueError, IndexError):
+        return color
+    clamp = lambda v: max(0, min(255, int(v * factor)))
+    return f"#{clamp(red):02X}{clamp(green):02X}{clamp(blue):02X}"
+
+
+def tint_color(color: str, amount: float) -> str:
+    """Mezcla ``color`` hacia blanco en la proporción ``amount`` (0..1).
+
+    Se usa para fondos tenues del acento (hover del botón secundario, badges).
+    Multiplicar los canales saturaba a cian/blanco puro en lugar de aclarar.
+    """
+    try:
+        red = int(color[1:3], 16)
+        green = int(color[3:5], 16)
+        blue = int(color[5:7], 16)
+    except (ValueError, IndexError):
+        return color
+    amount = max(0.0, min(1.0, amount))
+    blend = lambda channel: int(channel + (255 - channel) * amount)
+    return f"#{blend(red):02X}{blend(green):02X}{blend(blue):02X}"
+
+
+def with_alpha(color: str, alpha: float) -> str:
+    """Convierte ``#RRGGBB`` en ``rgba(r, g, b, alpha)`` (para fondos suaves)."""
+    try:
+        red = int(color[1:3], 16)
+        green = int(color[3:5], 16)
+        blue = int(color[5:7], 16)
+    except (ValueError, IndexError):
+        return color
+    return f"rgba({red}, {green}, {blue}, {max(0.0, min(1.0, alpha)):.2f})"
+
+
+def accent_states(accent: str = ACCENT) -> tuple[str, str, str]:
+    """Devuelve ``(base, hover, pressed)`` coherentes con *accent*.
+
+    Para el azul por defecto se conservan los valores curados de Windows 11; con
+    un acento personalizado, hover y pressed se derivan del propio color. Antes
+    eran azules fijos y el acento del usuario sólo teñía el estado base.
+    """
+    value = (accent or "").strip()
+    if not value:
+        return ACCENT, ACCENT_HOVER, ACCENT_PRESSED
+    if value.upper() == ACCENT.upper():
+        return ACCENT, ACCENT_HOVER, ACCENT_PRESSED
+    return value, shade_color(value, 1.12), shade_color(value, 0.82)
+
+
+def active_accent(default: str = ACCENT) -> str:
+    """Acento activo según la preferencia del usuario y, si no, *default*.
+
+    Fuente única para las páginas y diálogos que antes repetían su propio
+    ``_accent()``. El paso por ``leviathan_ui`` vive en
+    ``packagemaker.get_accent_color`` (nivel de aplicación); aquí basta la
+    preferencia guardada en ``pm_data``.
+    """
+    try:
+        from lib.pm_data import get_pm_data
+
+        value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
+        if value:
+            return value
+    except Exception:
+        pass
+    return default
+
+
 def window_qss(accent: str = ACCENT) -> str:
     """Fondo de ventana y reglas globales de foco."""
     return f"""
@@ -170,9 +248,10 @@ def combo_qss(accent: str = ACCENT) -> str:
 
 def primary_button_qss(accent: str = ACCENT) -> str:
     """Botón primario en píldora (macOS/UWP)."""
+    base, hover, pressed = accent_states(accent)
     return f"""
     QPushButton {{
-        background-color: {accent};
+        background-color: {base};
         color: {TEXT};
         border: none;
         border-radius: {PILL_RADIUS}px;
@@ -181,14 +260,15 @@ def primary_button_qss(accent: str = ACCENT) -> str:
         font-size: 13px;
         font-weight: 600;
     }}
-    QPushButton:hover {{ background-color: {ACCENT_HOVER}; }}
-    QPushButton:pressed {{ background-color: {ACCENT_PRESSED}; }}
+    QPushButton:hover {{ background-color: {hover}; }}
+    QPushButton:pressed {{ background-color: {pressed}; }}
     QPushButton:disabled {{ background-color: #3A3A3C; color: {TEXT_DIM}; }}
     """
 
 
-def secondary_button_qss() -> str:
-    """Botón secundario: superficie gris con borde sutil."""
+def secondary_button_qss(accent: str = ACCENT) -> str:
+    """Botón secundario: superficie gris con borde sutil; realce tenue del acento."""
+    soft = with_alpha(accent, 0.16)
     return f"""
     QPushButton {{
         background-color: {SURFACE};
@@ -200,10 +280,27 @@ def secondary_button_qss() -> str:
         font-size: 13px;
         font-weight: 500;
     }}
-    QPushButton:hover {{ background-color: {SURFACE_HOVER}; }}
-    QPushButton:pressed {{ background-color: #242426; }}
+    QPushButton:hover {{ background-color: {SURFACE_HOVER}; border-color: {accent}; }}
+    QPushButton:pressed {{ background-color: {soft}; }}
     QPushButton:disabled {{ color: {TEXT_DIM}; }}
     """
+
+
+def uwp_button_qss(accent: str = ACCENT) -> str:
+    """Botón de acción con geometría UWP: esquinas de 4px y acento del sistema.
+
+    Se usa en los controles secundarios del panel de configuración para
+    mantener la coherencia con el instalador (flarmhandler) sin arrastrar la
+    píldora de macOS.
+    """
+    base, hover, pressed = accent_states(accent)
+    return (
+        f"QPushButton{{background:{base};color:{TEXT};border:none;"
+        f"border-radius:4px;font-weight:600;font-family:{FONT_STACK};}}"
+        f"QPushButton:hover{{background:{hover};}}"
+        f"QPushButton:pressed{{background:{pressed};}}"
+        f"QPushButton:disabled{{background:#3A3A3C;color:{TEXT_DIM};}}"
+    )
 
 
 def destructive_button_qss() -> str:

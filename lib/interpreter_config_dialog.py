@@ -34,24 +34,11 @@ except ImportError:
         def emit(self, *args): pass
 
 from lib.python_portable_manager import get_python_manager
-from lib.design_tokens import ACCENT
+from lib.design_tokens import accent_states, active_accent
 
 
-def _accent() -> str:
-    """Acento activo: preferencia del usuario, luego el token de diseño."""
-    try:
-        from lib.pm_data import get_pm_data
-
-        value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
-        if value:
-            return value
-    except Exception:
-        pass
-    return ACCENT
-
-
-ACCENT_COLOR = _accent()
-ACCENT_HOVER = "#1084D8"
+ACCENT_COLOR = active_accent()
+_, ACCENT_HOVER, ACCENT_PRESSED = accent_states(ACCENT_COLOR)
 
 DARK_PANEL_QSS = f"""
 QDialog {{

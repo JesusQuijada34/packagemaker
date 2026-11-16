@@ -176,5 +176,85 @@ class EditorAccentTests(unittest.TestCase):
         self.assertNotEqual(ed.EDITOR_ACCENT_PRESSED, ed.EDITOR_ACCENT)
 
 
+class AccentStateTests(unittest.TestCase):
+    """El acento del usuario debe propagarse también a hover y pressed."""
+
+    def test_default_blue_keeps_curated_states(self):
+        from lib.design_tokens import ACCENT, ACCENT_HOVER, ACCENT_PRESSED, accent_states
+
+        self.assertEqual(accent_states(ACCENT), (ACCENT, ACCENT_HOVER, ACCENT_PRESSED))
+        self.assertEqual(accent_states(""), (ACCENT, ACCENT_HOVER, ACCENT_PRESSED))
+
+    def test_custom_accent_derives_states(self):
+        from lib.design_tokens import accent_states
+
+        base, hover, pressed = accent_states("#E81123")
+        self.assertEqual(base, "#E81123")
+        self.assertNotEqual(hover, base)
+        self.assertNotEqual(pressed, base)
+        # hover aclara, pressed oscurece.
+        self.assertGreater(int(hover[1:3], 16), int(base[1:3], 16))
+        self.assertLess(int(pressed[1:3], 16), int(base[1:3], 16))
+
+    def test_primary_button_states_follow_the_accent(self):
+        from lib.design_tokens import primary_button_qss
+
+        qss = primary_button_qss("#E81123")
+        self.assertIn("background-color: #E81123", qss)
+        # Ya no quedan azules fijos del tema por defecto.
+        self.assertNotIn("#1084D8", qss)
+        self.assertNotIn("#005FB8", qss)
+
+    def test_uwp_button_uses_accent_and_flat_radius(self):
+        from lib.design_tokens import uwp_button_qss
+
+        qss = uwp_button_qss("#E81123")
+        self.assertIn("background:#E81123", qss)
+        self.assertIn("border-radius:4px", qss)
+
+    def test_color_helpers_are_safe_on_bad_input(self):
+        from lib.design_tokens import shade_color, tint_color, with_alpha
+
+        self.assertEqual(shade_color("nope", 1.2), "nope")
+        self.assertEqual(tint_color("", 0.5), "")
+        self.assertEqual(with_alpha("bad", 0.5), "bad")
+
+    def test_active_accent_reads_user_preference(self):
+        from lib.design_tokens import active_accent
+
+        # Sin preferencia configurada cae al acento por defecto.
+        self.assertTrue(active_accent().startswith("#"))
+
+
+class AccentPropagationTests(unittest.TestCase):
+    """Las hojas de estilo raíz deben derivar los estados del acento activo."""
+
+    def test_applyget_states_follow_the_accent(self):
+        from lib.fluent_theme import applyget
+
+        qss = applyget("#E81123", dark=True)
+        self.assertIn("#E81123", qss)
+        self.assertNotIn("#1084D8", qss)
+        self.assertNotIn("#005FB8", qss)
+
+    def test_application_stylesheet_states_follow_the_accent(self):
+        from lib.fluent_theme import application_stylesheet
+
+        qss = application_stylesheet(True, "#E81123")
+        self.assertNotIn("#1084D8", qss)
+        self.assertNotIn("#005FB8", qss)
+
+    def test_splash_stylesheet_accepts_accent(self):
+        from lib.fluent_theme import splash_stylesheet
+
+        self.assertIn("#E81123", splash_stylesheet("#E81123"))
+
+    def test_action_bar_styles_are_accent_aware(self):
+        from lib import page_action_bar as pab
+
+        self.assertIn(pab.ACCENT_COLOR, pab.STYLE_PRIMARY)
+        self.assertNotEqual(pab.STYLE_PRIMARY, pab.STYLE_SECONDARY)
+
+
 if __name__ == "__main__":
     unittest.main()

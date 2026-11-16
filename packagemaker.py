@@ -263,6 +263,7 @@ from lib.design_tokens import (
     TEXT_LIGHT,
     TITLEBAR_BG,
     WINDOW_BG,
+    uwp_button_qss,
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
@@ -2602,7 +2603,7 @@ class PackageTodoGUI(QMainWindow):
         self.conf_fonts_btn = QPushButton(tr("config.fonts_download"))
         self.conf_fonts_btn.setFixedHeight(36)
         self.conf_fonts_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        set_qss(self.conf_fonts_btn, 'packagemaker_051', append=False)
+        self.conf_fonts_btn.setStyleSheet(uwp_button_qss(get_accent_color()))
         icon_button(self.conf_fonts_btn, "download", 16)
         self.conf_fonts_btn.clicked.connect(self._download_ui_fonts)
         self._config_tr_labels.append((self.conf_fonts_btn, "config.fonts_download"))

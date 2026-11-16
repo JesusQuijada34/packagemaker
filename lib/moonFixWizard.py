@@ -63,6 +63,11 @@ except (ImportError, SyntaxError):
         @staticmethod
         def launch(*args, **kwargs): pass
 from lib.uwp_animations import play_bounce_down_close
+from lib.design_tokens import accent_states, active_accent
+
+
+ACCENT_COLOR = active_accent()
+_, ACCENT_HOVER, _ACCENT_PRESSED = accent_states(ACCENT_COLOR)
 
 class FixedProxy:
     def __init__(self, v): self.v = v
@@ -99,23 +104,23 @@ class MoonFixWizard(QDialog):
         
         # Keyboard focus removal - more aggressive
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.setStyleSheet("""
-            * { outline: none; }
-            QWidget:focus { border: none; outline: none; }
-            QPushButton:focus { outline: none; border: none; }
-            QLineEdit:focus { border: 1px solid #1e88e5; background: rgba(0,0,0,0.2); }
-            QPushButton#uwp_next {
-                background-color: #0078d4;
+        self.setStyleSheet(f"""
+            * {{ outline: none; }}
+            QWidget:focus {{ border: none; outline: none; }}
+            QPushButton:focus {{ outline: none; border: none; }}
+            QLineEdit:focus {{ border: 1px solid {ACCENT_COLOR}; background: rgba(0,0,0,0.2); }}
+            QPushButton#uwp_next {{
+                background-color: {ACCENT_COLOR};
                 color: white;
                 border-radius: 4px;
                 font-weight: 600;
                 font-size: 13px;
                 border: 1px solid rgba(255,255,255,0.1);
                 padding: 0 15px;
-            }
-            QPushButton#uwp_next:hover { background-color: #106ebe; }
-            QPushButton#uwp_next:pressed { background-color: #005a9e; }
-            QPushButton#uwp_next:disabled { background-color: #333; color: #777; }
+            }}
+            QPushButton#uwp_next:hover {{ background-color: {ACCENT_HOVER}; }}
+            QPushButton#uwp_next:pressed {{ background-color: {_ACCENT_PRESSED}; }}
+            QPushButton#uwp_next:disabled {{ background-color: #333; color: #777; }}
         """)
         
         # Entrance state
@@ -476,17 +481,17 @@ class MoonFixWizard(QDialog):
 
         self.results[index] = {"inputs": {}, "is_invalid": any(i["type"] == "invalid_package" for i in proj_data["issues"])}
         
-        EDIT_QSS = """
-            QLineEdit { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.4); border-radius: 4px; color: white; padding: 0 12px; font-family: 'Segoe UIVariable Text'; font-size: 13px; }
-            QLineEdit:hover { background: rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.6); }
-            QLineEdit:focus { border: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid #0078D4; background: rgba(0,0,0,0.3); }
+        EDIT_QSS = f"""
+            QLineEdit {{ background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.4); border-radius: 4px; color: white; padding: 0 12px; font-family: 'Segoe UIVariable Text'; font-size: 13px; }}
+            QLineEdit:hover {{ background: rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.6); }}
+            QLineEdit:focus {{ border: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid {ACCENT_COLOR}; background: rgba(0,0,0,0.3); }}
         """
         
-        RADIO_QSS = """
-            QRadioButton { color: white; spacing: 8px; font-size: 11px; }
-            QRadioButton::indicator { width: 14px; height: 14px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.1); }
-            QRadioButton::indicator:checked { background: #0078d4; border: 2px solid #0078d4; }
-            QRadioButton::indicator:hover { border: 2px solid rgba(255,255,255,0.5); }
+        RADIO_QSS = f"""
+            QRadioButton {{ color: white; spacing: 8px; font-size: 11px; }}
+            QRadioButton::indicator {{ width: 14px; height: 14px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.1); }}
+            QRadioButton::indicator:checked {{ background: {ACCENT_COLOR}; border: 2px solid {ACCENT_COLOR}; }}
+            QRadioButton::indicator:hover {{ border: 2px solid rgba(255,255,255,0.5); }}
         """
 
         fields_def = [
@@ -574,9 +579,9 @@ class MoonFixWizard(QDialog):
             pack_box = QHBoxLayout()
             pack_box.setSpacing(10)
             btn_pack_css = (
-                "QPushButton { background: #0078d4; color: white; border-radius: 4px;"
+                f"QPushButton {{ background: {ACCENT_COLOR}; color: white; border-radius: 4px;"
                 " padding: 4px 10px; font-weight: 600; font-size: 11px; min-height: 28px; }"
-                " QPushButton:hover { background: #106ebe; }"
+                f" QPushButton:hover {{ background: {ACCENT_HOVER}; }}"
             )
             
             if missing_icons:
@@ -587,7 +592,7 @@ class MoonFixWizard(QDialog):
                 pack_box.addWidget(btn_i)
             if missing_assets:
                 btn_a = QPushButton("Subir Asset Pack")
-                btn_a.setStyleSheet(btn_pack_css.replace("#0078d4", "#28a745"))
+                btn_a.setStyleSheet(btn_pack_css.replace(ACCENT_COLOR, "#28a745"))
                 btn_a.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn_a.clicked.connect(lambda: self.upload_asset_pack(index))
                 pack_box.addWidget(btn_a)
