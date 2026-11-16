@@ -257,6 +257,71 @@ class BuildProcedureTests(unittest.TestCase):
 
 
 class WindowEffectsTests(unittest.TestCase):
+    def test_maximize_uses_square_corners_and_restore_rounds_them(self):
+        """Al maximizar el radio pasa a 0 (si no, las esquinas quedan
+        transparentes) y al restaurar vuelve al radio de diseño."""
+        from PyQt6.QtWidgets import QApplication, QWidget
+
+        app = QApplication.instance() or QApplication([])
+        from lib.window_chrome import (
+            apply_display_mode,
+            toggle_frameless_maximize,
+            FIXED_WINDOW_RADIUS,
+        )
+
+        window = QWidget()
+        window.resize(400, 300)
+        try:
+            apply_display_mode(window, "GhostBlur (Cristal)")
+            self.assertEqual(window.window_effects._radius, FIXED_WINDOW_RADIUS)
+            toggle_frameless_maximize(window)
+            self.assertTrue(window._pm_maximized)
+            self.assertEqual(window.window_effects._radius, 0)
+            toggle_frameless_maximize(window)
+            self.assertFalse(window._pm_maximized)
+            self.assertEqual(window.window_effects._radius, FIXED_WINDOW_RADIUS)
+        finally:
+            window.close()
+            app.processEvents()
+
+    def test_reapplying_display_mode_keeps_square_corners_when_maximized(self):
+        from PyQt6.QtWidgets import QApplication, QWidget
+
+        app = QApplication.instance() or QApplication([])
+        from lib.window_chrome import apply_display_mode
+
+        window = QWidget()
+        window.resize(400, 300)
+        try:
+            window._pm_maximized = True
+            effects = apply_display_mode(window, "GhostBlur (Cristal)")
+            self.assertEqual(effects._radius, 0)
+        finally:
+            window.close()
+            app.processEvents()
+
+    def test_patch_titlebar_exposes_frameless_toggle_on_window(self):
+        """El puente (doble clic / menú del sistema) llama a
+        ``window.toggle_frameless_maximize``; debe existir para no caer al
+        maximizado nativo, que sobre una ventana frameless se ve transparente."""
+        from PyQt6.QtWidgets import QApplication, QPushButton, QWidget
+
+        app = QApplication.instance() or QApplication([])
+        from lib.window_chrome import patch_titlebar_maximize
+
+        class Titlebar(QWidget):
+            def __init__(self):
+                super().__init__()
+                self.btn_max = QPushButton("max")
+
+        window = QWidget()
+        try:
+            patch_titlebar_maximize(Titlebar(), window)
+            self.assertTrue(callable(getattr(window, "toggle_frameless_maximize", None)))
+        finally:
+            window.close()
+            app.processEvents()
+
     def test_reapplying_display_mode_releases_previous_effects(self):
         from PyQt6.QtWidgets import QApplication, QWidget
 

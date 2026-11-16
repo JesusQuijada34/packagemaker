@@ -118,7 +118,10 @@ def apply_display_mode(window: QWidget, display_name: str) -> Any:
     _release_effects(window)
 
     spec = DISPLAY_MODE_SPECS.get(display_name, DISPLAY_MODE_SPECS["GhostBlur (Cristal)"])
-    builder = WipeWindow.create().set_mode(spec["mode"]).set_radius(FIXED_WINDOW_RADIUS)
+    # Maximizada, las esquinas deben ser rectas: un radio dejaría transparentes
+    # las cuatro esquinas (se vería el escritorio detrás).
+    radius = 0 if getattr(window, "_pm_maximized", False) else FIXED_WINDOW_RADIUS
+    builder = WipeWindow.create().set_mode(spec["mode"]).set_radius(radius)
     if hasattr(builder, "set_blur"):
         try:
             builder = builder.set_blur(FIXED_BLUR_INTENSITY)
@@ -140,17 +143,41 @@ def apply_personalization_effects(window: QWidget, blur_intensity=None, window_r
     effects = getattr(window, "window_effects", None)
     if not effects:
         return
+    # Maximizada las esquinas van rectas (radio 0); si no, se ven transparentes.
+    radius = 0 if getattr(window, "_pm_maximized", False) else FIXED_WINDOW_RADIUS
     try:
         if hasattr(effects, "set_radius"):
-            effects.set_radius(FIXED_WINDOW_RADIUS)
+            effects.set_radius(radius)
         if hasattr(effects, "set_blur"):
             effects.set_blur(FIXED_BLUR_INTENSITY)
     except Exception:
         pass
 
 
+def set_window_radius(window: QWidget, radius: int) -> None:
+    """Cambia el radio de las esquinas del efecto activo y repinta.
+
+    Al maximizar hay que pasar a radio 0: un radio distinto de cero deja las
+    cuatro esquinas sin pintar (transparentes) y se ve el escritorio a través
+    de ellas, que es el fallo de opacidad al maximizar.
+    """
+    effects = getattr(window, "window_effects", None)
+    if effects is None or not hasattr(effects, "set_radius"):
+        return
+    try:
+        effects.set_radius(int(radius))
+        window.update()
+    except Exception:
+        pass
+
+
 def patch_titlebar_maximize(titlebar, window: QWidget) -> None:
     """Reemplaza maximizado nativo (falla en ventanas frameless)."""
+    # El doble clic en la barra y el menú del sistema del puente llaman a
+    # ``window.toggle_frameless_maximize``; sin este enlace caían al
+    # ``showMaximized()`` nativo, que sobre una ventana frameless y translúcida
+    # dejaba ver el escritorio (el fallo de opacidad al maximizar).
+    window.toggle_frameless_maximize = lambda: toggle_frameless_maximize(window)
     if not hasattr(titlebar, "btn_max"):
         return
     try:
@@ -169,6 +196,8 @@ def toggle_frameless_maximize(window: QWidget) -> None:
             window.setGeometry(restore)
         else:
             window.showNormal()
+        # Recuperar las esquinas redondeadas al restaurar.
+        set_window_radius(window, FIXED_WINDOW_RADIUS)
         reapply = getattr(window, "_pm_reapply_display_mode", None)
         if callable(reapply):
             reapply()
@@ -184,6 +213,9 @@ def toggle_frameless_maximize(window: QWidget) -> None:
         # the single reapply callback and should not be chained on each toggle.
         window.setGeometry(screen.availableGeometry())
     window._pm_maximized = True
+    # Esquinas rectas mientras está maximizado: el radio dejaría transparentes
+    # las esquinas y se vería el escritorio detrás.
+    set_window_radius(window, 0)
     reapply = getattr(window, "_pm_reapply_display_mode", None)
     if callable(reapply):
         reapply()

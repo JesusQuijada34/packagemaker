@@ -43,6 +43,7 @@ NameError: name 'Qt' is not defined
 * [x] **Limpieza de Scripts:** Asegurar que los scripts temporales o de compilación se limpien correctamente al finalizar el proceso de compilación.
 * [x] **Manejo de Errores Largos:** Optimizar los cuadros de mensajes de error para que resuman el fallo de forma clara e intuitiva. Corregir el error visual por el cual al hacer *hover* sobre el botón del diálogo este se vuelve completamente blanco.
 * [x] **Efecto Blur:** Corregir el bug visual donde los tonos de *blur* se vuelven blancos progresivamente al maximizar y restaurar la ventana varias veces.
+* [x] **Opacidad al maximizar:** Al maximizar, el radio de las esquinas dejaba transparentes las cuatro puntas y se veía el escritorio detrás (además, el doble clic y el menú del sistema caían al `showMaximized()` nativo sobre la ventana frameless). Ahora `toggle_frameless_maximize` pone radio 0 al maximizar, lo restaura al volver, y se enlaza `window.toggle_frameless_maximize` para que el puente use la misma ruta (`lib/window_chrome.py`).
 * [x] **Barra de Estado en Compilación:** Mostrar en tiempo real cada línea de salida del compilador en la barra de estado mientras se compila, mostrando al final el procedimiento detallado detrás de `iflapp`.
 * [x] **Consistencia de Fondos:** Estandarizar la opacidad de los fondos entre pestañas (la pestaña "Crear" cuenta con transparencia media mientras que las demás son opacas; unificar criterio).
 
