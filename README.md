@@ -6,7 +6,7 @@ Influent Package Maker es una aplicación PyQt6 para crear, compilar, inspeccion
 
 La aplicación incluye cinco áreas principales: Crear, Compilar, Configuración, MoonFix y Acerca de. La compilación ofrece backends Nuitka, PyInstaller, zipapp, cx_Freeze y PyOxidizer cuando están disponibles. El contenedor `.iflapp` v2 incorpora manifiesto, verificación y extracción segura.
 
-La integración `.mexf`/`.asksome` está en migración: `example.mexf` se conserva como formato JSON legacy mientras se formaliza el nuevo contrato YAML versionado. No se ejecutan comandos heredados como shell sin validación.
+La integración `.mexf`/`.asksome` usa ahora un contrato YAML v1 declarativo, con validación de metadatos, IDs, argumentos y rutas de assets. `example.mexf` se conserva como JSON legacy detectable y migrable explícitamente. `.asksome` es un contenedor determinista con manifiesto, digest, firma local y extracción segura; no ejecuta comandos heredados como shell sin validación.
 
 ## Desarrollo
 

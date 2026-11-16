@@ -14,3 +14,10 @@
 
 - La auditoría de tema, diálogos, checkboxes, barra de estado y regresiones visuales pasa con `QT_QPA_PLATFORM=offscreen`.
 - La extracción completa de textos hardcodeados en español sigue pendiente y permanece señalada en `bugs.txt`.
+
+### Arquitectura `.mexf` / `.asksome`
+
+- Se añadió un parser YAML v1 declarativo con validación de metadatos, IDs, assets y argumentos argv.
+- El formato JSON de `example.mexf` se detecta como legacy y puede migrarse explícitamente a YAML.
+- Se añadió un contenedor `.asksome` determinista con manifiesto, digest, firma local y extracción contra traversal/enlaces.
+- Se declaró PyYAML como dependencia del parser.
