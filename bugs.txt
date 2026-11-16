@@ -59,8 +59,8 @@ NameError: name 'Qt' is not defined
 
 ### 4.1. Remoción del Shell Antiguo
 
-* [ ] Eliminar cualquier rastro del *shell* antiguo de `packagemaker`.
-* [ ] Implementar un nuevo *shell* basado íntegramente en archivos de configuración YAML (`.mexf`).
+* [x] Eliminar cualquier rastro del *shell* antiguo de `packagemaker` (borrados `shell/shellIntegration.py`, `shell/packagemakerShell.py`, `shell/__init__.py` y el wrapper `lib/shell_integration.py`, junto con `--shellpatch`/`ShellIntegrationHelper` y el mapa legacy del CLI).
+* [x] Implementar un nuevo *shell* basado íntegramente en archivos de configuración YAML (`.mexf`): `lib/mexf_shell.py` lee `file_associations`, `context_menus`, `shortcuts`, `environments` y `registry` del YAML y genera asociaciones MIME, `servicemenus` de KDE, lanzadores `.desktop`, `environment.d` y registro `.reg` de Windows. CLI: `--shell-plan`, `--install-mexf-shell`, `--uninstall-mexf-shell`; `example.mexf` migrado a YAML.
 
 ### 4.2. Estructura y Sintaxis de los Archivos `.mexf`
 

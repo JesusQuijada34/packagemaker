@@ -14,7 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Acciones que se resuelven sin instanciar ninguna ventana.
 HEADLESS_ACTIONS = (
-    "shellpatch_install",
+    "shell_plan",
+    "install_mexf_shell",
+    "uninstall_mexf_shell",
     "show_version",
     "list_compilers",
     "list_hardening",

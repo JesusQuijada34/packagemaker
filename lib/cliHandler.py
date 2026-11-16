@@ -65,12 +65,6 @@ with _DETAILS_XML_PATH.open("r", encoding="utf-8") as f:
     root_xml = tree.getroot()
     __version__ = root_xml.findtext("version", "")
 
-# Mapeo de comandos legacy a acciones modernas
-LEGACY_COMMAND_MAP = {
-    '--install-shell': ('shellpatch_install', None),
-    '--uninstall-shell': ('shellpatch_remove', None),
-    '--create-shortcuts': ('shellpatch_shortcuts', None),
-}
 
 class CLIHandler:
     """Maneja los argumentos de línea de comandos."""
@@ -84,7 +78,8 @@ class CLIHandler:
   \033[1m\033[94mpython packagemaker.py create --name "Mi App" --shortname "mi-app" --author "GitHub" --publisher "Tesla-Inc" --version "1.0" --platform win\033[0m
   \033[1m\033[94mpython packagemaker.py compile --name "Mi App" --shortname "mi-app" --author "GitHub" --publisher "Tesla-Inc" --version "1.0"\033[0m
   \033[1m\033[94mpython packagemaker.py moonfix --name "Mi App" --shortname "mi-app" --author "GitHub" --publisher "Tesla-Inc" --version "1.0"\033[0m
-  \033[1m\033[94mpython packagemaker.py --shellpatch install\033[0m
+  \033[1m\033[94mpython packagemaker.py --shell-plan example.mexf\033[0m
+  \033[1m\033[94mpython packagemaker.py --install-mexf-shell example.mexf\033[0m
   \033[1m\033[94mpython packagemaker.py --app-version\033[0m
 """,
             formatter_class=argparse.RawTextHelpFormatter
@@ -133,9 +128,12 @@ class CLIHandler:
         repair_parser.add_argument('--publisher', help='Publisher o empresa del proyecto (ej: "Tesla-Inc")')
         repair_parser.add_argument('--version', default='1.0.0', help='Versión del proyecto (ej: "1.0")')
 
-        # === Shell Integration ===
+        # === Shell Integration (declarada en .mexf) ===
         shell_group = self.parser.add_argument_group('Integración con Shell')
-        shell_group.add_argument('--shellpatch', metavar='ACTION', choices=['install', 'remove', 'shortcuts'], help='Gestión de integración shell: install, remove, shortcuts')
+        shell_group.add_argument('--shell-plan', metavar='MEXF', help='Mostrar el plan de shell (asociaciones, menús, atajos) declarado en un .mexf o carpeta de proyecto')
+        shell_group.add_argument('--shell-plan-json', action='store_true', help='Salida JSON para --shell-plan')
+        shell_group.add_argument('--install-mexf-shell', metavar='MEXF', help='Instalar la integración de shell declarada en un .mexf')
+        shell_group.add_argument('--uninstall-mexf-shell', metavar='MEXF', help='Retirar la integración de shell declarada en un .mexf')
 
         # === Compatibilidad legacy ===
         legacy_group = self.parser.add_argument_group('Compatibilidad legacy')
@@ -317,13 +315,28 @@ class CLIHandler:
                 },
             )
         
-        # === Shell Integration (con --shellpatch) ===
-        elif getattr(args, 'shellpatch', None) == 'install':
-            return ('shellpatch_install', None, shell_options)
-        elif getattr(args, 'shellpatch', None) == 'remove':
-            return ('shellpatch_remove', None, shell_options)
-        elif getattr(args, 'shellpatch', None) == 'shortcuts':
-            return ('shellpatch_shortcuts', None, shell_options)
+        # === Shell Integration (declarada en .mexf) ===
+        elif getattr(args, 'shell_plan', None):
+            return (
+                'shell_plan',
+                {
+                    'path': args.shell_plan,
+                    'json': getattr(args, 'shell_plan_json', False),
+                },
+                shell_options,
+            )
+        elif getattr(args, 'install_mexf_shell', None):
+            return (
+                'install_mexf_shell',
+                {'path': args.install_mexf_shell},
+                shell_options,
+            )
+        elif getattr(args, 'uninstall_mexf_shell', None):
+            return (
+                'uninstall_mexf_shell',
+                {'path': args.uninstall_mexf_shell},
+                shell_options,
+            )
         
         # === Versión ===
         elif args.app_version:
@@ -466,67 +479,70 @@ class CLIHandler:
             return (None, None, shell_options)
 
 
-# === Shell Integration Helper ===
-class ShellIntegrationHelper:
-    """Helper para manejar shell integration desde CLI sin import circular."""
-    
+# === Shell Integration Helper (declarada en .mexf) ===
+class MexfShellHelper:
+    """Instala/inspecciona la integración de shell declarada en un ``.mexf``."""
+
     @staticmethod
-    def _get_shell_integration():
-        """Importa y retorna ShellIntegration con path correcto."""
+    def plan(data):
+        import json
+
+        from lib.mexf_parser import MexfError
+        from lib.mexf_shell import load_shell_plan
+
         try:
-            from lib.shell_integration import ShellIntegration
-            return ShellIntegration()
-        except ImportError as e:
-            print(f"[ERROR] No se pudo importar shell_integration: {e}")
-            return None
-    
-    @classmethod
-    def install(cls):
-        shell = cls._get_shell_integration()
-        if shell is None:
+            plan = load_shell_plan(data['path'])
+        except (MexfError, FileNotFoundError, OSError) as exc:
+            print(f"[ERROR] No se pudo leer el plan de shell: {exc}")
+            return False
+        payload = plan.to_dict()
+        if data.get('json'):
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+            return True
+        print(f"Shell: {payload['name']}  ({payload['id']})")
+        print(f"Asociaciones : {len(payload['file_associations'])}")
+        for assoc in payload['file_associations']:
+            print(f"  - {assoc['extension']}  {assoc['mime_type']}")
+        print(f"Menús        : {len(payload['context_menus'])}")
+        for menu in payload['context_menus']:
+            print(f"  - [{menu['target']}] {menu['label']}")
+        if payload['environments']:
+            print(f"Entorno      : {len(payload['environments'])} variables")
+        return True
+
+    @staticmethod
+    def _install_or_remove(action, data):
+        from lib.mexf_parser import MexfError
+        from lib.mexf_shell import install_plan, load_shell_plan, uninstall_plan
+
+        try:
+            plan = load_shell_plan(data['path'])
+        except (MexfError, FileNotFoundError, OSError) as exc:
+            print(f"[ERROR] No se pudo leer el plan de shell: {exc}")
             return False
         try:
-            result = shell.install_all()
-            if result:
-                print("[OK] Integración con shell instalada correctamente")
+            if action == 'install':
+                result = install_plan(plan)
+                verb = "escrito"
             else:
-                print("[ERROR] Falló la instalación de la integración con shell")
-            return result
-        except Exception as e:
-            print(f"[ERROR] {e}")
+                result = uninstall_plan(plan)
+                verb = "eliminado"
+        except OSError as exc:
+            print(f"[ERROR] {exc}")
             return False
-    
+        for path in result.get('written', result.get('removed', [])):
+            print(f"[OK] {verb}: {path}")
+        for skipped in result.get('skipped', []):
+            print(f"[WARN] Omitido: {skipped}")
+        return True
+
     @classmethod
-    def uninstall(cls):
-        shell = cls._get_shell_integration()
-        if shell is None:
-            return False
-        try:
-            result = shell.uninstall_all()
-            if result:
-                print("[OK] Integración con shell desinstalada correctamente")
-            else:
-                print("[ERROR] Falló la desinstalación de la integración con shell")
-            return result
-        except Exception as e:
-            print(f"[ERROR] {e}")
-            return False
-    
+    def install(cls, data):
+        return cls._install_or_remove('install', data)
+
     @classmethod
-    def create_shortcuts(cls):
-        shell = cls._get_shell_integration()
-        if shell is None:
-            return False
-        try:
-            result = shell.create_shortcuts()
-            if result:
-                print("[OK] Accesos directos creados correctamente")
-            else:
-                print("[ERROR] Falló la creación de accesos directos")
-            return result
-        except Exception as e:
-            print(f"[ERROR] {e}")
-            return False
+    def uninstall(cls, data):
+        return cls._install_or_remove('uninstall', data)
 
 
 # === Version Update Helper ===
@@ -897,15 +913,15 @@ class AsksomeInstallHelper:
 # === Action Handlers ===
 def _handle_shell_actions(action, data=None):
     """Maneja acciones de shell que no requieren GUI. Retorna True si se manejó."""
-    if action == 'shellpatch_install':
-        return ShellIntegrationHelper.install()
-    
-    elif action == 'shellpatch_remove':
-        return ShellIntegrationHelper.uninstall()
-    
-    elif action == 'shellpatch_shortcuts':
-        return ShellIntegrationHelper.create_shortcuts()
-    
+    if action == 'shell_plan':
+        return MexfShellHelper.plan(data or {})
+
+    elif action == 'install_mexf_shell':
+        return MexfShellHelper.install(data or {})
+
+    elif action == 'uninstall_mexf_shell':
+        return MexfShellHelper.uninstall(data or {})
+
     elif action == 'show_version':
         print(f"Influent Package Maker v{__version__}")
         print("https://github.com/JesusQuijada34/packagemaker")

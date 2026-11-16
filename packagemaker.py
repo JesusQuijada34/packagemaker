@@ -4355,9 +4355,9 @@ def main():
 
             # Acciones que no requieren GUI ni QApplication
             if action in [
-                'shellpatch_install',
-                'shellpatch_remove',
-                'shellpatch_shortcuts',
+                'shell_plan',
+                'install_mexf_shell',
+                'uninstall_mexf_shell',
                 'show_version',
                 'version_update',
                 'list_compilers',

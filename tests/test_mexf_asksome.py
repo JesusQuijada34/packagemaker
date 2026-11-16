@@ -9,13 +9,33 @@ from lib.mexf_parser import MexfError, detect_mexf_format, migrate_legacy_mexf, 
 
 
 def test_legacy_mexf_is_detected_and_migrated(tmp_path):
-    source = Path("example.mexf")
+    source = tmp_path / "legacy.mexf"
+    source.write_text(
+        json.dumps(
+            {
+                "version": "1.0",
+                "app_name": "Legacy App",
+                "app_id": "com.example.legacy",
+                "extensions": [{"extension": ".iflapp"}],
+            }
+        ),
+        encoding="utf-8",
+    )
     assert detect_mexf_format(source) == "legacy-json"
     target = tmp_path / "main.mexf"
     migrate_legacy_mexf(source, target)
     document = parse_mexf(target)
     assert document.source_format == "yaml-v1"
+    assert document.metadata["id"] == "com.example.legacy"
+
+
+def test_shipped_example_mexf_is_yaml(tmp_path):
+    """El ``example.mexf`` del repositorio ya no es JSON legacy: es el shell YAML."""
+    source = Path(__file__).resolve().parents[1] / "example.mexf"
+    assert detect_mexf_format(source) == "yaml-v1"
+    document = parse_mexf(source)
     assert document.metadata["id"] == "com.fluthin.packagemaker"
+    assert document.data["file_associations"]
 
 
 def test_invalid_mexf_reports_contract_error(tmp_path):
