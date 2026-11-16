@@ -390,6 +390,102 @@ def test_syntax_wrapper_runs_against_valid_artifact(tmp_path):
     assert "[syntax] OK" in proc.stdout
 
 
+def test_generated_removeme_is_autonomous_and_self_contained(tmp_path):
+    """El script no debe depender del repositorio de PackageMaker."""
+    from lib.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    body = (Path(record.install_dir) / "removeme.py").read_text(encoding="utf-8")
+    assert "sys.path.insert" not in body
+    assert "from lib." not in body
+    assert record.remover == "removeme.py"
 
 
+def test_removeme_binary_name_matches_platform():
+    import sys as _sys
 
+    from lib.asksome_installer import removeme_binary_name
+
+    name = removeme_binary_name()
+    if _sys.platform.startswith("win"):
+        assert name == "removeme.exe"
+    elif _sys.platform == "darwin":
+        assert name == "removeme.app"
+    else:
+        assert name == "removeme.elf"
+
+
+def test_install_compiles_removeme_binary(tmp_path):
+    """Con ``removeme_binary=True`` se escribe el binario nativo y se registra."""
+    from lib.asksome_installer import install_asksome, removeme_binary_name
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(
+        artifact, install_root, shortcut_dirs=[shortcuts], removeme_binary=True
+    )
+    binary = Path(record.install_dir) / removeme_binary_name()
+    assert binary.is_file()
+    assert os.access(binary, os.X_OK)
+    assert record.remover == removeme_binary_name()
+    assert json.loads((Path(record.install_dir) / "install.json").read_text())["remover"] == record.remover
+
+
+def test_compiled_removeme_binary_purges_installation(tmp_path):
+    import subprocess
+
+    from lib.asksome_installer import install_asksome, list_installed
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(
+        artifact, install_root, shortcut_dirs=[shortcuts], removeme_binary=True
+    )
+    binary = Path(record.install_dir) / record.remover
+    assert binary.is_file()
+    result = subprocess.run([str(binary), "--silent"], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert not Path(record.install_dir).exists()
+    assert all(not Path(item).exists() for item in record.shortcuts)
+    assert list_installed(install_root) == []
+
+
+def test_build_removeme_for_existing_installation(tmp_path):
+    from lib.asksome_installer import build_removeme, install_asksome, removeme_binary_name
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    assert record.remover == "removeme.py"
+    binary = build_removeme(record.app_id, install_root)
+    assert binary is not None and binary.name == removeme_binary_name()
+    assert binary.is_file()
+
+
+def test_removeme_has_gui_with_console_fallback(tmp_path):
+    """La plantilla trae GUI (PyQt6) con respaldo a consola, sin importar ``lib``."""
+    from lib.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    body = (Path(record.install_dir) / "removeme.py").read_text(encoding="utf-8")
+    assert "_GuiReporter" in body and "_ConsoleReporter" in body
+    assert "QProgressDialog" in body
+    assert "from lib" not in body
+
+
+def test_generated_removeme_console_mode_reports_removals(tmp_path):
+    import subprocess
+    import sys as _sys
+
+    from lib.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    script = Path(record.install_dir) / "removeme.py"
+    result = subprocess.run(
+        [_sys.executable, str(script), "--console"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "eliminado:" in result.stdout
+    assert not Path(record.install_dir).exists()

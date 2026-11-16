@@ -3,8 +3,11 @@
 Un ``.asksome`` compilado desde ``.mexf`` se instala extrayendo su payload
 firmado en ``<install_root>/<app_id>/``, registrando la instalación (hashes,
 manifiesto, accesos directos) en ``install.json`` y creando los accesos directos
-del escritorio. La desinstalación es el proceso inverso y admite modo silencioso
-para ejecutarse desde ``removeme.py`` o desde la CLI.
+del escritorio. Genera además el removedor autónomo ``removeme.py`` y,
+opcionalmente, un removedor nativo (``removeme.exe`` en Windows / ``removeme.elf``
+en Linux) compilado con la jerarquía de backends de ``lib.compilers``. La
+desinstalación es el proceso inverso y admite modo silencioso para ejecutarse
+desde el removedor o desde la CLI.
 
 Los accesos directos son multiplataforma: en Linux se generan archivos
 ``.desktop``; en Windows se intenta un ``.lnk`` vía PowerShell y, si no está
@@ -19,6 +22,7 @@ import os
 import shutil
 import stat
 import sys
+import tempfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,6 +32,7 @@ from lib.asksome_format import extract_asksome, verify_asksome
 
 RECORD_NAME = "install.json"
 REMOVEME_NAME = "removeme.py"
+REMOVEME_STEM = "removeme"
 
 
 class AsksomeInstallError(RuntimeError):
@@ -47,6 +52,7 @@ class InstallRecord:
     files: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     installed_at: str = ""
+    remover: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -132,8 +138,16 @@ def install_asksome(
     create_desktop_shortcuts: bool = True,
     shortcut_dirs: Optional[List[Path]] = None,
     password: str | None = None,
+    removeme_binary: bool = False,
+    backend: str | None = None,
+    log_callback=None,
 ) -> InstallRecord:
-    """Instala un ``.asksome`` verificando su firma antes de extraer."""
+    """Instala un ``.asksome`` verificando su firma antes de extraer.
+
+    Con ``removeme_binary=True`` se compila además un removedor nativo
+    (``removeme.exe``/``removeme.elf``) junto al script ``removeme.py``; si no
+    hay backend disponible se conserva únicamente el script.
+    """
     source = Path(artifact).resolve()
     if not source.is_file():
         raise AsksomeInstallError(f"No existe el artefacto: {source}")
@@ -168,11 +182,19 @@ def install_asksome(
     if create_desktop_shortcuts:
         record.shortcuts = create_shortcuts(record, shortcut_dirs)
 
+    _write_removeme(target, record)
+    record.remover = REMOVEME_NAME
+    if removeme_binary:
+        binary = compile_removeme_binary(
+            target, preferred_backend=backend, log_callback=log_callback
+        )
+        if binary is not None:
+            record.remover = binary.name
+
     (target / RECORD_NAME).write_text(
         json.dumps(record.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    _write_removeme(target, record)
     return record
 
 
@@ -182,6 +204,36 @@ def read_record(app_id: str, install_root: Path | str) -> InstallRecord:
         raise AsksomeInstallError(f"No hay registro de instalación para {app_id}")
     data = json.loads(path.read_text(encoding="utf-8"))
     return InstallRecord(**data)
+
+
+def build_removeme(
+    app_id: str,
+    install_root: Path | str,
+    *,
+    preferred_backend: str | None = None,
+    log_callback=None,
+) -> Optional[Path]:
+    """Compila el removedor de una instalación existente a su binario nativo.
+
+    Reescribe ``removeme.py`` desde el registro y lo compila a
+    ``removeme.exe``/``removeme.elf``. Actualiza el campo ``remover`` del
+    registro y devuelve la ruta del binario (o ``None`` si no se pudo compilar).
+    """
+    root = Path(install_root).resolve()
+    target = root / app_id
+    record = read_record(app_id, install_root)
+    _write_removeme(target, record)
+    binary = compile_removeme_binary(
+        target, preferred_backend=preferred_backend, log_callback=log_callback
+    )
+    if binary is None:
+        return None
+    record.remover = binary.name
+    (target / RECORD_NAME).write_text(
+        json.dumps(record.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return binary
 
 
 def list_installed(install_root: Path | str) -> List[InstallRecord]:
@@ -238,27 +290,167 @@ def uninstall_asksome(
 _REMOVEME_TEMPLATE = '''#!/usr/bin/env python3
 """Desinstalador generado por PackageMaker para {app_id}.
 
+Es autónomo: no necesita el repositorio de PackageMaker ni importar ``lib``.
+Lee su propio ``install.json`` cuando existe y, si no, usa los accesos directos
+incrustados en el momento de la instalación.
+
 Uso:
-    python removeme.py            # elimina este paquete instalado
-    python removeme.py --silent   # sin error si ya no existe
+    removeme                   # desinstala; usa GUI si hay entorno gráfico
+    removeme --silent          # sin salida ni GUI; no falla si ya no existe
+    removeme --console         # fuerza la salida por consola
+    removeme --gui             # fuerza la interfaz gráfica (si PyQt6 está disponible)
+    removeme --keep-shortcuts  # conserva los accesos directos
 """
 import argparse
+import json
+import os
+import shutil
 import sys
 from pathlib import Path
 
-sys.path.insert(0, {repo_root!r})
-from lib.asksome_installer import uninstall_asksome
+APP_ID = {app_id!r}
+NAME = {name!r}
+EMBEDDED_SHORTCUTS = {shortcuts!r}
+
+
+def _self_file():
+    """Ruta real de este removedor (script, zipapp o binario congelado)."""
+    argv0 = (sys.argv[0] or "").strip()
+    if argv0:
+        try:
+            candidate = Path(argv0).resolve()
+        except OSError:
+            candidate = None
+        if candidate is not None and candidate.is_file():
+            return candidate
+    here = Path(__file__).resolve()
+    # Dentro de un zipapp ``__file__`` vive en el archivo; su padre es el archivo.
+    if here.parent.is_file():
+        return here.parent
+    return here
+
+
+def _install_dir():
+    """Carpeta de instalación: la que contiene a este removedor."""
+    if getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS"):
+        return Path(sys.executable).resolve().parent
+    return _self_file().parent
+
+
+def _shortcuts(target):
+    record = target / {record_name!r}
+    if record.is_file():
+        try:
+            data = json.loads(record.read_text(encoding="utf-8"))
+            return list(data.get("shortcuts") or EMBEDDED_SHORTCUTS)
+        except (OSError, ValueError):
+            pass
+    return list(EMBEDDED_SHORTCUTS)
+
+
+class _ConsoleReporter:
+    """Informa por consola; silencioso con ``--silent``."""
+
+    def __init__(self, quiet):
+        self.quiet = quiet
+
+    def start(self, total):
+        pass
+
+    def step(self, done, total, message):
+        if not self.quiet and message:
+            print(message)
+
+    def finish(self, removed):
+        pass
+
+
+class _GuiReporter:
+    """Progreso en vivo con PyQt6; el llamador cae a consola si no está disponible."""
+
+    def __init__(self):
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtWidgets import QApplication, QProgressDialog
+
+        self._app = QApplication.instance() or QApplication([])
+        self._dialog = QProgressDialog("Preparando la desinstalación...", None, 0, 100)
+        self._dialog.setWindowTitle("Desinstalando " + NAME)
+        self._dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self._dialog.setMinimumDuration(0)
+        self._dialog.setValue(1)
+        self._app.processEvents()
+
+    def start(self, total):
+        pass
+
+    def step(self, done, total, message):
+        if message:
+            self._dialog.setLabelText(message)
+        self._dialog.setValue(int(done * 100 / max(total, 1)))
+        self._app.processEvents()
+
+    def finish(self, removed):
+        self._dialog.setValue(100)
+        self._app.processEvents()
+        self._dialog.close()
+
+
+def _display_available():
+    if sys.platform.startswith("win") or sys.platform == "darwin":
+        return True
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def _make_reporter(args):
+    if args.silent:
+        return _ConsoleReporter(quiet=True)
+    if args.gui or (not args.console and _display_available()):
+        try:
+            return _GuiReporter()
+        except Exception:
+            pass
+    return _ConsoleReporter(quiet=False)
+
+
+def _remove(target, keep_shortcuts, reporter):
+    items = [] if keep_shortcuts else _shortcuts(target)
+    total = len(items) + 1
+    reporter.start(total)
+    removed = []
+    done = 0
+    for item in items:
+        path = Path(item)
+        done += 1
+        if path.is_file():
+            path.unlink()
+            removed.append(str(path))
+            reporter.step(done, total, "eliminado: " + str(path))
+        else:
+            reporter.step(done, total, "")
+    if target.is_dir():
+        shutil.rmtree(target)
+        removed.append(str(target))
+        reporter.step(total, total, "eliminado: " + str(target))
+    reporter.finish(removed)
+    return removed
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Desinstalar {name}")
-    parser.add_argument("--silent", action="store_true", help="No fallar si ya no existe")
+    parser = argparse.ArgumentParser(description="Desinstalar " + NAME)
+    parser.add_argument("--silent", action="store_true", help="Sin salida ni GUI; no fallar si ya no existe")
+    parser.add_argument("--console", action="store_true", help="Forzar la salida por consola")
+    parser.add_argument("--gui", action="store_true", help="Forzar la interfaz gráfica")
+    parser.add_argument("--keep-shortcuts", action="store_true", help="No retirar accesos directos")
     args = parser.parse_args(argv)
-    install_root = Path(__file__).resolve().parent.parent
-    removed = uninstall_asksome({app_id!r}, install_root, silent=args.silent)
-    if not args.silent:
-        for item in removed:
-            print(f"eliminado: {{item}}")
+
+    target = _install_dir()
+    if not target.is_dir():
+        if args.silent:
+            return 0
+        print("no existe: " + str(target), file=sys.stderr)
+        return 1
+
+    _remove(target, args.keep_shortcuts, _make_reporter(args))
     return 0
 
 
@@ -267,13 +459,105 @@ if __name__ == "__main__":
 '''
 
 
+def removeme_binary_name() -> str:
+    """Nombre del removedor binario según la plataforma (``removeme.exe``/``.elf``)."""
+    if sys.platform.startswith("win"):
+        return f"{REMOVEME_STEM}.exe"
+    if sys.platform == "darwin":
+        return f"{REMOVEME_STEM}.app"
+    return f"{REMOVEME_STEM}.elf"
+
+
 def _write_removeme(target: Path, record: InstallRecord) -> Path:
     script = target / REMOVEME_NAME
-    repo_root = str(Path(__file__).resolve().parent.parent)
     script.write_text(
         _REMOVEME_TEMPLATE.format(
-            app_id=record.app_id, name=record.name, repo_root=repo_root
+            app_id=record.app_id,
+            name=record.name,
+            shortcuts=list(record.shortcuts),
+            record_name=RECORD_NAME,
         ),
         encoding="utf-8",
     )
+    script.chmod(script.stat().st_mode | stat.S_IXUSR)
     return script
+
+
+def compile_removeme_binary(
+    target: Path | str,
+    *,
+    preferred_backend: str | None = None,
+    log_callback=None,
+) -> Optional[Path]:
+    """Compila ``removeme.py`` a un binario nativo ``removeme.exe``/``removeme.elf``.
+
+    Usa la jerarquía de backends de ``lib.compilers`` (Nuitka → PyInstaller →
+    zipapp). Devuelve la ruta del binario escrito en *target*, o ``None`` si no
+    se pudo compilar (en cuyo caso queda el script ``removeme.py``).
+    """
+    from lib.compilers import CompilerUnavailableError, get_backend, resolve_backend
+
+    target = Path(target)
+    script = target / REMOVEME_NAME
+    if not script.is_file():
+        return None
+
+    def _log(message: str) -> None:
+        if log_callback:
+            log_callback(message)
+
+    # Cadena de respaldo real: ``resolve_backend`` sólo comprueba que el módulo
+    # sea importable, pero un backend puede estar instalado y aun así fallar al
+    # compilar (p. ej. Nuitka con una versión de Python no soportada). Se prueba
+    # cada candidato y se usa el primero que produzca un binario.
+    candidates: List[str] = []
+    for name in (preferred_backend, "nuitka", "pyinstaller", "zipapp"):
+        if name and name not in candidates:
+            candidates.append(name)
+    try:
+        resolved = resolve_backend(preferred_backend, log_callback=log_callback)
+        if resolved.name not in candidates:
+            candidates.insert(0, resolved.name)
+    except CompilerUnavailableError as exc:
+        _log(f"[WARN] Sin backend preferido para el removedor: {exc}")
+
+    binary_name = removeme_binary_name()
+    build_dir = Path(tempfile.mkdtemp(prefix="pm-removeme-"))
+    staging = build_dir / "src"
+    staging.mkdir()
+    # Compilar desde un staging que contiene sólo el removedor: así el zipapp
+    # no arrastra el resto del paquete y el binario queda autocontenido.
+    staged_script = staging / REMOVEME_NAME
+    shutil.copy2(script, staged_script)
+    try:
+        for name in candidates:
+            try:
+                backend = get_backend(name, log_callback=log_callback)
+            except CompilerUnavailableError:
+                continue
+            if not backend.is_available():
+                continue
+            try:
+                produced = backend.compile(
+                    script_path=str(staged_script),
+                    output_name=REMOVEME_STEM,
+                    output_dir=str(build_dir / "out"),
+                    windowed=False,
+                    onefile=True,
+                    excludes=["PyQt6", "PyQt5", "tkinter"],
+                    build_dir=str(build_dir / "work"),
+                )
+            except Exception as exc:  # noqa: BLE001 - se prueba el siguiente backend
+                _log(f"[WARN] Backend {name} falló al compilar el removedor: {exc}")
+                continue
+            if not produced:
+                _log(f"[WARN] Backend {name} no produjo el removedor: {backend.last_error}")
+                continue
+            final = target / binary_name
+            shutil.copy2(produced, final)
+            final.chmod(final.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            return final
+        _log("[WARN] Ningún backend pudo compilar el removedor; queda removeme.py")
+        return None
+    finally:
+        shutil.rmtree(build_dir, ignore_errors=True)

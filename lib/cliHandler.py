@@ -183,6 +183,9 @@ class CLIHandler:
         mexf_group.add_argument('--uninstall-asksome', metavar='APP_ID', help='Desinstalar un .asksome instalado por su app id')
         mexf_group.add_argument('--install-root', metavar='DIR', help='Carpeta raíz de instalación para --install-asksome/--uninstall-asksome')
         mexf_group.add_argument('--asksome-password', metavar='PASS', help='Contraseña del payload cifrado para --install-asksome')
+        mexf_group.add_argument('--removeme-binary', action='store_true', help='Generar además el removedor nativo removeme.exe/.elf al instalar')
+        mexf_group.add_argument('--removeme-backend', choices=['nuitka', 'pyinstaller', 'zipapp', 'cxfreeze', 'pyoxidizer'], help='Backend para compilar el removedor nativo (por defecto: auto)')
+        mexf_group.add_argument('--build-removeme', metavar='APP_ID', help='Compilar el removedor nativo de un .asksome ya instalado')
         mexf_group.add_argument('--list-asksome', action='store_true', help='Listar los artefactos .asksome instalados')
         mexf_group.add_argument('--no-shortcuts', action='store_true', help='No crear accesos directos al instalar')
         mexf_group.add_argument('--debug-mexf', metavar='MEXF', help='Depurar el plan de un .mexf: muestra cada comando y su punto de ruptura')
@@ -410,6 +413,19 @@ class CLIHandler:
                     'root': getattr(args, 'install_root', None),
                     'shortcuts': not getattr(args, 'no_shortcuts', False),
                     'password': getattr(args, 'asksome_password', None),
+                    'removeme_binary': getattr(args, 'removeme_binary', False),
+                    'removeme_backend': getattr(args, 'removeme_backend', None),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'build_removeme', None):
+            return (
+                'build_removeme',
+                {
+                    'app_id': args.build_removeme,
+                    'root': getattr(args, 'install_root', None),
+                    'backend': getattr(args, 'removeme_backend', None),
                 },
                 shell_options,
             )
@@ -1074,6 +1090,9 @@ class AsksomeInstallHelper:
                 root,
                 create_desktop_shortcuts=bool(data.get("shortcuts", True)),
                 password=data.get("password"),
+                removeme_binary=bool(data.get("removeme_binary", False)),
+                backend=data.get("removeme_backend"),
+                log_callback=print,
             )
         except (AsksomeError, AsksomeInstallError, IflappError) as exc:
             print(f"[ERROR] Instalación .asksome fallida: {exc}")
@@ -1083,7 +1102,32 @@ class AsksomeInstallHelper:
         print(f"Instalado : {record.install_dir}")
         if record.shortcuts:
             print(f"Accesos   : {', '.join(record.shortcuts)}")
-        print(f"[OK] Desinstala con: {record.install_dir}/removeme.py")
+        print(f"[OK] Removedor: {record.install_dir}/{record.remover}")
+        return True
+
+    @staticmethod
+    def build_removeme(data):
+        from lib.asksome_installer import AsksomeInstallError, build_removeme
+
+        app_id = data.get("app_id")
+        if not app_id:
+            print("[ERROR] Debes indicar el app id con --build-removeme")
+            return False
+        root = AsksomeInstallHelper._root(data)
+        try:
+            binary = build_removeme(
+                app_id,
+                root,
+                preferred_backend=data.get("backend"),
+                log_callback=print,
+            )
+        except AsksomeInstallError as exc:
+            print(f"[ERROR] No se pudo compilar el removedor: {exc}")
+            return False
+        if binary is None:
+            print("[ERROR] No hay ningún backend de compilación disponible; queda removeme.py")
+            return False
+        print(f"[OK] Removedor nativo: {binary}")
         return True
 
     @staticmethod
@@ -1169,6 +1213,9 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'install_asksome':
         return AsksomeInstallHelper.install(data or {})
+
+    elif action == 'build_removeme':
+        return AsksomeInstallHelper.build_removeme(data or {})
 
     elif action == 'uninstall_asksome':
         return AsksomeInstallHelper.uninstall(data or {})
