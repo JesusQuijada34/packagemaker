@@ -23,6 +23,10 @@ HEADLESS_ACTIONS = (
     "inspect_iflapp",
     "list_fonts",
     "download_fonts",
+    "ide_scan",
+    "ide_compile",
+    "ide_run",
+    "ide_debug",
 )
 
 

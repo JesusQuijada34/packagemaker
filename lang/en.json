@@ -22,14 +22,16 @@
     "moonfix": "MoonFix",
     "about": "About",
     "toggle_expand": "Expand menu (Ctrl+B)",
-    "toggle_collapse": "Hide menu (Ctrl+B)"
+    "toggle_collapse": "Hide menu (Ctrl+B)",
+    "ide": "Project IDE"
   },
   "sidebar_desc": {
     "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
     "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
     "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
     "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**.",
+    "6": "### Project IDE\nVisual editor for `iflapp` projects: open the folder, edit the scripts, compile with the backend you choose and debug line by line with breakpoints."
   },
   "config": {
     "title": "Settings",
@@ -347,5 +349,27 @@
     "token_saved": "Token saved",
     "invalid": "Invalid token",
     "signed_by": "Signed by"
+  },
+  "iflapp_ide": {
+    "title": "iflapp Project IDE",
+    "open": "Open project",
+    "no_project": "No project loaded",
+    "backend": "Backend:",
+    "compile": "Compile",
+    "run": "Run",
+    "debug": "Debug",
+    "breakpoint": "Breakpoint",
+    "ready": "Ready.",
+    "loaded": "Project loaded: {count} script(s).",
+    "load_failed": "Could not load the project: {error}",
+    "compiled": "Compiled with {backend}: {count} artifact(s).",
+    "compile_failed": "Compilation failed: {error}",
+    "no_script": "Select a script.",
+    "ran": "Ran (code {code}).",
+    "run_failed": "Run failed (code {code}).",
+    "debugged": "Debugged: {count} stop(s).",
+    "no_stops": "No stops recorded.",
+    "break_on": "Breakpoint at line {line}.",
+    "break_off": "Breakpoint removed at line {line}."
   }
 }

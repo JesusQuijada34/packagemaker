@@ -189,6 +189,16 @@ class CLIHandler:
         mexf_group.add_argument('--debug-run', action='store_true', help='Ejecutar de verdad los comandos del plan (por defecto solo se simula)')
         mexf_group.add_argument('--debug-break', metavar='IDS', help='Puntos de ruptura separados por comas (ids de comando) para --debug-mexf')
 
+        ide_group = self.parser.add_argument_group('IDE de proyectos iflapp')
+        ide_group.add_argument('--ide-scan', metavar='PATH', help='Inspeccionar un proyecto iflapp: metadatos, guiones, .mexf e icono')
+        ide_group.add_argument('--ide-scan-json', action='store_true', help='Salida JSON para --ide-scan')
+        ide_group.add_argument('--ide-compile', metavar='PATH', help='Compilar los guiones de un proyecto iflapp con el backend elegido')
+        ide_group.add_argument('--ide-backend', choices=['auto', 'nuitka', 'pyinstaller', 'zipapp', 'cxfreeze', 'pyoxidizer'], help='Backend para --ide-compile (por defecto: auto)')
+        ide_group.add_argument('--ide-output', metavar='DIR', help='Carpeta de salida para --ide-compile (por defecto: <proyecto>/dist)')
+        ide_group.add_argument('--ide-run', metavar='SCRIPT', help='Ejecutar un guion del proyecto y capturar su salida')
+        ide_group.add_argument('--ide-debug', metavar='SCRIPT', help='Depurar un guion del proyecto por línea y listar las paradas')
+        ide_group.add_argument('--ide-break', metavar='LINES', help='Líneas de ruptura separadas por comas para --ide-debug')
+
         font_group = self.parser.add_argument_group('Fuentes')
         font_group.add_argument('--list-fonts', action='store_true', help='Mostrar el estado de las fuentes de la interfaz')
         font_group.add_argument('--download-fonts', nargs='?', const='all', metavar='KEYS', help='Descargar fuentes (todas o lista separada por comas)')
@@ -429,6 +439,49 @@ class CLIHandler:
             return (
                 'list_asksome',
                 {'root': getattr(args, 'install_root', None)},
+                shell_options,
+            )
+
+        elif getattr(args, 'ide_scan', None):
+            return (
+                'ide_scan',
+                {
+                    'path': args.ide_scan,
+                    'as_json': getattr(args, 'ide_scan_json', False),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'ide_compile', None):
+            return (
+                'ide_compile',
+                {
+                    'path': args.ide_compile,
+                    'backend': getattr(args, 'ide_backend', None),
+                    'output': getattr(args, 'ide_output', None),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'ide_run', None):
+            return (
+                'ide_run',
+                {
+                    'path': args.ide_run,
+                    'debug': False,
+                    'breakpoints': None,
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'ide_debug', None):
+            return (
+                'ide_debug',
+                {
+                    'path': args.ide_debug,
+                    'debug': True,
+                    'breakpoints': getattr(args, 'ide_break', None),
+                },
                 shell_options,
             )
 
@@ -893,6 +946,99 @@ class MexfDebugHelper:
         return True
 
 
+class IflappIdeHelper:
+    """Acciones headless del IDE de proyectos ``iflapp``."""
+
+    @staticmethod
+    def scan(data):
+        import json
+
+        from lib.iflapp_ide import scan_project
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar la carpeta del proyecto con --ide-scan")
+            return False
+        try:
+            project = scan_project(path)
+        except (FileNotFoundError, OSError) as exc:
+            print(f"[ERROR] {exc}")
+            return False
+        info = project.as_dict()
+        if data.get("as_json"):
+            print(json.dumps(info, ensure_ascii=False, indent=2))
+            return True
+        meta = info["metadata"]
+        print(f"Proyecto  : {info['root']}")
+        print(f"Identidad : {meta.get('publisher', '?')}.{meta.get('app', '?')} {meta.get('version', '?')}")
+        print(f"Plataforma: {meta.get('platform', '?')}")
+        print(f"Guiones   : {', '.join(info['scripts']) or '(ninguno)'}")
+        print(f"Entrada   : {info['entry'] or '(sin punto de entrada)'}")
+        print(f".mexf     : {'sí' if info['has_mexf'] else 'no'}")
+        print(f"Icono     : {info['icon'] or '(sin icono)'}")
+        if info["missing"]:
+            print(f"[WARN] Faltan: {', '.join(info['missing'])}")
+        return True
+
+    @staticmethod
+    def compile(data):
+        from lib.iflapp_ide import compile_project
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar la carpeta del proyecto con --ide-compile")
+            return False
+        backend = data.get("backend")
+        outcome = compile_project(
+            path,
+            backend=None if backend in (None, "auto") else backend,
+            output_dir=data.get("output"),
+            log=print,
+        )
+        for line in outcome.log:
+            print(line)
+        print(f"Backend   : {outcome.backend}")
+        print(f"Artefactos: {len(outcome.outputs)}")
+        if outcome.failures:
+            for failure in outcome.failures:
+                print(f"[ERROR] {failure}")
+            return False
+        return True
+
+    @staticmethod
+    def execute(data):
+        from pathlib import Path
+
+        from lib.iflapp_ide import debug_script, run_script
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar el guion con --ide-run o --ide-debug")
+            return False
+        script = Path(path).expanduser().resolve()
+        if not script.is_file():
+            print(f"[ERROR] No existe el guion: {script}")
+            return False
+        if data.get("debug"):
+            breaks = data.get("breakpoints")
+            lines = None
+            if breaks:
+                lines = [int(item) for item in str(breaks).split(",") if str(item).strip().isdigit()]
+            outcome = debug_script(script, breakpoints=lines)
+            if outcome.error:
+                print(f"[ERROR] {outcome.error}")
+                return False
+            print(f"Depurando {script.name}: {len(outcome.stops)} parada(s)")
+            for stop in outcome.stops:
+                variables = ", ".join(f"{k}={v!r}" for k, v in list(stop.locals.items())[:6])
+                print(f"  L{stop.line} {stop.function}  {variables}")
+            return True
+        code, output = run_script(script)
+        print(output)
+        print(f"[{'OK' if code == 0 else 'ERROR'}] código de salida: {code}")
+        return code == 0
+
+
 class AsksomeInstallHelper:
     """Instala, desinstala y lista artefactos ``.asksome``."""
 
@@ -1029,7 +1175,16 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'list_asksome':
         return AsksomeInstallHelper.list_installed(data or {})
-    
+
+    elif action == 'ide_scan':
+        return IflappIdeHelper.scan(data or {})
+
+    elif action == 'ide_compile':
+        return IflappIdeHelper.compile(data or {})
+
+    elif action in ('ide_run', 'ide_debug'):
+        return IflappIdeHelper.execute(data or {})
+
     return None  # No es acción de shell
 
 

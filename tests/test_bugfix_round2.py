@@ -130,6 +130,7 @@ class CreateTabOpaqueTests(unittest.TestCase):
                 window.page_build,
                 window.page_config,
                 window.page_moonfix,
+                window.page_ide,
                 window.page_about,
             ]
             colours = set()

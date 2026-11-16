@@ -275,6 +275,7 @@ from lib.report import Reporter, classify_build_message
 # no tocar los puntos de llamada existentes.
 LeviathanDialog = AlertDialog
 from lib.moonFixWizard import MoonFixWizard
+from lib.iflapp_ide_dialog import IflappIdePanel
 from lib.gitHubVerifyThread import GitHubVerifyThread
 from lib.i18n import i18n, tr, system_default_language, get_available_languages
 from lib.linux_icon_handler import ensure_linux_icon_support
@@ -698,7 +699,8 @@ SIDEBAR_DESC_KEYS = {
     1: "sidebar_desc.1",
     2: "sidebar_desc.3",
     3: "sidebar_desc.4",
-    4: "sidebar_desc.5",
+    4: "sidebar_desc.6",
+    5: "sidebar_desc.5",
 }
 
 class PackageTodoGUI(QMainWindow):
@@ -839,12 +841,14 @@ class PackageTodoGUI(QMainWindow):
         self.btn_build = SidebarItem(tr("sidebar.build"), get_tab_icon("construir"), dark=dark_now, icon_key="construir")
         self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"), dark=dark_now, icon_key="config")
         self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"), dark=dark_now, icon_key="moonfix")
+        self.btn_ide = SidebarItem(tr("sidebar.ide"), get_tab_icon("pmcodeeditor"), dark=dark_now, icon_key="pmcodeeditor")
         self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"), dark=dark_now, icon_key="about")
         self._sidebar_btn_keys = {
             self.btn_create: "sidebar.create",
             self.btn_build: "sidebar.build",
             self.btn_config: "sidebar.config",
             self.btn_moonfix: "sidebar.moonfix",
+            self.btn_ide: "sidebar.ide",
             self.btn_about: "sidebar.about",
         }
 
@@ -853,13 +857,15 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_group.addButton(self.btn_build, 1)
         self.sidebar_group.addButton(self.btn_config, 2)
         self.sidebar_group.addButton(self.btn_moonfix, 3)
-        self.sidebar_group.addButton(self.btn_about, 4)
+        self.sidebar_group.addButton(self.btn_ide, 4)
+        self.sidebar_group.addButton(self.btn_about, 5)
         self.sidebar_group.idClicked.connect(self.switch_page)
 
         self.sidebar_layout.addWidget(self.btn_create)
         self.sidebar_layout.addWidget(self.btn_build)
         self.sidebar_layout.addWidget(self.btn_config)
         self.sidebar_layout.addWidget(self.btn_moonfix)
+        self.sidebar_layout.addWidget(self.btn_ide)
 
         # Area de Contexto/Descripcion (Estilo Nota UWP)
         self.sidebar_layout.addStretch()
@@ -926,6 +932,9 @@ class PackageTodoGUI(QMainWindow):
         self.page_moonfix = QWidget()
         self.init_moonfix_tab(self.page_moonfix)
 
+        self.page_ide = QWidget()
+        self.init_ide_tab(self.page_ide)
+
         self.page_about = QWidget()
         self.init_about_tab(self.page_about)
 
@@ -933,6 +942,7 @@ class PackageTodoGUI(QMainWindow):
         self.stack.addWidget(self.page_build)
         self.stack.addWidget(self.page_config)
         self.stack.addWidget(self.page_moonfix)
+        self.stack.addWidget(self.page_ide)
         self.stack.addWidget(self.page_about)
 
         self.content_layout.addWidget(self.stack)
@@ -2889,6 +2899,31 @@ class PackageTodoGUI(QMainWindow):
         return issues
 
 
+    def init_ide_tab(self, parent_widget=None):
+        """Página del IDE de proyectos ``iflapp`` (editor, compilador, debugger)."""
+        target = parent_widget if parent_widget else self.page_ide
+        target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        layout = QVBoxLayout(target)
+        layout.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
+        layout.setSpacing(12)
+
+        self.ide_open_btn = make_action_button(tr("iflapp_ide.open"), "primary")
+        self.ide_open_btn.clicked.connect(self._ide_choose_project)
+        self.ide_action_bar, self.ide_bar_title = install_page_action_bar(
+            layout, tr("sidebar.ide"), [self.ide_open_btn]
+        )
+
+        self.ide_panel = IflappIdePanel(target)
+        layout.addWidget(self.ide_panel)
+
+    def _ide_choose_project(self):
+        folder = QFileDialog.getExistingDirectory(self, tr("iflapp_ide.open"))
+        if folder and self.ide_panel.load_project(folder):
+            self.reporter.info(
+                tr("sidebar.ide"),
+                tr("iflapp_ide.loaded").format(count=len(self.ide_panel.project.scripts)),
+            )
+
     def init_about_tab(self, parent_widget=None):
         target = parent_widget if parent_widget else self.tab_about
         # Enable styled background for proper inheritance
@@ -4372,6 +4407,10 @@ def main():
                 'install_asksome',
                 'uninstall_asksome',
                 'list_asksome',
+                'ide_scan',
+                'ide_compile',
+                'ide_run',
+                'ide_debug',
             ] or action_options.get('headless'):
                 result = handle_cli_action(action, data, None, **action_options)
                 if result is False:

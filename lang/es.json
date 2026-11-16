@@ -22,14 +22,16 @@
     "moonfix": "MoonFix",
     "about": "Acerca de",
     "toggle_expand": "Expandir menú (Ctrl+B)",
-    "toggle_collapse": "Ocultar menú (Ctrl+B)"
+    "toggle_collapse": "Ocultar menú (Ctrl+B)",
+    "ide": "IDE de Proyectos"
   },
   "sidebar_desc": {
     "0": "### Crear Proyecto\nDiseña aplicaciones desde cero. Establece identidades únicas, versiones y metadatos para el ecosistema **Influent OS** de forma guiada.",
     "1": "### Construir Paquete\nEmpaqueta tu trabajo. Transforma carpetas de desarrollo en archivos `.iflapp` comprimidos y listos para su distribución global.",
     "3": "### Configuración\nAjusta el motor del programa. Controla rutas, idioma, apariencia y opciones guardadas en data/pm.data.",
     "4": "### MoonFix Suite\nSanación profunda. Escanea, detecta y repara inconsistencias en tus paquetes. Asegura que cada asset y etiqueta XML sea perfecta.",
-    "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**."
+    "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**.",
+    "6": "### IDE de Proyectos\nEditor visual de proyectos `iflapp`: abre la carpeta, edita los guiones, compila con el backend que elijas y depura línea a línea con puntos de ruptura."
   },
   "config": {
     "title": "Configuración",
@@ -347,5 +349,27 @@
     "token_saved": "Token guardado",
     "invalid": "Token inválido",
     "signed_by": "Firmado por"
+  },
+  "iflapp_ide": {
+    "title": "IDE de Proyectos iflapp",
+    "open": "Abrir proyecto",
+    "no_project": "Sin proyecto cargado",
+    "backend": "Backend:",
+    "compile": "Compilar",
+    "run": "Ejecutar",
+    "debug": "Depurar",
+    "breakpoint": "Punto de ruptura",
+    "ready": "Listo.",
+    "loaded": "Proyecto cargado: {count} guion(es).",
+    "load_failed": "No se pudo cargar el proyecto: {error}",
+    "compiled": "Compilado con {backend}: {count} artefacto(s).",
+    "compile_failed": "Compilación fallida: {error}",
+    "no_script": "Selecciona un guion.",
+    "ran": "Ejecutado (código {code}).",
+    "run_failed": "Fallo de ejecución (código {code}).",
+    "debugged": "Depurado: {count} parada(s).",
+    "no_stops": "Sin paradas registradas.",
+    "break_on": "Punto de ruptura en la línea {line}.",
+    "break_off": "Punto de ruptura eliminado en la línea {line}."
   }
 }
