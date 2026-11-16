@@ -78,7 +78,7 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 ### 4.3. Compilador de `.mexf` a `.asksome`
 
-* [ ] Desarrollar un compilador dedicado que procese los `.mexf` siguiendo esta jerarquía:
+* [x] Desarrollar un compilador dedicado que procese los `.mexf` siguiendo esta jerarquía:
 1. Lectura del archivo de detalles (`details.xml`).
 2. Procesamiento de `/.mexf/main.mexf`.
 3. Procesamiento de los sub-módulos y add-ons dentro de la carpeta.

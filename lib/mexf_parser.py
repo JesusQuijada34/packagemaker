@@ -109,7 +109,7 @@ def validate_mexf(data: Dict[str, Any], *, project_root: Path | None = None) -> 
     return diagnostics
 
 
-def parse_mexf(path: Path | str) -> MexfDocument:
+def parse_mexf(path: Path | str, *, project_root: Path | None = None) -> MexfDocument:
     source = Path(path)
     raw = source.read_text(encoding="utf-8-sig")
     fmt = detect_mexf_format(source)
@@ -123,7 +123,9 @@ def parse_mexf(path: Path | str) -> MexfDocument:
     data = yaml.safe_load(raw)
     if not isinstance(data, dict):
         raise MexfError("El documento .mexf debe ser un objeto YAML.")
-    errors = validate_mexf(data, project_root=source.parent)
+    # Los assets se resuelven por defecto contra el directorio del propio
+    # documento; el compilador pasa la raíz real del proyecto.
+    errors = validate_mexf(data, project_root=project_root or source.parent)
     if errors:
         raise MexfError("; ".join(f"{e.path}: {e.message}" for e in errors))
     return MexfDocument(data, "yaml-v1", str(source))

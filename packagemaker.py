@@ -4306,6 +4306,7 @@ def main():
                 'inspect_iflapp',
                 'list_fonts',
                 'download_fonts',
+                'compile_mexf',
             ] or action_options.get('headless'):
                 result = handle_cli_action(action, data, None, **action_options)
                 if result is False:

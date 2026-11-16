@@ -38,6 +38,7 @@ from lib.compilers import (
     resolve_backend,
 )
 from lib.hardware_sandbox import HardwareSandbox
+from lib.mexf_compiler import MexfCompiler
 from lib.project_locator import describe_available, locate_project
 
 class FlangCompiler:
@@ -91,6 +92,25 @@ class FlangCompiler:
         """Añade un paso al procedimiento real y lo publica en la barra."""
         self.procedure.append(step)
         self.log(f"[STEP] {step}")
+
+    def _compile_mexf_if_present(self) -> Optional[Path]:
+        """Compila ``.mexf`` → ``.asksome`` antes del ``.iflapp`` si hay módulos.
+
+        El artefacto ``.asksome`` (shell moderno) se genera y queda junto al
+        ``.iflapp`` en la carpeta de releases. Si el proyecto no usa ``.mexf``,
+        el paso se omite sin error.
+        """
+        if not (self.repo_path / ".mexf").is_dir():
+            return None
+        compiler = MexfCompiler(
+            self.repo_path, self.output_path, log_callback=self.log
+        )
+        result = compiler.run()
+        for step in compiler.procedure:
+            self._record_procedure(step)
+        if result is None and compiler.last_error:
+            self.log(f"[WARN] {compiler.last_error}")
+        return result
 
     def _load_scripts_to_compile(self) -> Optional[List[str]]:
         """Carga una lista opcional de entry points desde config/settings.json.
@@ -874,6 +894,7 @@ class FlangCompiler:
             return None
         final_iflapp = None
         try:
+            self._compile_mexf_if_present()
             for platform_name in platforms_to_compile:
                 self._record_procedure(
                     f"Compilar binarios para {platform_name} "

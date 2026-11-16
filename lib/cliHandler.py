@@ -172,6 +172,10 @@ class CLIHandler:
         inspect_group.add_argument('--list-compilers', action='store_true', help='Mostrar compiladores disponibles y su estado')
         inspect_group.add_argument('--list-hardening', action='store_true', help='Mostrar métodos de blindaje disponibles y su estado')
 
+        mexf_group = self.parser.add_argument_group('Proyectos .mexf')
+        mexf_group.add_argument('--compile-mexf', metavar='PATH', help='Compilar un proyecto .mexf a un artefacto .asksome (carpeta con details.xml y .mexf/main.mexf)')
+        mexf_group.add_argument('--mexf-output', metavar='FILE', help='Ruta del .asksome de salida para --compile-mexf')
+
         font_group = self.parser.add_argument_group('Fuentes')
         font_group.add_argument('--list-fonts', action='store_true', help='Mostrar el estado de las fuentes de la interfaz')
         font_group.add_argument('--download-fonts', nargs='?', const='all', metavar='KEYS', help='Descargar fuentes (todas o lista separada por comas)')
@@ -333,6 +337,16 @@ class CLIHandler:
 
         elif getattr(args, 'list_fonts', False):
             return ('list_fonts', None, shell_options)
+
+        elif getattr(args, 'compile_mexf', None):
+            return (
+                'compile_mexf',
+                {
+                    'path': args.compile_mexf,
+                    'output': getattr(args, 'mexf_output', None),
+                },
+                shell_options,
+            )
 
         elif getattr(args, 'download_fonts', None):
             return (
@@ -637,6 +651,43 @@ class PackageInspectHelper:
         return True
 
 
+class MexfCompileHelper:
+    """Compila un proyecto ``.mexf`` a un artefacto ``.asksome`` firmado."""
+
+    @staticmethod
+    def compile(data):
+        from pathlib import Path
+
+        from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar la carpeta del proyecto con --compile-mexf")
+            return False
+
+        project_root = Path(path).expanduser().resolve()
+        if not project_root.is_dir():
+            print(f"[ERROR] La ruta no es una carpeta: {project_root}")
+            return False
+
+        output = data.get("output")
+        output_path = Path(output).expanduser().resolve() if output else None
+        try:
+            result = compile_mexf_project(project_root, output_path)
+        except MexfCompileError as exc:
+            print(f"[ERROR] Compilación .mexf fallida: {exc}")
+            return False
+
+        print(f"Proyecto  : {project_root}")
+        print(f"Módulos   : {', '.join(result.modules)}")
+        print(f"Publisher : {result.metadata['publisher']}")
+        print(f"App       : {result.metadata['app']}  ({result.metadata['name']})")
+        print(f"Version   : {result.metadata['version']}")
+        print(f"Plataforma: {result.metadata['platform']}")
+        print(f"[OK] Artefacto .asksome generado: {result.output}")
+        return True
+
+
 # === Action Handlers ===
 def _handle_shell_actions(action, data=None):
     """Maneja acciones de shell que no requieren GUI. Retorna True si se manejó."""
@@ -671,6 +722,9 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'inspect_iflapp':
         return PackageInspectHelper.inspect(data or {})
+
+    elif action == 'compile_mexf':
+        return MexfCompileHelper.compile(data or {})
     
     return None  # No es acción de shell
 
