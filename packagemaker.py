@@ -787,6 +787,7 @@ class PackageTodoGUI(QMainWindow):
         self.content_container = QWidget()
         # Enable styled background
         self.content_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.content_container.installEventFilter(self)
         self.content_layout = QHBoxLayout(self.content_container)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(0)
@@ -1089,6 +1090,15 @@ class PackageTodoGUI(QMainWindow):
     def eventFilter(self, obj, event):
         # El sidebar se colapsa/expande solo a mano (estilo VS Code); no hay
         # auto-ocultado por hover.
+        if (
+            obj is getattr(self, "content_container", None)
+            and event.type() == QEvent.Type.Resize
+            and getattr(self, "_landing_active", False)
+        ):
+            landing = getattr(self, "github_landing", None)
+            if landing is not None:
+                landing.setGeometry(self.content_container.rect())
+                landing.raise_()
         return super().eventFilter(obj, event)
 
     def animate_startup(self, instant=False):
@@ -1214,13 +1224,13 @@ class PackageTodoGUI(QMainWindow):
         """Muestra el landing sólo cuando no hay una credencial válida guardada."""
         from lib import github_identity
 
+        self._landing_active = True
+        self._set_landing_lock(True)
         self.github_landing = GitHubLoginLanding(self.content_container)
-        self.github_landing.setGeometry(self.content_container.rect())
         self.github_landing.login_requested.connect(self._landing_github_login)
         self.github_landing.finished.connect(self._finish_github_landing)
         self.github_landing.profile_requested.connect(self._show_github_profile)
-        self.github_landing.raise_()
-        self.github_landing.show()
+        self.github_landing.lock_to_parent()
         token = github_identity.load_token()
         profile = github_identity.load_profile()
         if token:
@@ -1258,6 +1268,30 @@ class PackageTodoGUI(QMainWindow):
     def _finish_github_landing(self, _profile) -> None:
         self._refresh_github_card()
         self.github_card.show()
+        self._landing_active = False
+        self._set_landing_lock(False)
+
+    def _set_landing_lock(self, locked: bool) -> None:
+        """Garantiza que nunca se pinte ni se pueda activar otra pestaña.
+
+        El landing es opaco y captura la interacción; las páginas permanecen
+        detrás para que la transición final no reconstruya el layout.
+        El título personalizado permanece visible como único chrome de ventana.
+        """
+        for widget in (
+            getattr(self, "sidebar", None),
+            getattr(self, "sidebar_resize_handle", None),
+            getattr(self, "stack", None),
+        ):
+            if widget is not None:
+                widget.setEnabled(not locked)
+        landing = getattr(self, "github_landing", None)
+        if landing is not None:
+            landing.setVisible(locked)
+            landing.setEnabled(locked)
+            if locked:
+                landing.lock_to_parent()
+                landing.raise_()
 
     def _show_github_profile(self) -> None:
         """Muestra los datos del perfil autenticado desde la tarjeta lateral."""
@@ -1283,6 +1317,8 @@ class PackageTodoGUI(QMainWindow):
         propiedad sólo actúa sobre ventanas de nivel superior. Aquí se aplica un
         ``QGraphicsOpacityEffect`` al widget entrante y se anima su ``opacity``.
         """
+        if getattr(self, "_landing_active", False):
+            return
         self.update_sidebar_description(index)
         current_widget = self.stack.currentWidget()
         next_widget = self.stack.widget(index)
@@ -4351,7 +4387,16 @@ class PackageTodoGUI(QMainWindow):
         super().resizeEvent(event)
         landing = getattr(self, "github_landing", None)
         if landing is not None and landing.parentWidget() is self.content_container:
-            landing.setGeometry(self.content_container.rect())
+            landing.lock_to_parent()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        landing = getattr(self, "github_landing", None)
+        if getattr(self, "_landing_active", False) and landing is not None:
+            # El layout obtiene su tamaño definitivo después del primer show.
+            # Reajustar en el siguiente ciclo evita una capa de 640x480 sobre
+            # una ventana redimensionada y elimina el solapamiento visible.
+            QTimer.singleShot(0, landing.lock_to_parent)
 
 
 # =============================================================================
@@ -4543,12 +4588,6 @@ def main():
     main_window = PackageTodoGUI()
     main_window.apply_ui_language()
 
-    splash = IntegratedSplash(
-        parent=main_window,
-        icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
-        title="Package Maker"
-    )
-
     def on_splash_finished():
         if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
             try:
@@ -4556,9 +4595,20 @@ def main():
             except (ImportError, OSError):
                 pass
 
-    splash.finished.connect(on_splash_finished)
     main_window.show()
-    splash.start(5000)
+    # El landing autenticado es el primer estado interactivo. El splash
+    # antiguo no debe cubrirlo ni dejar una segunda capa por encima.
+    if getattr(main_window, "_landing_active", False):
+        main_window.github_landing.lock_to_parent()
+        main_window.github_landing.raise_()
+    else:
+        splash = IntegratedSplash(
+            parent=main_window,
+            icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
+            title="Package Maker"
+        )
+        splash.finished.connect(on_splash_finished)
+        splash.start(5000)
 
     sys.exit(app.exec())
 

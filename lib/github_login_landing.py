@@ -24,10 +24,23 @@ class GitHubLoginLanding(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("GitHubLoginLanding")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+        self.setAutoFillBackground(True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._spinner_index = 0
         self._spinner_timer = QTimer(self)
         self._spinner_timer.timeout.connect(self._tick_spinner)
         self._build_ui()
+
+    def lock_to_parent(self):
+        """Ajusta la capa al padre y la pone por encima de todos sus hijos."""
+        parent = self.parentWidget()
+        if parent is not None:
+            self.setGeometry(parent.rect())
+        self.raise_()
+        self.show()
+        self.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def _build_ui(self):
         outer = QVBoxLayout(self)
