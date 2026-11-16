@@ -117,9 +117,10 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 ### 5.3. Nuevo IDE de Proyectos `iflapp`
 
-* [ ] Crear desde cero un editor de proyectos `iflapp` completamente nuevo equipado con:
-* Depurador (*debugger*).
-* Compilador propio utilizando los motores base de `packagemaker`.
+* [x] Crear desde cero un editor de proyectos `iflapp` completamente nuevo equipado con:
+* Depurador (*debugger*): `lib/iflapp_ide.py` (`trace_script`/`debug_script` con puntos de ruptura y variables locales por línea) integrado en el panel.
+* Compilador propio utilizando los motores base de `packagemaker`: `lib/iflapp_ide.compile_project` delega en `lib.compilers.resolve_backend` (Nuitka/PyInstaller/zipapp/cx_Freeze/PyOxidizer) y detecta imports ocultos.
+* Motor `lib/iflapp_ide.py` (escaneo de proyecto, compilación, ejecución y depuración) + diálogo/panel `lib/iflapp_ide_dialog.py` (`IflappIdePanel`/`IflappIdeDialog`) + página del sidebar + CLI headless (`--ide-scan`, `--ide-compile`, `--ide-run`, `--ide-debug`) + `tests/test_iflapp_ide.py`.
 
 
 
@@ -133,5 +134,5 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 ## 6. Fase Final de QA
 
-* [ ] Ejecutar pruebas integrales del ciclo de vida (Creación en el nuevo IDE $\rightarrow$ Compilación `.mexf` a `.asksome` $\rightarrow$ Instalación $\rightarrow$ Ejecución $\rightarrow$ Desinstalación con `removeme.py`).
-* [ ] Resolución de bugs remanentes detectados durante las pruebas de estrés.
+* [x] Ejecutar pruebas integrales del ciclo de vida (Creación en el nuevo IDE $\rightarrow$ Compilación `.mexf` a `.asksome` $\rightarrow$ Instalación $\rightarrow$ Ejecución $\rightarrow$ Desinstalación con `removeme.py`): `tests/test_lifecycle_end_to_end.py` encadena las funciones reales (crear con `create_project_from_templates` $\rightarrow$ `scan_project` $\rightarrow$ `compile_project` $\rightarrow$ `run_script` $\rightarrow$ `compile_mexf_project` $\rightarrow$ `install_asksome` $\rightarrow$ lanzador $\rightarrow$ `removeme.py`).
+* [x] Resolución de bugs remanentes detectados durante las pruebas de estrés: opacidad al maximizar (`lib/window_chrome.py`: radio 0 al maximizar + `window.toggle_frameless_maximize`), tinte blanco acumulado (`_release_effects`), respaldo `WipeWindow` sin `leviathan_ui` (`apply()` devuelve `self`), y `zipapp` con guiones de nombre no identificador (`demo-vida.py`, antes "Invalid entry point").
