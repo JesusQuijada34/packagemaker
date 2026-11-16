@@ -1,10 +1,9 @@
-import json
 from pathlib import Path
 
 import pytest
 
-from lib.asksome_format import AsksomeError, extract_asksome, pack_asksome, read_asksome_header, verify_asksome
-from lib.mexf_parser import MexfError, canonicalize_mexf, detect_mexf_format, migrate_legacy_mexf, parse_mexf
+from lib.asksome_format import AsksomeError, extract_asksome, pack_asksome, verify_asksome
+from lib.mexf_parser import MexfError, detect_mexf_format, migrate_legacy_mexf, parse_mexf
 
 
 def test_legacy_mexf_is_detected_and_migrated(tmp_path):
