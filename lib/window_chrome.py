@@ -8,14 +8,24 @@ import sys
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 try:
-    from PyQt6.QtCore import QRect
+    from PyQt6.QtCore import QObject, QRect
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication, QWidget
     PYQT6_AVAILABLE = True
 except (ImportError, SyntaxError):
     PYQT6_AVAILABLE = False
-    class QWidget: pass
-    class QApplication:
+
+    class QObject:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def setParent(self, *args, **kwargs):
+            pass
+
+    class QWidget:  # type: ignore[no-redef]
+        pass
+
+    class QApplication:  # type: ignore[no-redef]
         @staticmethod
         def instance(): return None
 
@@ -25,21 +35,42 @@ try:
 except (ImportError, SyntaxError):
     LEVIATHAN_WIPE_AVAILABLE = False
 
-    class WipeWindow:
-        """Respaldo sin efectos cuando ``leviathan_ui`` no está instalado."""
+    class WipeWindow(QObject):
+        """Respaldo sin efectos cuando ``leviathan_ui`` no está instalado.
+
+        Conserva el contrato de la librería real (``create``/``set_*``/``apply``
+        encadenables y ``apply`` devolviendo el propio objeto) para que
+        ``window.window_effects`` nunca quede en ``None`` y el control de radio
+        siga operando. Sin esto, en un entorno sin ``leviathan_ui`` la ventana
+        maximizada conservaba el radio y las esquinas quedaban transparentes.
+        """
+
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self._mode = "polished"
+            self._radius = FIXED_WINDOW_RADIUS
+            self._blur = FIXED_BLUR_INTENSITY
 
         @classmethod
         def create(cls):
             return cls()
 
-        def set_mode(self, *args, **kwargs):
+        def set_mode(self, mode, *args, **kwargs):
+            self._mode = mode
             return self
 
-        def set_radius(self, *args, **kwargs):
+        def set_radius(self, radius, *args, **kwargs):
+            self._radius = int(radius)
             return self
 
-        def apply(self, *args, **kwargs):
-            return None
+        def set_blur(self, blur, *args, **kwargs):
+            self._blur = blur
+            return self
+
+        def apply(self, widget=None, *args, **kwargs):
+            if widget is not None:
+                self.setParent(widget)
+            return self
 
 if TYPE_CHECKING:
     pass
