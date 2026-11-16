@@ -327,7 +327,16 @@
     "valid": "语法有效",
     "save_as": "另存 .asksome 为",
     "compile_failed": "编译失败：{error}",
-    "compiled": "已生成：{path}"
+    "compiled": "已生成：{path}",
+    "breakpoint": "Comando:",
+    "toggle_break": "Punto de ruptura",
+    "step": "Paso",
+    "resume": "Continuar",
+    "stop": "Detener",
+    "break_on": "Punto de ruptura activado",
+    "break_off": "Punto de ruptura desactivado",
+    "debug_finished": "Depuración finalizada",
+    "debug_stopped": "Depuración detenida"
   },
   "github": {
     "sign_in": "登录",

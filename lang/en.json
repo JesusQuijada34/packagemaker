@@ -327,7 +327,16 @@
     "valid": "Valid syntax",
     "save_as": "Save .asksome as",
     "compile_failed": "Compilation failed: {error}",
-    "compiled": "Generated: {path}"
+    "compiled": "Generated: {path}",
+    "breakpoint": "Command:",
+    "toggle_break": "Breakpoint",
+    "step": "Step",
+    "resume": "Resume",
+    "stop": "Stop",
+    "break_on": "Breakpoint set",
+    "break_off": "Breakpoint cleared",
+    "debug_finished": "Debugging finished",
+    "debug_stopped": "Debugging stopped"
   },
   "github": {
     "sign_in": "Sign in",

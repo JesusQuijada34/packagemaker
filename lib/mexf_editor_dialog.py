@@ -21,6 +21,7 @@ try:
         QListWidgetItem,
         QFileDialog,
         QSplitter,
+        QComboBox,
     )
     from PyQt6.QtCore import Qt, QTimer
     from PyQt6.QtGui import QFont
@@ -34,6 +35,7 @@ except ImportError:  # pragma: no cover - entorno sin GUI
 
 from lib.design_tokens import ACCENT
 from lib.i18n import tr
+from lib.mexf_debugger import MexfDebugger
 from lib.mexf_editor import compile_source, lint_source
 
 DEFAULT_TEMPLATE = """format: mexf
@@ -44,7 +46,10 @@ metadata:
   version: v1.0
 runtime:
   launcher: argv
-commands: []
+commands:
+  - id: mi-app.hola
+    executable: python
+    args: ["-c", "print('hola')"]
 triggers: []
 """
 
@@ -79,6 +84,30 @@ class MexfEditorDialog(QDialog):
         splitter.setSizes([460, 140])
         layout.addWidget(splitter)
 
+        debug_bar = QHBoxLayout()
+        debug_bar.addWidget(QLabel(tr("mexf_editor.breakpoint")))
+        self.break_selector = QComboBox()
+        self.break_selector.setMinimumWidth(180)
+        debug_bar.addWidget(self.break_selector)
+        self.btn_break = QPushButton(tr("mexf_editor.toggle_break"))
+        self.btn_break.clicked.connect(self.toggle_breakpoint)
+        debug_bar.addWidget(self.btn_break)
+        self.btn_step = QPushButton(tr("mexf_editor.step"))
+        self.btn_step.clicked.connect(lambda: self._debug_step(False))
+        debug_bar.addWidget(self.btn_step)
+        self.btn_resume = QPushButton(tr("mexf_editor.resume"))
+        self.btn_resume.clicked.connect(lambda: self._debug_step(True))
+        debug_bar.addWidget(self.btn_resume)
+        self.btn_stop = QPushButton(tr("mexf_editor.stop"))
+        self.btn_stop.clicked.connect(self.stop_debug)
+        debug_bar.addWidget(self.btn_stop)
+        debug_bar.addStretch()
+        layout.addLayout(debug_bar)
+
+        self.debug_output = QListWidget()
+        self.debug_output.setMaximumHeight(120)
+        layout.addWidget(self.debug_output)
+
         buttons = QHBoxLayout()
         self.status = QLabel(tr("mexf_editor.ready"))
         self.status.setStyleSheet("color: #888;")
@@ -105,10 +134,88 @@ class MexfEditorDialog(QDialog):
         self._timer.setInterval(400)
         self._timer.timeout.connect(self.run_lint)
         self.editor.textChanged.connect(self._timer.start)
+        self.debugger: MexfDebugger | None = None
+        self._refresh_breakpoints()
         self.run_lint()
+
+    # ── Debugger ─────────────────────────────────────────────────────────
+    def _refresh_breakpoints(self) -> None:
+        """Repuebla el selector con los comandos del documento actual."""
+        current = self.break_selector.currentText() if hasattr(self, "break_selector") else ""
+        self.break_selector.clear()
+        for command in self._load_commands():
+            self.break_selector.addItem(command["id"])
+        if current:
+            index = self.break_selector.findText(current)
+            if index >= 0:
+                self.break_selector.setCurrentIndex(index)
+
+    def _load_commands(self):
+        from lib.mexf_debugger import load_commands
+
+        try:
+            return load_commands(self._document())
+        except Exception:  # noqa: BLE001 - documento a medio escribir
+            return []
+
+    def _document(self):
+        import json
+
+        from lib.mexf_parser import _legacy_to_v1
+
+        text = self.editor.toPlainText()
+        try:
+            raw = json.loads(text)
+        except json.JSONDecodeError:
+            from lib.mexf_editor import yaml
+
+            raw = yaml.safe_load(text) if yaml else {}
+        if isinstance(raw, dict) and ("extensions" in raw or "shell_commands" in raw):
+            raw = _legacy_to_v1(raw)
+        return raw if isinstance(raw, dict) else {}
+
+    def toggle_breakpoint(self) -> None:
+        command_id = self.break_selector.currentText()
+        if not command_id:
+            return
+        debugger = self._ensure_debugger()
+        enabled = debugger.toggle_breakpoint(command_id)
+        marker = tr("mexf_editor.break_on") if enabled else tr("mexf_editor.break_off")
+        self.debug_output.addItem(f"{marker}: {command_id}")
+
+    def _ensure_debugger(self) -> MexfDebugger:
+        debugger = MexfDebugger(self._document())
+        if self.debugger is not None:
+            for command_id in self.debugger.breakpoints:
+                debugger.set_breakpoint(command_id)
+        self.debugger = debugger
+        return debugger
+
+    def _debug_step(self, resume: bool) -> None:
+        if self.debugger is None:
+            self.debugger = self._ensure_debugger()
+            self.debugger.start()
+        frame = self.debugger.resume() if resume else self.debugger.step()
+        if frame is None:
+            self.debug_output.addItem(tr("mexf_editor.debug_finished"))
+            self.debugger = None
+            return
+        self.debug_output.addItem(
+            f"[{frame.status}] {frame.command_id}: {frame.executable} {' '.join(frame.args)}"
+        )
+        if frame.output.strip():
+            self.debug_output.addItem(f"    {frame.output.strip()}")
+        if self.debugger.state == "finished":
+            self.debug_output.addItem(tr("mexf_editor.debug_finished"))
+            self.debugger = None
+
+    def stop_debug(self) -> None:
+        self.debugger = None
+        self.debug_output.addItem(tr("mexf_editor.debug_stopped"))
 
     def run_lint(self) -> bool:
         self.diagnostics.clear()
+        self._refresh_breakpoints()
         issues = lint_source(self.editor.toPlainText())
         for issue in issues:
             item = QListWidgetItem(f"L{issue.line}:{issue.column}  {issue.message}")

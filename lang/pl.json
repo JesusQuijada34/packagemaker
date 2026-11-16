@@ -327,7 +327,16 @@
     "valid": "Poprawna składnia",
     "save_as": "Zapisz .asksome jako",
     "compile_failed": "Kompilacja nieudana: {error}",
-    "compiled": "Utworzono: {path}"
+    "compiled": "Utworzono: {path}",
+    "breakpoint": "Comando:",
+    "toggle_break": "Punto de ruptura",
+    "step": "Paso",
+    "resume": "Continuar",
+    "stop": "Detener",
+    "break_on": "Punto de ruptura activado",
+    "break_off": "Punto de ruptura desactivado",
+    "debug_finished": "Depuración finalizada",
+    "debug_stopped": "Depuración detenida"
   },
   "github": {
     "sign_in": "Zaloguj",

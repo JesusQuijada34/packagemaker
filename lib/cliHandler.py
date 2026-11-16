@@ -185,6 +185,9 @@ class CLIHandler:
         mexf_group.add_argument('--asksome-password', metavar='PASS', help='Contraseña del payload cifrado para --install-asksome')
         mexf_group.add_argument('--list-asksome', action='store_true', help='Listar los artefactos .asksome instalados')
         mexf_group.add_argument('--no-shortcuts', action='store_true', help='No crear accesos directos al instalar')
+        mexf_group.add_argument('--debug-mexf', metavar='MEXF', help='Depurar el plan de un .mexf: muestra cada comando y su punto de ruptura')
+        mexf_group.add_argument('--debug-run', action='store_true', help='Ejecutar de verdad los comandos del plan (por defecto solo se simula)')
+        mexf_group.add_argument('--debug-break', metavar='IDS', help='Puntos de ruptura separados por comas (ids de comando) para --debug-mexf')
 
         font_group = self.parser.add_argument_group('Fuentes')
         font_group.add_argument('--list-fonts', action='store_true', help='Mostrar el estado de las fuentes de la interfaz')
@@ -407,6 +410,17 @@ class CLIHandler:
                 {
                     'app_id': args.uninstall_asksome,
                     'root': getattr(args, 'install_root', None),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'debug_mexf', None):
+            return (
+                'debug_mexf',
+                {
+                    'path': args.debug_mexf,
+                    'execute': getattr(args, 'debug_run', False),
+                    'breakpoints': getattr(args, 'debug_break', None),
                 },
                 shell_options,
             )
@@ -829,6 +843,56 @@ class MexfCompileHelper:
         return True
 
 
+class MexfDebugHelper:
+    """Depura el plan declarado en un ``.mexf`` (pasos, puntos de ruptura)."""
+
+    @staticmethod
+    def debug(data):
+        from pathlib import Path
+
+        from lib.mexf_debugger import MexfDebugger
+        from lib.mexf_parser import MexfError, parse_mexf
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar un .mexf con --debug-mexf")
+            return False
+        source = Path(path).expanduser().resolve()
+        project_root = source.parent.parent if source.parent.name == ".mexf" else source.parent
+        try:
+            document = parse_mexf(source, project_root=project_root)
+        except (MexfError, FileNotFoundError, OSError) as exc:
+            print(f"[ERROR] No se pudo leer el .mexf: {exc}")
+            return False
+
+        debugger = MexfDebugger(document, dry_run=not data.get("execute"))
+        breakpoints = data.get("breakpoints") or ""
+        for command_id in (item.strip() for item in breakpoints.split(",")):
+            if command_id:
+                debugger.set_breakpoint(command_id)
+
+        mode = "ejecución real" if data.get("execute") else "simulado"
+        print(f"Debug de {source.name}  ({mode})  comandos={len(debugger.commands)}")
+        if debugger.breakpoints:
+            print(f"Puntos de ruptura: {', '.join(debugger.breakpoints)}")
+        debugger.start()
+        while debugger.state != "finished":
+            debugger.resume()
+            if debugger.state == "paused":
+                current = debugger.current_command()
+                print(f"  [PAUSA] punto de ruptura en {current['id']}")
+        for frame in debugger.frames:
+            print(f"  [{frame.status:>7}] {frame.command_id}: {frame.executable} {' '.join(frame.args)}")
+            if frame.output.strip():
+                print(f"            {frame.output.strip()}")
+        variables = debugger.variables()
+        print(f"Estado: {variables['state']}  pc={variables['pc']}/{variables['total']}")
+        if debugger.error:
+            print(f"[ERROR] {debugger.error}")
+            return False
+        return True
+
+
 class AsksomeInstallHelper:
     """Instala, desinstala y lista artefactos ``.asksome``."""
 
@@ -953,6 +1017,9 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'compile_mexf':
         return MexfCompileHelper.compile(data or {})
+
+    elif action == 'debug_mexf':
+        return MexfDebugHelper.debug(data or {})
 
     elif action == 'install_asksome':
         return AsksomeInstallHelper.install(data or {})

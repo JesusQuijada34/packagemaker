@@ -327,7 +327,16 @@
     "valid": "유효한 구문",
     "save_as": ".asksome 다른 이름으로 저장",
     "compile_failed": "컴파일 실패: {error}",
-    "compiled": "생성됨: {path}"
+    "compiled": "생성됨: {path}",
+    "breakpoint": "Comando:",
+    "toggle_break": "Punto de ruptura",
+    "step": "Paso",
+    "resume": "Continuar",
+    "stop": "Detener",
+    "break_on": "Punto de ruptura activado",
+    "break_off": "Punto de ruptura desactivado",
+    "debug_finished": "Depuración finalizada",
+    "debug_stopped": "Depuración detenida"
   },
   "github": {
     "sign_in": "로그인",

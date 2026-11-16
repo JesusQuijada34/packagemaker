@@ -327,7 +327,16 @@
     "valid": "Синтаксис корректен",
     "save_as": "Сохранить .asksome как",
     "compile_failed": "Ошибка сборки: {error}",
-    "compiled": "Создано: {path}"
+    "compiled": "Создано: {path}",
+    "breakpoint": "Comando:",
+    "toggle_break": "Punto de ruptura",
+    "step": "Paso",
+    "resume": "Continuar",
+    "stop": "Detener",
+    "break_on": "Punto de ruptura activado",
+    "break_off": "Punto de ruptura desactivado",
+    "debug_finished": "Depuración finalizada",
+    "debug_stopped": "Depuración detenida"
   },
   "github": {
     "sign_in": "Войти",

@@ -4368,6 +4368,7 @@ def main():
                 'shell_info',
                 'install_shell_integration',
                 'compile_mexf',
+                'debug_mexf',
                 'install_asksome',
                 'uninstall_asksome',
                 'list_asksome',

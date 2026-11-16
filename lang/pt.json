@@ -327,7 +327,16 @@
     "valid": "Sintaxe válida",
     "save_as": "Salvar .asksome como",
     "compile_failed": "Falha ao compilar: {error}",
-    "compiled": "Gerado: {path}"
+    "compiled": "Gerado: {path}",
+    "breakpoint": "Comando:",
+    "toggle_break": "Punto de ruptura",
+    "step": "Paso",
+    "resume": "Continuar",
+    "stop": "Detener",
+    "break_on": "Punto de ruptura activado",
+    "break_off": "Punto de ruptura desactivado",
+    "debug_finished": "Depuración finalizada",
+    "debug_stopped": "Depuración detenida"
   },
   "github": {
     "sign_in": "Entrar",

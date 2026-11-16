@@ -106,7 +106,7 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 * [x] Diseñar y construir un entorno/editor visual especializado para archivos `.mexf` que incluya:
 * [x] Verificador de sintaxis en tiempo real (`lib/mexf_editor.lint_source`, panel de diagnósticos con línea/columna).
-* [ ] *Debugger* integrado.
+* [x] *Debugger* integrado: `lib/mexf_debugger.py` interpreta la lista `commands` del `.mexf` con puntos de ruptura, paso a paso, ejecución/continuar y ejecución real de cada comando argv (sin *shell*, `runner` inyectable). El diálogo del editor añade selector de comando, botón de punto de ruptura, Paso/Continuar/Detener y consola de depuración. CLI headless: `--debug-mexf <archivo>` (`--debug-run`, `--debug-break id1,id2`).
 * [x] Compilador interactivo de prueba (`lib/mexf_editor.compile_source`, botón "Compilar .asksome").
 
 
