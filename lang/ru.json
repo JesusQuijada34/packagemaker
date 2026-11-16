@@ -316,5 +316,17 @@
     "platform_windows": "Windows",
     "platform_linux": "Linux",
     "platform_multi": "Cross-platform"
+  },
+  "mexf_editor": {
+    "title": "Редактор .mexf",
+    "untitled": "(без имени)",
+    "ready": "Готово",
+    "check": "Проверить",
+    "compile": "Собрать .asksome",
+    "issues": "Проблем: {count}",
+    "valid": "Синтаксис корректен",
+    "save_as": "Сохранить .asksome как",
+    "compile_failed": "Ошибка сборки: {error}",
+    "compiled": "Создано: {path}"
   }
 }

@@ -316,5 +316,17 @@
     "platform_windows": "Windows",
     "platform_linux": "Linux",
     "platform_multi": "Cross-platform"
+  },
+  "mexf_editor": {
+    "title": ".mexf 편집기",
+    "untitled": "(제목 없음)",
+    "ready": "준비됨",
+    "check": "검사",
+    "compile": ".asksome 컴파일",
+    "issues": "문제 {count}개",
+    "valid": "유효한 구문",
+    "save_as": ".asksome 다른 이름으로 저장",
+    "compile_failed": "컴파일 실패: {error}",
+    "compiled": "생성됨: {path}"
   }
 }

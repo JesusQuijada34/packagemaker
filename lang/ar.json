@@ -316,5 +316,17 @@
     "platform_windows": "Windows",
     "platform_linux": "Linux",
     "platform_multi": "Cross-platform"
+  },
+  "mexf_editor": {
+    "title": "محرر .mexf",
+    "untitled": "(بدون عنوان)",
+    "ready": "جاهز",
+    "check": "تحقق",
+    "compile": "تصريف .asksome",
+    "issues": "{count} مشكلة",
+    "valid": "صيغة صحيحة",
+    "save_as": "حفظ .asksome باسم",
+    "compile_failed": "فشل التصريف: {error}",
+    "compiled": "تم الإنشاء: {path}"
   }
 }

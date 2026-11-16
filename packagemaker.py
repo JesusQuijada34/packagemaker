@@ -3987,14 +3987,11 @@ class PackageTodoGUI(QMainWindow):
             btnCerrar.setEnabled(True)
 
     def openMexfEditor(self, filePath):
-        """Abre el editor de archivos .mexf"""
+        """Abre el editor interactivo de archivos .mexf."""
         try:
-            LeviathanDialog.launch(
-                self,
-                "Editor MEXF",
-                f"Abriendo editor para:\n{os.path.basename(filePath)}\n\nEsta función abrirá el editor de archivos .mexf.",
-                mode="info"
-            )
+            from lib.mexf_editor_dialog import open_mexf_editor
+
+            open_mexf_editor(self, filePath)
         except Exception as e:
             LeviathanDialog.launch(self, "Error", f"Error abriendo editor MEXF: {e}", mode="error")
 

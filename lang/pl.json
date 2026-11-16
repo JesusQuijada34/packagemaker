@@ -316,5 +316,17 @@
     "platform_windows": "Windows",
     "platform_linux": "Linux",
     "platform_multi": "Cross-platform"
+  },
+  "mexf_editor": {
+    "title": "Edytor .mexf",
+    "untitled": "(bez tytułu)",
+    "ready": "Gotowe",
+    "check": "Sprawdź",
+    "compile": "Kompiluj .asksome",
+    "issues": "Problemy: {count}",
+    "valid": "Poprawna składnia",
+    "save_as": "Zapisz .asksome jako",
+    "compile_failed": "Kompilacja nieudana: {error}",
+    "compiled": "Utworzono: {path}"
   }
 }

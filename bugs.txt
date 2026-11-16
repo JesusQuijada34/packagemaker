@@ -103,10 +103,10 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 ### 5.1. Editor `.mexf` con Debugger
 
-* [ ] Diseñar y construir un entorno/editor visual especializado para archivos `.mexf` que incluya:
-* Verificador de sintaxis en tiempo real.
-* *Debugger* integrado.
-* Compilador interactivo de prueba.
+* [x] Diseñar y construir un entorno/editor visual especializado para archivos `.mexf` que incluya:
+* [x] Verificador de sintaxis en tiempo real (`lib/mexf_editor.lint_source`, panel de diagnósticos con línea/columna).
+* [ ] *Debugger* integrado.
+* [x] Compilador interactivo de prueba (`lib/mexf_editor.compile_source`, botón "Compilar .asksome").
 
 
 

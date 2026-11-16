@@ -253,4 +253,61 @@ def test_install_rejects_tampered_artifact(tmp_path):
         install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
 
 
+VALID_SOURCE = """format: mexf
+version: 1
+metadata:
+  id: influent.editor-demo
+  name: Editor Demo
+  version: v1.0
+runtime:
+  launcher: argv
+commands: []
+"""
+
+
+def test_lint_accepts_valid_source():
+    from lib.mexf_editor import is_valid_source, lint_source
+
+    assert lint_source(VALID_SOURCE) == []
+    assert is_valid_source(VALID_SOURCE)
+
+
+def test_lint_reports_yaml_error_with_line():
+    from lib.mexf_editor import lint_source
+
+    broken = "format: mexf\nmetadata:\n  id: [unclosed\n"
+    issues = lint_source(broken)
+    assert issues
+    assert issues[0].line >= 1
+    assert issues[0].severity == "error"
+
+
+def test_lint_reports_contract_violation_with_line():
+    from lib.mexf_editor import lint_source
+
+    bad = "format: mexf\nversion: 1\nmetadata:\n  name: Sin Id\n"
+    issues = lint_source(bad)
+    assert any("id" in issue.message.lower() for issue in issues)
+    assert all(issue.line >= 1 for issue in issues)
+
+
+def test_compile_source_builds_asksome(tmp_path):
+    from lib.asksome_format import verify_asksome
+    from lib.mexf_editor import compile_source
+
+    output = compile_source(VALID_SOURCE, tmp_path / "editor.asksome")
+    assert output.is_file()
+    header = verify_asksome(output)
+    assert header["metadata"]["id"] == "influent.editor-demo"
+
+
+def test_compile_source_rejects_invalid_text(tmp_path):
+    from lib.mexf_editor import compile_source
+    from lib.mexf_parser import MexfError
+
+    with pytest.raises(MexfError):
+        compile_source("format: mexf\nmetadata: {}\n", tmp_path / "bad.asksome")
+
+
+
 

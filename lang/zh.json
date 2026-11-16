@@ -316,5 +316,17 @@
     "platform_windows": "Windows",
     "platform_linux": "Linux",
     "platform_multi": "Cross-platform"
+  },
+  "mexf_editor": {
+    "title": ".mexf 编辑器",
+    "untitled": "（未命名）",
+    "ready": "就绪",
+    "check": "检查",
+    "compile": "编译 .asksome",
+    "issues": "{count} 个问题",
+    "valid": "语法有效",
+    "save_as": "另存 .asksome 为",
+    "compile_failed": "编译失败：{error}",
+    "compiled": "已生成：{path}"
   }
 }
