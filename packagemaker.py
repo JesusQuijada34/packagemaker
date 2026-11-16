@@ -707,7 +707,10 @@ class PackageTodoGUI(QMainWindow):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.compact_mode = compact_mode
         self.shell_mode = shell_mode
-        WipeWindow.create().set_mode("ghostBlur").set_radius(20).apply(self)
+        # El filtro de efectos (tinte ghostBlur) lo instala una sola vez
+        # ``_apply_leviathan_and_personalization`` más abajo. Instalarlo también
+        # aquí apilaba dos filtros WipeWindow sobre la ventana y duplicaba el
+        # tinte blanco (ventana lavada / deriva de opacidad al maximizar).
         # --- VERSION UPDATE 3.2.7 ---
         self.currentVersion = get_app_version()
 
@@ -1252,8 +1255,10 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, "desc_card"):
             set_qss(self.desc_card, 'packagemaker_068', append=False)
 
-        if hasattr(self, "page_create"):
-            set_qss(self.page_create, applyget(accent, dark), append=False)
+        # ``applyget`` ya está aplicado a ``self.central`` (ancestro de todas las
+        # páginas) y baja en cascada a sus hijos. Volver a aplicarlo sólo a
+        # ``page_create`` incluía su regla ``QWidget { background: transparent }``
+        # y dejaba esa pestaña translúcida mientras el resto eran opacas.
 
     # --- Refactored Init Methods to accept a parent widget instead of using self.tabs ---
 
@@ -3200,7 +3205,7 @@ class PackageTodoGUI(QMainWindow):
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
 
-            lblInfo = QLabel(f"📁 Carpeta: {os.path.basename(folderPath)}")
+            lblInfo = QLabel(tr("dialog.folder_info").format(name=os.path.basename(folderPath)))
             set_qss(lblInfo, 'packagemaker_106', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
@@ -3218,7 +3223,7 @@ class PackageTodoGUI(QMainWindow):
             # Botones
             layoutBotones = QHBoxLayout()
 
-            btnCerrar = QPushButton("Cerrar")
+            btnCerrar = QPushButton(tr("common.close"))
             set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
@@ -3378,24 +3383,24 @@ class PackageTodoGUI(QMainWindow):
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
 
-            lblInfo = QLabel(f"📁 Proyecto: {os.path.basename(projectPath)}")
+            lblInfo = QLabel(tr("dialog.project_info").format(name=os.path.basename(projectPath)))
             set_qss(lblInfo, 'packagemaker_112', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
 
             # Opciones de compilación
-            groupOpciones = QGroupBox("Opciones de Compilación")
+            groupOpciones = QGroupBox(tr("dialog.compile_options"))
             set_qss(groupOpciones, 'packagemaker_113', append=False)
             layoutOpciones = QVBoxLayout()
 
-            chkWindows = QCheckBox("🪟 Compilar para Windows")
+            chkWindows = QCheckBox(tr("dialog.compile_windows"))
             chkWindows.setChecked(True)
             layoutOpciones.addWidget(chkWindows)
 
-            chkKnosthalij = QCheckBox("🌐 Compilar para Knosthalij")
+            chkKnosthalij = QCheckBox(tr("dialog.compile_knosthalij"))
             layoutOpciones.addWidget(chkKnosthalij)
 
-            chkOptimizar = QCheckBox("⚡ Optimizar código")
+            chkOptimizar = QCheckBox(tr("dialog.optimize_code"))
             chkOptimizar.setChecked(True)
             layoutOpciones.addWidget(chkOptimizar)
 
@@ -3415,12 +3420,12 @@ class PackageTodoGUI(QMainWindow):
             # Botones
             layoutBotones = QHBoxLayout()
 
-            btnCerrar = QPushButton("Cerrar")
+            btnCerrar = QPushButton(tr("common.close"))
             set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
 
-            btnCompilar = QPushButton("🔨 Compilar")
+            btnCompilar = QPushButton(tr("dialog.compile"))
             set_qss(btnCompilar, BTN_STYLES["success"], append=False)
             btnCompilar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCompilar.setMinimumHeight(45)
@@ -3529,12 +3534,12 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.setSpacing(15)
 
             # Título
-            lblTitulo = QLabel("MoonFix - Reparación Automática")
+            lblTitulo = QLabel(tr("moonfix.auto_repair_title"))
             set_qss(lblTitulo, 'packagemaker_121', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
 
-            lblInfo = QLabel(f"📁 Proyecto: {os.path.basename(projectPath)}")
+            lblInfo = QLabel(tr("dialog.project_info").format(name=os.path.basename(projectPath)))
             set_qss(lblInfo, 'packagemaker_122', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
@@ -3545,23 +3550,23 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.addWidget(lblDescripcion)
 
             # Opciones de reparación
-            groupOpciones = QGroupBox("Opciones de Reparación")
+            groupOpciones = QGroupBox(tr("dialog.repair_options"))
             set_qss(groupOpciones, 'packagemaker_124', append=False)
             layoutOpciones = QVBoxLayout()
 
-            chkArchivos = QCheckBox("📄 Verificar archivos faltantes")
+            chkArchivos = QCheckBox(tr("dialog.repair_check_files"))
             chkArchivos.setChecked(True)
             layoutOpciones.addWidget(chkArchivos)
 
-            chkConfig = QCheckBox("⚙️ Actualizar configuraciones antiguas")
+            chkConfig = QCheckBox(tr("dialog.repair_update_config"))
             chkConfig.setChecked(True)
             layoutOpciones.addWidget(chkConfig)
 
-            chkEstructura = QCheckBox("🏗️ Reparar estructura de carpetas")
+            chkEstructura = QCheckBox(tr("dialog.repair_structure"))
             chkEstructura.setChecked(True)
             layoutOpciones.addWidget(chkEstructura)
 
-            chkDependencias = QCheckBox("📦 Verificar dependencias")
+            chkDependencias = QCheckBox(tr("dialog.repair_dependencies"))
             chkDependencias.setChecked(True)
             layoutOpciones.addWidget(chkDependencias)
 
@@ -3581,12 +3586,12 @@ class PackageTodoGUI(QMainWindow):
             # Botones
             layoutBotones = QHBoxLayout()
 
-            btnCerrar = QPushButton("Cerrar")
+            btnCerrar = QPushButton(tr("common.close"))
             set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
 
-            btnReparar = QPushButton("🌙 Ejecutar MoonFix")
+            btnReparar = QPushButton(tr("dialog.run_moonfix"))
             set_qss(btnReparar, BTN_STYLES["best"], append=False)
             btnReparar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnReparar.setMinimumHeight(45)
@@ -3705,7 +3710,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
 
             # Barra de título personalizada
-            titleBar = create_title_bar(dialogoInstalarPaquete, title="📦 Instalar Paquete", icon_path=IPM_ICON_PATH)
+            titleBar = create_title_bar(dialogoInstalarPaquete, title=tr("dialog.install_package_title"), icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
 
             # Contenido
@@ -3715,12 +3720,12 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.setSpacing(15)
 
             # Título
-            lblTitulo = QLabel("Instalar Paquete Fluthin")
+            lblTitulo = QLabel(tr("dialog.install_fluthin_package"))
             set_qss(lblTitulo, 'packagemaker_133', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
 
-            lblInfo = QLabel(f"📄 Archivo: {os.path.basename(filePath)}")
+            lblInfo = QLabel(tr("dialog.file_info").format(name=os.path.basename(filePath)))
             set_qss(lblInfo, 'packagemaker_134', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
@@ -3738,12 +3743,12 @@ class PackageTodoGUI(QMainWindow):
             # Botones
             layoutBotones = QHBoxLayout()
 
-            btnCerrar = QPushButton("Cerrar")
+            btnCerrar = QPushButton(tr("common.close"))
             set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
 
-            btnInstalar = QPushButton("📥 Instalar")
+            btnInstalar = QPushButton(tr("dialog.install"))
             set_qss(btnInstalar, BTN_STYLES["success"], append=False)
             btnInstalar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnInstalar.setMinimumHeight(45)
@@ -3837,7 +3842,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Crear diálogo personalizado con QDialog
             dialogoInstalarMexf = QDialog(self)
-            dialogoInstalarMexf.setWindowTitle("🔧 Instalar Extensiones MEXF")
+            dialogoInstalarMexf.setWindowTitle(tr("dialog.install_mexf_title"))
             dialogoInstalarMexf.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoInstalarMexf.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoInstalarMexf.resize(700, 550)
@@ -3855,7 +3860,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
 
             # Barra de título personalizada
-            titleBar = create_title_bar(dialogoInstalarMexf, title="🔧 Instalar Extensiones MEXF", icon_path=IPM_ICON_PATH)
+            titleBar = create_title_bar(dialogoInstalarMexf, title=tr("dialog.install_mexf_title"), icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
 
             # Contenido
@@ -3865,12 +3870,12 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.setSpacing(15)
 
             # Título
-            lblTitulo = QLabel("Instalar Extensiones de Shell")
+            lblTitulo = QLabel(tr("dialog.install_mexf_heading"))
             set_qss(lblTitulo, 'packagemaker_139', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
 
-            lblInfo = QLabel(f"📄 Archivo: {os.path.basename(filePath)}")
+            lblInfo = QLabel(tr("dialog.file_info").format(name=os.path.basename(filePath)))
             set_qss(lblInfo, 'packagemaker_140', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
@@ -3880,9 +3885,11 @@ class PackageTodoGUI(QMainWindow):
                 with open(filePath, 'r', encoding='utf-8') as f:
                     mexfData = json.load(f)
 
-                infoText = f"Nombre: {mexfData.get('name', 'N/A')}\n"
-                infoText += f"Versión: {mexfData.get('version', 'N/A')}\n"
-                infoText += f"Descripción: {mexfData.get('description', 'N/A')}"
+                infoText = tr("dialog.mexf_details").format(
+                    name=mexfData.get("name", "N/A"),
+                    version=mexfData.get("version", "N/A"),
+                    description=mexfData.get("description", "N/A"),
+                )
 
                 lblDetalles = QLabel(infoText)
                 set_qss(lblDetalles, 'packagemaker_157', append=False)
@@ -3904,12 +3911,12 @@ class PackageTodoGUI(QMainWindow):
             # Botones
             layoutBotones = QHBoxLayout()
 
-            btnCerrar = QPushButton("Cerrar")
+            btnCerrar = QPushButton(tr("common.close"))
             set_qss(btnCerrar, BTN_STYLES["default"], append=False)
             btnCerrar.setEnabled(False)
             btnCerrar.setMinimumHeight(45)
 
-            btnInstalar = QPushButton("🔧 Instalar Extensiones")
+            btnInstalar = QPushButton(tr("dialog.install_extensions"))
             set_qss(btnInstalar, BTN_STYLES["success"], append=False)
             btnInstalar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnInstalar.setMinimumHeight(45)
@@ -3996,7 +4003,7 @@ class PackageTodoGUI(QMainWindow):
         try:
             # Crear diálogo personalizado con QDialog
             dialogoCrearMexf = QDialog(self)
-            dialogoCrearMexf.setWindowTitle("📝 Crear Archivo MEXF")
+            dialogoCrearMexf.setWindowTitle(tr("dialog.create_mexf_title"))
             dialogoCrearMexf.setWindowFlags(Qt.WindowType.FramelessWindowHint)
             dialogoCrearMexf.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             dialogoCrearMexf.resize(650, 600)
@@ -4014,7 +4021,7 @@ class PackageTodoGUI(QMainWindow):
             layoutPrincipal.setSpacing(0)
 
             # Barra de título personalizada
-            titleBar = create_title_bar(dialogoCrearMexf, title="📝 Crear Archivo MEXF", icon_path=IPM_ICON_PATH)
+            titleBar = create_title_bar(dialogoCrearMexf, title=tr("dialog.create_mexf_title"), icon_path=IPM_ICON_PATH)
             layoutPrincipal.addWidget(titleBar)
 
             # Contenido
@@ -4024,12 +4031,12 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.setSpacing(15)
 
             # Título
-            lblTitulo = QLabel("Crear Archivo de Extensiones MEXF")
+            lblTitulo = QLabel(tr("dialog.create_mexf_heading"))
             set_qss(lblTitulo, 'packagemaker_145', append=False)
             lblTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
             contentLayout.addWidget(lblTitulo)
 
-            lblInfo = QLabel(f"📁 Ubicación: {folderPath}")
+            lblInfo = QLabel(tr("dialog.location").format(path=folderPath))
             set_qss(lblInfo, 'packagemaker_146', append=False)
             lblInfo.setWordWrap(True)
             contentLayout.addWidget(lblInfo)
@@ -4039,7 +4046,7 @@ class PackageTodoGUI(QMainWindow):
             formLayout.setSpacing(12)
 
             # Nombre del archivo
-            lblNombre = QLabel("Nombre del archivo:")
+            lblNombre = QLabel(tr("dialog.file_name"))
             set_qss(lblNombre, 'packagemaker_147', append=False)
             formLayout.addWidget(lblNombre)
 
@@ -4050,12 +4057,12 @@ class PackageTodoGUI(QMainWindow):
             formLayout.addWidget(txtNombre)
 
             # Descripción
-            lblDesc = QLabel("Descripción:")
+            lblDesc = QLabel(tr("dialog.description"))
             set_qss(lblDesc, 'packagemaker_149', append=False)
             formLayout.addWidget(lblDesc)
 
             txtDesc = QTextEdit()
-            txtDesc.setPlaceholderText("Describe las extensiones que incluye este archivo...")
+            txtDesc.setPlaceholderText(tr("dialog.extensions_placeholder"))
             txtDesc.setMaximumHeight(100)
             set_qss(txtDesc, 'packagemaker_150', append=False)
             formLayout.addWidget(txtDesc)
@@ -4063,7 +4070,7 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.addLayout(formLayout)
 
             # Información adicional
-            lblAyuda = QLabel("ℹ️ Se creará un archivo .mexf de ejemplo con configuraciones básicas de integración con el shell.")
+            lblAyuda = QLabel(tr("dialog.mexf_help"))
             set_qss(lblAyuda, 'packagemaker_151', append=False)
             lblAyuda.setWordWrap(True)
             contentLayout.addWidget(lblAyuda)
@@ -4073,12 +4080,12 @@ class PackageTodoGUI(QMainWindow):
             # Botones
             layoutBotones = QHBoxLayout()
 
-            btnCancelar = QPushButton("❌ Cancelar")
+            btnCancelar = QPushButton(tr("dialog.cancel_button"))
             set_qss(btnCancelar, BTN_STYLES["default"], append=False)
             btnCancelar.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCancelar.setMinimumHeight(45)
 
-            btnCrear = QPushButton("📝 Crear MEXF")
+            btnCrear = QPushButton(tr("dialog.create_mexf"))
             set_qss(btnCrear, BTN_STYLES["best"], append=False)
             btnCrear.setCursor(Qt.CursorShape.PointingHandCursor)
             btnCrear.setMinimumHeight(45)

@@ -8,6 +8,7 @@ import os
 import shutil
 import zipfile
 from lib.safe_zip import safe_extract_zip
+from lib.i18n import tr
 import tempfile
 import json
 import re
@@ -225,7 +226,7 @@ class MoonFixWizard(QDialog):
         nav_layout = QHBoxLayout(self.nav_bar)
         nav_layout.setContentsMargins(24, 0, 24, 0)
         
-        self.lbl_step = QLabel(f"Página 1 de {len(self.projects) + 2}")
+        self.lbl_step = QLabel(tr("wizard.page_of").format(current=1, total=len(self.projects) + 2))
         self.lbl_step.setStyleSheet("background: transparent; color: #888; font-size: 11px; font-family: 'Segoe UI Variable Text';")
         nav_layout.addWidget(self.lbl_step)
         nav_layout.addStretch()
@@ -245,7 +246,7 @@ class MoonFixWizard(QDialog):
         layout.setContentsMargins(40, 25, 40, 25)
         layout.setSpacing(15)
 
-        title = QLabel("Optimización de Proyectos")
+        title = QLabel(tr("moonfix.optimization_title"))
         title.setStyleSheet("font-size: 26px; font-weight: bold; color: white; font-family: 'Segoe UI Variable Display';")
         layout.addWidget(title)
 
@@ -263,7 +264,7 @@ class MoonFixWizard(QDialog):
         warning_box.setStyleSheet("background: transparent; border: 1px solid rgba(255, 152, 0, 0.2); border-radius: 8px;")
         w_layout = QHBoxLayout(warning_box)
         w_icon = QLabel("⚠️")
-        w_text = QLabel("Asegúrate de tener conexión a internet si necesitas verificar perfiles de GitHub.")
+        w_text = QLabel(tr("moonfix.internet_hint"))
         w_text.setStyleSheet("color: #ffb74d; font-size: 13px;")
         w_layout.addWidget(w_icon)
         w_layout.addWidget(w_text)
@@ -321,7 +322,7 @@ class MoonFixWizard(QDialog):
             else:
                 print("[MoonFix] Icon Pack cargado, pero no se encontraron nombres de archivos válidos.")
         except Exception as e:
-            LeviathanDialog.launch(self, "Error de Icon Pack", str(e), mode="error")
+            LeviathanDialog.launch(self, tr("wizard.error_icon_pack"), str(e), mode="error")
 
     def process_ipm_assetpck(self, file_path):
         """Binary parser for *.ipm-assetpck (ZIP format with internal JSON)"""
@@ -329,7 +330,7 @@ class MoonFixWizard(QDialog):
             temp_dir = tempfile.mkdtemp(prefix="ipm_assets_")
             with zipfile.ZipFile(file_path, 'r') as z:
                 if 'metadata.json' not in z.namelist():
-                    LeviathanDialog.launch(self, "Asset Pack", "El paquete no contiene metadata.json válida.", mode="error")
+                    LeviathanDialog.launch(self, tr("wizard.asset_pack"), tr("wizard.invalid_metadata"), mode="error")
                     return
                 
                 safe_extract_zip(z, temp_dir)
@@ -377,7 +378,7 @@ class MoonFixWizard(QDialog):
                 else:
                     print("[MoonFix] Asset Pack cargado, pero no hay campos faltantes compatibles.")
         except Exception as e:
-            LeviathanDialog.launch(self, "Error de Pack", f"No se pudo parsear el Asset Pack: {str(e)}", mode="error")
+            LeviathanDialog.launch(self, tr("wizard.error_pack"), tr("wizard.parse_pack_failed").format(error=str(e)), mode="error")
 
     def create_project_page(self, index, proj_data):
         page = QWidget()
@@ -546,7 +547,7 @@ class MoonFixWizard(QDialog):
                 edit.setFixedHeight(30)
                 edit.setStyleSheet(EDIT_QSS)
                 if not value or is_generic:
-                    edit.setPlaceholderText("Campo obligatorio...")
+                    edit.setPlaceholderText(tr("wizard.required_field"))
                     edit.setStyleSheet(edit.styleSheet() + "QLineEdit { border-left: 3px solid #f44336; }")
                 
                 form_layout.addWidget(lbl, current_row, 0)
@@ -613,7 +614,7 @@ class MoonFixWizard(QDialog):
         layout.addWidget(scroll)
         
         # GitHub Verification row
-        gh_btn = QPushButton("Verificar GitHub")
+        gh_btn = QPushButton(tr("wizard.verify_github"))
         gh_btn.setFixedHeight(30)
         gh_btn.setStyleSheet("QPushButton { background: #333; color: white; border-radius: 5px; font-size: 11px; }")
         gh_status = QLabel("Pendiente")
@@ -681,7 +682,7 @@ class MoonFixWizard(QDialog):
             for k, edit in inputs.items():
                 if k.startswith("extra_"): continue # Skip asset validation here
                 if not edit.text().strip():
-                    LeviathanDialog.launch(self, "Campo Requerido", f"El campo '{k}' es obligatorio para continuar.", mode="warning")
+                    LeviathanDialog.launch(self, tr("wizard.required_title"), tr("wizard.required_field_msg").format(field=k), mode="warning")
                     return
             
             # Apply fixes for this project
@@ -738,7 +739,7 @@ class MoonFixWizard(QDialog):
     def update_nav(self):
         curr = self.stack.currentIndex()
         total = self.stack.count()
-        self.lbl_step.setText(f"Página {curr + 1} de {total}")
+        self.lbl_step.setText(tr("wizard.page_of").format(current=curr + 1, total=total))
         
         # Reset to UWP accent for all states, changing only text/icons
         if curr == 0:

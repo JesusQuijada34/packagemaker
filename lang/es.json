@@ -141,7 +141,8 @@
     "yes": "Sí",
     "no": "No",
     "select_folder": "Seleccionar carpeta",
-    "version": "Versión"
+    "version": "Versión",
+    "close": "Cerrar"
   },
   "about": {
     "version": "Versión {version}",
@@ -157,13 +158,23 @@
     "no_subfolders": "No se encontraron subcarpetas para procesar.",
     "optimized": "Todos los proyectos ya están optimizados. No se requieren acciones.",
     "completed": "Reparación completada.\nProyectos sanados: {count}",
-    "warning": "Advertencia"
+    "warning": "Advertencia",
+    "auto_repair_title": "MoonFix - Reparación Automática",
+    "optimization_title": "Optimización de Proyectos",
+    "internet_hint": "Asegúrate de tener conexión a internet si necesitas verificar perfiles de GitHub."
   },
   "editor": {
     "project": "Proyecto",
     "no_project": "Sin proyecto",
     "metrics_title": "Métricas de Código",
-    "select_interpreter": "Seleccionar intérprete Python"
+    "select_interpreter": "Seleccionar intérprete Python",
+    "project_header": "Proyecto",
+    "project_header_value": "Proyecto: {name}",
+    "run": "Ejecutar",
+    "select_original": "Seleccionar Archivo Original",
+    "select_new": "Seleccionar Archivo Nuevo",
+    "file_metrics_title": "Métricas del Archivo",
+    "download_another": "Descargar otro intérprete..."
   },
   "updater": {
     "title": "Actualizador de PackageMaker",
@@ -201,7 +212,35 @@
     "create_button": "Crear proyecto",
     "project_name_required": "El nombre del proyecto no puede estar vacío.",
     "interpreter_config_title": "Configuración de intérpretes Python",
-    "extension_name_placeholder": "Nombre sin extensión"
+    "extension_name_placeholder": "Nombre sin extensión",
+    "folder_info": "📁 Carpeta: {name}",
+    "project_info": "📁 Proyecto: {name}",
+    "file_info": "📄 Archivo: {name}",
+    "compile_options": "Opciones de Compilación",
+    "compile_windows": "🪟 Compilar para Windows",
+    "compile_knosthalij": "🌐 Compilar para Knosthalij",
+    "optimize_code": "⚡ Optimizar código",
+    "compile": "🔨 Compilar",
+    "repair_options": "Opciones de Reparación",
+    "repair_check_files": "📄 Verificar archivos faltantes",
+    "repair_update_config": "⚙️ Actualizar configuraciones antiguas",
+    "repair_structure": "🏗️ Reparar estructura de carpetas",
+    "repair_dependencies": "📦 Verificar dependencias",
+    "run_moonfix": "🌙 Ejecutar MoonFix",
+    "install_fluthin_package": "Instalar Paquete Fluthin",
+    "install": "📥 Instalar",
+    "install_mexf_title": "🔧 Instalar Extensiones MEXF",
+    "install_mexf_heading": "Instalar Extensiones de Shell",
+    "install_extensions": "🔧 Instalar Extensiones",
+    "mexf_details": "Nombre: {name}\nVersión: {version}\nDescripción: {description}",
+    "create_mexf_title": "📝 Crear Archivo MEXF",
+    "create_mexf_heading": "Crear Archivo de Extensiones MEXF",
+    "file_name": "Nombre del archivo:",
+    "extensions_placeholder": "Describe las extensiones que incluye este archivo...",
+    "mexf_help": "ℹ️ Se creará un archivo .mexf de ejemplo con configuraciones básicas de integración con el shell.",
+    "cancel_button": "❌ Cancelar",
+    "create_mexf": "📝 Crear MEXF",
+    "install_package_title": "📦 Instalar Paquete"
   },
   "build": {
     "page_title": "Compilar el proyecto con BlindCube",
@@ -237,5 +276,45 @@
     "minimize": "Minimizar",
     "maximize": "Maximizar",
     "close": "Cerrar"
+  },
+  "interpreter": {
+    "title": "Gestión de intérpretes Python",
+    "installed": "Intérpretes instalados",
+    "set_default": "Establecer como predeterminado",
+    "uninstall": "Desinstalar",
+    "download_new": "Descargar nuevo intérprete",
+    "download_install": "Descargar e instalar",
+    "detection_config": "Configuración de detección",
+    "exclude_pyqt": "Excluir PyQt6 de la verificación automática",
+    "exclude_local": "Excluir módulos locales del proyecto",
+    "auto_check": "Verificar dependencias automáticamente al abrir archivos",
+    "version_label": "Versión:"
+  },
+  "wizard": {
+    "page_of": "Página {current} de {total}",
+    "required_field": "Campo obligatorio...",
+    "verify_github": "Verificar GitHub",
+    "error_icon_pack": "Error de Icon Pack",
+    "asset_pack": "Asset Pack",
+    "invalid_metadata": "El paquete no contiene metadata.json válida.",
+    "error_pack": "Error de Pack",
+    "parse_pack_failed": "No se pudo parsear el Asset Pack: {error}",
+    "required_title": "Campo Requerido",
+    "required_field_msg": "El campo '{field}' es obligatorio para continuar."
+  },
+  "dashboard": {
+    "new_project_title": "Nuevo Proyecto PackageMaker",
+    "create_new": "Crear nuevo proyecto",
+    "ph_publisher": "Ej: influent",
+    "ph_app": "Ej: my-app",
+    "internal_id": "ID interno:",
+    "ph_name": "Ej: Mi Aplicacion",
+    "name": "Nombre:",
+    "ph_author": "GitHub username",
+    "platform": "Plataforma:",
+    "location": "Ubicacion:",
+    "platform_windows": "Windows",
+    "platform_linux": "Linux",
+    "platform_multi": "Multiplataforma"
   }
 }

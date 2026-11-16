@@ -679,7 +679,7 @@ class FileExplorer(QWidget):
         layout.setSpacing(0)
         
         # Header con nombre de proyecto
-        self.header = QLabel("Proyecto")
+        self.header = QLabel(tr("editor.project_header"))
         self.header.setStyleSheet(f"font-weight: bold; padding: 5px; color: {EDITOR_ACCENT};")
         layout.addWidget(self.header)
         
@@ -709,7 +709,7 @@ class FileExplorer(QWidget):
         """Establece la ruta del proyecto actual."""
         self._project_path = path
         if path and os.path.exists(path):
-            self.header.setText(f"Proyecto: {os.path.basename(path)}")
+            self.header.setText(tr("editor.project_header_value").format(name=os.path.basename(path)))
             self.tree.setRootIndex(self.model.index(path))
             self.tree.expandToDepth(1)
         else:
@@ -814,7 +814,7 @@ class ConsolePanel(QWidget):
         self.input_field.returnPressed.connect(self._execute_input)
         input_layout.addWidget(self.input_field)
         
-        self.run_btn = QPushButton("Ejecutar")
+        self.run_btn = QPushButton(tr("editor.run"))
         self.run_btn.setMaximumWidth(80)
         self.run_btn.clicked.connect(self._execute_input)
         input_layout.addWidget(self.run_btn)
@@ -1091,13 +1091,13 @@ class DiffDialog(QDialog):
         # Header
         header = QHBoxLayout()
         
-        self.file1_btn = QPushButton("Seleccionar Archivo Original")
+        self.file1_btn = QPushButton(tr("editor.select_original"))
         self.file1_btn.clicked.connect(self._select_file1)
         header.addWidget(self.file1_btn)
         
         header.addWidget(QLabel("VS"))
         
-        self.file2_btn = QPushButton("Seleccionar Archivo Nuevo")
+        self.file2_btn = QPushButton(tr("editor.select_new"))
         self.file2_btn.clicked.connect(self._select_file2)
         header.addWidget(self.file2_btn)
         
@@ -1309,7 +1309,7 @@ class MetricsDialog(QDialog):
     def _setup_ui(self):
         layout = QVBoxLayout(self)
         
-        title = QLabel("Métricas del Archivo")
+        title = QLabel(tr("editor.file_metrics_title"))
         title.setStyleSheet(f"font-size: 16px; font-weight: bold; color: {EDITOR_ACCENT};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
@@ -1326,7 +1326,7 @@ class MetricsDialog(QDialog):
         layout.addWidget(scroll)
         
         # Botón cerrar
-        close_btn = QPushButton("Cerrar")
+        close_btn = QPushButton(tr("common.close"))
         close_btn.clicked.connect(self.accept)
         layout.addWidget(close_btn)
     
@@ -1411,7 +1411,7 @@ class FindDialog(QDialog):
         self.replace_btn.clicked.connect(self.replace)
         self.replace_all_btn = QPushButton("Reemplazar todo")
         self.replace_all_btn.clicked.connect(self.replace_all)
-        self.close_btn = QPushButton("Cerrar")
+        self.close_btn = QPushButton(tr("common.close"))
         self.close_btn.clicked.connect(self.close)
         
         btn_layout.addWidget(self.find_btn)
@@ -2553,13 +2553,13 @@ class EditorWindow(QMainWindow):
         layout.addWidget(list_widget)
 
         btn_row = QHBoxLayout()
-        btn_download = QPushButton("Descargar otro intérprete...")
+        btn_download = QPushButton(tr("editor.download_another"))
         btn_download.clicked.connect(lambda: self._download_new_interpreter(dialog))
         btn_row.addWidget(btn_download)
         btn_row.addStretch()
         btn_ok = QPushButton("Usar seleccionado")
         btn_ok.setDefault(True)
-        btn_cancel = QPushButton("Cancelar")
+        btn_cancel = QPushButton(tr("common.cancel"))
         btn_ok.clicked.connect(dialog.accept)
         btn_cancel.clicked.connect(dialog.reject)
         btn_row.addWidget(btn_ok)

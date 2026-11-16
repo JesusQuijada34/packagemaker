@@ -67,27 +67,49 @@ def fixed_window_title(version: str, suffix: str = "") -> str:
     return f"{base} - {suffix}" if suffix else base
 
 
+def _wipe_filters(window: QWidget):
+    """Devuelve los ``WipeWindow`` anclados a *window* (filtros de efecto).
+
+    ``WipeWindow.apply()`` hace ``setParent(widget)`` e
+    ``installEventFilter(widget)``, así que cada efecto activo aparece como hijo
+    de la ventana. Se recorren los hijos para detectar también filtros huérfanos
+    (los que perdieron la referencia en ``window_effects``), que de otro modo
+    seguirían pintando el tinte blanco.
+    """
+    try:
+        children = window.children()
+    except Exception:
+        return []
+    return [child for child in children if isinstance(child, WipeWindow)]
+
+
 def _release_effects(window: QWidget) -> None:
-    """Retira el filtro de eventos del WipeWindow anterior.
+    """Retira todos los filtros de efectos WipeWindow de la ventana.
 
     ``WipeWindow.apply()`` instala un filtro de eventos sobre la ventana y
     ``WipeWindow.create()`` devuelve un objeto **nuevo** en cada llamada. Si no
     se retira el filtro anterior, cada maximizar/restaurar deja uno más pintando
     el tinte blanco de ``ghostBlur`` y la ventana se vuelve progresivamente
-    blanca.
+    blanca. Se limpian tanto el efecto rastreado como cualquier huérfano.
     """
     previous = getattr(window, "window_effects", None)
-    if previous is None:
-        return
+    if previous is not None:
+        _detach_filter(window, previous)
+        window.window_effects = None
+
+    for orphan in _wipe_filters(window):
+        _detach_filter(window, orphan)
+
+
+def _detach_filter(window: QWidget, effect: Any) -> None:
     try:
-        window.removeEventFilter(previous)
+        window.removeEventFilter(effect)
     except Exception:
         pass
     try:
-        previous.setParent(None)
+        effect.setParent(None)
     except Exception:
         pass
-    window.window_effects = None
 
 
 def apply_display_mode(window: QWidget, display_name: str) -> Any:

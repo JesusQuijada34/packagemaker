@@ -188,3 +188,6 @@ data/pmCodeEditor/python/
 
 # Fuentes descargadas desde Google Fonts (caché local, no versionar)
 data/fonts/
+
+# Estado local del agente
+.openhands/

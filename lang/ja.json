@@ -141,7 +141,8 @@
     "yes": "Yes",
     "no": "No",
     "select_folder": "Select Folder",
-    "version": "Version"
+    "version": "Version",
+    "close": "Close"
   },
   "about": {
     "version": "Version {version}",
@@ -157,13 +158,23 @@
     "no_subfolders": "No subfolders were found to process.",
     "optimized": "All projects are already optimized. No action is required.",
     "completed": "Repair completed.\nProjects fixed: {count}",
-    "warning": "Warning"
+    "warning": "Warning",
+    "auto_repair_title": "MoonFix - Automatic Repair",
+    "optimization_title": "Project Optimization",
+    "internet_hint": "Make sure you have an internet connection if you need to verify GitHub profiles."
   },
   "editor": {
     "project": "Project",
     "no_project": "No project",
     "metrics_title": "Code Metrics",
-    "select_interpreter": "Select Python interpreter"
+    "select_interpreter": "Select Python interpreter",
+    "project_header": "Project",
+    "project_header_value": "Project: {name}",
+    "run": "Run",
+    "select_original": "Select Original File",
+    "select_new": "Select New File",
+    "file_metrics_title": "File Metrics",
+    "download_another": "Download another interpreter..."
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -201,7 +212,35 @@
     "create_button": "Create Project",
     "project_name_required": "Project name cannot be empty.",
     "interpreter_config_title": "Python interpreters configuration",
-    "extension_name_placeholder": "Name without extension"
+    "extension_name_placeholder": "Name without extension",
+    "folder_info": "📁 Folder: {name}",
+    "project_info": "📁 Project: {name}",
+    "file_info": "📄 File: {name}",
+    "compile_options": "Compilation Options",
+    "compile_windows": "🪟 Compile for Windows",
+    "compile_knosthalij": "🌐 Compile for Knosthalij",
+    "optimize_code": "⚡ Optimize code",
+    "compile": "🔨 Compile",
+    "repair_options": "Repair Options",
+    "repair_check_files": "📄 Check for missing files",
+    "repair_update_config": "⚙️ Update old configurations",
+    "repair_structure": "🏗️ Repair folder structure",
+    "repair_dependencies": "📦 Check dependencies",
+    "run_moonfix": "🌙 Run MoonFix",
+    "install_fluthin_package": "Install Fluthin Package",
+    "install": "📥 Install",
+    "install_mexf_title": "🔧 Install MEXF Extensions",
+    "install_mexf_heading": "Install Shell Extensions",
+    "install_extensions": "🔧 Install Extensions",
+    "mexf_details": "Name: {name}\nVersion: {version}\nDescription: {description}",
+    "create_mexf_title": "📝 Create MEXF File",
+    "create_mexf_heading": "Create MEXF Extensions File",
+    "file_name": "File name:",
+    "extensions_placeholder": "Describe the extensions this file includes...",
+    "mexf_help": "ℹ️ A sample .mexf file will be created with basic shell integration settings.",
+    "cancel_button": "❌ Cancel",
+    "create_mexf": "📝 Create MEXF",
+    "install_package_title": "📦 Install Package"
   },
   "build": {
     "page_title": "Compile the project with BlindCube",
@@ -237,5 +276,45 @@
     "minimize": "Minimize",
     "maximize": "Maximize",
     "close": "Close"
+  },
+  "interpreter": {
+    "title": "Python Interpreter Management",
+    "installed": "Installed interpreters",
+    "set_default": "Set as default",
+    "uninstall": "Uninstall",
+    "download_new": "Download new interpreter",
+    "download_install": "Download and install",
+    "detection_config": "Detection settings",
+    "exclude_pyqt": "Exclude PyQt6 from automatic verification",
+    "exclude_local": "Exclude local project modules",
+    "auto_check": "Automatically check dependencies when opening files",
+    "version_label": "Version:"
+  },
+  "wizard": {
+    "page_of": "Page {current} of {total}",
+    "required_field": "Required field...",
+    "verify_github": "Verify GitHub",
+    "error_icon_pack": "Icon Pack Error",
+    "asset_pack": "Asset Pack",
+    "invalid_metadata": "The package does not contain valid metadata.json.",
+    "error_pack": "Pack Error",
+    "parse_pack_failed": "Could not parse the Asset Pack: {error}",
+    "required_title": "Required Field",
+    "required_field_msg": "The field '{field}' is required to continue."
+  },
+  "dashboard": {
+    "new_project_title": "New PackageMaker Project",
+    "create_new": "Create new project",
+    "ph_publisher": "E.g.: influent",
+    "ph_app": "E.g.: my-app",
+    "internal_id": "Internal ID:",
+    "ph_name": "E.g.: My App",
+    "name": "Name:",
+    "ph_author": "GitHub username",
+    "platform": "Platform:",
+    "location": "Location:",
+    "platform_windows": "Windows",
+    "platform_linux": "Linux",
+    "platform_multi": "Cross-platform"
   }
 }

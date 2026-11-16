@@ -154,12 +154,15 @@ class DashboardCard(QPushButton):
         self.setGraphicsEffect(shadow)
 
 
+from lib.i18n import tr
+
+
 class NewProjectWizard(QDialog):
     """Asistente para crear proyectos PackageMaker desde src/templates/."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Nuevo Proyecto PackageMaker")
+        self.setWindowTitle(tr("dashboard.new_project_title"))
         self.setMinimumSize(520, 560)
         self.setStyleSheet(DARK_QSS)
         self.project_path: Optional[str] = None
@@ -169,7 +172,7 @@ class NewProjectWizard(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
 
-        title = QLabel("Crear nuevo proyecto")
+        title = QLabel(tr("dashboard.create_new"))
         title.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {ACCENT_COLOR};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
@@ -178,27 +181,27 @@ class NewProjectWizard(QDialog):
         form.setSpacing(12)
 
         self.input_publisher = QLineEdit()
-        self.input_publisher.setPlaceholderText("Ej: influent")
-        form.addRow("Publisher:", self.input_publisher)
+        self.input_publisher.setPlaceholderText(tr("dashboard.ph_publisher"))
+        form.addRow(tr("dialog.publisher_name"), self.input_publisher)
 
         self.input_app = QLineEdit()
-        self.input_app.setPlaceholderText("Ej: my-app")
-        form.addRow("ID interno:", self.input_app)
+        self.input_app.setPlaceholderText(tr("dashboard.ph_app"))
+        form.addRow(tr("dashboard.internal_id"), self.input_app)
 
         self.input_name = QLineEdit()
-        self.input_name.setPlaceholderText("Ej: Mi Aplicacion")
-        form.addRow("Nombre:", self.input_name)
+        self.input_name.setPlaceholderText(tr("dashboard.ph_name"))
+        form.addRow(tr("dashboard.name"), self.input_name)
 
         self.input_version = QLineEdit("1.0.0")
-        form.addRow("Version:", self.input_version)
+        form.addRow(tr("common.version") + ":", self.input_version)
 
         self.input_author = QLineEdit()
-        self.input_author.setPlaceholderText("GitHub username")
-        form.addRow("Autor:", self.input_author)
+        self.input_author.setPlaceholderText(tr("dashboard.ph_author"))
+        form.addRow(tr("dialog.author_name"), self.input_author)
 
         self.input_platform = QComboBox()
-        self.input_platform.addItems(["Windows", "Linux", "Multiplataforma"])
-        form.addRow("Plataforma:", self.input_platform)
+        self.input_platform.addItems([tr("dashboard.platform_windows"), tr("dashboard.platform_linux"), tr("dashboard.platform_multi")])
+        form.addRow(tr("dashboard.platform"), self.input_platform)
 
         self.input_location = QLineEdit()
         default_loc = Path.home() / "Documents" / "Packagemaker Projects"
@@ -209,15 +212,15 @@ class NewProjectWizard(QDialog):
         loc_row = QHBoxLayout()
         loc_row.addWidget(self.input_location)
         loc_row.addWidget(btn_browse)
-        form.addRow("Ubicacion:", loc_row)
+        form.addRow(tr("dashboard.location"), loc_row)
 
         layout.addLayout(form)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        btn_cancel = QPushButton("Cancelar")
+        btn_cancel = QPushButton(tr("common.cancel"))
         btn_cancel.clicked.connect(self.reject)
-        btn_create = QPushButton("Crear proyecto")
+        btn_create = QPushButton(tr("dialog.create_button"))
         btn_create.clicked.connect(self.create_project)
         btn_row.addWidget(btn_cancel)
         btn_row.addWidget(btn_create)

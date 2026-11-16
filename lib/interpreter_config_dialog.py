@@ -148,12 +148,12 @@ class InterpreterConfigDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
 
-        title = QLabel("Gestión de intérpretes Python")
+        title = QLabel(tr("interpreter.title"))
         title.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {ACCENT_COLOR};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
-        installed_group = QGroupBox("Intérpretes instalados")
+        installed_group = QGroupBox(tr("interpreter.installed"))
         installed_layout = QVBoxLayout(installed_group)
 
         self.interpreters_list = QListWidget()
@@ -161,11 +161,11 @@ class InterpreterConfigDialog(QDialog):
         installed_layout.addWidget(self.interpreters_list)
 
         btn_layout = QHBoxLayout()
-        self.btn_set_default = QPushButton("Establecer como predeterminado")
+        self.btn_set_default = QPushButton(tr("interpreter.set_default"))
         self.btn_set_default.setObjectName("primary")
         self.btn_set_default.clicked.connect(self.set_as_default)
 
-        self.btn_uninstall = QPushButton("Desinstalar")
+        self.btn_uninstall = QPushButton(tr("interpreter.uninstall"))
         self.btn_uninstall.setObjectName("danger")
         self.btn_uninstall.clicked.connect(self.uninstall_interpreter)
 
@@ -175,11 +175,11 @@ class InterpreterConfigDialog(QDialog):
         installed_layout.addLayout(btn_layout)
         layout.addWidget(installed_group)
 
-        download_group = QGroupBox("Descargar nuevo intérprete")
+        download_group = QGroupBox(tr("interpreter.download_new"))
         download_layout = QVBoxLayout(download_group)
 
         version_layout = QHBoxLayout()
-        version_layout.addWidget(QLabel("Versión:"))
+        version_layout.addWidget(QLabel(tr("interpreter.version_label")))
         self.version_combo = QComboBox()
         self.version_combo.setMinimumWidth(150)
         version_layout.addWidget(self.version_combo)
@@ -194,30 +194,30 @@ class InterpreterConfigDialog(QDialog):
         self.download_status.setStyleSheet("color: #aaaaaa; font-size: 12px;")
         download_layout.addWidget(self.download_status)
 
-        self.btn_download = QPushButton("Descargar e instalar")
+        self.btn_download = QPushButton(tr("interpreter.download_install"))
         self.btn_download.setObjectName("primary")
         self.btn_download.clicked.connect(self.download_interpreter)
         download_layout.addWidget(self.btn_download)
         layout.addWidget(download_group)
 
-        settings_group = QGroupBox("Configuración de detección")
+        settings_group = QGroupBox(tr("interpreter.detection_config"))
         settings_layout = QVBoxLayout(settings_group)
 
-        self.check_pyqt = QCheckBox("Excluir PyQt6 de la verificación automática")
+        self.check_pyqt = QCheckBox(tr("interpreter.exclude_pyqt"))
         self.check_pyqt.setChecked(True)
         settings_layout.addWidget(self.check_pyqt)
 
-        self.check_local = QCheckBox("Excluir módulos locales del proyecto")
+        self.check_local = QCheckBox(tr("interpreter.exclude_local"))
         self.check_local.setChecked(True)
         settings_layout.addWidget(self.check_local)
 
-        self.auto_check = QCheckBox("Verificar dependencias automáticamente al abrir archivos")
+        self.auto_check = QCheckBox(tr("interpreter.auto_check"))
         self.auto_check.setChecked(True)
         settings_layout.addWidget(self.auto_check)
         layout.addWidget(settings_group)
 
         final_btn_layout = QHBoxLayout()
-        btn_close = QPushButton("Cerrar")
+        btn_close = QPushButton(tr("common.close"))
         btn_close.clicked.connect(self.accept)
         final_btn_layout.addStretch()
         final_btn_layout.addWidget(btn_close)

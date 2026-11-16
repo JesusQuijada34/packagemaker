@@ -44,13 +44,13 @@ NameError: name 'Qt' is not defined
 * [x] **Manejo de Errores Largos:** Optimizar los cuadros de mensajes de error para que resuman el fallo de forma clara e intuitiva. Corregir el error visual por el cual al hacer *hover* sobre el botón del diálogo este se vuelve completamente blanco.
 * [x] **Efecto Blur:** Corregir el bug visual donde los tonos de *blur* se vuelven blancos progresivamente al maximizar y restaurar la ventana varias veces.
 * [x] **Barra de Estado en Compilación:** Mostrar en tiempo real cada línea de salida del compilador en la barra de estado mientras se compila, mostrando al final el procedimiento detallado detrás de `iflapp`.
-* [ ] **Consistencia de Fondos:** Estandarizar la opacidad de los fondos entre pestañas (la pestaña "Crear" cuenta con transparencia media mientras que las demás son opacas; unificar criterio).
+* [x] **Consistencia de Fondos:** Estandarizar la opacidad de los fondos entre pestañas (la pestaña "Crear" cuenta con transparencia media mientras que las demás son opacas; unificar criterio).
 
 ---
 
 ## 3. Sistema de Internacionalización (i18n)
 
-* [ ] **Completitud del i18n:** Finalizar el sistema de internacionalización para garantizar que no queden textos incompletos, cadenas (`strings`) faltantes ni textos hardcodeados en español dentro del código fuente. (Claves faltantes completadas; queda extraer textos hardcodeados.)
+* [x] **Completitud del i18n:** Finalizar el sistema de internacionalización para garantizar que no queden textos incompletos, cadenas (`strings`) faltantes ni textos hardcodeados en español dentro del código fuente.
 
 ---
 
