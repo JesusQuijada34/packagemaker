@@ -239,6 +239,8 @@ class ZipappBackend(CompilerBackend):
         return f"stdlib {sys.version_info.major}.{sys.version_info.minor}"
 
     def compile(self, **kwargs) -> Optional[str]:
+        import shutil
+        import tempfile
         import zipapp
 
         script_path = Path(kwargs["script_path"]).resolve()
@@ -249,19 +251,43 @@ class ZipappBackend(CompilerBackend):
 
         source_root = script_path.parent
         main = script_path.name
+        module = main[:-3] if main.endswith(".py") else main
+        # ``zipapp`` exige que el punto de entrada sea ``modulo:funcion`` con
+        # identificadores válidos; nombres con guion (``demo-vida.py``) lo
+        # rompen, así que se archiva una copia con un nombre seguro y un
+        # ``__main__.py`` que reejecuta el guion como principal.
+        safe_module = module if module.isidentifier() else "_pm_entry"
+        needs_staging = not (module.isidentifier() and _defines_main(script_path))
+        staging: Optional[tempfile.TemporaryDirectory] = None
+        entry: Optional[str] = None
+        if not needs_staging:
+            entry = f"{module}:main"
+        else:
+            staging = tempfile.TemporaryDirectory(prefix="pm_zipapp_")
+            stage_root = Path(staging.name)
+            shutil.copytree(source_root, stage_root, dirs_exist_ok=True)
+            if safe_module != module:
+                (stage_root / main).replace(stage_root / f"{safe_module}.py")
+            (stage_root / "__main__.py").write_text(
+                "import runpy\n"
+                f"runpy.run_module({safe_module!r}, run_name='__main__')\n",
+                encoding="utf-8",
+            )
+            source_root = stage_root
         try:
             zipapp.create_archive(
                 source_root,
                 target=target,
-                main=f"{main[:-3] if main.endswith('.py') else main}:main"
-                if _defines_main(script_path)
-                else main,
+                main=entry,
                 interpreter="/usr/bin/env python3",
                 compressed=True,
             )
         except Exception as exc:
             self.last_error = f"zipapp falló: {exc}"
             return None
+        finally:
+            if staging is not None:
+                staging.cleanup()
         if not target.is_file():
             self.last_error = "zipapp no generó el archivo esperado"
             return None

@@ -204,3 +204,52 @@ class ZipappBackendTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("zipapp-ok", result.stdout)
+
+    def test_zipapp_handles_scripts_without_main_function(self):
+        """Sin ``def main`` el guion debe ejecutarse igual al lanzar el .pyz."""
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "script.py").write_text(
+                "print('sin-main-ok')\n",
+                encoding="utf-8",
+            )
+            backend = compilers.get_backend("zipapp")
+            out = backend.compile(
+                script_path=str(root / "script.py"),
+                output_name="sinmain",
+                output_dir=str(root / "dist"),
+            )
+            self.assertIsNotNone(out, backend.last_error)
+            result = subprocess.run(
+                [sys.executable, out], capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("sin-main-ok", result.stdout)
+
+    def test_zipapp_handles_hyphenated_script_name(self):
+        """Un guion con guion (``demo-vida.py``) no es identificador válido:
+        el .pyz debe seguir ejecutándose (antes: "Invalid entry point")."""
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "demo-vida.py").write_text(
+                "print('guion-con-guion-ok')\n",
+                encoding="utf-8",
+            )
+            backend = compilers.get_backend("zipapp")
+            out = backend.compile(
+                script_path=str(root / "demo-vida.py"),
+                output_name="guion",
+                output_dir=str(root / "dist"),
+            )
+            self.assertIsNotNone(out, backend.last_error)
+            result = subprocess.run(
+                [sys.executable, out], capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("guion-con-guion-ok", result.stdout)
