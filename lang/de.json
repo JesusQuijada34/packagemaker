@@ -328,5 +328,15 @@
     "save_as": ".asksome speichern unter",
     "compile_failed": "Kompilierung fehlgeschlagen: {error}",
     "compiled": "Erzeugt: {path}"
+  },
+  "github": {
+    "sign_in": "Anmelden",
+    "logout": "Abmelden",
+    "sign_in_prompt": "GitHub verbinden",
+    "no_session": "Keine Sitzung",
+    "token_label": "GitHub-Token",
+    "token_saved": "Token gespeichert",
+    "invalid": "Ungültiges Token",
+    "signed_by": "Signiert von"
   }
 }

@@ -328,5 +328,15 @@
     "save_as": ".asksome の保存先",
     "compile_failed": "コンパイル失敗: {error}",
     "compiled": "生成: {path}"
+  },
+  "github": {
+    "sign_in": "サインイン",
+    "logout": "サインアウト",
+    "sign_in_prompt": "GitHub に接続",
+    "no_session": "セッションなし",
+    "token_label": "GitHub トークン",
+    "token_saved": "トークンを保存しました",
+    "invalid": "無効なトークン",
+    "signed_by": "署名者"
   }
 }

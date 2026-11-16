@@ -328,5 +328,15 @@
     "save_as": ".asksome opslaan als",
     "compile_failed": "Compilatie mislukt: {error}",
     "compiled": "Gegenereerd: {path}"
+  },
+  "github": {
+    "sign_in": "Aanmelden",
+    "logout": "Afmelden",
+    "sign_in_prompt": "GitHub verbinden",
+    "no_session": "Geen sessie",
+    "token_label": "GitHub-token",
+    "token_saved": "Token opgeslagen",
+    "invalid": "Ongeldig token",
+    "signed_by": "Ondertekend door"
   }
 }

@@ -328,5 +328,15 @@
     "compile_failed": "Derleme başarısız: {error}",
     "compiled": "Oluşturuldu: {path}",
     "compile": ".asksome derle"
+  },
+  "github": {
+    "sign_in": "Giriş yap",
+    "logout": "Çıkış yap",
+    "sign_in_prompt": "GitHub bağla",
+    "no_session": "Oturum yok",
+    "token_label": "GitHub belirteci",
+    "token_saved": "Belirteç kaydedildi",
+    "invalid": "Geçersiz belirteç",
+    "signed_by": "İmzalayan"
   }
 }

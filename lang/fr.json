@@ -328,5 +328,15 @@
     "save_as": "Enregistrer .asksome sous",
     "compile_failed": "Échec de compilation : {error}",
     "compiled": "Généré : {path}"
+  },
+  "github": {
+    "sign_in": "Se connecter",
+    "logout": "Se déconnecter",
+    "sign_in_prompt": "Connecter GitHub",
+    "no_session": "Aucune session",
+    "token_label": "Jeton GitHub",
+    "token_saved": "Jeton enregistré",
+    "invalid": "Jeton invalide",
+    "signed_by": "Signé par"
   }
 }

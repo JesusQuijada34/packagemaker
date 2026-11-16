@@ -124,9 +124,9 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 ### 5.4. Integración con GitHub (Autenticación y Firma)
 
-* [ ] Añadir un apartado de configuración para requerir inicio de sesión mediante **GitHub Token**.
-* [ ] Utilizar las credenciales para firmar los paquetes generados utilizando el nombre de usuario de GitHub.
-* [ ] Mostrar la imagen de perfil del usuario y su nombre en el panel lateral (*sidebar*) del IDE.
+* [x] Añadir un apartado de configuración para requerir inicio de sesión mediante **GitHub Token** (tarjeta de sesión en el sidebar + `lib/github_identity`).
+* [x] Utilizar las credenciales para firmar los paquetes generados utilizando el nombre de usuario de GitHub (`apply_signer` inyecta `signer` en los metadatos del build).
+* [x] Mostrar la imagen de perfil del usuario y su nombre en el panel lateral (*sidebar*) del IDE (`lib/github_profile_card`).
 
 ---
 

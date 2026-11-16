@@ -887,6 +887,10 @@ class PackageTodoGUI(QMainWindow):
 
         self.sidebar_layout.addWidget(self.desc_card)
         self.sidebar_layout.addSpacing(10)
+
+        self.github_card = self._build_github_card(dark_now)
+        self.sidebar_layout.addWidget(self.github_card)
+
         self.sidebar_layout.addWidget(self.btn_about)
 
         self.sidebar_collapse_button = self.sidebar_collapse_toggle
@@ -1133,6 +1137,64 @@ class PackageTodoGUI(QMainWindow):
             event.accept()
             return
         super().keyPressEvent(event)
+
+    def _build_github_card(self, dark: bool):
+        """Construye la tarjeta de perfil de GitHub del sidebar."""
+        from lib.github_profile_card import GitHubProfileCard
+
+        card = GitHubProfileCard(
+            on_login=self._github_login,
+            on_logout=self._github_logout,
+            dark=dark,
+        )
+        self._refresh_github_card(card)
+        return card
+
+    def _refresh_github_card(self, card=None) -> None:
+        """Refresca la tarjeta con el perfil guardado y su avatar en caché."""
+        from lib import github_identity
+
+        card = card or getattr(self, "github_card", None)
+        if card is None:
+            return
+        profile = github_identity.load_profile()
+        card.set_profile(profile if profile.login else None)
+        if profile.login and profile.avatar_url:
+            cached = github_identity.load_cached_avatar(profile.login)
+            if cached:
+                card.set_avatar_bytes(cached)
+
+    def _github_login(self) -> None:
+        """Pide el token y resuelve el perfil de GitHub."""
+        from PyQt6.QtWidgets import QInputDialog
+
+        from lib import github_identity
+
+        token, ok = QInputDialog.getText(
+            self,
+            tr("github.sign_in"),
+            tr("github.token_label"),
+            QLineEdit.EchoMode.Password,
+        )
+        if not ok or not token.strip():
+            return
+        try:
+            profile = github_identity.fetch_profile(token.strip())
+        except github_identity.GitHubIdentityError as exc:
+            LeviathanDialog.launch(self, tr("common.error"), str(exc), mode="error")
+            return
+        github_identity.save_token(token.strip())
+        github_identity.save_profile(profile)
+        avatar = github_identity.fetch_avatar(profile)
+        if avatar:
+            github_identity.cache_avatar(profile.login, avatar)
+        self._refresh_github_card()
+
+    def _github_logout(self) -> None:
+        from lib import github_identity
+
+        github_identity.clear_identity()
+        self._refresh_github_card()
 
     def switch_page(self, index):
         """Cambia de página con un fundido real de opacidad.

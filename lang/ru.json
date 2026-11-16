@@ -328,5 +328,15 @@
     "save_as": "Сохранить .asksome как",
     "compile_failed": "Ошибка сборки: {error}",
     "compiled": "Создано: {path}"
+  },
+  "github": {
+    "sign_in": "Войти",
+    "logout": "Выйти",
+    "sign_in_prompt": "Подключить GitHub",
+    "no_session": "Нет сеанса",
+    "token_label": "Токен GitHub",
+    "token_saved": "Токен сохранён",
+    "invalid": "Неверный токен",
+    "signed_by": "Подписано"
   }
 }

@@ -328,5 +328,15 @@
     "save_as": ".asksome 다른 이름으로 저장",
     "compile_failed": "컴파일 실패: {error}",
     "compiled": "생성됨: {path}"
+  },
+  "github": {
+    "sign_in": "로그인",
+    "logout": "로그아웃",
+    "sign_in_prompt": "GitHub 연결",
+    "no_session": "세션 없음",
+    "token_label": "GitHub 토큰",
+    "token_saved": "토큰 저장됨",
+    "invalid": "잘못된 토큰",
+    "signed_by": "서명자"
   }
 }

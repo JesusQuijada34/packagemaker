@@ -328,5 +328,15 @@
     "save_as": "حفظ .asksome باسم",
     "compile_failed": "فشل التصريف: {error}",
     "compiled": "تم الإنشاء: {path}"
+  },
+  "github": {
+    "sign_in": "تسجيل الدخول",
+    "logout": "خروج",
+    "sign_in_prompt": "الاتصال بـ GitHub",
+    "no_session": "لا جلسة",
+    "token_label": "رمز GitHub",
+    "token_saved": "تم حفظ الرمز",
+    "invalid": "رمز غير صالح",
+    "signed_by": "موقّع من"
   }
 }

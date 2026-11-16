@@ -215,6 +215,14 @@ class FlangCompiler:
                 'platform': root.findtext('platform') or root.findtext('plataforma') or 'AlphaCube',
                 'author': root.findtext('author') or root.findtext('autor') or 'Unknown',
             }
+            # Si hay sesión de GitHub, firma con el login del usuario sin
+            # sobrescribir un firmante declarado en el propio details.xml.
+            try:
+                from lib.github_identity import apply_signer
+
+                self.metadata = apply_signer(self.metadata)
+            except Exception:
+                pass
             self.platform_type = self.metadata['platform']
             self.log(f"[INFO] Metadatos cargados: {self.metadata}")
             return True

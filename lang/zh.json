@@ -328,5 +328,15 @@
     "save_as": "另存 .asksome 为",
     "compile_failed": "编译失败：{error}",
     "compiled": "已生成：{path}"
+  },
+  "github": {
+    "sign_in": "登录",
+    "logout": "退出",
+    "sign_in_prompt": "连接 GitHub",
+    "no_session": "未登录",
+    "token_label": "GitHub 令牌",
+    "token_saved": "令牌已保存",
+    "invalid": "令牌无效",
+    "signed_by": "签名者"
   }
 }
