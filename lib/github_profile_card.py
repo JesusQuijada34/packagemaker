@@ -9,7 +9,7 @@ from __future__ import annotations
 try:
     from PyQt6.QtCore import Qt, pyqtSignal
     from PyQt6.QtGui import QPixmap
-    from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+    from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
     PYQT6_AVAILABLE = True
 except ImportError:  # pragma: no cover - entorno sin GUI
     PYQT6_AVAILABLE = False
@@ -33,33 +33,49 @@ class GitHubProfileCard(QWidget):
         self._on_logout = on_logout
         self._avatar_bytes: bytes | None = None
 
-        layout = QHBoxLayout(self)
+        # La barra lateral admite desde ~180 px. Separamos la identidad y la
+        # acción en filas distintas para que el texto no compita con el botón.
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 8, 10, 8)
-        layout.setSpacing(10)
+        layout.setSpacing(7)
+
+        identity_row = QHBoxLayout()
+        identity_row.setContentsMargins(0, 0, 0, 0)
+        identity_row.setSpacing(9)
 
         self.avatar = QLabel()
         self.avatar.setObjectName("GitHubProfileAvatar")
         self.avatar.setFixedSize(_AVATAR_SIZE, _AVATAR_SIZE)
         self.avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.avatar)
+        identity_row.addWidget(self.avatar)
 
         text_col = QVBoxLayout()
         text_col.setContentsMargins(0, 0, 0, 0)
-        text_col.setSpacing(0)
+        text_col.setSpacing(1)
         self.lbl_name = QLabel()
         self.lbl_name.setObjectName("GitHubProfileName")
+        self.lbl_name.setMinimumWidth(0)
+        self.lbl_name.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.lbl_login = QLabel()
         self.lbl_login.setObjectName("GitHubProfileLogin")
+        self.lbl_login.setMinimumWidth(0)
+        self.lbl_login.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         text_col.addWidget(self.lbl_name)
         text_col.addWidget(self.lbl_login)
-        layout.addLayout(text_col)
-        layout.addStretch()
+        identity_row.addLayout(text_col, 1)
+        layout.addLayout(identity_row)
 
+        action_row = QHBoxLayout()
+        action_row.setContentsMargins(0, 0, 0, 0)
+        action_row.addStretch(1)
         self.btn_action = QPushButton()
-        self.btn_action.setFlat(True)
+        self.btn_action.setObjectName("GitHubProfileAction")
+        self.btn_action.setMinimumWidth(104)
+        self.btn_action.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_action.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_action.clicked.connect(self._handle_action)
-        layout.addWidget(self.btn_action)
+        action_row.addWidget(self.btn_action)
+        layout.addLayout(action_row)
 
         self.set_profile(None)
 
