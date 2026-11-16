@@ -58,6 +58,13 @@ el estado actual del repositorio como punto de partida.
    y personalizadas.
 2. Interfaz PyQt6 basada en `leviathan_ui` para los pasos en tiempo real, con
    respaldo no-op cuando la dependencia no está instalada (regla del repo).
+3. **Removedor nativo** (`removeme.exe` en Windows / `removeme.elf` en Linux):
+   `lib.asksome_installer.compile_removeme_binary` compila el script con la
+   jerarquía de `lib.compilers` (Nuitka → PyInstaller → zipapp) y cae al
+   siguiente backend si uno está instalado pero falla. Se genera con
+   `--install-asksome --removeme-binary` (opcional `--removeme-backend`) o a
+   posteriori con `--build-removeme APP_ID`. El campo `remover` de
+   `install.json` registra cuál de los dos existe.
 
 ## Fase 5 — Editor MEXF y debugger
 

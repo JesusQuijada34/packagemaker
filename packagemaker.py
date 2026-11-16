@@ -4407,6 +4407,7 @@ def main():
                 'install_asksome',
                 'uninstall_asksome',
                 'list_asksome',
+                'build_removeme',
                 'ide_scan',
                 'ide_compile',
                 'ide_run',
