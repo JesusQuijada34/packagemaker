@@ -121,6 +121,7 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 * Depurador (*debugger*): `lib/iflapp_ide.py` (`trace_script`/`debug_script` con puntos de ruptura y variables locales por línea) integrado en el panel.
 * Compilador propio utilizando los motores base de `packagemaker`: `lib/iflapp_ide.compile_project` delega en `lib.compilers.resolve_backend` (Nuitka/PyInstaller/zipapp/cx_Freeze/PyOxidizer) y detecta imports ocultos.
 * Motor `lib/iflapp_ide.py` (escaneo de proyecto, compilación, ejecución y depuración) + diálogo/panel `lib/iflapp_ide_dialog.py` (`IflappIdePanel`/`IflappIdeDialog`) + página del sidebar + CLI headless (`--ide-scan`, `--ide-compile`, `--ide-run`, `--ide-debug`) + `tests/test_iflapp_ide.py`.
+* [x] Mantener una sola raíz de proyecto activa en el panel y abrirla mediante el diálogo oficial `OpenWithDialog` de Package Maker.
 
 
 
@@ -129,6 +130,8 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 * [x] Añadir un apartado de configuración para requerir inicio de sesión mediante **GitHub Token** (tarjeta de sesión en el sidebar + `lib/github_identity`).
 * [x] Utilizar las credenciales para firmar los paquetes generados utilizando el nombre de usuario de GitHub (`apply_signer` inyecta `signer` en los metadatos del build).
 * [x] Mostrar la imagen de perfil del usuario y su nombre en el panel lateral (*sidebar*) del IDE (`lib/github_profile_card`).
+* [x] Añadir landing inicial centrado con avatar, token, estado animado, spinner, bienvenida y transición al sidebar; validar automáticamente la credencial guardada y mostrar los detalles del perfil al pulsar la tarjeta.
+* [x] Centralizar los estilos de los controles nuevos en el QSS raíz de la aplicación; el landing, la tarjeta GitHub y el IDE no escriben hojas de estilo locales.
 
 ---
 

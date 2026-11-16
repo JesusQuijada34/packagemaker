@@ -7,7 +7,7 @@ construcción de la ventana, siguiendo la convención del resto del proyecto.
 from __future__ import annotations
 
 try:
-    from PyQt6.QtCore import Qt
+    from PyQt6.QtCore import Qt, pyqtSignal
     from PyQt6.QtGui import QPixmap
     from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
     PYQT6_AVAILABLE = True
@@ -18,13 +18,13 @@ except ImportError:  # pragma: no cover - entorno sin GUI
         def __init__(self, *args, **kwargs):
             pass
 
-from lib.design_tokens import SIDEBAR_TEXT_GRAY
-
 _AVATAR_SIZE = 34
 
 
 class GitHubProfileCard(QWidget):
     """Tarjeta compacta con el perfil de GitHub y acciones de sesión."""
+
+    profile_requested = pyqtSignal()
 
     def __init__(self, parent=None, on_login=None, on_logout=None, dark: bool = True):
         super().__init__(parent)
@@ -38,20 +38,18 @@ class GitHubProfileCard(QWidget):
         layout.setSpacing(10)
 
         self.avatar = QLabel()
+        self.avatar.setObjectName("GitHubProfileAvatar")
         self.avatar.setFixedSize(_AVATAR_SIZE, _AVATAR_SIZE)
         self.avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.avatar.setStyleSheet(
-            f"border-radius: {_AVATAR_SIZE // 2}px; background: {SIDEBAR_TEXT_GRAY}33;"
-        )
         layout.addWidget(self.avatar)
 
         text_col = QVBoxLayout()
         text_col.setContentsMargins(0, 0, 0, 0)
         text_col.setSpacing(0)
         self.lbl_name = QLabel()
-        self.lbl_name.setStyleSheet(f"color: {SIDEBAR_TEXT_GRAY}; font-weight: 600;")
+        self.lbl_name.setObjectName("GitHubProfileName")
         self.lbl_login = QLabel()
-        self.lbl_login.setStyleSheet(f"color: {SIDEBAR_TEXT_GRAY}; font-size: 11px;")
+        self.lbl_login.setObjectName("GitHubProfileLogin")
         text_col.addWidget(self.lbl_name)
         text_col.addWidget(self.lbl_login)
         layout.addLayout(text_col)
@@ -104,3 +102,8 @@ class GitHubProfileCard(QWidget):
                     Qt.TransformationMode.SmoothTransformation,
                 )
             )
+
+    def mousePressEvent(self, event):  # noqa: N802 - API Qt
+        if self._current_login and event.button() == Qt.MouseButton.LeftButton:
+            self.profile_requested.emit()
+        super().mousePressEvent(event)

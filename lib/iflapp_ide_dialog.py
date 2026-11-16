@@ -30,7 +30,6 @@ try:
         QComboBox,
     )
     from PyQt6.QtCore import Qt, pyqtSignal
-    from PyQt6.QtGui import QFont
     PYQT6_AVAILABLE = True
 except ImportError:  # pragma: no cover - entorno sin GUI
     PYQT6_AVAILABLE = False
@@ -43,7 +42,6 @@ except ImportError:  # pragma: no cover - entorno sin GUI
         def __init__(self, *args, **kwargs):
             raise ImportError("El IDE de proyectos iflapp requiere PyQt6.")
 
-from lib.design_tokens import ACCENT, mono_value_qss
 from lib.i18n import tr
 from lib.iflapp_ide import (
     IfappProject,
@@ -70,18 +68,24 @@ class IflappIdePanel(QWidget):
 
     # ── Construcción ─────────────────────────────────────────────────────
     def _build_ui(self) -> None:
+        self.setObjectName("IflappIdePanel")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(10)
 
         top = QHBoxLayout()
         self.header = QLabel(tr("iflapp_ide.no_project"))
-        self.header.setStyleSheet(f"color: {ACCENT}; font-weight: bold;")
+        self.header.setObjectName("IflappIdeHeader")
         top.addWidget(self.header)
         top.addStretch()
         self.btn_open = QPushButton(tr("iflapp_ide.open"))
         self.btn_open.clicked.connect(self.choose_project)
         top.addWidget(self.btn_open)
+        self.btn_open_with = QPushButton(tr("iflapp_ide.open_with"))
+        self.btn_open_with.setToolTip(tr("iflapp_ide.open_with_hint"))
+        self.btn_open_with.clicked.connect(self.open_with_package_maker)
+        self.btn_open_with.setEnabled(False)
+        top.addWidget(self.btn_open_with)
         layout.addLayout(top)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -90,7 +94,7 @@ class IflappIdePanel(QWidget):
         splitter.addWidget(self.tree)
 
         self.editor = QPlainTextEdit()
-        self.editor.setFont(QFont("Cascadia Code, Consolas, monospace", 10))
+        self.editor.setObjectName("IflappIdeEditor")
         splitter.addWidget(self.editor)
         splitter.setSizes([240, 760])
         layout.addWidget(splitter)
@@ -126,7 +130,7 @@ class IflappIdePanel(QWidget):
 
         bottom = QHBoxLayout()
         self.status = QLabel(tr("iflapp_ide.ready"))
-        self.status.setStyleSheet("color: #888;")
+        self.status.setObjectName("IflappIdeStatus")
         bottom.addWidget(self.status)
         bottom.addStretch()
         self.btn_close = QPushButton(tr("common.close"))
@@ -135,7 +139,8 @@ class IflappIdePanel(QWidget):
         layout.addLayout(bottom)
 
         self.meta_label = QLabel("")
-        self.meta_label.setStyleSheet(mono_value_qss())
+        self.meta_label.setObjectName("IflappIdeMetadata")
+        self.meta_label.setProperty("role", "monospace")
         layout.addWidget(self.meta_label)
 
     # ── Carga de proyecto ────────────────────────────────────────────────
@@ -153,11 +158,33 @@ class IflappIdePanel(QWidget):
         self.header.setText(str(self.project.root))
         self._refresh_tree()
         self._refresh_metadata()
+        self.btn_open_with.setEnabled(True)
         self.console.clear()
         self.status.setText(
             tr("iflapp_ide.loaded").format(count=len(self.project.scripts))
         )
         return True
+
+    def open_with_package_maker(self) -> bool:
+        """Abre el proyecto seleccionado mediante el diálogo oficial.
+
+        El IDE mantiene una única raíz activa; el diálogo decide qué editor
+        registrado se usa y conserva la preferencia por proyecto.
+        """
+        if self.project is None:
+            self.status.setText(tr("iflapp_ide.no_project"))
+            return False
+        from lib.openWithDialog import open_project_with_editor
+
+        opened = open_project_with_editor(
+            self,
+            str(self.project.root),
+            self.project.root.name,
+            use_default=False,
+        )
+        if opened:
+            self.status.setText(tr("iflapp_ide.opened_with"))
+        return bool(opened)
 
     def _refresh_tree(self) -> None:
         self.tree.clear()

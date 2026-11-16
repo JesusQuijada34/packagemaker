@@ -276,6 +276,7 @@ from lib.report import Reporter, classify_build_message
 LeviathanDialog = AlertDialog
 from lib.moonFixWizard import MoonFixWizard
 from lib.iflapp_ide_dialog import IflappIdePanel
+from lib.github_login_landing import GitHubLoginLanding
 from lib.gitHubVerifyThread import GitHubVerifyThread
 from lib.i18n import i18n, tr, system_default_language, get_available_languages
 from lib.linux_icon_handler import ensure_linux_icon_support
@@ -283,6 +284,7 @@ from lib.pm_data import get_pm_data, load_merged_app_config
 from lib.fluent_theme import (
     BTN_STYLES,
     FluentCheckBox as QCheckBox,
+    application_stylesheet,
     applyget,
     checkbox_stylesheet,
     conf_field_stylesheet,
@@ -988,6 +990,7 @@ class PackageTodoGUI(QMainWindow):
         # Apply Global Styles
         self.apply_theme()
         self._apply_leviathan_and_personalization()
+        self._setup_github_landing()
 
         if self.compact_mode or self.shell_mode:
             self.enterCompactShellMode()
@@ -1157,6 +1160,7 @@ class PackageTodoGUI(QMainWindow):
             on_logout=self._github_logout,
             dark=dark,
         )
+        card.profile_requested.connect(self._show_github_profile)
         self._refresh_github_card(card)
         return card
 
@@ -1205,6 +1209,72 @@ class PackageTodoGUI(QMainWindow):
 
         github_identity.clear_identity()
         self._refresh_github_card()
+
+    def _setup_github_landing(self) -> None:
+        """Muestra el landing sólo cuando no hay una credencial válida guardada."""
+        from lib import github_identity
+
+        self.github_landing = GitHubLoginLanding(self.content_container)
+        self.github_landing.setGeometry(self.content_container.rect())
+        self.github_landing.login_requested.connect(self._landing_github_login)
+        self.github_landing.finished.connect(self._finish_github_landing)
+        self.github_landing.profile_requested.connect(self._show_github_profile)
+        self.github_landing.raise_()
+        self.github_landing.show()
+        token = github_identity.load_token()
+        profile = github_identity.load_profile()
+        if token:
+            cached = github_identity.load_cached_avatar(profile.login) if profile.login else None
+            self.github_landing.set_profile(profile if profile.login else None, cached)
+            self.github_landing.begin_loading(tr("github.landing_starting"))
+            QTimer.singleShot(80, lambda: self._resolve_landing_github(token))
+
+    def _landing_github_login(self, token: str) -> None:
+        from lib import github_identity
+
+        token = token.strip() or github_identity.load_token()
+        if not token:
+            self.github_landing.show_error(tr("github.token_label"))
+            return
+        self.github_landing.begin_loading()
+        QTimer.singleShot(80, lambda: self._resolve_landing_github(token))
+
+    def _resolve_landing_github(self, token: str) -> None:
+        from lib import github_identity
+
+        try:
+            profile = github_identity.fetch_profile(token)
+            github_identity.save_token(token)
+            github_identity.save_profile(profile)
+            avatar = github_identity.fetch_avatar(profile)
+            if avatar:
+                github_identity.cache_avatar(profile.login, avatar)
+                self.github_landing.set_profile(profile, avatar)
+            self._refresh_github_card()
+            self.github_landing.show_welcome(profile)
+        except github_identity.GitHubIdentityError as exc:
+            self.github_landing.show_error(str(exc))
+
+    def _finish_github_landing(self, _profile) -> None:
+        self._refresh_github_card()
+        self.github_card.show()
+
+    def _show_github_profile(self) -> None:
+        """Muestra los datos del perfil autenticado desde la tarjeta lateral."""
+        from lib import github_identity
+
+        profile = github_identity.load_profile()
+        if not profile.login:
+            return
+        repos = profile.extras.get("public_repos", 0)
+        details = tr("github.profile_details").format(
+            login=profile.login,
+            name=profile.display_name(),
+            email=profile.email or "—",
+            repos=repos,
+            url=profile.html_url or "—",
+        )
+        LeviathanDialog.launch(self, tr("github.profile"), details, mode="info")
 
     def switch_page(self, index):
         """Cambia de página con un fundido real de opacidad.
@@ -1293,7 +1363,8 @@ class PackageTodoGUI(QMainWindow):
         app = QApplication.instance()
         if app is not None:
             app.setStyleSheet(
-                checkbox_stylesheet(accent, TEXT if dark else TEXT_LIGHT)
+                application_stylesheet(dark, accent)
+                + checkbox_stylesheet(accent, TEXT if dark else TEXT_LIGHT)
             )
 
         set_qss(self.central, applyget(accent, dark), append=False)
@@ -4274,6 +4345,13 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             LeviathanDialog.launch(self, "Error", f"Error creando archivo MEXF: {e}", mode="error")
+
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        landing = getattr(self, "github_landing", None)
+        if landing is not None and landing.parentWidget() is self.content_container:
+            landing.setGeometry(self.content_container.rect())
 
 
 # =============================================================================

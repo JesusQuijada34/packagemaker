@@ -23,7 +23,9 @@ from lib.design_tokens import (
     SURFACE,
     TEXT,
     TEXT_DIM,
+    TEXT_LIGHT,
     TEXT_MUTED,
+    TEXT_MUTED_LIGHT,
     TITLEBAR_BG,
     TITLE_SIZE,
     WINDOW_BG,
@@ -411,6 +413,47 @@ def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
 def checkbox_stylesheet(accent=ACCENT, color=TEXT_MUTED, size=13):
     """Return the shared checkbox QSS loaded from the central asset."""
     return checkbox_qss(accent, color, size)
+
+
+def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
+    """QSS raíz para controles nuevos y superficies compartidas.
+
+    Los widgets nuevos sólo declaran ``objectName`` y heredan estas reglas;
+    así no se crean hojas de estilo locales que se queden obsoletas al cambiar
+    de tema.
+    """
+    surface = SURFACE if dark else "#FFFFFF"
+    page = WINDOW_BG if dark else "#F5F7FB"
+    text = TEXT if dark else TEXT_LIGHT
+    muted = TEXT_MUTED if dark else TEXT_MUTED_LIGHT
+    border = BORDER if dark else "#D1D1D6"
+    return f"""
+        QWidget {{ font-family: {FONT_STACK}; color: {text}; }}
+        QLineEdit, QComboBox, QPlainTextEdit, QTextEdit {{
+            background: {surface}; color: {text}; border: 1px solid {border};
+            border-radius: {CONTROL_RADIUS}px; padding: 8px;
+        }}
+        QPushButton {{ background: {surface}; color: {text}; border: 1px solid {border};
+            border-radius: {PILL_RADIUS}px; padding: 8px 16px; }}
+        QPushButton:hover {{ border-color: {accent}; }}
+        QPushButton:disabled {{ color: {muted}; }}
+        QWidget#IflappIdePanel, QWidget#GitHubLoginLanding {{ background: {page}; }}
+        QFrame#GitHubLoginCard {{ background: {surface}; border: 1px solid {border};
+            border-radius: 18px; }}
+        QLabel#GitHubLandingAvatar {{ background: {accent}; color: {TEXT};
+            border-radius: 56px; font-size: 30px; font-weight: 700; }}
+        QLabel#GitHubLandingName {{ color: {text}; font-size: 22px; font-weight: 700; }}
+        QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus {{ color: {muted}; }}
+        QLabel#GitHubWelcomeLabel {{ color: {accent}; font-size: 16px; font-weight: 600; }}
+        QPushButton#GitHubLoginButton {{ background: {accent}; color: {TEXT}; border: none; }}
+        QLabel#GitHubProfileAvatar {{ background: {accent}33; border-radius: 17px; }}
+        QLabel#GitHubProfileName {{ color: {SIDEBAR_TEXT_GRAY}; font-weight: 600; }}
+        QLabel#GitHubProfileLogin {{ color: {SIDEBAR_TEXT_GRAY}; font-size: 11px; }}
+        QLabel#IflappIdeHeader {{ color: {accent}; font-size: 18px; font-weight: 700; }}
+        QLabel#IflappIdeStatus {{ color: {muted}; }}
+        QListWidget#IflappIdeTree, QListWidget#IflappIdeConsole {{ background: {surface};
+            border: 1px solid {border}; border-radius: {CONTROL_RADIUS}px; }}
+    """
 
 
 def splash_titlebar_stylesheet():

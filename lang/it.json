@@ -348,7 +348,14 @@
     "token_label": "Token GitHub",
     "token_saved": "Token salvato",
     "invalid": "Token non valido",
-    "signed_by": "Firmato da"
+    "signed_by": "Firmato da",
+    "landing_prompt": "Conecta tu cuenta para continuar",
+    "landing_token_placeholder": "Token personal de GitHub",
+    "landing_token_hint": "El token se guarda como credencial local y nunca se muestra en pantalla",
+    "landing_starting": "Iniciando sesión",
+    "welcome": "Bienvenido {name}…",
+    "profile": "Ver perfil de GitHub",
+    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}"
   },
   "iflapp_ide": {
     "title": "iflapp Project IDE",
@@ -370,6 +377,9 @@
     "debugged": "Debugged: {count} stop(s).",
     "no_stops": "No stops recorded.",
     "break_on": "Breakpoint at line {line}.",
-    "break_off": "Breakpoint removed at line {line}."
+    "break_off": "Breakpoint removed at line {line}.",
+    "open_with": "Abrir con…",
+    "open_with_hint": "Abrir el proyecto seleccionado con el diálogo de Package Maker",
+    "opened_with": "Proyecto abierto con Package Maker."
   }
 }
