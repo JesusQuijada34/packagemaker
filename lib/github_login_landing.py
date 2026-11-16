@@ -24,6 +24,10 @@ class GitHubLoginLanding(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("GitHubLoginLanding")
+        # El landing cubre el contenido completo (sidebar + páginas). No puede
+        # ser translúcido: de lo contrario las etiquetas y el formulario que
+        # quedan debajo se mezclan visualmente, justo el artefacto de la captura.
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
         self.setAutoFillBackground(True)
@@ -44,11 +48,12 @@ class GitHubLoginLanding(QWidget):
 
     def _build_ui(self):
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(32, 32, 32, 32)
+        outer.setContentsMargins(24, 24, 24, 24)
         outer.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.card = QFrame(self)
         self.card.setObjectName("GitHubLoginCard")
+        self.card.setMaximumWidth(560)
         card_layout = QVBoxLayout(self.card)
         card_layout.setContentsMargins(42, 38, 42, 38)
         card_layout.setSpacing(14)
