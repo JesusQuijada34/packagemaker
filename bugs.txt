@@ -28,29 +28,29 @@ NameError: name 'Qt' is not defined
 
 ### 2.1. Errores de Código y Temas
 
-* [ ] **Corregir Error Crítico (`NameError`):** Definir o importar correctamente `Qt` en `lib/fluent_theme.py` (línea 345) para solucionar el fallo al evaluar el modo del sistema operativo.
-* [ ] **Unificación de Checkboxes:**
+* [x] **Corregir Error Crítico (`NameError`):** Definir o importar correctamente `Qt` en `lib/fluent_theme.py` (línea 345) para solucionar el fallo al evaluar el modo del sistema operativo.
+* [x] **Unificación de Checkboxes:**
 * Reestructurar la creación de los `checkboxes` desde cero para garantizar un estilo uniforme en todas las páginas.
 * Solucionar el conflicto de QSS e interfaz mencionado en `packagemaker.py:L1347`.
 * Centralizar los estilos eliminando llamadas dispersas a `setqss` y creando un único archivo QSS maestro en la carpeta de assets que actúe como objeto raíz (`root`) en el punto de entrada principal.
 
 
-* [ ] **Legibilidad en Modo Claro:** Reemplazar todos los tonos de texto gris por negro absoluto (`#000000` o equivalente) para asegurar una lectura cómoda en el modo claro.
-* [ ] **Fondo del Splash:** Modificar el fondo del *Splash Screen* para que adopte automáticamente el color de acento configurado en el sistema operativo.
+* [x] **Legibilidad en Modo Claro:** Reemplazar todos los tonos de texto gris por negro absoluto (`#000000` o equivalente) para asegurar una lectura cómoda en el modo claro.
+* [x] **Fondo del Splash:** Modificar el fondo del *Splash Screen* para que adopte automáticamente el color de acento configurado en el sistema operativo.
 
 ### 2.2. Rendimiento, Diálogos y Estados
 
-* [ ] **Limpieza de Scripts:** Asegurar que los scripts temporales o de compilación se limpien correctamente al finalizar el proceso de compilación.
-* [ ] **Manejo de Errores Largos:** Optimizar los cuadros de mensajes de error para que resuman el fallo de forma clara e intuitiva. Corregir el error visual por el cual al hacer *hover* sobre el botón del diálogo este se vuelve completamente blanco.
-* [ ] **Efecto Blur:** Corregir el bug visual donde los tonos de *blur* se vuelven blancos progresivamente al maximizar y restaurar la ventana varias veces.
-* [ ] **Barra de Estado en Compilación:** Mostrar en tiempo real cada línea de salida del compilador en la barra de estado mientras se compila, mostrando al final el procedimiento detallado detrás de `iflapp`.
+* [x] **Limpieza de Scripts:** Asegurar que los scripts temporales o de compilación se limpien correctamente al finalizar el proceso de compilación.
+* [x] **Manejo de Errores Largos:** Optimizar los cuadros de mensajes de error para que resuman el fallo de forma clara e intuitiva. Corregir el error visual por el cual al hacer *hover* sobre el botón del diálogo este se vuelve completamente blanco.
+* [x] **Efecto Blur:** Corregir el bug visual donde los tonos de *blur* se vuelven blancos progresivamente al maximizar y restaurar la ventana varias veces.
+* [x] **Barra de Estado en Compilación:** Mostrar en tiempo real cada línea de salida del compilador en la barra de estado mientras se compila, mostrando al final el procedimiento detallado detrás de `iflapp`.
 * [ ] **Consistencia de Fondos:** Estandarizar la opacidad de los fondos entre pestañas (la pestaña "Crear" cuenta con transparencia media mientras que las demás son opacas; unificar criterio).
 
 ---
 
 ## 3. Sistema de Internacionalización (i18n)
 
-* [ ] **Completitud del i18n:** Finalizar el sistema de internacionalización para garantizar que no queden textos incompletos, cadenas (`strings`) faltantes ni textos hardcodeados en español dentro del código fuente.
+* [ ] **Completitud del i18n:** Finalizar el sistema de internacionalización para garantizar que no queden textos incompletos, cadenas (`strings`) faltantes ni textos hardcodeados en español dentro del código fuente. (Claves faltantes completadas; queda extraer textos hardcodeados.)
 
 ---
 

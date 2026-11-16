@@ -38,6 +38,7 @@ from lib.design_tokens import (
 )
 
 try:
+    from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QFont, QFontDatabase, QGuiApplication
     from PyQt6.QtWidgets import QCheckBox
     PYQT6_AVAILABLE = True

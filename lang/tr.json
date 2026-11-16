@@ -129,7 +129,12 @@
   "common": {
     "cancel": "İptal",
     "ok": "Tamam",
-    "error": "Error"
+    "error": "Error",
+    "warning": "Warning",
+    "yes": "Yes",
+    "no": "No",
+    "select_folder": "Select Folder",
+    "version": "Version"
   },
   "build": {
     "page_title": "Compile the project with BlindCube",
@@ -161,5 +166,61 @@
     "minimize": "Minimize",
     "maximize": "Maximize",
     "close": "Close"
+  },
+  "about": {
+    "version": "Version {version}",
+    "description": "<p><b>Package Maker</b> is the definitive suite for the Influent OS ecosystem.</p><p>Designed to help developers create, build, and distribute applications efficiently.</p><br><p>It uses the <b>FLARM (Fluthin Armadillo)</b> engine to ensure integrity and security.</p>"
+  },
+  "moonfix": {
+    "title": "MoonFix",
+    "description": "Repairs projects using official templates.",
+    "batch": "Batch mode",
+    "project_folder_placeholder": "Project folder...",
+    "browse_folder": "Browse project folder",
+    "path_missing": "The selected folder does not exist.",
+    "no_subfolders": "No subfolders were found to process.",
+    "optimized": "All projects are already optimized. No action is required.",
+    "completed": "Repair completed.\nProjects fixed: {count}",
+    "warning": "Warning"
+  },
+  "editor": {
+    "project": "Project",
+    "no_project": "No project"
+  },
+  "updater": {
+    "title": "PackageMaker Updater",
+    "application": "Application",
+    "current_version": "Current Version",
+    "platform": "Platform",
+    "author": "Author",
+    "publisher": "Publisher",
+    "read_error": "Could not read details.xml",
+    "error": "Error",
+    "check_updates": "Check for Updates",
+    "update_now": "Update Now",
+    "exit": "Exit",
+    "updated": "Updated",
+    "latest": "You already have the latest version: {version}",
+    "update_available": "Update Available",
+    "remote_version": "Current version: {current}\nNew version: {new}",
+    "no_updates": "No updates were found or the process was cancelled",
+    "info": "Information",
+    "check_remote": "Could not verify the remote version",
+    "checking_updates": "Checking for updates..."
+  },
+  "dialog": {
+    "create_project_title": "Create Project",
+    "create_project": "Create a new project",
+    "project_name": "Project name:",
+    "project_version": "Version:",
+    "author_name": "Author:",
+    "author_placeholder": "Your name",
+    "publisher_name": "Publisher:",
+    "company_placeholder": "Company name",
+    "description": "Description:",
+    "description_placeholder": "Describe your project...",
+    "location": "Location: {path}",
+    "create_button": "Create Project",
+    "project_name_required": "Project name cannot be empty."
   }
 }

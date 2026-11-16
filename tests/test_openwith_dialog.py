@@ -20,7 +20,7 @@ except ImportError as e:
     print(f"[ERROR] Error importing OpenWithDialog: {e}")
     sys.exit(1)
 
-def test_dialog():
+def demo_dialog():
     """Test the OpenWithDialog with improved UI."""
     app = QApplication(sys.argv)
     
@@ -33,6 +33,7 @@ def test_dialog():
     
     # Show dialog
     dialog.show()
+    app.processEvents()
     
     print("[OK] Dialog launched successfully")
     print("[INFO] Check for:")
@@ -41,7 +42,9 @@ def test_dialog():
     print("  - Smooth selection animation when clicking items")
     print("  - Orange hover states on items")
     
-    sys.exit(app.exec())
+    dialog.close()
+    app.processEvents()
+    return None
 
 if __name__ == "__main__":
-    test_dialog()
+    demo_dialog()

@@ -329,7 +329,15 @@ def _decrypt_payload(data: bytes, password: Optional[str], params: Dict) -> byte
         aes = _try_aesgcm()
         if aes is None:
             raise IflappError("Se requiere el paquete 'cryptography' para abrir AES-256-GCM.")
-        return aes(key).decrypt(nonce, data, None)
+        try:
+            return aes(key).decrypt(nonce, data, None)
+        except Exception as exc:
+            # cryptography raises ``InvalidTag`` for a wrong password or a
+            # tampered payload. Keep the public API independent of the
+            # optional backend and expose the project's domain exception.
+            raise IflappSignatureError(
+                "La contraseña no es válida o el payload cifrado fue alterado."
+            ) from exc
     if mode == "hmac-sha256-ctr":
         expected = params.get("mac", "")
         actual = hmac.new(key, nonce + _xor(data, _keystream(key, nonce, len(data))), hashlib.sha256).hexdigest()
