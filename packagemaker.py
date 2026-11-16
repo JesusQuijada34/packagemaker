@@ -453,6 +453,10 @@ if sys.platform.startswith("linux"):
     IPM_ICON_PATH = _png_path if os.path.exists(_png_path) else _ico_fallback
 else:
     IPM_ICON_PATH = os.path.join("app", "app-icon.ico")
+
+# Fondo difuminado del landing de acceso y duración del splash integrado.
+LOGIN_BACKGROUND = os.path.join("assets", "login.jpg")
+SPLASH_DURATION_MS = 5000
 DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
 CONFIG_DIR = os.path.join(os.getcwd(), "config")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "settings.json")
@@ -1221,39 +1225,63 @@ class PackageTodoGUI(QMainWindow):
         self._refresh_github_card()
 
     def _setup_github_landing(self) -> None:
-        """Muestra el landing sólo cuando no hay una credencial válida guardada."""
-        from lib import github_identity
+        """Prepara el landing; sólo lo muestra si no hay una sesión válida.
 
-        self._landing_active = True
-        self._set_landing_lock(True)
-        self.github_landing = GitHubLoginLanding(self.content_container)
+        El splash integrado se pinta primero (ver ``main``) y, al terminar,
+        revela el landing. Si ya hay un token guardado se valida en segundo
+        plano; mientras tanto el splash sigue visible para no enseñar un
+        formulario que quizá no haga falta.
+        """
+        self._landing_active = False
+        self.github_landing = GitHubLoginLanding(
+            self.content_container, background_path=LOGIN_BACKGROUND
+        )
         self.github_landing.login_requested.connect(self._landing_github_login)
         self.github_landing.finished.connect(self._finish_github_landing)
         self.github_landing.profile_requested.connect(self._show_github_profile)
-        self.github_landing.lock_to_parent()
-        token = github_identity.load_token()
-        profile = github_identity.load_profile()
-        if token:
-            cached = github_identity.load_cached_avatar(profile.login) if profile.login else None
-            self.github_landing.set_profile(profile if profile.login else None, cached)
-            self.github_landing.begin_loading(tr("github.landing_starting"))
-            QTimer.singleShot(80, lambda: self._resolve_landing_github(token))
+        self.github_landing.hide()
 
-    def _landing_github_login(self, token: str) -> None:
+    def show_github_landing(self) -> None:
+        """Revela el landing (lo llama ``main`` cuando el splash termina)."""
+        landing = getattr(self, "github_landing", None)
+        if landing is None or getattr(self, "_landing_active", False):
+            return
+        self._landing_active = True
+        self._set_landing_lock(True)
+        landing.lock_to_parent()
+
+    def on_splash_finished(self) -> None:
+        """Tras el splash: restaura la sesión guardada o muestra el landing."""
         from lib import github_identity
 
-        token = token.strip() or github_identity.load_token()
+        token = github_identity.load_token()
+        if token:
+            QTimer.singleShot(60, lambda: self._resolve_landing_github(token, quiet=True))
+        else:
+            self.show_github_landing()
+
+    def _landing_github_login(self, username: str, token: str) -> None:
+        from lib import github_identity
+
+        token = github_identity.sanitize_token(token) or github_identity.load_token()
         if not token:
-            self.github_landing.show_error(tr("github.token_label"))
+            self.github_landing.show_error(tr("github.landing_token_required"))
             return
         self.github_landing.begin_loading()
-        QTimer.singleShot(80, lambda: self._resolve_landing_github(token))
+        QTimer.singleShot(80, lambda: self._resolve_landing_github(token, expected_login=username))
 
-    def _resolve_landing_github(self, token: str) -> None:
+    def _resolve_landing_github(self, token: str, expected_login: str = "", quiet: bool = False) -> None:
         from lib import github_identity
 
         try:
             profile = github_identity.fetch_profile(token)
+            # El token manda: si el usuario escribió un login, debe coincidir.
+            if expected_login and profile.login.lower() != expected_login.lower():
+                raise github_identity.GitHubIdentityError(
+                    tr("github.landing_mismatch").format(
+                        expected=expected_login, actual=profile.login
+                    )
+                )
             github_identity.save_token(token)
             github_identity.save_profile(profile)
             avatar = github_identity.fetch_avatar(profile)
@@ -1261,9 +1289,18 @@ class PackageTodoGUI(QMainWindow):
                 github_identity.cache_avatar(profile.login, avatar)
                 self.github_landing.set_profile(profile, avatar)
             self._refresh_github_card()
-            self.github_landing.show_welcome(profile)
+            if quiet:
+                # Sesión restaurada: entra sin pasar por el formulario.
+                self._finish_github_landing(profile)
+            else:
+                self.github_landing.show_welcome(profile)
         except github_identity.GitHubIdentityError as exc:
-            self.github_landing.show_error(str(exc))
+            if quiet:
+                # Token guardado inválido: descártalo y deja el formulario listo.
+                github_identity.save_token("")
+                self.show_github_landing()
+            else:
+                self.github_landing.show_error(str(exc))
 
     def _finish_github_landing(self, _profile) -> None:
         self._refresh_github_card()
@@ -4594,21 +4631,18 @@ def main():
                 importlib.import_module("pyi_splash").close()
             except (ImportError, OSError):
                 pass
+        # El splash integrado es siempre lo primero; al desvanecerse decide si
+        # restaura la sesión guardada o revela el landing de acceso.
+        main_window.on_splash_finished()
 
     main_window.show()
-    # El landing autenticado es el primer estado interactivo. El splash
-    # antiguo no debe cubrirlo ni dejar una segunda capa por encima.
-    if getattr(main_window, "_landing_active", False):
-        main_window.github_landing.lock_to_parent()
-        main_window.github_landing.raise_()
-    else:
-        splash = IntegratedSplash(
-            parent=main_window,
-            icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
-            title="Package Maker"
-        )
-        splash.finished.connect(on_splash_finished)
-        splash.start(5000)
+    splash = IntegratedSplash(
+        parent=main_window,
+        icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
+        title="Package Maker",
+    )
+    splash.finished.connect(on_splash_finished)
+    splash.start(SPLASH_DURATION_MS)
 
     sys.exit(app.exec())
 

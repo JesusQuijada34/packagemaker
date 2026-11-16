@@ -440,17 +440,27 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
         QWidget#IflappIdePanel {{ background: {page}; }}
         QWidget#GitHubLoginLanding {{ background-color: {page}; color: {text}; }}
         QFrame#GitHubLoginCard {{ background: {surface}; border: 1px solid {border};
-            border-radius: 18px; }}
+            border-radius: 20px; }}
         QLabel#GitHubLandingAvatar {{ background: {accent}; color: {TEXT};
-            border-radius: 56px; font-size: 30px; font-weight: 700; }}
+            border-radius: 44px; font-size: 30px; font-weight: 700;
+            border: 3px solid {accent}; }}
+        QLabel#GitHubLandingTitle {{ color: {text}; font-size: 26px; font-weight: 700; }}
+        QLabel#GitHubLandingSubtitle {{ color: {muted}; font-size: 14px; }}
         QLabel#GitHubLandingName {{ color: {text}; font-size: 22px; font-weight: 700; }}
-        QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus {{ color: {muted}; }}
+        QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus {{ color: {muted};
+            font-size: 12px; }}
         QLabel#GitHubWelcomeLabel {{ color: {accent}; font-size: 16px; font-weight: 600; }}
         QPushButton#GitHubLoginButton {{ background-color: {accent}; color: #FFFFFF;
-            border: none; border-radius: {PILL_RADIUS}px; padding: 9px 20px; }}
-        QPushButton#GitHubLoginButton:hover {{ background-color: {accent}; color: #FFFFFF; }}
-        QLineEdit#GitHubTokenInput {{ background-color: {surface}; color: {text};
-            border: 1px solid {border}; border-radius: {CONTROL_RADIUS}px; padding: 9px 12px; }}
+            border: none; border-radius: {PILL_RADIUS}px; padding: 12px 20px;
+            font-size: 15px; font-weight: 600; min-height: 44px; }}
+        QPushButton#GitHubLoginButton:hover {{ background-color: {ACCENT_HOVER}; color: #FFFFFF; }}
+        QPushButton#GitHubLoginButton:pressed {{ background-color: {ACCENT_PRESSED}; }}
+        QPushButton#GitHubLoginButton:disabled {{ background-color: {border}; color: {muted}; }}
+        QLineEdit#GitHubTokenInput, QLineEdit#GitHubUsernameInput {{ background-color: {surface};
+            color: {text}; border: 1px solid {border}; border-radius: {CONTROL_RADIUS}px;
+            padding: 10px 14px; font-size: 14px; min-height: 44px; }}
+        QLineEdit#GitHubTokenInput:focus, QLineEdit#GitHubUsernameInput:focus {{
+            border: 2px solid {accent}; }}
         QLabel#GitHubProfileAvatar {{ background: {accent}33; border-radius: 17px; }}
         QLabel#GitHubProfileName {{ color: {SIDEBAR_TEXT_GRAY}; font-weight: 600; }}
         QLabel#GitHubProfileLogin {{ color: {SIDEBAR_TEXT_GRAY}; font-size: 11px; }}
@@ -638,14 +648,24 @@ def applyget(accent: str, dark: bool = True) -> str:
     QFrame#GitHubLoginCard {{
         background-color: {surface};
         border: 1px solid {border};
-        border-radius: 18px;
+        border-radius: 20px;
     }}
     QLabel#GitHubLandingAvatar {{
         background-color: {accent};
         color: #FFFFFF;
-        border-radius: 56px;
+        border-radius: 44px;
+        border: 3px solid {accent};
         font-size: 30px;
         font-weight: 700;
+    }}
+    QLabel#GitHubLandingTitle {{
+        color: {text};
+        font-size: 26px;
+        font-weight: 700;
+    }}
+    QLabel#GitHubLandingSubtitle {{
+        color: {muted};
+        font-size: 14px;
     }}
     QLabel#GitHubLandingName {{
         color: {text};
@@ -654,6 +674,7 @@ def applyget(accent: str, dark: bool = True) -> str:
     }}
     QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus {{
         color: {muted};
+        font-size: 12px;
     }}
     QLabel#GitHubWelcomeLabel {{
         color: {accent};
@@ -665,19 +686,32 @@ def applyget(accent: str, dark: bool = True) -> str:
         color: #FFFFFF;
         border: none;
         border-radius: {PILL_RADIUS}px;
-        padding: 9px 20px;
-        min-height: 40px;
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        min-height: 44px;
     }}
     QPushButton#GitHubLoginButton:hover {{
         background-color: {ACCENT_HOVER};
     }}
-    QLineEdit#GitHubTokenInput {{
+    QPushButton#GitHubLoginButton:pressed {{
+        background-color: {ACCENT_PRESSED};
+    }}
+    QPushButton#GitHubLoginButton:disabled {{
+        background-color: {border};
+        color: {muted};
+    }}
+    QLineEdit#GitHubTokenInput, QLineEdit#GitHubUsernameInput {{
         background-color: {surface};
         color: {text};
         border: 1px solid {border};
         border-radius: {CONTROL_RADIUS}px;
-        padding: 9px 12px;
-        min-height: 40px;
+        padding: 10px 14px;
+        font-size: 14px;
+        min-height: 44px;
+    }}
+    QLineEdit#GitHubTokenInput:focus, QLineEdit#GitHubUsernameInput:focus {{
+        border: 2px solid {accent};
     }}
     QLabel#GitHubProfileAvatar {{
         background: {accent}33;

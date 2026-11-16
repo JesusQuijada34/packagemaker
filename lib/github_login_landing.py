@@ -3,25 +3,35 @@
 El widget sólo define estructura y estados; la apariencia llega del QSS raíz
 mediante objectName, de modo que los controles nuevos heredan el lenguaje visual
 de la aplicación sin estilos locales dispersos.
+
+El diseño es un login moderno centrado: isotipo circular que se convierte en el
+avatar tras autenticar, campo de usuario, campo de token, botón píldora y una
+línea de estado con spinner. No hay botón de regresión: la única acción es
+iniciar sesión.
 """
 from __future__ import annotations
 
 try:
     from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtSignal
-    from PyQt6.QtGui import QPixmap
-    from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
+    from PyQt6.QtGui import QColor, QPainter, QPixmap
+    from PyQt6.QtWidgets import QFrame, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 except ImportError:  # pragma: no cover
     QWidget = object
 
 from lib.i18n import tr
 
+AVATAR_SIZE = 88
+CARD_WIDTH = 460
+INPUT_HEIGHT = 46
+BUTTON_HEIGHT = 48
+
 
 class GitHubLoginLanding(QWidget):
-    login_requested = pyqtSignal(str)
+    login_requested = pyqtSignal(str, str)
     finished = pyqtSignal(object)
     profile_requested = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, background_path: str = ""):
         super().__init__(parent)
         self.setObjectName("GitHubLoginLanding")
         # El landing cubre el contenido completo (sidebar + páginas). No puede
@@ -32,10 +42,29 @@ class GitHubLoginLanding(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
         self.setAutoFillBackground(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self._background = QPixmap(background_path) if background_path else QPixmap()
         self._spinner_index = 0
+        self._status_message = ""
         self._spinner_timer = QTimer(self)
         self._spinner_timer.timeout.connect(self._tick_spinner)
         self._build_ui()
+
+    def paintEvent(self, event):  # noqa: N802 - API Qt
+        """Pinta el fondo difuminado (si existe) con un velo para dar contraste."""
+        super().paintEvent(event)
+        if self._background.isNull():
+            return
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        scaled = self._background.scaled(
+            self.size(),
+            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        painter.drawPixmap(self.rect(), scaled)
+        # Velo uniforme para que la tarjeta y el texto siempre se lean.
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 120))
+        painter.end()
 
     def lock_to_parent(self):
         """Ajusta la capa al padre y la pone por encima de todos sus hijos."""
@@ -53,56 +82,70 @@ class GitHubLoginLanding(QWidget):
 
         self.card = QFrame(self)
         self.card.setObjectName("GitHubLoginCard")
-        self.card.setMaximumWidth(560)
+        self.card.setFixedWidth(CARD_WIDTH)
         card_layout = QVBoxLayout(self.card)
-        card_layout.setContentsMargins(42, 38, 42, 38)
-        card_layout.setSpacing(14)
+        card_layout.setContentsMargins(38, 42, 38, 42)
+        card_layout.setSpacing(16)
 
         self.avatar = QLabel(self.card)
         self.avatar.setObjectName("GitHubLandingAvatar")
-        self.avatar.setFixedSize(112, 112)
+        self.avatar.setFixedSize(AVATAR_SIZE, AVATAR_SIZE)
         self.avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.avatar.setText("GH")
+        self.avatar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.avatar.mousePressEvent = lambda event: self.profile_requested.emit()
         card_layout.addWidget(self.avatar, 0, Qt.AlignmentFlag.AlignHCenter)
 
-        self.name = QLabel(self.card)
-        self.name.setObjectName("GitHubLandingName")
-        self.name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.name.setText("GitHub")
-        card_layout.addWidget(self.name)
+        self.title = QLabel(self.card)
+        self.title.setObjectName("GitHubLandingTitle")
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title.setText(tr("github.landing_title"))
+        card_layout.addWidget(self.title)
 
-        self.prompt = QLabel(self.card)
-        self.prompt.setObjectName("GitHubLandingPrompt")
-        self.prompt.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.prompt.setText(tr("github.landing_prompt"))
-        card_layout.addWidget(self.prompt)
+        self.subtitle = QLabel(self.card)
+        self.subtitle.setObjectName("GitHubLandingSubtitle")
+        self.subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.subtitle.setWordWrap(True)
+        self.subtitle.setText(tr("github.landing_subtitle"))
+        card_layout.addWidget(self.subtitle)
 
-        self.credentials_row = QHBoxLayout()
+        self.username_input = QLineEdit(self.card)
+        self.username_input.setObjectName("GitHubUsernameInput")
+        self.username_input.setPlaceholderText(tr("github.landing_username_placeholder"))
+        self.username_input.setClearButtonEnabled(True)
+        self.username_input.setMinimumHeight(INPUT_HEIGHT)
+        card_layout.addWidget(self.username_input)
+
         self.token_input = QLineEdit(self.card)
         self.token_input.setObjectName("GitHubTokenInput")
         self.token_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.token_input.setPlaceholderText(tr("github.landing_token_placeholder"))
         self.token_input.setToolTip(tr("github.landing_token_hint"))
-        self.credentials_row.addWidget(self.token_input, 1)
+        self.token_input.setMinimumHeight(INPUT_HEIGHT)
+        self.token_input.returnPressed.connect(self._emit_login)
+        card_layout.addWidget(self.token_input)
+
         self.login_button = QPushButton(tr("github.sign_in"), self.card)
         self.login_button.setObjectName("GitHubLoginButton")
         self.login_button.setDefault(True)
-        self.login_button.clicked.connect(lambda: self.login_requested.emit(self.token_input.text().strip()))
-        self.credentials_row.addWidget(self.login_button)
-        card_layout.addLayout(self.credentials_row)
+        self.login_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.login_button.setMinimumHeight(BUTTON_HEIGHT)
+        self.login_button.clicked.connect(self._emit_login)
+        card_layout.addWidget(self.login_button)
 
-        self.progress_row = QHBoxLayout()
-        self.progress_text = QLabel(self.card)
-        self.progress_text.setObjectName("GitHubLoginStatus")
-        self.progress_text.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.progress_row.addWidget(self.progress_text, 1)
-        self.spinner = QLabel(self.card)
-        self.spinner.setObjectName("GitHubLoginSpinner")
-        self.spinner.setFixedWidth(28)
-        self.spinner.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.progress_row.addWidget(self.spinner)
-        card_layout.addLayout(self.progress_row)
+        self.prompt = QLabel(self.card)
+        self.prompt.setObjectName("GitHubLandingPrompt")
+        self.prompt.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.prompt.setWordWrap(True)
+        self.prompt.setText(tr("github.landing_token_hint"))
+        card_layout.addWidget(self.prompt)
+
+        self.status = QLabel(self.card)
+        self.status.setObjectName("GitHubLoginStatus")
+        self.status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.status.setWordWrap(True)
+        self.status.hide()
+        card_layout.addWidget(self.status)
 
         self.welcome = QLabel(self.card)
         self.welcome.setObjectName("GitHubWelcomeLabel")
@@ -112,46 +155,59 @@ class GitHubLoginLanding(QWidget):
         card_layout.addWidget(self.welcome)
 
         outer.addWidget(self.card, 0, Qt.AlignmentFlag.AlignCenter)
-        self.progress_row_widget = self.progress_text
-        self.progress_text.hide()
-        self.spinner.hide()
+
+    # ── estado ────────────────────────────────────────────────────────────
+    def _emit_login(self):
+        self.login_requested.emit(
+            self.username_input.text().strip(),
+            self.token_input.text().strip(),
+        )
+
+    def _set_form_enabled(self, enabled: bool):
+        for widget in (self.username_input, self.token_input, self.login_button):
+            widget.setEnabled(enabled)
+            widget.setVisible(enabled)
 
     def set_profile(self, profile, avatar_bytes: bytes | None = None):
         if not profile:
             return
-        self.name.setText(profile.display_name())
+        self.subtitle.setText(profile.display_name())
         if avatar_bytes:
             pixmap = QPixmap()
             if pixmap.loadFromData(avatar_bytes):
-                self.avatar.setPixmap(pixmap.scaled(112, 112, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation))
-        else:
-            self.avatar.setText((profile.login or "GH")[:2].upper())
+                self.avatar.setPixmap(
+                    pixmap.scaled(
+                        AVATAR_SIZE,
+                        AVATAR_SIZE,
+                        Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                )
+                return
+        self.avatar.setText((profile.login or "GH")[:2].upper())
 
     def begin_loading(self, message: str = ""):
-        self.credentials_row.setEnabled(False)
-        self.token_input.hide()
-        self.login_button.hide()
-        self.progress_text.setText(message or tr("github.landing_starting"))
-        self.progress_text.show()
-        self.spinner.show()
+        self._set_form_enabled(False)
+        self.welcome.hide()
+        self._status_message = message or tr("github.landing_starting")
+        self.status.setText(self._status_message)
+        self.status.show()
+        self._spinner_index = 0
         self._spinner_timer.start(110)
 
     def show_error(self, message: str):
         self._spinner_timer.stop()
-        self.spinner.hide()
-        self.progress_text.setText(message)
-        self.progress_text.show()
-        self.credentials_row.setEnabled(True)
-        self.token_input.show()
-        self.login_button.show()
+        self._set_form_enabled(True)
+        self._status_message = ""
+        self.status.setText(message)
+        self.status.show()
+        self.token_input.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def show_welcome(self, profile):
         self._spinner_timer.stop()
-        self.progress_text.setText("")
-        self.progress_text.hide()
+        self.status.hide()
         self.welcome.setText(tr("github.welcome").format(name=profile.display_name()))
         self.welcome.show()
-        self.spinner.show()
         QTimer.singleShot(900, lambda: self._finish(profile))
 
     def _finish(self, profile):
@@ -172,4 +228,4 @@ class GitHubLoginLanding(QWidget):
 
     def _tick_spinner(self):
         self._spinner_index = (self._spinner_index + 1) % 4
-        self.spinner.setText("·" * (self._spinner_index + 1))
+        self.status.setText(f"{self._status_message} {'·' * (self._spinner_index + 1)}")

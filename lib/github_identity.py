@@ -27,6 +27,19 @@ NAME_KEY = "github_name"
 AVATAR_KEY = "github_avatar_url"
 EMAIL_KEY = "github_email"
 
+# Al copiar el token desde la web de GitHub se cuelan caracteres invisibles
+# (espacio duro U+00A0, ancho cero U+200B/U+200C/U+200D, BOM U+FEFF). ``str.strip``
+# no los elimina y la API responde 401 como si el token fuera inválido, o el
+# cliente HTTP lanza UnicodeEncodeError al construir la cabecera.
+_INVISIBLE_CHARS = dict.fromkeys(
+    [0x00A0, 0x200B, 0x200C, 0x200D, 0x2060, 0xFEFF, *range(0x2000, 0x200B)]
+)
+
+
+def sanitize_token(token: str) -> str:
+    """Limpia el token de espacios y caracteres invisibles pegados por accidente."""
+    return (token or "").translate(_INVISIBLE_CHARS).strip()
+
 
 class GitHubIdentityError(RuntimeError):
     """Error al resolver o validar la identidad de GitHub."""
@@ -67,21 +80,23 @@ def _store():
 
 def save_token(token: str) -> None:
     store = _store()
-    token = (token or "").strip()
+    token = sanitize_token(token)
     if token:
         store.set_user(TOKEN_KEY, token)
     else:
         store.remove_user(TOKEN_KEY)
+    store.save()
 
 
 def load_token() -> str:
-    return str(_store().get_user(TOKEN_KEY, "") or "")
+    return sanitize_token(str(_store().get_user(TOKEN_KEY, "") or ""))
 
 
 def clear_identity() -> None:
     store = _store()
     for key in (TOKEN_KEY, LOGIN_KEY, NAME_KEY, AVATAR_KEY, EMAIL_KEY):
         store.remove_user(key)
+    store.save()
 
 
 def save_profile(profile: GitHubProfile) -> None:
@@ -90,6 +105,7 @@ def save_profile(profile: GitHubProfile) -> None:
     store.set_user(NAME_KEY, profile.name)
     store.set_user(AVATAR_KEY, profile.avatar_url)
     store.set_user(EMAIL_KEY, profile.email)
+    store.save()
 
 
 def load_profile() -> GitHubProfile:
@@ -114,11 +130,21 @@ def _request(url: str, token: str = "", *, timeout: float = 10.0) -> Any:
     except urllib.error.HTTPError as exc:
         if exc.code == 401:
             raise GitHubIdentityError("Token de GitHub inválido o caducado") from exc
+        if exc.code == 403:
+            raise GitHubIdentityError(
+                "GitHub rechazó el token (403): sin permisos o límite alcanzado"
+            ) from exc
         if exc.code == 404:
             raise GitHubIdentityError("Recurso de GitHub no encontrado") from exc
         raise GitHubIdentityError(f"GitHub respondió {exc.code}") from exc
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise GitHubIdentityError("Sin conexión con GitHub") from exc
+    except ValueError as exc:
+        # ``http.client`` lanza ValueError/UnicodeEncodeError si la cabecera
+        # lleva caracteres no ASCII (p. ej. un token pegado con un espacio duro).
+        raise GitHubIdentityError(
+            "El token contiene caracteres no válidos; vuelve a copiarlo sin espacios"
+        ) from exc
 
 
 def _profile_from_payload(payload: Dict[str, Any], *, authenticated: bool) -> GitHubProfile:
@@ -135,7 +161,7 @@ def _profile_from_payload(payload: Dict[str, Any], *, authenticated: bool) -> Gi
 
 def fetch_profile(token: str = "", *, timeout: float = 10.0) -> GitHubProfile:
     """Obtiene el perfil autenticado (``/user``) o público por ``login``."""
-    token = (token or load_token()).strip()
+    token = sanitize_token(token or load_token())
     if token:
         payload = _request(f"{GITHUB_API}/user", token, timeout=timeout)
         profile = _profile_from_payload(payload, authenticated=True)

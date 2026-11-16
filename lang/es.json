@@ -355,7 +355,12 @@
     "landing_starting": "Iniciando sesión",
     "welcome": "Bienvenido {name}…",
     "profile": "Ver perfil de GitHub",
-    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}"
+    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}",
+    "landing_title": "Accede con GitHub",
+    "landing_subtitle": "Conecta tu cuenta para firmar y publicar tus paquetes",
+    "landing_username_placeholder": "Usuario de GitHub (opcional)",
+    "landing_token_required": "Introduce tu token personal de GitHub",
+    "landing_mismatch": "El token pertenece a {actual}, no a {expected}"
   },
   "iflapp_ide": {
     "title": "IDE de Proyectos iflapp",

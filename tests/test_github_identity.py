@@ -115,6 +115,67 @@ def test_clear_identity_removes_token_and_profile(store):
     assert github_identity.load_profile().login == ""
 
 
+def test_sanitize_token_strips_invisible_characters():
+    """Copiar el token desde la web cuela NBSP/ZWSP/BOM; no deben provocar 401."""
+    from lib.github_identity import sanitize_token
+
+    assert sanitize_token("  ghp_abc  ") == "ghp_abc"
+    assert sanitize_token("ghp_abc\u00a0") == "ghp_abc"
+    assert sanitize_token("\ufeffghp_abc") == "ghp_abc"
+    assert sanitize_token("ghp_a\u200bb\u200cc") == "ghp_abc"
+
+
+def test_saved_token_is_cleaned_and_persisted(store):
+    from lib import github_identity
+
+    github_identity.save_token("ghp_secret\u00a0")
+    assert github_identity.load_token() == "ghp_secret"
+    # Persistido en disco: un almacén nuevo lo vuelve a leer.
+    from lib.pm_data import PMDataStore
+
+    assert PMDataStore(path=store.path).get_user("github_token") == "ghp_secret"
+
+
+def test_fetch_profile_sanitizes_token_before_request(store, monkeypatch):
+    from lib import github_identity
+
+    captured = {}
+
+    def fake_request(url, token="", *, timeout=10.0):
+        captured["token"] = token
+        return {"login": "octocat"}
+
+    monkeypatch.setattr(github_identity, "_request", fake_request)
+    github_identity.fetch_profile("ghp_token\u00a0")
+    assert captured["token"] == "ghp_token"
+
+
+def test_request_invalid_header_reports_friendly_error(monkeypatch):
+    """Una cabecera no ASCII lanzaba ValueError sin capturar; debe ser legible."""
+    import urllib.request
+
+    from lib import github_identity
+
+    def boom(*_args, **_kwargs):
+        raise ValueError("Invalid header value")
+
+    monkeypatch.setattr(urllib.request, "urlopen", boom)
+    with pytest.raises(github_identity.GitHubIdentityError) as exc:
+        github_identity._request("https://api.github.com/user", "ghp_token")
+    assert "caracteres" in str(exc.value)
+
+
+def test_save_token_empty_clears_persisted_token(store):
+    from lib import github_identity
+
+    github_identity.save_token("ghp_secret")
+    github_identity.save_token("")
+    assert github_identity.load_token() == ""
+    from lib.pm_data import PMDataStore
+
+    assert not PMDataStore(path=store.path).get_user("github_token")
+
+
 def test_avatar_cache_roundtrip(store, monkeypatch):
     from lib import github_identity
 

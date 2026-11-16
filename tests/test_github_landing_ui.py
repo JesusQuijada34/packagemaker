@@ -49,6 +49,58 @@ def test_github_landing_is_an_opaque_overlay(qapp):
         qapp.processEvents()
 
 
+def test_github_landing_has_modern_login_controls(qapp):
+    """El rediseño exige isotipo, campo de usuario, token y píldora."""
+    from lib.github_login_landing import AVATAR_SIZE, GitHubLoginLanding
+
+    landing = GitHubLoginLanding()
+    try:
+        assert landing.avatar.width() == AVATAR_SIZE == landing.avatar.height()
+        assert landing.avatar.objectName() == "GitHubLandingAvatar"
+        assert landing.username_input.objectName() == "GitHubUsernameInput"
+        assert landing.token_input.objectName() == "GitHubTokenInput"
+        assert landing.login_button.objectName() == "GitHubLoginButton"
+        assert landing.card.objectName() == "GitHubLoginCard"
+        # No debe existir un botón de regresión en el diseño nuevo.
+        assert not hasattr(landing, "back_button")
+    finally:
+        landing.close()
+        qapp.processEvents()
+
+
+def test_github_landing_emits_username_and_token(qapp):
+    from lib.github_login_landing import GitHubLoginLanding
+
+    landing = GitHubLoginLanding()
+    captured = {}
+    landing.login_requested.connect(lambda user, token: captured.update(user=user, token=token))
+    try:
+        landing.username_input.setText("octocat")
+        landing.token_input.setText("ghp_token")
+        landing.login_button.click()
+        qapp.processEvents()
+        assert captured == {"user": "octocat", "token": "ghp_token"}
+    finally:
+        landing.close()
+        qapp.processEvents()
+
+
+def test_github_landing_error_reenables_form(qapp):
+    from lib.github_login_landing import GitHubLoginLanding
+
+    landing = GitHubLoginLanding()
+    try:
+        landing.begin_loading()
+        assert not landing.login_button.isEnabled()
+        landing.show_error("Token de GitHub inválido o caducado")
+        assert landing.login_button.isEnabled()
+        assert landing.token_input.isEnabled()
+        assert "inválido" in landing.status.text()
+    finally:
+        landing.close()
+        qapp.processEvents()
+
+
 def test_github_profile_action_has_its_own_sidebar_row(qapp):
     from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout
     from lib.github_profile_card import GitHubProfileCard
