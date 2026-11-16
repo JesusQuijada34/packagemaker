@@ -1,5 +1,12 @@
-Encontre varios bugs en el codigo
+# 📋 Especificación Técnica: Refactorización, Corrección de Bugs y Nueva Arquitectura `.mexf` / `.asksome` para `packagemaker`
 
+## 1. Contexto y Estado Actual
+
+* **Proyecto:** `packagemaker` (Ruta base: `C:\Users\Jesus Quijada\Documents\GitHub\packagemaker`)
+
+
+* **Problema crítico actual (Crash al iniciar):**
+```text
 Traceback (most recent call last):
   File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\packagemaker.py", line 4374, in <module>
     main()
@@ -11,32 +18,119 @@ Traceback (most recent call last):
     if scheme == Qt.ColorScheme.Dark:
 NameError: name 'Qt' is not defined
 
-. los checkboxes deben de crearse desde cero y uniformarlos bien en todas las paginas
-. no se limpian los scripts al compilar
-. cuando hay errores largos el cuadro de mensaje no resume el error basado en terminos y a veces un hover en el boton del dialogo lo vuelve blanco
-. sigue aumentando los tonos del blur a blanco al maximizar varias veces y restaurar
-. el fondo del splash deber de pintarse al color de acento del sistema
-. hay gris en algunos textos y es incomodo leer en el modo claro, pasa a negro
-. mientras se compila, debe de aparecer en la barra de estado cada linea de la salida del compilador y al final el procedimiento real detras del iflapp
-. terminar el sistema i18n y que no falte nada ni quede incompleto el sistema i18n ni mucho menos texto en español dentro del codigo ni strings faltantes
-. la pestaña crear es fondo medio transparente y las otras son fondo opaco. cual mantendrias?
-. y el problema de apariencia de los checkboxes se debe por un conflicto de codigo y de qss, fijate que hasta yo mismo comente una linea dentro de la funcion. referencia a packagemaker.py:L1347
-. hay otro bug mas, asi comente las lineas que contengan setqss, los checkboxes siguen adoptando esa apariencia y se debe a que no hay un qss en la carpeta de assets centralizado, como si el script principal fuera el html5 y importa directamente el qss para dar apariencia centralizada, eso si, se debe recoger todo y se debe colocar en una sola hoja de estilos y en el punto de entrada principal se importará como objeto raíz el qss como si fuera un root, y debes de hacer un instalador de iflapps aparte qué instale el iflapp como si fuera un appx, con Accesos directos y registro de instalación usando updater.py/exe/elf o mejor usando nueva estructura, vamos a activar los mexf qué son puro yaml qué definen triggers, comandos, registros, extensiones, accesos directos, strings, entornos, comando y/o tipo de desinstalación/instalación, asociaciones de archivos y ruta de ícono de la extensión, menus contextuales de shell (icono del elemento de menú, comando, si debe de estar agrupado todos los elementos y que nombre e ícono colocar), acciones (como ejecutar al inicio, comandos de inicio, trigger all presionar cualquier tecla o hacer cualquier gesto o estando en un programa etc.). Entre muchas cosas, El lenguaje debe ser yaml, El implementado de iflapp debe ser estructurado y se debe pasar por el archivo details.xml luego por /.mexf/main.mexf y por todo los mexf dentro de la carpeta, también se puede importar otros mexf como librerías add-ons. Luciría algo así un importe y sus funciones
+```
 
-meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Como importar en python y renombrar su uso, some, bsome cuando la condición es renombrable llamando el método pero invocando el nombre de la variable a la vez como, !some 'trig' bsome 'trignuevo'
+
+
+---
+
+## 2. Corrección de Errores y Mejoras de Interfaz (Bugfixes & UI)
+
+### 2.1. Errores de Código y Temas
+
+* [x] **Corregir Error Crítico (`NameError`):** Definir o importar correctamente `Qt` en `lib/fluent_theme.py` (línea 345) para solucionar el fallo al evaluar el modo del sistema operativo.
+* [x] **Unificación de Checkboxes:**
+* Reestructurar la creación de los `checkboxes` desde cero para garantizar un estilo uniforme en todas las páginas.
+* Solucionar el conflicto de QSS e interfaz mencionado en `packagemaker.py:L1347`.
+* Centralizar los estilos eliminando llamadas dispersas a `setqss` y creando un único archivo QSS maestro en la carpeta de assets que actúe como objeto raíz (`root`) en el punto de entrada principal.
+
+
+* [x] **Legibilidad en Modo Claro:** Reemplazar todos los tonos de texto gris por negro absoluto (`#000000` o equivalente) para asegurar una lectura cómoda en el modo claro.
+* [x] **Fondo del Splash:** Modificar el fondo del *Splash Screen* para que adopte automáticamente el color de acento configurado en el sistema operativo.
+
+### 2.2. Rendimiento, Diálogos y Estados
+
+* [x] **Limpieza de Scripts:** Asegurar que los scripts temporales o de compilación se limpien correctamente al finalizar el proceso de compilación.
+* [x] **Manejo de Errores Largos:** Optimizar los cuadros de mensajes de error para que resuman el fallo de forma clara e intuitiva. Corregir el error visual por el cual al hacer *hover* sobre el botón del diálogo este se vuelve completamente blanco.
+* [x] **Efecto Blur:** Corregir el bug visual donde los tonos de *blur* se vuelven blancos progresivamente al maximizar y restaurar la ventana varias veces.
+* [x] **Barra de Estado en Compilación:** Mostrar en tiempo real cada línea de salida del compilador en la barra de estado mientras se compila, mostrando al final el procedimiento detallado detrás de `iflapp`.
+* [ ] **Consistencia de Fondos:** Estandarizar la opacidad de los fondos entre pestañas (la pestaña "Crear" cuenta con transparencia media mientras que las demás son opacas; unificar criterio).
+
+---
+
+## 3. Sistema de Internacionalización (i18n)
+
+* [ ] **Completitud del i18n:** Finalizar el sistema de internacionalización para garantizar que no queden textos incompletos, cadenas (`strings`) faltantes ni textos hardcodeados en español dentro del código fuente. (Claves faltantes completadas; queda extraer textos hardcodeados.)
+
+---
+
+## 4. Nueva Arquitectura: Sistema `.mexf` y Motor `.asksome`
+
+### 4.1. Remoción del Shell Antiguo
+
+* [ ] Eliminar cualquier rastro del *shell* antiguo de `packagemaker`.
+* [ ] Implementar un nuevo *shell* basado íntegramente en archivos de configuración YAML (`.mexf`).
+
+### 4.2. Estructura y Sintaxis de los Archivos `.mexf`
+
+Los archivos YAML estructurarán triggers, comandos, registros, extensiones, accesos directos, strings, entornos, asociaciones de archivos, rutas de íconos y menús contextuales de shell.
+
+**Ejemplo conceptual de sintaxis e importación:**
+
+```yaml
+meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importación y renombrado condicional (ej. some / bsome)
 - (trig.Main) bsome ['trig']: .@! Clase en cascada
-  trig.onStartup(bsome.self) bsome ['trig.run']: .@! Función desde allí y llamando la librería 
-   trig.run(powershell['echo hello world welcome to your user desktop'] if trig.some::[Calenverath.defaults]) .@! Ejecuta powershell y sus argumentos desde la cascada condicional de que si se enciende la pc
-- !endsome 'trig.main' keepb 'trig' .@! Termina la clase y la función y globaliza la función y sus variables (keepb), y (keepsome) la mantiene aislada y privada, y (keep) la deja normal pero sin acceso a sus variables desde adentro (pero son expuestas de solo lectura desde afuera)
+  trig.onStartup(bsome.self) bsome ['trig.run']: .@! Función invocando librería
+   trig.run(powershell['echo hello world welcome to your user desktop'] if trig.some::[Calenverath.defaults])
+- !endsome 'trig.main' keepb 'trig' .@! Cierre de clase/función y exportación de variables (keepb, keepsome, keep)
 
-Limpiaras Cualquier rastro de shell viejo de packagemaker y emplear otro nuevo escrito en mexf basándote en los comandos, luego crearás un compilador de mexf, convertirá mexf en un binario propio .asksome, separará todo, creará un paquete con manifiesto basado en el titulo y Metadata del .mexf y generará archivos de registros multiplataforma y scripts de comando para cada plataforma, El paquete asksome pesará más de lo normal por los engines, Los encabezados dentro del binario, encriptado, launcher independiente y preparado, assets basado en rutas, entre muchas cosas más. El compilador mexf compila antes de compilar el iflapp, al terminar de compilar todos los .asksome procederá a crear envoltorios para probar sintaxis y entorno y luego a compilar los iflapp.
+```
 
-Pero crearás una plantilla para un desinstalador llamado removeme.py, El cual eliminará el shell asksome, integraciones, archivos y accesos directos, osea un proceso inverso al de instalar un paquete, así mismo, tendrá lineas de comandos silenciosas y personalizadas y una interfaz en pyqt6 basado en leviathan-ui para los pasos y el procedimiento en tiempo real
+### 4.3. Compilador de `.mexf` a `.asksome`
 
-Ahora Si, al instalar un iflapp se procederá el shell desde .asksome y luego la implementación de los accesos directos. Y haz un editor mexf con debugger y compilador y probado de sintaxis. Planea
+* [ ] Desarrollar un compilador dedicado que procese los `.mexf` siguiendo esta jerarquía:
+1. Lectura del archivo de detalles (`details.xml`).
+2. Procesamiento de `/.mexf/main.mexf`.
+3. Procesamiento de los sub-módulos y add-ons dentro de la carpeta.
 
-Otra Idea de que se haga un shell en pyyhon/dll/so para revelar los iconos de cada paquete y su info al pasar hover en el sistema operativo al igual de sus detalles en el panel de propiedades de cada sistema operativo
 
-Hacer Desde cero un editor de proyectos iflapp con debugger y compilador usando los engines de packagemaker
-Luego agregar un apartado para requerir inicio de sesión en Github via token para firmar paquetes con el username y mostrar el logo de mi perfil en el sidebar junto a mi nombre
-Luego se harán pruebas y bugfixes
+* [ ] Transformar los archivos `.mexf` en un binario empaquetado propio con extensión `.asksome` (incluyendo motores embebidos, encabezados encriptados, *launcher* independiente y gestión de assets por rutas).
+* [ ] Integrar el flujo de compilación para que el compilador de `.mexf` se ejecute previo a la compilación del `iflapp`, generando envoltorios de prueba de sintaxis y entorno.
+
+### 4.4. Instalador y Desinstalador Avanzado
+
+* [ ] **Instalador de `iflapps`:** Crear un instalador robusto que ejecute el shell desde `.asksome`, cree accesos directos, registre la instalación (usando estructuras modernizadas tipo `updater`) y configure variables, comandos y extensiones.
+* [ ] **Plantilla de Desinstalación (`removeme.py`):**
+* Desarrollar un script inverso encargado de purgar el shell `.asksome`, integraciones, archivos y accesos directos.
+* Soporte para ejecución mediante comandos silenciosos y personalizados.
+* Interfaz gráfica en PyQt6 basada en `leviathan-ui` para guiar al usuario en tiempo real durante el proceso de desinstalación.
+
+
+
+---
+
+## 5. Nuevas Herramientas y Módulos de Desarrollo
+
+### 5.1. Editor `.mexf` con Debugger
+
+* [ ] Diseñar y construir un entorno/editor visual especializado para archivos `.mexf` que incluya:
+* Verificador de sintaxis en tiempo real.
+* *Debugger* integrado.
+* Compilador interactivo de prueba.
+
+
+
+### 5.2. Shell Nativo (Python / DLL / SO)
+
+* [ ] Desarrollar un módulo en Python/DLL/SO para exponer información detallada de los paquetes, metadatos y vistas previas de iconos al pasar el cursor (*hover*) en el sistema operativo, así como su integración en el panel de propiedades nativo del SO.
+
+### 5.3. Nuevo IDE de Proyectos `iflapp`
+
+* [ ] Crear desde cero un editor de proyectos `iflapp` completamente nuevo equipado con:
+* Depurador (*debugger*).
+* Compilador propio utilizando los motores base de `packagemaker`.
+
+
+
+### 5.4. Integración con GitHub (Autenticación y Firma)
+
+* [ ] Añadir un apartado de configuración para requerir inicio de sesión mediante **GitHub Token**.
+* [ ] Utilizar las credenciales para firmar los paquetes generados utilizando el nombre de usuario de GitHub.
+* [ ] Mostrar la imagen de perfil del usuario y su nombre en el panel lateral (*sidebar*) del IDE.
+
+---
+
+## 6. Fase Final de QA
+
+* [ ] Ejecutar pruebas integrales del ciclo de vida (Creación en el nuevo IDE $\rightarrow$ Compilación `.mexf` a `.asksome` $\rightarrow$ Instalación $\rightarrow$ Ejecución $\rightarrow$ Desinstalación con `removeme.py`).
+* [ ] Resolución de bugs remanentes detectados durante las pruebas de estrés.

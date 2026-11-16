@@ -9,3 +9,4 @@ zstandard
 pyinstaller
 # Cifrado AES-256-GCM opcional para el payload .iflapp.
 cryptography
+PyYAML

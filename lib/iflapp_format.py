@@ -332,11 +332,11 @@ def _decrypt_payload(data: bytes, password: Optional[str], params: Dict) -> byte
         try:
             return aes(key).decrypt(nonce, data, None)
         except Exception as exc:
-            # ``InvalidTag`` de ``cryptography`` no deriva de ``IflappError``;
-            # se normaliza para que los llamadores capturen un único tipo.
+            # cryptography raises ``InvalidTag`` for a wrong password or a
+            # tampered payload. Keep the public API independent of the
+            # optional backend and expose the project's domain exception.
             raise IflappSignatureError(
-                "No se pudo descifrar el payload: la contraseña es incorrecta "
-                "o los datos fueron alterados."
+                "La contraseña no es válida o el payload cifrado fue alterado."
             ) from exc
     if mode == "hmac-sha256-ctr":
         expected = params.get("mac", "")

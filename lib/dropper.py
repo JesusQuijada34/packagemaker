@@ -109,12 +109,14 @@ def _decrypt(data, password, params):
     if mode == "aes-256-gcm":
         try:
             from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-        except ImportError:
-            raise SystemExit("El paquete usa AES-256-GCM; instala 'cryptography' para abrirlo.")
+        except ImportError as exc:
+            raise SystemExit(
+                "El paquete usa AES-256-GCM; instale 'cryptography' para abrirlo."
+            ) from exc
         try:
             return AESGCM(key).decrypt(nonce, data, None)
-        except Exception:
-            raise SystemExit("No se pudo descifrar el payload: contraseña incorrecta o datos alterados.")
+        except Exception as exc:
+            raise SystemExit("Contraseña incorrecta o payload cifrado alterado.") from exc
     raise SystemExit("Modo de cifrado no soportado por el stub: " + mode)
 
 

@@ -4186,18 +4186,16 @@ class IntegratedSplash(QWidget):
     def __init__(self, parent=None, icon_path=None, title="Package Maker"):
         super().__init__(parent)
         self.parent = parent
+        self.accent = str(get_accent_color())
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setGeometry(0, 0, parent.width(), parent.height())
-        # El fondo se pinta con el acento activo (preferencia del usuario →
-        # Leviathan → azul UWP), no con un gris fijo.
-        self._accent = str(get_accent_color())
-        self.setStyleSheet(
-            f"QWidget#SplashContainer {{"
-            f"background-color: {self._accent};"
-            f"border-radius: 0px;"
-            f"}}"
-        )
+        self.setStyleSheet(f"""
+            QWidget#SplashContainer {{
+                background-color: {self.accent};
+                border-radius: 0px;
+            }}
+        """)
 
         container = QWidget(self)
         container.setObjectName("SplashContainer")

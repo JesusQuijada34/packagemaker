@@ -57,8 +57,8 @@ SIDEBAR_TEXT_DARK = SIDEBAR_TEXT_GRAY
 SIDEBAR_TEXT_SELECTED_LIGHT = SIDEBAR_TEXT_GRAY
 SIDEBAR_TEXT_SELECTED_DARK = SIDEBAR_TEXT_GRAY
 
-TEXT_LIGHT = "#1C1C1E"
-TEXT_MUTED_LIGHT = "#5A5A5E"
+TEXT_LIGHT = "#000000"
+TEXT_MUTED_LIGHT = "#000000"
 
 DANGER = "#FF453A"
 DANGER_SOFT = "rgba(255, 69, 58, 0.16)"
@@ -100,7 +100,7 @@ SECTION_LABEL_SIZE = 12
 # --------------------------------------------------------------------------- #
 # Tipografía
 # --------------------------------------------------------------------------- #
-FONT_STACK = "'Segoe UI Variable Display','SF Pro Display','Segoe UI','Inter Regular',sans-serif"
+FONT_STACK = "'Roboto','Segoe UI Variable Display','SF Pro Display','Segoe UI','Inter Regular',sans-serif"
 MONO_STACK = "'Cascadia Code','Consolas','JetBrains Mono','DejaVu Sans Mono',monospace"
 
 
