@@ -4365,6 +4365,8 @@ def main():
                 'inspect_iflapp',
                 'list_fonts',
                 'download_fonts',
+                'shell_info',
+                'install_shell_integration',
                 'compile_mexf',
                 'install_asksome',
                 'uninstall_asksome',

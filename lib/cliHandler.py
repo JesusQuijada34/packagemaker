@@ -169,6 +169,10 @@ class CLIHandler:
         inspect_group.add_argument('--inspect', metavar='IFLAPP', help='Leer cabecera, icono y detalles de un .iflapp sin descomprimir')
         inspect_group.add_argument('--inspect-json', action='store_true', help='Salida JSON para --inspect')
         inspect_group.add_argument('--inspect-extract', metavar='DIR', help='Extraer icono y detalles de la cabecera a DIR')
+        inspect_group.add_argument('--shell-info', metavar='FILE', help='Metadatos de shell (hover) de un .iflapp/.asksome sin descifrar')
+        inspect_group.add_argument('--shell-info-json', action='store_true', help='Salida JSON para --shell-info')
+        inspect_group.add_argument('--shell-preview', metavar='DIR', help='Exportar la vista previa de icono a DIR junto con --shell-info')
+        inspect_group.add_argument('--install-shell-integration', action='store_true', help='Registrar la asociación MIME y el generador de miniaturas del SO')
         inspect_group.add_argument('--list-compilers', action='store_true', help='Mostrar compiladores disponibles y su estado')
         inspect_group.add_argument('--list-hardening', action='store_true', help='Mostrar métodos de blindaje disponibles y su estado')
 
@@ -339,6 +343,20 @@ class CLIHandler:
 
         elif getattr(args, 'list_compilers', False):
             return ('list_compilers', None, shell_options)
+
+        elif getattr(args, 'shell_info', None):
+            return (
+                'shell_info',
+                {
+                    'path': args.shell_info,
+                    'json': getattr(args, 'shell_info_json', False),
+                    'preview': getattr(args, 'shell_preview', None),
+                },
+                shell_options,
+            )
+
+        elif getattr(args, 'install_shell_integration', False):
+            return ('install_shell_integration', None, shell_options)
 
         elif getattr(args, 'list_hardening', False):
             return ('list_hardening', None, shell_options)
@@ -690,6 +708,69 @@ class PackageInspectHelper:
         return True
 
 
+class NativeShellHelper:
+    """Expone metadatos de shell y registra la integración del SO."""
+
+    @staticmethod
+    def info(data):
+        import json as _json
+        from pathlib import Path
+
+        from lib import native_shell
+
+        path = data.get("path")
+        if not path:
+            print("[ERROR] Debes indicar un archivo con --shell-info")
+            return False
+        target = Path(path).expanduser()
+        if not target.is_file():
+            print(f"[ERROR] No existe el archivo: {target}")
+            return False
+        try:
+            info = native_shell.package_info(target)
+        except ValueError as exc:
+            print(f"[ERROR] {exc}")
+            return False
+
+        if data.get("json"):
+            print(_json.dumps(info, indent=2, ensure_ascii=False))
+        else:
+            identity = info["identity"]
+            print(f"Paquete   : {info['path']}")
+            print(f"Tipo      : {info['kind']} v{info['format_version']} ({info['compression']}/{info['encryption']})")
+            print(f"Publisher : {identity.get('publisher', '')}")
+            print(f"App       : {identity.get('app', '')}  ({identity.get('name', '')})")
+            print(f"Version   : {identity.get('version', '')}")
+            if identity.get("signer"):
+                print(f"Firmante  : {identity['signer']}")
+            print(f"MIME      : {info['mime_type']}")
+            print(f"Icono     : {info['icon_bytes']} bytes")
+            print(f"Archivos  : {info['file_count']}")
+
+        preview_dir = data.get("preview")
+        if preview_dir:
+            png = native_shell.export_icon_preview(target, preview_dir)
+            if png:
+                print(f"[OK] Vista previa exportada: {png}")
+            else:
+                print("[INFO] El paquete no tiene icono exportable (o falta Pillow).")
+        return True
+
+    @staticmethod
+    def install():
+        from lib import native_shell
+
+        result = native_shell.install_shell_integration()
+        for path in result["written"]:
+            print(f"[OK] Integración escrita: {path}")
+        for item in result["skipped"]:
+            print(f"[AVISO] Omitido: {item}")
+        if not result["written"]:
+            print("[ERROR] No se pudo registrar la integración del shell.")
+            return False
+        return True
+
+
 class MexfCompileHelper:
     """Compila un proyecto ``.mexf`` a un artefacto ``.asksome`` firmado."""
 
@@ -847,6 +928,12 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'inspect_iflapp':
         return PackageInspectHelper.inspect(data or {})
+
+    elif action == 'shell_info':
+        return NativeShellHelper.info(data or {})
+
+    elif action == 'install_shell_integration':
+        return NativeShellHelper.install()
 
     elif action == 'compile_mexf':
         return MexfCompileHelper.compile(data or {})

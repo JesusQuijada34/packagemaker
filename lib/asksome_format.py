@@ -1,6 +1,7 @@
 """Contenedor determinista y seguro para artefactos compilados desde .mexf."""
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 import io
@@ -48,7 +49,7 @@ def _tar_bytes(root: Path) -> tuple[bytes, list[dict[str, Any]]]:
     return stream.getvalue(), manifest
 
 
-def pack_asksome(staging_dir: Path | str, output_file: Path | str, *, metadata: dict | None = None, launcher: str = "launcher.py", password: str | None = None) -> Path:
+def pack_asksome(staging_dir: Path | str, output_file: Path | str, *, metadata: dict | None = None, launcher: str = "launcher.py", password: str | None = None, icon: bytes | None = None) -> Path:
     root = Path(staging_dir).resolve()
     if not root.is_dir():
         raise AsksomeError(f"No existe staging: {root}")
@@ -61,6 +62,10 @@ def pack_asksome(staging_dir: Path | str, output_file: Path | str, *, metadata: 
 
     payload, encryption = iflapp_format._encrypt_payload(payload, password)
     header = {"format": "asksome", "format_version": 1, "launcher": launcher, "manifest": manifest, "metadata": metadata or {}, "compression": "lzma", "encryption": encryption.get("encryption", "none"), "encryption_params": encryption, "payload_sha256": hashlib.sha256(payload).hexdigest()}
+    # El icono viaja en claro (base64) para que el shell pueda mostrarlo al
+    # pasar el cursor sin descifrar el payload.
+    if icon:
+        header["icon"] = base64.b64encode(icon).decode("ascii")
     signature = hmac.new(KEY, _canonical(header) + payload, hashlib.sha256).hexdigest()
     header["signature"] = signature
     header_bytes = _canonical(header)

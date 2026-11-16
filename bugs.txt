@@ -112,7 +112,7 @@ meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importació
 
 ### 5.2. Shell Nativo (Python / DLL / SO)
 
-* [ ] Desarrollar un módulo en Python/DLL/SO para exponer información detallada de los paquetes, metadatos y vistas previas de iconos al pasar el cursor (*hover*) en el sistema operativo, así como su integración en el panel de propiedades nativo del SO.
+* [x] Desarrollar un módulo en Python/DLL/SO para exponer información detallada de los paquetes, metadatos y vistas previas de iconos al pasar el cursor (*hover*) en el sistema operativo, así como su integración en el panel de propiedades nativo del SO (`lib/native_shell.py`: `package_info`, `export_icon_preview`, `write_thumbnailer`/`write_desktop_entry` para freedesktop y andamiaje `.reg` en Windows; CLI `--shell-info`/`--install-shell-integration`).
 
 ### 5.3. Nuevo IDE de Proyectos `iflapp`
 

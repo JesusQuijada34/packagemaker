@@ -228,6 +228,22 @@ if __name__ == "__main__":
 '''
 
 
+def _find_project_icon(project_root: Path, app: str) -> Optional[bytes]:
+    """Busca un icono del proyecto para incrustarlo en claro en la cabecera.
+
+    Prioriza el icono específico de la app sobre el genérico y ``.ico`` sobre
+    ``.png``, igual que hace el resto del build.
+    """
+    stems = [f"{app}-icon", "app-icon", "icon"]
+    for directory in (project_root / "app", project_root):
+        for stem in stems:
+            for ext in (".ico", ".png"):
+                candidate = directory / f"{stem}{ext}"
+                if candidate.is_file():
+                    return candidate.read_bytes()
+    return None
+
+
 def write_test_wrappers(
     merged: Dict[str, Any],
     output: Path,
@@ -298,13 +314,14 @@ def compile_mexf_project(
 
     output = Path(output_file) if output_file else root / f"{details['app']}.asksome"
 
+    icon = _find_project_icon(root, details["app"])
     if staging_dir is not None:
         _stage_project(root, Path(staging_dir), merged)
-        pack_asksome(staging_dir, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password)
+        pack_asksome(staging_dir, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password, icon=icon)
     else:
         with tempfile.TemporaryDirectory(prefix="mexf-build-") as tmp:
             _stage_project(root, Path(tmp), merged)
-            pack_asksome(tmp, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password)
+            pack_asksome(tmp, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password, icon=icon)
 
     result = CompileResult(
         output=output,
