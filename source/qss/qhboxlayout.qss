@@ -1,0 +1,12 @@
+/* Regla heredada de la hoja raíz para las cabeceras de sección. */
+
+/* @role: root */
+QHBoxLayout {
+    color: __TEXT__;
+    font-size: 20px;
+    font-weight: 600;
+    font-family: __FONT_STACK__;
+    letter-spacing: 0.3px;
+    background: transparent;
+    border: none;
+}

@@ -3,6 +3,7 @@
 import os
 import sys
 
+from lib import qss_loader
 from lib.design_tokens import (
     ACCENT,
     BORDER,
@@ -371,19 +372,14 @@ def sidebar_stylesheet(dark, accent="#0078d4"):
     selección lo pinta ``SidebarItem`` (barra corta y centrada). Aquí sólo
     quedan el marco, el botón de colapso y la tarjeta de contexto.
     """
-    if dark:
-        sidebar_bg, border, hover, selected = SIDEBAR_BG, "#333333", "rgba(255,255,255,.06)", "rgba(255,255,255,.10)"
-    else:
-        sidebar_bg, border, hover, selected = "rgba(242,242,247,.9)", "#D1D1D6", "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
-    return f"""
-        QWidget#NavigationSidebar {{ background:{sidebar_bg}; border-right:1px solid {border}; }}
-        QPushButton#SidebarCollapseButton {{ background:transparent; color:{SIDEBAR_TEXT_GRAY}; border:none; border-radius:7px; }}
-        QPushButton#SidebarCollapseButton:hover {{ background:{hover}; }}
-        QPushButton#SidebarCollapseButton:pressed {{ background:{selected}; }}
-        QWidget#SidebarContextCard {{ background:{hover}; border:1px solid {border}; border-radius:{CARD_RADIUS}px; }}
-        QWidget#NavigationSidebar QPushButton {{ color:{SIDEBAR_TEXT_GRAY}; font-family:{FONT_STACK}; font-size:14px; }}
-        QWidget#NavigationSidebar QPushButton:focus {{ outline:none; }}
-    """
+    return qss_loader.qss(
+        "qwidget",
+        role="sidebar-frame-dark" if dark else "sidebar-frame-light",
+        SIDEBAR_BG=SIDEBAR_BG,
+        SIDEBAR_TEXT_GRAY=SIDEBAR_TEXT_GRAY,
+        CARD_RADIUS=CARD_RADIUS,
+        FONT_STACK=FONT_STACK,
+    )
 
 
 def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
@@ -393,19 +389,16 @@ def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
     selección se marca con el fondo y con el indicador que pinta
     ``SidebarItem``, no cambiando el color del texto.
     """
-    if dark:
-        hover, selected = "rgba(255,255,255,.06)", "rgba(255,255,255,.10)"
-    else:
-        hover, selected = "rgba(15,23,42,.07)", "rgba(0,120,212,.14)"
-    return f"""
-        QPushButton {{ background:transparent; color:{SIDEBAR_TEXT_GRAY}; text-align:left; padding-left:{SIDEBAR_ICON_INSET}px;
-            border:none; border-left:{int(border_width)}px solid transparent; border-radius:{CONTROL_RADIUS}px;
-            font-family:{FONT_STACK};
-            font-size:14px; font-weight:500; }}
-        QPushButton:hover {{ background:{hover}; color:{SIDEBAR_TEXT_GRAY}; }}
-        QPushButton:checked {{ background:{selected}; color:{SIDEBAR_TEXT_GRAY}; border-left:{int(border_width)}px solid {accent}; }}
-        QPushButton:focus {{ outline:none; }}
-    """
+    return qss_loader.qss(
+        "qwidget",
+        role="sidebar-button-dark" if dark else "sidebar-button-light",
+        SIDEBAR_TEXT_GRAY=SIDEBAR_TEXT_GRAY,
+        SIDEBAR_ICON_INSET=SIDEBAR_ICON_INSET,
+        BORDER_WIDTH=int(border_width),
+        CONTROL_RADIUS=CONTROL_RADIUS,
+        FONT_STACK=FONT_STACK,
+        ACCENT=accent,
+    )
 
 
 def checkbox_stylesheet(accent=ACCENT, color=TEXT_MUTED, size=13):
@@ -418,7 +411,7 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
 
     Los widgets nuevos sólo declaran ``objectName`` y heredan estas reglas;
     así no se crean hojas de estilo locales que se queden obsoletas al cambiar
-    de tema.
+    de tema. Las reglas salen de ``source/qss`` (roles ``base``).
     """
     surface = SURFACE if dark else "#FFFFFF"
     page = WINDOW_BG if dark else "#F5F7FB"
@@ -426,48 +419,38 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
     muted = TEXT_MUTED if dark else TEXT_MUTED_LIGHT
     border = BORDER if dark else "#D1D1D6"
     _, accent_hover, accent_pressed = accent_states(accent)
-    return f"""
-        QWidget {{ font-family: {FONT_STACK}; color: {text}; }}
-        QLineEdit, QComboBox, QPlainTextEdit, QTextEdit {{
-            background: {surface}; color: {text}; border: 1px solid {border};
-            border-radius: {CONTROL_RADIUS}px; padding: 8px;
-        }}
-        QPushButton {{ background: {surface}; color: {text}; border: 1px solid {border};
-            border-radius: {PILL_RADIUS}px; padding: 8px 16px; }}
-        QPushButton:hover {{ border-color: {accent}; }}
-        QPushButton:disabled {{ color: {muted}; }}
-        QWidget#IflappIdePanel {{ background: {page}; }}
-        QWidget#GitHubLoginLanding {{ background-color: {page}; color: {text}; }}
-        QFrame#GitHubLoginCard {{ background: {surface}; border: 1px solid {border};
-            border-radius: 20px; }}
-        QLabel#GitHubLandingAvatar {{ background: {accent}; color: {TEXT};
-            border-radius: 44px; font-size: 30px; font-weight: 700;
-            border: 3px solid {accent}; }}
-        QLabel#GitHubLandingTitle {{ color: {text}; font-size: 26px; font-weight: 700; }}
-        QLabel#GitHubLandingSubtitle {{ color: {muted}; font-size: 14px; }}
-        QLabel#GitHubLandingName {{ color: {text}; font-size: 22px; font-weight: 700; }}
-        QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus {{ color: {muted};
-            font-size: 12px; }}
-        QLabel#GitHubWelcomeLabel {{ color: {accent}; font-size: 16px; font-weight: 600; }}
-        QPushButton#GitHubLoginButton {{ background-color: {accent}; color: #FFFFFF;
-            border: none; border-radius: {PILL_RADIUS}px; padding: 12px 20px;
-            font-size: 15px; font-weight: 600; min-height: 44px; }}
-        QPushButton#GitHubLoginButton:hover {{ background-color: {accent_hover}; color: #FFFFFF; }}
-        QPushButton#GitHubLoginButton:pressed {{ background-color: {accent_pressed}; }}
-        QPushButton#GitHubLoginButton:disabled {{ background-color: {border}; color: {muted}; }}
-        QLineEdit#GitHubTokenInput, QLineEdit#GitHubUsernameInput {{ background-color: {surface};
-            color: {text}; border: 1px solid {border}; border-radius: {CONTROL_RADIUS}px;
-            padding: 10px 14px; font-size: 14px; min-height: 44px; }}
-        QLineEdit#GitHubTokenInput:focus, QLineEdit#GitHubUsernameInput:focus {{
-            border: 2px solid {accent}; }}
-        QLabel#GitHubProfileAvatar {{ background: {accent}33; border-radius: 17px; }}
-        QLabel#GitHubProfileName {{ color: {SIDEBAR_TEXT_GRAY}; font-weight: 600; }}
-        QLabel#GitHubProfileLogin {{ color: {SIDEBAR_TEXT_GRAY}; font-size: 11px; }}
-        QLabel#IflappIdeHeader {{ color: {accent}; font-size: 18px; font-weight: 700; }}
-        QLabel#IflappIdeStatus {{ color: {muted}; }}
-        QListWidget#IflappIdeTree, QListWidget#IflappIdeConsole {{ background: {surface};
-            border: 1px solid {border}; border-radius: {CONTROL_RADIUS}px; }}
-    """
+    common = {
+        "SURFACE": surface,
+        "CARD_SURFACE": surface,
+        "CARD_BORDER": border,
+        "PAGE": page,
+        "TEXT": text,
+        "LABEL": text,
+        "MUTED": muted,
+        "BORDER": border,
+        "ACCENT": accent,
+        "ACCENT_HOVER": accent_hover,
+        "ACCENT_PRESSED": accent_pressed,
+        "FONT_STACK": FONT_STACK,
+        "CONTROL_RADIUS": CONTROL_RADIUS,
+        "PILL_RADIUS": PILL_RADIUS,
+    }
+    return "\n".join(
+        [
+            qss_loader.qss("qwidget", role="base", **common),
+            qss_loader.qss("qlineedit", role="base", **common),
+            qss_loader.qss("qpushbutton", role="base", **common),
+            qss_loader.qss("qwidget", role="landing", **common),
+            qss_loader.qss("qframe", role="landing", **common),
+            qss_loader.qss("qlabel", role="landing", **common),
+            qss_loader.qss("qpushbutton", role="landing", **common),
+            qss_loader.qss("qlineedit", role="landing", **common),
+            qss_loader.qss("qlabel", role="profile", **common),
+            qss_loader.qss("qpushbutton", role="profile", **common),
+            qss_loader.qss("qlabel", role="ide", **common),
+            qss_loader.qss("qlistwidget", role="ide", **common),
+        ]
+    )
 
 
 def splash_titlebar_stylesheet():
@@ -485,39 +468,23 @@ def splash_titlebar_stylesheet():
 
 
 def conf_field_stylesheet(readonly=False):
+    values = {
+        "SURFACE": SURFACE,
+        "BORDER": BORDER,
+        "CONTROL_RADIUS": CONTROL_RADIUS,
+        "TEXT": TEXT,
+        "TEXT_DIM": TEXT_DIM,
+        "TEXT_MUTED": TEXT_MUTED,
+        "INPUT_PADDING": INPUT_PADDING,
+        "INPUT_MIN_HEIGHT": INPUT_HEIGHT - 2,
+        "ACCENT": ACCENT,
+    }
+    fields = qss_loader.qss(
+        "qlineedit", role="readonly" if readonly else "field", **values
+    )
     if readonly:
-        return f"""
-            QLineEdit, QComboBox {{
-                background: #242426;
-                border: 1px solid rgba(255,255,255,0.06);
-                border-radius: {CONTROL_RADIUS}px;
-                color: {TEXT_DIM};
-                padding: 0 {INPUT_PADDING}px;
-                min-height: {INPUT_HEIGHT - 2}px;
-            }}
-        """
-    return f"""
-        QLineEdit, QComboBox {{
-            background: {SURFACE};
-            border: 1px solid {BORDER};
-            border-radius: {CONTROL_RADIUS}px;
-            color: {TEXT};
-            padding: 0 {INPUT_PADDING}px;
-            min-height: {INPUT_HEIGHT - 2}px;
-            selection-background-color: {ACCENT};
-        }}
-        QLineEdit:hover, QComboBox:hover {{ border-color: #5A5A5C; }}
-        QLineEdit:focus, QComboBox:focus {{ border: 2px solid {ACCENT}; }}
-        QComboBox::drop-down {{ border: none; width: 28px; }}
-        QComboBox::down-arrow {{
-            image: none;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 5px solid {TEXT_MUTED};
-            width: 0; height: 0;
-            margin-right: 8px;
-        }}
-    """
+        return fields
+    return fields + qss_loader.qss("qcombobox", role="field", **values)
 
 
 BTN_STYLES = {'default': 'background-color: transparent;color: rgba(32,33,36,0.96);border-radius: 9px;padding: '
@@ -600,13 +567,16 @@ SPLASH_STYLESHEET = splash_stylesheet()
 
 
 def applyget(accent: str, dark: bool = True) -> str:
-    # En tema claro el gris por defecto queda ilegible sobre el fondo claro:
-    # se conmutan los textos al negro y se conserva el resto del QSS.
+    """Hoja raíz del ``central``: ensambla los roles ``root`` por control.
+
+    En tema claro el gris por defecto queda ilegible sobre el fondo claro: se
+    conmutan los textos al negro y se conserva el resto del QSS.
+    """
     text = TEXT if dark else "#000000"
     label = "#cccccc" if dark else "#1f2937"
     page = WINDOW_BG if dark else "#F5F7FB"
-    surface = SURFACE if dark else "#FFFFFF"
-    border = BORDER if dark else "#D1D1D6"
+    card_surface = SURFACE if dark else "#FFFFFF"
+    card_border = BORDER if dark else "#D1D1D6"
     muted = TEXT_DIM if dark else label
     group_text = "#f3f5f8" if dark else "#000000"
     stack_text = "#bbb" if dark else "#333333"
@@ -615,166 +585,53 @@ def applyget(accent: str, dark: bool = True) -> str:
     disabled_bg = "#3A3A3C" if dark else "#d8dae0"
     line_hover = "#5A5A5C" if dark else "#b9bcc4"
     _, accent_hover, accent_pressed = accent_states(accent)
-    return f"""
-    * {{
-        outline: none;
-    }}
-    QWidget:focus {{
-        border: none;
-        outline: none;
-    }}
-    QPushButton:focus {{
-        outline: none;
-        border: none;
-    }}
-    QLineEdit:focus {{
-        border: 2px solid {accent};
-        background: {SURFACE};
-    }}
-    QComboBox {{
-        border:none;
-    }}
-    QWidget#ContentContainer {{
-        background-color: {WINDOW_BG};
-        border: none
-    }}
-    QWidget#NavigationSidebar {{
-        background-color: {SIDEBAR_BG};
-        border-right: 1px solid #333333;
-    }}
-
-    /* El QSS local de CentralWidget prevalece sobre el de QApplication.
-       Por eso los controles del landing deben vivir también en esta hoja raíz. */
-    QWidget#GitHubLoginLanding {{
-        background-color: {page};
-        color: {text};
-        border: none;
-        border-radius: 0;
-    }}
-    QFrame#GitHubLoginCard {{
-        background-color: {surface};
-        border: 1px solid {border};
-        border-radius: 20px;
-    }}
-    QLabel#GitHubLandingAvatar {{
-        background-color: {accent};
-        color: #FFFFFF;
-        border-radius: 44px;
-        border: 3px solid {accent};
-        font-size: 30px;
-        font-weight: 700;
-    }}
-    QLabel#GitHubLandingTitle {{
-        color: {text};
-        font-size: 26px;
-        font-weight: 700;
-    }}
-    QLabel#GitHubLandingSubtitle {{
-        color: {muted};
-        font-size: 14px;
-    }}
-    QLabel#GitHubLandingName {{
-        color: {text};
-        font-size: 22px;
-        font-weight: 700;
-    }}
-    QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus {{
-        color: {muted};
-        font-size: 12px;
-    }}
-    QLabel#GitHubWelcomeLabel {{
-        color: {accent};
-        font-size: 16px;
-        font-weight: 600;
-    }}
-    QPushButton#GitHubLoginButton {{
-        background-color: {accent};
-        color: #FFFFFF;
-        border: none;
-        border-radius: {PILL_RADIUS}px;
-        padding: 12px 20px;
-        font-size: 15px;
-        font-weight: 600;
-        min-height: 44px;
-    }}
-    QPushButton#GitHubLoginButton:hover {{
-        background-color: {accent_hover};
-    }}
-    QPushButton#GitHubLoginButton:pressed {{
-        background-color: {accent_pressed};
-    }}
-    QPushButton#GitHubLoginButton:disabled {{
-        background-color: {border};
-        color: {muted};
-    }}
-    QLineEdit#GitHubTokenInput, QLineEdit#GitHubUsernameInput {{
-        background-color: {surface};
-        color: {text};
-        border: 1px solid {border};
-        border-radius: {CONTROL_RADIUS}px;
-        padding: 10px 14px;
-        font-size: 14px;
-        min-height: 44px;
-    }}
-    QLineEdit#GitHubTokenInput:focus, QLineEdit#GitHubUsernameInput:focus {{
-        border: 2px solid {accent};
-    }}
-    QLabel#GitHubProfileAvatar {{
-        background: {accent}33;
-        border-radius: 17px;
-    }}
-    QLabel#GitHubProfileName {{
-        color: {label};
-        font-weight: 600;
-    }}
-    QLabel#GitHubProfileLogin {{
-        color: {muted};
-        font-size: 11px;
-    }}
-    QPushButton#GitHubProfileAction {{
-        background: {surface};
-        color: {label};
-        border: 1px solid {border};
-        border-radius: {CONTROL_RADIUS}px;
-        padding: 4px 10px;
-        min-height: 26px;
-        font-size: 12px;
-    }}
-    QPushButton#GitHubProfileAction:hover {{
-        border-color: {accent};
-        background: {surface};
-    }}
-
-    QWidget#DialogCentral {{
-        background-color: transparent;
-        border: none;
-    }}
-    QWidget#SidebarContextCard {{ background-color: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.09); border-radius: {CARD_RADIUS}px; }}
-    QGroupBox {{ color: {group_text}; background-color: transparent; border: none; font-weight: 600; }}
-    QHBoxLayout {{ color: {text}; font-size: 20px; font-weight: 600; font-family: {FONT_STACK}; letter-spacing: 0.3px; background: transparent; border: none; }}
-    QWidget {{ background-color: transparent ; border: none; border-radius: 5px; }}
-    QLineEdit, QTextEdit, QPlainTextEdit {{ background-color: {SURFACE}; border: 1px solid {BORDER}; border-radius: {CONTROL_RADIUS}px; color: {text}; font-family: {FONT_STACK}; font-size: 14px; padding: 0 {INPUT_PADDING}px; min-height: {INPUT_HEIGHT - 2}px; selection-background-color: {accent};}}
-    QLineEdit:hover {{ border-color: {line_hover}; }}
-    QLineEdit:focus {{ background-color: {SURFACE}; border: 2px solid {accent}; }}
-    QScrollBar:vertical {{ width: 10px; margin: 2px; background: transparent; }}
-    QScrollBar:horizontal {{ height: 10px; margin: 2px; background: transparent; }}
-    QScrollBar::handle:vertical, QScrollBar::handle:horizontal {{ background: {scroll_handle}; border-radius: 4px; min-height: 24px; min-width: 24px; }}
-    QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {{ background: {scroll_handle_hover}; }}
-    QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page {{ background: transparent; border: none; }}
-    QWidget:focus, QPushButton:focus, QCheckBox:focus, QRadioButton:focus, QComboBox:focus, QListWidget:focus, QSlider:focus {{ outline: none; }}
-    QLabel {{ font-family: {FONT_STACK}; font-size: 14px; color: {label}; font-weight: 500; background: transparent; border: none}}
-    QStackedWidget {{ background: transparent; color: {stack_text}; font-size: 12px; line-height: 1.2; border:none; }}
-    QPushButton {{ background-color: {accent}; color: {text}; font-weight: 600; font-size: 14px; border-radius: {PILL_RADIUS}px; border: none; padding: 0 {BUTTON_PADDING_H}px; font-family: {FONT_STACK}; }}
-    QPushButton:hover {{ background-color: {accent_hover}; }}
-    QPushButton:pressed {{ background-color: {accent_pressed}; border-color: rgba(255, 255, 255, 0.05); }}
-    QPushButton:disabled {{ background-color: {disabled_bg}; color: {TEXT_DIM}; }}
-    {slider_qss(accent)}
-    QProgressBar {{
-        background: transparent;
-        border: none;
-        border-radius: 2px;
-    }}
-    QProgressBar::chunk {{
-        background: {accent};
-    }}
-    """
+    values = {
+        "ACCENT": accent,
+        "ACCENT_HOVER": accent_hover,
+        "ACCENT_PRESSED": accent_pressed,
+        "WINDOW_BG": WINDOW_BG,
+        "SIDEBAR_BG": SIDEBAR_BG,
+        "SURFACE": SURFACE,
+        "BORDER": BORDER,
+        "CARD_SURFACE": card_surface,
+        "CARD_BORDER": card_border,
+        "TEXT": text,
+        "LABEL": label,
+        "PAGE": page,
+        "MUTED": muted,
+        "GROUP_TEXT": group_text,
+        "STACK_TEXT": stack_text,
+        "SCROLL_HANDLE": scroll_handle,
+        "SCROLL_HANDLE_HOVER": scroll_handle_hover,
+        "DISABLED_BG": disabled_bg,
+        "LINE_HOVER": line_hover,
+        "FONT_STACK": FONT_STACK,
+        "CARD_RADIUS": CARD_RADIUS,
+        "CONTROL_RADIUS": CONTROL_RADIUS,
+        "PILL_RADIUS": PILL_RADIUS,
+        "BUTTON_PADDING_H": BUTTON_PADDING_H,
+        "INPUT_PADDING": INPUT_PADDING,
+        "INPUT_MIN_HEIGHT": INPUT_HEIGHT - 2,
+        "TEXT_DIM": TEXT_DIM,
+    }
+    parts = [
+        qss_loader.qss("qwidget", role="root", **values),
+        qss_loader.qss("qcombobox", role="root", **values),
+        qss_loader.qss("qwidget", role="landing", **values),
+        qss_loader.qss("qframe", role="landing", **values),
+        qss_loader.qss("qlabel", role="landing", **values),
+        qss_loader.qss("qpushbutton", role="landing", **values),
+        qss_loader.qss("qlineedit", role="landing", **values),
+        qss_loader.qss("qlabel", role="profile", **values),
+        qss_loader.qss("qpushbutton", role="profile", **values),
+        qss_loader.qss("qgroupbox", role="root", **values),
+        qss_loader.qss("qhboxlayout", role="root", **values),
+        qss_loader.qss("qlineedit", role="root", **values),
+        qss_loader.qss("qscrollbar", role="root", **values),
+        qss_loader.qss("qlabel", role="root", **values),
+        qss_loader.qss("qstackedwidget", role="root", **values),
+        qss_loader.qss("qpushbutton", role="root", **values),
+        slider_qss(accent),
+        qss_loader.qss("qprogressbar", role="root", **values),
+    ]
+    return "\n".join(parts)

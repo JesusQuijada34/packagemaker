@@ -1,0 +1,22 @@
+/* Slider estilo macOS: pista fina y pulgar blanco de 16px. */
+
+QSlider::groove:horizontal {
+    height: 4px;
+    background: __BORDER__;
+    border-radius: 2px;
+    margin: 0 2px;
+}
+QSlider::sub-page:horizontal {
+    background: __ACCENT__;
+    border-radius: 2px;
+}
+QSlider::handle:horizontal {
+    background: #FFFFFF;
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+}
+QSlider::handle:horizontal:hover { background: #F2F2F7; }
+QSlider::handle:horizontal:pressed { background: #E5E5EA; }

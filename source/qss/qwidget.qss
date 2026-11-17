@@ -1,0 +1,112 @@
+/* Widgets: barra lateral, chrome de ventana y landing de GitHub. */
+
+/* @role: sidebar-dark */
+QWidget#NavigationSidebar {
+    background: __SIDEBAR_BG__;
+    border-right: 1px solid __DIVIDER__;
+}
+QWidget#NavigationSidebar QPushButton {
+    color: __TEXT_MUTED__;
+    text-align: left;
+    padding-left: __SIDEBAR_ICON_INSET__px;
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: __CONTROL_RADIUS__px;
+    font-family: __FONT_STACK__;
+    font-size: 14px;
+    font-weight: 500;
+}
+QWidget#NavigationSidebar QPushButton:hover { background: rgba(255,255,255,0.06); }
+QWidget#NavigationSidebar QPushButton:checked {
+    background: rgba(255,255,255,0.10);
+    border-left: 3px solid __ACCENT__;
+    color: __TEXT__;
+}
+
+/* @role: sidebar-light */
+QWidget#NavigationSidebar {
+    background: rgba(242,242,247,0.9);
+    border-right: 1px solid #D1D1D6;
+}
+QWidget#NavigationSidebar QPushButton {
+    color: #1C1C1E;
+    text-align: left;
+    padding-left: __SIDEBAR_ICON_INSET__px;
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: __CONTROL_RADIUS__px;
+    font-family: __FONT_STACK__;
+    font-size: 14px;
+    font-weight: 500;
+}
+QWidget#NavigationSidebar QPushButton:hover { background: rgba(255,255,255,0.06); }
+QWidget#NavigationSidebar QPushButton:checked {
+    background: rgba(255,255,255,0.10);
+    border-left: 3px solid __ACCENT__;
+    color: __TEXT__;
+}
+
+/* @role: root */
+* { outline: none; }
+QWidget:focus { border: none; outline: none; }
+QWidget#ContentContainer { background-color: __WINDOW_BG__; border: none }
+QWidget#NavigationSidebar { background-color: __SIDEBAR_BG__; border-right: 1px solid #333333; }
+QWidget#DialogCentral { background-color: transparent; border: none; }
+QWidget#SidebarContextCard {
+    background-color: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: __CARD_RADIUS__px;
+}
+QWidget { background-color: transparent ; border: none; border-radius: 5px; }
+QWidget:focus, QPushButton:focus, QCheckBox:focus, QRadioButton:focus, QComboBox:focus,
+QListWidget:focus, QSlider:focus { outline: none; }
+
+/* @role: landing */
+/* El QSS local de CentralWidget prevalece sobre el de QApplication: los
+   controles del landing deben vivir también en la hoja raíz (applyget). */
+QWidget#GitHubLoginLanding {
+    background-color: __PAGE__;
+    color: __TEXT__;
+    border: none;
+    border-radius: 0;
+}
+
+/* @role: base */
+QWidget { font-family: __FONT_STACK__; color: __TEXT__; }
+QWidget#IflappIdePanel { background: __PAGE__; }
+
+/* @role: sidebar-frame-dark */
+QWidget#NavigationSidebar { background: __SIDEBAR_BG__; border-right: 1px solid #333333; }
+QPushButton#SidebarCollapseButton { background: transparent; color: __SIDEBAR_TEXT_GRAY__; border: none; border-radius: 7px; }
+QPushButton#SidebarCollapseButton:hover { background: rgba(255,255,255,.06); }
+QPushButton#SidebarCollapseButton:pressed { background: rgba(255,255,255,.10); }
+QWidget#SidebarContextCard { background: rgba(255,255,255,.06); border: 1px solid #333333; border-radius: __CARD_RADIUS__px; }
+QWidget#NavigationSidebar QPushButton { color: __SIDEBAR_TEXT_GRAY__; font-family: __FONT_STACK__; font-size: 14px; }
+QWidget#NavigationSidebar QPushButton:focus { outline: none; }
+
+/* @role: sidebar-frame-light */
+QWidget#NavigationSidebar { background: rgba(242,242,247,.9); border-right: 1px solid #D1D1D6; }
+QPushButton#SidebarCollapseButton { background: transparent; color: __SIDEBAR_TEXT_GRAY__; border: none; border-radius: 7px; }
+QPushButton#SidebarCollapseButton:hover { background: rgba(15,23,42,.07); }
+QPushButton#SidebarCollapseButton:pressed { background: rgba(0,120,212,.14); }
+QWidget#SidebarContextCard { background: rgba(15,23,42,.07); border: 1px solid #D1D1D6; border-radius: __CARD_RADIUS__px; }
+QWidget#NavigationSidebar QPushButton { color: __SIDEBAR_TEXT_GRAY__; font-family: __FONT_STACK__; font-size: 14px; }
+QWidget#NavigationSidebar QPushButton:focus { outline: none; }
+
+/* @role: sidebar-button-dark */
+QPushButton { background: transparent; color: __SIDEBAR_TEXT_GRAY__; text-align: left; padding-left: __SIDEBAR_ICON_INSET__px;
+    border: none; border-left: __BORDER_WIDTH__px solid transparent; border-radius: __CONTROL_RADIUS__px;
+    font-family: __FONT_STACK__;
+    font-size: 14px; font-weight: 500; }
+QPushButton:hover { background: rgba(255,255,255,.06); color: __SIDEBAR_TEXT_GRAY__; }
+QPushButton:checked { background: rgba(255,255,255,.10); color: __SIDEBAR_TEXT_GRAY__; border-left: __BORDER_WIDTH__px solid __ACCENT__; }
+QPushButton:focus { outline: none; }
+
+/* @role: sidebar-button-light */
+QPushButton { background: transparent; color: __SIDEBAR_TEXT_GRAY__; text-align: left; padding-left: __SIDEBAR_ICON_INSET__px;
+    border: none; border-left: __BORDER_WIDTH__px solid transparent; border-radius: __CONTROL_RADIUS__px;
+    font-family: __FONT_STACK__;
+    font-size: 14px; font-weight: 500; }
+QPushButton:hover { background: rgba(15,23,42,.07); color: __SIDEBAR_TEXT_GRAY__; }
+QPushButton:checked { background: rgba(0,120,212,.14); color: __SIDEBAR_TEXT_GRAY__; border-left: __BORDER_WIDTH__px solid __ACCENT__; }
+QPushButton:focus { outline: none; }

@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from lib import qss_loader
+
 # --------------------------------------------------------------------------- #
 # Paleta
 # --------------------------------------------------------------------------- #
@@ -187,103 +189,72 @@ def active_accent(default: str = ACCENT) -> str:
 
 def window_qss(accent: str = ACCENT) -> str:
     """Fondo de ventana y reglas globales de foco."""
-    return f"""
-    QMainWindow, QDialog {{ background-color: {WINDOW_BG}; }}
-    QWidget:focus, QPushButton:focus, QCheckBox:focus,
-    QRadioButton:focus, QComboBox:focus, QListWidget:focus,
-    QSlider:focus, QLineEdit:focus {{ outline: none; }}
-    """
+    return qss_loader.qss("qmainwindow", WINDOW_BG=WINDOW_BG)
 
 
 def input_qss(accent: str = ACCENT) -> str:
     """Inputs y combos: borde sutil y foco de 2px en el acento."""
-    return f"""
-    QLineEdit, QComboBox, QPlainTextEdit, QTextEdit {{
-        background-color: {SURFACE};
-        border: 1px solid {BORDER};
-        border-radius: {CONTROL_RADIUS}px;
-        padding: 0 {INPUT_PADDING}px;
-        color: {TEXT};
-        font-family: {FONT_STACK};
-        font-size: 14px;
-        min-height: {INPUT_HEIGHT - 2}px;
-        selection-background-color: {accent};
-    }}
-    QLineEdit:hover, QComboBox:hover {{ border-color: #5A5A5C; }}
-    QLineEdit:focus, QComboBox:focus {{ border: 2px solid {accent}; }}
-    QLineEdit:disabled, QComboBox:disabled {{ color: {TEXT_DIM}; background: #242426; }}
-    """
+    return qss_loader.qss(
+        "qlineedit",
+        role="component",
+        SURFACE=SURFACE,
+        BORDER=BORDER,
+        CONTROL_RADIUS=CONTROL_RADIUS,
+        INPUT_PADDING=INPUT_PADDING,
+        INPUT_MIN_HEIGHT=INPUT_HEIGHT - 2,
+        TEXT=TEXT,
+        TEXT_DIM=TEXT_DIM,
+        FONT_STACK=FONT_STACK,
+        ACCENT=accent,
+    )
 
 
 def combo_qss(accent: str = ACCENT) -> str:
     """Combo plano con chevron minimalista a la derecha."""
-    return (
-        input_qss(accent)
-        + f"""
-    QComboBox::drop-down {{
-        border: none;
-        width: 28px;
-        subcontrol-origin: padding;
-        subcontrol-position: center right;
-    }}
-    QComboBox::down-arrow {{
-        image: none;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-top: 5px solid {TEXT_MUTED};
-        width: 0; height: 0;
-        margin-right: 8px;
-    }}
-    QComboBox QAbstractItemView {{
-        background-color: {SURFACE};
-        border: 1px solid {BORDER};
-        border-radius: {CONTROL_RADIUS}px;
-        color: {TEXT};
-        selection-background-color: {accent};
-        outline: none;
-    }}
-    """
+    return input_qss(accent) + qss_loader.qss(
+        "qcombobox",
+        role="component",
+        SURFACE=SURFACE,
+        BORDER=BORDER,
+        CONTROL_RADIUS=CONTROL_RADIUS,
+        TEXT=TEXT,
+        TEXT_MUTED=TEXT_MUTED,
+        ACCENT=accent,
     )
 
 
 def primary_button_qss(accent: str = ACCENT) -> str:
     """Botón primario en píldora (macOS/UWP)."""
     base, hover, pressed = accent_states(accent)
-    return f"""
-    QPushButton {{
-        background-color: {base};
-        color: {TEXT};
-        border: none;
-        border-radius: {PILL_RADIUS}px;
-        padding: 0 {BUTTON_PADDING_H}px;
-        font-family: {FONT_STACK};
-        font-size: 13px;
-        font-weight: 600;
-    }}
-    QPushButton:hover {{ background-color: {hover}; }}
-    QPushButton:pressed {{ background-color: {pressed}; }}
-    QPushButton:disabled {{ background-color: #3A3A3C; color: {TEXT_DIM}; }}
-    """
+    return qss_loader.qss(
+        "qpushbutton",
+        role="primary",
+        ACCENT=base,
+        ACCENT_HOVER=hover,
+        ACCENT_PRESSED=pressed,
+        TEXT=TEXT,
+        TEXT_DIM=TEXT_DIM,
+        PILL_RADIUS=PILL_RADIUS,
+        BUTTON_PADDING_H=BUTTON_PADDING_H,
+        FONT_STACK=FONT_STACK,
+    )
 
 
 def secondary_button_qss(accent: str = ACCENT) -> str:
     """Botón secundario: superficie gris con borde sutil; realce tenue del acento."""
-    soft = with_alpha(accent, 0.16)
-    return f"""
-    QPushButton {{
-        background-color: {SURFACE};
-        color: {TEXT};
-        border: 1px solid {BORDER};
-        border-radius: {CONTROL_RADIUS}px;
-        padding: 0 16px;
-        font-family: {FONT_STACK};
-        font-size: 13px;
-        font-weight: 500;
-    }}
-    QPushButton:hover {{ background-color: {SURFACE_HOVER}; border-color: {accent}; }}
-    QPushButton:pressed {{ background-color: {soft}; }}
-    QPushButton:disabled {{ color: {TEXT_DIM}; }}
-    """
+    return qss_loader.qss(
+        "qpushbutton",
+        role="secondary",
+        SURFACE=SURFACE,
+        SURFACE_HOVER=SURFACE_HOVER,
+        BORDER=BORDER,
+        CONTROL_RADIUS=CONTROL_RADIUS,
+        TEXT=TEXT,
+        TEXT_DIM=TEXT_DIM,
+        ACCENT=accent,
+        ACCENT_SOFT=with_alpha(accent, 0.16),
+        FONT_STACK=FONT_STACK,
+    )
 
 
 def uwp_button_qss(accent: str = ACCENT) -> str:
@@ -294,162 +265,102 @@ def uwp_button_qss(accent: str = ACCENT) -> str:
     píldora de macOS.
     """
     base, hover, pressed = accent_states(accent)
-    return (
-        f"QPushButton{{background:{base};color:{TEXT};border:none;"
-        f"border-radius:4px;font-weight:600;font-family:{FONT_STACK};}}"
-        f"QPushButton:hover{{background:{hover};}}"
-        f"QPushButton:pressed{{background:{pressed};}}"
-        f"QPushButton:disabled{{background:#3A3A3C;color:{TEXT_DIM};}}"
+    return qss_loader.qss(
+        "qpushbutton",
+        role="uwp",
+        ACCENT=base,
+        ACCENT_HOVER=hover,
+        ACCENT_PRESSED=pressed,
+        TEXT=TEXT,
+        TEXT_DIM=TEXT_DIM,
+        FONT_STACK=FONT_STACK,
     )
 
 
 def destructive_button_qss() -> str:
     """Botón destructivo: rojo suave, texto rojo."""
-    return f"""
-    QPushButton {{
-        background-color: {DANGER_SOFT};
-        color: {DANGER_TEXT};
-        border: 1px solid rgba(255, 69, 58, 0.35);
-        border-radius: {CONTROL_RADIUS}px;
-        padding: 0 16px;
-        font-family: {FONT_STACK};
-        font-size: 13px;
-        font-weight: 600;
-    }}
-    QPushButton:hover {{ background-color: rgba(255, 69, 58, 0.28); }}
-    QPushButton:pressed {{ background-color: rgba(255, 69, 58, 0.4); }}
-    """
+    return qss_loader.qss(
+        "qpushbutton",
+        role="destructive",
+        DANGER_SOFT=DANGER_SOFT,
+        DANGER_TEXT=DANGER_TEXT,
+        CONTROL_RADIUS=CONTROL_RADIUS,
+        FONT_STACK=FONT_STACK,
+    )
 
 
 _ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
-_CHECKBOX_QSS = (_ASSETS_DIR / "checkbox.qss").read_text(encoding="utf-8")
 
 
 def checkbox_qss(accent: str = ACCENT, color: str = TEXT_MUTED, size: int = 13) -> str:
     """Load the shared checkbox QSS and resolve theme-specific values."""
-    replacements = {
-        "__ACCENT__": str(accent),
-        "__TEXT_COLOR__": str(color),
-        "__FONT_STACK__": FONT_STACK,
-        "__FONT_SIZE__": str(int(size)),
-        "__CHECK_ICON__": str((_ASSETS_DIR / "icons" / "checkbox-check.svg").resolve()).replace("\\", "/"),
-        "__PARTIAL_ICON__": str((_ASSETS_DIR / "icons" / "checkbox-indeterminate.svg").resolve()).replace("\\", "/"),
-    }
-    stylesheet = _CHECKBOX_QSS
-    for token, value in replacements.items():
-        stylesheet = stylesheet.replace(token, value)
-    return stylesheet
+    return qss_loader.qss(
+        "qcheckbox",
+        ACCENT=accent,
+        TEXT_COLOR=color,
+        FONT_STACK=FONT_STACK,
+        FONT_SIZE=int(size),
+        CHECK_ICON=str((_ASSETS_DIR / "icons" / "checkbox-check.svg").resolve()).replace("\\", "/"),
+        PARTIAL_ICON=str((_ASSETS_DIR / "icons" / "checkbox-indeterminate.svg").resolve()).replace("\\", "/"),
+    )
 
 
 def radio_qss(accent: str = ACCENT) -> str:
     """Radio UWP: círculo gris con punto interior de acento."""
-    return f"""
-    QRadioButton {{
-        color: {TEXT_MUTED};
-        font-family: {FONT_STACK};
-        font-size: 13px;
-        spacing: 8px;
-        background: transparent;
-    }}
-    QRadioButton::indicator {{
-        width: 18px; height: 18px;
-        border-radius: 10px;
-        border: 2px solid #8E8E93;
-        background: transparent;
-    }}
-    QRadioButton::indicator:hover {{ border-color: {TEXT}; }}
-    QRadioButton::indicator:checked {{
-        border: 5px solid {accent};
-        background: {SURFACE};
-    }}
-    QRadioButton:disabled {{ color: #777; }}
-    """
+    return qss_loader.qss(
+        "qradiobutton",
+        TEXT_MUTED=TEXT_MUTED,
+        FONT_STACK=FONT_STACK,
+        TEXT=TEXT,
+        SURFACE=SURFACE,
+        ACCENT=accent,
+    )
 
 
 def slider_qss(accent: str = ACCENT) -> str:
     """Slider estilo macOS: pista fina y pulgar blanco de 16px."""
-    return f"""
-    QSlider::groove:horizontal {{
-        height: 4px;
-        background: {BORDER};
-        border-radius: 2px;
-        margin: 0 2px;
-    }}
-    QSlider::sub-page:horizontal {{
-        background: {accent};
-        border-radius: 2px;
-    }}
-    QSlider::handle:horizontal {{
-        background: #FFFFFF;
-        width: 16px;
-        height: 16px;
-        margin: -6px 0;
-        border-radius: 8px;
-        border: 1px solid rgba(0, 0, 0, 0.25);
-    }}
-    QSlider::handle:horizontal:hover {{ background: #F2F2F7; }}
-    QSlider::handle:horizontal:pressed {{ background: #E5E5EA; }}
-    """
+    return qss_loader.qss("qslider", BORDER=BORDER, ACCENT=accent)
 
 
 def section_label_qss() -> str:
     """Etiqueta de sección: mayúsculas, 12px, atenuada."""
-    return (
-        f"color:{TEXT_DIM};font-size:{SECTION_LABEL_SIZE}px;font-weight:600;"
-        f"letter-spacing:1px;text-transform:uppercase;background:transparent;"
-        f"font-family:{FONT_STACK};"
+    return qss_loader.qss(
+        "qlabel",
+        role="section",
+        TEXT_DIM=TEXT_DIM,
+        SECTION_LABEL_SIZE=SECTION_LABEL_SIZE,
+        FONT_STACK=FONT_STACK,
     )
 
 
 def title_qss() -> str:
     """Título de página: 20px semibold."""
-    return (
-        f"color:#F5F7FB;font-size:{TITLE_SIZE}px;font-weight:600;"
-        f"background:transparent;font-family:{FONT_STACK};"
+    return qss_loader.qss(
+        "qlabel", role="title", TITLE_SIZE=TITLE_SIZE, FONT_STACK=FONT_STACK
     )
 
 
 def mono_value_qss() -> str:
     """Valor monoespaciado para la información del sistema."""
-    return f"color:#C7C7CC;font-size:12px;font-family:{MONO_STACK};background:transparent;"
+    return qss_loader.qss("qlabel", role="mono", MONO_STACK=MONO_STACK)
 
 
 def sidebar_qss(dark: bool = True, accent: str = ACCENT) -> str:
     """Barra lateral: fondo translúcido, borde de 1px y margen para el semáforo."""
-    if dark:
-        bg, border, text = SIDEBAR_BG, DIVIDER, TEXT_MUTED
-    else:
-        bg, border, text = "rgba(242,242,247,0.9)", "#D1D1D6", "#1C1C1E"
-    return f"""
-    QWidget#NavigationSidebar {{
-        background: {bg};
-        border-right: 1px solid {border};
-    }}
-    QWidget#NavigationSidebar QPushButton {{
-        color: {text};
-        text-align: left;
-        padding-left: {SIDEBAR_ICON_INSET}px;
-        border: none;
-        border-left: 3px solid transparent;
-        border-radius: {CONTROL_RADIUS}px;
-        font-family: {FONT_STACK};
-        font-size: 14px;
-        font-weight: 500;
-    }}
-    QWidget#NavigationSidebar QPushButton:hover {{ background: rgba(255,255,255,0.06); }}
-    QWidget#NavigationSidebar QPushButton:checked {{
-        background: rgba(255,255,255,0.10);
-        border-left: 3px solid {accent};
-        color: {TEXT};
-    }}
-    """
+    return qss_loader.qss(
+        "qwidget",
+        role="sidebar-dark" if dark else "sidebar-light",
+        SIDEBAR_BG=SIDEBAR_BG,
+        DIVIDER=DIVIDER,
+        TEXT_MUTED=TEXT_MUTED,
+        TEXT=TEXT,
+        SIDEBAR_ICON_INSET=SIDEBAR_ICON_INSET,
+        CONTROL_RADIUS=CONTROL_RADIUS,
+        FONT_STACK=FONT_STACK,
+        ACCENT=accent,
+    )
 
 
 def card_qss() -> str:
     """Tarjeta/panel con radio de macOS."""
-    return (
-        f"QWidget#PageActionBar, QFrame#Card, QWidget#Card {{"
-        f"background: rgba(255,255,255,0.04);"
-        f"border: 1px solid rgba(255,255,255,0.08);"
-        f"border-radius: {WINDOW_RADIUS}px; }}"
-    )
+    return qss_loader.qss("qframe", role="card", WINDOW_RADIUS=WINDOW_RADIUS)

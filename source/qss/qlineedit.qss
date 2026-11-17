@@ -1,0 +1,78 @@
+/* Inputs: componente (input_qss), hoja raíz y campos de configuración. */
+
+/* @role: component */
+QLineEdit, QComboBox, QPlainTextEdit, QTextEdit {
+    background-color: __SURFACE__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    padding: 0 __INPUT_PADDING__px;
+    color: __TEXT__;
+    font-family: __FONT_STACK__;
+    font-size: 14px;
+    min-height: __INPUT_MIN_HEIGHT__px;
+    selection-background-color: __ACCENT__;
+}
+QLineEdit:hover, QComboBox:hover { border-color: #5A5A5C; }
+QLineEdit:focus, QComboBox:focus { border: 2px solid __ACCENT__; }
+QLineEdit:disabled, QComboBox:disabled { color: __TEXT_DIM__; background: #242426; }
+
+/* @role: root */
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: __SURFACE__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    color: __TEXT__;
+    font-family: __FONT_STACK__;
+    font-size: 14px;
+    padding: 0 __INPUT_PADDING__px;
+    min-height: __INPUT_MIN_HEIGHT__px;
+    selection-background-color: __ACCENT__;
+}
+QLineEdit:hover { border-color: __LINE_HOVER__; }
+QLineEdit:focus { background-color: __SURFACE__; border: 2px solid __ACCENT__; }
+
+/* @role: field */
+QLineEdit, QComboBox {
+    background: __SURFACE__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    color: __TEXT__;
+    padding: 0 __INPUT_PADDING__px;
+    min-height: __INPUT_MIN_HEIGHT__px;
+    selection-background-color: __ACCENT__;
+}
+QLineEdit:hover, QComboBox:hover { border-color: #5A5A5C; }
+QLineEdit:focus, QComboBox:focus { border: 2px solid __ACCENT__; }
+
+/* @role: readonly */
+QLineEdit, QComboBox {
+    background: #242426;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: __CONTROL_RADIUS__px;
+    color: __TEXT_DIM__;
+    padding: 0 __INPUT_PADDING__px;
+    min-height: __INPUT_MIN_HEIGHT__px;
+}
+
+/* @role: landing */
+QLineEdit#GitHubTokenInput, QLineEdit#GitHubUsernameInput {
+    background-color: __CARD_SURFACE__;
+    color: __TEXT__;
+    border: 1px solid __CARD_BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 44px;
+}
+QLineEdit#GitHubTokenInput:focus, QLineEdit#GitHubUsernameInput:focus {
+    border: 2px solid __ACCENT__;
+}
+
+/* @role: base */
+QLineEdit, QComboBox, QPlainTextEdit, QTextEdit {
+    background: __SURFACE__;
+    color: __TEXT__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    padding: 8px;
+}

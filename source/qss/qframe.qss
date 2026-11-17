@@ -1,0 +1,11 @@
+/* Marcos: tarjeta compartida y tarjeta del landing. */
+
+/* @role: card */
+QWidget#PageActionBar, QFrame#Card, QWidget#Card{background: rgba(255,255,255,0.04);border: 1px solid rgba(255,255,255,0.08);border-radius: __WINDOW_RADIUS__px; }
+
+/* @role: landing */
+QFrame#GitHubLoginCard {
+    background-color: __CARD_SURFACE__;
+    border: 1px solid __CARD_BORDER__;
+    border-radius: 20px;
+}

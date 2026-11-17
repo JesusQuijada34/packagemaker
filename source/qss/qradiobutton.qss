@@ -1,0 +1,21 @@
+/* Radio UWP: círculo gris con punto interior de acento. */
+
+QRadioButton {
+    color: __TEXT_MUTED__;
+    font-family: __FONT_STACK__;
+    font-size: 13px;
+    spacing: 8px;
+    background: transparent;
+}
+QRadioButton::indicator {
+    width: 18px; height: 18px;
+    border-radius: 10px;
+    border: 2px solid #8E8E93;
+    background: transparent;
+}
+QRadioButton::indicator:hover { border-color: __TEXT__; }
+QRadioButton::indicator:checked {
+    border: 5px solid __ACCENT__;
+    background: __SURFACE__;
+}
+QRadioButton:disabled { color: #777; }

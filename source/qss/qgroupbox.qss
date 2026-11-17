@@ -1,0 +1,9 @@
+/* Grupo sin marco. */
+
+/* @role: root */
+QGroupBox {
+    color: __GROUP_TEXT__;
+    background-color: transparent;
+    border: none;
+    font-weight: 600;
+}

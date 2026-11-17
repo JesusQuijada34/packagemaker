@@ -1,3 +1,5 @@
+/* Checkbox UWP: indicador cuadrado con marca SVG del acento. */
+
 QCheckBox {
     color: __TEXT_COLOR__;
     font-family: __FONT_STACK__;

@@ -1,0 +1,8 @@
+/* Listas: consola y árbol del IDE iflapp. */
+
+/* @role: ide */
+QListWidget#IflappIdeTree, QListWidget#IflappIdeConsole {
+    background: __SURFACE__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+}

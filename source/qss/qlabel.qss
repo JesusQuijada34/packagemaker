@@ -1,0 +1,44 @@
+/* Etiquetas: roles section / title / mono / root / landing / profile. */
+
+/* @role: section */
+color:__TEXT_DIM__;font-size:__SECTION_LABEL_SIZE__px;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:transparent;font-family:__FONT_STACK__;
+
+/* @role: title */
+color:#F5F7FB;font-size:__TITLE_SIZE__px;font-weight:600;background:transparent;font-family:__FONT_STACK__;
+
+/* @role: mono */
+color:#C7C7CC;font-size:12px;font-family:__MONO_STACK__;background:transparent;
+
+/* @role: root */
+QLabel {
+    font-family: __FONT_STACK__;
+    font-size: 14px;
+    color: __LABEL__;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+}
+
+/* @role: landing */
+QLabel#GitHubLandingAvatar {
+    background-color: __ACCENT__;
+    color: #FFFFFF;
+    border-radius: 44px;
+    border: 3px solid __ACCENT__;
+    font-size: 30px;
+    font-weight: 700;
+}
+QLabel#GitHubLandingTitle { color: __TEXT__; font-size: 26px; font-weight: 700; }
+QLabel#GitHubLandingSubtitle { color: __MUTED__; font-size: 14px; }
+QLabel#GitHubLandingName { color: __TEXT__; font-size: 22px; font-weight: 700; }
+QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus { color: __MUTED__; font-size: 12px; }
+QLabel#GitHubWelcomeLabel { color: __ACCENT__; font-size: 16px; font-weight: 600; }
+
+/* @role: profile */
+QLabel#GitHubProfileAvatar { background: __ACCENT__33; border-radius: 17px; }
+QLabel#GitHubProfileName { color: __LABEL__; font-weight: 600; }
+QLabel#GitHubProfileLogin { color: __MUTED__; font-size: 11px; }
+
+/* @role: ide */
+QLabel#IflappIdeHeader { color: __ACCENT__; font-size: 18px; font-weight: 700; }
+QLabel#IflappIdeStatus { color: __MUTED__; }

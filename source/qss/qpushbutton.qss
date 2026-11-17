@@ -1,0 +1,105 @@
+/* Botones: variantes primary / secondary / uwp / destructive. */
+
+/* @role: primary */
+QPushButton {
+    background-color: __ACCENT__;
+    color: __TEXT__;
+    border: none;
+    border-radius: __PILL_RADIUS__px;
+    padding: 0 __BUTTON_PADDING_H__px;
+    font-family: __FONT_STACK__;
+    font-size: 13px;
+    font-weight: 600;
+}
+QPushButton:hover { background-color: __ACCENT_HOVER__; }
+QPushButton:pressed { background-color: __ACCENT_PRESSED__; }
+QPushButton:disabled { background-color: #3A3A3C; color: __TEXT_DIM__; }
+
+/* @role: secondary */
+QPushButton {
+    background-color: __SURFACE__;
+    color: __TEXT__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    padding: 0 16px;
+    font-family: __FONT_STACK__;
+    font-size: 13px;
+    font-weight: 500;
+}
+QPushButton:hover { background-color: __SURFACE_HOVER__; border-color: __ACCENT__; }
+QPushButton:pressed { background-color: __ACCENT_SOFT__; }
+QPushButton:disabled { color: __TEXT_DIM__; }
+
+/* @role: uwp */
+QPushButton{background:__ACCENT__;color:__TEXT__;border:none;border-radius:4px;font-weight:600;font-family:__FONT_STACK__;}
+QPushButton:hover{background:__ACCENT_HOVER__;}
+QPushButton:pressed{background:__ACCENT_PRESSED__;}
+QPushButton:disabled{background:#3A3A3C;color:__TEXT_DIM__;}
+
+/* @role: destructive */
+QPushButton {
+    background-color: __DANGER_SOFT__;
+    color: __DANGER_TEXT__;
+    border: 1px solid rgba(255, 69, 58, 0.35);
+    border-radius: __CONTROL_RADIUS__px;
+    padding: 0 16px;
+    font-family: __FONT_STACK__;
+    font-size: 13px;
+    font-weight: 600;
+}
+QPushButton:hover { background-color: rgba(255, 69, 58, 0.28); }
+QPushButton:pressed { background-color: rgba(255, 69, 58, 0.4); }
+
+/* @role: root */
+QPushButton {
+    background-color: __ACCENT__;
+    color: __TEXT__;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: __PILL_RADIUS__px;
+    border: none;
+    padding: 0 __BUTTON_PADDING_H__px;
+    font-family: __FONT_STACK__;
+}
+QPushButton:hover { background-color: __ACCENT_HOVER__; }
+QPushButton:pressed { background-color: __ACCENT_PRESSED__; border-color: rgba(255, 255, 255, 0.05); }
+QPushButton:disabled { background-color: __DISABLED_BG__; color: __TEXT_DIM__; }
+QPushButton:focus { outline: none; border: none; }
+
+/* @role: landing */
+QPushButton#GitHubLoginButton {
+    background-color: __ACCENT__;
+    color: #FFFFFF;
+    border: none;
+    border-radius: __PILL_RADIUS__px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    min-height: 44px;
+}
+QPushButton#GitHubLoginButton:hover { background-color: __ACCENT_HOVER__; }
+QPushButton#GitHubLoginButton:pressed { background-color: __ACCENT_PRESSED__; }
+QPushButton#GitHubLoginButton:disabled { background-color: __CARD_BORDER__; color: __MUTED__; }
+
+/* @role: profile */
+QPushButton#GitHubProfileAction {
+    background: __SURFACE__;
+    color: __LABEL__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    padding: 4px 10px;
+    min-height: 26px;
+    font-size: 12px;
+}
+QPushButton#GitHubProfileAction:hover { border-color: __ACCENT__; background: __SURFACE__; }
+
+/* @role: base */
+QPushButton {
+    background: __SURFACE__;
+    color: __TEXT__;
+    border: 1px solid __BORDER__;
+    border-radius: __PILL_RADIUS__px;
+    padding: 8px 16px;
+}
+QPushButton:hover { border-color: __ACCENT__; }
+QPushButton:disabled { color: __MUTED__; }

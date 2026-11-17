@@ -1,0 +1,11 @@
+/* Barra de progreso con el acento del sistema. */
+
+/* @role: root */
+QProgressBar {
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+}
+QProgressBar::chunk {
+    background: __ACCENT__;
+}

@@ -185,7 +185,11 @@ def test_sidebar_button_stylesheet_uses_the_uniform_gray():
     # El texto seleccionado ya no cambia de color: es el mismo gris.
     button_fn = text.split("def sidebar_button_stylesheet")[1].split("def checkbox_stylesheet")[0]
     assert "selected_text" not in button_fn
-    assert "color:{SIDEBAR_TEXT_GRAY}" in button_fn
+    # Las reglas viven en source/qss; ambos roles usan el gris uniforme.
+    button_qss = source("source/qss/qwidget.qss")
+    assert "__SIDEBAR_TEXT_GRAY__" in button_qss
+    assert "sidebar-button-dark" in button_qss
+    assert "sidebar-button-light" in button_qss
 
 
 # --- Bug real: el fundido de página no se veía ni se limpiaba --------------- #

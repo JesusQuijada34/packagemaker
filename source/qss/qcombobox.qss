@@ -1,0 +1,39 @@
+/* Combo: componente (chevron + lista) y variantes de la hoja raíz. */
+
+/* @role: component */
+QComboBox::drop-down {
+    border: none;
+    width: 28px;
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+}
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid __TEXT_MUTED__;
+    width: 0; height: 0;
+    margin-right: 8px;
+}
+QComboBox QAbstractItemView {
+    background-color: __SURFACE__;
+    border: 1px solid __BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    color: __TEXT__;
+    selection-background-color: __ACCENT__;
+    outline: none;
+}
+
+/* @role: root */
+QComboBox { border: none; }
+
+/* @role: field */
+QComboBox::drop-down { border: none; width: 28px; }
+QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid __TEXT_MUTED__;
+    width: 0; height: 0;
+    margin-right: 8px;
+}

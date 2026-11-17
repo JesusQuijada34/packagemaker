@@ -12,14 +12,14 @@ def source(name):
 def test_checkbox_uses_native_painting_and_shared_root_stylesheet():
     theme = source("lib/fluent_theme.py")
     tokens = source("lib/design_tokens.py")
-    stylesheet = source("assets/checkbox.qss")
+    stylesheet = source("source/qss/qcheckbox.qss")
     entrypoint = source("packagemaker.py")
     checkbox_class = theme.split("class FluentCheckBox", 1)[1].split("\nelse:", 1)[0]
 
     assert "def paintEvent" not in checkbox_class
-    assert "checkbox.qss" in tokens
-    assert "image: url(\"__CHECK_ICON__\")" in stylesheet
-    assert "image: url(\"__PARTIAL_ICON__\")" in stylesheet
+    assert "qcheckbox" in tokens
+    assert 'image: url("__CHECK_ICON__")' in stylesheet
+    assert 'image: url("__PARTIAL_ICON__")' in stylesheet
     assert "app.setStyleSheet(checkbox_stylesheet" in entrypoint
 
 

@@ -1,0 +1,10 @@
+/* Contenedor de páginas apiladas. */
+
+/* @role: root */
+QStackedWidget {
+    background: transparent;
+    color: __STACK_TEXT__;
+    font-size: 12px;
+    line-height: 1.2;
+    border: none;
+}

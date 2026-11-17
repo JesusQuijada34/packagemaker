@@ -1,0 +1,18 @@
+/* Barras de desplazamiento finas. */
+
+/* @role: root */
+QScrollBar:vertical { width: 10px; margin: 2px; background: transparent; }
+QScrollBar:horizontal { height: 10px; margin: 2px; background: transparent; }
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background: __SCROLL_HANDLE__;
+    border-radius: 4px;
+    min-height: 24px;
+    min-width: 24px;
+}
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background: __SCROLL_HANDLE_HOVER__;
+}
+QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page {
+    background: transparent;
+    border: none;
+}

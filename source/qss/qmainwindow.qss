@@ -1,0 +1,7 @@
+/* Fondo de ventana y reglas globales de foco. */
+
+QMainWindow, QDialog { background-color: __WINDOW_BG__; }
+
+QWidget:focus, QPushButton:focus, QCheckBox:focus,
+QRadioButton:focus, QComboBox:focus, QListWidget:focus,
+QSlider:focus, QLineEdit:focus { outline: none; }

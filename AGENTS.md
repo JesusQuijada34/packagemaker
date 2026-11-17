@@ -20,6 +20,13 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   tipografía. Ningún widget debe escribir colores a mano: pide su QSS aquí
   (`input_qss`, `primary_button_qss`, `checkbox_qss`, `radio_qss`, `slider_qss`,
   `mono_value_qss`, ...). Cambiar `ACCENT` o un radio se propaga a toda la UI.
+- **Los QSS viven en `source/qss/{qtcontrolid}.qss`** (un fichero por control:
+  `qmainwindow`, `qlineedit`, `qcombobox`, `qpushbutton`, `qcheckbox`,
+  `qradiobutton`, `qslider`, `qlabel`, `qframe`, `qwidget`). Son plantillas con
+  marcadores `__NOMBRE__`; los builders de `design_tokens.py` los leen con
+  `lib/qss_loader.py` y resuelven los marcadores. Editar un estilo es tocar el
+  `.qss`, nunca el `.py`. Un control con variantes separa sus bloques con
+  `/* @role: nombre */` y se leen con `qss("qpushbutton", role="primary")`.
 - Híbrido: radios amplios y píldoras de macOS (ventana 12px, píldora 18px),
   materiales oscuros, foco de 2px y controles planos de UWP.
 - Acento por defecto `#0078D4` (azul Windows 11), definido en
