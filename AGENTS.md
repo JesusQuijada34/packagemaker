@@ -110,8 +110,27 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   el punto de entrada probando `app`/`main`/`app`/`run`/`__main__`/`start` en
   raíz y `bin/`; sin esto sólo extraía e imprimía la ruta.
 - `lib/BuildThread.py` — orquesta build + `verify_in_sandbox()`.
+- `lib/splash_bootloader.py` — bootloader de splash **autocontenido** (sólo
+  stdlib + PyQt6 opcional; nunca importa módulos de PackageMaker). `arm()` lee
+  el acento del SO y resuelve el icono del proyecto; `start()`/`finish()` crean
+  y desvanecen la ventana. Se **copia** a la `lib/` de los proyectos compilados.
+- `lib/bootloader_injection.py` — inyección AST (Fase 3 de `bugs.md`):
+  `inject_source()` inserta la cabecera post-imports y el cierre post-UI-init
+  (antes de `app.exec()`/`exec_()` o tras el primer `.show()`), respetando la
+  indentación e idempotente por la sentinela `_pm_splash`.
+  `prepare_for_build()` escribe el sidecar `<guion>_pmboot.py` (junto al
+  original para resolver assets relativos) y copia la librería de splash.
+  Detecta `PyQt6`/`leviathan_ui` vía `FRAMEWORK_MODULES`; extensible a otros GUI.
+  Cableada en `BuildThread._compile_binary` e `iflapp_ide.compile_project`.
 
 ## Trampas conocidas
+- **Inyección bootloader**: el guion inyectado se compila como copia
+  `<guion>_pmboot.py` junto al original (nunca se edita in situ) y se borra en el
+  `finally` de `_compile_binary`. Los bloques deben indentarse al nivel de la
+  línea de referencia o el cuerpo de las funciones se rompe (los inserts AST
+  caían a columna 0). El módulo copiado a `lib/` sólo puede usar stdlib + PyQt6:
+  un import de PackageMaker rompe el proyecto compilado (test
+  `test_splash_module_is_self_contained`).
 - El script de verificación del sandbox importa `lib`, por lo que se ejecuta con
   `PYTHONPATH` apuntando a la raíz del repo.
 - `QDialog.accept()` no dispara `closeEvent`; la limpieza de overlay vive en

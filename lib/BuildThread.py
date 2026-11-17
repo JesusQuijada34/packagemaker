@@ -396,8 +396,24 @@ class FlangCompiler:
             add_data.append((str(self.details_xml_path), "."))
         hidden_imports = self._detect_hidden_imports(script_path)
 
+        # Fase 3: bootloader de splash. Se compila una copia inyectada del guion
+        # (junto al original, para resolver assets relativos) y se copia la
+        # librería de splash a ``lib/`` del proyecto.
+        from lib import bootloader_injection
+
+        compile_path = script_path
+        injected = bootloader_injection.prepare_for_build(script_path, self.repo_path)
+        if injected is not None:
+            compile_path = injected
+            hidden_imports = sorted(set(hidden_imports) | {"lib.splash_bootloader"})
+            lib_dir = self.repo_path / "lib"
+            if lib_dir.is_dir():
+                add_data.append((str(lib_dir), "lib"))
+            self.log(f"[INFO] Bootloader de splash inyectado en {injected.name}")
+
         backend = self._ensure_compiler()
         if backend is None:
+            bootloader_injection.cleanup_injected_copy(script_path)
             return False
 
         dist_dir = self.repo_path / "dist"
@@ -425,7 +441,7 @@ class FlangCompiler:
                     self.log(f"[WARNING] Error al convertir icono a PNG: {e}")
             
             exe_path = backend.compile(
-                script_path=str(script_path),
+                script_path=str(compile_path),
                 output_name=script_name,
                 output_dir=str(script_dist_dir),
                 icon_path=str(icon_to_use) if icon_to_use else None,
@@ -456,6 +472,8 @@ class FlangCompiler:
         finally:
             backend.cleanup()
             shutil.rmtree(build_dir, ignore_errors=True)
+            if injected is not None:
+                bootloader_injection.cleanup_injected_copy(script_path)
 
     def create_package(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):

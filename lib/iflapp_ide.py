@@ -219,22 +219,35 @@ def compile_project(
             _log(f"[ERROR] Guion no encontrado: {script_path}")
             continue
         output_name = script_path.stem
+        # Fase 3: bootloader de splash (copia inyectada + librería en lib/).
+        from lib import bootloader_injection
+
+        compile_path = script_path
+        injected = bootloader_injection.prepare_for_build(script_path, project.root)
+        hidden_imports = detect_hidden_imports(script_path)
+        if injected is not None:
+            compile_path = injected
+            hidden_imports = sorted(set(hidden_imports) | {"lib.splash_bootloader"})
+            _log(f"[INFO] Bootloader de splash inyectado en {injected.name}")
         _log(f"[INFO] Compilando {script_name} con {engine.display_name}...")
         try:
             produced = engine.compile(
-                script_path=str(script_path),
+                script_path=str(compile_path),
                 output_name=output_name,
                 output_dir=str(target_dir),
                 icon_path=project.icon,
                 windowed=True,
                 onefile=True,
-                hidden_imports=detect_hidden_imports(script_path),
+                hidden_imports=hidden_imports,
                 excludes=None,
                 cwd=str(project.root),
             )
         except Exception as exc:  # noqa: BLE001 - se informa al usuario
             produced = None
             _log(f"[ERROR] {script_name}: {exc}")
+        finally:
+            if injected is not None:
+                bootloader_injection.cleanup_injected_copy(script_path)
         if produced:
             outcome.outputs.append(str(produced))
             _log(f"[OK] {produced}")
