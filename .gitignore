@@ -192,3 +192,4 @@ data/fonts/
 # Estado local del agente
 .openhands/
 /data
+applog.txt

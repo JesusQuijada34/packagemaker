@@ -22,8 +22,8 @@ from lib.i18n import tr
 
 AVATAR_SIZE = 88
 CARD_WIDTH = 460
-INPUT_HEIGHT = 46
-BUTTON_HEIGHT = 48
+INPUT_HEIGHT = 32
+BUTTON_HEIGHT = 32
 
 
 class GitHubLoginLanding(QWidget):

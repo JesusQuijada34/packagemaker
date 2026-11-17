@@ -753,7 +753,7 @@ class PackageTodoGUI(QMainWindow):
                 except Exception as e:
                     print(f"[WARNING] Error al preparar icono en Linux: {e}")
 
-        # Central Widget & Main Layout
+        # Central Widget & Main Layoutt
         self.central = QWidget()
         self.central.setObjectName("CentralWidget")
         set_qss(self.central, 'packagemaker_001', append=False)
@@ -1950,7 +1950,7 @@ class PackageTodoGUI(QMainWindow):
         elif linux_checked:
             plataforma_seleccionada = "Danenone"
         else:
-            plataforma_seleccionada = "Knosthalij"
+            plataforma_seleccionada = "StoneCube"
 
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
@@ -3080,13 +3080,13 @@ class PackageTodoGUI(QMainWindow):
 
         # Barra de acciones superior (estilo macOS): enlaces reales a GitHub y
         # Telegram como botones circulares de icono (UWP).
-        self.about_github_btn = make_icon_button(get_icon("about", 18), "GitHub", 34)
+        self.about_github_btn = make_icon_button(get_icon("github", 18), "GitHub", 34)
         self.about_github_btn.clicked.connect(
             lambda: self._open_external_url("https://github.com/JesusQuijada34/packagemaker")
         )
-        self.about_telegram_btn = make_icon_button(get_icon("moonfix", 18), "Telegram", 34)
+        self.about_telegram_btn = make_icon_button(get_icon("telegram", 18), "Telegram", 34)
         self.about_telegram_btn.clicked.connect(
-            lambda: self._open_external_url("https://t.me/influent_os")
+            lambda: self._open_external_url("https://t.me/JesusDaviel34")
         )
         self.about_action_bar, self.about_bar_title = install_page_action_bar(
             layout,
@@ -3120,7 +3120,7 @@ class PackageTodoGUI(QMainWindow):
             logo_lbl.setPixmap(QIcon(IPM_ICON_PATH).pixmap(64, 64))
         else:
             set_qss(logo_lbl, 'packagemaker_086', append=False)
-            logo_lbl.setText("PM")
+            logo_lbl.setText("Packagemaker")
             logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         title_box = QVBoxLayout()
@@ -3158,10 +3158,10 @@ class PackageTodoGUI(QMainWindow):
             set_qss(v, 'packagemaker_088', append=False)
             return l, v
 
-        l1, v1 = spec_item("Motor:", "FLARM v2.1")
+        l1, v1 = spec_item("Engine Pricipal:", "BlindCube v2.1")
         l2, v2 = spec_item("Licencia:", "GNU GPL v3")
         l3, v3 = spec_item("Framework:", f"Qt {QtCore.qVersion()} (PyQt6)")
-        l4, v4 = spec_item("Desarrollador:", "Jesus Quijada")
+        l4, v4 = spec_item("Desarrollador:", "Jesus Daviel")
 
         grid.addWidget(l1, 0, 0); grid.addWidget(v1, 0, 1)
         grid.addWidget(l2, 1, 0); grid.addWidget(v2, 1, 1)

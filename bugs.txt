@@ -1,141 +1,59 @@
-# 📋 Especificación Técnica: Refactorización, Corrección de Bugs y Nueva Arquitectura `.mexf` / `.asksome` para `packagemaker`
+Bugs nuevos qué encontré
 
-## 1. Contexto y Estado Actual
+Conseguí Qué no se guarda el estado del inicio de sesión correctamente o el landing no válida la existencia del login pero se augur mostrando igual la muralla de inicio de sesión pero al hacer clic en el logo o perfil se muestra la info de un estado de inicio anterior guardado en pm.data
 
-* **Proyecto:** `packagemaker` (Ruta base: `C:\Users\Jesus Quijada\Documents\GitHub\packagemaker`)
+El Recuadro debe ser translúcido y los bordes horizontales deberían de parecer iluminados por el fondo para dar ese aspecto de glass líquido y los inputs deben de adoptar los qss de package maker al igual que los controles del landing page
 
+No Existe un spinner en realidad, El recuadro no se anima al cambiar de estado como un ejemplo animación de resize cuando se le da en iniciar sesión, deberías de hacer qué el input del usuario sea obligatorio para confirmar que coincida el username del token con el username manual, hacer que al darle en iniciar sesión todo se anime, que aparezca el perfil de usuario en circular del mismo tamaño del logo "GH" animado suavemente reemplazando el logo genérico y abajo qué aparezca el nombre de perfil y más abajo aparezca el mensaje cargando perfil mientras se carga todo, al cargar el perfil, animarlo, mientras aparece el nombre de cuenta que aparezca un texto que diga iniciando sesión, cuando cargue el nombre de cuenta, remplazar ese texto animando lo suavemente por el nombre de cuenta, luego se guarda registro o caché si es posible, luego todo se desplaza y se anima mientras el fondo de aclara suavemente a si estado original sin contrast y se desvanece revelando la interfaz.
 
-* **Problema crítico actual (Crash al iniciar):**
-```text
-Traceback (most recent call last):
-  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\packagemaker.py", line 4374, in <module>
-    main()
-  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\packagemaker.py", line 4350, in main
-    main_window = PackageTodoGUI()
-  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\packagemaker.py", line 834, in __init__
-    dark_now = system_theme_mode() != "light"
-  File "C:\Users\Jesus Quijada\Documents\GitHub\packagemaker\lib\fluent_theme.py", line 345, in system_theme_mode
-    if scheme == Qt.ColorScheme.Dark:
-NameError: name 'Qt' is not defined
+Al cerrar sesión, será todo lo contrario, aparece el fondo de landing page, se destruye la ventana del ide, aparece animado el recuadro mientras qué al fondo de le aplica una animación de fundido mientras se le aplica el contraste original, luego se acomodan los controles y todo es como el estado del first time, todo es manejado con coherencia y hay caché cifrada
 
-```
+Elimina el elemento del sidebar llamado ide y todas sus funciones relacionadas pero que no afecten al engine del programa, ya que, existe uno llamado pmcodeeditor.
 
+Agrega Un acceso directo en el landing dentro del recuadro que pregunte si no poseo un token de GitHub. El link hará que el recuadro se extienda horizontalmente dejando los controles principales a la izquierda después de la animación que aparezca un splitter horizontal animado al mismo tiempo, luego a la mitad derecha aparecerán los pasos para obtener el token explicada mente y detectando el navegador predeterminado para lograr los pasos detallados por ejemplo: Abre edge..., con flechas de atrás/siguiente paso, después el link cambiará su pregunta por una qué pregunta si obtengo un token de GitHub, el cual ocultará el recuadro extendido derecho animando primero en desaparecer los controles y luego recoger desde la derecha el recuadro hasta centrarlo a su tamaño original como estaba antes de forma limpia, después el link cambiará a su pregunta original y a su acción predeterminada sin bug dentro del código, también incluye un link que pregunte si no tengo una cuenta de github, para abrirme otro panel extendido con otros pasos distintos y link cambia a pregunta si poseo una cuenta de github para proceder a cerrar el panel extendido y solamente dejar el recuadro de autenticación original.
 
+Otro bug, cambio "packagemaker\lib\github_login_landing.py:L25-26" por otros valores y no aplica, coincide con un bug de qss de forzado de material y size?
 
----
+También, al abrir package maker no se desplaza suavemente desde abajo, las esquinas son cuadradas, al terminar el splash solo se quita de golpe y no se funde suavemente, que está pasando con las animaciones y sus propiedades? Si, también debe de aplicar en el bootloader y en flarmhandler
 
-## 2. Corrección de Errores y Mejoras de Interfaz (Bugfixes & UI)
+Remplaza el texto del login genérico "GH", por la librería de iconos 
 
-### 2.1. Errores de Código y Temas
-
-* [x] **Corregir Error Crítico (`NameError`):** Definir o importar correctamente `Qt` en `lib/fluent_theme.py` (línea 345) para solucionar el fallo al evaluar el modo del sistema operativo.
-* [x] **Unificación de Checkboxes:**
-* Reestructurar la creación de los `checkboxes` desde cero para garantizar un estilo uniforme en todas las páginas.
-* Solucionar el conflicto de QSS e interfaz mencionado en `packagemaker.py:L1347`.
-* Centralizar los estilos eliminando llamadas dispersas a `setqss` y creando las hojas por control en `source/qss/{qtcontrolid}.qss` (leídas con `lib/qss_loader.py`), con `qcheckbox.qss` aplicado como objeto raíz (`root`) en el punto de entrada principal.
+En package maker todavía veo strings en español hasta inclusive en los prints y en los retornos
 
 
-* [x] **Legibilidad en Modo Claro:** Reemplazar todos los tonos de texto gris por negro absoluto (`#000000` o equivalente) para asegurar una lectura cómoda en el modo claro.
-* [x] **Fondo del Splash:** Modificar el fondo del *Splash Screen* para que adopte automáticamente el color de acento configurado en el sistema operativo.
+También veo que la i18n tiene archivos incompletos, unusable y en ingles y ni siquiera en su propio idioma
 
-### 2.2. Rendimiento, Diálogos y Estados
+Todavía veo funciones que llaman a set qss ejemplo en L759
 
-* [x] **Limpieza de Scripts:** Asegurar que los scripts temporales o de compilación se limpien correctamente al finalizar el proceso de compilación.
-* [x] **Manejo de Errores Largos:** Optimizar los cuadros de mensajes de error para que resuman el fallo de forma clara e intuitiva. Corregir el error visual por el cual al hacer *hover* sobre el botón del diálogo este se vuelve completamente blanco.
-* [x] **Efecto Blur:** Corregir el bug visual donde los tonos de *blur* se vuelven blancos progresivamente al maximizar y restaurar la ventana varias veces.
-* [x] **Opacidad al maximizar:** Al maximizar, el radio de las esquinas dejaba transparentes las cuatro puntas y se veía el escritorio detrás (además, el doble clic y el menú del sistema caían al `showMaximized()` nativo sobre la ventana frameless). Ahora `toggle_frameless_maximize` pone radio 0 al maximizar, lo restaura al volver, y se enlaza `window.toggle_frameless_maximize` para que el puente use la misma ruta (`lib/window_chrome.py`).
-* [x] **Barra de Estado en Compilación:** Mostrar en tiempo real cada línea de salida del compilador en la barra de estado mientras se compila, mostrando al final el procedimiento detallado detrás de `iflapp`.
-* [x] **Consistencia de Fondos:** Estandarizar la opacidad de los fondos entre pestañas (la pestaña "Crear" cuenta con transparencia media mientras que las demás son opacas; unificar criterio).
+Incluí Iconos en la librería de iconos para que apliques iconos en donde falta y he comentarse los svg que dudes en donde colocar, si necesitas que mueva yo la carpeta svg para que lo incluyas tu en la librería de iconos de forma implementada, también se es validado.
 
----
+Aprovechando El inicio de sesión en github se debería eliminar el input de introducir autor ya que se usará el user name de github en vez de escribirlo
 
-## 3. Sistema de Internacionalización (i18n)
+En Vez de simular un splash de carga de 5 segundos, mejor es poner el splash integrado de primero y hacerlo desvanecer una vez que una interfaz lo llame a su cierre para mostrar tal interfaz, es decir, ya que esto será condicional de que si primero es iniciar sesión o seguir usando el ide con la sesión iniciada, para saber en donde frenar el splash usando la condición que llevará el cierre a la interfaz decidida y así revelar la interfaz decidida una vez llamado al cierre del splash. Es como una palanca con un propósito si sale algo para saber en donde cumplir su objetivo.
 
-* [x] **Completitud del i18n:** Finalizar el sistema de internacionalización para garantizar que no queden textos incompletos, cadenas (`strings`) faltantes ni textos hardcodeados en español dentro del código fuente.
+Limpia El código de funciones que no se usan, separa las clases dentró de el en lib/, y deja package maker como index, es decir el que cargue las variables e importes y condición de si cargar el landing page o la interfaz siempre colocando el splash por delante y de primer plano en todo. 
 
----
+Ya En lib haz 3 paquetes python para los siguientes motores que quedan incrustados en package maker y son dañados por otros agentes o programas y package maker solo importará esos módulos enteros, así es mejor porque hay programas que editan y dañan el funcionamiento de los nombres canonicales y los métodos, el motor de creación trae consigo mismo las plantillas y lo necesario para hacer proyectos como lo hace normalmente. Y el motor de compilación solo tendrá 2 tipos de compilación con su launcher el cual es llamado mediante funciones por otros scripts. Estos compiladores descargan python en un entorno virtual temporal con su sub motor de compilado dentro del proyecto y cada uno posee funciones de regenerado efervescente de paquetes el cual es moon fix.
 
-## 4. Nueva Arquitectura: Sistema `.mexf` y Motor `.asksome`
+lib/flatcubeEngine/ - zip tradicional (FlatCube v1) "sin mantenimiento Y fuera de soporte"
+ requiere sub compiladores: pyinstaller
+ sandbox: es básico, solo para alojar archivos fuera del entorno
+ extensión de paquetes: .flatkpkg/zip 
+ python: 3.10
+ No compatible con: leviathan ui/pyqt6
+ compatible puro: pyqt4/pyqt5 estable a esa versión de python
+ ideal para: Viajes y entornos python
 
-### 4.1. Remoción del Shell Antiguo
+lib/blindcubeEngine/ - blindaje preciso (BlindCube v2) "Popular y el predeterminado"
+ requiere sub compiladores: nuitka, leviathan ui
+ tipo de sandbox: emula cualquier recurso en cualquier sistema operativo con restricciones
+ compatible con: .MEXF "Marked extensions file", tiene fácil y mejor funcionamiento
+ extensión de paquetes: .blindkpkg/lzma con magic bytes y header 
+ Python: python 3.14 y leviathan ui/pyqt6+
+ ideal para: Desktop apps (UWP yourself), servidores, apps de pago y tiendas por su cifrado de externo a extremo
 
-* [x] Eliminar cualquier rastro del *shell* antiguo de `packagemaker` (borrados `shell/shellIntegration.py`, `shell/packagemakerShell.py`, `shell/__init__.py` y el wrapper `lib/shell_integration.py`, junto con `--shellpatch`/`ShellIntegrationHelper` y el mapa legacy del CLI).
-* [x] Implementar un nuevo *shell* basado íntegramente en archivos de configuración YAML (`.mexf`): `lib/mexf_shell.py` lee `file_associations`, `context_menus`, `shortcuts`, `environments` y `registry` del YAML y genera asociaciones MIME, `servicemenus` de KDE, lanzadores `.desktop`, `environment.d` y registro `.reg` de Windows. CLI: `--shell-plan`, `--install-mexf-shell`, `--uninstall-mexf-shell`; `example.mexf` migrado a YAML.
+lib/makeselfEngine/ - motor de generación de paquetes
+  sus templates, su formato canonical, estructura y etcétera.
 
-### 4.2. Estructura y Sintaxis de los Archivos `.mexf`
-
-Los archivos YAML estructurarán triggers, comandos, registros, extensiones, accesos directos, strings, entornos, asociaciones de archivos, rutas de íconos y menús contextuales de shell.
-
-**Ejemplo conceptual de sintaxis e importación:**
-
-```yaml
-meg (lib/adata.mexf/:[Trigger.example; Trigger.*]) !some 'trig': .@! Importación y renombrado condicional (ej. some / bsome)
-- (trig.Main) bsome ['trig']: .@! Clase en cascada
-  trig.onStartup(bsome.self) bsome ['trig.run']: .@! Función invocando librería
-   trig.run(powershell['echo hello world welcome to your user desktop'] if trig.some::[Calenverath.defaults])
-- !endsome 'trig.main' keepb 'trig' .@! Cierre de clase/función y exportación de variables (keepb, keepsome, keep)
-
-```
-
-### 4.3. Compilador de `.mexf` a `.asksome`
-
-* [x] Desarrollar un compilador dedicado que procese los `.mexf` siguiendo esta jerarquía:
-1. Lectura del archivo de detalles (`details.xml`).
-2. Procesamiento de `/.mexf/main.mexf`.
-3. Procesamiento de los sub-módulos y add-ons dentro de la carpeta.
-
-
-* [x] Transformar los archivos `.mexf` en un binario empaquetado propio con extensión `.asksome` (cabecera en claro firmada, *payload* comprimido y cifrable con contraseña vía la cripto de `.iflapp`, *launcher* independiente y gestión de assets por rutas validadas contra la raíz).
-* [x] Integrar el flujo de compilación para que el compilador de `.mexf` se ejecute previo a la compilación del `iflapp`, generando envoltorios de prueba de sintaxis y entorno (`write_test_wrappers` / `--mexf-wrappers`).
-
-### 4.4. Instalador y Desinstalador Avanzado
-
-* [x] **Instalador de `iflapps`:** Instalador de `.asksome` que verifica la firma, extrae el payload, crea accesos directos multiplataforma y registra la instalación (`install.json`) con lanzador y purga (`removeme.py`).
-* [x] **Plantilla de Desinstalación (`removeme.py`):**
-* Desarrollar un script inverso encargado de purgar el shell `.asksome`, integraciones, archivos y accesos directos.
-* Soporte para ejecución mediante comandos silenciosos y personalizados.
-* Interfaz gráfica en PyQt6 basada en `leviathan-ui` para guiar al usuario en tiempo real durante el proceso de desinstalación.
-
-
-
----
-
-## 5. Nuevas Herramientas y Módulos de Desarrollo
-
-### 5.1. Editor `.mexf` con Debugger
-
-* [x] Diseñar y construir un entorno/editor visual especializado para archivos `.mexf` que incluya:
-* [x] Verificador de sintaxis en tiempo real (`lib/mexf_editor.lint_source`, panel de diagnósticos con línea/columna).
-* [x] *Debugger* integrado: `lib/mexf_debugger.py` interpreta la lista `commands` del `.mexf` con puntos de ruptura, paso a paso, ejecución/continuar y ejecución real de cada comando argv (sin *shell*, `runner` inyectable). El diálogo del editor añade selector de comando, botón de punto de ruptura, Paso/Continuar/Detener y consola de depuración. CLI headless: `--debug-mexf <archivo>` (`--debug-run`, `--debug-break id1,id2`).
-* [x] Compilador interactivo de prueba (`lib/mexf_editor.compile_source`, botón "Compilar .asksome").
-
-
-
-### 5.2. Shell Nativo (Python / DLL / SO)
-
-* [x] Desarrollar un módulo en Python/DLL/SO para exponer información detallada de los paquetes, metadatos y vistas previas de iconos al pasar el cursor (*hover*) en el sistema operativo, así como su integración en el panel de propiedades nativo del SO (`lib/native_shell.py`: `package_info`, `export_icon_preview`, `write_thumbnailer`/`write_desktop_entry` para freedesktop y andamiaje `.reg` en Windows; CLI `--shell-info`/`--install-shell-integration`).
-
-### 5.3. Nuevo IDE de Proyectos `iflapp`
-
-* [x] Crear desde cero un editor de proyectos `iflapp` completamente nuevo equipado con:
-* Depurador (*debugger*): `lib/iflapp_ide.py` (`trace_script`/`debug_script` con puntos de ruptura y variables locales por línea) integrado en el panel.
-* Compilador propio utilizando los motores base de `packagemaker`: `lib/iflapp_ide.compile_project` delega en `lib.compilers.resolve_backend` (Nuitka/PyInstaller/zipapp/cx_Freeze/PyOxidizer) y detecta imports ocultos.
-* Motor `lib/iflapp_ide.py` (escaneo de proyecto, compilación, ejecución y depuración) + diálogo/panel `lib/iflapp_ide_dialog.py` (`IflappIdePanel`/`IflappIdeDialog`) + página del sidebar + CLI headless (`--ide-scan`, `--ide-compile`, `--ide-run`, `--ide-debug`) + `tests/test_iflapp_ide.py`.
-* [x] Mantener una sola raíz de proyecto activa en el panel y abrirla mediante el diálogo oficial `OpenWithDialog` de Package Maker.
-
-
-
-### 5.4. Integración con GitHub (Autenticación y Firma)
-
-* [x] Añadir un apartado de configuración para requerir inicio de sesión mediante **GitHub Token** (tarjeta de sesión en el sidebar + `lib/github_identity`).
-* [x] Utilizar las credenciales para firmar los paquetes generados utilizando el nombre de usuario de GitHub (`apply_signer` inyecta `signer` en los metadatos del build).
-* [x] Mostrar la imagen de perfil del usuario y su nombre en el panel lateral (*sidebar*) del IDE (`lib/github_profile_card`).
-* [x] Añadir landing inicial centrado con avatar, token, estado animado, spinner, bienvenida y transición al sidebar; validar automáticamente la credencial guardada y mostrar los detalles del perfil al pulsar la tarjeta.
-* [x] Centralizar los estilos de los controles nuevos en las hojas por control (`source/qss/{qtcontrolid}.qss`, leídas con `lib/qss_loader.py`); el landing, la tarjeta GitHub y el IDE no escriben hojas de estilo locales, sólo `objectName` y roles `root`/`landing`/`profile`/`ide`.
-
----
-
-## 6. Fase Final de QA
-
-* [x] Ejecutar pruebas integrales del ciclo de vida (Creación en el nuevo IDE $\rightarrow$ Compilación `.mexf` a `.asksome` $\rightarrow$ Instalación $\rightarrow$ Ejecución $\rightarrow$ Desinstalación con `removeme.py`): `tests/test_lifecycle_end_to_end.py` encadena las funciones reales (crear con `create_project_from_templates` $\rightarrow$ `scan_project` $\rightarrow$ `compile_project` $\rightarrow$ `run_script` $\rightarrow$ `compile_mexf_project` $\rightarrow$ `install_asksome` $\rightarrow$ lanzador $\rightarrow$ `removeme.py`).
-* [x] Resolución de bugs remanentes detectados durante las pruebas de estrés: opacidad al maximizar (`lib/window_chrome.py`: radio 0 al maximizar + `window.toggle_frameless_maximize`), tinte blanco acumulado (`_release_effects`), respaldo `WipeWindow` sin `leviathan_ui` (`apply()` devuelve `self`), y `zipapp` con guiones de nombre no identificador (`demo-vida.py`, antes "Invalid entry point").
+Exijo un plan para eso, primero separar los engines de creación y compilación a paquetes python y En el apartado de compilado, se tendrá que escoger el motor de compilación, que por obvias razónes son 2 y por obviedad ninguno embebe sin módulos ya que cada engine prepara entornos virtuales basado en lib/requirements.txt, para luego proceder a modificar la interfaz o que prefieres hacer más rápido? Empaquetar los engines o reparar bugs de las ventanas? Yo recomiendo empezar por lo visual
+luego modificar el build this para forzar escoger un compilador

@@ -151,12 +151,109 @@ ICONS_SVG = {
 <path d="M2.5 17.5L7 15" stroke="{ACCENT}"  stroke-linejoin="round"/>
 <path d="M7 15L12 23L17 15" stroke="{ACCENT}"  stroke-linejoin="round"/>
 </svg>""",
-    "collapse": f"""<svg width="24" height="24" viewBox="0 0 24 24" stroke-width="1.8" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M14.5 7L9.5 12L14.5 17" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+    "collapse": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M20 20L15 15M15 15V19M15 15H19" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 20L9 15M9 15V19M9 15H5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M20 4L15 9M15 9V5M15 9H19" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 4L9 9M9 9V5M9 9H5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>""",
-    "expand": f"""<svg width="24" height="24" viewBox="0 0 24 24" stroke-width="1.8" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M9.5 7L14.5 12L9.5 17" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+    "expand": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 9L4 4M4 4V8M4 4H8" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15 9L20 4M20 4V8M20 4H16" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9 15L4 20M4 20V16M4 20H8" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15 15L20 20M20 20V16M20 20H16" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>""",
+    "github": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M16 22.0268V19.1568C16.0375 18.68 15.9731 18.2006 15.811 17.7506C15.6489 17.3006 15.3929 16.8902 15.06 16.5468C18.2 16.1968 21.5 15.0068 21.5 9.54679C21.4997 8.15062 20.9627 6.80799 20 5.79679C20.4558 4.5753 20.4236 3.22514 19.91 2.02679C19.91 2.02679 18.73 1.67679 16 3.50679C13.708 2.88561 11.292 2.88561 8.99999 3.50679C6.26999 1.67679 5.08999 2.02679 5.08999 2.02679C4.57636 3.22514 4.54413 4.5753 4.99999 5.79679C4.03011 6.81549 3.49251 8.17026 3.49999 9.57679C3.49999 14.9968 6.79998 16.1868 9.93998 16.5768C9.61098 16.9168 9.35725 17.3222 9.19529 17.7667C9.03334 18.2112 8.96679 18.6849 8.99999 19.1568V22.0268" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9 20.0267C6 20.9999 3.5 20.0267 2 17.0267" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+    "telegram" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 5L2 12.5L9 13.5M21 5L18.5 20L9 13.5M21 5L9 13.5M9 13.5V19L12.2488 15.7229" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+    "spinner" : f"""<svg width="64" height="64" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M13 6.5C16.1338 6.5 17.5 5.18153 17.5 2C17.5 5.18153 18.8567 6.5 22 6.5C18.8567 6.5 17.5 7.85669 17.5 11C17.5 7.85669 16.1338 6.5 13 6.5Z" stroke="{ACCENT}" stroke-linejoin="round"/>
+</svg>""",
+    "login" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 12H12M12 12L15 15M12 12L15 9" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19 6V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V18" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+    "logout" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 12H19M19 12L16 15M19 12L16 9" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19 6V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V18" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+    "profile" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.271 18.3457C4.271 18.3457 6.50002 15.5 12 15.5C17.5 15.5 19.7291 18.3457 19.7291 18.3457" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 12C13.6569 12 15 10.6569 15 9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9C9 10.6569 10.3431 12 12 12Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
+    "win" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 16.9865V7.01353C4 6.71792 4.21531 6.46636 4.50737 6.42072L19.3074 4.10822C19.6713 4.05137 20 4.33273 20 4.70103V19.299C20 19.6673 19.6713 19.9486 19.3074 19.8918L4.50737 17.5793C4.21531 17.5336 4 17.2821 4 16.9865Z" stroke="{ACCENT}" />
+<path d="M4 12H20" stroke="{ACCENT}" />
+<path d="M10.5 5.5V18.5" stroke="{ACCENT}" />
+</svg>""", # icono del checkbox windows
+    "linux" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M2.5 20C3.5 20 4.5 19.2 4.5 18C4.5 16.8 4.5 13.3333 4.5 11C4.5 7.5 7.6 4 12 4" stroke="{ACCENT}"  stroke-linecap="round"/>
+<path d="M21.5 20C20.5 20 19.5 19.2 19.5 18V11C19.5 7.5 16.4 4 12 4" stroke="{ACCENT}"  stroke-linecap="round"/>
+<path d="M12 19C14.7614 19 17 17.8807 17 16.5C17 15.1193 14.7614 14 12 14C9.23858 14 7 15.1193 7 16.5C7 17.8807 9.23858 19 12 19Z" stroke="{ACCENT}"  stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7.75036 15C7.28731 14.3647 7 13.4793 7 12.5C7 10.567 8.11929 9 9.5 9C10.8807 9 12 10.567 12 12.5C12 12.9554 11.9379 13.3904 11.8249 13.7895" stroke="{ACCENT}"  stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16.2496 15C16.7127 14.3647 17 13.4793 17 12.5C17 10.567 15.8807 9 14.5 9C13.1193 9 12 10.567 12 12.5C12 12.9554 12.0621 13.3904 12.1751 13.7895" stroke="{ACCENT}"  stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 12V14" stroke="{ACCENT}"  stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M14.5 12V14" stroke="{ACCENT}"  stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""", # icono del checkbox linux
+    "alphacube" : f"""<svg width="64" height="64" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3.52844 7.29346L9 10.3332" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22 2L20 2M12 12L12 10C12 6.45478 14.3061 3.44817 17.5 2.39838" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22 12L20 12M12 22L12 20C12 16.4548 14.3061 13.4482 17.5 12.3984" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 22L3.30861 17.1715C3.11813 17.0656 3 16.8649 3 16.647L2.99998 7.35304C2.99998 7.13514 3.11812 6.93437 3.3086 6.82855L11.7086 2.16188C11.8898 2.06121 12.1102 2.06121 12.2914 2.16188L15 3.66667" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 11.9999L3.52842 7.29346" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 21L12 12" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15 13.5L15 4" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""", # icono del checkbox alphacube
+    "sandbox" : f"""<svg width="64" height="64" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 19V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19Z" stroke="{ACCENT}"/>
+<path d="M10 15C8.34315 15 7 13.6569 7 12C7 10.3431 8.34315 9 10 9C11.6569 9 13 10.3431 13 12C13 13.6569 11.6569 15 10 15Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M18 14L18 10" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.5 9.5L13.5 8.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7.5 9.5L6.5 8.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.5 15.5L7.5 14.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M13.5 15.5L12.5 14.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 8L3 8" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 6L3 6" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 16H2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 18H2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""", # icono del checkbox Sandbox
+    "sb_back" : f"""<svg width="64" height="64" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 19V5C3 3.89543 3.89543 3 5 3H12C13.1046 3 14 3.89543 14 5V19C14 20.1046 13.1046 21 12 21H5C3.89543 21 3 20.1046 3 19Z" stroke="{ACCENT}"/>
+<path d="M12 3H19C20.1046 3 21 3.89543 21 5V5.5M12 21H19C20.1046 21 21 20.1046 21 19V18.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.5 15C7.67157 15 7 13.6569 7 12C7 10.3431 7.67157 9 8.5 9C9.32843 9 10 10.3431 10 12C10 13.6569 9.32843 15 8.5 15Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 9.5L10.5 8.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7.5 9.5L6.5 8.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.5 15.5L7.5 14.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.5 15.5L9.5 14.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 8L3 8" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 6L3 6" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 16H2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 18H2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22 12H15M15 12L18.5 8.5M15 12L18.5 15.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""", #boton atras del sandbox
+    "sb_continue" : f"""<svg width="64" height="64" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 19V5C3 3.89543 3.89543 3 5 3H12C13.1046 3 14 3.89543 14 5V19C14 20.1046 13.1046 21 12 21H5C3.89543 21 3 20.1046 3 19Z" stroke="{ACCENT}"/>
+<path d="M12 3H19C20.1046 3 21 3.89543 21 5V5.5M12 21H19C20.1046 21 21 20.1046 21 19V18.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.5 15C7.67157 15 7 13.6569 7 12C7 10.3431 7.67157 9 8.5 9C9.32843 9 10 10.3431 10 12C10 13.6569 9.32843 15 8.5 15Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.5 9.5L10.5 8.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M7.5 9.5L6.5 8.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M6.5 15.5L7.5 14.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M10.5 15.5L9.5 14.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 8L3 8" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2 6L3 6" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 16H2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 18H2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15 12H22M22 12L18.5 8.5M22 12L18.5 15.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""", #boton continuar del sandbox
+    "shield" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 18L3.13036 4.91253C3.05646 4.39524 3.39389 3.91247 3.90398 3.79912L11.5661 2.09641C11.8519 2.03291 12.1481 2.03291 12.4339 2.09641L20.096 3.79912C20.6061 3.91247 20.9435 4.39524 20.8696 4.91252L19 18C18.9293 18.495 18.5 21.5 12 21.5C5.5 21.5 5.07071 18.495 5 18Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""" , #header "proc" en el recuadro de sandbox
 }
 
 
