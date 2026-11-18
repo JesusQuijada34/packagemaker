@@ -36,6 +36,9 @@ _ICON_CANDIDATES = (
     "assets/splash.png",
 )
 _SAFETY_TIMEOUT_MS = 6000
+_SLIDE_DURATION_MS = 420
+_SLIDE_OFFSET = 36
+_SPLASH_RADIUS = 14
 
 try:  # pragma: no cover - depende del entorno
     from PyQt6 import QtCore, QtGui, QtWidgets
@@ -119,6 +122,7 @@ class SplashBootloader:
         self._accent: str = DEFAULT_ACCENT
         self._widget = None
         self._fade = None
+        self._slide = None
         self._safety = None
 
     def arm(self, script_file: str | None = None) -> "SplashBootloader":
@@ -135,13 +139,42 @@ class SplashBootloader:
         self._widget = self._build_widget()
         if self._widget is None:
             return False
-        self._widget.show()
-        self._widget.raise_()
+        widget = self._widget
+        # Entra deslizándose desde abajo con un fundido: la geometría y la
+        # opacidad se animan juntas para que la apertura no sea un salto seco.
+        widget.setWindowOpacity(0.0)
+        target = widget.pos()
+        widget.move(target.x(), target.y() + _SLIDE_OFFSET)
+        widget.show()
+        widget.raise_()
+        self._animate_slide(target, fade_in=True)
         self._safety = QtCore.QTimer()
         self._safety.setSingleShot(True)
         self._safety.timeout.connect(self.finish)
         self._safety.start(_SAFETY_TIMEOUT_MS)
         return True
+
+    def _animate_slide(self, target_pos, *, fade_in: bool) -> None:
+        """Anima ``pos`` y ``windowOpacity`` hacia el estado estable."""
+        widget = self._widget
+        if widget is None:
+            return
+        try:
+            self._slide = QtCore.QPropertyAnimation(widget, b"pos")
+            self._slide.setDuration(_SLIDE_DURATION_MS)
+            self._slide.setStartValue(widget.pos())
+            self._slide.setEndValue(target_pos)
+            self._slide.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
+            self._slide.start()
+            if fade_in:
+                self._fade = QtCore.QPropertyAnimation(widget, b"windowOpacity")
+                self._fade.setDuration(_SLIDE_DURATION_MS)
+                self._fade.setStartValue(0.0)
+                self._fade.setEndValue(1.0)
+                self._fade.setEasingCurve(QtCore.QEasingCurve.Type.OutCubic)
+                self._fade.start()
+        except Exception:
+            widget.setWindowOpacity(1.0)
 
     def finish(self, app=None) -> None:
         """Desvanece el splash y lo cierra (idempotente)."""
@@ -173,7 +206,8 @@ class SplashBootloader:
             )
             widget.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
             widget.setStyleSheet(
-                f"QWidget#PmSplash {{ background-color: {self._accent}; }}"
+                f"QWidget#PmSplash {{ background-color: {self._accent};"
+                f" border-radius: {_SPLASH_RADIUS}px; }}"
             )
 
             container = QtWidgets.QWidget(widget)

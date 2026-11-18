@@ -29,6 +29,7 @@ from lib.design_tokens import (
     TITLEBAR_BG,
     TITLE_SIZE,
     WINDOW_BG,
+    WINDOW_RADIUS,
     accent_states,
     checkbox_qss,
     destructive_button_qss,
@@ -66,7 +67,7 @@ WINDOW_CHROME_STYLES = {
     'packagemaker_006': 'border:none;background:transparent;color:#888;font-weight:bold;font-size:11px;text-transform:uppercase;',
     'packagemaker_007': 'background:transparent;color:#bbb;font-size:12px;line-height:1.2;border:none;',
     'packagemaker_008': f'background:{CONTENT_BG};border:none;',
-    'packagemaker_010': 'QMainWindow{background:\x00QSS_SLOT_0\x00;}',
+    'packagemaker_010': 'QMainWindow{background:\x00QSS_SLOT_0\x00;border:none;border-radius:\x00QSS_SLOT_1\x00px;}',
     'packagemaker_065': 'color:\x00QSS_SLOT_0\x00;font-weight:600;',
     'packagemaker_066': "QPushButton{background-color:transparent;color:#c7ced8;text-align:left;padding-left:17px;border:none;border-left:\x00QSS_SLOT_0\x00px solid transparent;border-radius:9px;font-family:'Segoe UI Variable Display','Segoe UI',sans-serif;font-size:15px;font-weight:500;}QPushButton:hover{background-color:rgba(255,255,255,0.06);color:#ffffff;}QPushButton:checked{background-color:rgba(255,255,255,0.08);color:#ffffff;border-left:\x00QSS_SLOT_1\x00px solid \x00QSS_SLOT_2\x00;}QPushButton:focus{outline:none;}",
     'packagemaker_067': 'QPushButton{background:rgba(255,255,255,0.04);color:#f3f5f8;border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-weight:700;}QPushButton:hover{background:rgba(255,255,255,0.08);}',
@@ -470,14 +471,18 @@ def splash_titlebar_stylesheet():
     """
 
 
-def titlebar_chrome_stylesheet(base_bg: str) -> str:
-    """Fondo del chrome de la titlebar personalizada según el tema.
+def titlebar_chrome_stylesheet(base_bg: str, radius: int = WINDOW_RADIUS) -> str:
+    """Fondo del chrome de la titlebar, con las esquinas superiores redondeadas.
 
-    Centraliza el QSS que antes se escribía en línea al reaplicar el tema, para
-    que la titlebar siga la paleta sin literales repartidos por la ventana.
+    Centraliza el QSS que antes se escribía en línea al reaplicar el tema. La
+    titlebar ocupa el borde superior de la ventana frameless, así que redondear
+    sus esquinas superiores es lo que elimina las esquinas cuadradas al abrir.
+    Maximizada, el radio se pasa a 0 (esquinas rectas, como el overlay).
     """
     return (
-        f"QWidget {{ background-color:{base_bg}; border:none; }}"
+        f"QWidget {{ background-color:{base_bg}; border:none;"
+        f" border-top-left-radius:{int(radius)}px;"
+        f" border-top-right-radius:{int(radius)}px; }}"
         " QLabel { background:transparent; border:none; }"
     )
 
@@ -490,12 +495,14 @@ def titlebar_label_stylesheet(text_col: str) -> str:
     )
 
 
-def status_bar_stylesheet() -> str:
-    """Barra de estado oscura y translúcida, sin literal en la ventana."""
+def status_bar_stylesheet(radius: int = WINDOW_RADIUS) -> str:
+    """Barra de estado oscura, translúcida y con las esquinas inferiores curvas."""
     return (
         "QStatusBar{background:rgba(255,255,255,0.04);color:#c7ced8;"
         "border-top:1px solid rgba(255,255,255,0.08);font-size:12px;"
-        "padding:2px 10px;} QStatusBar::item{border:none;}"
+        f"padding:2px 10px; border-bottom-left-radius:{int(radius)}px;"
+        f" border-bottom-right-radius:{int(radius)}px;}}"
+        " QStatusBar::item{border:none;}"
     )
 
 

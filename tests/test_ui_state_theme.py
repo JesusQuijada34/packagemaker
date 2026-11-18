@@ -43,5 +43,39 @@ def test_sidebar_and_titlebar_are_theme_aware_and_transparent():
     assert "sidebar_button_stylesheet(dark, accent, border_w)" in text
     # La titlebar toma su QSS de un helper central, no de un literal en línea.
     assert "titlebar_label_stylesheet(text_col)" in text
-    assert "titlebar_chrome_stylesheet(base_bg)" in text
+    assert "titlebar_chrome_stylesheet(base_bg, radius)" in text
     assert "background:transparent; color:{text_col}" in theme
+
+
+def test_window_opens_with_rounded_corners_from_tokens():
+    """Al abrir, las cuatro esquinas van redondeadas y salen de los tokens.
+
+    La ventana es frameless y translúcida: el redondeo tiene que pintarse en el
+    QMainWindow, la titlebar (arriba) y la barra de estado (abajo). Si el radio
+    fuera un literal suelto dejaría de seguir al token ``WINDOW_RADIUS``.
+    """
+    from lib import qss_loader
+    from lib.design_tokens import WINDOW_RADIUS
+    from lib.fluent_theme import status_bar_stylesheet, titlebar_chrome_stylesheet
+
+    qwidget = source("source/qss/qwidget.qss")
+    assert "@role: window-root" in qwidget
+    assert "border-radius: __WINDOW_RADIUS__px" in qwidget
+
+    rendered = qss_loader.qss(
+        "qwidget", role="window-root",
+        WINDOW_BG="#1C1C1E", WINDOW_RADIUS=WINDOW_RADIUS,
+    )
+    assert f"border-radius: {WINDOW_RADIUS}px" in rendered
+
+    titlebar = titlebar_chrome_stylesheet("#1C1C1E", WINDOW_RADIUS)
+    assert f"border-top-left-radius:{WINDOW_RADIUS}px" in titlebar
+    assert f"border-top-right-radius:{WINDOW_RADIUS}px" in titlebar
+
+    status = status_bar_stylesheet(WINDOW_RADIUS)
+    assert f"border-bottom-left-radius:{WINDOW_RADIUS}px" in status
+    assert f"border-bottom-right-radius:{WINDOW_RADIUS}px" in status
+
+    # Maximizada el radio se colapsa a 0 en los tres sitios.
+    assert "border-top-left-radius:0px" in titlebar_chrome_stylesheet("#1C1C1E", 0)
+    assert "border-bottom-left-radius:0px" in status_bar_stylesheet(0)

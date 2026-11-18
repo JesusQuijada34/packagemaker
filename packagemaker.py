@@ -255,6 +255,7 @@ from lib.design_tokens import (
     TEXT_LIGHT,
     TITLEBAR_BG,
     WINDOW_BG,
+    WINDOW_RADIUS,
     uwp_button_qss,
 )
 from lib.SidebarItem import SidebarItem
@@ -1421,6 +1422,8 @@ class PackageTodoGUI(QMainWindow):
         dark = self.last_theme_mode == "dark"
         base_bg = WINDOW_BG if dark else "#f5f7fb"
         text_col = TEXT if dark else "#1f2937"
+        # Maximizada las esquinas van rectas; si no, curvas como el overlay.
+        radius = 0 if getattr(self, "_pm_maximized", False) else WINDOW_RADIUS
 
         app = QApplication.instance()
         if app is not None:
@@ -1430,11 +1433,16 @@ class PackageTodoGUI(QMainWindow):
             )
 
         set_qss(self.central, applyget(accent, dark), append=False)
-        set_qss(self, 'packagemaker_010', values=(qss_value(base_bg, None, ''),), append=False)
+        set_qss(
+            self,
+            'packagemaker_010',
+            values=(qss_value(base_bg, None, ''), qss_value(radius, None, '')),
+            append=False,
+        )
 
         if hasattr(self.titlebar, "title_lbl"):
             self.titlebar.title_lbl.setText(self._fixed_title)
-            self.titlebar.setStyleSheet(titlebar_chrome_stylesheet(base_bg))
+            self.titlebar.setStyleSheet(titlebar_chrome_stylesheet(base_bg, radius))
             self.titlebar.title_lbl.setStyleSheet(
                 titlebar_label_stylesheet(text_col)
             )

@@ -61,6 +61,13 @@ QWidget { background-color: transparent ; border: none; border-radius: 5px; }
 QWidget:focus, QPushButton:focus, QCheckBox:focus, QRadioButton:focus, QComboBox:focus,
 QListWidget:focus, QSlider:focus { outline: none; }
 
+/* @role: window-root */
+QMainWindow {
+    background-color: __WINDOW_BG__;
+    border: none;
+    border-radius: __WINDOW_RADIUS__px;
+}
+
 /* @role: landing */
 /* El QSS local de CentralWidget prevalece sobre el de QApplication: los
    controles del landing deben vivir también en la hoja raíz (applyget). */
