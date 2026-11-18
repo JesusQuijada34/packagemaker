@@ -34,7 +34,7 @@ except ImportError:
         def emit(self, *args): pass
 
 from lib.python_portable_manager import get_python_manager
-from lib.design_tokens import accent_states, active_accent
+from lib.design_tokens import TEXT_ALT, accent_states, active_accent
 
 
 ACCENT_COLOR = active_accent()
@@ -178,7 +178,7 @@ class InterpreterConfigDialog(QDialog):
         download_layout.addWidget(self.download_progress)
 
         self.download_status = QLabel("")
-        self.download_status.setStyleSheet("color: #aaaaaa; font-size: 12px;")
+        self.download_status.setStyleSheet(f"color: {TEXT_ALT}; font-size: 12px;")
         download_layout.addWidget(self.download_status)
 
         self.btn_download = QPushButton(tr("interpreter.download_install"))

@@ -85,10 +85,15 @@ CLOSE_HOVER = "#E81123"      # fondo del botón de cerrar al pasar el ratón
 
 # --- Grises neutros de apoyo ----------------------------------------------- #
 SURFACE_ELEVATED = "#333333"  # superficie elevada / control deshabilitado
+SURFACE_PRESSED = "#242426"   # fondo de control al pulsar
 TEXT_FAINT = "#777777"        # texto deshabilitado o muy tenue
 TEXT_TERTIARY = "#888888"     # etiquetas atenuadas
 TEXT_ALT = "#AAAAAA"          # descripciones de apoyo
 TEXT_SOFT = "#BBBBBB"         # texto secundario suave
+TITLEBAR_TEXT = "#EEEEEE"     # rótulo del título de la barra superior
+
+# Anillo de foco del indicador de navegación por teclado.
+FOCUS_RING = "#F9826C"
 
 # --------------------------------------------------------------------------- #
 # Geometría

@@ -33,7 +33,7 @@ except ImportError:  # pragma: no cover - entorno sin GUI
         def __init__(self, *args, **kwargs):
             raise ImportError("El editor .mexf requiere PyQt6.")
 
-from lib.design_tokens import ACCENT
+from lib.design_tokens import ACCENT, TEXT_TERTIARY
 from lib.i18n import tr
 from lib.mexf_debugger import MexfDebugger
 from lib.mexf_editor import compile_source, lint_source
@@ -110,7 +110,7 @@ class MexfEditorDialog(QDialog):
 
         buttons = QHBoxLayout()
         self.status = QLabel(tr("mexf_editor.ready"))
-        self.status.setStyleSheet("color: #888;")
+        self.status.setStyleSheet(f"color: {TEXT_TERTIARY};")
         buttons.addWidget(self.status)
         buttons.addStretch()
 

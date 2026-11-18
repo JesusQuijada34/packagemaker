@@ -47,7 +47,7 @@ except ImportError:
 
 EDITOR_CONFIG_PATH = Path(__file__).resolve().parent.parent / "data" / "pmCodeEditor" / "editor_config.json"
 
-from lib.design_tokens import accent_states, active_accent, with_alpha
+from lib.design_tokens import TEXT_ALT, accent_states, active_accent, with_alpha
 
 
 ACCENT_COLOR = active_accent()
@@ -127,7 +127,7 @@ class DashboardCard(QPushButton):
 
         desc_label = QLabel(description)
         desc_label.setStyleSheet(
-            "font-size: 12px; color: #aaaaaa; border: none; background: transparent;"
+            f"font-size: 12px; color: {TEXT_ALT}; border: none; background: transparent;"
         )
         desc_label.setWordWrap(True)
         desc_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -350,7 +350,7 @@ class DashboardWindow(QMainWindow):
         row.addStretch()
 
         py_label = QLabel(f"Python: {Path(self.python_path).name} | {platform.system()}")
-        py_label.setStyleSheet("color: #aaaaaa; font-size: 12px;")
+        py_label.setStyleSheet(f"color: {TEXT_ALT}; font-size: 12px;")
         py_label.setToolTip(self.python_path)
         row.addWidget(py_label)
 

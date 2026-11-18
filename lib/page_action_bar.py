@@ -33,6 +33,7 @@ from lib.design_tokens import (
     FONT_STACK,
     SURFACE,
     SURFACE_HOVER,
+    SURFACE_PRESSED,
     TITLE_SIZE,
     WINDOW_RADIUS,
     accent_states,
@@ -108,7 +109,7 @@ def make_icon_button(icon, tooltip: str = "", size: int = 34) -> "QPushButton":
         f"QPushButton{{background:{SURFACE};border:1px solid {BORDER};"
         f"border-radius:{size // 2}px;}}"
         f"QPushButton:hover{{background:{SURFACE_HOVER};}}"
-        f"QPushButton:pressed{{background:#242426;}}"
+        f"QPushButton:pressed{{background:{SURFACE_PRESSED};}}"
     )
     if icon is not None:
         try:

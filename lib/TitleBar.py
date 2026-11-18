@@ -61,6 +61,10 @@ except ImportError:
         def __init__(self, *args, **kwargs): pass
         def loadFromData(self, *args): pass
 
+
+from lib.design_tokens import TITLEBAR_TEXT
+
+
 class AnimTitleButton(QPushButton):
     """Boton de titulo con animación de fondo suave (UWP Style)"""
     def __init__(self, icon_svg, hover_color, parent=None):
@@ -120,6 +124,7 @@ class AnimTitleButton(QPushButton):
         self.anim.start()
         super().leaveEvent(event)
 
+
 class TitleBar(QWidget):
     """Custom non-native title bar with UWP-style animated buttons."""
 
@@ -144,7 +149,7 @@ class TitleBar(QWidget):
         self.title_label = QLabel(title)
         self.title_label.setObjectName("titleLabel")
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
-        self.title_label.setStyleSheet("font-size: 13px; font-weight: 500; font-family: 'Segoe UI'; color: #eeeeee;")
+        self.title_label.setStyleSheet(f"font-size: 13px; font-weight: 500; font-family: 'Segoe UI'; color: {TITLEBAR_TEXT};")
         layout.addWidget(self.title_label)
         layout.addStretch()
 

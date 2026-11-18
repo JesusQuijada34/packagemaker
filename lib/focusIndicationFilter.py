@@ -18,6 +18,9 @@ except ImportError:
         def setAttribute(self, *args): pass
 
 
+from lib.design_tokens import FOCUS_RING
+
+
 class FocusIndicationFilter(QObject):
     """Filtro de eventos para simular el indicador de foco estilo UWP."""
 
@@ -28,7 +31,7 @@ class FocusIndicationFilter(QObject):
         self.indicator.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.indicator.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         # Color por defecto (se actualizará con el tema)
-        self.indicator.setStyleSheet("background-color: #f9826c; border-radius: 2px;")
+        self.indicator.setStyleSheet(f"background-color: {FOCUS_RING}; border-radius: 2px;")
         self.indicator.hide()
         self.current_widget = None
 
