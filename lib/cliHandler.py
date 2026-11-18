@@ -1715,4 +1715,3 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         print(f"[AVISO] Acción desconocida: {action}")
     
     return window
-    return window

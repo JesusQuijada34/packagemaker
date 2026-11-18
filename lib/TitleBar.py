@@ -2,7 +2,6 @@ try:
     from PyQt6.QtWidgets import QPushButton, QWidget, QHBoxLayout, QLabel
     from PyQt6.QtGui import QIcon, QPixmap, QColor, QPainter
     from PyQt6.QtCore import Qt, QSize, QVariantAnimation, QAbstractAnimation, QPoint
-    from PyQt6.QtGui import QShowEvent
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -56,7 +55,6 @@ except ImportError:
         def setSpacing(self, *args): pass
         def addWidget(self, *args): pass
         def addStretch(self, *args): pass
-    class QShowEvent: pass
     class QIcon:
         def __init__(self, *args): pass
     class QPixmap:
