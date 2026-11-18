@@ -107,7 +107,8 @@
       "placeholder_version": "1.0.0",
       "placeholder_author": "GitHub Username",
       "placeholder_icon": "Ruta al archivo .ico",
-      "author_required": "El campo Autor es obligatorio."
+      "author_required": "El campo Autor es obligatorio.",
+      "author_placeholder": "Inicia sesión en GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",

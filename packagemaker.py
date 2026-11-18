@@ -277,7 +277,6 @@ from lib.report import Reporter, classify_build_message
 LeviathanDialog = AlertDialog
 from lib.moonFixWizard import MoonFixWizard
 from lib.github_login_landing import GitHubLoginLanding
-from lib.gitHubVerifyThread import GitHubVerifyThread
 from lib.i18n import i18n, tr, system_default_language, get_available_languages
 from lib.linux_icon_handler import ensure_linux_icon_support
 from lib.pm_data import get_pm_data, load_merged_app_config
@@ -1010,6 +1009,8 @@ class PackageTodoGUI(QMainWindow):
             btn.setText(tr(key))
         idx = self.stack.currentIndex()
         self.update_sidebar_description(idx)
+        if hasattr(self, "input_autor"):
+            self._refresh_author_field()
         if hasattr(self, "conf_header"):
             self._refresh_config_tab_labels()
         if hasattr(self, "sandbox_switch"):
@@ -1208,12 +1209,14 @@ class PackageTodoGUI(QMainWindow):
         if avatar:
             github_identity.cache_avatar(profile.login, avatar)
         self._refresh_github_card()
+        self._refresh_author_field()
 
     def _github_logout(self) -> None:
         from lib import github_identity
 
         github_identity.clear_identity()
         self._refresh_github_card()
+        self._refresh_author_field()
 
     def _setup_github_landing(self) -> None:
         """Prepara el landing; sólo lo muestra si no hay una sesión válida.
@@ -1295,6 +1298,7 @@ class PackageTodoGUI(QMainWindow):
 
     def _finish_github_landing(self, _profile) -> None:
         self._refresh_github_card()
+        self._refresh_author_field()
         self.github_card.show()
         self._landing_active = False
         self._set_landing_lock(False)
@@ -1533,10 +1537,13 @@ class PackageTodoGUI(QMainWindow):
         self.input_version = uwp_input(tr("create.form.placeholder_version"))
         form_layout.addWidget(self.input_version, 3, 1)
 
-        # Fila 4
+        # Fila 4: Autor = username de GitHub autenticado (no editable).
         form_layout.addWidget(uwp_label(tr("create.form.author")), 4, 0)
         self.input_autor = uwp_input(tr("create.form.placeholder_author"))
+        self.input_autor.setReadOnly(True)
+        self.input_autor.setEnabled(False)
         form_layout.addWidget(self.input_autor, 4, 1)
+        self._refresh_author_field()
 
         # Fila 5 Icon
         form_layout.addWidget(uwp_label(tr("create.form.icon")), 5, 0)
@@ -1612,6 +1619,24 @@ class PackageTodoGUI(QMainWindow):
         # La retroalimentación de estado vive ahora en el diálogo iOS y en la
         # consola; se retiró el área de estado que ocupaba el antiguo botón.
         layout.addStretch()
+
+    def _refresh_author_field(self) -> None:
+        """Sincroniza el campo Autor con el username de GitHub autenticado.
+
+        El autor ya no se escribe a mano: se toma de la sesión de GitHub. Sin
+        sesión el campo queda vacío y bloqueado (la creación exige iniciar
+        sesión primero).
+        """
+        field = getattr(self, "input_autor", None)
+        if field is None:
+            return
+        from lib import github_identity
+
+        login = github_identity.load_profile().login or github_identity.signer_from_store()
+        field.setText(login or "")
+        field.setPlaceholderText(
+            login or tr("create.form.author_placeholder")
+        )
 
     def _set_create_status(self, text, qss_key=None):
         """Publica el estado de creación en la barra de estado.
@@ -1873,11 +1898,12 @@ class PackageTodoGUI(QMainWindow):
     def create_package_action(self, progress_dialog=None):
         if progress_dialog is not None:
             self._create_progress_dialog = progress_dialog
-        # Validar autor (obligatorio)
+        # El autor se toma de la sesión de GitHub: sin sesión no se puede crear.
+        self._refresh_author_field()
         autor = self.input_autor.text().strip()
         if not autor:
             self._set_create_status(
-                "Error: El campo Autor es obligatorio. Debe ser un username de GitHub válido.",
+                tr("create.form.author_required"),
                 'packagemaker_075',
             )
             self._set_create_progress(tr("common.error"), tr("create.form.author_required"))
@@ -1890,7 +1916,6 @@ class PackageTodoGUI(QMainWindow):
         self.input_nombre_logico.setEnabled(False)
         self.input_nombre_completo.setEnabled(False)
         self.input_version.setEnabled(False)
-        self.input_autor.setEnabled(False)
         self.checkbox_windows.setEnabled(False)
         self.checkbox_linux.setEnabled(False)
         self.sandbox_switch.setEnabled(False)
@@ -1898,10 +1923,8 @@ class PackageTodoGUI(QMainWindow):
         self._set_create_status(tr("create.progress_checking"))
         self._set_create_progress(tr("create.status_creating"), tr("create.progress_checking"))
 
-        # Crear y ejecutar thread de verificación
-        self.github_thread = GitHubVerifyThread(autor, self)
-        self.github_thread.finished.connect(self.on_github_verification_finished)
-        self.github_thread.start()
+        # La sesión de GitHub ya está autenticada: se continúa directamente.
+        self.on_github_verification_finished(True, autor)
 
     def on_github_verification_finished(self, valido, mensaje):
         """Callback cuando termina la verificación de GitHub"""
@@ -1911,7 +1934,6 @@ class PackageTodoGUI(QMainWindow):
         self.input_nombre_logico.setEnabled(True)
         self.input_nombre_completo.setEnabled(True)
         self.input_version.setEnabled(True)
-        self.input_autor.setEnabled(True)
         self.checkbox_windows.setEnabled(True)
         self.checkbox_linux.setEnabled(True)
         self.sandbox_switch.setEnabled(True)
@@ -1926,6 +1948,7 @@ class PackageTodoGUI(QMainWindow):
             return
 
         # Si la verificación fue exitosa, continuar con la creación del proyecto
+        self._refresh_author_field()
         autor = self.input_autor.text().strip()
         self._set_create_progress(tr("create.status_creating"), tr("create.progress_generating"))
 
@@ -3218,12 +3241,15 @@ class PackageTodoGUI(QMainWindow):
             set_qss(txtVersion, 'packagemaker_095', append=False)
             formLayout.addWidget(txtVersion)
 
-            # Autor
+            # Autor: username de GitHub autenticado (no editable).
             lblAutor = QLabel(tr("dialog.author_name"))
             set_qss(lblAutor, 'packagemaker_096', append=False)
             formLayout.addWidget(lblAutor)
 
-            txtAutor = QLineEdit()
+            from lib import github_identity
+            txtAutor = QLineEdit(github_identity.load_profile().login or "")
+            txtAutor.setReadOnly(True)
+            txtAutor.setEnabled(False)
             txtAutor.setPlaceholderText(tr("dialog.author_placeholder"))
             set_qss(txtAutor, 'packagemaker_097', append=False)
             formLayout.addWidget(txtAutor)
