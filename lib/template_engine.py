@@ -106,6 +106,21 @@ def detect_rating(app_id: str, name: str) -> str:
     return "Todas las edades"
 
 
+def _resolve_version(version_base: str):
+    """Valida y normaliza la versión escrita por el usuario.
+
+    El campo de versión es libre (``1``, ``v2``, ``1.0.0``...). Antes se pasaba
+    tal cual a ``version_components`` y un ``1`` suelto lanzaba ``ValueError``.
+    Ahora se normaliza primero a una base ``X.x`` y, si aun así no fuera válida,
+    se cae al valor por defecto ``1.0`` en lugar de romper la creación.
+    """
+    normalized = ProjectNameFormatter.normalize_version_base(version_base)
+    try:
+        return ProjectNameFormatter.version_components(normalized)
+    except ValueError:
+        return ProjectNameFormatter.version_components("1.0")
+
+
 def build_variables(
     publisher: str,
     app_id: str,
@@ -128,7 +143,7 @@ def build_variables(
     author_val = author.strip() or "Unknown"
     plat = ProjectNameFormatter.normalize_platform(platform)
 
-    version_clean, existing_timestamp = ProjectNameFormatter.version_components(version_base)
+    version_clean, existing_timestamp = _resolve_version(version_base)
     timestamp = timestamp or existing_timestamp or ProjectNameFormatter.get_timestamp()
     version_vso = ProjectNameFormatter.format_version_vso(version_clean, timestamp)
     version_full = ProjectNameFormatter.format_version_full(version_clean, platform, timestamp)

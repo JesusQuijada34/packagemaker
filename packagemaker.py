@@ -1994,9 +1994,15 @@ class PackageTodoGUI(QMainWindow):
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
         nombre_completo = self.input_nombre_completo.text() or nombre_logico.strip().upper()
-        version_base = (self.input_version.text().strip() or "1").split("-")[0]
         from lib.projectNameFormatter import ProjectNameFormatter
         from lib.template_engine import build_variables
+
+        # El campo de versión es libre: ``1`` o ``v2`` son válidos para el
+        # usuario pero no cumplen el patrón ``X.x``. Se normaliza antes de
+        # construir nada para no romper la ley de nombres.
+        version_base = ProjectNameFormatter.normalize_version_base(
+            self.input_version.text()
+        )
 
         try:
             timestamp = ProjectNameFormatter.get_timestamp()
@@ -2351,7 +2357,13 @@ class PackageTodoGUI(QMainWindow):
         empresa = self.input_build_empresa.text().strip().lower() or "influent"
         nombre = self.input_build_nombre.text().strip().lower() or "mycoolapp"
         version_input = self.input_build_version.text().strip()
-        version_full = version_input or f"1-{version}"
+        from lib.projectNameFormatter import ProjectNameFormatter
+
+        # Igual que en la creación: se acepta ``1`` o ``v2`` y se normaliza a la
+        # base canónica ``X.x`` antes de armar el nombre del paquete.
+        version_full = ProjectNameFormatter.normalize_version_base(
+            version_input or f"1-{version}"
+        )
         platformLineEdit = self.input_build_platform.text() or f"{linkedsys.capitalize()}"
 
         custom_path = self.input_custom_path.text().strip()
@@ -3334,11 +3346,14 @@ class PackageTodoGUI(QMainWindow):
 
             app_id = nombreProyecto.strip().lower().replace(" ", "-")
             pub = (publisher or autor or "influent").strip().lower().replace(" ", "-")
-            version_base = (version or "1.0.0").strip().split("-")[0]
 
             # El nombre de la carpeta debe ser el canónico (con versión y
             # plataforma), no ``publisher.app`` a secas.
             from lib.projectNameFormatter import ProjectNameFormatter
+
+            version_base = ProjectNameFormatter.normalize_version_base(
+                version or "1.0.0"
+            )
 
             try:
                 timestamp = ProjectNameFormatter.get_timestamp()
@@ -3865,7 +3880,11 @@ class PackageTodoGUI(QMainWindow):
             name = xml_data.get("name", app_id)
             author = xml_data.get("author", "Unknown")
             target_platform = normalize_platform(xml_data.get("platform", "Knosthalij"))
-            version_raw = xml_data.get("version", "1.0.0").lstrip("v").split("-")[0] or "1.0.0"
+            from lib.projectNameFormatter import ProjectNameFormatter
+
+            version_raw = ProjectNameFormatter.normalize_version_base(
+                xml_data.get("version", "1.0.0")
+            )
 
             progressBar.setValue(40)
             txtLog.append("[1/2] Aplicando plantillas de proyecto...")

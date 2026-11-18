@@ -1365,7 +1365,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         # Obtener valores de proyecto
         publisher = (project_source.get('publisher') or project_source.get('author') or 'influent').strip().lower().replace(' ', '-')
         app_id = project_source.get('shortname') or (project_source.get('name') or base_path.name).strip().lower().replace(' ', '-')
-        version_base = str(project_source.get('version') or '1.0.0').strip().split('-')[0]
+        version_base = ProjectNameFormatter.normalize_version_base(project_source.get('version') or '1.0.0')
         platform_value = normalize_platform(project_source.get('platform')) if project_source.get('platform') else normalize_platform('Knosthalij')
         description = project_source.get('description') or 'Proyecto creado con Influent Package Maker'
         author_val = project_source.get('author') or 'Unknown'
@@ -1410,7 +1410,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         # Construir nombre de carpeta para buscar el proyecto
         publisher = (project_source.get('publisher') or project_source.get('author') or 'influent').strip().lower().replace(' ', '-')
         app_id = project_source.get('shortname') or (project_source.get('name') or '').strip().lower().replace(' ', '-')
-        version_base = str(project_source.get('version') or '1.0.0').strip().split('-')[0]
+        version_base = ProjectNameFormatter.normalize_version_base(project_source.get('version') or '1.0.0')
         
         # Buscar proyecto que coincida con el patrón
         project_path = None

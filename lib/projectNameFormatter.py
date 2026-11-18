@@ -104,6 +104,31 @@ class ProjectNameFormatter:
         return match.group("base"), match.group("timestamp")
 
     @classmethod
+    def normalize_version_base(cls, version: str) -> str:
+        """Normaliza la versión que escribe el usuario a una base válida ``X.x``.
+
+        El campo de versión es libre: la gente teclea ``1``, ``v2``, ``1.0`` o
+        ``1.0.0``. El formatter exige al menos ``X.x``, así que un ``1`` suelto
+        reventaba la creación con un ``ValueError``. Aquí se acepta lo que el
+        usuario escriba y se devuelve una base canónica:
+
+        - se descarta el prefijo ``v`` y cualquier ``-timestamp``/``-Plataforma``;
+        - ``1`` → ``1.0`` (se completa el componente menor que falte);
+        - si no hay ningún número, se cae al valor por defecto ``1.0``.
+        """
+        candidate = str(version or "").strip()
+        if candidate.startswith(("v", "V")):
+            candidate = candidate[1:].strip()
+        candidate = candidate.split("-", 1)[0].strip()
+
+        numbers = re.findall(r"\d+", candidate)
+        if not numbers:
+            return "1.0"
+        if len(numbers) == 1:
+            return f"{numbers[0]}.0"
+        return ".".join(numbers)
+
+    @classmethod
     def format_version_vso(
         cls, version_base: str, timestamp: Optional[str] = None
     ) -> str:

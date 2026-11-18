@@ -103,3 +103,53 @@ class ProjectNameFormatterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VersionNormalizationTests(unittest.TestCase):
+    """Regresión: el campo de versión libre (``1``, ``v2``) rompía la creación.
+
+    Traza original: ``ValueError: Versión inválida`` al crear un proyecto
+    porque ``version_base`` llegaba como ``"1"`` sin el componente ``X.x``.
+    """
+
+    def test_bare_major_version_is_completed(self):
+        self.assertEqual(ProjectNameFormatter.normalize_version_base("1"), "1.0")
+        self.assertEqual(ProjectNameFormatter.normalize_version_base("v2"), "2.0")
+        self.assertEqual(ProjectNameFormatter.normalize_version_base("3"), "3.0")
+
+    def test_valid_versions_pass_through(self):
+        for value in ("1.0", "1.0.0", "3.2.7", "v3.2.7"):
+            self.assertEqual(
+                ProjectNameFormatter.normalize_version_base(value),
+                value.lstrip("v"),
+            )
+
+    def test_empty_or_garbage_falls_back_to_default(self):
+        self.assertEqual(ProjectNameFormatter.normalize_version_base(""), "1.0")
+        self.assertEqual(ProjectNameFormatter.normalize_version_base(None), "1.0")
+        self.assertEqual(ProjectNameFormatter.normalize_version_base("abc"), "1.0")
+
+    def test_timestamp_and_platform_suffix_are_stripped(self):
+        self.assertEqual(
+            ProjectNameFormatter.normalize_version_base("v3.2.7-26.05-20.13"),
+            "3.2.7",
+        )
+        self.assertEqual(
+            ProjectNameFormatter.normalize_version_base("1.0.0-Knosthalij"),
+            "1.0.0",
+        )
+
+    @patch.object(ProjectNameFormatter, "get_timestamp", return_value="26.08-15.38")
+    def test_build_variables_accepts_a_bare_major_version(self, _timestamp):
+        variables = build_variables(
+            "influent", "myapp", "My App", "octocat", "Knosthalij", "1"
+        )
+        self.assertEqual(variables["VERSION_BASE"], "1.0")
+        self.assertEqual(variables["FOLDER_NAME"], "influent.myapp.v1.0-26.08-15.38-Knosthalij")
+
+    @patch.object(ProjectNameFormatter, "get_timestamp", return_value="26.08-15.38")
+    def test_build_variables_never_raises_on_garbage_version(self, _timestamp):
+        variables = build_variables(
+            "influent", "myapp", "My App", "octocat", "Danenone", "not-a-version"
+        )
+        self.assertEqual(variables["VERSION_BASE"], "1.0")
