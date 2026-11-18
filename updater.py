@@ -8,12 +8,13 @@ It imports core functionality from lib.coreUpdater and provides CLI/GUI interfac
 """
 import sys
 import argparse
+import importlib
 import os
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QTimer, QPropertyAnimation
 from leviathan_ui import WipeWindow
-from lib.app_icons import get_icon, icon_button
+from lib.app_icons import icon_button
 
 # Import core updater module
 from lib.coreUpdater import (
