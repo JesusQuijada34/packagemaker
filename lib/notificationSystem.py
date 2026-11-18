@@ -7,6 +7,7 @@ import sys
 from typing import Optional, List, Callable, Dict
 from lib.design_tokens import active_accent
 from dataclasses import dataclass, field
+from lib.i18n import tr
 try:
     from PyQt6.QtCore import (
         Qt, QTimer, QPropertyAnimation, QEasingCurve, QPoint, pyqtSignal,
@@ -333,7 +334,7 @@ class NotificationWidget(QWidget):
         try:
             action.callback()
         except Exception as e:
-            print(f"Error en accion de notificacion: {e}")
+            print(tr("notifications.action_error").format(error=e))
         self.close_notification()
         
     def _setup_shadow(self):
@@ -441,7 +442,7 @@ class NotificationWidget(QWidget):
                 try:
                     self.data.on_click()
                 except Exception as e:
-                    print(f"Error en click de notificacion: {e}")
+                    print(tr("notifications.click_error").format(error=e))
             self.clicked.emit()
         super().mousePressEvent(event)
         
@@ -710,10 +711,10 @@ def error_handler(title: str, error_message: str, error_details: str = "", durat
             # Mostrar mini confirmacion
             success("Copiado", "Error copiado al portapapeles", duration=2000)
         except Exception as e:
-            print(f"Error copiando: {e}")
+            print(tr("notifications.copy_error_log").format(error=e))
     
     actions = kwargs.pop('actions', [])
-    actions.insert(0, NotificationAction("📋 Copiar error", copy_error, "primary"))
+    actions.insert(0, NotificationAction(tr("notifications.copy_error"), copy_error, "primary"))
     
     return get_notification_manager().error(title, error_message, duration=duration, actions=actions, **kwargs)
 

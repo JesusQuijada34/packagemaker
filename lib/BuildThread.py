@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, Optional, List
 
 from lib.projectNameFormatter import ProjectNameFormatter
+from lib.i18n import tr
 
 # requests con fallback a urllib
 try:
@@ -155,11 +156,11 @@ class FlangCompiler:
         """Compatibilidad: garantiza el backend PyInstaller."""
         if self._check_pyinstaller_installed():
             return True
-        self.log("[INFO] PyInstaller no encontrado. Iniciando instalación automática...")
+        self.log("[INFO] " + tr("build_log.pyinstaller_install"))
         if ensure_backend("pyinstaller", log_callback=self.log):
             return True
         self.last_error = "No se pudo instalar PyInstaller automáticamente."
-        self.log("[ERROR] No se pudo instalar PyInstaller automáticamente")
+        self.log("[ERROR] " + tr("build_log.pyinstaller_failed"))
         return False
 
     def describe_compilers(self) -> dict:
@@ -202,7 +203,7 @@ class FlangCompiler:
 
     def parse_details_xml(self) -> bool:
         if not self.details_xml_path.exists():
-            self.log(f"[ERROR] No details.xml found in {self.repo_path}")
+            self.log("[ERROR] " + tr("build_log.details_missing").format(path=self.repo_path))
             return False
         try:
             tree = ET.parse(self.details_xml_path)
@@ -228,7 +229,7 @@ class FlangCompiler:
             return True
         except Exception as e:
             self.last_error = str(e)
-            self.log(f"[ERROR] Error al parsear details.xml: {e}")
+            self.log("[ERROR] " + tr("build_log.details_parse_error").format(error=e))
             return False
 
     def _find_icon(self, script_name: str):
@@ -282,7 +283,7 @@ class FlangCompiler:
                     self.log(f"[INFO] Script seleccionado: {script_name}")
             if not self.scripts:
                 self.last_error = "No se encontraron los scripts indicados en scripts_to_compile."
-                self.log("[ERROR] No se encontraron scripts para compilar.")
+                self.log("[ERROR] " + tr("build_log.no_scripts"))
             return len(self.scripts) > 0
 
         main_script = f"{self.metadata['app']}.py"
@@ -321,7 +322,7 @@ class FlangCompiler:
                     self.log(f"[INFO] Secondary script: {file.name} | Icon: {icon_name}")
         if not self.scripts:
             self.last_error = "No se encontraron scripts .py para compilar en el proyecto."
-            self.log("[ERROR] No se encontraron scripts para compilar.")
+            self.log("[ERROR] " + tr("build_log.no_scripts"))
         return len(self.scripts) > 0
 
     def should_compile_for_platform(self, target_platform: str) -> bool:
@@ -359,9 +360,9 @@ class FlangCompiler:
         if backend is None:
             return False
         self.log("--- / --- - WORKING FOR SQUAREROOM - --- / ---")
-        self.log(f"[INFO] Iniciando compilación para {target_platform} con {backend.display_name}...")
+        self.log("[INFO] " + tr("build_log.start_compiling").format(platform=target_platform, backend=backend.display_name))
         for script in self.scripts:
-            self.log(f"[INFO] Compilando script: {script['name']}...")
+            self.log("[INFO] " + tr("build_log.compiling_script").format(name=script["name"]))
             if target_platform == "Windows":
                 if not self._compile_windows_binary(script):
                     return False
@@ -409,7 +410,7 @@ class FlangCompiler:
             lib_dir = self.repo_path / "lib"
             if lib_dir.is_dir():
                 add_data.append((str(lib_dir), "lib"))
-            self.log(f"[INFO] Bootloader de splash inyectado en {injected.name}")
+            self.log("[INFO] " + tr("build_log.splash_injected").format(name=injected.name))
 
         backend = self._ensure_compiler()
         if backend is None:
@@ -438,7 +439,7 @@ class FlangCompiler:
                         icon_to_use = Path(png_icon)
                         self.log(f"[INFO] Icono convertido a PNG: {png_icon}")
                 except Exception as e:
-                    self.log(f"[WARNING] Error al convertir icono a PNG: {e}")
+                    self.log("[WARNING] " + tr("build_log.icon_png_error").format(error=e))
             
             exe_path = backend.compile(
                 script_path=str(compile_path),
@@ -460,14 +461,14 @@ class FlangCompiler:
                         os.chmod(accumulated_exe, 0o755)
                     except OSError:
                         pass
-                self.log(f"[OK] {script_name} compilado.")
+                self.log("[OK] " + tr("build_log.compiled_ok").format(name=script_name))
                 return True
             self.last_error = backend.last_error or "El compilador no generó el binario esperado."
             self.log(f"[ERROR] {self.last_error}")
             return False
         except Exception as e:
             self.last_error = str(e)
-            self.log(f"[ERROR] Excepción del compilador: {e}")
+            self.log("[ERROR] " + tr("build_log.compiler_exception").format(error=e))
             return False
         finally:
             backend.cleanup()
@@ -526,7 +527,7 @@ class FlangCompiler:
 
     def optimize_binaries(self) -> bool:
         """Optimiza los binarios generados (Placeholder para compatibilidad con CLI)."""
-        self.log("[INFO] Optimización de binarios no implementada aún.")
+        self.log("[INFO] " + tr("build_log.optimize_pending"))
         return True
 
     def _load_gitignore_patterns(self) -> List[str]:
@@ -550,7 +551,7 @@ class FlangCompiler:
                                 patterns.append(p)
                 self.log(f"[INFO] .gitignore cargado ({len(patterns)} patrones)")
             except Exception as e:
-                self.log(f"[WARN] No se pudo leer .gitignore: {e}")
+                self.log("[WARN] " + tr("build_log.gitignore_error").format(error=e))
         return patterns
 
     def _should_exclude(self, name: str, patterns: List[str]) -> bool:
@@ -582,7 +583,7 @@ class FlangCompiler:
                 try:
                     shutil.copytree(item, dest, ignore=ignore_func)
                 except Exception as e:
-                    self.log(f"[WARN] Error copiando {item.name}: {e}")
+                    self.log("[WARN] " + tr("build_log.copy_error").format(name=item.name, error=e))
             elif item.is_file():
                 try:
                     shutil.copy2(item, dest)
@@ -638,7 +639,7 @@ class FlangCompiler:
             # Formatear y guardar XML
             self._save_pretty_xml(tree, package_path / "details.xml")
         except Exception as e:
-            self.log(f"[ERROR] Updating XML: {e}")
+            self.log("[ERROR] " + tr("build_log.xml_update_error").format(error=e))
     
     def _save_pretty_xml(self, tree, filepath):
         """Guarda un XML formateado con indentación."""
@@ -709,7 +710,7 @@ class FlangCompiler:
             return True
         except Exception as e:
             self.last_error = str(e)
-            self.log(f"[ERROR] Empaquetado fallido: {e}")
+            self.log("[ERROR] " + tr("build_log.pack_failed").format(error=e))
             return False
 
     def create_dropper(self, iflapp_path: Path, output_file: Optional[Path] = None) -> Optional[Path]:
@@ -719,10 +720,10 @@ class FlangCompiler:
         output_file = output_file or Path(iflapp_path).with_suffix(".run")
         try:
             create_dropper(iflapp_path, output_file, password=self.package_password)
-            self.log(f"[OK] Dropper autoextraíble generado: {output_file.name}")
+            self.log("[OK] " + tr("build_log.dropper_ok").format(name=output_file.name))
             return output_file
         except Exception as e:
-            self.log(f"[WARN] No se pudo generar el dropper: {e}")
+            self.log("[WARN] " + tr("build_log.dropper_failed").format(error=e))
             return None
 
     def apply_hardening(self, package_path: Path) -> List:
@@ -769,7 +770,7 @@ class FlangCompiler:
         fuente original nunca se expone directamente al código del paquete.
         """
         if not self._sandbox:
-            self.log("[INFO] Sandbox desactivado; se omite la verificación aislada.")
+            self.log("[INFO] " + tr("build_log.sandbox_off"))
             return True
 
         info = self._sandbox.describe()
@@ -808,12 +809,12 @@ class FlangCompiler:
                 env=sandbox_env,
             )
             if result.ok and "IFLAPP_OK" in result.stdout:
-                self.log(f"[OK] Verificación en sandbox correcta ({result.backend}).")
+                self.log("[OK] " + tr("build_log.sandbox_ok").format(backend=result.backend))
                 return True
-            self.log(f"[WARN] Verificación en sandbox incompleta: {result.stderr.strip()[:400]}")
+            self.log("[WARN] " + tr("build_log.sandbox_incomplete").format(detail=result.stderr.strip()[:400]))
             return False
         except Exception as e:
-            self.log(f"[WARN] Sandbox no disponible para verificación: {e}")
+            self.log("[WARN] " + tr("build_log.sandbox_unavailable").format(error=e))
             return False
         finally:
             if workspace:
@@ -826,7 +827,7 @@ class FlangCompiler:
         directorios ``*.build``, ``*.onefile-build`` y ``*.dist`` junto al
         script; se eliminan para no dejar restos de compilación.
         """
-        self.log("[INFO] Limpiando archivos de compilación...")
+        self.log("[INFO] " + tr("build_log.cleanup_start"))
         dist_dir = self.repo_path / "dist"
         build_dir = self.repo_path / "build"
         
@@ -835,17 +836,17 @@ class FlangCompiler:
             if folder.exists() and folder.is_dir():
                 try:
                     shutil.rmtree(folder)
-                    self.log(f"[INFO] Carpeta eliminada: {folder.name}")
+                    self.log("[INFO] " + tr("build_log.folder_removed").format(name=folder.name))
                 except Exception as e:
-                    self.log(f"[WARN] No se pudo eliminar {folder.name}: {e}")
+                    self.log("[WARN] " + tr("build_log.folder_remove_failed").format(name=folder.name, error=e))
         
         # Eliminar archivos .spec
         for spec_file in self.repo_path.glob("*.spec"):
             try:
                 spec_file.unlink()
-                self.log(f"[INFO] Archivo eliminado: {spec_file.name}")
+                self.log("[INFO] " + tr("build_log.file_removed").format(name=spec_file.name))
             except Exception as e:
-                self.log(f"[WARN] No se pudo eliminar {spec_file.name}: {e}")
+                self.log("[WARN] " + tr("build_log.file_remove_failed").format(name=spec_file.name, error=e))
 
         # Artefactos intermedios de Nuitka (carpetas junto al script fuente).
         for pattern in ("*.build", "*.onefile-build", "*.dist", "*.build-cache"):
@@ -854,19 +855,19 @@ class FlangCompiler:
                     continue
                 try:
                     shutil.rmtree(leftover)
-                    self.log(f"[INFO] Carpeta eliminada: {leftover.name}")
+                    self.log("[INFO] " + tr("build_log.folder_removed").format(name=leftover.name))
                 except Exception as e:
-                    self.log(f"[WARN] No se pudo eliminar {leftover.name}: {e}")
+                    self.log("[WARN] " + tr("build_log.folder_remove_failed").format(name=leftover.name, error=e))
 
     def _cleanup_package_folder(self, package_path: Path, iflapp_path: Path):
         """Elimina la carpeta temporal del paquete tras crear el `.iflapp`."""
         if package_path.exists() and package_path.is_dir() and iflapp_path.exists():
             try:
                 shutil.rmtree(package_path)
-                self.log(f"[INFO] Carpeta del paquete eliminada: {package_path.name}")
-                self.log(f"[INFO] Solo queda el archivo .iflapp: {iflapp_path.name}")
+                self.log("[INFO] " + tr("build_log.package_folder_removed").format(name=package_path.name))
+                self.log("[INFO] " + tr("build_log.only_iflapp_left").format(name=iflapp_path.name))
             except OSError as exc:
-                self.log(f"[WARN] No se pudo eliminar la carpeta del paquete {package_path.name}: {exc}")
+                self.log("[WARN] " + tr("build_log.package_folder_remove_failed").format(name=package_path.name, error=exc))
 
     def cleanup_processed_project(self, iflapp_path: Path, allow_delete: bool = False) -> bool:
         """Elimina el proyecto fuente solo cuando el llamador lo autoriza.
@@ -878,20 +879,20 @@ class FlangCompiler:
         source_path = self.repo_path.resolve()
         artifact_path = Path(iflapp_path).resolve()
         if not allow_delete:
-            self.log("[INFO] Proyecto fuente conservado; la eliminación requiere autorización explícita.")
+            self.log("[INFO] " + tr("build_log.source_kept"))
             return False
         if not artifact_path.is_file() or not iflapp_format.is_valid_container(artifact_path):
-            self.log("[WARN] Se conserva el proyecto: el archivo .iflapp no es válido.")
+            self.log("[WARN] " + tr("build_log.source_kept_invalid"))
             return False
         if source_path == artifact_path.parent or source_path in artifact_path.parents:
-            self.log("[WARN] Se conserva el proyecto: el .iflapp está dentro de la carpeta fuente.")
+            self.log("[WARN] " + tr("build_log.source_kept_inside"))
             return False
         try:
             shutil.rmtree(source_path)
-            self.log(f"[INFO] Proyecto procesado eliminado: {source_path.name}")
+            self.log("[INFO] " + tr("build_log.source_removed").format(name=source_path.name))
             return True
         except OSError as exc:
-            self.log(f"[WARN] No se pudo eliminar el proyecto procesado {source_path.name}: {exc}")
+            self.log("[WARN] " + tr("build_log.source_remove_failed").format(name=source_path.name, error=exc))
             return False
 
     def run(self, build_mode="portable") -> Optional[Path]:
@@ -979,7 +980,7 @@ class FlangCompiler:
             
         if final_iflapp is not None:
             self._record_procedure("Procedimiento completado")
-            self.log("--- Procedimiento real detrás del .iflapp ---")
+            self.log(tr("build_log.procedure_header"))
             for index, step in enumerate(self.procedure, 1):
                 self.log(f"  {index}. {step}")
         return final_iflapp

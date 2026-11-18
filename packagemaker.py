@@ -2767,7 +2767,7 @@ class PackageTodoGUI(QMainWindow):
 
             LeviathanDialog.launch(self, tr("config.reset"), tr("config.reset_success"), mode="success")
         except Exception as e:
-            LeviathanDialog.launch(self, tr("config.reset"), f"Error al restablecer: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("config.reset"), tr("app.error_reset").format(error=e), mode="error")
 
     def _refresh_config_form(self) -> None:
         """Actualiza los campos del formulario con los valores por defecto"""
@@ -3284,7 +3284,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             print(f"Error showing create-project dialog: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("manager.error_status").format(error=e), mode="error")
 
     def _ejecutarCreacionProyecto(self, rutaBase, nombreProyecto, version, autor, publisher, descripcion, dialogo):
         """Ejecuta la creación del proyecto"""
@@ -3361,7 +3361,7 @@ class PackageTodoGUI(QMainWindow):
             dialogo.close()
 
         except Exception as e:
-            LeviathanDialog.launch(self, "Error", f"Error creando proyecto: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_create_project").format(error=e), mode="error")
 
     def showInstallFolderDialog(self, folderPath):
         """Muestra ventana completa para instalar carpeta como paquete"""
@@ -3455,7 +3455,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             print(f"Error showing install-folder dialog: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_dialog").format(error=e), mode="error")
 
     def _ejecutarInstalacionCarpeta(self, folderPath, progressBar, txtLog, btnInstalar, btnCerrar):
         """Ejecuta la instalación de la carpeta como paquete"""
@@ -3537,7 +3537,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error instalando carpeta: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_install_folder").format(error=e), mode="error")
             btnInstalar.setEnabled(True)
             btnCerrar.setEnabled(True)
 
@@ -3653,7 +3653,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             print(f"Error showing build dialog: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_dialog").format(error=e), mode="error")
 
     def _ejecutarCompilacion(self, projectPath, compWindows, compKnosthalij, optimizar, progressBar, txtLog, btnCompilar, btnCerrar):
         """Ejecuta la compilación del proyecto"""
@@ -3689,11 +3689,11 @@ class PackageTodoGUI(QMainWindow):
             txtLog.append("\n=== ✅ Compilación Completada Exitosamente ===")
 
             btnCerrar.setEnabled(True)
-            LeviathanDialog.launch(self, "Éxito", "Proyecto compilado correctamente", mode="success")
+            LeviathanDialog.launch(self, tr("app.success"), tr("app.compile_success"), mode="success")
 
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error compilando: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_compiling").format(error=e), mode="error")
             btnCompilar.setEnabled(True)
             btnCerrar.setEnabled(True)
 
@@ -3820,7 +3820,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             print(f"Error showing repair dialog: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_dialog").format(error=e), mode="error")
 
     def _ejecutarMoonFix(self, projectPath, checkArchivos, checkConfig, checkEstructura, checkDeps, progressBar, txtLog, btnReparar, btnCerrar):
         """Ejecuta MoonFix para reparar el proyecto usando plantillas en src/templates/."""
@@ -3883,7 +3883,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error ejecutando MoonFix: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_moonfix").format(error=e), mode="error")
             btnReparar.setEnabled(True)
             btnCerrar.setEnabled(True)
 
@@ -3979,7 +3979,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             print(f"Error showing install-package dialog: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_dialog").format(error=e), mode="error")
 
     def _ejecutarInstalacionPaquete(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
         """Ejecuta la instalación del paquete .iflapp"""
@@ -4018,7 +4018,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error instalando paquete: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_install_package").format(error=e), mode="error")
             btnInstalar.setEnabled(True)
             btnCerrar.setEnabled(True)
 
@@ -4035,7 +4035,7 @@ class PackageTodoGUI(QMainWindow):
                 mode="info"
             )
         except Exception as e:
-            LeviathanDialog.launch(self, "Error", f"Error abriendo paquete: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_open_package").format(error=e), mode="error")
 
     def showInstallMexfDialog(self, filePath):
         """Muestra un diálogo para instalar extensiones desde .mexf"""
@@ -4147,7 +4147,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             print(f"Error showing install-MEXF dialog: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("manager.error_status").format(error=e), mode="error")
 
     def _ejecutarInstalacionMexf(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
         """Ejecuta la instalación de extensiones MEXF"""
@@ -4182,7 +4182,7 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             txtLog.append(f"\n✗ ERROR: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error instalando MEXF: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_install_mexf").format(error=e), mode="error")
             btnInstalar.setEnabled(True)
             btnCerrar.setEnabled(True)
 
@@ -4193,7 +4193,7 @@ class PackageTodoGUI(QMainWindow):
 
             open_mexf_editor(self, filePath)
         except Exception as e:
-            LeviathanDialog.launch(self, "Error", f"Error abriendo editor MEXF: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_open_mexf").format(error=e), mode="error")
 
     def showCreateMexfDialog(self, folderPath):
         """Muestra ventana completa para crear un archivo .mexf"""
@@ -4313,13 +4313,13 @@ class PackageTodoGUI(QMainWindow):
 
         except Exception as e:
             print(f"Error showing create-MEXF dialog: {e}")
-            LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_dialog").format(error=e), mode="error")
 
     def _ejecutarCreacionMexf(self, folderPath, nombreArchivo, descripcion, dialogo):
         """Ejecuta la creación del archivo MEXF"""
         try:
             if not nombreArchivo or nombreArchivo.strip() == "":
-                LeviathanDialog.launch(self, "Advertencia", "El nombre del archivo no puede estar vacío", mode="warning")
+                LeviathanDialog.launch(self, tr("common.warning"), tr("app.filename_required"), mode="warning")
                 return
 
             # Crear ruta del archivo
@@ -4376,7 +4376,7 @@ class PackageTodoGUI(QMainWindow):
             dialogo.close()
 
         except Exception as e:
-            LeviathanDialog.launch(self, "Error", f"Error creando archivo MEXF: {e}", mode="error")
+            LeviathanDialog.launch(self, tr("common.error"), tr("app.error_create_mexf").format(error=e), mode="error")
 
 
     def resizeEvent(self, event):

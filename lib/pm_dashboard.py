@@ -226,7 +226,7 @@ class NewProjectWizard(QDialog):
         author = self.input_author.text().strip()
 
         if not publisher or not app_id or not name:
-            QMessageBox.warning(self, "Campos requeridos", "Publisher, ID y Nombre son obligatorios.")
+            QMessageBox.warning(self, tr("common.warning"), tr("dashboard.required_fields"))
             return
 
         platform_map = {
@@ -255,7 +255,7 @@ class NewProjectWizard(QDialog):
         project_path = Path(base_dir) / folder_name
 
         if project_path.exists():
-            QMessageBox.warning(self, "Ya existe", f"La carpeta ya existe:\n{project_path}")
+            QMessageBox.warning(self, tr("common.warning"), tr("dashboard.folder_exists").format(path=project_path))
             return
 
         try:

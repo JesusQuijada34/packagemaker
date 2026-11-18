@@ -762,11 +762,11 @@ class MoonFixWizard(QDialog):
         
         # Reset to UWP accent for all states, changing only text/icons
         if curr == 0:
-            self.btn_next.setText("Empezar")
+            self.btn_next.setText(tr("wizard.start"))
         elif curr == total - 1:
-            self.btn_next.setText("Finalizar")
+            self.btn_next.setText(tr("wizard.finish"))
         else:
-            self.btn_next.setText("Siguiente →")
+            self.btn_next.setText(tr("wizard.next"))
 
     def apply_project_fixes(self, idx):
         proj = self.projects[idx]

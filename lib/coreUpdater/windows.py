@@ -42,6 +42,7 @@ except ImportError:
 
 from .workers import InstallerWorker, IFLAPPInstallerWorker, EXEInstallerWorker
 from .system_tray import get_tray_icon, set_tray_icon, set_updater_window
+from lib.i18n import tr
 
 try:
     from lib.alert_dialog import AlertDialog as LeviathanDialog
@@ -172,13 +173,13 @@ class ModernUpdaterWindow(QMainWindow):
     def on_fin(self, ok, msg):
         self.thread.quit()
         if ok:
-            self.lbl_status.setText("¡Actualización completada!")
+            self.lbl_status.setText(tr("updater.update_done"))
             # Relaunch
             exe = f"{self.app_data['app']}.exe"
             if os.path.exists(exe): subprocess.Popen(exe)
             QTimer.singleShot(1500, self.close)
         else:
-            self.lbl_status.setText(f"Error: {msg}")
+            self.lbl_status.setText(tr("updater.error").format(error=msg))
             self.lbl_status.setStyleSheet("color: #ff5252;")
     
     def hide_to_tray(self):
@@ -276,12 +277,12 @@ class IFLAPPInstallerWindow(QMainWindow):
     def on_finished(self, ok, msg):
         self.thread.quit()
         if ok:
-            self.lbl_status.setText("¡Instalación completada!")
+            self.lbl_status.setText(tr("updater.install_done"))
             self.lbl_main.setText("Paquete instalado")
             self.icon_lbl.setText("✅")
             QTimer.singleShot(2000, self.close)
         else:
-            self.lbl_status.setText(f"Error: {msg}")
+            self.lbl_status.setText(tr("updater.error").format(error=msg))
             self.lbl_status.setStyleSheet("color: #ff5252;")
         self.finished.emit(ok, msg)
 
@@ -527,11 +528,11 @@ class EXEInstallerWindow(QMainWindow):
     def on_finished(self, ok, msg):
         self.thread.quit()
         if ok:
-            self.lbl_status.setText("¡Instalación completada!")
+            self.lbl_status.setText(tr("updater.install_done"))
             self.lbl_main.setText("Setup instalado")
             self.icon_lbl.setText("✅")
             QTimer.singleShot(2000, self.close)
         else:
-            self.lbl_status.setText(f"Error: {msg}")
+            self.lbl_status.setText(tr("updater.error").format(error=msg))
             self.lbl_status.setStyleSheet("color: #ff5252;")
         self.finished.emit(ok, msg)

@@ -35,6 +35,7 @@ except ImportError:
 
 from lib.python_portable_manager import get_python_manager
 from lib.design_tokens import TEXT_ALT, accent_states, active_accent
+from lib.i18n import tr
 
 
 ACCENT_COLOR = active_accent()
@@ -126,8 +127,6 @@ class InterpreterConfigDialog(QDialog):
         self.load_interpreters()
 
     def init_ui(self):
-        from lib.i18n import tr
-
         self.setWindowTitle(tr("dialog.interpreter_config_title"))
         self.setMinimumSize(650, 500)
         self.setStyleSheet(DARK_PANEL_QSS)
@@ -356,7 +355,7 @@ class InterpreterConfigDialog(QDialog):
             self.load_interpreters()
             self._load_available_versions()
         else:
-            self.download_status.setText(f"Error instalando Python {ver}")
+            self.download_status.setText(tr("interpreter.install_error").format(ver=ver))
 
     def get_settings(self) -> dict:
         return {

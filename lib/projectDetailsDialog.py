@@ -53,6 +53,7 @@ from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.notificationSystem import warning, error, success, NotificationAction
 from lib.safe_zip import safe_extract_zip
 from lib.design_tokens import active_accent
+from lib.i18n import tr
 
 
 ACCENT_COLOR = active_accent()
@@ -317,7 +318,7 @@ class ProjectDetailsDialog(QDialog):
             btn.setStyleSheet(action_style if is_primary else normal_style)
             return btn
 
-        self.btn_run = mk_btn("Ejecutar", is_primary=False, icon_str="construir")
+        self.btn_run = mk_btn(tr("manager.run"), is_primary=False, icon_str="construir")
         self.btn_run.clicked.connect(self.run_selected_script)
 
         # Layout principal de botones
@@ -328,14 +329,14 @@ class ProjectDetailsDialog(QDialog):
         btn_layout.addWidget(self.btn_run)
 
         if self.is_app:
-            self.btn_uninstall = mk_btn("Desinstalar", is_primary=False, icon_str="desinstalar")
+            self.btn_uninstall = mk_btn(tr("manager.uninstall"), is_primary=False, icon_str="desinstalar")
             self.btn_uninstall.clicked.connect(self.uninstall_action)
             btn_layout.addWidget(self.btn_uninstall)
         else:
-            self.btn_install = mk_btn("Instalar", is_primary=False, icon_str="instalar")
+            self.btn_install = mk_btn(tr("manager.install"), is_primary=False, icon_str="instalar")
             self.btn_install.clicked.connect(self.install_action)
 
-            self.btn_delete = mk_btn("Eliminar", is_primary=False, icon_str="desinstalar")
+            self.btn_delete = mk_btn(tr("manager.delete"), is_primary=False, icon_str="desinstalar")
             self.btn_delete.clicked.connect(self.delete_action)
 
             btn_layout.addWidget(self.btn_install)
@@ -346,7 +347,7 @@ class ProjectDetailsDialog(QDialog):
         # Boton de compilar (Solo para proyectos locales)
         if not self.is_app:
             content_layout.addSpacing(10)
-            self.btn_compile = mk_btn("Compilar Proyecto", is_primary=True, icon_str="construir")
+            self.btn_compile = mk_btn(tr("manager.compile_project"), is_primary=True, icon_str="construir")
             self.btn_compile.setFixedHeight(40)
             self.btn_compile.clicked.connect(self.compile_action)
             content_layout.addWidget(self.btn_compile)
@@ -366,7 +367,7 @@ class ProjectDetailsDialog(QDialog):
 
         python = find_python_executable()
         if not python:
-             LeviathanDialog.launch(self, "Python no encontrado", "No se detecto una instalacion de Python valida para ejecutar el script.", mode="error")
+             LeviathanDialog.launch(self, tr("manager.python_missing_title"), tr("manager.python_missing_msg"), mode="error")
              return
 
         # Abrir terminal
@@ -380,10 +381,10 @@ class ProjectDetailsDialog(QDialog):
         # Abrir consola de instalacion para mostrar progreso
         self.install_console = InstallConsoleDialog(self)
         self.install_console.show()
-        self.install_console.log("Iniciando proceso de compilacion e instalacion...")
+        self.install_console.log(tr("manager.install_start_log"))
         
         # Primero compilar
-        self.install_console.log("Paso 1/2: Compilando proyecto...")
+        self.install_console.log(tr("manager.step_compile"))
         self._compile_then_install()
     
     def _compile_then_install(self):
@@ -412,8 +413,8 @@ class ProjectDetailsDialog(QDialog):
     
     def _on_compile_finished_for_install(self, msg):
         """Cuando termina compilacion, proceder a instalar"""
-        self.install_console.log(f"Compilacion exitosa: {msg}")
-        self.install_console.log("Paso 2/2: Instalando paquete Fluthin...")
+        self.install_console.log(tr("manager.compile_success_log").format(msg=msg))
+        self.install_console.log(tr("manager.step_install"))
         
         # Buscar el .iflapp generado (en base_dir y en releases/)
         base_name = self.pkg.get("name", "")
@@ -428,21 +429,21 @@ class ProjectDetailsDialog(QDialog):
         try:
             for search_path in search_paths:
                 if search_path and os.path.exists(search_path):
-                    self.install_console.log(f"Buscando en: {search_path}")
+                    self.install_console.log(tr("manager.searching_in").format(path=search_path))
                     for f in os.listdir(search_path):
                         if (f.endswith(".iflapp") or f.endswith(".iflappb")) and base_name in f:
                             valid_file = os.path.join(search_path, f)
-                            self.install_console.log(f"Encontrado: {f}")
+                            self.install_console.log(tr("manager.found").format(name=f))
                             break
                     if valid_file:
                         break
         except Exception as e:
-            self.install_console.log(f"Error buscando paquete: {e}")
+            self.install_console.log(tr("manager.error_searching").format(error=e))
             return
         
         if not valid_file:
-            self.install_console.log("No se encontro el paquete compilado (.iflapp)")
-            self.install_console.log("Tip: Verifica que la compilacion haya generado el archivo")
+            self.install_console.log(tr("manager.package_not_found"))
+            self.install_console.log(tr("manager.package_not_found_tip"))
             return
         
         # Instalar
@@ -450,7 +451,7 @@ class ProjectDetailsDialog(QDialog):
             target_dir = os.path.join(self.fluthin_apps, self.pkg['name'])
             os.makedirs(target_dir, exist_ok=True)
             
-            self.install_console.log(f"Extrayendo a: {target_dir}")
+            self.install_console.log(tr("manager.extracting_to").format(path=target_dir))
             from lib.iflapp_format import extract_iflapp, sniff_format
 
             if sniff_format(valid_file) == "iflapp2":
@@ -459,32 +460,32 @@ class ProjectDetailsDialog(QDialog):
                 with zipfile.ZipFile(valid_file, 'r') as zf:
                     safe_extract_zip(zf, target_dir)
             
-            self.install_console.log("Instalacion completada exitosamente!")
+            self.install_console.log(tr("manager.install_done_log"))
             if hasattr(self.manager, "load_manager_lists"): 
                 self.manager.load_manager_lists()
             # Notificacion de exito Windows 11
             success(
-                "Instalación completada",
-                f"'{self.pkg.get('name', 'Unknown')}' ha sido instalado correctamente en Fluthin Apps.",
+                tr("manager.install_success_title"),
+                tr("manager.install_success_msg").format(name=self.pkg.get("name", "Unknown")),
                 duration=6000,
                 actions=[
-                    NotificationAction("Ejecutar", self._run_installed_app),
-                    NotificationAction("Ver en carpeta", lambda: self._open_folder(target_dir))
+                    NotificationAction(tr("manager.run"), self._run_installed_app),
+                    NotificationAction(tr("manager.view_in_folder"), lambda: self._open_folder(target_dir))
                 ]
             )
         except Exception as e:
-            self.install_console.log(f"Error en instalacion: {e}")
+            self.install_console.log(tr("manager.install_error_log").format(error=e))
             # Notificacion de error
             error(
-                "Error de instalación",
-                f"No se pudo instalar el proyecto: {str(e)}",
+                tr("manager.install_error_title"),
+                tr("manager.install_error_msg").format(error=str(e)),
                 duration=0  # Persistente
             )
     
     def _on_compile_error_for_install(self, msg):
         """Error durante compilacion"""
-        self.install_console.log(f"Error en compilacion: {msg}")
-        self.install_console.log("Instalacion cancelada.")
+        self.install_console.log(tr("manager.compile_error_log").format(error=msg))
+        self.install_console.log(tr("manager.install_cancelled"))
 
     def uninstall_action(self):
          def do_uninstall(res):
@@ -496,7 +497,7 @@ class ProjectDetailsDialog(QDialog):
                  except Exception as e:
                      LeviathanDialog.launch(self, "Error", str(e), mode="error")
 
-         LeviathanDialog.launch(self, "Desinstalar", "Estas seguro de eliminar esta app?", mode="warning", buttons=["SI", "NO"], callback=do_uninstall)
+         LeviathanDialog.launch(self, tr("manager.uninstall"), tr("manager.uninstall_confirm"), mode="warning", buttons=["SI", "NO"], callback=do_uninstall)
 
     def delete_action(self):
          def do_delete(res):
@@ -508,12 +509,12 @@ class ProjectDetailsDialog(QDialog):
                  except Exception as e:
                      LeviathanDialog.launch(self, "Error", str(e), mode="error")
 
-         LeviathanDialog.launch(self, "Eliminar", "Estas seguro de eliminar este proyecto y todos sus archivos? Esta accion no se puede deshacer.", mode="error", buttons=["SI", "NO"], callback=do_delete)
+         LeviathanDialog.launch(self, tr("manager.delete"), tr("manager.delete_confirm"), mode="error", buttons=["SI", "NO"], callback=do_delete)
 
     def compile_action(self):
         # Trigger compilation using BuildThread
         self.btn_compile.setEnabled(False)
-        self.lbl_status.setText("Compilando...")
+        self.lbl_status.setText(tr("manager.compiling_status"))
 
         # Extract metadata
         empresa = self.pkg.get('empresa', 'influent')
@@ -541,24 +542,24 @@ class ProjectDetailsDialog(QDialog):
         self.btn_compile.setEnabled(True)
         # Mostrar notificacion Windows 11
         success(
-            "Compilación exitosa",
-            f"El proyecto '{self.pkg.get('name', 'Unknown')}' se ha compilado correctamente.",
+            tr("manager.compile_success_title"),
+            tr("manager.compile_success_msg").format(name=self.pkg.get("name", "Unknown")),
             duration=5000,
             actions=[
-                NotificationAction("Abrir carpeta", self._open_project_folder)
+                NotificationAction(tr("manager.open_folder"), self._open_project_folder)
             ]
         )
 
     def on_compile_error(self, msg):
-        self.lbl_status.setText(f"Error: {msg}")
+        self.lbl_status.setText(tr("manager.error_status").format(error=msg))
         self.btn_compile.setEnabled(True)
         # Mostrar notificacion de error
         error(
-            "Error de compilación",
-            f"No se pudo compilar el proyecto: {msg}",
+            tr("manager.compile_error_title"),
+            tr("manager.compile_error_msg").format(error=msg),
             duration=8000,
             actions=[
-                NotificationAction("Ver detalles", lambda: LeviathanDialog.launch(self, "Error", msg, mode="error"), "primary")
+                NotificationAction(tr("manager.view_details"), lambda: LeviathanDialog.launch(self, tr("common.error"), msg, mode="error"), "primary")
             ]
         )
         
@@ -569,9 +570,9 @@ class ProjectDetailsDialog(QDialog):
             try:
                 _open_path_in_file_manager(folder)
             except OSError as exc:
-                warning("No se pudo abrir la carpeta", str(exc))
+                warning(tr("manager.open_folder_failed_title"), str(exc))
         else:
-            warning("Carpeta no encontrada", "No se pudo abrir la carpeta del proyecto.")
+            warning(tr("manager.folder_not_found_title"), tr("manager.folder_not_found_msg"))
             
     def _run_installed_app(self):
         """Ejecutar la aplicacion instalada"""
@@ -590,9 +591,9 @@ class ProjectDetailsDialog(QDialog):
                     python = sys.executable
                     subprocess.Popen([python, os.path.join(target_dir, main_file)], cwd=target_dir)
                     return
-            warning("No se encontró ejecutable", "No se encontró un archivo ejecutable para iniciar.")
+            warning(tr("manager.no_executable_title"), tr("manager.no_executable_msg"))
         else:
-            warning("Aplicación no encontrada", "La carpeta de instalación no existe.")
+            warning(tr("manager.app_not_found_title"), tr("manager.app_not_found_msg"))
             
     def _open_folder(self, folder):
         """Abrir una carpeta especificada en el explorador."""
@@ -600,6 +601,6 @@ class ProjectDetailsDialog(QDialog):
             try:
                 _open_path_in_file_manager(folder)
             except OSError as exc:
-                warning("No se pudo abrir la carpeta", str(exc))
+                warning(tr("manager.open_folder_failed_title"), str(exc))
         else:
-            warning("Carpeta no encontrada", "No se pudo abrir la carpeta especificada.")
+            warning(tr("manager.folder_not_found_title"), tr("manager.folder_missing_msg"))
