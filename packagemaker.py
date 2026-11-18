@@ -373,48 +373,17 @@ def get_tab_icon(key):
 plataforma_platform = sys.platform
 plataforma_name = os.name
 
-# --- TERMUX/ANDROID DETECTION ---
-# Termux usa PREFIX=/data/data/com.termux/files/usr
-# Android tiene restricciones de acceso a carpetas estándar
-_is_termux = os.environ.get("PREFIX", "").startswith("/data/data/com.termux")
-_is_android = sys.platform.startswith("linux") and (
-    os.path.exists("/system/app") or
-    os.environ.get("ANDROID_ROOT") or
-    os.environ.get("ANDROID_DATA")
-)
+# --- PLATAFORMA Y CARPETAS BASE ---
+# La detección vive en ``lib/platform_detect.py`` (única fuente de verdad): el
+# nombre canónico admite solo Danenone/Knosthalij/AlphaCube. Antes se usaban
+# tokens que la ley no reconoce ("termux", "android", "keystone"), lo que
+# rompía los nombres canónicos.
+from lib.platform_detect import detect_platform_info as _detect_platform_info
 
-if _is_termux:
-    # Termux: guardar en carpeta home de termux (accessible)
-    # Carpeta oculta .packagemaker en home de termux
-    termux_home = os.path.expanduser("~")
-    BASE_DIR = os.path.join(termux_home, ".packagemaker", "projects")
-    Fluthin_APPS = os.path.join(termux_home, ".packagemaker", "apps")
-    linkedsys = "termux"
-    # Termux no tiene acceso a ~/Documents por restricciones de Android
-elif _is_android:
-    # Android: guardar en carpeta interna de la app o almacenamiento común
-    android_home = os.path.expanduser("~")
-    BASE_DIR = os.path.join(android_home, "PackageMaker", "Projects")
-    Fluthin_APPS = os.path.join(android_home, "PackageMaker", "Apps")
-    linkedsys = "android"
-elif plataforma_platform.startswith("win"):
-    user_profile = os.environ.get("USERPROFILE", "")
-    doc_folder = "Documents"
-    if os.path.exists(os.path.join(user_profile, "Documentos")):
-        doc_folder = "Documentos"
-    elif os.path.exists(os.path.join(user_profile, "Documents")):
-        doc_folder = "Documents"
-    BASE_DIR = os.path.join(user_profile, doc_folder, "Packagemaker Projects")
-    Fluthin_APPS = os.path.join(user_profile, doc_folder, "Fluthin Apps")
-    linkedsys = "knosthalij"
-elif plataforma_platform.startswith("linux"):
-    BASE_DIR = os.path.expanduser("~/Documents/Packagemaker Projects")
-    Fluthin_APPS = os.path.expanduser("~/Documents/Fluthin Apps")
-    linkedsys = "danenone"
-else:
-    BASE_DIR = "Packagemaker Projects/"
-    Fluthin_APPS = "Fluthin Apps/"
-    linkedsys = "keystone"
+_PLATFORM_INFO = _detect_platform_info()
+linkedsys = _PLATFORM_INFO.platform.lower()  # "knosthalij" / "danenone"
+BASE_DIR = _PLATFORM_INFO.base_dir
+Fluthin_APPS = _PLATFORM_INFO.apps_dir
 
 _PLATFORM_BASE_DIR = BASE_DIR
 _PLATFORM_FLUTHIN_APPS = Fluthin_APPS
@@ -433,13 +402,9 @@ else:
     BASE_DIR = _PLATFORM_BASE_DIR
 
 # --- GLOBAL CONFIG SYSTEM ---
-# Manejar icono según la plataforma (PNG para Linux, ICO para Windows)
-if sys.platform.startswith("linux"):
-    _ico_fallback = os.path.join("app", "app-icon.ico")
-    _png_path = os.path.join("app", "app-icon.png")
-    IPM_ICON_PATH = _png_path if os.path.exists(_png_path) else _ico_fallback
-else:
-    IPM_ICON_PATH = os.path.join("app", "app-icon.ico")
+# Icono según la plataforma (PNG para Linux, ICO para Windows), resuelto por el
+# detector autoritativo para no repetir la lógica.
+IPM_ICON_PATH = _PLATFORM_INFO.icon_path
 
 # Fondo difuminado del landing de acceso.
 LOGIN_BACKGROUND = os.path.join("assets", "login.jpg")
@@ -1989,7 +1954,9 @@ class PackageTodoGUI(QMainWindow):
         elif linux_checked:
             plataforma_seleccionada = "Danenone"
         else:
-            plataforma_seleccionada = "StoneCube"
+            # Sin selección explícita se usa la plataforma real del equipo; antes
+            # se ponía "StoneCube", que la ley de nombres no reconoce.
+            plataforma_seleccionada = _PLATFORM_INFO.platform
 
         empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
         nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"

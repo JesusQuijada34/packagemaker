@@ -200,11 +200,11 @@ class EngineEnvironment:
     def moon_fix(self, project_path: Path, **kwargs) -> Dict:
         """Regeneración efervescente: repara la estructura del proyecto.
 
-        Delega en ``repair_project_from_templates`` (Moon Fix), que restaura
+        Delega en el motor de generación (``makeselfEngine``), que restaura
         carpetas, ``details.xml`` y los ficheros faltantes sin sobrescribir los
         guiones existentes.
         """
-        from lib.template_engine import repair_project_from_templates
+        from lib.makeselfEngine.templates import repair_project_from_templates
 
         return repair_project_from_templates(Path(project_path), **kwargs)
 

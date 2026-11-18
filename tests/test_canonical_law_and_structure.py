@@ -379,23 +379,23 @@ class CreatedProjectNamingRegressionTests(unittest.TestCase):
 
     def test_missing_templates_are_detected_before_creating_folders(self):
         """Sin plantillas no debe quedar un proyecto vacío en disco."""
-        from lib import template_engine
+        from lib.makeselfEngine import templates as engine_templates
 
         with patch.object(
-            template_engine, "get_templates_root", return_value=Path("/no/existe")
+            engine_templates, "get_templates_root", return_value=Path("/no/existe")
         ):
-            self.assertFalse(template_engine.templates_available())
+            self.assertFalse(engine_templates.templates_available())
         # Con las plantillas reales del repo sí está disponible.
-        self.assertTrue(template_engine.templates_available())
+        self.assertTrue(engine_templates.templates_available())
 
     def test_creation_aborts_without_writing_when_templates_are_missing(self):
         """``create_project_from_templates`` no deja restos si falla."""
-        from lib import template_engine
+        from lib.makeselfEngine import templates as engine_templates
 
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "proj"
             with patch.object(
-                template_engine, "get_templates_root", return_value=Path("/no/existe")
+                engine_templates, "get_templates_root", return_value=Path("/no/existe")
             ):
                 with self.assertRaises(FileNotFoundError):
                     create_project_from_templates(

@@ -7,17 +7,28 @@ básico), pensado para entornos portables o viajes.
 
 El motor sigue disponible para inspección, pero ya no se mantiene: el flujo
 moderno usa ``blindcubeEngine``.
+
+La lógica real del contenedor vive en ``container`` (ZIP autocontenido).
 """
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from lib.engine_core import (
     ENGINE_ROLE_COMPILER,
     BuildEngine,
     EngineEnvironment,
     register_engine,
+)
+from lib.flatcubeEngine import container
+from lib.flatcubeEngine.container import (
+    FORMAT_EXTENSION,
+    FlatCubeError,
+    pack,
+    pack_directory,
+    read_manifest,
+    unpack,
 )
 
 ENGINE_ID = "flatcube"
@@ -33,7 +44,7 @@ ENGINE = register_engine(
         backend="pyinstaller",
         stack="Python 3.10, PyInstaller, PyQt4/PyQt5 (incompatible con Leviathan UI / PyQt6)",
         description="Sandbox básico. Ideal para entornos portables o viajes.",
-        format_extension=".flatkpkg",
+        format_extension=FORMAT_EXTENSION,
         compression="zip",
         selectable=True,
         notes="Legacy / sin soporte",
@@ -41,13 +52,23 @@ ENGINE = register_engine(
 )
 
 
-def pack(payload: bytes, *, meta: Optional[Dict] = None) -> bytes:
-    """Empaqueta un payload ZIP en el contenedor ``.flatkpkg``."""
-    return ENGINE.pack(payload, meta=meta)
-
-
 def environment(
     workdir: Path, requirements_path: Optional[Path] = None
 ) -> EngineEnvironment:
     """Entorno efímero del motor FlatCube v1."""
     return EngineEnvironment(ENGINE, Path(workdir), requirements_path=requirements_path)
+
+
+__all__ = [
+    "ENGINE_ID",
+    "DISPLAY_NAME",
+    "ENGINE",
+    "FORMAT_EXTENSION",
+    "FlatCubeError",
+    "container",
+    "pack",
+    "unpack",
+    "pack_directory",
+    "read_manifest",
+    "environment",
+]
