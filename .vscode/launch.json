@@ -5,19 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch IPMbJd with NODE.JS",
-            "program": "${workspaceFolder}/app.js",
-            "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
             "name": "Influent Package Maker debugMode",
-            "type": "debugpy",
+            "type": "${cwd}",
             "request": "launch",
-            "program": "${file}",
+            "program": "python ${file}",
             "console": "integratedTerminal"
         }
     ]

@@ -42,6 +42,7 @@ def _rXml(path):
             "version": root.findtext("version", "").strip(),
             "platform": root.findtext("platform", "").strip(),
             "author": root.findtext("author", "").strip(),
+            "name": root.findtext("name", ""),
             "publisher": root.findtext("publisher", "").strip()
         }
     except (OSError, ET.ParseError):
