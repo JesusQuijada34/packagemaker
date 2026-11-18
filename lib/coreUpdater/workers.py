@@ -12,6 +12,7 @@ import traceback
 from PyQt6.QtCore import QObject, pyqtSignal
 from .core import log, KillerLogic, cache_get, cache_set
 from lib.safe_zip import safe_extract_zip
+from lib.i18n import tr
 
 # requests con fallback a urllib
 try:
@@ -34,7 +35,7 @@ class InstallerWorker(QObject):
         temp_zip = "pending_update.zip"
         ext_dir = "update_temp_extracted"
         try:
-            self.status.emit("Conectando con el servidor...")
+            self.status.emit(tr("updater.status_connecting"))
             
             if requests:
                 r = requests.get(self.url, stream=True)
@@ -60,16 +61,16 @@ class InstallerWorker(QObject):
                             down += len(chunk)
                             if total: self.progress.emit(int(down * 100 / total))
 
-            self.status.emit("Descomprimiendo actualización...")
+            self.status.emit(tr("updater.status_extracting"))
             if os.path.exists(ext_dir): shutil.rmtree(ext_dir)
             with zipfile.ZipFile(temp_zip, "r") as z:
                 safe_extract_zip(z, ext_dir)
 
-            self.status.emit("Cerrando aplicación principal...")
+            self.status.emit(tr("updater.status_closing"))
             KillerLogic.kill_target(self.app)
             time.sleep(2) 
 
-            self.status.emit("Sobrescribiendo sistema...")
+            self.status.emit(tr("updater.status_overwriting"))
             for root, dirs, files in os.walk(ext_dir):
                 rel = os.path.relpath(root, ext_dir)
                 dest_fold = rel if rel != "." else "."
@@ -90,7 +91,7 @@ class InstallerWorker(QObject):
             # Sincronizar plantillas antes de borrar
             try:
                 from .installer import sync_templates_to_local
-                self.status.emit("Sincronizando plantillas...")
+                self.status.emit(tr("updater.status_syncing"))
                 sync_ok, sync_msg, sync_files = sync_templates_to_local()
                 if sync_ok and sync_files:
                     log(f"[UPDATE] Plantillas sincronizadas: {len(sync_files)} archivos")
@@ -104,7 +105,7 @@ class InstallerWorker(QObject):
             try: os.remove(temp_zip)
             except OSError: pass
             
-            self.status.emit("Finalizando...")
+            self.status.emit(tr("updater.status_finishing"))
             self.finished.emit(True, "OK")
 
         except Exception as e:
@@ -126,7 +127,7 @@ class IFLAPPInstallerWorker(QObject):
     
     def run(self):
         try:
-            self.status.emit("Extrayendo paquete...")
+            self.status.emit(tr("updater.status_unpacking"))
             
             # Crear directorio destino si no existe
             os.makedirs(self.target_dir, exist_ok=True)
@@ -145,7 +146,7 @@ class IFLAPPInstallerWorker(QObject):
             for i, _ in enumerate(files):
                 self.progress.emit(int((i + 1) * 100 / total) if total else 100)
             
-            self.status.emit("Configurando aplicación...")
+            self.status.emit(tr("updater.status_configuring"))
             
             # Verificar details.xml
             import xml.etree.ElementTree as ET
@@ -191,11 +192,11 @@ class EXEInstallerWorker(QObject):
                 cached_data = cache_get(cache_key)
                 if cached_data:
                     log("[CACHE] Usando ejecutable en caché de memoria")
-                    self.status.emit("Usando caché de memoria...")
+                    self.status.emit(tr("updater.status_using_cache"))
                     exe_data = cached_data
                 else:
                     # Descargar a memoria
-                    self.status.emit("Descargando instalador...")
+                    self.status.emit(tr("updater.status_downloading"))
                     if requests:
                         r = requests.get(self.url, stream=True, timeout=60)
                         total = int(r.headers.get("content-length", 0))
@@ -232,7 +233,7 @@ class EXEInstallerWorker(QObject):
                     log(f"[CACHE] Guardado en memoria: {len(exe_data)} bytes")
             else:
                 # Descarga tradicional a archivo
-                self.status.emit("Descargando instalador...")
+                self.status.emit(tr("updater.status_downloading"))
                 temp_file = os.path.join(tempfile.gettempdir(), f"download_{os.getpid()}.tmp")
                 
                 if requests:
@@ -261,7 +262,7 @@ class EXEInstallerWorker(QObject):
                         exe_data = f.read()
             
             self.progress.emit(50)
-            self.status.emit("Preparando instalación...")
+            self.status.emit(tr("updater.status_preparing"))
             
             # Escribir a archivo temporal
             temp_dir = tempfile.gettempdir()
@@ -273,7 +274,7 @@ class EXEInstallerWorker(QObject):
             log(f"[EXE] Guardado temporalmente: {self.temp_exe_path}")
             
             self.progress.emit(60)
-            self.status.emit("Ejecutando instalador en modo silencioso...")
+            self.status.emit(tr("updater.status_running_silent"))
             
             # Ejecutar con --silent
             if sys.platform == "win32":
@@ -292,13 +293,13 @@ class EXEInstallerWorker(QObject):
             )
             
             self.progress.emit(75)
-            self.status.emit("Instalando... (esto puede tardar unos minutos)")
+            self.status.emit(tr("updater.status_installing"))
             
             stdout, stderr = process.communicate()
             
             if process.returncode == 0:
                 self.progress.emit(100)
-                self.status.emit("Instalación completada")
+                self.status.emit(tr("updater.status_install_done"))
                 log("[EXE] Instalación exitosa")
                 self.finished.emit(True, "OK")
             else:

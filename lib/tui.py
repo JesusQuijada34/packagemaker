@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Optional, List, Dict
 
 from lib.projectNameFormatter import ProjectNameFormatter
+from lib.i18n import tr
+from lib.platform_detect import detect_platform_info
 
 # ─── ANSI helpers ────────────────────────────────────────────────────────────
 
@@ -91,14 +93,15 @@ def _clear() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
 
-def _print_menu(title: str, options: List[str], back_label: str = "Volver") -> None:
+def _print_menu(title: str, options: List[str], back_label: str = "") -> None:
+    back_label = back_label or tr("tui.back")
     """Imprime un menú numerado."""
     print(bold(cyan(f"\n  {title}")))
     print(_hr())
     for i, opt in enumerate(options, 1):
         print(f"  {bold(str(i))}.  {opt}")
     print(f"  {bold('0')}.  {dim(back_label)}")
-    print(f"  {dim('q/b')}.  {dim('Salir/Regresar')}")
+    print(f"  {dim('q/b')}.  {dim(tr('tui.quit_back'))}")
     print(_hr())
 
 
@@ -153,7 +156,7 @@ def _select_menu(prompt: str, allow_back: bool = True) -> int:
     Returns:
         int: Número seleccionado o -1 si se cancela
     """
-    back_hint = " [q=Salir, 0=Volver]" if allow_back else ""
+    back_hint = tr("tui.select_back_hint") if allow_back else ""
     try:
         raw = input(f"\n  {cyan('›')} {prompt}:{back_hint} ").strip().lower()
         if allow_back and raw in ('q', 'b', 'quit', 'back'):
@@ -181,17 +184,15 @@ def _info(msg: str) -> None:
 
 def _pause() -> None:
     try:
-        input(f"\n  {dim('Presiona Enter para continuar...')}")
+        input(f"\n  {dim(tr('tui.press_enter'))}")
     except (KeyboardInterrupt, EOFError):
         pass
 
 # ─── Platform detection ───────────────────────────────────────────────────────
 
 def _detect_platform() -> str:
-    """Windows → Knosthalij, Linux → Danenone."""
-    if sys.platform.startswith("win"):
-        return "Knosthalij"
-    return "Danenone"
+    """Plataforma canonica del detector autoritativo (Knosthalij/Danenone)."""
+    return detect_platform_info().platform
 
 
 def _base_dir() -> Path:
@@ -249,10 +250,10 @@ def _run_live(cmd: List[str], cwd: Optional[Path] = None) -> int:
         proc.wait()
         return proc.returncode
     except FileNotFoundError as exc:
-        _err(f"Comando no encontrado: {exc}")
+        _err(tr("tui.command_not_found").format(error=exc))
         return 1
     except KeyboardInterrupt:
-        _warn("Interrumpido por el usuario.")
+        _warn(tr("tui.interrupted"))
         return 130
 
 # ─── Screen: Crear Proyecto ───────────────────────────────────────────────────
@@ -260,21 +261,21 @@ def _run_live(cmd: List[str], cwd: Optional[Path] = None) -> int:
 def _screen_create() -> None:
     _clear()
     _banner()
-    print(bold(white("  Crear Nuevo Proyecto")))
+    print(bold(white("  " + tr("tui.create_title"))))
     print(_hr())
 
-    empresa   = _prompt("Empresa / Publisher", "influent")
-    slug      = _prompt("ID Interno (Slug)",   "my-app-tool")
-    nombre    = _prompt("Nombre Visible",       slug.replace("-", " ").title())
-    version   = _prompt("Versión Inicial",      "1.0.0")
-    autor     = _prompt("Autor (GitHub User)",  "")
-    icon_path = _prompt("Icono (.ico) [opcional]", "")
+    empresa   = _prompt(tr("tui.empresa"), "influent")
+    slug      = _prompt(tr("tui.slug"), "my-app-tool")
+    nombre    = _prompt(tr("tui.visible_name"), slug.replace("-", " ").title())
+    version   = _prompt(tr("tui.initial_version"), "1.0.0")
+    autor     = _prompt(tr("tui.author"), "")
+    icon_path = _prompt(tr("tui.icon_opt"), "")
 
-    print(f"\n  {bold('Plataforma objetivo:')}")
-    plat_idx = _prompt_choice("Seleccionar plataforma", [
-        "Windows (Knosthalij)",
-        "Linux (Danenone)",
-        "Multiplataforma (AlphaCube)",
+    print(f"\n  {bold(tr('tui.target_platform'))}")
+    plat_idx = _prompt_choice(tr("tui.select_platform"), [
+        tr("tui.platform_windows"),
+        tr("tui.platform_linux"),
+        tr("tui.platform_multi"),
     ], default=0)
     plat_map = {0: "win", 1: "linux", 2: "all"}
     plataforma = plat_map[plat_idx]
@@ -283,29 +284,29 @@ def _screen_create() -> None:
     plat_display = {"win": "Knosthalij (Windows)", "linux": "Danenone (Linux)", "all": "AlphaCube (Multi)"}
     plataforma_display = plat_display[plataforma]
 
-    sandbox = _prompt_bool("Sandbox seguro", True)
+    sandbox = _prompt_bool(tr("tui.sandbox_secure"), True)
 
     print()
     print(_hr())
-    print(bold("  Resumen:"))
-    _info(f"Publisher : {orange(empresa)}")
-    _info(f"Slug      : {orange(slug)}")
-    _info(f"Nombre    : {orange(nombre)}")
-    _info(f"Versión   : {orange(version)}")
-    _info(f"Autor     : {orange(autor) if autor else gray('(sin autor)')}")
-    _info(f"Plataforma: {orange(plataforma_display)}")
-    _info(f"Sandbox   : {green('Sí') if sandbox else red('No')}")
+    print(bold("  " + tr("tui.summary")))
+    _info(f"{tr('tui.publisher_col')} : {orange(empresa)}")
+    _info(f"{tr('tui.slug_col')}      : {orange(slug)}")
+    _info(f"{tr('tui.name_col')}    : {orange(nombre)}")
+    _info(f"{tr('tui.version_col')}   : {orange(version)}")
+    _info(f"{tr('tui.author_col')}     : {orange(autor) if autor else gray(tr('tui.no_author'))}")
+    _info(f"{tr('tui.platform_col')}: {orange(plataforma_display)}")
+    _info(f"{tr('tui.sandbox_col')}   : {green(tr('tui.yes')) if sandbox else red(tr('tui.no'))}")
     if icon_path:
-        _info(f"Icono     : {orange(icon_path)}")
+        _info(f"{tr('tui.icon_col')}     : {orange(icon_path)}")
     print(_hr())
 
-    if not _prompt_bool("¿Crear proyecto?", True):
-        _warn("Cancelado.")
+    if not _prompt_bool(tr("tui.confirm_create"), True):
+        _warn(tr("tui.cancelled"))
         _pause()
         return
 
     if not autor:
-        _err("El campo Autor es obligatorio (debe ser un username válido de GitHub).")
+        _err(tr("tui.author_required"))
         _pause()
         return
 
@@ -341,9 +342,9 @@ def _screen_create() -> None:
         folder_name = ProjectNameFormatter.format_project_folder(
             publisher_slug, app_slug, version_base, real_platform
         )
-        _ok(f"Proyecto creado en: {_base_dir() / folder_name}")
+        _ok(tr("tui.project_created").format(path=_base_dir() / folder_name))
     else:
-        _err(f"Falló con código {rc}")
+        _err(tr("tui.failed_code").format(rc=rc))
     _pause()
 
 # ─── Screen: Construir Paquete ────────────────────────────────────────────────
@@ -351,7 +352,7 @@ def _screen_create() -> None:
 def _screen_build() -> None:
     _clear()
     _banner()
-    print(bold(white("  Construir Paquete")))
+    print(bold(white("  " + tr("tui.build_title"))))
     print(_hr())
 
     # Opción: seleccionar proyecto existente o ruta manual
@@ -366,21 +367,21 @@ def _screen_build() -> None:
     project_path_str = ""
     manual_mode = False
     if projects:
-        print(f"\n  {bold('Proyectos recientes:')}")
+        print(f"\n  {bold(tr('tui.recent_projects'))}")
         display = [p.name for p in projects[:10]]
-        display.append("Ingresar ruta manualmente…")
-        idx = _prompt_choice("Seleccionar proyecto", display, default=0)
+        display.append(tr("tui.enter_manual_path"))
+        idx = _prompt_choice(tr("tui.select_project"), display, default=0)
         if idx < len(projects):
             project_path_str = str(projects[idx])
         else:
-            project_path_str = _prompt("Ruta al proyecto", "")
+            project_path_str = _prompt(tr("tui.project_path"), "")
             manual_mode = True
     else:
-        project_path_str = _prompt("Ruta al proyecto", "")
+        project_path_str = _prompt(tr("tui.project_path"), "")
         manual_mode = True
 
     if not project_path_str or not Path(project_path_str).exists():
-        _err("Ruta de proyecto inválida o no existe.")
+        _err(tr("tui.invalid_project_path"))
         _pause()
         return
 
@@ -401,56 +402,56 @@ def _screen_build() -> None:
     # Si es modo manual, pedir confirmación de datos
     if manual_mode:
         print()
-        print(bold("  Datos del paquete:"))
-        empresa     = _prompt("Fabricante",      empresa)
-        nombre      = _prompt("Nombre interno",  nombre)
-        version_val = _prompt("Versión",         version_val)
+        print(bold("  " + tr("tui.package_data")))
+        empresa     = _prompt(tr("tui.manufacturer"), empresa)
+        nombre      = _prompt(tr("tui.internal_name"), nombre)
+        version_val = _prompt(tr("tui.version_col"), version_val)
 
-        _info(f"Entorno de compilación detectado: {orange(detected)}")
+        _info(tr("tui.detected_env").format(env=orange(detected)))
 
-        print(f"\n  {bold('Modo de compilación:')}")
-        mode_idx = _prompt_choice("Modo", ["Portable (All-in-one)", "Lite (Single File)"], default=0)
+        print(f"\n  {bold(tr('tui.build_mode'))}")
+        mode_idx = _prompt_choice(tr("tui.mode"), [tr("tui.mode_portable"), tr("tui.mode_lite")], default=0)
         build_mode = "portable" if mode_idx == 0 else "lite"
 
-        output_dir = _prompt("Carpeta de salida", str(Path(project_path_str).parent / "dist"))
+        output_dir = _prompt(tr("tui.output_dir"), str(Path(project_path_str).parent / "dist"))
 
         print()
         print(_hr())
-        print(bold("  Resumen:"))
-        _info(f"Proyecto  : {orange(project_path_str)}")
-        _info(f"Fabricante: {orange(empresa)}")
-        _info(f"App       : {orange(nombre)}")
-        _info(f"Versión   : {orange(version_val)}")
-        _info(f"Modo      : {orange(build_mode)}")
-        _info(f"Salida    : {orange(output_dir)}")
-        _info(f"Plataforma: {orange(detected)}")
+        print(bold("  " + tr("tui.summary")))
+        _info(f"{tr('tui.project_col')}  : {orange(project_path_str)}")
+        _info(f"{tr('tui.manufacturer_col')}: {orange(empresa)}")
+        _info(f"{tr('tui.app_col')}       : {orange(nombre)}")
+        _info(f"{tr('tui.version_col')}   : {orange(version_val)}")
+        _info(f"{tr('tui.mode_col')}      : {orange(build_mode)}")
+        _info(f"{tr('tui.output_col')}    : {orange(output_dir)}")
+        _info(f"{tr('tui.platform_col')}: {orange(detected)}")
         print(_hr())
 
-        if not _prompt_bool("¿Construir paquete?", True):
-            _warn("Cancelado.")
+        if not _prompt_bool(tr("tui.confirm_build"), True):
+            _warn(tr("tui.cancelled"))
             _pause()
             return
     else:
         # Modo automático: compilar directamente con metadatos del proyecto
         print()
         print(_hr())
-        print(bold("  Compilando proyecto seleccionado:"))
-        _info(f"Proyecto  : {orange(Path(project_path_str).name)}")
-        _info(f"Fabricante: {orange(empresa)}")
-        _info(f"App       : {orange(nombre)}")
-        _info(f"Versión   : {orange(version_val)}")
-        _info(f"Plataforma: {orange(detected)}")
+        print(bold("  " + tr("tui.compiling_selected")))
+        _info(f"{tr('tui.project_col')}  : {orange(Path(project_path_str).name)}")
+        _info(f"{tr('tui.manufacturer_col')}: {orange(empresa)}")
+        _info(f"{tr('tui.app_col')}       : {orange(nombre)}")
+        _info(f"{tr('tui.version_col')}   : {orange(version_val)}")
+        _info(f"{tr('tui.platform_col')}: {orange(detected)}")
         print(_hr())
-        _info("Iniciando compilación con metadatos del proyecto...")
+        _info(tr("tui.starting_build"))
         print()
 
     cmd = _build_project_command(Path(project_path_str))
 
     rc = _run_live(cmd)
     if rc == 0:
-        _ok("Paquete construido con éxito.")
+        _ok(tr("tui.build_success"))
     else:
-        _err(f"Falló con código {rc}")
+        _err(tr("tui.failed_code").format(rc=rc))
     _pause()
 
 # ─── Screen: Gestor de Apps ───────────────────────────────────────────────────
@@ -458,12 +459,12 @@ def _screen_build() -> None:
 def _screen_manager() -> None:
     _clear()
     _banner()
-    print(bold(white("  Gestor de Aplicaciones")))
+    print(bold(white("  " + tr("tui.manager_title"))))
     print(_hr())
 
     base = _base_dir()
     if not base.exists():
-        _warn(f"Carpeta de proyectos no encontrada: {base}")
+        _warn(tr("tui.projects_folder_missing").format(path=base))
         _pause()
         return
 
@@ -473,18 +474,18 @@ def _screen_manager() -> None:
     )
 
     if not projects:
-        _warn("No hay proyectos en la carpeta de proyectos.")
+        _warn(tr("tui.no_projects"))
         _pause()
         return
 
     while True:
         _clear()
         _banner()
-        print(bold(white("  Gestor de Aplicaciones")))
+        print(bold(white("  " + tr("tui.manager_title"))))
         print(_hr())
         names = [p.name for p in projects]
-        _print_menu("Seleccionar proyecto", names, back_label="Volver al menú principal")
-        choice = _select_menu("Opción", allow_back=True)
+        _print_menu(tr("tui.select_project"), names, back_label=tr("tui.back_main_menu"))
+        choice = _select_menu(tr("tui.option"), allow_back=True)
 
         if choice == 0 or choice == -1:
             return
@@ -510,11 +511,11 @@ def _project_actions(proj: Path) -> None:
         try:
             root = ET.parse(details).getroot()
             meta = {
-                "Publisher": root.findtext("publisher") or "",
-                "App":       root.findtext("app") or "",
-                "Versión":   root.findtext("version") or "",
-                "Plataforma":root.findtext("platform") or "",
-                "Autor":     root.findtext("author") or root.findtext("autor") or "",
+                tr("tui.publisher_col").strip(): root.findtext("publisher") or "",
+                tr("tui.app_col").strip():       root.findtext("app") or "",
+                tr("tui.version_col").strip():   root.findtext("version") or "",
+                tr("tui.platform_col").strip():  root.findtext("platform") or "",
+                tr("tui.author_col").strip():    root.findtext("author") or root.findtext("autor") or "",
             }
         except Exception:
             pass
@@ -522,20 +523,20 @@ def _project_actions(proj: Path) -> None:
     while True:
         _clear()
         _banner()
-        print(bold(white(f"  Proyecto: {orange(proj.name)}")))
+        print(bold(white(f"  {tr('tui.project_header')}: {orange(proj.name)}")))
         print(_hr())
         if meta:
             for k, v in meta.items():
                 if v:
                     _info(f"{k:12}: {cyan(v)}")
         print(_hr())
-        _print_menu("Acciones", [
-            "Compilar / Construir paquete",
-            "Reparar con MoonFix",
-            "Abrir en explorador de archivos",
-            "Ver detalles (details.xml)",
-        ], back_label="Volver a la lista de proyectos")
-        choice = _select_menu("Opción", allow_back=True)
+        _print_menu(tr("tui.actions"), [
+            tr("tui.action_build"),
+            tr("tui.action_moonfix"),
+            tr("tui.action_open_folder"),
+            tr("tui.action_view_details"),
+        ], back_label=tr("tui.back_project_list"))
+        choice = _select_menu(tr("tui.option"), allow_back=True)
 
         if choice == 0 or choice == -1:
             return
@@ -560,13 +561,13 @@ def _build_project_direct(proj: Path) -> None:
     """Lanza compilación sobre un proyecto del gestor."""
     detected = _detect_platform()
     print()
-    _info(f"Compilando {orange(proj.name)} para {orange(detected)}…")
+    _info(tr("tui.compiling_for").format(name=orange(proj.name), platform=orange(detected)))
     cmd = _build_project_command(proj)
     rc = _run_live(cmd)
     if rc == 0:
-        _ok("Paquete construido con éxito.")
+        _ok(tr("tui.build_success"))
     else:
-        _err(f"Falló con código {rc}")
+        _err(tr("tui.failed_code").format(rc=rc))
     _pause()
 
 
@@ -594,7 +595,7 @@ def _moonfix_project_direct(proj: Path) -> None:
         metadata["author"] = (root.findtext("author") or root.findtext("autor") or metadata["author"]).strip()
         metadata["version"] = (root.findtext("version") or metadata["version"]).strip()
     except Exception as exc:
-        _warn(f"No se pudo leer details.xml; se usarán valores mínimos: {exc}")
+        _warn(tr("tui.details_read_failed").format(error=exc))
 
     cmd = [
         py, str(entry), "--headless", "moonfix",
@@ -605,12 +606,12 @@ def _moonfix_project_direct(proj: Path) -> None:
         "--version", metadata["version"],
     ]
     print()
-    _info(f"Ejecutando MoonFix sobre {orange(proj.name)}…")
+    _info(tr("tui.running_moonfix").format(name=orange(proj.name)))
     rc = _run_live(cmd)
     if rc == 0:
-        _ok("MoonFix completado.")
+        _ok(tr("tui.moonfix_done"))
     else:
-        _err(f"Falló con código {rc}")
+        _err(tr("tui.failed_code").format(rc=rc))
     _pause()
 
 
@@ -623,14 +624,14 @@ def _open_folder(proj: Path) -> None:
         subprocess.Popen(["open", target], close_fds=True)
     else:
         subprocess.Popen(["xdg-open", target], close_fds=True)
-    _ok(f"Abriendo {proj.name}")
+    _ok(tr("tui.opening").format(name=proj.name))
     _pause()
 
 
 def _show_details_xml(proj: Path) -> None:
     details = proj / "details.xml"
     if not details.exists():
-        _err("details.xml no encontrado.")
+        _err(tr("tui.details_not_found"))
         _pause()
         return
     print(_hr())
@@ -646,7 +647,7 @@ def _show_details_xml(proj: Path) -> None:
 def _screen_moonfix() -> None:
     _clear()
     _banner()
-    print(bold(white("  MoonFix — Reparar Proyecto")))
+    print(bold(white("  " + tr("tui.moonfix_title"))))
     print(_hr())
 
     base = _base_dir()
@@ -660,24 +661,24 @@ def _screen_moonfix() -> None:
     project_path_str = ""
     if projects:
         display = [p.name for p in projects[:10]]
-        display.append("Ingresar ruta manualmente…")
-        idx = _prompt_choice("Seleccionar proyecto a reparar", display, default=0)
+        display.append(tr("tui.enter_manual_path"))
+        idx = _prompt_choice(tr("tui.select_project_repair"), display, default=0)
         if idx < len(projects):
             project_path_str = str(projects[idx])
         else:
-            project_path_str = _prompt("Ruta al proyecto", "")
+            project_path_str = _prompt(tr("tui.project_path"), "")
     else:
-        project_path_str = _prompt("Ruta al proyecto", "")
+        project_path_str = _prompt(tr("tui.project_path"), "")
 
     if not project_path_str or not Path(project_path_str).exists():
-        _err("Ruta inválida.")
+        _err(tr("tui.invalid_path"))
         _pause()
         return
 
-    print(f"\n  {bold('Reparación con MoonFix:')}")
-    _info("MoonFix lee details.xml y restaura la estructura y los archivos faltantes mediante las plantillas del proyecto.")
-    if not _prompt_bool("¿Iniciar MoonFix?", True):
-        _warn("Cancelado.")
+    print(f"\n  {bold(tr('tui.moonfix_repair_header'))}")
+    _info(tr("tui.moonfix_explain"))
+    if not _prompt_bool(tr("tui.confirm_moonfix"), True):
+        _warn(tr("tui.cancelled"))
         _pause()
         return
 
@@ -693,7 +694,7 @@ def _screen_moonfix() -> None:
 def _screen_config() -> None:
     _clear()
     _banner()
-    print(bold(white("  Configuración")))
+    print(bold(white("  " + tr("tui.config_title"))))
     print(_hr())
 
     # Leer config actual
@@ -706,33 +707,33 @@ def _screen_config() -> None:
         base_dir = str(_base_dir())
         lang = "es"
 
-    _info(f"Carpeta de proyectos: {cyan(base_dir)}")
-    _info(f"Idioma actual        : {cyan(lang)}")
+    _info(tr("tui.projects_folder").format(path=cyan(base_dir)))
+    _info(tr("tui.current_language").format(lang=cyan(lang)))
     print(_hr())
 
     action = _prompt_choice(
-        "Acción",
-        ["Editar configuración", "Eliminar configuración y restaurar valores predeterminados"],
+        tr("tui.action"),
+        [tr("tui.action_edit_config"), tr("tui.action_reset_config")],
         default=0,
     )
 
     if action == 1:
-        if not _prompt_bool("¿Eliminar preferencias y cachés de usuario?", False):
-            _warn("Eliminación cancelada.")
+        if not _prompt_bool(tr("tui.confirm_reset_config"), False):
+            _warn(tr("tui.reset_cancelled"))
             _pause()
             return
         try:
             from lib.pm_data import get_pm_data
             if get_pm_data().reset_user_configuration():
-                _ok("Configuración eliminada y valores predeterminados restaurados.")
+                _ok(tr("tui.config_reset_ok"))
             else:
-                _err("No se pudo eliminar la configuración.")
+                _err(tr("tui.config_reset_failed"))
         except Exception as e:
-            _err(f"No se pudo eliminar la configuración: {e}")
+            _err(tr("tui.config_reset_failed_detail").format(error=e))
         _pause()
         return
 
-    new_base = _prompt("Nueva carpeta de proyectos (Enter = sin cambios)", base_dir)
+    new_base = _prompt(tr("tui.new_projects_folder"), base_dir)
     try:
         from lib.i18n import get_available_languages
 
@@ -740,11 +741,11 @@ def _screen_config() -> None:
     except Exception:
         lang_options = [("es", "Español"), ("en", "English")]
     lang_names = [name for _code, name in lang_options]
-    lang_idx = _prompt_choice("Idioma", lang_names, default=0)
+    lang_idx = _prompt_choice(tr("tui.language"), lang_names, default=0)
     new_lang = lang_options[lang_idx][0] if 0 <= lang_idx < len(lang_options) else "es"
 
-    if not _prompt_bool("¿Guardar cambios?", True):
-        _warn("Cancelado.")
+    if not _prompt_bool(tr("tui.confirm_save"), True):
+        _warn(tr("tui.cancelled"))
         _pause()
         return
 
@@ -754,11 +755,11 @@ def _screen_config() -> None:
         store.set_user("base_dir", new_base)
         store.set_user("language", new_lang)
         if store.save():
-            _ok("Configuración guardada.")
+            _ok(tr("tui.config_saved"))
         else:
-            _err("No se pudo guardar la configuración.")
+            _err(tr("tui.config_save_failed"))
     except Exception as e:
-        _err(f"No se pudo guardar: {e}")
+        _err(tr("tui.config_save_failed_detail").format(error=e))
     _pause()
 
 # ─── Screen: Acerca de ────────────────────────────────────────────────────────
@@ -766,15 +767,15 @@ def _screen_config() -> None:
 def _screen_about() -> None:
     _clear()
     _banner()
-    print(bold(white("  Acerca de Influent Package Maker")))
+    print(bold(white("  " + tr("tui.about_title"))))
     print(_hr())
-    _info(f"Versión       : {cyan(_get_version())}")
-    _info(f"Sistema       : {cyan(platform.system())} {platform.release()}")
-    _info(f"Python        : {cyan(sys.version.split()[0])}")
-    _info(f"Directorio    : {cyan(os.getcwd())}")
-    _info(f"Proyectos     : {cyan(str(_base_dir()))}")
+    _info(f"{tr('tui.about_version')} : {cyan(_get_version())}")
+    _info(f"{tr('tui.about_system')} : {cyan(detect_platform_info().platform)} {platform.release()}")
+    _info(f"{tr('tui.about_python')} : {cyan(sys.version.split()[0])}")
+    _info(f"{tr('tui.about_dir')} : {cyan(os.getcwd())}")
+    _info(f"{tr('tui.about_projects')} : {cyan(str(_base_dir()))}")
     print(_hr())
-    print(f"  {gray('Influent Package Maker — Sistema de gestión de paquetes Fluthin')}")
+    print(f"  {gray(tr('tui.about_tagline'))}")
     print(f"  {gray('https://github.com/Influent-PackageMaker')}")
     print()
     _pause()
@@ -785,86 +786,25 @@ def _screen_about() -> None:
 def _screen_help() -> None:
     _clear()
     _banner()
-    print(bold(white("  Ayuda — Influent Package Maker TUI")))
+    print(bold(white("  " + tr("tui.help_title"))))
     print(_hr())
     print()
-    print(bold(cyan("  Bienvenido a Influent Package Maker TUI")))
+    print(bold(cyan("  " + tr("tui.help_welcome"))))
     print()
-    print(dim("  Influent Package Maker es un sistema de gestión de paquetes para crear,"))
-    print(dim("  compilar y distribuir aplicaciones de forma sencilla. Esta versión TUI"))
-    print(dim("  está diseñada para entornos sin interfaz gráfica (SSH, CI, WSL sin X)."))
-    print()
-    print(_hr())
-    print(bold(cyan("  Opciones del Menú Principal:")))
-    print(_hr())
-    print()
-    print(bold("  1. Crear Proyecto"))
-    print("     Crea una nueva estructura de proyecto desde cero. Deberás ingresar:")
-    print("     - Empresa/Publisher: Nombre de la organización")
-    print("     - ID Interno (Slug): Identificador único (ej: mi-app-herramienta)")
-    print("     - Nombre Visible: Nombre que verán los usuarios")
-    print("     - Versión Inicial: Número de versión (ej: 1.0.0)")
-    print("     - Autor: Username de GitHub (obligatorio)")
-    print("     - Plataforma: Windows (Knosthalij), Linux (Danenone) o Multiplataforma")
-    print("     - Sandbox: Protección para evitar que el código sea dañino")
-    print()
-    print(bold("  2. Construir Paquete"))
-    print("     Compila un proyecto existente en un paquete ejecutable. Puedes:")
-    print("     - Seleccionar un proyecto de la lista o ingresar la ruta manualmente")
-    print("     - Elegir el modo: Portable (todo en uno) o Lite (archivo único)")
-    print("     - Especificar la carpeta de salida")
-    print()
-    print(bold("  3. Gestor de Aplicaciones"))
-    print("     Administra tus proyectos existentes. Para cada proyecto puedes:")
-    print("     - Compilar el paquete")
-    print("     - Reparar con MoonFix (para problemas de proyectos)")
-    print("     - Abrir en el explorador de archivos")
-    print("     - Ver detalles del proyecto")
-    print()
-    print(bold("  4. MoonFix — Reparar"))
-    print("     Herramienta de reparación automática para proyectos con problemas.")
-    print("     Opciones disponibles:")
-    print("     - Verificar archivos faltantes")
-    print("     - Actualizar configuraciones antiguas")
-    print("     - Reparar estructura de carpetas")
-    print("     - Verificar dependencias")
-    print()
-    print(bold("  5. Configuración"))
-    print("     Ajusta la configuración global de la aplicación:")
-    print("     - Carpeta de proyectos (donde se guardan los nuevos proyectos)")
-    print("     - Idioma de la interfaz (el que tenga traducción en lang/)")
-    print()
-    print(bold("  6. Acerca de"))
-    print("     Muestra información del sistema y versión de la aplicación.")
+    for _line in tr("tui.help_intro").split("\n"):
+        print(dim("  " + _line))
     print()
     print(_hr())
-    print(bold(cyan("  Comandos de Navegación:")))
+    print(bold(cyan("  " + tr("tui.help_menu_options"))))
     print(_hr())
     print()
-    print("  - En cualquier menú numerado, presiona [0] para volver")
-    print("  - Presiona [Enter] para confirmar selecciones")
-    print("  - Puedes usar [Ctrl+C] en cualquier momento para cancelar")
-    print()
-    print(_hr())
-    print(bold(cyan("  Modos de Ejecución:")))
-    print(_hr())
-    print()
-    print("  GUI (Interfaz Gráfica):")
-    print("    python packagemaker.py")
-    print()
-    print("  TUI (Terminal):")
-    print("    python packagemaker.py --tui")
-    print()
-    print("  Headless (sin GUI ni TUI):")
-    print("    python packagemaker.py create /ruta/proyecto --name MiApp --author usuario")
-    print("    python packagemaker.py compile /ruta/proyecto --output ./dist --headless")
-    print()
-    print(_hr())
-    print(bold(cyan("  Recursos Adicionales:")))
-    print(_hr())
-    print()
-    print("  - Documentación: https://github.com/Influent-PackageMaker")
-    print("  - Repositorio: https://github.com/JesusQuijada34/packagemaker")
+    for _line in tr("tui.help_body").split("\n"):
+        if not _line:
+            print()
+        elif _line.startswith("  ") and _line.strip()[0].isdigit():
+            print(bold(_line))
+        else:
+            print(_line)
     print()
     _pause()
 
@@ -872,13 +812,13 @@ def _screen_help() -> None:
 # ─── Menú principal ───────────────────────────────────────────────────────────
 
 _MAIN_MENU = [
-    ("Crear Proyecto",        _screen_create),
-    ("Construir Paquete",     _screen_build),
-    ("Gestor de Aplicaciones",_screen_manager),
-    ("MoonFix — Reparar",     _screen_moonfix),
-    ("Configuración",         _screen_config),
-    ("Acerca de",             _screen_about),
-    ("Ayuda",                 _screen_help),
+    ("tui.menu_create",  _screen_create),
+    ("tui.menu_build",   _screen_build),
+    ("tui.menu_manager", _screen_manager),
+    ("tui.menu_moonfix", _screen_moonfix),
+    ("tui.menu_config",  _screen_config),
+    ("tui.menu_about",   _screen_about),
+    ("tui.menu_help",    _screen_help),
 ]
 
 
@@ -890,24 +830,24 @@ def run_tui() -> None:
     while True:
         _clear()
         _banner()
-        print(bold(white("  Menú Principal")))
+        print(bold(white("  " + tr("tui.main_menu"))))
         print(_hr())
         for i, (label, _) in enumerate(_MAIN_MENU, 1):
-            print(f"  {bold(orange(str(i)))}  {label}")
-        print(f"  {bold('0')}  {dim('Salir')}")
-        print(f"  {dim('q')}  {dim('Salir sin confirmar')}")
+            print(f"  {bold(orange(str(i)))}  {tr(label)}")
+        print(f"  {bold('0')}  {dim(tr('tui.exit'))}")
+        print(f"  {dim('q')}  {dim(tr('tui.exit_no_confirm'))}")
         print(_hr())
 
-        choice = _select_menu("Opción", allow_back=True)
+        choice = _select_menu(tr("tui.option"), allow_back=True)
 
         if choice == 0 or choice == -1:
             _clear()
-            print(f"\n  {orange('Hasta pronto.')}\n")
+            print(f"\n  {orange(tr('tui.bye'))}\n")
             sys.exit(0)
         if 1 <= choice <= len(_MAIN_MENU):
             _, fn = _MAIN_MENU[choice - 1]
             try:
                 fn()
             except KeyboardInterrupt:
-                _warn("Acción cancelada.")
+                _warn(tr("tui.action_cancelled"))
                 _pause()

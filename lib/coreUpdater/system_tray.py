@@ -20,6 +20,12 @@ except ImportError:
     class QColor: pass
     class QAction: pass
 
+try:
+    from lib.i18n import tr
+except Exception:  # pragma: no cover - i18n siempre disponible en la app
+    def tr(text, *args, **kwargs):
+        return text
+
 # --- GLOBAL VARIABLES FOR SYSTEM TRAY ---
 _tray_icon = None
 _updater_window = None
@@ -35,17 +41,17 @@ class SystemTrayIcon(QSystemTrayIcon):
         # Create context menu
         menu = QMenu()
         
-        show_action = QAction("Mostrar", self)
+        show_action = QAction(tr("tray.show"), self)
         show_action.triggered.connect(self.show_window)
         menu.addAction(show_action)
         
-        hide_action = QAction("Ocultar", self)
+        hide_action = QAction(tr("tray.hide"), self)
         hide_action.triggered.connect(self.hide_window)
         menu.addAction(hide_action)
         
         menu.addSeparator()
         
-        quit_action = QAction("Salir", self)
+        quit_action = QAction(tr("tray.quit"), self)
         quit_action.triggered.connect(self.quit_app)
         menu.addAction(quit_action)
         

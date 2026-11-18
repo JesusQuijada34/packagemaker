@@ -134,13 +134,13 @@ class FlangCompiler:
             return None
         scripts = build.get("scripts")
         if not isinstance(scripts, list) or not scripts:
-            self.last_error = "config/settings.json debe declarar build.scripts como una lista no vacía."
+            self.last_error = tr("build_log.err_scripts_config")
             self.log(f"[ERROR] {self.last_error}")
             return []
         normalized = []
         for script in scripts:
             if not isinstance(script, str) or not script or any(char in script for char in "/\\") or script != Path(script).stem:
-                self.last_error = "build.scripts contiene un nombre de script no seguro."
+                self.last_error = tr("build_log.err_unsafe_script")
                 self.log(f"[ERROR] {self.last_error}")
                 return []
             normalized.append(script)
@@ -321,7 +321,7 @@ class FlangCompiler:
                     icon_name = icon_path.name if icon_path else 'None'
                     self.log(f"[INFO] Secondary script: {file.name} | Icon: {icon_name}")
         if not self.scripts:
-            self.last_error = "No se encontraron scripts .py para compilar en el proyecto."
+            self.last_error = tr("build_log.err_no_py_scripts")
             self.log("[ERROR] " + tr("build_log.no_scripts"))
         return len(self.scripts) > 0
 
@@ -336,23 +336,20 @@ class FlangCompiler:
 
     def compile_binaries(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):
-            self.last_error = (
-                f"La plataforma del proyecto ({self.platform_type}) no permite "
-                f"compilar para {target_platform}."
+            self.last_error = tr("build_log.err_platform_compile").format(
+                platform_type=self.platform_type, target=target_platform
             )
             self.log(f"[ERROR] {self.last_error}")
             return False
         if target_platform == "Windows" and self.current_platform != "Windows":
-            self.last_error = (
-                f"No se puede compilar para Windows desde {self.current_platform}; "
-                "se requiere un runner Windows."
+            self.last_error = tr("build_log.err_cross_windows").format(
+                current=self.current_platform
             )
             self.log(f"[ERROR] {self.last_error}")
             return False
         if target_platform == "Linux" and self.current_platform != "Linux":
-            self.last_error = (
-                f"No se puede compilar para Linux desde {self.current_platform}; "
-                "se requiere un runner Linux."
+            self.last_error = tr("build_log.err_cross_linux").format(
+                current=self.current_platform
             )
             self.log(f"[ERROR] {self.last_error}")
             return False
@@ -463,7 +460,7 @@ class FlangCompiler:
                         pass
                 self.log("[OK] " + tr("build_log.compiled_ok").format(name=script_name))
                 return True
-            self.last_error = backend.last_error or "El compilador no generó el binario esperado."
+            self.last_error = backend.last_error or tr("build_log.err_no_binary")
             self.log(f"[ERROR] {self.last_error}")
             return False
         except Exception as e:
@@ -478,9 +475,8 @@ class FlangCompiler:
 
     def create_package(self, target_platform: str) -> bool:
         if not self.should_compile_for_platform(target_platform):
-            self.last_error = (
-                f"La plataforma del proyecto ({self.platform_type}) no permite "
-                f"crear un paquete para {target_platform}."
+            self.last_error = tr("build_log.err_platform_package").format(
+                platform_type=self.platform_type, target=target_platform
             )
             self.log(f"[ERROR] {self.last_error}")
             return False
@@ -516,9 +512,8 @@ class FlangCompiler:
         if missing_binaries:
             self.log(f"[DEBUG] Binarios faltantes: {missing_binaries}")
         if not expected_binaries or missing_binaries:
-            self.last_error = (
-                f"El paquete para {target_platform} no contiene todos los binarios "
-                "compilados esperados."
+            self.last_error = tr("build_log.err_missing_binaries").format(
+                target=target_platform
             )
             self.log(f"[ERROR] {self.last_error}")
             shutil.rmtree(package_path, ignore_errors=True)
@@ -690,7 +685,7 @@ class FlangCompiler:
 
             report = iflapp_format.verify_iflapp(output_file, signing_key=self.signing_key)
             if report.get("file_count", 0) <= 0:
-                self.last_error = "El contenedor .iflapp generado está vacío."
+                self.last_error = tr("build_log.err_empty_container")
                 self.log(f"[ERROR] {self.last_error}")
                 output_file.unlink(missing_ok=True)
                 return False
@@ -698,7 +693,7 @@ class FlangCompiler:
             header = iflapp_format.read_iflapp_header(output_file, include_blobs=False)
             names = {entry["path"] for entry in header.manifest}
             if "details.xml" not in names:
-                self.last_error = "El archivo .iflapp no contiene details.xml."
+                self.last_error = tr("build_log.err_no_details")
                 self.log(f"[ERROR] {self.last_error}")
                 output_file.unlink(missing_ok=True)
                 return False
@@ -911,11 +906,8 @@ class FlangCompiler:
         if not platforms_to_compile:
             # Knosthalij sólo se compila en Windows y Danenone sólo en Linux;
             # AlphaCube (multiplataforma) usa el sistema operativo anfitrión.
-            self.last_error = (
-                f"El proyecto está marcado como {self.platform_type}, que no se puede "
-                f"compilar en {self.current_platform}. "
-                "Compílalo en su sistema operativo nativo o marca el proyecto como "
-                "AlphaCube (multiplataforma)."
+            self.last_error = tr("build_log.err_marked_platform").format(
+                platform_type=self.platform_type, current=self.current_platform
             )
             self.log(f"[ERROR] {self.last_error}")
             return None
@@ -924,12 +916,14 @@ class FlangCompiler:
             self._compile_mexf_if_present()
             for platform_name in platforms_to_compile:
                 self._record_procedure(
-                    f"Compilar binarios para {platform_name} "
-                    f"({', '.join(script['name'] for script in self.scripts)})"
+                    tr("build_log.proc_compile").format(
+                        platform=platform_name,
+                        scripts=", ".join(script['name'] for script in self.scripts),
+                    )
                 )
                 if not self.compile_binaries(platform_name):
                     return None
-                self._record_procedure(f"Construir la carpeta de paquete ({platform_name})")
+                self._record_procedure(tr("build_log.proc_package_folder").format(platform=platform_name))
                 if not self.create_package(platform_name):
                     return None
                 platform_suffix = "Knosthalij" if platform_name == "Windows" else "Danenone"
@@ -946,7 +940,9 @@ class FlangCompiler:
                 # Blindaje opcional del árbol de paquete antes de empaquetar.
                 if self.hardening_methods:
                     self._record_procedure(
-                        f"Aplicar blindaje ({', '.join(self.hardening_methods)})"
+                        tr("build_log.proc_hardening").format(
+                            methods=", ".join(self.hardening_methods)
+                        )
                     )
                     self.apply_hardening(last_package_path)
                 
@@ -959,19 +955,19 @@ class FlangCompiler:
                 iflapp_path = self.output_path / iflapp_name
                 
                 self._record_procedure(
-                    f"Comprimir a .iflapp v2 (cabecera + payload firmado): {iflapp_name}"
+                    tr("build_log.proc_compress").format(name=iflapp_name)
                 )
                 if self.compress_to_iflapp(last_package_path, iflapp_path):
                     final_iflapp = iflapp_path
                     self.log(f"[SUCCESS] Package created: {iflapp_path}")
                     # Verificar el contenedor en el sandbox antes de publicarlo.
-                    self._record_procedure("Verificar el .iflapp en el sandbox aislado")
+                    self._record_procedure(tr("build_log.proc_verify"))
                     self.verify_in_sandbox(iflapp_path)
                     if self.build_dropper:
-                        self._record_procedure("Generar dropper .run autoextraíble")
+                        self._record_procedure(tr("build_log.proc_dropper"))
                         self.create_dropper(iflapp_path)
                     # Limpiar la carpeta temporal y el proyecto fuente tras validar el .iflapp.
-                    self._record_procedure("Limpiar artefactos temporales y carpeta de paquete")
+                    self._record_procedure(tr("build_log.proc_cleanup"))
                     self._cleanup_package_folder(last_package_path, iflapp_path)
                     self.cleanup_processed_project(iflapp_path)
         finally:
@@ -979,7 +975,7 @@ class FlangCompiler:
             self._cleanup_build_artifacts()
             
         if final_iflapp is not None:
-            self._record_procedure("Procedimiento completado")
+            self._record_procedure(tr("build_log.proc_done"))
             self.log(tr("build_log.procedure_header"))
             for index, step in enumerate(self.procedure, 1):
                 self.log(f"  {index}. {step}")
@@ -1018,30 +1014,30 @@ class BuildThread(QThread):
         self.build_dropper = build_dropper
         self.hardening = list(hardening) if hardening else []
         self.curiosity_phrases = [
-            "Sabias que el primer error de software fue causado por una polilla real atrapada en una computadora?",
-            "Sabias que Python lleva el nombre de la serie de television Monty Python's Flying Circus?",
-            "Sabias que el modo oscuro consume menos energia en pantallas OLED?",
-            "Sabias que el codigo de la mision Apolo 11 contenia chistes escondidos?",
-            "Sabias que 'Hello World' se convirtio en tradicion gracias a Brian Kernighan?",
-            "Sabias que el primer lenguaje de programacion fue creado por Ada Lovelace?",
-            "Sabias que el 90% del codigo de los coches modernos es software?",
-            "Sabias que Linux esta presente en el 100% de las 500 supercomputadoras mas potentes?",
-            "Sabias que el primer dominio registrado fue symbolics.com en 1985?",
-            "Sabias que se estima que hay mas de 20 millones de desarrolladores en el mundo?"
+            tr("build_log.curiosity_1"),
+            tr("build_log.curiosity_2"),
+            tr("build_log.curiosity_3"),
+            tr("build_log.curiosity_4"),
+            tr("build_log.curiosity_5"),
+            tr("build_log.curiosity_6"),
+            tr("build_log.curiosity_7"),
+            tr("build_log.curiosity_8"),
+            tr("build_log.curiosity_9"),
+            tr("build_log.curiosity_10"),
         ]
         self._curiosity_timer = None
 
     def emit_random_curiosity(self):
         import random
         phrase = random.choice(self.curiosity_phrases)
-        self.progress.emit(f"Curiosidad: {phrase}")
+        self.progress.emit(f"{tr('build_log.curiosity_prefix')}: {phrase}")
 
     def run(self):
         self.emit_random_curiosity()
         if self.custom_path:
             repo_path = Path(self.custom_path)
             if not repo_path.exists():
-                self.error.emit(f"No se encontró la carpeta personalizada: {self.custom_path}")
+                self.error.emit(tr("build_log.err_custom_path").format(path=self.custom_path))
                 return
         else:
             base_dir = Path(self.base_dir or Path.cwd())
@@ -1053,9 +1049,11 @@ class BuildThread(QThread):
             )
             if repo_path is None:
                 self.error.emit(
-                    f"No se encontró ningún proyecto de {self.empresa}.{self.nombre} "
-                    f"en {base_dir}.\n\nProyectos disponibles:\n"
-                    f"{describe_available(base_dir)}"
+                    tr("build_log.err_project_not_found").format(
+                        app=f"{self.empresa}.{self.nombre}",
+                        base=base_dir,
+                        available=describe_available(base_dir),
+                    )
                 )
                 return
         compiler = FlangCompiler(
@@ -1077,7 +1075,7 @@ class BuildThread(QThread):
                 summary += f"\n\nProcedimiento detrás del .iflapp:\n{steps}"
             self.finished.emit(summary)
         else:
-            error_message = compiler.last_error or "Fallo la compilacion. Verifique los logs y los iconos .ico"
+            error_message = compiler.last_error or tr("build_log.fail_generic")
             self.error.emit(error_message)
 
     def handle_compiler_log(self, msg):
@@ -1086,5 +1084,5 @@ class BuildThread(QThread):
             self._last_phrase_time = time.time()
         if time.time() - self._last_phrase_time > 8:
             import random
-            self.progress.emit(f"Curiosidad: {random.choice(self.curiosity_phrases)}")
+            self.progress.emit(f"{tr('build_log.curiosity_prefix')}: {random.choice(self.curiosity_phrases)}")
             self._last_phrase_time = time.time()

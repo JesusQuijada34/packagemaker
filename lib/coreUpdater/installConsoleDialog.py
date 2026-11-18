@@ -5,6 +5,7 @@ Consola aparte para registro/debug de compilación e instalación.
 """
 
 import sys
+from lib.i18n import tr
 try:
     from PyQt6.QtCore import Qt
     from PyQt6.QtWidgets import (
@@ -88,7 +89,7 @@ class InstallConsoleDialog(QDialog):
         content_layout.setSpacing(0)
         
         # Title bar
-        self.titlebar = CustomTitleBar(self, title="Progreso de Instalación", icon="")
+        self.titlebar = CustomTitleBar(self, title=tr("install_console.title"), icon="")
         content_layout.addWidget(self.titlebar)
         
         # Área de log
@@ -161,7 +162,7 @@ class InstallConsoleDialog(QDialog):
         
         btn_layout.addStretch()
 
-        self.btn_close = QPushButton("Cerrar")
+        self.btn_close = QPushButton(tr("install_console.close"))
         self.btn_close.setFixedHeight(32)
         self.btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_close.clicked.connect(self.accept)

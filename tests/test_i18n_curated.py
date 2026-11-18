@@ -56,6 +56,19 @@ _IDENTICAL_BY_DESIGN = {
     "dialog.project_info",
     "dialog.folder_info",
     "editor.project_header_value",
+    # Etiquetas de la TUI que son la misma palabra en varios idiomas
+    # (Action/Option/Mode/Version/App) o nombres de plataforma canónicos.
+    "tui.action",
+    "tui.actions",
+    "tui.app_col",
+    "tui.mode",
+    "tui.mode_col",
+    "tui.option",
+    "tui.platform_col",
+    "tui.platform_linux",
+    "tui.platform_windows",
+    "tui.version_col",
+    "tui.help_title",
 }
 
 _NON_ENGLISH = ["fr", "de", "it", "pt", "nl", "pl", "tr", "ru", "ja", "ko", "zh", "ar"]

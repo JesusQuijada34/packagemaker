@@ -180,15 +180,15 @@ def main():
     from lib.asksome_format import AsksomeError, verify_asksome
 
     if not ARTIFACT.is_file():
-        print(f"[syntax] falta el artefacto: {{ARTIFACT}}", file=sys.stderr)
+        print(f"[syntax] missing artifact: {{ARTIFACT}}", file=sys.stderr)
         return 1
     try:
         header = verify_asksome(ARTIFACT)
     except AsksomeError as exc:
-        print(f"[syntax] cabecera inválida: {{exc}}", file=sys.stderr)
+        print(f"[syntax] invalid header: {{exc}}", file=sys.stderr)
         return 1
     modules = header.get("metadata", {{}}).get("modules", [])
-    print(f"[syntax] OK {{len(modules)}} módulo(s): {{', '.join(modules)}}")
+    print(f"[syntax] OK {{len(modules)}} module(s): {{', '.join(modules)}}")
     return 0
 
 
@@ -213,13 +213,13 @@ EXPECTED_PLATFORM = {platform!r}
 def main():
     from lib.asksome_format import verify_asksome
 
-    print(f"[env] python {{sys.version.split()[0]}} en {{platform.system()}}")
+    print(f"[env] python {{sys.version.split()[0]}} on {{platform.system()}}")
     header = verify_asksome(ARTIFACT)
     declared = header.get("metadata", {{}}).get("platform", "")
     if EXPECTED_PLATFORM and declared != EXPECTED_PLATFORM:
-        print(f"[env] plataforma declarada {{declared}} != {{EXPECTED_PLATFORM}}", file=sys.stderr)
+        print(f"[env] declared platform {{declared}} != {{EXPECTED_PLATFORM}}", file=sys.stderr)
         return 1
-    print(f"[env] OK plataforma {{declared}}")
+    print(f"[env] OK platform {{declared}}")
     return 0
 
 
