@@ -22,16 +22,14 @@
     "moonfix": "MoonFix",
     "about": "حول",
     "toggle_expand": "Expand menu (Ctrl+B)",
-    "toggle_collapse": "Hide menu (Ctrl+B)",
-    "ide": "بيئة تطوير المشاريع"
+    "toggle_collapse": "Hide menu (Ctrl+B)"
   },
   "sidebar_desc": {
     "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
     "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
     "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
     "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**.",
-    "6": "### بيئة تطوير المشاريع\nمحرر مرئي لمشاريع `iflapp`: افتح المجلد، وحرر السكربتات، وترجم باستخدام الواجهة الخلفية المختارة، وصحّح سطرًا بسطر مع نقاط التوقف."
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
   },
   "config": {
     "title": "الإعدادات",

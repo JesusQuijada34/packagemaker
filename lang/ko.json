@@ -22,16 +22,14 @@
     "moonfix": "MoonFix",
     "about": "정보",
     "toggle_expand": "Expand menu (Ctrl+B)",
-    "toggle_collapse": "Hide menu (Ctrl+B)",
-    "ide": "프로젝트 IDE"
+    "toggle_collapse": "Hide menu (Ctrl+B)"
   },
   "sidebar_desc": {
     "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
     "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
     "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
     "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**.",
-    "6": "### 프로젝트 IDE\n`iflapp` 프로젝트용 시각적 편집기: 폴더를 열고 스크립트를 편집하며 선택한 백엔드로 컴파일하고 중단점으로 줄 단위로 디버그합니다."
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
   },
   "config": {
     "title": "설정",

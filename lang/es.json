@@ -22,16 +22,14 @@
     "moonfix": "MoonFix",
     "about": "Acerca de",
     "toggle_expand": "Expandir menú (Ctrl+B)",
-    "toggle_collapse": "Ocultar menú (Ctrl+B)",
-    "ide": "IDE de Proyectos"
+    "toggle_collapse": "Ocultar menú (Ctrl+B)"
   },
   "sidebar_desc": {
     "0": "### Crear Proyecto\nDiseña aplicaciones desde cero. Establece identidades únicas, versiones y metadatos para el ecosistema **Influent OS** de forma guiada.",
     "1": "### Construir Paquete\nEmpaqueta tu trabajo. Transforma carpetas de desarrollo en archivos `.iflapp` comprimidos y listos para su distribución global.",
     "3": "### Configuración\nAjusta el motor del programa. Controla rutas, idioma, apariencia y opciones guardadas en data/pm.data.",
     "4": "### MoonFix Suite\nSanación profunda. Escanea, detecta y repara inconsistencias en tus paquetes. Asegura que cada asset y etiqueta XML sea perfecta.",
-    "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**.",
-    "6": "### IDE de Proyectos\nEditor visual de proyectos `iflapp`: abre la carpeta, edita los guiones, compila con el backend que elijas y depura línea a línea con puntos de ruptura."
+    "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**."
   },
   "config": {
     "title": "Configuración",
