@@ -7,6 +7,7 @@ from lib import qss_loader
 from lib.design_tokens import (
     ACCENT,
     BORDER,
+    BUTTON_HEIGHT,
     BUTTON_PADDING_H,
     CARD_RADIUS,
     CONTENT_BG,
@@ -434,6 +435,8 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
         "FONT_STACK": FONT_STACK,
         "CONTROL_RADIUS": CONTROL_RADIUS,
         "PILL_RADIUS": PILL_RADIUS,
+        "INPUT_MIN_HEIGHT": INPUT_HEIGHT - 2,
+        "BUTTON_HEIGHT": BUTTON_HEIGHT,
     }
     return "\n".join(
         [
@@ -465,6 +468,48 @@ def splash_titlebar_stylesheet():
             background: transparent;
         }
     """
+
+
+def titlebar_chrome_stylesheet(base_bg: str) -> str:
+    """Fondo del chrome de la titlebar personalizada según el tema.
+
+    Centraliza el QSS que antes se escribía en línea al reaplicar el tema, para
+    que la titlebar siga la paleta sin literales repartidos por la ventana.
+    """
+    return (
+        f"QWidget {{ background-color:{base_bg}; border:none; }}"
+        " QLabel { background:transparent; border:none; }"
+    )
+
+
+def titlebar_label_stylesheet(text_col: str) -> str:
+    """Texto del título de la titlebar según el tema."""
+    return (
+        f"background:transparent; color:{text_col};"
+        f" font-family:{FONT_STACK}; font-weight:600;"
+    )
+
+
+def status_bar_stylesheet() -> str:
+    """Barra de estado oscura y translúcida, sin literal en la ventana."""
+    return (
+        "QStatusBar{background:rgba(255,255,255,0.04);color:#c7ced8;"
+        "border-top:1px solid rgba(255,255,255,0.08);font-size:12px;"
+        "padding:2px 10px;} QStatusBar::item{border:none;}"
+    )
+
+
+def transparent_logo_stylesheet() -> str:
+    """Marco transparente con relleno para el logo con sombra."""
+    return "background: transparent; border: none; padding: 6px;"
+
+
+def splash_container_stylesheet(accent: str = ACCENT) -> str:
+    """Fondo de acento del splash integrado, como plantilla parametrizada."""
+    return (
+        f"QWidget#SplashContainer {{ background-color:{accent};"
+        " border-radius: 0px; }"
+    )
 
 
 def conf_field_stylesheet(readonly=False):
@@ -612,6 +657,7 @@ def applyget(accent: str, dark: bool = True) -> str:
         "BUTTON_PADDING_H": BUTTON_PADDING_H,
         "INPUT_PADDING": INPUT_PADDING,
         "INPUT_MIN_HEIGHT": INPUT_HEIGHT - 2,
+        "BUTTON_HEIGHT": BUTTON_HEIGHT,
         "TEXT_DIM": TEXT_DIM,
     }
     parts = [

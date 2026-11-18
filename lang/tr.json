@@ -132,7 +132,8 @@
     "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
     "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
     "downloading_icon": "Downloading icon...",
-    "project_created": "Project created in: {folder}/ (sha256: {sha256})"
+    "project_created": "Project created in: {folder}/ (sha256: {sha256})",
+    "form.author_placeholder": "GitHub'a giriş yapın"
   },
   "common": {
     "cancel": "İptal",
@@ -271,10 +272,10 @@
     "compilation_error": "Compilation error",
     "compiler_default": "Nuitka (default)",
     "progress_building": "Building...",
-    "engine": "Motor de compilación:",
-    "engine_tooltip": "Elige el motor explícitamente: FlatCube v1 (legacy) o BlindCube v2 (estándar)",
-    "engine_required": "Debes seleccionar un motor de compilación antes de compilar.",
-    "engine_legacy_warning": "FlatCube v1 es legacy y no recibe soporte. Se recomienda BlindCube v2.",
+    "engine": "Derleme motoru:",
+    "engine_tooltip": "Motoru açıkça seçin: FlatCube v1 (legacy) veya BlindCube v2 (standart)",
+    "engine_required": "Derlemeden önce bir derleme motoru seçmelisiniz.",
+    "engine_legacy_warning": "FlatCube v1 legacy'dir ve desteklenmez. BlindCube v2 önerilir.",
     "engine_legacy": "Legacy"
   },
   "window": {
@@ -334,15 +335,15 @@
     "save_as": ".asksome farklı kaydet",
     "compile_failed": "Derleme başarısız: {error}",
     "compiled": "Oluşturuldu: {path}",
-    "breakpoint": "Comando:",
-    "toggle_break": "Punto de ruptura",
-    "step": "Paso",
-    "resume": "Continuar",
-    "stop": "Detener",
-    "break_on": "Punto de ruptura activado",
-    "break_off": "Punto de ruptura desactivado",
-    "debug_finished": "Depuración finalizada",
-    "debug_stopped": "Depuración detenida"
+    "breakpoint": "Komut:",
+    "toggle_break": "Kesme noktası",
+    "step": "Adım",
+    "resume": "Devam et",
+    "stop": "Durdur",
+    "break_on": "Kesme noktası ayarlandı",
+    "break_off": "Kesme noktası kaldırıldı",
+    "debug_finished": "Hata ayıklama tamamlandı",
+    "debug_stopped": "Hata ayıklama durduruldu"
   },
   "github": {
     "sign_in": "Giriş yap",
@@ -353,18 +354,18 @@
     "token_saved": "Belirteç kaydedildi",
     "invalid": "Geçersiz belirteç",
     "signed_by": "İmzalayan",
-    "landing_prompt": "Conecta tu cuenta para continuar",
-    "landing_token_placeholder": "Token personal de GitHub",
-    "landing_token_hint": "El token se guarda como credencial local y nunca se muestra en pantalla",
-    "landing_starting": "Iniciando sesión",
-    "welcome": "Bienvenido {name}…",
-    "profile": "Ver perfil de GitHub",
-    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}",
-    "landing_title": "Sign in with GitHub",
-    "landing_subtitle": "Connect your account to sign and publish your packages",
-    "landing_username_placeholder": "GitHub username (optional)",
-    "landing_token_required": "Enter your GitHub personal token",
-    "landing_mismatch": "The token belongs to {actual}, not {expected}"
+    "landing_prompt": "Devam etmek için hesabınızı bağlayın",
+    "landing_token_placeholder": "Kişisel GitHub belirteci",
+    "landing_token_hint": "Belirteç yerel kimlik bilgisi olarak saklanır ve ekranda hiçbir zaman gösterilmez",
+    "landing_starting": "Oturum açılıyor",
+    "welcome": "Hoş geldiniz {name}…",
+    "profile": "GitHub profilini görüntüle",
+    "profile_details": "@{login}\nAd: {name}\nE-posta: {email}\nGenel depolar: {repos}\nProfil: {url}",
+    "landing_title": "GitHub ile oturum aç",
+    "landing_subtitle": "Paketlerinizi imzalamak ve yayımlamak için hesabınızı bağlayın",
+    "landing_username_placeholder": "GitHub kullanıcı adı (isteğe bağlı)",
+    "landing_token_required": "Kişisel GitHub belirtecinizi girin",
+    "landing_mismatch": "Belirteç {expected} değil {actual} hesabına ait"
   },
   "iflapp_ide": {
     "title": "iflapp Project IDE",
@@ -387,8 +388,8 @@
     "no_stops": "No stops recorded.",
     "break_on": "Breakpoint at line {line}.",
     "break_off": "Breakpoint removed at line {line}.",
-    "open_with": "Abrir con…",
-    "open_with_hint": "Abrir el proyecto seleccionado con el diálogo de Package Maker",
-    "opened_with": "Proyecto abierto con Package Maker."
+    "open_with": "Şununla aç…",
+    "open_with_hint": "Seçili projeyi Package Maker iletişim kutusuyla aç",
+    "opened_with": "Proje Package Maker ile açıldı."
   }
 }

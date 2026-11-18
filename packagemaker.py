@@ -31,7 +31,7 @@ try:
     )
     from PyQt6.QtGui import QFont, QIcon, QColor
     from PyQt6.QtGui import QPixmap
-    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QPropertyAnimation, QEasingCurve
+    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QPoint, QPropertyAnimation, QEasingCurve
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -77,6 +77,8 @@ except ImportError:
         def showMessage(self, *args, **kwargs): pass
     class QColor:
         def __init__(self, *args, **kwargs): pass
+    class QPoint:
+        def __init__(self, *args, **kwargs): pass
     class Qt:
         class WindowType: pass
         class WidgetAttribute: pass
@@ -90,10 +92,6 @@ except ImportError:
         class Modifier: pass
         class MouseButton: pass
 import requests
-try:
-    import winreg
-except ImportError:
-    winreg = None
 
 try:
     from leviathan_ui import InmersiveSplash, LightsOff, WipeWindow, LeviathanProgressBar, CustomTitleBar
@@ -235,11 +233,6 @@ def get_accent_color():
     return "#0078D4"
 
 
-# Updater - usar coreUpdater si está disponible, sino fallback a lib.Updater
-try:
-    pass
-except ImportError:
-    pass
 from lib.BuildThread import BuildThread
 from lib.app_icons import get_icon, icon_button
 from lib.window_chrome import (
@@ -254,7 +247,6 @@ from lib.uwp_animations import play_bounce_down_close
 from lib.page_action_bar import install_page_action_bar, make_action_button, make_icon_button
 from lib.design_tokens import (
     CONTENT_PADDING,
-    FONT_STACK,
     INPUT_HEIGHT,
     SIDEBAR_ITEM_HEIGHT,
     SIDEBAR_PADDING,
@@ -293,7 +285,12 @@ from lib.fluent_theme import (
     sidebar_button_stylesheet,
     sidebar_stylesheet,
     set_qss,
+    splash_container_stylesheet,
+    status_bar_stylesheet,
     system_theme_mode,
+    titlebar_chrome_stylesheet,
+    titlebar_label_stylesheet,
+    transparent_logo_stylesheet,
 )
 from lib.qml_animations import animate_property
 
@@ -307,16 +304,6 @@ if not hasattr(LeviathanProgressBar, 'setValue'):
     def set_value_patch(self, val):
         self.value = val
     LeviathanProgressBar.setValue = set_value_patch
-# The following block handles platform-specific imports.
-# The warning about 'pyi_splash' is expected only when running as a PyInstaller .exe.
-# It's safe to ignore in regular Python editors; it's only meaningful when sys.frozen is set.
-
-if sys.platform.startswith("win"):
-    try:
-        import winreg
-    except ImportError:
-        winreg = None
-
 def _register_bundled_fonts():
     """Registra en Qt las fuentes descargadas en ``data/fonts``.
 
@@ -328,7 +315,7 @@ def _register_bundled_fonts():
 
         return load_cached_fonts()
     except Exception as exc:  # pragma: no cover - la UI no debe caer por fuentes
-        print(f"[FONT] No se pudieron registrar las fuentes: {exc}")
+        print(f"[FONT] Could not register fonts: {exc}")
         return {}
 
 
@@ -453,9 +440,8 @@ if sys.platform.startswith("linux"):
 else:
     IPM_ICON_PATH = os.path.join("app", "app-icon.ico")
 
-# Fondo difuminado del landing de acceso y duración del splash integrado.
+# Fondo difuminado del landing de acceso.
 LOGIN_BACKGROUND = os.path.join("assets", "login.jpg")
-SPLASH_DURATION_MS = 5000
 DEFAULT_FOLDERS = "app,assets,config,docs,source,lib"
 CONFIG_DIR = os.path.join(os.getcwd(), "config")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "settings.json")
@@ -495,11 +481,11 @@ Fluthin_APPS = APP_CONFIG.get("Fluthin_APPS", _PLATFORM_FLUTHIN_APPS) or _PLATFO
 try:
     os.makedirs(BASE_DIR, exist_ok=True)
     os.makedirs(Fluthin_APPS, exist_ok=True)
-    print(f"[PackageMaker] Plataforma detectada: {linkedsys}")
+    print(f"[PackageMaker] Platform detected: {linkedsys}")
     print(f"[PackageMaker] BASE_DIR: {BASE_DIR}")
     print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}")
 except OSError as e:
-    print(f"[PackageMaker] ADVERTENCIA: No se pudo crear directorio {BASE_DIR}: {e}")
+    print(f"[PackageMaker] WARNING: could not create directory {BASE_DIR}: {e}")
     # Intentar con directorio alternativo
     alt_dir = os.path.expanduser("~")
     BASE_DIR = os.path.join(alt_dir, "PackageMaker", "Projects")
@@ -507,9 +493,9 @@ except OSError as e:
     try:
         os.makedirs(BASE_DIR, exist_ok=True)
         os.makedirs(Fluthin_APPS, exist_ok=True)
-        print(f"[PackageMaker] Usando directorio alternativo: {BASE_DIR}")
+        print(f"[PackageMaker] Using fallback directory: {BASE_DIR}")
     except OSError as e2:
-        print(f"[PackageMaker] ERROR: No se pudo crear directorio alternativo: {e2}")
+        print(f"[PackageMaker] ERROR: could not create fallback directory: {e2}")
 
 def save_app_config(config):
     store = get_pm_data()
@@ -528,28 +514,6 @@ def save_app_config(config):
             store.set_user(key, config[key])
     return store.save()
 
-# Funciones para guardar en registro de Windows
-def save_to_registry(key, value):
-    try:
-        reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\\PackageMaker", 0, winreg.KEY_SET_VALUE)
-        winreg.SetValueEx(reg_key, key, 0, winreg.REG_SZ, str(value))
-        winreg.CloseKey(reg_key)
-        return True
-    except OSError:
-        return False
-
-def load_from_registry(key, default=""):
-    try:
-        reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\\PackageMaker", 0, winreg.KEY_READ)
-        value, _ = winreg.QueryValueEx(reg_key, key)
-        winreg.CloseKey(reg_key)
-        return value
-    except OSError:
-        return default
-
-plataforma = plataforma_platform.capitalize()
-nombre = plataforma_name.capitalize()
-plataforma = f"{plataforma} in {nombre}"
 
 AGE_RATINGS = {
     "project1" : "NO SEGURO!",
@@ -696,7 +660,7 @@ def get_app_version():
                 version = version[1:]  # Remover 'v' del prefijo
             return version
         except Exception as e:
-            print(f"Error leyendo details.xml: {e}")
+            print(f"Error reading details.xml: {e}")
     return "Not available"  # Fallback por defecto
 
 SIDEBAR_DESC_KEYS = {
@@ -739,7 +703,7 @@ class PackageTodoGUI(QMainWindow):
             try:
                 self.setWindowIcon(QtGui.QIcon(icon_to_load))
             except Exception as e:
-                print(f"[WARNING] No se pudo cargar icono: {e}")
+                print(f"[WARNING] Could not load icon: {e}")
         else:
             # Intenta convertir ICO a PNG en Linux si el PNG no existe
             if sys.platform.startswith("linux"):
@@ -748,7 +712,7 @@ class PackageTodoGUI(QMainWindow):
                     if icon_path and os.path.exists(icon_path):
                         self.setWindowIcon(QtGui.QIcon(icon_path))
                 except Exception as e:
-                    print(f"[WARNING] Error al preparar icono en Linux: {e}")
+                    print(f"[WARNING] Error preparing icon on Linux: {e}")
 
         # Central Widget & Main Layoutt
         self.central = QWidget()
@@ -950,11 +914,7 @@ class PackageTodoGUI(QMainWindow):
         self.status_bar = QStatusBar(self)
         self.status_bar.setObjectName("MainStatusBar")
         self.status_bar.setSizeGripEnabled(False)
-        self.status_bar.setStyleSheet(
-            "QStatusBar{background:rgba(255,255,255,0.04);color:#c7ced8;"
-            "border-top:1px solid rgba(255,255,255,0.08);font-size:12px;"
-            "padding:2px 10px;} QStatusBar::item{border:none;}"
-        )
+        self.status_bar.setStyleSheet(status_bar_stylesheet())
         self.v_layout.addWidget(self.status_bar)
         self.reporter = Reporter(
             status_bar=self.status_bar,
@@ -1101,7 +1061,13 @@ class PackageTodoGUI(QMainWindow):
         return super().eventFilter(obj, event)
 
     def animate_startup(self, instant=False):
-        """Posiciona la ventana y anima su opacidad desde el controlador QML."""
+        """Revela la ventana con opacidad y un deslizamiento suave desde abajo.
+
+        Se animan dos propiedades a la vez (``windowOpacity`` y ``pos``) para
+        que la apertura no sea un simple fundido: la ventana entra desplazándose
+        desde la parte inferior hasta su posición centrada. Maximizada o con
+        geometría gestionada por el WM, ``pos`` se ignora silenciosamente.
+        """
         screen_geo = QApplication.primaryScreen().geometry()
         x = (screen_geo.width() - self.width()) // 2
         y = (screen_geo.height() - self.height()) // 2
@@ -1111,16 +1077,20 @@ class PackageTodoGUI(QMainWindow):
             self.setWindowOpacity(1.0)
             return
 
-        self.move(x, y)
+        offset = max(24, int(screen_geo.height() * 0.04))
+        self.move(x, y + offset)
         self.setWindowOpacity(0.0)
-        animate_property(
-            self,
-            "windowOpacity",
-            0.0,
-            1.0,
-            800,
-            QEasingCurve.Type.OutExpo,
-        )
+        try:
+            animate_property(
+                self, "windowOpacity", 0.0, 1.0, 800, QEasingCurve.Type.OutExpo
+            )
+            animate_property(
+                self, "pos", self.pos(), QPoint(x, y), 800, QEasingCurve.Type.OutExpo
+            )
+        except Exception:
+            # Sin controlador de animación, deja la ventana visible y centrada.
+            self.move(x, y)
+            self.setWindowOpacity(1.0)
 
     def setup_touch_gestures(self):
         """Activa los gestos táctiles de navegación (según el ajuste touch_mode)."""
@@ -1246,16 +1216,36 @@ class PackageTodoGUI(QMainWindow):
         self._landing_active = True
         self._set_landing_lock(True)
         landing.lock_to_parent()
+        self._close_splash()
 
     def on_splash_finished(self) -> None:
-        """Tras el splash: restaura la sesión guardada o muestra el landing."""
+        """Compatibilidad: la compuerta de sesión vive en ``start_session_gate``."""
+        self.start_session_gate(None)
+
+    def start_session_gate(self, on_decided=None) -> None:
+        """Compuerta lógica del splash: valida la sesión antes de revelar la UI.
+
+        El splash permanece en primer plano (sin temporizador falso) hasta que
+        se sabe si hay que mostrar el landing de login o entrar directamente al
+        IDE. ``on_decided`` es el cierre del splash y se invoca exactamente una
+        vez, cuando ya se tomó la decisión.
+        """
         from lib import github_identity
 
+        self._splash_closer = on_decided
         token = github_identity.load_token()
         if token:
+            # Sesión guardada: validar en segundo plano con el splash visible.
             QTimer.singleShot(60, lambda: self._resolve_landing_github(token, quiet=True))
         else:
             self.show_github_landing()
+
+    def _close_splash(self) -> None:
+        """Cierra el splash una sola vez, ya decidida la ruta de arranque."""
+        closer = getattr(self, "_splash_closer", None)
+        if closer is not None:
+            self._splash_closer = None
+            closer()
 
     def _landing_github_login(self, username: str, token: str) -> None:
         from lib import github_identity
@@ -1305,6 +1295,7 @@ class PackageTodoGUI(QMainWindow):
         self.github_card.show()
         self._landing_active = False
         self._set_landing_lock(False)
+        self._close_splash()
 
     def _set_landing_lock(self, locked: bool) -> None:
         """Garantiza que nunca se pinte ni se pueda activar otra pestaña.
@@ -1443,12 +1434,9 @@ class PackageTodoGUI(QMainWindow):
 
         if hasattr(self.titlebar, "title_lbl"):
             self.titlebar.title_lbl.setText(self._fixed_title)
-            self.titlebar.setStyleSheet(
-                f"QWidget {{ background-color:{base_bg}; border:none; }}"
-                " QLabel { background:transparent; border:none; }"
-            )
+            self.titlebar.setStyleSheet(titlebar_chrome_stylesheet(base_bg))
             self.titlebar.title_lbl.setStyleSheet(
-                f"background:transparent; color:{text_col}; font-family:{FONT_STACK}; font-weight:600;"
+                titlebar_label_stylesheet(text_col)
             )
 
         for btn in getattr(self, "_sidebar_btn_keys", {}):
@@ -2048,9 +2036,9 @@ class PackageTodoGUI(QMainWindow):
                                f.write(r_icon.content)
                            selected_icon = tmp_icon
                        else:
-                           print(f"[WARNING] No se pudo descargar icono (HTTP {r_icon.status_code})")
+                           print(f"[WARNING] Could not download icon (HTTP {r_icon.status_code})")
                   except Exception as ex_icon:
-                       print(f"Error descargando icono: {ex_icon}")
+                       print(f"Error downloading icon: {ex_icon}")
 
             if selected_icon and os.path.exists(selected_icon):
                 shutil.copy(selected_icon, icon_dest)
@@ -2817,7 +2805,7 @@ class PackageTodoGUI(QMainWindow):
             self.apply_theme()
 
         except Exception as e:
-            print(f"Error actualizando formulario: {e}")
+            print(f"Error updating form: {e}")
 
     def _restart_for_config(self) -> None:
         store = get_pm_data()
@@ -3139,10 +3127,7 @@ class PackageTodoGUI(QMainWindow):
         logo_lbl.setMinimumSize(64, 64)
         logo_lbl.setMaximumSize(128, 128)
         # Sombra suave (UWP) bajo el logo.
-        logo_lbl.setStyleSheet(
-            "background: transparent; border: none; "
-            "padding: 6px;"
-        )
+        logo_lbl.setStyleSheet(transparent_logo_stylesheet())
         shadow = QGraphicsDropShadowEffect(logo_lbl)
         shadow.setBlurRadius(24)
         shadow.setOffset(0, 6)
@@ -3213,7 +3198,7 @@ class PackageTodoGUI(QMainWindow):
 
             QDesktopServices.openUrl(QUrl(url))
         except Exception as exc:
-            print(f"[PackageMaker] No se pudo abrir {url}: {exc}")
+            print(f"[PackageMaker] Could not open {url}: {exc}")
 
 
     # ========================================
@@ -3368,7 +3353,7 @@ class PackageTodoGUI(QMainWindow):
             dialogoCrearProyecto.exec()
 
         except Exception as e:
-            print(f"Error mostrando diálogo de crear proyecto: {e}")
+            print(f"Error showing create-project dialog: {e}")
             LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
 
     def _ejecutarCreacionProyecto(self, rutaBase, nombreProyecto, version, autor, publisher, descripcion, dialogo):
@@ -3536,7 +3521,7 @@ class PackageTodoGUI(QMainWindow):
             dialogoInstalar.exec()
 
         except Exception as e:
-            print(f"Error mostrando diálogo de instalar carpeta: {e}")
+            print(f"Error showing install-folder dialog: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
 
     def _ejecutarInstalacionCarpeta(self, folderPath, progressBar, txtLog, btnInstalar, btnCerrar):
@@ -3734,7 +3719,7 @@ class PackageTodoGUI(QMainWindow):
             dialogoCompilar.exec()
 
         except Exception as e:
-            print(f"Error mostrando diálogo de compilar: {e}")
+            print(f"Error showing build dialog: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
 
     def _ejecutarCompilacion(self, projectPath, compWindows, compKnosthalij, optimizar, progressBar, txtLog, btnCompilar, btnCerrar):
@@ -3901,7 +3886,7 @@ class PackageTodoGUI(QMainWindow):
             dialogoReparar.exec()
 
         except Exception as e:
-            print(f"Error mostrando diálogo de reparar: {e}")
+            print(f"Error showing repair dialog: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
 
     def _ejecutarMoonFix(self, projectPath, checkArchivos, checkConfig, checkEstructura, checkDeps, progressBar, txtLog, btnReparar, btnCerrar):
@@ -4056,7 +4041,7 @@ class PackageTodoGUI(QMainWindow):
             dialogoInstalarPaquete.exec()
 
         except Exception as e:
-            print(f"Error mostrando diálogo de instalar paquete: {e}")
+            print(f"Error showing install-package dialog: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
 
     def _ejecutarInstalacionPaquete(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
@@ -4224,7 +4209,7 @@ class PackageTodoGUI(QMainWindow):
             dialogoInstalarMexf.exec()
 
         except Exception as e:
-            print(f"Error mostrando diálogo de instalar MEXF: {e}")
+            print(f"Error showing install-MEXF dialog: {e}")
             LeviathanDialog.launch(self, "Error", f"Error: {e}", mode="error")
 
     def _ejecutarInstalacionMexf(self, filePath, progressBar, txtLog, btnInstalar, btnCerrar):
@@ -4390,7 +4375,7 @@ class PackageTodoGUI(QMainWindow):
             dialogoCrearMexf.exec()
 
         except Exception as e:
-            print(f"Error mostrando diálogo de crear MEXF: {e}")
+            print(f"Error showing create-MEXF dialog: {e}")
             LeviathanDialog.launch(self, "Error", f"Error mostrando diálogo: {e}", mode="error")
 
     def _ejecutarCreacionMexf(self, folderPath, nombreArchivo, descripcion, dialogo):
@@ -4488,12 +4473,7 @@ class IntegratedSplash(QWidget):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setGeometry(0, 0, parent.width(), parent.height())
-        self.setStyleSheet(f"""
-            QWidget#SplashContainer {{
-                background-color: {self.accent};
-                border-radius: 0px;
-            }}
-        """)
+        self.setStyleSheet(splash_container_stylesheet(self.accent))
 
         container = QWidget(self)
         container.setObjectName("SplashContainer")
@@ -4517,10 +4497,6 @@ class IntegratedSplash(QWidget):
 
         layout.addStretch()
 
-        self.splash_timer = QTimer(self)
-        self.splash_timer.timeout.connect(self._finish_splash)
-        self.splash_timer.setSingleShot(True)
-
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if self.parent:
@@ -4529,10 +4505,18 @@ class IntegratedSplash(QWidget):
             if container:
                 container.setGeometry(0, 0, self.width(), self.height())
 
-    def start(self, delay_ms=5000):
+    def show_splash(self):
+        """Muestra el splash sin temporizador: actúa como compuerta lógica.
+
+        Permanece visible hasta que la validación de sesión decide si hay que
+        revelar el landing o entrar directamente al IDE (``finish``).
+        """
         self.show()
         self.raise_()
-        self.splash_timer.start(delay_ms)
+
+    def finish(self):
+        """Cierra el splash con el desvanecido (lo llama la compuerta de sesión)."""
+        self._finish_splash()
 
     def _finish_splash(self):
         self.fade_anim = QPropertyAnimation(self, b"windowOpacity")
@@ -4624,7 +4608,7 @@ def main():
                     app.setFont(font)
                 window = handle_cli_action(action, data, PackageTodoGUI, **action_options)
             else:
-                print("⚠️ PyQt6 no disponible. Forzando modo TUI...")
+                print("PyQt6 not available. Forcing TUI mode...")
                 from lib.tui import run_tui
                 run_tui()
                 return
@@ -4663,24 +4647,26 @@ def main():
     main_window = PackageTodoGUI()
     main_window.apply_ui_language()
 
-    def on_splash_finished():
-        if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
-            try:
-                importlib.import_module("pyi_splash").close()
-            except (ImportError, OSError):
-                pass
-        # El splash integrado es siempre lo primero; al desvanecerse decide si
-        # restaura la sesión guardada o revela el landing de acceso.
-        main_window.on_splash_finished()
-
-    main_window.show()
+    # El splash es lo primero y actúa como compuerta lógica: sin temporizador
+    # falso, permanece visible hasta que la validación de sesión decide si hay
+    # que revelar el landing o entrar directamente al IDE.
     splash = IntegratedSplash(
         parent=main_window,
         icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
         title="Package Maker",
     )
-    splash.finished.connect(on_splash_finished)
-    splash.start(SPLASH_DURATION_MS)
+
+    def close_splash():
+        if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
+            try:
+                importlib.import_module("pyi_splash").close()
+            except (ImportError, OSError):
+                pass
+        splash.finish()
+
+    main_window.show()
+    splash.show_splash()
+    main_window.start_session_gate(close_splash)
 
     sys.exit(app.exec())
 

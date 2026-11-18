@@ -35,9 +35,13 @@ def test_theme_and_font_have_system_fallbacks():
 
 def test_sidebar_and_titlebar_are_theme_aware_and_transparent():
     text = source("packagemaker.py")
+    theme = source("lib/fluent_theme.py")
     assert "system_theme_mode()" in text
     assert "paletteChanged" in text
     assert "colorSchemeChanged" in text
     assert "sidebar_stylesheet(dark, accent)" in text
     assert "sidebar_button_stylesheet(dark, accent, border_w)" in text
-    assert "background:transparent; color:{text_col}" in text
+    # La titlebar toma su QSS de un helper central, no de un literal en línea.
+    assert "titlebar_label_stylesheet(text_col)" in text
+    assert "titlebar_chrome_stylesheet(base_bg)" in text
+    assert "background:transparent; color:{text_col}" in theme

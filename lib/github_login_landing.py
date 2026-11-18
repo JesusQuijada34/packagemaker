@@ -18,12 +18,21 @@ try:
 except ImportError:  # pragma: no cover
     QWidget = object
 
+from lib.app_icons import ICONS_SVG, svg_to_pixmap
+from lib.design_tokens import BUTTON_HEIGHT, INPUT_HEIGHT
 from lib.i18n import tr
 
 AVATAR_SIZE = 88
+AVATAR_ICON_SIZE = 46
 CARD_WIDTH = 460
-INPUT_HEIGHT = 32
-BUTTON_HEIGHT = 32
+
+
+def _default_avatar_pixmap():
+    """Isotipo vectorial de GitHub (blanco) para el avatar sin sesión."""
+    try:
+        return svg_to_pixmap(ICONS_SVG["github"], AVATAR_ICON_SIZE)
+    except Exception:
+        return QPixmap()
 
 
 class GitHubLoginLanding(QWidget):
@@ -91,7 +100,7 @@ class GitHubLoginLanding(QWidget):
         self.avatar.setObjectName("GitHubLandingAvatar")
         self.avatar.setFixedSize(AVATAR_SIZE, AVATAR_SIZE)
         self.avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.avatar.setText("GH")
+        self.avatar.setPixmap(_default_avatar_pixmap())
         self.avatar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.avatar.mousePressEvent = lambda event: self.profile_requested.emit()
         card_layout.addWidget(self.avatar, 0, Qt.AlignmentFlag.AlignHCenter)

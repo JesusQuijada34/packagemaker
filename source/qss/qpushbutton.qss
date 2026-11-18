@@ -72,10 +72,10 @@ QPushButton#GitHubLoginButton {
     color: #FFFFFF;
     border: none;
     border-radius: __PILL_RADIUS__px;
-    padding: 12px 20px;
+    padding: 0 20px;
     font-size: 15px;
     font-weight: 600;
-    min-height: 44px;
+    min-height: __BUTTON_HEIGHT__px;
 }
 QPushButton#GitHubLoginButton:hover { background-color: __ACCENT_HOVER__; }
 QPushButton#GitHubLoginButton:pressed { background-color: __ACCENT_PRESSED__; }

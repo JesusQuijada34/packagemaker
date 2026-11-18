@@ -132,7 +132,8 @@
     "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
     "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
     "downloading_icon": "Downloading icon...",
-    "project_created": "Project created in: {folder}/ (sha256: {sha256})"
+    "project_created": "Project created in: {folder}/ (sha256: {sha256})",
+    "form.author_placeholder": "سجّل الدخول إلى GitHub"
   },
   "common": {
     "cancel": "إلغاء",
@@ -271,10 +272,10 @@
     "compilation_error": "Compilation error",
     "compiler_default": "Nuitka (default)",
     "progress_building": "Building...",
-    "engine": "Motor de compilación:",
-    "engine_tooltip": "Elige el motor explícitamente: FlatCube v1 (legacy) o BlindCube v2 (estándar)",
-    "engine_required": "Debes seleccionar un motor de compilación antes de compilar.",
-    "engine_legacy_warning": "FlatCube v1 es legacy y no recibe soporte. Se recomienda BlindCube v2.",
+    "engine": "محرك التصريف:",
+    "engine_tooltip": "اختر المحرك صراحةً: FlatCube v1 (قديم) أو BlindCube v2 (قياسي)",
+    "engine_required": "يجب اختيار محرك تصريف قبل التصريف.",
+    "engine_legacy_warning": "FlatCube v1 قديم وغير مدعوم. يُنصح باستخدام BlindCube v2.",
     "engine_legacy": "Legacy"
   },
   "window": {
@@ -334,15 +335,15 @@
     "save_as": "حفظ .asksome باسم",
     "compile_failed": "فشل التصريف: {error}",
     "compiled": "تم الإنشاء: {path}",
-    "breakpoint": "Comando:",
-    "toggle_break": "Punto de ruptura",
-    "step": "Paso",
-    "resume": "Continuar",
-    "stop": "Detener",
-    "break_on": "Punto de ruptura activado",
-    "break_off": "Punto de ruptura desactivado",
-    "debug_finished": "Depuración finalizada",
-    "debug_stopped": "Depuración detenida"
+    "breakpoint": "الأمر:",
+    "toggle_break": "نقطة توقف",
+    "step": "خطوة",
+    "resume": "استئناف",
+    "stop": "إيقاف",
+    "break_on": "تم تعيين نقطة التوقف",
+    "break_off": "تم مسح نقطة التوقف",
+    "debug_finished": "انتهى التصحيح",
+    "debug_stopped": "تم إيقاف التصحيح"
   },
   "github": {
     "sign_in": "تسجيل الدخول",
@@ -353,18 +354,18 @@
     "token_saved": "تم حفظ الرمز",
     "invalid": "رمز غير صالح",
     "signed_by": "موقّع من",
-    "landing_prompt": "Conecta tu cuenta para continuar",
-    "landing_token_placeholder": "Token personal de GitHub",
-    "landing_token_hint": "El token se guarda como credencial local y nunca se muestra en pantalla",
-    "landing_starting": "Iniciando sesión",
-    "welcome": "Bienvenido {name}…",
-    "profile": "Ver perfil de GitHub",
-    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}",
-    "landing_title": "Sign in with GitHub",
-    "landing_subtitle": "Connect your account to sign and publish your packages",
-    "landing_username_placeholder": "GitHub username (optional)",
-    "landing_token_required": "Enter your GitHub personal token",
-    "landing_mismatch": "The token belongs to {actual}, not {expected}"
+    "landing_prompt": "اربط حسابك للمتابعة",
+    "landing_token_placeholder": "رمز GitHub الشخصي",
+    "landing_token_hint": "يُحفظ الرمز كبيانات اعتماد محلية ولا يظهر على الشاشة أبدًا",
+    "landing_starting": "جارٍ تسجيل الدخول",
+    "welcome": "مرحبًا {name}…",
+    "profile": "عرض ملف GitHub الشخصي",
+    "profile_details": "@{login}\nالاسم: {name}\nالبريد الإلكتروني: {email}\nالمستودعات العامة: {repos}\nالملف الشخصي: {url}",
+    "landing_title": "تسجيل الدخول عبر GitHub",
+    "landing_subtitle": "اربط حسابك لتوقيع حزمك ونشرها",
+    "landing_username_placeholder": "اسم مستخدم GitHub (اختياري)",
+    "landing_token_required": "أدخل رمز GitHub الشخصي الخاص بك",
+    "landing_mismatch": "الرمز يخص {actual} وليس {expected}"
   },
   "iflapp_ide": {
     "title": "iflapp Project IDE",
@@ -387,8 +388,8 @@
     "no_stops": "No stops recorded.",
     "break_on": "Breakpoint at line {line}.",
     "break_off": "Breakpoint removed at line {line}.",
-    "open_with": "Abrir con…",
-    "open_with_hint": "Abrir el proyecto seleccionado con el diálogo de Package Maker",
-    "opened_with": "Proyecto abierto con Package Maker."
+    "open_with": "فتح باستخدام…",
+    "open_with_hint": "افتح المشروع المحدد باستخدام مربع حوار Package Maker",
+    "opened_with": "تم فتح المشروع باستخدام Package Maker."
   }
 }

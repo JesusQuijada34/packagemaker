@@ -132,7 +132,8 @@
     "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
     "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
     "downloading_icon": "Downloading icon...",
-    "project_created": "Project created in: {folder}/ (sha256: {sha256})"
+    "project_created": "Project created in: {folder}/ (sha256: {sha256})",
+    "form.author_placeholder": "GitHub にサインイン"
   },
   "common": {
     "cancel": "キャンセル",
@@ -271,10 +272,10 @@
     "compilation_error": "Compilation error",
     "compiler_default": "Nuitka (default)",
     "progress_building": "Building...",
-    "engine": "Motor de compilación:",
-    "engine_tooltip": "Elige el motor explícitamente: FlatCube v1 (legacy) o BlindCube v2 (estándar)",
-    "engine_required": "Debes seleccionar un motor de compilación antes de compilar.",
-    "engine_legacy_warning": "FlatCube v1 es legacy y no recibe soporte. Se recomienda BlindCube v2.",
+    "engine": "コンパイルエンジン:",
+    "engine_tooltip": "エンジンを明示的に選択してください: FlatCube v1（レガシー）または BlindCube v2（標準）",
+    "engine_required": "コンパイルする前にエンジンを選択する必要があります。",
+    "engine_legacy_warning": "FlatCube v1 はレガシーでサポートされていません。BlindCube v2 を推奨します。",
     "engine_legacy": "Legacy"
   },
   "window": {
@@ -334,15 +335,15 @@
     "save_as": ".asksome の保存先",
     "compile_failed": "コンパイル失敗: {error}",
     "compiled": "生成: {path}",
-    "breakpoint": "Comando:",
-    "toggle_break": "Punto de ruptura",
-    "step": "Paso",
-    "resume": "Continuar",
-    "stop": "Detener",
-    "break_on": "Punto de ruptura activado",
-    "break_off": "Punto de ruptura desactivado",
-    "debug_finished": "Depuración finalizada",
-    "debug_stopped": "Depuración detenida"
+    "breakpoint": "コマンド:",
+    "toggle_break": "ブレークポイント",
+    "step": "ステップ",
+    "resume": "再開",
+    "stop": "停止",
+    "break_on": "ブレークポイントを設定しました",
+    "break_off": "ブレークポイントを解除しました",
+    "debug_finished": "デバッグが終了しました",
+    "debug_stopped": "デバッグを停止しました"
   },
   "github": {
     "sign_in": "サインイン",
@@ -353,18 +354,18 @@
     "token_saved": "トークンを保存しました",
     "invalid": "無効なトークン",
     "signed_by": "署名者",
-    "landing_prompt": "Conecta tu cuenta para continuar",
-    "landing_token_placeholder": "Token personal de GitHub",
-    "landing_token_hint": "El token se guarda como credencial local y nunca se muestra en pantalla",
-    "landing_starting": "Iniciando sesión",
-    "welcome": "Bienvenido {name}…",
-    "profile": "Ver perfil de GitHub",
-    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}",
-    "landing_title": "Sign in with GitHub",
-    "landing_subtitle": "Connect your account to sign and publish your packages",
-    "landing_username_placeholder": "GitHub username (optional)",
-    "landing_token_required": "Enter your GitHub personal token",
-    "landing_mismatch": "The token belongs to {actual}, not {expected}"
+    "landing_prompt": "続行するにはアカウントを接続してください",
+    "landing_token_placeholder": "個人用 GitHub トークン",
+    "landing_token_hint": "トークンはローカル資格情報として保存され、画面に表示されることはありません",
+    "landing_starting": "サインイン中",
+    "welcome": "ようこそ {name}…",
+    "profile": "GitHub プロフィールを表示",
+    "profile_details": "@{login}\n名前: {name}\nメール: {email}\n公開リポジトリ: {repos}\nプロフィール: {url}",
+    "landing_title": "GitHub でサインイン",
+    "landing_subtitle": "アカウントを接続してパッケージに署名し公開します",
+    "landing_username_placeholder": "GitHub ユーザー名（任意）",
+    "landing_token_required": "GitHub の個人用トークンを入力してください",
+    "landing_mismatch": "トークンは {expected} ではなく {actual} に属しています"
   },
   "iflapp_ide": {
     "title": "iflapp Project IDE",
@@ -387,8 +388,8 @@
     "no_stops": "No stops recorded.",
     "break_on": "Breakpoint at line {line}.",
     "break_off": "Breakpoint removed at line {line}.",
-    "open_with": "Abrir con…",
-    "open_with_hint": "Abrir el proyecto seleccionado con el diálogo de Package Maker",
-    "opened_with": "Proyecto abierto con Package Maker."
+    "open_with": "アプリで開く…",
+    "open_with_hint": "選択したプロジェクトを Package Maker ダイアログで開く",
+    "opened_with": "プロジェクトを Package Maker で開きました。"
   }
 }

@@ -132,7 +132,8 @@
     "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
     "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
     "downloading_icon": "Downloading icon...",
-    "project_created": "Project created in: {folder}/ (sha256: {sha256})"
+    "project_created": "Project created in: {folder}/ (sha256: {sha256})",
+    "form.author_placeholder": "Sign in to GitHub"
   },
   "common": {
     "cancel": "Cancel",
@@ -271,10 +272,10 @@
     "compilation_error": "Compilation error",
     "compiler_default": "Nuitka (default)",
     "progress_building": "Building...",
-    "engine": "Motor de compilación:",
-    "engine_tooltip": "Elige el motor explícitamente: FlatCube v1 (legacy) o BlindCube v2 (estándar)",
-    "engine_required": "Debes seleccionar un motor de compilación antes de compilar.",
-    "engine_legacy_warning": "FlatCube v1 es legacy y no recibe soporte. Se recomienda BlindCube v2.",
+    "engine": "Compilation engine:",
+    "engine_tooltip": "Choose the engine explicitly: FlatCube v1 (legacy) or BlindCube v2 (standard)",
+    "engine_required": "You must select a compilation engine before building.",
+    "engine_legacy_warning": "FlatCube v1 is legacy and unsupported. BlindCube v2 is recommended.",
     "engine_legacy": "Legacy"
   },
   "window": {
@@ -353,13 +354,13 @@
     "token_saved": "Token saved",
     "invalid": "Invalid token",
     "signed_by": "Signed by",
-    "landing_prompt": "Conecta tu cuenta para continuar",
-    "landing_token_placeholder": "Token personal de GitHub",
-    "landing_token_hint": "El token se guarda como credencial local y nunca se muestra en pantalla",
-    "landing_starting": "Iniciando sesión",
-    "welcome": "Bienvenido {name}…",
-    "profile": "Ver perfil de GitHub",
-    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}",
+    "landing_prompt": "Connect your account to continue",
+    "landing_token_placeholder": "Personal GitHub token",
+    "landing_token_hint": "The token is stored as a local credential and never shown on screen",
+    "landing_starting": "Signing in",
+    "welcome": "Welcome {name}…",
+    "profile": "View GitHub profile",
+    "profile_details": "@{login}\nName: {name}\nEmail: {email}\nPublic repositories: {repos}\nProfile: {url}",
     "landing_title": "Sign in with GitHub",
     "landing_subtitle": "Connect your account to sign and publish your packages",
     "landing_username_placeholder": "GitHub username (optional)",
@@ -387,8 +388,8 @@
     "no_stops": "No stops recorded.",
     "break_on": "Breakpoint at line {line}.",
     "break_off": "Breakpoint removed at line {line}.",
-    "open_with": "Abrir con…",
-    "open_with_hint": "Abrir el proyecto seleccionado con el diálogo de Package Maker",
-    "opened_with": "Proyecto abierto con Package Maker."
+    "open_with": "Open with…",
+    "open_with_hint": "Open the selected project with the Package Maker dialog",
+    "opened_with": "Project opened with Package Maker."
   }
 }

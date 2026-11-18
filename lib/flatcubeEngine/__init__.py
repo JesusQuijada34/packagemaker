@@ -11,7 +11,7 @@ moderno usa ``blindcubeEngine``.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from lib.engine_core import (
     ENGINE_ROLE_COMPILER,

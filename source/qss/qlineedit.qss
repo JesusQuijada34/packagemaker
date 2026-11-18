@@ -60,9 +60,9 @@ QLineEdit#GitHubTokenInput, QLineEdit#GitHubUsernameInput {
     color: __TEXT__;
     border: 1px solid __CARD_BORDER__;
     border-radius: __CONTROL_RADIUS__px;
-    padding: 10px 14px;
+    padding: 0 14px;
     font-size: 14px;
-    min-height: 44px;
+    min-height: __INPUT_MIN_HEIGHT__px;
 }
 QLineEdit#GitHubTokenInput:focus, QLineEdit#GitHubUsernameInput:focus {
     border: 2px solid __ACCENT__;

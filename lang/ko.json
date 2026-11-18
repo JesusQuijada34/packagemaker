@@ -132,7 +132,8 @@
     "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
     "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
     "downloading_icon": "Downloading icon...",
-    "project_created": "Project created in: {folder}/ (sha256: {sha256})"
+    "project_created": "Project created in: {folder}/ (sha256: {sha256})",
+    "form.author_placeholder": "GitHub에 로그인"
   },
   "common": {
     "cancel": "취소",
@@ -271,10 +272,10 @@
     "compilation_error": "Compilation error",
     "compiler_default": "Nuitka (default)",
     "progress_building": "Building...",
-    "engine": "Motor de compilación:",
-    "engine_tooltip": "Elige el motor explícitamente: FlatCube v1 (legacy) o BlindCube v2 (estándar)",
-    "engine_required": "Debes seleccionar un motor de compilación antes de compilar.",
-    "engine_legacy_warning": "FlatCube v1 es legacy y no recibe soporte. Se recomienda BlindCube v2.",
+    "engine": "컴파일 엔진:",
+    "engine_tooltip": "엔진을 명시적으로 선택하세요: FlatCube v1(레거시) 또는 BlindCube v2(표준)",
+    "engine_required": "빌드하기 전에 컴파일 엔진을 선택해야 합니다.",
+    "engine_legacy_warning": "FlatCube v1은 레거시이며 지원되지 않습니다. BlindCube v2를 권장합니다.",
     "engine_legacy": "Legacy"
   },
   "window": {
@@ -334,15 +335,15 @@
     "save_as": ".asksome 다른 이름으로 저장",
     "compile_failed": "컴파일 실패: {error}",
     "compiled": "생성됨: {path}",
-    "breakpoint": "Comando:",
-    "toggle_break": "Punto de ruptura",
-    "step": "Paso",
-    "resume": "Continuar",
-    "stop": "Detener",
-    "break_on": "Punto de ruptura activado",
-    "break_off": "Punto de ruptura desactivado",
-    "debug_finished": "Depuración finalizada",
-    "debug_stopped": "Depuración detenida"
+    "breakpoint": "명령:",
+    "toggle_break": "중단점",
+    "step": "단계",
+    "resume": "계속",
+    "stop": "중지",
+    "break_on": "중단점 설정됨",
+    "break_off": "중단점 해제됨",
+    "debug_finished": "디버깅 완료됨",
+    "debug_stopped": "디버깅 중지됨"
   },
   "github": {
     "sign_in": "로그인",
@@ -353,18 +354,18 @@
     "token_saved": "토큰 저장됨",
     "invalid": "잘못된 토큰",
     "signed_by": "서명자",
-    "landing_prompt": "Conecta tu cuenta para continuar",
-    "landing_token_placeholder": "Token personal de GitHub",
-    "landing_token_hint": "El token se guarda como credencial local y nunca se muestra en pantalla",
-    "landing_starting": "Iniciando sesión",
-    "welcome": "Bienvenido {name}…",
-    "profile": "Ver perfil de GitHub",
-    "profile_details": "@{login}\nNombre: {name}\nCorreo: {email}\nRepositorios públicos: {repos}\nPerfil: {url}",
-    "landing_title": "Sign in with GitHub",
-    "landing_subtitle": "Connect your account to sign and publish your packages",
-    "landing_username_placeholder": "GitHub username (optional)",
-    "landing_token_required": "Enter your GitHub personal token",
-    "landing_mismatch": "The token belongs to {actual}, not {expected}"
+    "landing_prompt": "계속하려면 계정을 연결하세요",
+    "landing_token_placeholder": "개인 GitHub 토큰",
+    "landing_token_hint": "토큰은 로컬 자격 증명으로 저장되며 화면에 표시되지 않습니다",
+    "landing_starting": "로그인 중",
+    "welcome": "{name}님, 환영합니다…",
+    "profile": "GitHub 프로필 보기",
+    "profile_details": "@{login}\n이름: {name}\n이메일: {email}\n공개 저장소: {repos}\n프로필: {url}",
+    "landing_title": "GitHub로 로그인",
+    "landing_subtitle": "계정을 연결하여 패키지에 서명하고 게시하세요",
+    "landing_username_placeholder": "GitHub 사용자 이름 (선택 사항)",
+    "landing_token_required": "GitHub 개인 토큰을 입력하세요",
+    "landing_mismatch": "이 토큰은 {expected}이(가) 아니라 {actual}의 것입니다"
   },
   "iflapp_ide": {
     "title": "iflapp Project IDE",
@@ -387,8 +388,8 @@
     "no_stops": "No stops recorded.",
     "break_on": "Breakpoint at line {line}.",
     "break_off": "Breakpoint removed at line {line}.",
-    "open_with": "Abrir con…",
-    "open_with_hint": "Abrir el proyecto seleccionado con el diálogo de Package Maker",
-    "opened_with": "Proyecto abierto con Package Maker."
+    "open_with": "다음으로 열기…",
+    "open_with_hint": "선택한 프로젝트를 Package Maker 대화 상자로 엽니다",
+    "opened_with": "Package Maker로 프로젝트를 열었습니다."
   }
 }
