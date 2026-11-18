@@ -6,6 +6,8 @@ import sys
 from lib import qss_loader
 from lib.design_tokens import (
     ACCENT,
+    AVATAR_FONT_SIZE,
+    AVATAR_RADIUS,
     BORDER,
     BUTTON_HEIGHT,
     BUTTON_PADDING_H,
@@ -434,6 +436,8 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
         "GLASS_BG": glass_bg,
         "GLASS_BORDER": glass_border,
         "GLASS_BORDER_TOP": glass_border_top,
+        "AVATAR_RADIUS": AVATAR_RADIUS,
+        "AVATAR_FONT_SIZE": AVATAR_FONT_SIZE,
         "PAGE": page,
         "TEXT": text,
         "LABEL": text,
@@ -503,6 +507,16 @@ def titlebar_label_stylesheet(text_col: str) -> str:
         f"background:transparent; color:{text_col};"
         f" font-family:{FONT_STACK}; font-weight:600;"
     )
+
+
+def titlebar_background_stylesheet(base_bg: str = TITLEBAR_BG) -> str:
+    """Fondo plano de la titlebar en la construcción inicial (sin radio).
+
+    Centraliza el QSS que antes se escribía en línea en ``packagemaker.py``; el
+    redondeo de las esquinas superiores lo aplica ``titlebar_chrome_stylesheet``
+    al mostrar la ventana.
+    """
+    return f"background-color:{base_bg}; border:none;"
 
 
 def status_bar_stylesheet(radius: int = WINDOW_RADIUS) -> str:
@@ -663,9 +677,11 @@ def applyget(accent: str, dark: bool = True) -> str:
         "GLASS_BG": glass_bg,
         "GLASS_BORDER": glass_border,
         "GLASS_BORDER_TOP": glass_border_top,
-        "TEXT": text,
-        "LABEL": label,
+        "AVATAR_RADIUS": AVATAR_RADIUS,
+        "AVATAR_FONT_SIZE": AVATAR_FONT_SIZE,
         "PAGE": page,
+        "TEXT": text,
+        "LABEL": text,
         "MUTED": muted,
         "GROUP_TEXT": group_text,
         "STACK_TEXT": stack_text,

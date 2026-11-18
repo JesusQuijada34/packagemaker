@@ -46,6 +46,24 @@ def test_login_card_has_liquid_glass_finish():
         assert "__" not in card
 
 
+def test_avatar_radius_follows_token_not_literal():
+    """El radio del avatar se deriva de ``AVATAR_SIZE``, no de un literal QSS.
+
+    Regresión de ``bugs.txt`` 2.2 ("bug de tamaño y material"): el radio vivía
+    como ``44px`` fijo en ``qlabel.qss`` y cambiar ``AVATAR_SIZE`` en Python no
+    movía el círculo. Ahora el marcador ``__AVATAR_RADIUS__`` lo resuelve.
+    """
+    from lib.design_tokens import AVATAR_RADIUS, AVATAR_SIZE
+    from lib.fluent_theme import applyget
+
+    assert AVATAR_RADIUS == AVATAR_SIZE // 2
+    for dark in (True, False):
+        css = applyget("#0078D4", dark=dark)
+        block = css.split("QLabel#GitHubLandingAvatar", 1)[1].split("}", 1)[0]
+        assert f"border-radius: {AVATAR_RADIUS}px" in block
+        assert "__" not in block
+
+
 def test_github_landing_is_an_opaque_overlay(qapp):
     from PyQt6.QtCore import Qt
     from lib.github_login_landing import GitHubLoginLanding

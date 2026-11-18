@@ -34,12 +34,15 @@ except ImportError:  # pragma: no cover
     QWidget = object
 
 from lib.app_icons import ICONS_SVG, svg_to_pixmap
-from lib.design_tokens import BUTTON_HEIGHT, INPUT_HEIGHT
+from lib.design_tokens import (
+    AVATAR_ICON_SIZE,
+    AVATAR_SIZE,
+    BUTTON_HEIGHT,
+    INPUT_HEIGHT,
+)
 from lib.i18n import tr
 from lib.landing_assistant import ANIMATION_MS, PANEL_WIDTH, LandingAssistant, detect_default_browser
 
-AVATAR_SIZE = 88
-AVATAR_ICON_SIZE = 46
 CARD_WIDTH = 460
 CARD_EXPAND = 48
 

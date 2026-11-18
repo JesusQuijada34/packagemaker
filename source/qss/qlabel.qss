@@ -23,9 +23,9 @@ QLabel {
 QLabel#GitHubLandingAvatar {
     background-color: __ACCENT__;
     color: #FFFFFF;
-    border-radius: 44px;
+    border-radius: __AVATAR_RADIUS__px;
     border: 3px solid __ACCENT__;
-    font-size: 30px;
+    font-size: __AVATAR_FONT_SIZE__px;
     font-weight: 700;
 }
 QLabel#GitHubLandingTitle { color: __TEXT__; font-size: 26px; font-weight: 700; }

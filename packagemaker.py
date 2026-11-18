@@ -253,7 +253,6 @@ from lib.design_tokens import (
     SIDEBAR_TOP_MARGIN,
     TEXT,
     TEXT_LIGHT,
-    TITLEBAR_BG,
     WINDOW_BG,
     WINDOW_RADIUS,
     uwp_button_qss,
@@ -289,6 +288,7 @@ from lib.fluent_theme import (
     splash_container_stylesheet,
     status_bar_stylesheet,
     system_theme_mode,
+    titlebar_background_stylesheet,
     titlebar_chrome_stylesheet,
     titlebar_label_stylesheet,
     transparent_logo_stylesheet,
@@ -738,9 +738,7 @@ class PackageTodoGUI(QMainWindow):
             title=self._fixed_title,
             icon=(IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else ""),
         )
-        self.titlebar.setStyleSheet(
-            f"background-color: {TITLEBAR_BG}; border: none;"
-        )
+        self.titlebar.setStyleSheet(titlebar_background_stylesheet())
         self.titlebar.title_lbl.setText(self._fixed_title)
         patch_titlebar_maximize(self.titlebar, self)
         self._pm_reapply_display_mode = self._apply_leviathan_and_personalization

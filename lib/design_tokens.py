@@ -103,6 +103,14 @@ FORM_ROW_GAP = 16
 BUTTON_HEIGHT = 36
 BUTTON_PADDING_H = 24
 
+# Avatar del landing: el tamaño vive aquí y el QSS deriva el radio y el
+# tamaño de fuente de estos tokens. Antes el radio era un literal (``44px``)
+# en ``qlabel.qss`` y cambiar ``AVATAR_SIZE`` no movía el círculo.
+AVATAR_SIZE = 88
+AVATAR_RADIUS = AVATAR_SIZE // 2
+AVATAR_ICON_SIZE = 46
+AVATAR_FONT_SIZE = 30
+
 SECTION_LABEL_SIZE = 12
 
 # --------------------------------------------------------------------------- #
