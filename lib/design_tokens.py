@@ -72,6 +72,24 @@ DANGER = "#FF453A"
 DANGER_SOFT = "rgba(255, 69, 58, 0.16)"
 DANGER_TEXT = "#FF6B60"
 
+# --- Estados semánticos ---------------------------------------------------- #
+# Centralizan los colores que los asistentes (p. ej. el wizard de MoonFix)
+# escribían a mano en su QSS en línea. Un control de estado pide su color aquí
+# en vez de incrustar el literal.
+SUCCESS = "#28A745"          # acción correcta (fondo de botón)
+SUCCESS_TEXT = "#4CAF50"     # confirmación en texto
+ERROR_TEXT = "#F44336"       # error en texto
+WARNING = "#FF9800"          # encabezado de aviso
+WARNING_SOFT = "#FFB74D"     # aviso atenuado
+CLOSE_HOVER = "#E81123"      # fondo del botón de cerrar al pasar el ratón
+
+# --- Grises neutros de apoyo ----------------------------------------------- #
+SURFACE_ELEVATED = "#333333"  # superficie elevada / control deshabilitado
+TEXT_FAINT = "#777777"        # texto deshabilitado o muy tenue
+TEXT_TERTIARY = "#888888"     # etiquetas atenuadas
+TEXT_ALT = "#AAAAAA"          # descripciones de apoyo
+TEXT_SOFT = "#BBBBBB"         # texto secundario suave
+
 # --------------------------------------------------------------------------- #
 # Geometría
 # --------------------------------------------------------------------------- #

@@ -113,6 +113,42 @@ class LightModeTextTests(unittest.TestCase):
         self.assertIn("applyget(accent, dark)", text)
 
 
+class InlineStyleTokenTests(unittest.TestCase):
+    def test_moonfix_wizard_has_no_hand_written_hex_colors(self):
+        """El QSS en línea del asistente pide sus colores a ``design_tokens``.
+
+        Regresión de ``bugs.txt`` 2.2 ("centralizar toda la hoja de estilos"):
+        los literales ``#28a745``/``#f44336``/``#ff9800``/... vivían escritos a
+        mano en ``moonFixWizard.py``; ahora salen de tokens semánticos.
+        """
+        import re
+
+        text = source("lib/moonFixWizard.py")
+        hexes = sorted(set(re.findall(r"#[0-9a-fA-F]{3,6}\b", text)))
+        self.assertEqual(hexes, [], f"colores a mano en moonFixWizard.py: {hexes}")
+
+    def test_semantic_state_tokens_exist(self):
+        from lib.design_tokens import (
+            CLOSE_HOVER,
+            ERROR_TEXT,
+            SUCCESS,
+            SUCCESS_TEXT,
+            SURFACE_ELEVATED,
+            TEXT_ALT,
+            TEXT_FAINT,
+            TEXT_SOFT,
+            TEXT_TERTIARY,
+            WARNING,
+            WARNING_SOFT,
+        )
+
+        for value in (
+            CLOSE_HOVER, ERROR_TEXT, SUCCESS, SUCCESS_TEXT, SURFACE_ELEVATED,
+            TEXT_ALT, TEXT_FAINT, TEXT_SOFT, TEXT_TERTIARY, WARNING, WARNING_SOFT,
+        ):
+            self.assertRegex(value, r"^#[0-9A-Fa-f]{6}$")
+
+
 class CreateTabOpaqueTests(unittest.TestCase):
     def test_create_tab_is_not_translucent(self):
         text = source("packagemaker.py")

@@ -63,7 +63,21 @@ except (ImportError, SyntaxError):
         @staticmethod
         def launch(*args, **kwargs): pass
 from lib.uwp_animations import play_bounce_down_close
-from lib.design_tokens import accent_states, active_accent
+from lib.design_tokens import (
+    CLOSE_HOVER,
+    ERROR_TEXT,
+    SUCCESS,
+    SUCCESS_TEXT,
+    SURFACE_ELEVATED,
+    TEXT_ALT,
+    TEXT_FAINT,
+    TEXT_SOFT,
+    TEXT_TERTIARY,
+    WARNING,
+    WARNING_SOFT,
+    accent_states,
+    active_accent,
+)
 
 
 ACCENT_COLOR = active_accent()
@@ -120,7 +134,7 @@ class MoonFixWizard(QDialog):
             }}
             QPushButton#uwp_next:hover {{ background-color: {ACCENT_HOVER}; }}
             QPushButton#uwp_next:pressed {{ background-color: {_ACCENT_PRESSED}; }}
-            QPushButton#uwp_next:disabled {{ background-color: #333; color: #777; }}
+            QPushButton#uwp_next:disabled {{ background-color: {SURFACE_ELEVATED}; color: {TEXT_FAINT}; }}
         """)
         
         # Entrance state
@@ -200,7 +214,7 @@ class MoonFixWizard(QDialog):
         
         btn_close = QPushButton("✕")
         btn_close.setFixedSize(32, 32)
-        btn_close.setStyleSheet("QPushButton { background: transparent; color: #888; border-radius: 16px; font-size: 16px; } QPushButton:hover { background: #e81123; color: white; }")
+        btn_close.setStyleSheet(f"QPushButton {{ background: transparent; color: {TEXT_TERTIARY}; border-radius: 16px; font-size: 16px; }} QPushButton:hover {{ background: {CLOSE_HOVER}; color: white; }}")
         btn_close.clicked.connect(self.reject)
         t_layout.addWidget(btn_close)
         
@@ -232,7 +246,7 @@ class MoonFixWizard(QDialog):
         nav_layout.setContentsMargins(24, 0, 24, 0)
         
         self.lbl_step = QLabel(tr("wizard.page_of").format(current=1, total=len(self.projects) + 2))
-        self.lbl_step.setStyleSheet("background: transparent; color: #888; font-size: 11px; font-family: 'Segoe UI Variable Text';")
+        self.lbl_step.setStyleSheet(f"background: transparent; color: {TEXT_TERTIARY}; font-size: 11px; font-family: 'Segoe UI Variable Text';")
         nav_layout.addWidget(self.lbl_step)
         nav_layout.addStretch()
         
@@ -259,7 +273,7 @@ class MoonFixWizard(QDialog):
             f"Se han detectado <b>{len(self.projects)}</b> proyectos que requieren atención inmediata.\n\n"
             "MoonFix corregirá automáticamente las claves inválidas y normalizará las versiones."
         )
-        desc.setStyleSheet("color: #bbb; font-size: 14px; line-height: 1.5;")
+        desc.setStyleSheet(f"color: {TEXT_SOFT}; font-size: 14px; line-height: 1.5;")
         desc.setWordWrap(True)
         layout.addWidget(desc)
         
@@ -270,7 +284,7 @@ class MoonFixWizard(QDialog):
         w_layout = QHBoxLayout(warning_box)
         w_icon = QLabel("⚠️")
         w_text = QLabel(tr("moonfix.internet_hint"))
-        w_text.setStyleSheet("color: #ffb74d; font-size: 13px;")
+        w_text.setStyleSheet(f"color: {WARNING_SOFT}; font-size: 13px;")
         w_layout.addWidget(w_icon)
         w_layout.addWidget(w_text)
         layout.addWidget(warning_box)
@@ -432,7 +446,7 @@ class MoonFixWizard(QDialog):
         i_layout.setSpacing(4)
         
         i_title = QLabel("INCONSISTENCIAS")
-        i_title.setStyleSheet("color: #ff9800; font-size: 9px; font-weight: bold; letter-spacing: 1.5px; font-family: 'Segoe UI Variable Text';")
+        i_title.setStyleSheet(f"color: {WARNING}; font-size: 9px; font-weight: bold; letter-spacing: 1.5px; font-family: 'Segoe UI Variable Text';")
         i_layout.addWidget(i_title)
         
         # Restore full issue list for "learning"
@@ -449,7 +463,7 @@ class MoonFixWizard(QDialog):
             elif issue["type"] == "missing_splash_setup": desc = "Banner de Setup faltante"
             
             i_lbl = QLabel(f"• {desc}")
-            i_lbl.setStyleSheet("color: #bbb; font-size: 11px; font-family: 'Segoe UI Variable Text';")
+            i_lbl.setStyleSheet(f"color: {TEXT_SOFT}; font-size: 11px; font-family: 'Segoe UI Variable Text';")
             i_lbl.setWordWrap(True)
             i_layout.addWidget(i_lbl)
         
@@ -511,7 +525,7 @@ class MoonFixWizard(QDialog):
             if key == "platform":
                 if should_show:
                     lbl = QLabel(label_text)
-                    lbl.setStyleSheet("color: #aaa; font-weight: 500;")
+                    lbl.setStyleSheet(f"color: {TEXT_ALT}; font-weight: 500;")
                     form_layout.addWidget(lbl, current_row, 0)
                     
                     p_box = QHBoxLayout()
@@ -547,13 +561,13 @@ class MoonFixWizard(QDialog):
 
             if should_show:
                 lbl = QLabel(label_text)
-                lbl.setStyleSheet("color: #aaa; font-weight: 500;")
+                lbl.setStyleSheet(f"color: {TEXT_ALT}; font-weight: 500;")
                 edit = QLineEdit(value)
                 edit.setFixedHeight(30)
                 edit.setStyleSheet(EDIT_QSS)
                 if not value or is_generic:
                     edit.setPlaceholderText(tr("wizard.required_field"))
-                    edit.setStyleSheet(edit.styleSheet() + "QLineEdit { border-left: 3px solid #f44336; }")
+                    edit.setStyleSheet(edit.styleSheet() + f"QLineEdit {{ border-left: 3px solid {ERROR_TEXT}; }}")
                 
                 form_layout.addWidget(lbl, current_row, 0)
                 form_layout.addWidget(edit, current_row, 1)
@@ -592,7 +606,7 @@ class MoonFixWizard(QDialog):
                 pack_box.addWidget(btn_i)
             if missing_assets:
                 btn_a = QPushButton("Subir Asset Pack")
-                btn_a.setStyleSheet(btn_pack_css.replace(ACCENT_COLOR, "#28a745"))
+                btn_a.setStyleSheet(btn_pack_css.replace(ACCENT_COLOR, SUCCESS))
                 btn_a.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn_a.clicked.connect(lambda: self.upload_asset_pack(index))
                 pack_box.addWidget(btn_a)
@@ -621,14 +635,14 @@ class MoonFixWizard(QDialog):
         # GitHub Verification row
         gh_btn = QPushButton(tr("wizard.verify_github"))
         gh_btn.setFixedHeight(30)
-        gh_btn.setStyleSheet("QPushButton { background: #333; color: white; border-radius: 5px; font-size: 11px; }")
+        gh_btn.setStyleSheet(f"QPushButton {{ background: {SURFACE_ELEVATED}; color: white; border-radius: 5px; font-size: 11px; }}")
         gh_status = QLabel("Pendiente")
-        gh_status.setStyleSheet("color: #777; font-size: 10px;")
+        gh_status.setStyleSheet(f"color: {TEXT_FAINT}; font-size: 10px;")
         def verify_gh(idx=index, status_lbl=gh_status):
             user = self.results[idx]["inputs"]["author"].text().strip()
             ok, msg = verificar_github_username(user)
             status_lbl.setText("✅ OK" if ok else f"❌ {msg}")
-            status_lbl.setStyleSheet(f"color: {'#4caf50' if ok else '#f44336'}; font-size: 10px;")
+            status_lbl.setStyleSheet(f"color: {SUCCESS_TEXT if ok else ERROR_TEXT}; font-size: 10px;")
         gh_btn.clicked.connect(verify_gh)
         layout.addSpacing(5)
         gh_row = QHBoxLayout()
@@ -655,7 +669,7 @@ class MoonFixWizard(QDialog):
         layout.addWidget(title)
 
         self.done_desc = QLabel("Se han procesado todos los proyectos exitosamente y sus configuraciones han sido normalizadas.")
-        self.done_desc.setStyleSheet("color: #aaa; font-size: 15px;")
+        self.done_desc.setStyleSheet(f"color: {TEXT_ALT}; font-size: 15px;")
         self.done_desc.setWordWrap(True)
         self.done_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.done_desc)
