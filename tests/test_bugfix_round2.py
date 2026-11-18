@@ -83,10 +83,20 @@ class DialogHoverTests(unittest.TestCase):
 
 class SplashAccentTests(unittest.TestCase):
     def test_splash_uses_system_accent(self):
+        """El splash toma el acento del sistema y lo aplica a su contenedor.
+
+        Tras extraer ``IntegratedSplash`` a ``lib/splash_window.py`` (Fase 1.1),
+        el acento se recibe explícitamente desde el índice (``get_accent_color``)
+        y nunca queda fijado a un color literal.
+        """
+        text = source("lib/splash_window.py")
+        self.assertIn("SplashContainer", text)
+        self.assertIn("self.accent", text)
+        self.assertNotIn("#1a1a1a", text)
+
+    def test_index_passes_system_accent_to_splash(self):
         text = source("packagemaker.py")
-        splash = text.split("class IntegratedSplash")[1]
-        self.assertIn("get_accent_color()", splash)
-        self.assertNotIn("#1a1a1a", splash)
+        self.assertIn("accent=get_accent_color()", text)
 
 
 class LightModeTextTests(unittest.TestCase):

@@ -31,7 +31,7 @@ try:
     )
     from PyQt6.QtGui import QFont, QIcon, QColor
     from PyQt6.QtGui import QPixmap
-    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QPoint, QPropertyAnimation, QEasingCurve
+    from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QPoint, QEasingCurve
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -100,7 +100,7 @@ try:
     LEVIATHAN_AVAILABLE = True
 except (ImportError, SyntaxError) as e:
     LEVIATHAN_AVAILABLE = False
-    print(f"[WARN] Leviathan UI no disponible o error de sintaxis: {e}")
+    print(f"[WARN] Leviathan UI unavailable or syntax error: {e}")
     _leviathan_accent = None
 
     class LeviathanProgressBar(QWidget):
@@ -259,6 +259,7 @@ from lib.design_tokens import (
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
+from lib.splash_window import IntegratedSplash
 from lib.window_manager_bridge import install_window_manager_bridges
 from lib.ios_progress_dialog import show_ios_progress
 from lib.alert_dialog import AlertDialog
@@ -285,7 +286,6 @@ from lib.fluent_theme import (
     sidebar_button_stylesheet,
     sidebar_stylesheet,
     set_qss,
-    splash_container_stylesheet,
     status_bar_stylesheet,
     system_theme_mode,
     titlebar_background_stylesheet,
@@ -4493,81 +4493,6 @@ class PackageTodoGUI(QMainWindow):
             QTimer.singleShot(0, landing.lock_to_parent)
 
 
-# =============================================================================
-# INTEGRATED SPLASH - PANTALLA DE CARGA INTEGRADA
-# =============================================================================
-class IntegratedSplash(QWidget):
-    """Splash integrado estilo UWP - minimalista con solo icono centrado"""
-
-    finished = pyqtSignal()
-
-    def __init__(self, parent=None, icon_path=None, title="Package Maker"):
-        super().__init__(parent)
-        self.parent = parent
-        self.accent = str(get_accent_color())
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setGeometry(0, 0, parent.width(), parent.height())
-        self.setStyleSheet(splash_container_stylesheet(self.accent))
-
-        container = QWidget(self)
-        container.setObjectName("SplashContainer")
-        container.setGeometry(0, 0, self.width(), self.height())
-
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        layout.addStretch()
-
-        self.icon_label = QLabel()
-        self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        if icon_path and os.path.exists(icon_path):
-            pixmap = QPixmap(icon_path)
-            if not pixmap.isNull():
-                scaled = pixmap.scaled(180, 180, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-                self.icon_label.setPixmap(scaled)
-        layout.addWidget(self.icon_label)
-
-        layout.addStretch()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if self.parent:
-            self.setGeometry(0, 0, self.parent.width(), self.parent.height())
-            container = self.findChild(QWidget, "SplashContainer")
-            if container:
-                container.setGeometry(0, 0, self.width(), self.height())
-
-    def show_splash(self):
-        """Muestra el splash sin temporizador: actúa como compuerta lógica.
-
-        Permanece visible hasta que la validación de sesión decide si hay que
-        revelar el landing o entrar directamente al IDE (``finish``).
-        """
-        self.show()
-        self.raise_()
-
-    def finish(self):
-        """Cierra el splash con el desvanecido (lo llama la compuerta de sesión)."""
-        self._finish_splash()
-
-    def _finish_splash(self):
-        self.fade_anim = QPropertyAnimation(self, b"windowOpacity")
-        self.fade_anim.setDuration(600)
-        self.fade_anim.setStartValue(1.0)
-        self.fade_anim.setEndValue(0.0)
-        self.fade_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
-        self.fade_anim.finished.connect(self._close_and_emit)
-        self.fade_anim.start()
-
-    def _close_and_emit(self):
-        self.hide()
-        self.finished.emit()
-        self.deleteLater()
-
-
 main_window = None
 
 def main():
@@ -4689,6 +4614,7 @@ def main():
         parent=main_window,
         icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
         title="Package Maker",
+        accent=get_accent_color(),
     )
 
     def close_splash():
