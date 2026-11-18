@@ -2148,9 +2148,8 @@ class PackageTodoGUI(QMainWindow):
         # Fila 3: Plataforma (AUTOMATIZADO)
         form_layout.addWidget(uwp_label(tr("build.environment")), 3, 0)
         self.input_build_platform = uwp_input(tr("build.platform_detecting"), read_only=True)
-        # Auto-detectar plataforma actual
-        detected_plat = "Windows" if sys.platform.startswith("win") else "Linux"
-        self.input_build_platform.setText(detected_plat)
+        # Plataforma detectada por la fuente autoritativa (no adivinar el SO).
+        self.input_build_platform.setText(_PLATFORM_INFO.platform)
         self.input_build_platform.setToolTip(tr("build.platform_auto_tooltip"))
         form_layout.addWidget(self.input_build_platform, 3, 1)
 
