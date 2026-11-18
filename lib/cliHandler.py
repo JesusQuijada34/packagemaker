@@ -154,6 +154,13 @@ class CLIHandler:
         except Exception:
             _compiler_choices = ['nuitka', 'pyinstaller']
         buildthis_group.add_argument('--compiler', choices=_compiler_choices, help='Backend de compilación (por defecto: nuitka)')
+        try:
+            from lib.engines import compiler_engines as _compiler_engines
+
+            _engine_choices = [e.id for e in _compiler_engines()]
+        except Exception:
+            _engine_choices = ['flatcube', 'blindcube']
+        buildthis_group.add_argument('--engine', choices=_engine_choices, help='Motor de compilación explícito (flatcube v1 legacy o blindcube v2 estándar)')
         buildthis_group.add_argument('--password', metavar='PASS', help='Cifrar el payload del .iflapp con esta contraseña')
         buildthis_group.add_argument('--no-sandbox', action='store_true', help='Desactivar la verificación en sandbox virtualizado')
         buildthis_group.add_argument('--dropper', action='store_true', help='Generar además un dropper autoextraíble (.run)')
@@ -172,6 +179,7 @@ class CLIHandler:
         inspect_group.add_argument('--shell-preview', metavar='DIR', help='Exportar la vista previa de icono a DIR junto con --shell-info')
         inspect_group.add_argument('--install-shell-integration', action='store_true', help='Registrar la asociación MIME y el generador de miniaturas del SO')
         inspect_group.add_argument('--list-compilers', action='store_true', help='Mostrar compiladores disponibles y su estado')
+        inspect_group.add_argument('--list-engines', action='store_true', help='Mostrar los motores de Package Maker (MakeSelf / FlatCube v1 / BlindCube v2) y su estado')
         inspect_group.add_argument('--list-hardening', action='store_true', help='Mostrar métodos de blindaje disponibles y su estado')
 
         mexf_group = self.parser.add_argument_group('Proyectos .mexf')
@@ -373,6 +381,9 @@ class CLIHandler:
         elif getattr(args, 'list_compilers', False):
             return ('list_compilers', None, shell_options)
 
+        elif getattr(args, 'list_engines', False):
+            return ('list_engines', None, shell_options)
+
         elif getattr(args, 'shell_info', None):
             return (
                 'shell_info',
@@ -527,6 +538,7 @@ class CLIHandler:
                     'output': getattr(args, 'output', None),
                     'platform': getattr(args, 'platform', None),
                     'compiler': getattr(args, 'compiler', None),
+                    'engine': getattr(args, 'engine', None),
                     'password': getattr(args, 'password', None),
                     'sandbox': not getattr(args, 'no_sandbox', False),
                     'dropper': getattr(args, 'dropper', False),
@@ -550,6 +562,7 @@ class CLIHandler:
                     'output': getattr(args, 'output', None),
                     'platform': getattr(args, 'platform', None),
                     'compiler': getattr(args, 'compiler', None),
+                    'engine': getattr(args, 'engine', None),
                     'password': getattr(args, 'password', None),
                     'sandbox': not getattr(args, 'no_sandbox', False),
                     'dropper': getattr(args, 'dropper', False),
@@ -672,6 +685,25 @@ class CompilerReportHelper:
         for name, info in report.items():
             status = "OK" if info["available"] else "NO DISPONIBLE"
             print(f"  - {name:12s} {status:15s} {info['version']} ({info['display_name']})")
+        return True
+
+
+# === Engine Report Helper ===
+class EngineReportHelper:
+    """Lista los motores de Package Maker (MakeSelf / FlatCube v1 / BlindCube v2)."""
+
+    @staticmethod
+    def report():
+        from lib.engines import describe_engines
+
+        print("Motores de Package Maker:")
+        for row in describe_engines():
+            status = {"legacy": "LEGACY / SIN SOPORTE"}.get(row["status"], "ESTÁNDAR")
+            print(
+                f"  - {row['id']:10s} {row['name']:14s} {row['role']:10s} "
+                f"{status:22s} py{row['python']} backend={row['backend']} formato={row['format']}"
+            )
+            print(f"      {row['notes']}")
         return True
 
 
@@ -1187,6 +1219,9 @@ def _handle_shell_actions(action, data=None):
     elif action == 'list_compilers':
         return CompilerReportHelper.report()
 
+    elif action == 'list_engines':
+        return EngineReportHelper.report()
+
     elif action == 'list_hardening':
         return HardeningReportHelper.report()
 
@@ -1495,6 +1530,19 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
         print("[INFO] Iniciando compilación del proyecto actual...")
 
+        # Motor explícito: si se indica, su backend manda; si no, se conserva el
+        # comportamiento previo (backend por defecto, Nuitka).
+        compiler_name = kwargs.get('compiler')
+        engine_id = kwargs.get('engine')
+        if engine_id:
+            from lib.engines import get_engine
+
+            engine = get_engine(engine_id)
+            compiler_name = engine.backend or compiler_name
+            print(f"[INFO] Motor: {engine.display_name} (py{engine.python_version}, backend={engine.backend})")
+            if engine.is_legacy:
+                print("[WARN] FlatCube v1 es legacy y no recibe soporte.")
+
         print(f"[INFO] Proyecto: {project_path}")
         print(f"[INFO] Salida: {output_path}")
         print(f"[INFO] Plataforma objetivo (detectada): {target_platform}")
@@ -1502,7 +1550,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             project_path,
             output_path,
             log_callback=print,
-            compiler_name=kwargs.get('compiler'),
+            compiler_name=compiler_name,
             sandbox=kwargs.get('sandbox', True),
             package_password=kwargs.get('password'),
             build_dropper=kwargs.get('dropper', False),

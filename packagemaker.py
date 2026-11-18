@@ -1015,6 +1015,9 @@ class PackageTodoGUI(QMainWindow):
             self._refresh_config_tab_labels()
         if hasattr(self, "sandbox_switch"):
             self.sandbox_switch.setText(tr("create.sandbox"))
+        if hasattr(self, "engine_combo"):
+            self._populate_engines()
+            self.engine_combo.setToolTip(tr("build.engine_tooltip"))
 
     def update_sidebar_description(self, index):
         key = SIDEBAR_DESC_KEYS.get(index)
@@ -2186,14 +2189,16 @@ class PackageTodoGUI(QMainWindow):
 
         form_layout.addLayout(mode_layout, 4, 1) # Use addLayout directly for cleaner code
 
-        # Fila 4b: Compilador y blindaje
-        form_layout.addWidget(uwp_label(tr("build.compiler")), 6, 0)
-        self.compiler_combo = QComboBox()
-        self.compiler_combo.setFixedHeight(35)
-        set_qss(self.compiler_combo, 'packagemaker_079', append=False)
-        self._populate_compilers()
-        self.compiler_combo.setToolTip(tr("build.backend_tooltip"))
-        form_layout.addWidget(self.compiler_combo, 6, 1)
+        # Fila 6: motor de compilación (selección explícita FlatCube/BlindCube).
+        # Un ítem marcado como legacy no se deshabilita: elegirlo pide confirmación.
+        form_layout.addWidget(uwp_label(tr("build.engine")), 6, 0)
+        self.engine_combo = QComboBox()
+        self.engine_combo.setFixedHeight(35)
+        set_qss(self.engine_combo, 'packagemaker_079', append=False)
+        self._populate_engines()
+        self.engine_combo.setToolTip(tr("build.engine_tooltip"))
+        self.engine_combo.currentIndexChanged.connect(self._on_engine_changed)
+        form_layout.addWidget(self.engine_combo, 6, 1)
 
         options_row = QHBoxLayout()
         options_row.setSpacing(18)
@@ -2266,23 +2271,57 @@ class PackageTodoGUI(QMainWindow):
                  except (OSError, ET.ParseError):
                      pass
 
-    def _populate_compilers(self):
-        """Rellena el selector de compiladores con los backends disponibles."""
-        try:
-            from lib.compilers import available_backends
+    def _populate_engines(self):
+        """Rellena el selector con los motores de compilación explícitos.
 
-            report = available_backends()
-            for name, info in report.items():
-                label = info["display_name"]
-                if not info["available"]:
-                    label += f" ({tr('common.not_installed')})"
-                self.compiler_combo.addItem(label, name)
-                if not info["available"]:
-                    index = self.compiler_combo.count() - 1
-                    self.compiler_combo.model().item(index).setEnabled(False)
-        except Exception as exc:
-            print(f"[WARN] {tr('build.compiler_warn')}: {exc}")
-            self.compiler_combo.addItem(tr("build.compiler_default"), "nuitka")
+        FlatCube v1 (legacy) y BlindCube v2 (estándar) aparecen siempre: el
+        usuario debe elegir uno; el legacy se marca en la etiqueta.
+        """
+        from lib.engines import compiler_engines
+
+        self.engine_combo.clear()
+        for engine in compiler_engines():
+            label = engine.display_name
+            if engine.is_legacy:
+                label += f" ({tr('build.engine_legacy')})"
+            self.engine_combo.addItem(label, engine.id)
+        # BlindCube v2 es el estándar: preseleccionarlo no rompe la exigencia de
+        # elección explícita (el combo nunca queda vacío).
+        standard = self.engine_combo.findData("blindcube")
+        if standard >= 0:
+            self.engine_combo.setCurrentIndex(standard)
+
+    def _selected_engine(self):
+        """Devuelve el motor elegido y avisa si es legacy (requiere confirmar)."""
+        from lib.engines import get_engine
+
+        engine_id = self.engine_combo.currentData()
+        if not engine_id:
+            return None
+        engine = get_engine(engine_id)
+        if engine.is_legacy:
+            confirm = LeviathanDialog.launch(
+                self,
+                tr("common.warning"),
+                tr("build.engine_legacy_warning"),
+                mode="question",
+            )
+            if confirm != 1:
+                return None
+        return engine
+
+    def _on_engine_changed(self, _index):
+        """Actualiza el tooltip con el stack del motor elegido."""
+        from lib.engines import get_engine
+
+        engine_id = self.engine_combo.currentData()
+        if not engine_id:
+            return
+        engine = get_engine(engine_id)
+        self.engine_combo.setToolTip(
+            f"{engine.display_name} · py{engine.python_version} · "
+            f"{engine.backend or '—'} · {engine.format_extension or '—'}"
+        )
 
     def build_package_action(self):
         version = getversion()
@@ -2300,11 +2339,17 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, 'radio_lite') and self.radio_lite.isChecked():
             build_mode = "lite"
 
+        # El motor se elige explícitamente; su backend decide la compilación.
+        engine = self._selected_engine()
+        if engine is None:
+            self.reporter.error(tr("common.warning"), tr("build.engine_required"))
+            return
+        compiler_name = engine.backend
+
         self.reporter.progress(tr("build.progress_building"))
         self.build_progress.setVisible(True)
         self.build_progress.setMarquee(True)
 
-        compiler_name = self.compiler_combo.currentData() if hasattr(self, 'compiler_combo') else None
         build_dropper = bool(getattr(self, 'dropper_checkbox', None) and self.dropper_checkbox.isChecked())
         hardening = None
         if getattr(self, 'hardening_checkbox', None) and self.hardening_checkbox.isChecked():
@@ -4548,6 +4593,7 @@ def main():
                 'show_version',
                 'version_update',
                 'list_compilers',
+                'list_engines',
                 'list_hardening',
                 'inspect_iflapp',
                 'list_fonts',

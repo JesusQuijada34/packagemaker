@@ -270,7 +270,12 @@
     "compilation_complete": "Compilación completada",
     "compilation_error": "Error de compilación",
     "compiler_default": "Nuitka (predeterminado)",
-    "progress_building": "Compilando..."
+    "progress_building": "Compilando...",
+    "engine": "Motor de compilación:",
+    "engine_tooltip": "Elige el motor explícitamente: FlatCube v1 (legacy) o BlindCube v2 (estándar)",
+    "engine_required": "Debes seleccionar un motor de compilación antes de compilar.",
+    "engine_legacy_warning": "FlatCube v1 es legacy y no recibe soporte. Se recomienda BlindCube v2.",
+    "engine_legacy": "Legacy"
   },
   "window": {
     "restore": "Restaurar",

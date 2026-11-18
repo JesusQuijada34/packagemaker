@@ -19,6 +19,7 @@ HEADLESS_ACTIONS = (
     "uninstall_mexf_shell",
     "show_version",
     "list_compilers",
+    "list_engines",
     "list_hardening",
     "inspect_iflapp",
     "list_fonts",

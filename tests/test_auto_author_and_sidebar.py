@@ -80,3 +80,49 @@ def test_author_field_is_readonly_and_follows_session(qapp, isolated_store):
     finally:
         win.close()
         qapp.processEvents()
+
+
+def test_build_tab_forces_explicit_engine_choice(qapp):
+    """La pestaña Compilar exige elegir FlatCube v1 o BlindCube v2."""
+    import packagemaker as pm
+
+    win = pm.PackageTodoGUI()
+    try:
+        ids = [win.engine_combo.itemData(i) for i in range(win.engine_combo.count())]
+        assert ids == ["blindcube", "flatcube"]
+        # BlindCube v2 (estándar) va preseleccionado; el combo nunca queda vacío.
+        assert win.engine_combo.currentData() == "blindcube"
+        assert win._selected_engine().id == "blindcube"
+        # El motor legacy se marca en la etiqueta.
+        legacy_index = win.engine_combo.findData("flatcube")
+        assert "Legacy" in win.engine_combo.itemText(legacy_index)
+    finally:
+        win.close()
+        qapp.processEvents()
+
+
+def test_engine_registry_and_containers():
+    """Los 3 motores se registran y sus contenedores hacen round-trip."""
+    from lib import blindcubeEngine, flatcubeEngine, makeselfEngine
+    from lib.engines import available_engines, compiler_engines, resolve_engine
+
+    assert set(available_engines()) == {"makeself", "flatcube", "blindcube"}
+    assert [e.id for e in compiler_engines()] == ["blindcube", "flatcube"]
+    assert resolve_engine(None).id == "blindcube"
+
+    # BlindCube v2: cabecera con magic bytes + LZMA.
+    payload = b"package-maker" * 50
+    container = blindcubeEngine.pack(payload, meta={"app": "demo"})
+    assert container.startswith(b"BLINDCUB")
+    meta, restored = blindcubeEngine.unpack(container)
+    assert restored == payload
+    assert meta["app"] == "demo"
+
+    # FlatCube v1: el .flatkpkg es un ZIP, sin cabecera propia.
+    zip_bytes = b"PK\x03\x04demo"
+    assert flatcubeEngine.pack(zip_bytes) == zip_bytes
+
+    # MakeSelf valida la ley de nombres canónicos.
+    assert makeselfEngine.validate_canonical_name("Influent.demo.v1.0-24.01-10.00-AlphaCube")
+    assert not makeselfEngine.validate_canonical_name("Influent.demo")
+
