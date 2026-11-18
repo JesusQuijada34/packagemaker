@@ -1,59 +1,174 @@
-Bugs nuevos qué encontré
+## Recomendación Estratégica de Ejecución
 
-Conseguí Qué no se guarda el estado del inicio de sesión correctamente o el landing no válida la existencia del login pero se augur mostrando igual la muralla de inicio de sesión pero al hacer clic en el logo o perfil se muestra la info de un estado de inicio anterior guardado en pm.data
+Para responder a tu pregunta sobre por dónde empezar: lo más eficiente y seguro es empezar por la Refactorización de Arquitectura y Motores (Fase 1), antes de tocar la interfaz (Fase 2).
 
-El Recuadro debe ser translúcido y los bordes horizontales deberían de parecer iluminados por el fondo para dar ese aspecto de glass líquido y los inputs deben de adoptar los qss de package maker al igual que los controles del landing page
-
-No Existe un spinner en realidad, El recuadro no se anima al cambiar de estado como un ejemplo animación de resize cuando se le da en iniciar sesión, deberías de hacer qué el input del usuario sea obligatorio para confirmar que coincida el username del token con el username manual, hacer que al darle en iniciar sesión todo se anime, que aparezca el perfil de usuario en circular del mismo tamaño del logo "GH" animado suavemente reemplazando el logo genérico y abajo qué aparezca el nombre de perfil y más abajo aparezca el mensaje cargando perfil mientras se carga todo, al cargar el perfil, animarlo, mientras aparece el nombre de cuenta que aparezca un texto que diga iniciando sesión, cuando cargue el nombre de cuenta, remplazar ese texto animando lo suavemente por el nombre de cuenta, luego se guarda registro o caché si es posible, luego todo se desplaza y se anima mientras el fondo de aclara suavemente a si estado original sin contrast y se desvanece revelando la interfaz.
-
-Al cerrar sesión, será todo lo contrario, aparece el fondo de landing page, se destruye la ventana del ide, aparece animado el recuadro mientras qué al fondo de le aplica una animación de fundido mientras se le aplica el contraste original, luego se acomodan los controles y todo es como el estado del first time, todo es manejado con coherencia y hay caché cifrada
-
-Elimina el elemento del sidebar llamado ide y todas sus funciones relacionadas pero que no afecten al engine del programa, ya que, existe uno llamado pmcodeeditor.
-
-Agrega Un acceso directo en el landing dentro del recuadro que pregunte si no poseo un token de GitHub. El link hará que el recuadro se extienda horizontalmente dejando los controles principales a la izquierda después de la animación que aparezca un splitter horizontal animado al mismo tiempo, luego a la mitad derecha aparecerán los pasos para obtener el token explicada mente y detectando el navegador predeterminado para lograr los pasos detallados por ejemplo: Abre edge..., con flechas de atrás/siguiente paso, después el link cambiará su pregunta por una qué pregunta si obtengo un token de GitHub, el cual ocultará el recuadro extendido derecho animando primero en desaparecer los controles y luego recoger desde la derecha el recuadro hasta centrarlo a su tamaño original como estaba antes de forma limpia, después el link cambiará a su pregunta original y a su acción predeterminada sin bug dentro del código, también incluye un link que pregunte si no tengo una cuenta de github, para abrirme otro panel extendido con otros pasos distintos y link cambia a pregunta si poseo una cuenta de github para proceder a cerrar el panel extendido y solamente dejar el recuadro de autenticación original.
-
-Otro bug, cambio "packagemaker\lib\github_login_landing.py:L25-26" por otros valores y no aplica, coincide con un bug de qss de forzado de material y size?
-
-También, al abrir package maker no se desplaza suavemente desde abajo, las esquinas son cuadradas, al terminar el splash solo se quita de golpe y no se funde suavemente, que está pasando con las animaciones y sus propiedades? Si, también debe de aplicar en el bootloader y en flarmhandler
-
-Remplaza el texto del login genérico "GH", por la librería de iconos 
-
-En package maker todavía veo strings en español hasta inclusive en los prints y en los retornos
+* **¿Por qué?** Si arreglas primero las animaciones, los estilos QSS y los flujos de inicio de sesión sobre un archivo monolítico desordenado, al separar las clases y módulos después tendrás que volver a conectar señales, rutas e importaciones (duplicando trabajo y arriesgando nuevos bugs).
 
 
-También veo que la i18n tiene archivos incompletos, unusable y en ingles y ni siquiera en su propio idioma
+* **Orden óptimo:** Primero limpiamos la base y encapsulamos los motores para blindar el código; luego aplicamos toda la capa visual, animaciones y flujos de usuario sobre una arquitectura limpia.
 
-Todavía veo funciones que llaman a set qss ejemplo en L759
 
-Incluí Iconos en la librería de iconos para que apliques iconos en donde falta y he comentarse los svg que dudes en donde colocar, si necesitas que mueva yo la carpeta svg para que lo incluyas tu en la librería de iconos de forma implementada, también se es validado.
 
-Aprovechando El inicio de sesión en github se debería eliminar el input de introducir autor ya que se usará el user name de github en vez de escribirlo
+---
 
-En Vez de simular un splash de carga de 5 segundos, mejor es poner el splash integrado de primero y hacerlo desvanecer una vez que una interfaz lo llame a su cierre para mostrar tal interfaz, es decir, ya que esto será condicional de que si primero es iniciar sesión o seguir usando el ide con la sesión iniciada, para saber en donde frenar el splash usando la condición que llevará el cierre a la interfaz decidida y así revelar la interfaz decidida una vez llamado al cierre del splash. Es como una palanca con un propósito si sale algo para saber en donde cumplir su objetivo.
+## Fase 1: Arquitectura Modular y Blindaje de Motores (Backend)
 
-Limpia El código de funciones que no se usan, separa las clases dentró de el en lib/, y deja package maker como index, es decir el que cargue las variables e importes y condición de si cargar el landing page o la interfaz siempre colocando el splash por delante y de primer plano en todo. 
+El objetivo es convertir el archivo principal de **Package Maker** en un *index* limpio (solo carga variables, importaciones y decide qué ventana mostrar tras el splash), separando toda la lógica en `lib/` para evitar que modificaciones externas rompan los nombres canónicos y métodos.
 
-Ya En lib haz 3 paquetes python para los siguientes motores que quedan incrustados en package maker y son dañados por otros agentes o programas y package maker solo importará esos módulos enteros, así es mejor porque hay programas que editan y dañan el funcionamiento de los nombres canonicales y los métodos, el motor de creación trae consigo mismo las plantillas y lo necesario para hacer proyectos como lo hace normalmente. Y el motor de compilación solo tendrá 2 tipos de compilación con su launcher el cual es llamado mediante funciones por otros scripts. Estos compiladores descargan python en un entorno virtual temporal con su sub motor de compilado dentro del proyecto y cada uno posee funciones de regenerado efervescente de paquetes el cual es moon fix.
+### 1. Limpieza y Separación de Clases (`lib/`)
 
-lib/flatcubeEngine/ - zip tradicional (FlatCube v1) "sin mantenimiento Y fuera de soporte"
- requiere sub compiladores: pyinstaller
- sandbox: es básico, solo para alojar archivos fuera del entorno
- extensión de paquetes: .flatkpkg/zip 
- python: 3.10
- No compatible con: leviathan ui/pyqt6
- compatible puro: pyqt4/pyqt5 estable a esa versión de python
- ideal para: Viajes y entornos python
+* **Refactorización del Index:** Extraer las clases internas hacia módulos dedicados en `lib/` y eliminar todo el código muerto o funciones sin uso.
 
-lib/blindcubeEngine/ - blindaje preciso (BlindCube v2) "Popular y el predeterminado"
- requiere sub compiladores: nuitka, leviathan ui
- tipo de sandbox: emula cualquier recurso en cualquier sistema operativo con restricciones
- compatible con: .MEXF "Marked extensions file", tiene fácil y mejor funcionamiento
- extensión de paquetes: .blindkpkg/lzma con magic bytes y header 
- Python: python 3.14 y leviathan ui/pyqt6+
- ideal para: Desktop apps (UWP yourself), servidores, apps de pago y tiendas por su cifrado de externo a extremo
 
-lib/makeselfEngine/ - motor de generación de paquetes
-  sus templates, su formato canonical, estructura y etcétera.
+* **Eliminación de Módulos Obsoletos:** Remover por completo el elemento `ide` del *sidebar* y sus funciones asociadas (sin afectar el motor principal), dado que `pmcodeeditor` cumple esa función.
 
-Exijo un plan para eso, primero separar los engines de creación y compilación a paquetes python y En el apartado de compilado, se tendrá que escoger el motor de compilación, que por obvias razónes son 2 y por obviedad ninguno embebe sin módulos ya que cada engine prepara entornos virtuales basado en lib/requirements.txt, para luego proceder a modificar la interfaz o que prefieres hacer más rápido? Empaquetar los engines o reparar bugs de las ventanas? Yo recomiendo empezar por lo visual
-luego modificar el build this para forzar escoger un compilador
+
+* **Automatización de Autor:** Eliminar el campo manual de "Autor" en la creación de proyectos y vincularlo directamente al `username` autenticado de GitHub.
+
+
+
+### 2. Encapsulamiento de Motores en Paquetes Python
+
+Cada motor operará de forma aislada preparando entornos virtuales temporales basados en `lib/requirements.txt`, descargando su versión de Python correspondiente e incluyendo funciones de regeneración efervescente (**Moon Fix**):
+
+| Paquete | Motor / Propósito | Stack y Requisitos | Formato y Uso Ideal |
+| --- | --- | --- | --- |
+| **`lib/makeselfEngine/`** | **Motor de Generación**
+
+ | Plantillas base, estructura de carpetas y validación de formato canónico.
+
+ | Creación inicial de proyectos de Package Maker.
+
+ |
+| **`lib/flatcubeEngine/`** | **FlatCube v1** *(Legacy / Sin soporte)*
+
+ | Python 3.10, PyInstaller, PyQt4/PyQt5 *(Incompatible con Leviathan UI / PyQt6)*.
+
+ | **`.flatkpkg` / `.zip**`. Sandbox básico. Ideal para entornos portables o viajes.
+
+ |
+| **`lib/blindcubeEngine/`** | **BlindCube v2** *(Estándar / Popular)*
+
+ | Python 3.14, Nuitka, Leviathan UI / PyQt6+, compatible con `.MEXF`.
+
+ | **`.blindkpkg` / LZMA** (con *magic bytes* y *header*). Sandbox multi-OS con cifrado de extremo a extremo. Ideal para apps de escritorio, tiendas y servidores.
+
+ |
+
+### 3. Actualización del Flujo de Compilación (`Build This`)
+
+* Modificar la vista/acción de compilación para **forzar la selección explícita** entre los dos motores disponibles (`FlatCube v1` o `BlindCube v2`) antes de ejecutar el *launcher* de compilación.
+
+
+
+---
+
+## Fase 2: Corrección de Bugs de Ventana, QSS e Internacionalización
+
+### 1. Motor de Ventanas y Animaciones Globales
+
+* **Apertura y Bordes:** Corregir el renderizado inicial de **Package Maker** para eliminar las esquinas cuadradas y aplicar una animación de desplazamiento suave desde la parte inferior.
+
+
+* **Revisión de Propiedades de Animación:** Auditar las propiedades de opacidad y geometría que impiden las transiciones suaves tanto en la app principal como en **`bootloader`** y **`flarmhandler`**.
+
+
+* **Splash Screen Condicional (Sin temporizador falso):** Eliminar el retraso artificial de 5 segundos. El *Splash Screen* debe cargarse en primer plano desde el inicio y actuar como una **compuerta lógica**: permanecerá visible hasta que la validación de sesión determine si debe desvanecerse para mostrar el *Landing de Login* o directamente el *IDE*.
+
+
+
+### 2. Saneamiento de Estilos (QSS) e Iconografía
+
+* **Bug de Tamaño y Material (`github_login_landing.py:L25-26`):** Investigar y corregir el forzado de estilos/dimensiones en el QSS que impide que los cambios en las líneas 25-26 surtan efecto.
+
+
+* **Eliminación de `setStyleSheet` en línea:** Refactorizar llamadas residuales a `setQSS` / `setStyleSheet` (como en `L759`) para centralizar toda la hoja de estilos.
+
+
+* **Integración de Librería de Iconos:** Reemplazar el texto provisional `"GH"` por el icono vectorial correspondiente y auditar la interfaz para insertar los nuevos SVGs pendientes (revisando los comentarios sobre su ubicación).
+
+
+
+### 3. Internacionalización (i18n) y Limpieza de Strings
+
+* **Traducción del Código Fuente:** Eliminar textos hardcodeados en español dentro de la lógica, retornos de funciones y mensajes `print()` en consola.
+
+
+* **Reparación de Archivos i18n:** Completar y corregir los diccionarios de idiomas que actualmente están rotos, incompletos o contienen texto en inglés dentro de archivos de otros idiomas.
+
+
+
+---
+
+## Fase 3: Rediseño UX/UI del Landing Page y Flujo de Autenticación
+
+### 1. Estética "Liquid Glass"
+
+* **Contenedor Principal:** Aplicar un acabado translúcido al recuadro de inicio de sesión con bordes horizontales iluminados que reaccionen visualmente al fondo.
+
+
+* **Coherencia de Controles:** Adaptar todos los *inputs* y botones del *landing* a los estilos QSS oficiales de **Package Maker**.
+
+
+
+### 2. Persistencia, Validación y Coreografía de Inicio/Cierre de Sesión
+
+* **Validación y Caché Cifrada:** Corregir el fallo de lectura/escritura en `pm.data` (que muestra la muralla de login aunque exista sesión, pero carga datos viejos al hacer clic). Implementar caché cifrada y exigir que el campo de usuario sea **obligatorio** para verificar que coincida exactamente con el propietario del Token de GitHub.
+
+
+* **Secuencia Animada de Login:**
+1. Al pulsar *Iniciar Sesión*, redimensionar suavemente el recuadro.
+
+
+2. Reemplazar el logo genérico de GitHub por el **avatar circular del usuario** (mismo tamaño) mediante una transición suave.
+
+
+3. Mostrar debajo el nombre del perfil y un indicador real de estado (*"Cargando perfil..."* -> *"Iniciando sesión..."*) que se transforme animadamente en el nombre de la cuenta al finalizar.
+
+
+4. Guardar la sesión en caché, aclarar suavemente el contraste del fondo hasta su estado original y desvanecer el *landing* para revelar la interfaz principal.
+
+
+
+
+* **Secuencia Animada de Logout:**
+1. Destruir la ventana del IDE.
+
+
+2. Mostrar el fondo del *landing* con animación de fundido y ajuste de contraste.
+
+
+3. Desplegar el recuadro de login animado y reacomodar los controles al estado inicial (*first time*) limpiando la caché de sesión.
+
+
+
+
+
+### 3. Asistente Interactivo Lateral (Paneles Desplegables)
+
+Implementar dos accesos directos dentro del recuadro de login que expandan horizontalmente la tarjeta con un *splitter* animado hacia la derecha:
+
+* **Flujo A — *"¿No posees un token de GitHub?"*:**
+* Expande el panel derecho mostrando una guía paso a paso con navegación (*Atrás / Siguiente*).
+
+
+* **Detección de Navegador:** Detectar el navegador predeterminado del sistema para personalizar las instrucciones (ej. *"Abre Microsoft Edge..."*).
+
+
+* El enlace cambia dinámicamente a *"¿Ya obtuviste tu token de GitHub?"*; al pulsarlo, oculta los controles derechos, contrae el recuadro hacia el centro y restaura el enlace a su estado original sin errores de estado.
+
+
+
+
+* **Flujo B — *"¿No tienes una cuenta de GitHub?"*:**
+* Despliega el mismo formato de panel extendido con los pasos de registro y cambia el enlace a *"¿Ya posees una cuenta de GitHub?"* para plegar nuevamente la vista.
+
+
+
+
+
+---
+
+### ¿Por qué punto exacto quieres que empecemos?
+
+Si estás de acuerdo con el orden recomendado, podemos arrancar definiendo la **estructura de carpetas y puntos de entrada de los 3 motores en `lib/**`, o si prefieres revisar primero el código de **`github_login_landing.py`** para resolver el bug del QSS y el flujo de sesión
