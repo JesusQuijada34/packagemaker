@@ -391,13 +391,30 @@ def _existing_overlay(code: str) -> dict:
     return data
 
 
+def _nest(flat: dict) -> dict:
+    """Reanida un diccionario plano ``seccion.clave`` -> valor."""
+    nested: dict = {}
+    for key, value in flat.items():
+        parts = key.split(".")
+        node = nested
+        for part in parts[:-1]:
+            node = node.setdefault(part, {})
+        node[parts[-1]] = value
+    return nested
+
+
 def main() -> None:
+    from tools.translations_curated import CURATED
+
     source = json.loads((LANG_DIR / "es.json").read_text(encoding="utf-8"))
     fallback = json.loads((LANG_DIR / "en.json").read_text(encoding="utf-8"))
 
     for code, overlay in TRANSLATIONS.items():
         merged = _deep_merge(_deep_merge(source, fallback), _existing_overlay(code))
         merged = _deep_merge(merged, overlay)
+        # Las traducciones curadas tienen la última palabra: cubren las claves
+        # que de otro modo caerían al inglés.
+        merged = _deep_merge(merged, _nest(CURATED.get(code, {})))
         merged["_meta"] = overlay["_meta"]
         out = LANG_DIR / f"{code}.json"
         out.write_text(
