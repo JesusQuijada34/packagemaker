@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from lib.pm_data import get_pm_data
+from lib import session_cache
 
 GITHUB_API = "https://api.github.com"
 _USER_AGENT = "PackageMaker-GitHubIdentity"
@@ -43,6 +44,15 @@ def sanitize_token(token: str) -> str:
 
 class GitHubIdentityError(RuntimeError):
     """Error al resolver o validar la identidad de GitHub."""
+
+
+class GitHubOfflineError(GitHubIdentityError):
+    """No se pudo contactar con GitHub (red no disponible).
+
+    Se distingue del error de credencial inválida para no borrar una sesión
+    válida cuando lo único que falta es conexión: el arranque debe entrar con el
+    perfil cacheado en vez de mostrar la muralla de login.
+    """
 
 
 @dataclass
@@ -89,7 +99,45 @@ def save_token(token: str) -> None:
 
 
 def load_token() -> str:
-    return sanitize_token(str(_store().get_user(TOKEN_KEY, "") or ""))
+    token = sanitize_token(str(_store().get_user(TOKEN_KEY, "") or ""))
+    if token:
+        return token
+    # ``pm.data`` puede no tener el token (lectura fallida o clave ausente): la
+    # caché cifrada lo recupera para no volver a mostrar la muralla de login.
+    cached = session_cache.load_session()
+    return sanitize_token(cached[0]) if cached else ""
+
+
+def persist_session(token: str, profile: "GitHubProfile") -> None:
+    """Guarda token + perfil en pm.data y en la caché cifrada (una sola vez)."""
+    save_token(token)
+    if profile is not None:
+        save_profile(profile)
+        session_cache.save_session(sanitize_token(token), profile.to_dict())
+
+
+def restore_cached_session() -> Optional["GitHubProfile"]:
+    """Repuebla pm.data desde la caché cifrada si falta la sesión.
+
+    Devuelve el perfil restaurado, o ``None`` si no hay caché utilizable.
+    """
+    cached = session_cache.load_session()
+    if not cached:
+        return None
+    token, profile_dict = cached
+    store = _store()
+    if not store.get_user(TOKEN_KEY, ""):
+        store.set_user(TOKEN_KEY, sanitize_token(token))
+    for key, value in (
+        (LOGIN_KEY, profile_dict.get("login", "")),
+        (NAME_KEY, profile_dict.get("name", "")),
+        (AVATAR_KEY, profile_dict.get("avatar_url", "")),
+        (EMAIL_KEY, profile_dict.get("email", "")),
+    ):
+        if value and not store.get_user(key, ""):
+            store.set_user(key, value)
+    store.save()
+    return load_profile()
 
 
 def clear_identity() -> None:
@@ -97,6 +145,7 @@ def clear_identity() -> None:
     for key in (TOKEN_KEY, LOGIN_KEY, NAME_KEY, AVATAR_KEY, EMAIL_KEY):
         store.remove_user(key)
     store.save()
+    session_cache.clear_session()
 
 
 def save_profile(profile: GitHubProfile) -> None:
@@ -119,6 +168,21 @@ def load_profile() -> GitHubProfile:
     )
 
 
+def has_cached_session() -> bool:
+    """Sesión restaurable sin red: hay token y un ``login`` de perfil conocido.
+
+    Es lo que permite entrar directamente al IDE en el arranque cuando ya se
+    inició sesión antes, sin volver a mostrar la muralla de login. El ``login``
+    puede estar en ``pm.data`` o en la caché cifrada.
+    """
+    if not load_token():
+        return False
+    if load_profile().login:
+        return True
+    cached = session_cache.load_session()
+    return bool(cached and cached[1].get("login"))
+
+
 def _request(url: str, token: str = "", *, timeout: float = 10.0) -> Any:
     headers = {"User-Agent": _USER_AGENT, "Accept": "application/vnd.github+json"}
     if token:
@@ -138,7 +202,7 @@ def _request(url: str, token: str = "", *, timeout: float = 10.0) -> Any:
             raise GitHubIdentityError("Recurso de GitHub no encontrado") from exc
         raise GitHubIdentityError(f"GitHub respondió {exc.code}") from exc
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        raise GitHubIdentityError("Sin conexión con GitHub") from exc
+        raise GitHubOfflineError("Sin conexión con GitHub") from exc
     except ValueError as exc:
         # ``http.client`` lanza ValueError/UnicodeEncodeError si la cabecera
         # lleva caracteres no ASCII (p. ej. un token pegado con un espacio duro).

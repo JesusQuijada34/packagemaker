@@ -5,7 +5,8 @@ QWidget#PageActionBar, QFrame#Card, QWidget#Card{background: rgba(255,255,255,0.
 
 /* @role: landing */
 QFrame#GitHubLoginCard {
-    background-color: __CARD_SURFACE__;
-    border: 1px solid __CARD_BORDER__;
-    border-radius: 20px;
+    background-color: __GLASS_BG__;
+    border: 1px solid __GLASS_BORDER__;
+    border-top: 1px solid __GLASS_BORDER_TOP__;
+    border-radius: __CARD_RADIUS__px;
 }

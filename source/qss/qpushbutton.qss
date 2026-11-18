@@ -80,6 +80,27 @@ QPushButton#GitHubLoginButton {
 QPushButton#GitHubLoginButton:hover { background-color: __ACCENT_HOVER__; }
 QPushButton#GitHubLoginButton:pressed { background-color: __ACCENT_PRESSED__; }
 QPushButton#GitHubLoginButton:disabled { background-color: __CARD_BORDER__; color: __MUTED__; }
+QPushButton#GitHubAssistantLink {
+    background: transparent;
+    color: __ACCENT__;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 0;
+    text-align: center;
+}
+QPushButton#GitHubAssistantLink:hover { color: __ACCENT_HOVER__; }
+QPushButton#GitHubAssistantBack, QPushButton#GitHubAssistantNext {
+    background: transparent;
+    color: __ACCENT__;
+    border: 1px solid __CARD_BORDER__;
+    border-radius: __CONTROL_RADIUS__px;
+    padding: 4px 12px;
+    min-height: 26px;
+    font-size: 12px;
+}
+QPushButton#GitHubAssistantBack:hover, QPushButton#GitHubAssistantNext:hover { border-color: __ACCENT__; }
+QPushButton#GitHubAssistantBack:disabled { color: __MUTED__; }
 
 /* @role: profile */
 QPushButton#GitHubProfileAction {

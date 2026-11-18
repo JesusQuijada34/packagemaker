@@ -12,19 +12,36 @@ iniciar sesión.
 from __future__ import annotations
 
 try:
-    from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtSignal
+    from PyQt6.QtCore import (
+        QEasingCurve,
+        QPropertyAnimation,
+        QTimer,
+        Qt,
+        pyqtSignal,
+    )
     from PyQt6.QtGui import QColor, QPainter, QPixmap
-    from PyQt6.QtWidgets import QFrame, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
+    from PyQt6.QtWidgets import (
+        QFrame,
+        QGraphicsOpacityEffect,
+        QHBoxLayout,
+        QLabel,
+        QLineEdit,
+        QPushButton,
+        QVBoxLayout,
+        QWidget,
+    )
 except ImportError:  # pragma: no cover
     QWidget = object
 
 from lib.app_icons import ICONS_SVG, svg_to_pixmap
 from lib.design_tokens import BUTTON_HEIGHT, INPUT_HEIGHT
 from lib.i18n import tr
+from lib.landing_assistant import ANIMATION_MS, PANEL_WIDTH, LandingAssistant, detect_default_browser
 
 AVATAR_SIZE = 88
 AVATAR_ICON_SIZE = 46
 CARD_WIDTH = 460
+CARD_EXPAND = 48
 
 
 def _default_avatar_pixmap():
@@ -54,6 +71,7 @@ class GitHubLoginLanding(QWidget):
         self._background = QPixmap(background_path) if background_path else QPixmap()
         self._spinner_index = 0
         self._status_message = ""
+        self._assistant_flow = ""
         self._spinner_timer = QTimer(self)
         self._spinner_timer.timeout.connect(self._tick_spinner)
         self._build_ui()
@@ -83,6 +101,33 @@ class GitHubLoginLanding(QWidget):
         self.raise_()
         self.show()
         self.setFocus(Qt.FocusReason.OtherFocusReason)
+
+    def reveal(self):
+        """Muestra el landing con un fundido y recupera el contraste original."""
+        self.setWindowOpacity(0.0)
+        self.lock_to_parent()
+        animation = QPropertyAnimation(self, b"windowOpacity", self)
+        animation.setDuration(360)
+        animation.setStartValue(0.0)
+        animation.setEndValue(1.0)
+        animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._reveal_animation = animation
+        animation.start()
+
+    def reset_to_initial_state(self):
+        """Devuelve el landing al estado 'primera vez' tras cerrar sesión."""
+        self._spinner_timer.stop()
+        self._status_message = ""
+        self.username_input.clear()
+        self.token_input.clear()
+        self._set_form_enabled(True)
+        self.status.hide()
+        self.welcome.hide()
+        self.subtitle.setText(tr("github.landing_subtitle"))
+        self.avatar.setPixmap(_default_avatar_pixmap())
+        self.card.setFixedWidth(CARD_WIDTH)
+        self.setWindowOpacity(1.0)
+        self._collapse_assistant()
 
     def _build_ui(self):
         outer = QVBoxLayout(self)
@@ -163,7 +208,74 @@ class GitHubLoginLanding(QWidget):
         self.welcome.hide()
         card_layout.addWidget(self.welcome)
 
-        outer.addWidget(self.card, 0, Qt.AlignmentFlag.AlignCenter)
+        # Enlaces del asistente (Fase 3.3): abren el panel lateral.
+        self.token_link = QPushButton(tr("github.assistant_token_link"), self.card)
+        self.token_link.setObjectName("GitHubAssistantLink")
+        self.token_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.token_link.setFlat(True)
+        self.token_link.clicked.connect(lambda: self._toggle_assistant("token"))
+        card_layout.addWidget(self.token_link)
+
+        self.account_link = QPushButton(tr("github.assistant_account_link"), self.card)
+        self.account_link.setObjectName("GitHubAssistantLink")
+        self.account_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.account_link.setFlat(True)
+        self.account_link.clicked.connect(lambda: self._toggle_assistant("account"))
+        card_layout.addWidget(self.account_link)
+
+        # La tarjeta y el panel viven en una fila que se ensancha al desplegar.
+        self.row = QWidget(self)
+        row_layout = QHBoxLayout(self.row)
+        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setSpacing(12)
+        row_layout.addWidget(self.card)
+        self.assistant = LandingAssistant(self.row, detect_default_browser())
+        self.assistant.setObjectName("GitHubAssistantPanel")
+        self.assistant.hide()
+        row_layout.addWidget(self.assistant)
+        outer.addWidget(self.row, 0, Qt.AlignmentFlag.AlignCenter)
+
+    # ── asistente lateral (Fase 3.3) ──────────────────────────────────────
+    def _toggle_assistant(self, flow: str) -> None:
+        """Despliega el panel lateral o lo pliega si ya está abierto."""
+        if self._assistant_flow == flow:
+            self._collapse_assistant()
+            return
+        self._assistant_flow = flow
+        self.assistant.start_flow(flow)
+        self.assistant.show()
+        self._animate_row(self._closed_row_width() + PANEL_WIDTH)
+        self._sync_assistant_links()
+
+    def _collapse_assistant(self) -> None:
+        self._assistant_flow = ""
+        self.assistant.hide()
+        self._animate_row(self._closed_row_width())
+        self._sync_assistant_links()
+
+    def _closed_row_width(self) -> int:
+        return CARD_WIDTH + 2 * self.layout().contentsMargins().left()
+
+    def _animate_row(self, target: int) -> None:
+        animation = QPropertyAnimation(self.row, b"maximumWidth", self)
+        animation.setDuration(ANIMATION_MS)
+        animation.setStartValue(self.row.width())
+        animation.setEndValue(target)
+        animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        self._row_animation = animation
+        animation.start()
+
+    def _sync_assistant_links(self) -> None:
+        token_open = self._assistant_flow == "token"
+        account_open = self._assistant_flow == "account"
+        self.token_link.setText(
+            tr("github.assistant_token_link_active") if token_open
+            else tr("github.assistant_token_link")
+        )
+        self.account_link.setText(
+            tr("github.assistant_account_link_active") if account_open
+            else tr("github.assistant_account_link")
+        )
 
     # ── estado ────────────────────────────────────────────────────────────
     def _emit_login(self):
@@ -181,21 +293,38 @@ class GitHubLoginLanding(QWidget):
         if not profile:
             return
         self.subtitle.setText(profile.display_name())
+        self._set_avatar(avatar_bytes)
+
+    def _set_avatar(self, avatar_bytes: bytes | None):
+        """Coloca el avatar circular del usuario (o el isotipo si no hay bytes)."""
         if avatar_bytes:
             pixmap = QPixmap()
             if pixmap.loadFromData(avatar_bytes):
-                self.avatar.setPixmap(
-                    pixmap.scaled(
-                        AVATAR_SIZE,
-                        AVATAR_SIZE,
-                        Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                        Qt.TransformationMode.SmoothTransformation,
-                    )
-                )
+                self._animate_avatar_swap(pixmap)
                 return
-        self.avatar.setText((profile.login or "GH")[:2].upper())
+        self.avatar.setPixmap(_default_avatar_pixmap())
+
+    def _animate_avatar_swap(self, pixmap: QPixmap):
+        """Transición suave del isotipo de GitHub al avatar del usuario."""
+        scaled = pixmap.scaled(
+            AVATAR_SIZE,
+            AVATAR_SIZE,
+            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        self.avatar.setPixmap(scaled)
+        effect = QGraphicsOpacityEffect(self.avatar)
+        self.avatar.setGraphicsEffect(effect)
+        animation = QPropertyAnimation(effect, b"opacity", self)
+        animation.setDuration(320)
+        animation.setStartValue(0.0)
+        animation.setEndValue(1.0)
+        animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._avatar_animation = animation
+        animation.start()
 
     def begin_loading(self, message: str = ""):
+        self._expand_card()
         self._set_form_enabled(False)
         self.welcome.hide()
         self._status_message = message or tr("github.landing_starting")
@@ -203,6 +332,19 @@ class GitHubLoginLanding(QWidget):
         self.status.show()
         self._spinner_index = 0
         self._spinner_timer.start(110)
+
+    def _expand_card(self):
+        """Ensancha la tarjeta suavemente al iniciar sesión."""
+        target = CARD_WIDTH + CARD_EXPAND
+        animation = QPropertyAnimation(self.card, b"minimumWidth", self)
+        animation.setDuration(280)
+        animation.setStartValue(self.card.width())
+        animation.setEndValue(target)
+        animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._card_animation = animation
+        # max a target de inmediato y min creciendo: así el ancho se anima.
+        self.card.setMaximumWidth(target)
+        animation.start()
 
     def show_error(self, message: str):
         self._spinner_timer.stop()
@@ -214,9 +356,11 @@ class GitHubLoginLanding(QWidget):
 
     def show_welcome(self, profile):
         self._spinner_timer.stop()
-        self.status.hide()
-        self.welcome.setText(tr("github.welcome").format(name=profile.display_name()))
-        self.welcome.show()
+        # El indicador de estado se transforma en el nombre de la cuenta.
+        self.subtitle.setText(profile.display_name())
+        self.status.setText(tr("github.welcome").format(name=profile.display_name()))
+        self.status.show()
+        self.welcome.hide()
         QTimer.singleShot(900, lambda: self._finish(profile))
 
     def _finish(self, profile):

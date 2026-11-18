@@ -77,6 +77,12 @@ QWidget#GitHubLoginLanding {
     border: none;
     border-radius: 0;
 }
+QWidget#GitHubAssistantPanel {
+    background-color: __GLASS_BG__;
+    border: 1px solid __GLASS_BORDER__;
+    border-top: 1px solid __GLASS_BORDER_TOP__;
+    border-radius: __CARD_RADIUS__px;
+}
 
 /* @role: base */
 QWidget { font-family: __FONT_STACK__; color: __TEXT__; }

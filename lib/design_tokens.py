@@ -42,6 +42,12 @@ SIDEBAR_BG_SOLID = "#282828"
 TITLEBAR_BG = "rgba(40, 40, 40, 0.85)"
 CONTENT_BG = "rgba(28, 28, 30, 0.82)"
 
+# Acabado "Liquid Glass" de la tarjeta de login: superficie translúcida con el
+# borde superior iluminado, para que reaccione al fondo del escritorio.
+GLASS_BG = "rgba(255, 255, 255, 0.10)"
+GLASS_BORDER = "rgba(255, 255, 255, 0.18)"
+GLASS_BORDER_TOP = "rgba(255, 255, 255, 0.42)"
+
 TEXT = "#FFFFFF"
 TEXT_MUTED = "#DDDDDD"
 TEXT_DIM = "#8E8E93"

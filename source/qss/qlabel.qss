@@ -33,6 +33,8 @@ QLabel#GitHubLandingSubtitle { color: __MUTED__; font-size: 14px; }
 QLabel#GitHubLandingName { color: __TEXT__; font-size: 22px; font-weight: 700; }
 QLabel#GitHubLandingPrompt, QLabel#GitHubLoginStatus { color: __MUTED__; font-size: 12px; }
 QLabel#GitHubWelcomeLabel { color: __ACCENT__; font-size: 16px; font-weight: 600; }
+QLabel#GitHubAssistantHeading { color: __TEXT__; font-size: 16px; font-weight: 700; }
+QLabel#GitHubAssistantBody { color: __MUTED__; font-size: 13px; }
 
 /* @role: profile */
 QLabel#GitHubProfileAvatar { background: __ACCENT__33; border-radius: 17px; }

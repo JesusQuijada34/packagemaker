@@ -35,6 +35,17 @@ def test_root_stylesheet_keeps_github_landing_opaque_in_light_mode():
     assert "color: #000000" in landing
 
 
+def test_login_card_has_liquid_glass_finish():
+    """El recuadro de login es translúcido con el borde superior iluminado."""
+    from lib.fluent_theme import applyget
+
+    for dark in (True, False):
+        card = applyget("#0078D4", dark=dark).split("QFrame#GitHubLoginCard", 1)[1].split("}", 1)[0]
+        assert "border-top: 1px solid" in card
+        assert "rgba(" in card
+        assert "__" not in card
+
+
 def test_github_landing_is_an_opaque_overlay(qapp):
     from PyQt6.QtCore import Qt
     from lib.github_login_landing import GitHubLoginLanding

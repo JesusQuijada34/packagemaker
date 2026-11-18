@@ -1191,6 +1191,17 @@ class PackageTodoGUI(QMainWindow):
         github_identity.clear_identity()
         self._refresh_github_card()
         self._refresh_author_field()
+        self._show_landing_after_logout()
+
+    def _show_landing_after_logout(self) -> None:
+        """Secuencia de cierre de sesión: funde el landing y lo deja 'first time'."""
+        landing = getattr(self, "github_landing", None)
+        if landing is None:
+            return
+        self._landing_active = True
+        self._set_landing_lock(True)
+        landing.reset_to_initial_state()
+        landing.reveal()
 
     def _setup_github_landing(self) -> None:
         """Prepara el landing; sólo lo muestra si no hay una sesión válida.
@@ -1234,12 +1245,26 @@ class PackageTodoGUI(QMainWindow):
         from lib import github_identity
 
         self._splash_closer = on_decided
-        token = github_identity.load_token()
-        if token:
-            # Sesión guardada: validar en segundo plano con el splash visible.
+        # Si pm.data perdió la sesión pero hay caché cifrada, se repuebla antes
+        # de decidir: es lo que evita la muralla de login con sesión existente.
+        github_identity.restore_cached_session()
+        if github_identity.has_cached_session():
+            # Sesión cacheada: entra directamente (aunque no haya red) y valida
+            # el token en segundo plano sin bloquear el arranque.
+            token = github_identity.load_token()
+            self._enter_with_cached_session()
             QTimer.singleShot(60, lambda: self._resolve_landing_github(token, quiet=True))
         else:
             self.show_github_landing()
+
+    def _enter_with_cached_session(self) -> None:
+        """Revela el IDE con la sesión cacheada y cierra el splash."""
+        self._refresh_github_card()
+        self._refresh_author_field()
+        self.github_card.show()
+        self._landing_active = False
+        self._set_landing_lock(False)
+        self._close_splash()
 
     def _close_splash(self) -> None:
         """Cierra el splash una sola vez, ya decidida la ruta de arranque."""
@@ -1251,6 +1276,10 @@ class PackageTodoGUI(QMainWindow):
     def _landing_github_login(self, username: str, token: str) -> None:
         from lib import github_identity
 
+        # El usuario es obligatorio: debe coincidir con el propietario del token.
+        if not username.strip():
+            self.github_landing.show_error(tr("github.landing_username_required"))
+            return
         token = github_identity.sanitize_token(token) or github_identity.load_token()
         if not token:
             self.github_landing.show_error(tr("github.landing_token_required"))
@@ -1270,8 +1299,8 @@ class PackageTodoGUI(QMainWindow):
                         expected=expected_login, actual=profile.login
                     )
                 )
-            github_identity.save_token(token)
-            github_identity.save_profile(profile)
+            # Guarda token + perfil en pm.data y en la caché cifrada.
+            github_identity.persist_session(token, profile)
             avatar = github_identity.fetch_avatar(profile)
             if avatar:
                 github_identity.cache_avatar(profile.login, avatar)
@@ -1282,21 +1311,21 @@ class PackageTodoGUI(QMainWindow):
                 self._finish_github_landing(profile)
             else:
                 self.github_landing.show_welcome(profile)
+        except github_identity.GitHubOfflineError:
+            # Sin red no se puede validar, pero la sesión cacheada sigue siendo
+            # válida: no se borra ni se muestra la muralla de login.
+            if not quiet:
+                self.github_landing.show_error(tr("github.landing_offline"))
         except github_identity.GitHubIdentityError as exc:
             if quiet:
                 # Token guardado inválido: descártalo y deja el formulario listo.
-                github_identity.save_token("")
+                github_identity.clear_identity()
                 self.show_github_landing()
             else:
                 self.github_landing.show_error(str(exc))
 
     def _finish_github_landing(self, _profile) -> None:
-        self._refresh_github_card()
-        self._refresh_author_field()
-        self.github_card.show()
-        self._landing_active = False
-        self._set_landing_lock(False)
-        self._close_splash()
+        self._enter_with_cached_session()
 
     def _set_landing_lock(self, locked: bool) -> None:
         """Garantiza que nunca se pinte ni se pueda activar otra pestaña.

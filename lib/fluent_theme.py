@@ -13,6 +13,9 @@ from lib.design_tokens import (
     CONTENT_BG,
     CONTROL_RADIUS,
     FONT_STACK,
+    GLASS_BG,
+    GLASS_BORDER,
+    GLASS_BORDER_TOP,
     INPUT_HEIGHT,
     INPUT_PADDING,
     PILL_RADIUS,
@@ -420,11 +423,17 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
     text = TEXT if dark else TEXT_LIGHT
     muted = TEXT_MUTED if dark else TEXT_MUTED_LIGHT
     border = BORDER if dark else "#D1D1D6"
+    glass_bg = GLASS_BG if dark else "rgba(255, 255, 255, 0.72)"
+    glass_border = GLASS_BORDER if dark else "rgba(15, 23, 42, 0.14)"
+    glass_border_top = GLASS_BORDER_TOP if dark else "rgba(255, 255, 255, 0.95)"
     _, accent_hover, accent_pressed = accent_states(accent)
     common = {
         "SURFACE": surface,
         "CARD_SURFACE": surface,
         "CARD_BORDER": border,
+        "GLASS_BG": glass_bg,
+        "GLASS_BORDER": glass_border,
+        "GLASS_BORDER_TOP": glass_border_top,
         "PAGE": page,
         "TEXT": text,
         "LABEL": text,
@@ -435,6 +444,7 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
         "ACCENT_PRESSED": accent_pressed,
         "FONT_STACK": FONT_STACK,
         "CONTROL_RADIUS": CONTROL_RADIUS,
+        "CARD_RADIUS": CARD_RADIUS,
         "PILL_RADIUS": PILL_RADIUS,
         "INPUT_MIN_HEIGHT": INPUT_HEIGHT - 2,
         "BUTTON_HEIGHT": BUTTON_HEIGHT,
@@ -629,6 +639,9 @@ def applyget(accent: str, dark: bool = True) -> str:
     page = WINDOW_BG if dark else "#F5F7FB"
     card_surface = SURFACE if dark else "#FFFFFF"
     card_border = BORDER if dark else "#D1D1D6"
+    glass_bg = GLASS_BG if dark else "rgba(255, 255, 255, 0.72)"
+    glass_border = GLASS_BORDER if dark else "rgba(15, 23, 42, 0.14)"
+    glass_border_top = GLASS_BORDER_TOP if dark else "rgba(255, 255, 255, 0.95)"
     muted = TEXT_DIM if dark else label
     group_text = "#f3f5f8" if dark else "#000000"
     stack_text = "#bbb" if dark else "#333333"
@@ -647,6 +660,9 @@ def applyget(accent: str, dark: bool = True) -> str:
         "BORDER": BORDER,
         "CARD_SURFACE": card_surface,
         "CARD_BORDER": card_border,
+        "GLASS_BG": glass_bg,
+        "GLASS_BORDER": glass_border,
+        "GLASS_BORDER_TOP": glass_border_top,
         "TEXT": text,
         "LABEL": label,
         "PAGE": page,
