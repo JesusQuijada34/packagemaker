@@ -3036,93 +3036,10 @@ class PackageTodoGUI(QMainWindow):
             ))
 
     def check_project_issues(self, project_path):
-        issues = []
-        # 1. Check folders
-        required_dirs = ["app", "assets", "config", "docs", "source", "lib"]
-        missing_dirs = [d for d in required_dirs if not os.path.exists(os.path.join(project_path, d))]
+        """Diagnostica un proyecto (delegado a ``lib.project_diagnostics``)."""
+        from lib.project_diagnostics import check_project_issues
 
-        is_completely_invalid = (len(missing_dirs) == len(required_dirs))
-        if is_completely_invalid:
-            issues.append({"type": "invalid_package", "desc": "Faltan todos los recursos estructurales"})
-        else:
-            for d in missing_dirs:
-                issues.append({"type": "missing_dir", "path": d})
-
-        # 2. Check XML & Vital Files
-        xml_path = os.path.join(project_path, "details.xml")
-        requires_wizard = False
-
-        if not os.path.exists(xml_path):
-            issues.append({"type": "missing_xml"})
-            requires_wizard = True
-        else:
-            try:
-                tree = ET.parse(xml_path)
-                root = tree.getroot()
-                data = {child.tag: (child.text or "").strip() for child in root}
-
-                # Check Main Script based on <app> tag
-                app_id = data.get("app")
-                if app_id:
-                    script_path = os.path.join(project_path, f"{app_id}.py")
-                    if not os.path.exists(script_path):
-                        issues.append({"type": "missing_script", "name": f"{app_id}.py"})
-                        requires_wizard = True
-
-                # Check Version Formatting
-                version = data.get("version", "")
-                if version:
-                    prohibited = ["danenone", "knosthalij", "keystone", "windows", "linux", "darwin", "macos"]
-                    if any(p in version.lower() for p in prohibited) or "-" not in version:
-                        issues.append({"type": "dirty_version", "old": version})
-                        requires_wizard = True
-
-                # OPTIONAL ASSETS (Only flagged if we are ALREADY in the wizard or if explicitly missing)
-                # But to satisfy "healthy projects shouldn't show up", we only trigger if structural issues exist
-                # OR if the user expects MoonFix to find them.
-                # Decision: Only README, License and Splash issues will NOT trigger the wizard alone.
-                if not os.path.exists(os.path.join(project_path, "README.md")):
-                    issues.append({"type": "missing_readme"})
-                if not os.path.exists(os.path.join(project_path, "LICENSE")):
-                    issues.append({"type": "missing_license"})
-
-                # ICONS (Main and Updater)
-                if not os.path.exists(os.path.join(project_path, "app", "app-icon.ico")):
-                    issues.append({"type": "missing_icon"})
-
-                if not os.path.exists(os.path.join(project_path, "app", "product_logo.png")):
-                    issues.append({"type": "missing_logo"})
-
-                if os.path.exists(os.path.join(project_path, "updater.py")):
-                    if not os.path.exists(os.path.join(project_path, "app", "updater-icon.ico")):
-                        issues.append({"type": "missing_icon_updater"})
-
-                # SPLASHES
-                if not os.path.exists(os.path.join(project_path, "assets", "splash.png")):
-                    issues.append({"type": "missing_splash"})
-                if not os.path.exists(os.path.join(project_path, "assets", "splash_Setup.png")):
-                    issues.append({"type": "missing_splash_setup"})
-
-            except (ET.ParseError, OSError):
-                issues.append({"type": "corrupt_xml"})
-                requires_wizard = True
-
-        # If it ONLY has optional missing files and NO structural issues, we return empty list
-        # so MoonFix scan doesn't flag it as "incomplete".
-        # Logic Update: Missing Icons are now considered structural enough to trigger if structural issues exist,
-        # but to satisfy "3 assets or less" rule, we must allow the wizard to report them.
-
-        critical_structural = ["missing_dir", "invalid_package", "missing_xml", "missing_script", "dirty_version"]
-        has_critical = any(i["type"] in critical_structural for i in issues)
-
-        # If there are <= 3 assets missing (even if optional), and NO structural damage,
-        # normally we'd skip, BUT if an icon is missing for a script, we SHOULD trigger.
-        has_missing_icons = any(i["type"] in ["missing_icon", "missing_icon_updater"] for i in issues)
-
-        if not requires_wizard and not has_critical and not has_missing_icons:
-            return []
-
-        return issues
+        return check_project_issues(project_path)
 
 
     def init_about_tab(self, parent_widget=None):
