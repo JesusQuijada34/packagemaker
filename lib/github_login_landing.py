@@ -33,7 +33,7 @@ try:
 except ImportError:  # pragma: no cover
     QWidget = object
 
-from lib.app_icons import ICONS_SVG, svg_to_pixmap
+from lib.app_icons import ICONS_SVG, circular_pixmap, svg_to_pixmap
 from lib.design_tokens import (
     AVATAR_ICON_SIZE,
     AVATAR_SIZE,
@@ -97,17 +97,23 @@ class GitHubLoginLanding(QWidget):
         painter.end()
 
     def lock_to_parent(self):
-        """Ajusta la capa al padre y la pone por encima de todos sus hijos."""
+        """Ajusta la capa al padre y la pone por encima de todos sus hijos.
+
+        No fuerza ``show()``: reposicionar un landing oculto no debe revivirlo
+        como capa fantasma. Quien quiera mostrarlo usa ``reveal()`` o
+        ``setVisible(True)``.
+        """
         parent = self.parentWidget()
         if parent is not None:
             self.setGeometry(parent.rect())
-        self.raise_()
-        self.show()
-        self.setFocus(Qt.FocusReason.OtherFocusReason)
+        if self.isVisible():
+            self.raise_()
+            self.setFocus(Qt.FocusReason.OtherFocusReason)
 
     def reveal(self):
         """Muestra el landing con un fundido y recupera el contraste original."""
         self.setWindowOpacity(0.0)
+        self.show()
         self.lock_to_parent()
         animation = QPropertyAnimation(self, b"windowOpacity", self)
         animation.setDuration(360)
@@ -127,10 +133,21 @@ class GitHubLoginLanding(QWidget):
         self.status.hide()
         self.welcome.hide()
         self.subtitle.setText(tr("github.landing_subtitle"))
+        self.avatar.setGraphicsEffect(None)
         self.avatar.setPixmap(_default_avatar_pixmap())
         self.card.setFixedWidth(CARD_WIDTH)
         self.setWindowOpacity(1.0)
-        self._collapse_assistant()
+        self._reset_assistant()
+
+    def _reset_assistant(self) -> None:
+        """Pliega el asistente de inmediato (sin animación) al cerrar sesión."""
+        self._assistant_flow = ""
+        self._sync_assistant_links()
+        animation = getattr(self, "_row_animation", None)
+        if animation is not None:
+            animation.stop()
+        self.row.setMaximumWidth(self._closed_row_width())
+        self.assistant.hide()
 
     def _build_ui(self):
         outer = QVBoxLayout(self)
@@ -252,19 +269,27 @@ class GitHubLoginLanding(QWidget):
 
     def _collapse_assistant(self) -> None:
         self._assistant_flow = ""
-        self.assistant.hide()
-        self._animate_row(self._closed_row_width())
         self._sync_assistant_links()
+        # Se contrae con animación y el panel se oculta al terminar: ocultarlo de
+        # inmediato dejaba un salto brusco en el que el recuadro no se recogía.
+        self._animate_row(self._closed_row_width(), on_finished=self.assistant.hide)
 
     def _closed_row_width(self) -> int:
         return CARD_WIDTH + 2 * self.layout().contentsMargins().left()
 
-    def _animate_row(self, target: int) -> None:
+    def _animate_row(self, target: int, on_finished=None) -> None:
         animation = QPropertyAnimation(self.row, b"maximumWidth", self)
         animation.setDuration(ANIMATION_MS)
         animation.setStartValue(self.row.width())
         animation.setEndValue(target)
         animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
+        if on_finished is not None:
+            animation.finished.connect(on_finished)
+        # Se detiene la animación anterior: sin esto, alternar el panel a media
+        # transición dejaba dos animaciones compitiendo por ``maximumWidth``.
+        previous = getattr(self, "_row_animation", None)
+        if previous is not None:
+            previous.stop()
         self._row_animation = animation
         animation.start()
 
@@ -308,13 +333,11 @@ class GitHubLoginLanding(QWidget):
         self.avatar.setPixmap(_default_avatar_pixmap())
 
     def _animate_avatar_swap(self, pixmap: QPixmap):
-        """Transición suave del isotipo de GitHub al avatar del usuario."""
-        scaled = pixmap.scaled(
-            AVATAR_SIZE,
-            AVATAR_SIZE,
-            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-            Qt.TransformationMode.SmoothTransformation,
-        )
+        """Transición suave del isotipo de GitHub al avatar circular del usuario."""
+        scaled = circular_pixmap(pixmap, AVATAR_SIZE)
+        if scaled.isNull():
+            self.avatar.setPixmap(_default_avatar_pixmap())
+            return
         self.avatar.setPixmap(scaled)
         effect = QGraphicsOpacityEffect(self.avatar)
         self.avatar.setGraphicsEffect(effect)

@@ -110,14 +110,11 @@ class GitHubProfileCard(QWidget):
             return
         pixmap = QPixmap()
         if pixmap.loadFromData(data):
-            self.avatar.setPixmap(
-                pixmap.scaled(
-                    _AVATAR_SIZE,
-                    _AVATAR_SIZE,
-                    Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-            )
+            from lib.app_icons import circular_pixmap
+
+            rounded = circular_pixmap(pixmap, _AVATAR_SIZE)
+            if not rounded.isNull():
+                self.avatar.setPixmap(rounded)
 
     def mousePressEvent(self, event):  # noqa: N802 - API Qt
         if self._current_login and event.button() == Qt.MouseButton.LeftButton:

@@ -4382,7 +4382,14 @@ class PackageTodoGUI(QMainWindow):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         landing = getattr(self, "github_landing", None)
-        if landing is not None and landing.parentWidget() is self.content_container:
+        # Sólo se reposiciona el landing si está activo: sin esta guarda, el
+        # redimensionar (o maximizar, o arrastrar el sidebar) volvía a mostrar
+        # el landing oculto como una capa fantasma no interactiva.
+        if (
+            landing is not None
+            and getattr(self, "_landing_active", False)
+            and landing.parentWidget() is self.content_container
+        ):
             landing.lock_to_parent()
 
     def showEvent(self, event):

@@ -290,6 +290,40 @@ def svg_to_pixmap(svg_data: str, size: int = 24) -> 'QPixmap':
         return pixmap
 
 
+def circular_pixmap(pixmap: 'QPixmap', size: int) -> 'QPixmap':
+    """Recorta *pixmap* en un círculo de *size* px.
+
+    El ``border-radius`` del QSS no recorta el ``pixmap`` de un ``QLabel`` (sólo
+    el fondo del widget), así que las fotos de perfil salían cuadradas. Aquí se
+    enmascara el bitmap para que el avatar quede redondo de verdad.
+    """
+    if not PYQT6_AVAILABLE or pixmap.isNull() or size <= 0:
+        return QPixmap()
+    try:
+        from PyQt6.QtGui import QPainterPath
+
+        scaled = pixmap.scaled(
+            size,
+            size,
+            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        rounded = QPixmap(size, size)
+        rounded.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(rounded)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        path = QPainterPath()
+        path.addEllipse(0, 0, size, size)
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, scaled)
+        painter.end()
+        return rounded
+    except Exception as e:
+        print(f"Warning: Could not mask pixmap: {e}")
+        return QPixmap()
+
+
 def svg_to_icon(svg_data: str, size: int = 24) -> 'QIcon':
     try:
         return QIcon(svg_to_pixmap(svg_data, size))
