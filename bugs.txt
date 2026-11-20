@@ -53,5 +53,8 @@ Respalda el plan anterior si no lo has terminado.
  ! Uff y para darle vista atractiva, agrégale sombra debajo de la barra superior esa qué contiene los botones. Como la que está debajo del ícono del programa en acerca de.
  ! me doy cuenta que falta mover archivos de cada engine a su carpeta, no que solamente exista un container.py o pocos archivos, como asksome, que es del engine blind cube, build thread es también del engine bind cube porque es su última versión, fijate el montón de archivos que son de cada engine y andan regados y esparcidos en lib
  ! el script de capturas de pantalla genera capturas inválidas de la herramienta, osea imágenes que no coinciden con la pantalla e interacción real de la tool. Ya que normal mente al hacer clic en un ítem del sidebar el queda marcado,y hablando de marcado cuando hago hover por unas cuantas veces en un ítem del sidebar primero se pinta de azul y rápida mente de pinta del predeterminado gris pero después ya no se pinta de azul y queda gris predeterminado pero si hago hover en otro lado y vuelvo, se repite el bug, es css?
+ ! Ha En una de esas capturas esta una qué son controles como verdes, así los quiero en package maker pero obviamente no es el verde sino el naranja, allí tienes que modificar los css
+ ! En vez de usar la función de set qss seguido de package maker y unos números, mejor es que en el root se importen los qss como archivos pero que hagan apariencia global que estar colocando estilos individuales a cada control.
+
 Primero Vamos a corregir errores de lógica internos y luego nos ocuparemos de la interfaz para asegurar estabilidad en lógicas, métodos y engines.
 
