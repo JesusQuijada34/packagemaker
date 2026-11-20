@@ -1,60 +1,85 @@
- ... Gemini, describe las capturas basado en los bugs y revela qué aparece ya qué open hands no lee imágenes e organiza ésto en un plan task, pero tomando en cuenta las capturas y en la captura donde muestro mis archivos python en lista en la carpeta lib, allí describe los archivos y listalos en este archivo. Y también enfócate en ideas de diseño ui/ux ios...
+# Plan Task Detallado y Extenso: Modernización y Estabilización de Influent Package Maker (GlassCube / iOS Style)
+
+Este documento contiene las directrices técnicas, correcciones lógicas, refactorización de motores y especificaciones de UI/UX que debes aplicar en el repositorio de **Influent Package Maker**. Como no tienes acceso visual a las capturas, este plan detalla paso a paso las interacciones, coreografías visuales y la arquitectura interna que el usuario ha diseñado.
 
 ---
 
-Respalda el plan anterior si no lo has terminado.
+## FASE 1: Estabilización Lógica, Aislamiento y Motores
 
- ! Aquí Esta pasando algo, yo creo el proyecto, perfecto, puse los datos de el para compilar, probé un bug y es que al poner version incorrecta igual compila o es que adivina o se guía de los primeros datos.
- ! Porque dice que es pyi embed cuando blind cube compila en un entorno aislado y con nuitka por defecto más los requirements.txt en la carpeta lib/, flat cube compila igualmente en un entorno aislado pero usando pyi más instalando los requerimientos dentro del entorno
- ! Porque queda disponible el botón y los controles cuando se está empaquetando un proyecto? Así fácil provocaría cualquier persona un bug de reforzado, también yo no entiendo porque muestras frases aleatorias si no son necesarias en vez de mostrar proceeding real aunque recomiendo que el mismo motor de compilación blind cube haga pruebas de sintaxis, pruebas offscreen y si todo pasa, compila, si fue exitosa la compilación con nuitka, empaqueta y firma en un .blindkpkg, sí detecta un .env pregunta a donde inyectar las variables: (método)
-    - parcial: entorno global (se íntegra a cada programa compilado, pero puede ser lento ya qué sé mete como environment al ejecutar tal programa que hace pensar que esta leyendo el .env desde el sistema operativo real, osea en pocas palabras puede ser usado pefile para inyectar variables de entorno)
-    - personalizado: Le pregunta al usuario mediante otra gui encima de la principal pero con efecto de oscureciendo fondo, a cuales programas desea inyectar las variables virtuales, se vale selección multiple, en un container horizontal por cada ítem de lista en este orden:
-       * checkbox, luego el ícono del programa (Solo en windows, en Linux se lee usando el método de emparejamiento, es decir que sigue esto: Por cada {appname o programa }.exe o (elf) hay íconos qué siguen el patrón pero seguido del sufijo -icon.ico en app/) y al final el nombre y su peso.
-   ya al terminar el "chooser setup" se toma consideración de lo que el usuario escogió y se procede a hacer el precompilado de variables virtuales dentro del programa y los efectos del setup quedan off.
- ! Hay un error qué package maker no termina de compilar por un error de contra choque de archivos, ha y en ese error me di cuenta que no has movido los engines completos a sus carpetas
- ! Exigí un método para postear de primero el splash justo rápido en el momento cuando se imprimen las primeras variables en la terminal, El sea condicional a esperar que se dibuje la interfaz para que después del show widow see desvanezca el splash, así aprecio esa bienvenida mientras mi programa pesado carga su pre cargada interfaz, parecido a un appx/msix, aunque puedes tratar el splash como el frame obligatorio de Arranque qué en su condición si ya se creó la interfaz hijo correctamente, El se desvanece. Si hay error antes de cargar la interfaz o en el ciclo, mostrar una ventana solitaria con el title bar y un título centrado qué diga lo que paso y abajo como subtitulo el error interno (otra condición más para el splash)
- ! Pensé en esta estructura condicional al llamar el splash primeramente, pero el splash debe de tomar el valor de salida para reaccionar a un cierre suave como cortina, pero antes de cerrarse, ve si al ser llamada su función hay otras instancias qué están en colá y necesitan pasar por debajo del bootloader):
-   no es necesario hacer login, 0.:
-   {
-    No hay errores internos y no es necesario mostrar la ventana de reporte, 0:
-    {
-     mostrar la interfaz principal, 0:
-     {
-      pero, si hay un 1, llamar hacia atrás (la ventana de reporte).
-     }
-    hay errores internos Y se necesita reportarlos y hacerlos saber al usuario, 1:
-    }
-   se necesita login, 1.
-   }
- ! El Orden debe ser el siguiente y depende de la sala de cada condición
+### 1. Corrección de Compilación y Validación de Versiones
+- **Problema:** Al introducir una versión incorrecta o dejar campos vacíos, el sistema compila adivinando o guiándose de los datos anteriores.
+- **Acción:** Implementar un validador estricto en la interfaz de compilación (`projectConfig.py` / `projectDetailsDialog.py`). Si los campos clave (como versión o nombre interno) están vacíos o no cumplen con el formato, la compilación debe bloquearse y mostrar una alerta nativa, prohibiendo que se hereden datos fantasma de proyectos previos.
 
-    GitHub landing page
-    Internal error verification
-    Main window
-    Sub-internal error verification
- ! Seguro El orden, se recomienda hacer destroy de cada ventana tras resultar códigos de salida y error, para con el fin de no solapar ni por error revelar frames ocultos, si es posible hacer qué el title bar haga aparecer el splash como bootloader y que genere un frame oculto debajo del title bar y que sea reactivado y reusado por otros frames qué quieran llamar o usar la ventana existente y qué cada ventana sea agachada al frame principal y qué la title bar sea su controlador de ventana (como un window manager) y que al hacer destroy de cada ventana y después el title bar no detecte una ventana activa e interactiva qué use el frame inmediatamente, se cierre el programa. Ya aquí tendrás que clonar mi repo leviathan-ui para actualizar el engine viejo de ventanas por unos engranajes qué pareciera que hackeara el sistema de ventanas del sistema operativo, nuevo engine de frames, tendrán por obligación una barra de titulo personalizada, un script principal qué quiera hacer una interfaz llama a la Liberia, se llena el frame qué la Liberia regala, se personaliza como cualquier ventana qt6 y se activa un main para ver la magia, pero si pongo un comando para que leviathan cierre ese identificador, cierra el programa principal si no hay transición a la otra interfaz. Cada frame es identificado manualmente como si fuese a modificar un object name, así puede saber con certeza cual frame cerrar el engine, pero el comando para cerrar un frame no requiere colocar cual es el identificador del frame a cerrar porque ya con especificar el cierre, se le pide a la barra de titulo como se llama el id del frame actual. Pero si pongo un comando para hacer transición y switch a otro frame sin cerrar el engine window, desplaza el frame suavemente hacia abajo ocultandolo y manteniendo su estado original sin recrear de nuevo y hacia arriba muestra el otro frame al qué see quiso desplazar, El switch necesitará qué le digan el id del frame para poder desplazar, también se puede escoger a que lado o desde que lado hacer la transición de caída, escoger el color de la barra de titulo si uno en específico, vidrio liquido o el tono del sistema de forma automática. Otra mejora qué al presionar 3 veces seguidas la barra de titulo, mostrar el frame en primer plano y encima de otras apps y la title bar oculta qué aparece desde arriba suavemente pero el botón de maximizar cambia a salir de pantalla completa al igual que el gesto de regresión de toque 3 veces, El icono es un svg de una flecha en dirección hacia abajo a la izquierda. También incluir el frame de error interno con texto enriquecedor, va integrado al title bar y será mostrado durante el error interno de una app. La title bar acepta colocar un título manual a la ventana del frame o automático leyendo el xml de una app. Cuando las pruebas y la reproducción de bugs en contra del código aguante y sobreviva a las pruebas fuertes, renovarle el nombre leviathan ui por GlassCube., recuerda que tienes que clonar leviathan ui en la carpeta de lib en package maker para usarlo en local e ir probando antes de subir la Liberia.
- ! Las traducciones no son parciales y si te fijas hay strings en español e ingles genérico 
- ! El sidebar al contraer no nuestras bien el container de login, predeterminado sería solamente el perfil y ajustado al lateral, y que solamente muestre los iconos como botones como otros programas y al estirar todo normal y estirado cono siempre
- ! Porque No se revelan mis repos públicos en la info de mi perfil?
- ! En el apartado de configuración, elimina esos botones superiores, restablecer se convertirá en un ítem, El cual, más abajo describiré donde posicionarlo y el botón de guardar será automático al cambiar cualquier ajuste.
- ! Los botones de examinar archivos están funcionando independiente mente de el css central y se ven distintos en todos lados
- ! Elimina la opción de editor de código en todo el programa ya qué esa una función unusable
- ! La traducción automática en línea funciona de verdad? Para que tiene que guardarse en la data si se supone que más bien tiene que rellenar las traducciones faltantes o mejor quitar eso ya qué sé estará actualizando los i18n constantemente
- ! Elimina la opción de Modo de ventana ya qué la interfaz queda diseñada como yo la edite por defecto
- ! Las notificaciones funcionan? Deberías de hacerlas nativas del sistema operativo o personalizadas con el mismo comportamiento de las notificaciones de windows en sus transiciones y animaciones y posiciones (podemos hacer un engine dentro de leviathan para hacer notificaciones personalizadas)
- ! Eso de información del sistema, en configuración debería de moverse al apartado acerca de, más actualizando info de esa pestaña
- ! Lo de las fuentes en caché porque no se escogen manualmente?
- ! casi pego un grito cuando veo ese cuadrado ⬜ en los ddls, que hicieron qué me aburriera de ese tipo de barra plegable y hacer una idea para una interfaz basada en iOS.
- ! Mira ese checkbox qué tiene fondo en el apartado de moon fix parece lucir independiente, ahora me pregunto si los css están incorporados en todo el root porque veo controles independientes de su misma apariencia.
- ! tengo una idea para los grupos en configuración, por cada grupo hacer una tarjeta así como los ítem de Kaspersky. Al hacer clic en una tarjeta, que por cierto cada una tiene que tener iconos svg a los lados, El lado izquierdo corresponde al ícono del item y el lado derecho una flecha ➡ que indica qué el elemento tiene opciones. Comportamiento: Al hacer clic en un elemento ejemplo, si hago clic en general, se marca un indicator naranja a la izquierda como en el sidebar, se marca el contorno de la tarjeta, se transiciona todo suavemente hacia la izquierda en un desplazamiento suave mientras qué al mismo tiempo aparece una flecha izquierda al lado izquierdo del titulo de la pestaña "configuración", mientras se arrima a la derecha el titulo dándole espacio a que se acomode la animación de apparition, ya los 2 se unen y forman un botón qué tiene un ícono izquierdo y su texto y su forma encapsulada, su acción es changeable y por los momentos hace retroceder a la página de configuración, y queda como siempre el titulo nada más, pero vamos a suponer qué dentro de la sub página general hay un item de selección qué sé llama optimizar para, El cual al abrir hace la animación de desplazamiento, cambia la acción de retroceder a general y el titulo se le cambia el texto a general o mejor dicho al nombre de su ítem padre. Ahora supone que cuando abre la página de ese ítem chooseable hay múltiples opciones para escoger (si se configura la página de un choose como múltiples opciones, se le permitirá al usuario seleccionar varias opciones y en la barra superior aparece un botón para confirmar pero si se intenta retroceder obliga a guardar las opciones editadas si se modificó algo. Si se configura como única opción, se espera a que se seleccione una opción, marcarla, aplicarla inmediatamente y retroceder automáticamente), que si por ejemplo, laptop, pc, tableta etc., cada opción qué to marque queda seleccionada con un indicator de border lateral izquierdo Colorado de naranja como escogido y habilitado, que si fuera deshabilitado fuera gris o que si tuviera un error interno se marca de rojo o si es un warning, pues de amarillo. Bueno, ahora yo quiero retroceder, como yo seleccioné varias y toqué varias cosas, me va a decir que primero guarde o mejor me pregunta que si quiero guardar las opciones, las condiciones dependen de si quiero o no guardar lo que hice. Ahora vamos con otro caso pero con el mismo group item pero en modo selección única, si dentro de ese ítem cuando me abrió su página de elementos (se me olvido decir que son elementos de lista con titulo y descripción) escogí qué quise optimizar para laptop, me marcara, y me retrocede a su padre y como cada item tiene titulo y descripción como subtitulo, la descripción es la opción qué está en realidad seleccionada, ahora si es un ítem qué me va a redireccionar a un programa o sitio web si ícono derecho es una flecha ↗ que a la vista se sabe que es algo que no se va a expandir,o mejor dicho no tiene hijo, osea un botón qué lanza otra acción externa, pero su subtitulo dice exactamente a donde va a redirigir y pues obviamente el titulo es el nombre adoptivo. Esto me hace acordar cuando por primera vez usé un iPhone xr, que me acuerdo que habían muchos items qué hacían redirect a un hijo, osea a una pestaña y arriba siempre cambiaba un botón qué te hacia regresar al padre de esa pestaña y las opciones automáticamente se marcaban para que tu disfrutaras de esa animación mientras tu verificas qué así se seleccionó y después te redirige a su padre. Veo la interfaz de Kaspersky y parece uwp en unas cosas pero su configuración es diferente y te hace a acordar a un iPhone y te llama la atención como se interactua con el.
- ! ha y por cierto, me gusta ese foco de teclado qué tiene Kaspersky, quiero copiarlo a mi cssroot.
- ! ahí ves como se hace foco bien bonito y del acento del control
- ! ha le tomé una captura a Kaspersky del card item pero no es el mismo que yo me refiero, osea que la flecha no sea un botón sino segundo ícono del item, y el icono qué tu ves en el centro va a la izquierda, El texto centrado va alineado a la izquierda y abajo la descripción o el estado del card item.
- ! Uff y para darle vista atractiva, agrégale sombra debajo de la barra superior esa qué contiene los botones. Como la que está debajo del ícono del programa en acerca de.
- ! me doy cuenta que falta mover archivos de cada engine a su carpeta, no que solamente exista un container.py o pocos archivos, como asksome, que es del engine blind cube, build thread es también del engine bind cube porque es su última versión, fijate el montón de archivos que son de cada engine y andan regados y esparcidos en lib
- ! el script de capturas de pantalla genera capturas inválidas de la herramienta, osea imágenes que no coinciden con la pantalla e interacción real de la tool. Ya que normal mente al hacer clic en un ítem del sidebar el queda marcado,y hablando de marcado cuando hago hover por unas cuantas veces en un ítem del sidebar primero se pinta de azul y rápida mente de pinta del predeterminado gris pero después ya no se pinta de azul y queda gris predeterminado pero si hago hover en otro lado y vuelvo, se repite el bug, es css?
- ! Ha En una de esas capturas esta una qué son controles como verdes, así los quiero en package maker pero obviamente no es el verde sino el naranja, allí tienes que modificar los css
- ! En vez de usar la función de set qss seguido de package maker y unos números, mejor es que en el root se importen los qss como archivos pero que hagan apariencia global que estar colocando estilos individuales a cada control.
+### 2. Aislamiento de Motores (`BlindCube` vs `FlatCube` vs `MakeSelf`)
+- **BlindCube Engine:** Debe compilar estrictamente en un entorno aislado utilizando **Nuitka** por defecto, tomando como base los `requirements.txt` ubicados en la carpeta `lib/`.
+- **FlatCube Engine:** Compila en entorno aislado usando PyInstaller, instalando explícitamente los requerimientos dentro del entorno virtual del proyecto.
+- **Eliminación del Bug de Bloqueo de Archivos (`WinError 32`):** Asegurar que los procesos hijos de Python liberen los descriptores y archivos en uso (`shutil.copy2` / manejo de `_winapi.CopyFile2`) antes de que el hilo principal (`BuildThread.py`) intente mover, sobrescribir o eliminar directorios temporales.
 
-Primero Vamos a corregir errores de lógica internos y luego nos ocuparemos de la interfaz para asegurar estabilidad en lógicas, métodos y engines.
+### 3. Bloqueo de Controles Durante el Empaquetado
+- **Problema:** Los botones y controles de la interfaz quedan disponibles y clickeables mientras se empaqueta un proyecto, lo que provoca bugs por doble ejecución o modificación de estados a mitad del proceso.
+- **Acción:** Deshabilitar interactivamente toda la sección de inputs/acciones principales al iniciar el hilo de compilación y mostrar un indicador de progreso real en terminal o barra de estado (eliminando frases aleatorias innecesarias).
 
+### 4. Sistema de Pruebas Previas al Empaquetado en BlindCube
+- Antes de empaquetar, el motor `BlindCube` debe ejecutar automáticamente:
+  1. Pruebas de sintaxis.
+  2. Pruebas offscreen.
+- Si todo es exitoso, compila con Nuitka, empaqueta y firma generando un archivo `.blindkpkg`.
+- **Inyección de Variables de Entorno (`.env`):** Si el proyecto detecta un archivo `.env`, se debe consultar al usuario el método de inyección mediante un diálogo flotante que oscurezca el fondo (*backdrop blur*):
+  - **Parcial:** Entorno global (se inyecta como environment al ejecutar el programa).
+  - **Personalizado:** Despliega una GUI superpuesta con un contenedor horizontal por cada ítem de lista que contenga: `Checkbox` -> `Ícono de la aplicación` (en Linux se empareja buscando el sufijo `-icon.ico` en `app/`) -> `Nombre del programa` y su `peso`. Al terminar el *chooser setup*, se realiza el precompilado de las variables virtuales.
+
+---
+
+## FASE 2: Arquitectura de Ventanas, Splash y Leviathan-UI (GlassCube)
+
+### 1. Reorganización de Módulos en `lib/`
+- Agrupar y mover los scripts dispersos en la raíz de `lib/` hacia carpetas dedicadas según corresponda:
+  - `blindcubesEngine/` (incluyendo `asksomes_format.py`, `asksomes_installer.py`, `BuildThread.py`, etc.).
+  - `flatcubeEngine/`
+  - `makeselfEngine/`
+- Clonar o integrar el motor **leviathan-ui** dentro de `lib/` para pruebas locales antes de subir la librería.
+
+### 2. Coreografía del Splash Screen y Ciclo de Vida de Ventanas
+El orden estricto de arranque y verificación de condiciones debe ser el siguiente:
+1. **Splash Screen (Bootloader):** Se dibuja instantáneamente al imprimir las primeras variables en la terminal. Actúa como el frame obligatorio de arranque.
+2. **GitHub Landing Page** (si requiere login, código `1`).
+3. **Internal Error Verification** (si hay errores internos, código `1` muestra la ventana de reporte; si no, código `0` continúa).
+4. **Main Window.**
+
+- **Transiciones del Splash:** El splash debe desvanecerse suavemente (*fade out* tipo cortina) una vez que la interfaz principal (`pm_dashboard.py`) confirme que se ha dibujado correctamente.
+- **Manejo de Errores Críticos:** Si ocurre un error antes de cargar la interfaz o durante el ciclo, el splash se transforma en una ventana solitaria con barra de título personalizada, título centrado y subtítulo con el error interno enriquecido.
+- **Gestión de Frames (Window Manager Local):** Las ventanas deben destruirse (`destroy()`) tras arrojar códigos de salida para evitar solapamientos. La barra de título personalizada actúa como controlador unificado (`window manager`).
+  - Al presionar **3 veces seguidas** la barra de título, el frame pasa al primer plano (siempre encima de otras apps) y la barra se oculta apareciendo suavemente desde arriba, transformando el botón de maximizar en "Salir de pantalla completa" (con un icono SVG de flecha hacia abajo a la izquierda).
+  - *Cambio de marca:* Una vez que los bugs y pruebas de estrés contra el código se superen, renombrar formalmente `leviathan-ui` a **GlassCube**.
+
+---
+
+## FASE 3: Evolución de UI/UX, Estilo iOS y Limpieza General
+
+### 1. Unificación de Estilos Globales (QSS)
+- Eliminar la aplicación fragmentada de QSS por control individual y centralizar la carga de estilos globales (`qss_loader.py`) en el root de la aplicación.
+- Reemplazar los acentos verdes o dispersos por el **naranja corporativo** característico en los focos de teclado (*keyboard focus*), bordes activos y estados de selección, imitando la elegancia visual de los elementos de Kaspersky.
+- **Corrección del Sidebar:** Corregir el bug de hover donde el ítem parpadea entre azul y gris predeterminado. Al contraer el sidebar, ocultar el contenedor de login y mostrar únicamente los iconos como botones ajustados al lateral; al estirar, se expande con normalidad.
+
+### 2. Rediseño del Panel de Configuración (Estilo Tarjetas iOS / Kaspersky)
+- **Limpieza en Configuración:**
+  - Eliminar los botones superiores (el botón *Restaurar* pasa a ser un ítem interno más abajo; el botón *Guardar* se vuelve **automático** al modificar cualquier ajuste).
+  - Eliminar por completo la opción de "Editor de código" (función unusable) y el selector de "Modo de ventana" (la interfaz se mantiene fija con el diseño por defecto en cristal).
+  - Mover la sección de "Información del sistema" al apartado de **"Acerca de"**, actualizando su contenido.
+- **Coreografía de Tarjetas y Navegación en Cascada:**
+  - Los grupos de configuración se organizan en **tarjetas**. Cada tarjeta tiene un icono SVG a la izquierda y una flecha indicadora (`➡`) a la derecha.
+  - Al hacer clic en un elemento (ej. *General*):
+    1. Se marca un indicador naranja a la izquierda y se acentúa el contorno de la tarjeta.
+    2. Todo se desplaza suavemente hacia la izquierda.
+    3. Aparece una flecha de retroceso unificada con el título superior formando un botón cápsula.
+  - Si se trata de un ítem con sub-opciones de selección múltiple, aparece un botón de confirmación superior y se valida el guardado al retroceder. Si es de selección única, se marca, se aplica inmediatamente y se retrocede de forma automática.
+  - Los elementos de redirección externa muestran una flecha diagonal (`↗`).
+- **Sombras y Detalles:** Agregar sombras suaves debajo de la barra superior con botones, imitando el relieve visual del icono en la sección "Acerca de".
+
+### 3. Ajustes Menores
+- **Traducciones:** Asegurar que no existan traducciones parciales mezclando español e inglés genérico en los strings.
+- **Fuentes:** Permitir la selección manual de fuentes en caché desde la interfaz en lugar de depender de cargas automáticas ocultas.
+- **Notificaciones:** Reemplazar las alertas rudimentarias por notificaciones nativas del sistema operativo o personalizadas con las transiciones, animaciones y posiciones de Windows.
+
+---
+*Instrucciones listas para ser ejecutadas por el agente de desarrollo.*
