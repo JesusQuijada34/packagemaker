@@ -1475,6 +1475,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             package_path = output_path / package_name
             iflapp_file = output_path / ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform_suffix)
 
+            if compiler.hardening_methods:
+                print(f"[INFO] Aplicando blindaje: {', '.join(compiler.hardening_methods)}")
+                compiler.apply_hardening(package_path)
+
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)
 
@@ -1578,6 +1582,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             package_name = ProjectNameFormatter.format_package_folder(publisher, app, version, platform_suffix)
             package_path = output_path / package_name
             iflapp_file = output_path / ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform_suffix)
+
+            if compiler.hardening_methods:
+                print(f"[INFO] Aplicando blindaje: {', '.join(compiler.hardening_methods)}")
+                compiler.apply_hardening(package_path)
 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)

@@ -53,6 +53,45 @@ class CliHardeningParseTests(unittest.TestCase):
         self.assertEqual(options.get("password"), "pw")
 
 
+class CliBuildHardeningTests(unittest.TestCase):
+    """El blindaje pedido por CLI debe aplicarse antes de empaquetar."""
+
+    def test_buildthis_headless_applies_requested_hardening(self):
+        from lib.cliHandler import handle_cli_action
+        from lib.iflapp_format import read_iflapp_header
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project = root / "project"
+            project.mkdir()
+            (project / "details.xml").write_text(
+                "<app><publisher>Influent</publisher><app>portableapp</app>"
+                "<version>v1.0</version><platform>AlphaCube</platform></app>",
+                encoding="utf-8",
+            )
+            (project / "portableapp.py").write_text("print('portable')\n", encoding="utf-8")
+            output = root / "output"
+
+            handle_cli_action(
+                "buildthis",
+                {"path": str(project)},
+                None,
+                headless=True,
+                output=str(output),
+                platform="Windows" if sys.platform.startswith("win") else "Linux",
+                compiler="zipapp",
+                sandbox=False,
+                hardening=["integrity"],
+            )
+
+            artifact = next(output.glob("*.iflapp"))
+            names = {
+                entry["path"]
+                for entry in read_iflapp_header(artifact, include_blobs=False).manifest
+            }
+            self.assertIn(".iflapp.integrity", names)
+
+
 class InspectHelperTests(unittest.TestCase):
     def _make_package(self, root: Path) -> Path:
         pkg = root / "pkg"

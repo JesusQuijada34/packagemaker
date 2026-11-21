@@ -502,11 +502,18 @@ class FlangCompiler:
         expected_binaries = []
         missing_binaries = []
         for script in self.scripts:
-            binary_name = f"{script['name']}{expected_suffix}"
-            candidates = [package_path / binary_name, package_path / "bin" / binary_name]
+            expected_name = f"{script['name']}{expected_suffix}"
+            # El backend zipapp entrega `<guion>.pyz`; sigue siendo el artefacto
+            # compilado del guion aunque no sea un binario nativo.
+            candidate_names = [expected_name, f"{script['name']}.pyz"]
+            candidates = [
+                location / name
+                for name in candidate_names
+                for location in (package_path, package_path / "bin")
+            ]
             binary_path = next((candidate for candidate in candidates if candidate.is_file()), None)
             if binary_path is None:
-                missing_binaries.append(binary_name)
+                missing_binaries.append(expected_name)
             else:
                 expected_binaries.append(binary_path)
         if missing_binaries:
@@ -608,7 +615,15 @@ class FlangCompiler:
         dist_dir = self.repo_path / "dist"
         if dist_dir.exists():
             for binary in dist_dir.iterdir():
-                if (target_platform == "Windows" and binary.suffix == ".exe") or (target_platform == "Linux" and binary.suffix == ""):
+                if binary.is_dir():
+                    continue
+                is_native = (
+                    (target_platform == "Windows" and binary.suffix == ".exe")
+                    or (target_platform == "Linux" and binary.suffix == "")
+                )
+                # zipapp no produce binario nativo; su archivo portable (.pyz)
+                # también debe viajar en el paquete.
+                if is_native or binary.suffix == ".pyz":
                     destination = package_path / binary.name
                     # `app`, `config` y otros nombres pueden coincidir con
                     # carpetas obligatorias del contrato Fluthin.
