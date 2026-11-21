@@ -42,6 +42,31 @@ from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
 from lib.mexf_compiler import MexfCompiler
 from lib.project_locator import describe_available, locate_project
 
+
+def package_identity(
+    metadata: Dict[str, str], details_bytes: Optional[bytes]
+) -> Dict[str, str]:
+    """Alinea la identidad de la cabecera con el ``details.xml`` empaquetado.
+
+    ``create_package`` reescribe ``<platform>`` con la plataforma objetivo (p.
+    ej. ``Danenone`` al compilar un proyecto ``AlphaCube`` en Linux). La
+    cabecera conservaba la plataforma declarada del proyecto, así que
+    ``--inspect`` y ``--shell-info`` mostraban una plataforma distinta de la del
+    ``details.xml`` incluido en el mismo contenedor.
+    """
+    identity = dict(metadata)
+    if not details_bytes:
+        return identity
+    try:
+        root = ET.fromstring(details_bytes)
+    except ET.ParseError:
+        return identity
+    platform_value = (root.findtext("platform") or "").strip()
+    if platform_value:
+        identity["platform"] = platform_value
+    return identity
+
+
 class FlangCompiler:
     """Compilador principal unificado para el ecosistema Fluthin (Version Robusta)."""
 
@@ -508,11 +533,18 @@ class FlangCompiler:
         expected_binaries = []
         missing_binaries = []
         for script in self.scripts:
-            binary_name = f"{script['name']}{expected_suffix}"
-            candidates = [package_path / binary_name, package_path / "bin" / binary_name]
+            expected_name = f"{script['name']}{expected_suffix}"
+            # El backend zipapp entrega `<guion>.pyz`; sigue siendo el artefacto
+            # compilado del guion aunque no sea un binario nativo.
+            candidate_names = [expected_name, f"{script['name']}.pyz"]
+            candidates = [
+                location / name
+                for name in candidate_names
+                for location in (package_path, package_path / "bin")
+            ]
             binary_path = next((candidate for candidate in candidates if candidate.is_file()), None)
             if binary_path is None:
-                missing_binaries.append(binary_name)
+                missing_binaries.append(expected_name)
             else:
                 expected_binaries.append(binary_path)
         if missing_binaries:
@@ -614,7 +646,15 @@ class FlangCompiler:
         dist_dir = self.repo_path / "dist"
         if dist_dir.exists():
             for binary in dist_dir.iterdir():
-                if (target_platform == "Windows" and binary.suffix == ".exe") or (target_platform == "Linux" and binary.suffix == ""):
+                if binary.is_dir():
+                    continue
+                is_native = (
+                    (target_platform == "Windows" and binary.suffix == ".exe")
+                    or (target_platform == "Linux" and binary.suffix == "")
+                )
+                # zipapp no produce binario nativo; su archivo portable (.pyz)
+                # también debe viajar en el paquete.
+                if is_native or binary.suffix == ".pyz":
                     destination = package_path / binary.name
                     # `app`, `config` y otros nombres pueden coincidir con
                     # carpetas obligatorias del contrato Fluthin.
@@ -684,7 +724,7 @@ class FlangCompiler:
                 icon=icon_bytes,
                 icon_name=icon_name,
                 details=details_bytes,
-                identity=self.metadata,
+                identity=package_identity(self.metadata, details_bytes),
                 password=self.package_password,
                 signing_key=self.signing_key,
             )
@@ -786,12 +826,13 @@ class FlangCompiler:
             extract_script.write_text(
                 "\n".join(
                     [
+                        "import os",
                         "import sys",
                         "from lib.blindcubeEngine.iflapp_format import extract_iflapp, verify_iflapp, read_iflapp_header",
                         "pkg = sys.argv[1]",
                         "dest = sys.argv[2]",
                         "verify_iflapp(pkg)",
-                        "extract_iflapp(pkg, dest)",
+                        "extract_iflapp(pkg, dest, password=os.environ.get('IFLAPP_VERIFY_PASSWORD') or None)",
                         "header = read_iflapp_header(pkg, include_blobs=False)",
                         "print('IFLAPP_OK', header.file_count, header.identity().get('app', ''))",
                     ]
@@ -804,6 +845,10 @@ class FlangCompiler:
             sandbox_env = {"PYTHONPATH": os.pathsep.join(
                 [str(project_root), os.environ.get("PYTHONPATH", "")]
             ).rstrip(os.pathsep)}
+            # La contraseña viaja por entorno, no por argv: el paquete cifrado
+            # necesita descifrarse para extraerlo y verificar su arranque.
+            if self.package_password:
+                sandbox_env["IFLAPP_VERIFY_PASSWORD"] = self.package_password
             result = self._sandbox.run(
                 [sys.executable, str(extract_script), str(iflapp_path), str(Path(workspace) / "unpacked")],
                 workspace,

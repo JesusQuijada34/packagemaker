@@ -1,5 +1,5 @@
 # Dependencias solo para desarrollo, CI y auditoría. Nunca en producción.
-# Instalar con: pip install -r requirements-dev.txt
+# Instalar desde la raíz: pip install -r lib/requirements-dev.txt
 -r requirements.txt
 
 # Pruebas

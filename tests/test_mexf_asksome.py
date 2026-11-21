@@ -1,9 +1,15 @@
+import hashlib
+import hmac
+import io
 import json
+import lzma
 import os
+import tarfile
 from pathlib import Path
 
 import pytest
 
+from lib.blindcubeEngine import asksome_format
 from lib.blindcubeEngine.asksome_format import AsksomeError, extract_asksome, pack_asksome, verify_asksome
 from lib.mexf_parser import MexfError, detect_mexf_format, migrate_legacy_mexf, parse_mexf
 
@@ -67,6 +73,101 @@ def test_asksome_tampering_is_rejected(tmp_path):
     artifact.write_bytes(data)
     with pytest.raises(AsksomeError):
         verify_asksome(artifact)
+
+
+def _tar_payload(names):
+    stream = io.BytesIO()
+    with tarfile.open(fileobj=stream, mode="w") as tar:
+        for name in names:
+            data = b"x"
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+    return lzma.compress(stream.getvalue(), format=lzma.FORMAT_ALONE)
+
+
+def _craft_asksome(path, *, names=(), payload=None, header=None):
+    """Escribe un .asksome firmado con la clave local para probar el lector."""
+    payload = payload if payload is not None else _tar_payload(names)
+    data = {
+        "format": "asksome",
+        "format_version": 1,
+        "manifest": [],
+        "metadata": {},
+        "compression": "lzma",
+        "encryption": "none",
+        "payload_sha256": hashlib.sha256(payload).hexdigest(),
+    }
+    data.update(header or {})
+    signature = hmac.new(
+        asksome_format.KEY, asksome_format._canonical(data) + payload, hashlib.sha256
+    ).hexdigest()
+    data["signature"] = signature
+    header_bytes = asksome_format._canonical(data)
+    Path(path).write_bytes(
+        asksome_format.MAGIC + len(header_bytes).to_bytes(4, "little") + header_bytes + payload
+    )
+    return Path(path)
+
+
+def _write_raw_asksome(path, header_bytes, *, declared_size=None, payload=b""):
+    size = len(header_bytes) if declared_size is None else declared_size
+    Path(path).write_bytes(
+        asksome_format.MAGIC + size.to_bytes(4, "little") + header_bytes + payload
+    )
+    return Path(path)
+
+
+class TestAsksomeMalformedHeaderTests:
+    def test_non_object_header_is_rejected(self, tmp_path):
+        artifact = _write_raw_asksome(tmp_path / "list.asksome", b"[]")
+        with pytest.raises(AsksomeError):
+            asksome_format.read_asksome_header(artifact)
+        with pytest.raises(AsksomeError):
+            verify_asksome(artifact)
+        with pytest.raises(AsksomeError):
+            extract_asksome(artifact, tmp_path / "out")
+
+    def test_truncated_header_is_rejected(self, tmp_path):
+        artifact = _write_raw_asksome(
+            tmp_path / "cut.asksome", b'{"format":"asksome"}', declared_size=9999
+        )
+        with pytest.raises(AsksomeError):
+            asksome_format.read_asksome_header(artifact)
+
+    @pytest.mark.parametrize(
+        "override",
+        [
+            {"metadata": []},
+            {"manifest": "x"},
+            {"icon": 123},
+            {"encryption_params": []},
+            {"format_version": "1"},
+        ],
+    )
+    def test_wrong_header_field_types_are_rejected(self, tmp_path, override):
+        artifact = _craft_asksome(tmp_path / "bad.asksome", header=override)
+        with pytest.raises(AsksomeError):
+            verify_asksome(artifact)
+        with pytest.raises(AsksomeError):
+            extract_asksome(artifact, tmp_path / "out")
+
+    @pytest.mark.parametrize(
+        "name",
+        ["C:/Windows/evil.txt", "C:evil.txt", "../evil.txt", "/tmp/evil.txt", ".."],
+    )
+    def test_unsafe_member_paths_are_rejected(self, tmp_path, name):
+        artifact = _craft_asksome(tmp_path / "traversal.asksome", names=[name])
+        target = tmp_path / "unpacked"
+        with pytest.raises(AsksomeError):
+            extract_asksome(artifact, target)
+        assert not (tmp_path / "evil.txt").exists()
+        assert not (target / "evil.txt").exists()
+
+    def test_corrupt_payload_raises_asksome_error(self, tmp_path):
+        artifact = _craft_asksome(tmp_path / "corrupt.asksome", payload=b"not lzma at all")
+        with pytest.raises(AsksomeError):
+            extract_asksome(artifact, tmp_path / "out")
 
 
 DETAILS_XML = """<?xml version="1.0" encoding="UTF-8"?>

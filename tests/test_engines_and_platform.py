@@ -1,5 +1,7 @@
+import io
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from lib import blindcubeEngine, flatcubeEngine, makeselfEngine
@@ -7,8 +9,10 @@ from lib.engines import (
     BLINDCUBE_ID,
     FLATCUBE_ID,
     MAKESELF_ID,
+    EngineError,
     available_engines,
     compiler_engines,
+    get_engine,
     resolve_engine,
 )
 from lib.platform_detect import (
@@ -147,6 +151,64 @@ class MakeSelfEngineTests(unittest.TestCase):
         )
         self.assertIn("FOLDER_NAME", variables)
         self.assertIn("Danenone", variables["FOLDER_NAME"])
+
+
+class MalformedEngineContainerTests(unittest.TestCase):
+    """Un contenedor cortado o con tipos inesperados no debe lanzar excepciones crudas."""
+
+    def test_blindcube_short_header_is_reported(self):
+        for raw in (blindcubeEngine.MAGIC, blindcubeEngine.MAGIC + b"\x00\x01\x02"):
+            with self.assertRaises(blindcubeEngine.BlindCubeError):
+                blindcubeEngine.read_header(raw)
+
+    def test_blindcube_declared_header_beyond_file_is_reported(self):
+        raw = blindcubeEngine.MAGIC.ljust(8, b"\x00") + b"\x00\x00\x00\x00" + b"\xff\xff\xff\x7f"
+        with self.assertRaises(blindcubeEngine.BlindCubeError):
+            blindcubeEngine.read_header(raw)
+
+    def test_blindcube_non_object_header_is_reported(self):
+        raw = (
+            blindcubeEngine.MAGIC.ljust(8, b"\x00")
+            + b"\x00\x00\x00\x00"
+            + b"\x04\x00\x00\x00"
+            + b"null"
+        )
+        with self.assertRaises(blindcubeEngine.BlindCubeError):
+            blindcubeEngine.read_header(raw)
+
+    def test_blindcube_corrupt_payload_is_reported(self):
+        container = blindcubeEngine.container.build_header(4, {"encryption": "none"}) + b"no-es-lzma"
+        with self.assertRaises(blindcubeEngine.BlindCubeError):
+            blindcubeEngine.unpack(container)
+
+    def test_blindcube_missing_crypto_parameters_are_reported(self):
+        container = blindcubeEngine.container.build_header(0, {"encryption": "hmac-sha256-ctr"})
+        with self.assertRaises(blindcubeEngine.BlindCubeError):
+            blindcubeEngine.unpack(container, password="pw")
+
+    def test_engine_core_read_header_rejects_truncated_input(self):
+        engine = get_engine(BLINDCUBE_ID)
+        for raw in (blindcubeEngine.MAGIC, blindcubeEngine.MAGIC + b"\x00\x00\x00\x00"):
+            with self.assertRaises(EngineError):
+                engine.read_header(raw)
+
+    def test_flatcube_corrupt_zip_is_reported(self):
+        with self.assertRaises(flatcubeEngine.FlatCubeError):
+            flatcubeEngine.unpack(b"PK\x03\x04" + b"\x00" * 12)
+
+    def test_flatcube_non_object_manifest_is_reported(self):
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr(flatcubeEngine.container.MANIFEST_NAME, "[1, 2]")
+        with self.assertRaises(flatcubeEngine.FlatCubeError):
+            flatcubeEngine.unpack(buffer.getvalue())
+
+    def test_flatcube_unparsable_manifest_is_reported(self):
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr(flatcubeEngine.container.MANIFEST_NAME, "no es json")
+        with self.assertRaises(flatcubeEngine.FlatCubeError):
+            flatcubeEngine.unpack(buffer.getvalue())
 
 
 if __name__ == "__main__":

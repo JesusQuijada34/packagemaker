@@ -34,12 +34,16 @@ def unpack(container: bytes) -> Tuple[Dict, bytes]:
     """Lee un ``.flatkpkg`` y devuelve ``(manifest, payload_bytes)``."""
     if not _looks_like_zip(container):
         raise FlatCubeError("El contenedor no es un ZIP (.flatkpkg) válido")
-    with zipfile.ZipFile(io.BytesIO(container)) as archive:
-        names = archive.namelist()
-        manifest: Dict = {}
-        if MANIFEST_NAME in names:
-            manifest = json.loads(archive.read(MANIFEST_NAME).decode("utf-8"))
-        return manifest, container
+    manifest: Dict = {}
+    try:
+        with zipfile.ZipFile(io.BytesIO(container)) as archive:
+            if MANIFEST_NAME in archive.namelist():
+                manifest = json.loads(archive.read(MANIFEST_NAME).decode("utf-8"))
+    except (zipfile.BadZipFile, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise FlatCubeError(f"Contenedor .flatkpkg ilegible: {exc}") from exc
+    if not isinstance(manifest, dict):
+        raise FlatCubeError("El manifiesto del contenedor no es un objeto JSON")
+    return manifest, container
 
 
 def pack_directory(

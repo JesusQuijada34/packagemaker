@@ -100,6 +100,8 @@
     "section_appearance_hint": "Densidade, acento lateral e opacidade",
     "section_notifications_hint": "Avisos do sistema e entrada tatil",
     "section_fonts_hint": "Estado das fontes e descarga manual",
+    "font_family": "Fonte da interface",
+    "font_auto": "Automatica (padrao do sistema)",
     "reset_hint": "Restaura as configuracoes padrao"
   },
   "create": {

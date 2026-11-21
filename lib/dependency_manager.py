@@ -45,6 +45,14 @@ STDLIB_MODULES = {
     "bisect", "array", "secrets", "uuid", "configparser", "getpass", "textwrap",
 }
 
+# ``sys.stdlib_module_names`` (3.10+) es la autoridad; la lista anterior solo
+# cubre intérpretes antiguos. Sin esto, imports como ``hmac``, ``asyncio``,
+# ``email`` o ``tomllib`` se trataban como dependencias de PyPI y se intentaban
+# instalar (y se escribían en requirements.txt).
+_STDLIB_MODULES = frozenset(STDLIB_MODULES) | frozenset(
+    getattr(sys, "stdlib_module_names", ())
+)
+
 IDE_BUNDLED_MODULES = {
     "PyQt6", "PyQt5", "PyQt", "PySide6", "PySide2", "PySide",
     "leviathan_ui", "leviathan",
@@ -117,7 +125,7 @@ def detect_imports_from_source(
     for pattern in patterns:
         for match in re.finditer(pattern, content, re.MULTILINE):
             module = match.group(1).split(".")[0]
-            if not module or module in STDLIB_MODULES:
+            if not module or module in _STDLIB_MODULES:
                 continue
             if exclude_pyqt and is_ide_bundled_module(module, exclude_pyqt=True):
                 continue

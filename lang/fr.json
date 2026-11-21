@@ -100,6 +100,8 @@
     "section_appearance_hint": "Densite, accent lateral et opacite",
     "section_notifications_hint": "Avis systeme et saisie tactile",
     "section_fonts_hint": "Etat des polices et telechargement manuel",
+    "font_family": "Police de l'interface",
+    "font_auto": "Automatique (selon le systeme)",
     "reset_hint": "Retablit les parametres par defaut"
   },
   "create": {

@@ -188,25 +188,38 @@ def _launch(dest, header):
     # 1) El nombre declarado en la cabecera.
     if app:
         for root in roots:
-            candidates += [os.path.join(root, app), os.path.join(root, app + ".exe"), os.path.join(root, app + ".py")]
+            candidates += [
+                os.path.join(root, app),
+                os.path.join(root, app + ".exe"),
+                os.path.join(root, app + ".py"),
+                os.path.join(root, app + ".pyz"),
+            ]
     # 2) Puntos de entrada habituales cuando la cabecera no nombra el binario.
     for root in roots:
         for stem in ("main", "app", "run", "__main__", "start"):
-            candidates += [os.path.join(root, stem), os.path.join(root, stem + ".exe"), os.path.join(root, stem + ".py")]
+            candidates += [
+                os.path.join(root, stem),
+                os.path.join(root, stem + ".exe"),
+                os.path.join(root, stem + ".py"),
+                os.path.join(root, stem + ".pyz"),
+            ]
     for candidate in candidates:
         if os.path.isfile(candidate):
-            if candidate.endswith(".py"):
+            if candidate.endswith((".py", ".pyz")):
                 return subprocess.call([sys.executable, candidate])
             os.chmod(candidate, os.stat(candidate).st_mode | stat.S_IEXEC)
             return subprocess.call([candidate])
-    # 3) Respaldo: primer script o ejecutable en la raíz extraída.
-    for entry in sorted(os.listdir(dest)):
+    # 3) Respaldo: artefactos Python antes que los guiones auxiliares del
+    # paquete (``updater.py``); si no, el primer ejecutable de la raíz.
+    entries = sorted(os.listdir(dest))
+    for suffix in (".pyz", ".py"):
+        for entry in entries:
+            full = os.path.join(dest, entry)
+            if os.path.isfile(full) and entry.endswith(suffix):
+                return subprocess.call([sys.executable, full])
+    for entry in entries:
         full = os.path.join(dest, entry)
-        if not os.path.isfile(full):
-            continue
-        if entry.endswith(".py"):
-            return subprocess.call([sys.executable, full])
-        if os.access(full, os.X_OK):
+        if os.path.isfile(full) and os.access(full, os.X_OK):
             return subprocess.call([full])
     print("Paquete extraído en: " + dest)
     return 0

@@ -90,24 +90,33 @@ def _encrypt(data: bytes, password: Optional[str]) -> Tuple[bytes, Dict]:
     }
 
 
+def _decrypt_parameters(params: Dict) -> Tuple[bytes, bytes]:
+    """Decodifica ``salt``/``nonce`` de la cabecera con un error legible."""
+    try:
+        salt = bytes.fromhex(params["salt"])
+        nonce = bytes.fromhex(params["nonce"])
+    except (KeyError, ValueError) as exc:
+        raise BlindCubeError("Parámetros de cifrado incompletos o inválidos.") from exc
+    return salt, nonce
+
+
 def _decrypt(data: bytes, password: Optional[str], params: Dict) -> bytes:
     mode = params.get("encryption", "none")
     if mode == "none":
         return data
     if not password:
         raise BlindCubeError("El contenedor está cifrado; se requiere contraseña.")
-    salt = bytes.fromhex(params["salt"])
+    salt, nonce = _decrypt_parameters(params)
     key = _derive_key(password, salt)
     if mode == "aes-256-gcm":  # pragma: no cover - depende del entorno
         aesgcm = _try_aesgcm()
         if aesgcm is None:
             raise BlindCubeError("Se requiere 'cryptography' para abrir AES-256-GCM.")
         try:
-            return aesgcm(key).decrypt(bytes.fromhex(params["nonce"]), data, None)
+            return aesgcm(key).decrypt(nonce, data, None)
         except Exception as exc:
             raise BlindCubeError("Contraseña incorrecta o payload corrupto.") from exc
     if mode == "hmac-sha256-ctr":
-        nonce = bytes.fromhex(params["nonce"])
         expected = params.get("mac", "")
         actual = hmac.new(key, nonce + data, hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, actual):
@@ -135,12 +144,21 @@ def read_header(container: bytes) -> Tuple[Dict, int]:
     if not container.startswith(expected):
         raise BlindCubeError("Magic bytes del contenedor no coinciden")
     base = _MAGIC_LEN
+    if len(container) < base + 8:
+        raise BlindCubeError("Cabecera del contenedor truncada")
     (payload_len,) = struct.unpack(_LEN_FMT, container[base : base + 4])
     (blob_len,) = struct.unpack(_LEN_FMT, container[base + 4 : base + 8])
-    blob = container[base + 8 : base + 8 + blob_len]
-    meta = json.loads(blob.decode("utf-8"))
+    end = base + 8 + blob_len
+    if end > len(container):
+        raise BlindCubeError("Cabecera del contenedor truncada")
+    try:
+        meta = json.loads(container[base + 8 : end].decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise BlindCubeError(f"Cabecera del contenedor ilegible: {exc}") from exc
+    if not isinstance(meta, dict):
+        raise BlindCubeError("La cabecera del contenedor no es un objeto JSON")
     meta["payload_len"] = payload_len
-    return meta, base + 8 + blob_len
+    return meta, end
 
 
 def pack(
@@ -167,7 +185,10 @@ def unpack(container: bytes, *, password: Optional[str] = None) -> Tuple[Dict, b
     meta, offset = read_header(container)
     encrypted = container[offset:]
     compressed = _decrypt(encrypted, password, meta)
-    payload = lzma.decompress(compressed, format=lzma.FORMAT_ALONE)
+    try:
+        payload = lzma.decompress(compressed, format=lzma.FORMAT_ALONE)
+    except lzma.LZMAError as exc:
+        raise BlindCubeError("Payload LZMA corrupto o incompleto.") from exc
     return meta, payload
 
 

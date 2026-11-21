@@ -100,6 +100,8 @@
     "section_appearance_hint": "Dichte, Seitenakzent und Deckkraft",
     "section_notifications_hint": "Systemhinweise und Touch-Eingabe",
     "section_fonts_hint": "Schriftartenstatus und manueller Download",
+    "font_family": "Schriftart der Oberflaeche",
+    "font_auto": "Automatisch (Systemvorgabe)",
     "reset_hint": "Setzt die Einstellungen auf die Standardwerte zuruck"
   },
   "create": {

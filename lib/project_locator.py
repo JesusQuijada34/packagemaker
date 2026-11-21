@@ -5,6 +5,11 @@ El nombre de la carpeta lleva la marca temporal del momento de creación, así q
 reconstruirlo a mano (``publisher.app.v1.0-...``) casi nunca coincide con el
 proyecto real. En vez de adivinar el nombre, este módulo recorre ``base_dir`` y
 lee ``details.xml`` de cada candidato.
+
+Cuando la carpeta ya sigue la ley canónica, su nombre es la identidad que el
+usuario ve y la que teclea en la CLI. Se usa esa identidad primero y se cae a
+``details.xml`` solo para carpetas antiguas o no canónicas; así se puede reparar
+un proyecto cuyos metadatos son precisamente los que están mal.
 """
 
 from __future__ import annotations
@@ -12,6 +17,8 @@ from __future__ import annotations
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+from lib.projectNameFormatter import ProjectNameFormatter
 
 
 def read_metadata(details_path: Path) -> Dict[str, str]:
@@ -41,6 +48,47 @@ def iter_projects(base_dir) -> List[Tuple[Path, Dict[str, str]]]:
     return projects
 
 
+# Carpetas que nunca son proyectos "crudos": salidas de compiladores, cachés y
+# entornos virtuales. Listarlas en el gestor confundía artefactos con proyectos.
+BUILD_ARTIFACT_DIRS = frozenset({
+    "build", "dist", "releases", "out", "target", "__pycache__",
+    "node_modules", "venv", "env", ".venv", ".git", ".idea", ".vscode",
+    "site-packages", "htmlcov", ".pytest_cache", ".mypy_cache",
+})
+BUILD_ARTIFACT_SUFFIXES = (".build", ".onefile-build", ".dist", ".build-cache")
+
+
+def is_project_directory(path) -> bool:
+    """``True`` si *path* parece un proyecto fuente listable por el gestor."""
+    candidate = Path(path)
+    if not candidate.is_dir():
+        return False
+    name = candidate.name
+    if name.startswith("."):
+        return False
+    if name.lower() in BUILD_ARTIFACT_DIRS:
+        return False
+    if name.endswith(BUILD_ARTIFACT_SUFFIXES):
+        return False
+    return (candidate / "details.xml").is_file()
+
+
+def list_projects(base_dir) -> List[Path]:
+    """Proyectos fuente de ``base_dir``, excluyendo artefactos de compilación."""
+    base = Path(base_dir)
+    if not base.is_dir():
+        return []
+    return [item for item in sorted(base.iterdir()) if is_project_directory(item)]
+
+
+def _identity(path: Path, meta: Dict[str, str]) -> Tuple[str, str]:
+    """Identidad del proyecto: nombre canónico de carpeta o, si no, metadatos."""
+    parsed = ProjectNameFormatter.parse_project_folder(path.name)
+    if parsed:
+        return parsed["publisher"], parsed["app"]
+    return meta.get("publisher", ""), meta.get("app", "")
+
+
 def locate_project(
     base_dir,
     publisher: Optional[str] = None,
@@ -54,9 +102,10 @@ def locate_project(
     """
     candidates = []
     for path, meta in iter_projects(base_dir):
-        if app_id and meta.get("app", "").lower() != str(app_id).lower():
+        project_publisher, project_app = _identity(path, meta)
+        if app_id and project_app.lower() != str(app_id).lower():
             continue
-        if publisher and meta.get("publisher", "").lower() != str(publisher).lower():
+        if publisher and project_publisher.lower() != str(publisher).lower():
             continue
         if platform and meta.get("platform", "").lower() != str(platform).lower():
             continue

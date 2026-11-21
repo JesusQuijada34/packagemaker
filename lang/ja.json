@@ -100,6 +100,8 @@
     "section_appearance_hint": "密度、サイドのアクセント、不透明度",
     "section_notifications_hint": "システム通知とタッチ入力",
     "section_fonts_hint": "フォントの状態と手動ダウンロード",
+    "font_family": "インターフェースのフォント",
+    "font_auto": "自動（システムに従う）",
     "reset_hint": "設定を既定値に戻します"
   },
   "create": {

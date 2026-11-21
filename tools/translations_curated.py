@@ -18,6 +18,8 @@ from typing import Dict
 CURATED: Dict[str, Dict[str, str]] = {}
 
 CURATED["fr"] = {
+    "config.font_family": "Police de l'interface",
+    "config.font_auto": "Automatique (selon le systeme)",
     "config.section_notifications": 'Notifications et alertes',
     "config.touch_mode_hint": 'Glissez avec deux doigts pour changer de section.',
     "config.confirm": 'Confirmer',
@@ -243,6 +245,8 @@ CURATED["fr"] = {
 }
 
 CURATED["de"] = {
+    "config.font_family": "Schriftart der Oberflaeche",
+    "config.font_auto": "Automatisch (Systemvorgabe)",
     "config.section_notifications": 'Benachrichtigungen und Hinweise',
     "config.touch_mode_hint": 'Mit zwei Fingern wischen, um den Abschnitt zu wechseln.',
     "config.confirm": 'Bestatigen',
@@ -468,6 +472,8 @@ CURATED["de"] = {
 }
 
 CURATED["it"] = {
+    "config.font_family": "Font dell'interfaccia",
+    "config.font_auto": "Automatico (predefinito di sistema)",
     "config.section_notifications": 'Notifiche e avvisi',
     "config.touch_mode_hint": 'Scorri con due dita per cambiare sezione.',
     "config.confirm": 'Conferma',
@@ -693,6 +699,8 @@ CURATED["it"] = {
 }
 
 CURATED["pt"] = {
+    "config.font_family": "Fonte da interface",
+    "config.font_auto": "Automatica (padrao do sistema)",
     "config.section_notifications": 'Notificacoes e avisos',
     "config.touch_mode_hint": 'Deslize com dois dedos para mudar de secao.',
     "config.confirm": 'Confirmar',
@@ -920,6 +928,8 @@ CURATED["pt"] = {
 }
 
 CURATED["nl"] = {
+    "config.font_family": "Lettertype van de interface",
+    "config.font_auto": "Automatisch (systeemstandaard)",
     "config.section_notifications": 'Meldingen en waarschuwingen',
     "config.touch_mode_hint": 'Veeg met twee vingers om van sectie te wisselen.',
     "config.confirm": 'Bevestigen',
@@ -1145,6 +1155,8 @@ CURATED["nl"] = {
 }
 
 CURATED["pl"] = {
+    "config.font_family": "Czcionka interfejsu",
+    "config.font_auto": "Automatycznie (domyslna systemowa)",
     "config.section_notifications": 'Powiadomienia i ostrzezenia',
     "config.touch_mode_hint": 'Przesun dwoma palcami, aby zmienic sekcje.',
     "config.confirm": 'Potwierdz',
@@ -1370,6 +1382,8 @@ CURATED["pl"] = {
 }
 
 CURATED["tr"] = {
+    "config.font_family": "Arayuz yazi tipi",
+    "config.font_auto": "Otomatik (sistem varsayilani)",
     "config.section_notifications": 'Bildirimler ve uyarilar',
     "config.touch_mode_hint": 'Bolumu degistirmek icin iki parmakla kaydirin.',
     "config.confirm": 'Onayla',
@@ -1595,6 +1609,8 @@ CURATED["tr"] = {
 }
 
 CURATED["ru"] = {
+    "config.font_family": "Шрифт интерфейса",
+    "config.font_auto": "Автоматически (по системе)",
     "config.section_notifications": 'Уведомления и оповещения',
     "config.touch_mode_hint": 'Смахните двумя пальцами, чтобы сменить раздел.',
     "config.confirm": 'Подтвердить',
@@ -1820,6 +1836,8 @@ CURATED["ru"] = {
 }
 
 CURATED["ja"] = {
+    "config.font_family": "インターフェースのフォント",
+    "config.font_auto": "自動（システムに従う）",
     "config.section_notifications": '通知とアラート',
     "config.touch_mode_hint": '2本指でスワイプしてセクションを切り替えます。',
     "config.confirm": '確定',
@@ -2045,6 +2063,8 @@ CURATED["ja"] = {
 }
 
 CURATED["ko"] = {
+    "config.font_family": "인터페이스 글꼴",
+    "config.font_auto": "자동 (시스템 기본값)",
     "config.section_notifications": '알림 및 경고',
     "config.touch_mode_hint": '두 손가락으로 밀어 섹션을 전환합니다.',
     "config.confirm": '확인',
@@ -2270,6 +2290,8 @@ CURATED["ko"] = {
 }
 
 CURATED["zh"] = {
+    "config.font_family": "界面字体",
+    "config.font_auto": "自动（跟随系统）",
     "config.section_notifications": '通知与提醒',
     "config.touch_mode_hint": '用双指滑动切换分区。',
     "config.confirm": '确认',
@@ -2495,6 +2517,8 @@ CURATED["zh"] = {
 }
 
 CURATED["ar"] = {
+    "config.font_family": "خط الواجهة",
+    "config.font_auto": "تلقائي (حسب النظام)",
     "config.section_notifications": 'الإشعارات والتنبيهات',
     "config.touch_mode_hint": 'اسحب بإصبعين للتبديل بين الأقسام.',
     "config.confirm": 'تأكيد',

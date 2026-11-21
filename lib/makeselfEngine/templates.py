@@ -9,6 +9,7 @@ queda como fachada de compatibilidad que reexporta desde aquí.
 import hashlib
 import sys
 import time
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from xml.dom import minidom
@@ -293,6 +294,30 @@ def create_project_from_templates(
     }
 
 
+def _existing_timestamp(project_path: Path) -> Optional[str]:
+    """Recupera la marca temporal ya usada por el proyecto.
+
+    La reparación regenera ``details.xml``; si genera una marca nueva, la carpeta
+    y los metadatos dejan de compartir timestamp y el proyecto incumple la ley
+    de nombres canónicos.
+    """
+    parsed = ProjectNameFormatter.parse_project_folder(project_path.name)
+    if parsed:
+        return parsed.get("timestamp")
+
+    details_path = project_path / "details.xml"
+    if not details_path.is_file():
+        return None
+    try:
+        root = ET.parse(details_path).getroot()
+        _, timestamp = ProjectNameFormatter.version_components(
+            (root.findtext("version") or "").strip()
+        )
+        return timestamp
+    except (ET.ParseError, ValueError, OSError):
+        return None
+
+
 def repair_project_from_templates(
     project_path: Path,
     publisher: str,
@@ -302,15 +327,27 @@ def repair_project_from_templates(
     platform: str,
     version_base: str = "1.0.0",
     description: str = "",
+    timestamp: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Repara un proyecto existente: restaura carpetas, details.xml y archivos faltantes
     usando plantillas en src/templates/ (no sobrescribe scripts existentes salvo XML).
+
+    ``timestamp`` permite fijar la marca temporal; sin él se conserva la del
+    proyecto para que ``details.xml`` siga coincidiendo con el nombre de carpeta.
     """
     project_path = Path(project_path)
     plat = normalize_platform(platform)
+    timestamp = timestamp or _existing_timestamp(project_path)
     variables = build_variables(
-        publisher, app_id, name, author, plat, version_base, description or "Reparado por MoonFix"
+        publisher,
+        app_id,
+        name,
+        author,
+        plat,
+        version_base,
+        description or "Reparado por MoonFix",
+        timestamp=timestamp,
     )
     repaired: List[str] = []
 

@@ -15,6 +15,7 @@ que es verificable sin GUI ni red.
 from __future__ import annotations
 
 import base64
+import binascii
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -35,6 +36,16 @@ def detect_kind(path: Path | str) -> str:
     if data.startswith(b"IFLAPP"):
         return "iflapp"
     return "unknown"
+
+
+def _decoded_icon(header: Dict) -> Optional[bytes]:
+    encoded = header.get("icon")
+    if not isinstance(encoded, str) or not encoded:
+        return None
+    try:
+        return base64.b64decode(encoded)
+    except (binascii.Error, ValueError):
+        return None
 
 
 def _asksome_header(path: Path) -> Dict:
@@ -77,7 +88,7 @@ def package_info(path: Path | str) -> Dict:
 
     header = _asksome_header(target)
     metadata = dict(header.get("metadata", {}))
-    icon = header.get("icon", "")
+    icon = _decoded_icon(header) or b""
     return {
         "path": str(target),
         "kind": "asksome",
@@ -86,7 +97,7 @@ def package_info(path: Path | str) -> Dict:
         "compression": header.get("compression", ""),
         "encryption": header.get("encryption", "none"),
         "file_count": len(header.get("manifest", [])),
-        "icon_bytes": len(base64.b64decode(icon)) if icon else 0,
+        "icon_bytes": len(icon),
         "identity": {
             "publisher": metadata.get("publisher", ""),
             "app": metadata.get("app", ""),
@@ -106,8 +117,7 @@ def icon_bytes(path: Path | str) -> Optional[bytes]:
     if kind == "iflapp":
         return _iflapp_reader(target).icon_bytes()
     if kind == "asksome":
-        encoded = _asksome_header(target).get("icon", "")
-        return base64.b64decode(encoded) if encoded else None
+        return _decoded_icon(_asksome_header(target))
     return None
 
 

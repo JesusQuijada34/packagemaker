@@ -100,6 +100,8 @@
     "section_appearance_hint": "밀도, 측면 강조 및 불투명도",
     "section_notifications_hint": "시스템 알림 및 터치 입력",
     "section_fonts_hint": "글꼴 상태 및 수동 다운로드",
+    "font_family": "인터페이스 글꼴",
+    "font_auto": "자동 (시스템 기본값)",
     "reset_hint": "설정을 기본값으로 되돌립니다"
   },
   "create": {

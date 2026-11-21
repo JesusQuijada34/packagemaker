@@ -128,12 +128,21 @@ class BuildEngine:
         if not raw.startswith(expected):
             raise EngineError("Magic bytes del contenedor no coinciden")
         base = _HEADER_MAGIC_LEN
+        if len(raw) < base + 8:
+            raise EngineError("Cabecera del contenedor truncada")
         (payload_len,) = struct.unpack(_HEADER_LEN_FMT, raw[base : base + 4])
         (blob_len,) = struct.unpack(_HEADER_LEN_FMT, raw[base + 4 : base + 8])
-        blob = raw[base + 8 : base + 8 + blob_len]
-        meta = json.loads(blob.decode("utf-8"))
+        end = base + 8 + blob_len
+        if end > len(raw):
+            raise EngineError("Cabecera del contenedor truncada")
+        try:
+            meta = json.loads(raw[base + 8 : end].decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise EngineError(f"Cabecera del contenedor ilegible: {exc}") from exc
+        if not isinstance(meta, dict):
+            raise EngineError("La cabecera del contenedor no es un objeto JSON")
         meta["payload_len"] = payload_len
-        return meta, base + 8 + blob_len
+        return meta, end
 
 
 @dataclass

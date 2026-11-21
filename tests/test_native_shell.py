@@ -1,10 +1,37 @@
 """Pruebas del shell nativo (§5.2): metadatos hover, vista previa e integración."""
+import hashlib
+import hmac
 import json
 from pathlib import Path
 
 import pytest
 
+from lib.blindcubeEngine import asksome_format
 from lib.blindcubeEngine.asksome_format import pack_asksome
+
+
+def _craft_signed_asksome(path, **header_extra):
+    """Contenedor mínimo firmado con la clave local para probar el lector."""
+    payload = b""
+    header = {
+        "format": "asksome",
+        "format_version": 1,
+        "manifest": [],
+        "metadata": {},
+        "compression": "lzma",
+        "encryption": "none",
+        "payload_sha256": hashlib.sha256(payload).hexdigest(),
+    }
+    header.update(header_extra)
+    signature = hmac.new(
+        asksome_format.KEY, asksome_format._canonical(header) + payload, hashlib.sha256
+    ).hexdigest()
+    header["signature"] = signature
+    header_bytes = asksome_format._canonical(header)
+    Path(path).write_bytes(
+        asksome_format.MAGIC + len(header_bytes).to_bytes(4, "little") + header_bytes + payload
+    )
+    return Path(path)
 
 
 def _make_staging(tmp_path):
@@ -150,3 +177,19 @@ def test_shell_info_cli_helper(tmp_path, capsys):
     assert NativeShellHelper.info({"path": str(artifact), "json": True}) is True
     payload = json.loads(capsys.readouterr().out)
     assert payload["identity"]["app"] == "demo"
+
+
+def test_package_info_rejects_malformed_header(tmp_path):
+    from lib.native_shell import package_info
+
+    artifact = _craft_signed_asksome(tmp_path / "bad.asksome", metadata=[])
+    with pytest.raises(ValueError):
+        package_info(artifact)
+
+
+def test_invalid_base64_icon_does_not_break_shell_info(tmp_path):
+    from lib.native_shell import icon_bytes, package_info
+
+    artifact = _craft_signed_asksome(tmp_path / "icon.asksome", icon="abcde")
+    assert icon_bytes(artifact) is None
+    assert package_info(artifact)["icon_bytes"] == 0

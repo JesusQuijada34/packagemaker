@@ -100,6 +100,8 @@
     "section_appearance_hint": "Gestosc, akcent boczny i krycie",
     "section_notifications_hint": "Powiadomienia systemowe i wprowadzanie dotykowe",
     "section_fonts_hint": "Stan czcionek i reczne pobieranie",
+    "font_family": "Czcionka interfejsu",
+    "font_auto": "Automatycznie (domyslna systemowa)",
     "reset_hint": "Przywraca ustawienia domyslne"
   },
   "create": {

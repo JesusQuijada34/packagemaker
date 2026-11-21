@@ -17,7 +17,48 @@ from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QTimer, QPropertyAnimatio
 from lib import leviathan_bridge
 from lib.app_icons import icon_button
 
-WipeWindow = leviathan_bridge.attribute("WipeWindow")
+# ``updater.py`` se copia a los proyectos empaquetados, donde la copia
+# vendorizada de ``lib/leviathan_ui`` no viaja: sólo cuenta la distribución.
+LEVIATHAN_AVAILABLE = leviathan_bridge.is_available(prefer_vendored=False)
+
+if LEVIATHAN_AVAILABLE:
+    WipeWindow = leviathan_bridge.attribute("WipeWindow")
+else:
+
+    class WipeWindow:
+        """Respaldo sin efectos cuando ``leviathan_ui`` no está instalado.
+
+        El updater se copia a todos los proyectos empaquetados y también se usa
+        en modo headless (``--version``/``--check``/``--install``); sin este
+        respaldo, la ausencia de la dependencia opcional abortaba con
+        ``ImportError`` antes de parsear los argumentos.
+        """
+
+        def __init__(self, parent=None):
+            self._parent = parent
+
+        @classmethod
+        def create(cls):
+            return cls()
+
+        def set_mode(self, *args, **kwargs):
+            return self
+
+        def set_radius(self, *args, **kwargs):
+            return self
+
+        def set_blur(self, *args, **kwargs):
+            return self
+
+        def apply(self, *args, **kwargs):
+            return self
+
+        def show(self, *args, **kwargs):
+            return self
+
+        def close(self, *args, **kwargs):
+            return self
+
 
 # Import core updater module
 from lib.coreUpdater import (
@@ -281,10 +322,9 @@ class IntegratedSplash(QWidget):
         self.deleteLater()
 
 def get_accent_color():
-    _leviathan_accent = leviathan_bridge.attribute("get_accent_color")
-    if _leviathan_accent is not None:
+    if LEVIATHAN_AVAILABLE:
         try:
-            return str(_leviathan_accent())
+            return str(leviathan_bridge.attribute("get_accent_color")())
         except Exception:
             pass
     return "#0078D4"

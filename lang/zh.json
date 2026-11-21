@@ -100,6 +100,8 @@
     "section_appearance_hint": "密度、侧边强调与不透明度",
     "section_notifications_hint": "系统通知与触摸输入",
     "section_fonts_hint": "字体状态与手动下载",
+    "font_family": "界面字体",
+    "font_auto": "自动（跟随系统）",
     "reset_hint": "将设置恢复为默认值"
   },
   "create": {

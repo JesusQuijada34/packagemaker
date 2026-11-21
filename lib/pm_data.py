@@ -88,24 +88,29 @@ class PMDataStore:
         self.load()
 
     def load(self) -> Dict[str, Any]:
+        data: Any = {}
         if self.path.is_file():
             try:
                 with open(self.path, "r", encoding="utf-8") as f:
-                    self._data = json.load(f)
-            except (json.JSONDecodeError, OSError):
-                self._data = {}
-        else:
-            self._data = {}
+                    data = json.load(f)
+            except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+                data = {}
+        # Un pm.data editado a mano (o truncado por un corte de energía) puede
+        # seguir siendo JSON válido pero no ser un objeto. Antes eso reventaba
+        # en _ensure_structure y la aplicación no arrancaba ni en modo CLI.
+        self._data = data if isinstance(data, dict) else {}
         self._ensure_structure()
         self._refresh_readonly()
         return self._data
 
     def _ensure_structure(self) -> None:
+        if not isinstance(self._data, dict):
+            self._data = {}
         if "schema_version" not in self._data:
             self._data["schema_version"] = self.SCHEMA_VERSION
-        self._data.setdefault("user", {})
-        self._data.setdefault("readonly", {})
-        self._data.setdefault("translation_cache", {})
+        for section in ("user", "readonly", "translation_cache"):
+            if not isinstance(self._data.get(section), dict):
+                self._data[section] = {}
         user = self._data["user"]
         for key, val in DEFAULT_USER.items():
             if key not in user:
@@ -113,6 +118,8 @@ class PMDataStore:
 
     def _refresh_readonly(self) -> None:
         root = _app_root()
+        if not isinstance(self._data.get("readonly"), dict):
+            self._data["readonly"] = {}
         ro = self._data["readonly"]
         ro["is_compiled"] = is_compiled_build()
         ro["app_version"] = self._detect_app_version()
@@ -154,15 +161,19 @@ class PMDataStore:
             return False
 
     def get_user(self, key: str, default: Any = None) -> Any:
-        return self._data.get("user", {}).get(key, default)
+        user = self._data.get("user")
+        return user.get(key, default) if isinstance(user, dict) else default
 
     def set_user(self, key: str, value: Any) -> None:
-        self._data.setdefault("user", {})[key] = value
+        if not isinstance(self._data.get("user"), dict):
+            self._data["user"] = {}
+        self._data["user"][key] = value
 
     def remove_user(self, key: str) -> None:
         """Elimina una clave de la configuración del usuario."""
-        if "user" in self._data and key in self._data["user"]:
-            del self._data["user"][key]
+        user = self._data.get("user")
+        if isinstance(user, dict):
+            user.pop(key, None)
 
     def reset_user_configuration(self) -> bool:
         """Elimina preferencias y cachés de usuario y restaura los valores base.
@@ -184,19 +195,34 @@ class PMDataStore:
         return True
 
     def get_translation_cache(self, lang: str) -> Dict[str, str]:
-        return dict(self._data.get("translation_cache", {}).get(lang, {}))
+        cache = self._data.get("translation_cache")
+        if not isinstance(cache, dict):
+            return {}
+        entries = cache.get(lang)
+        return dict(entries) if isinstance(entries, dict) else {}
 
     def set_translation_cache_entry(self, lang: str, key: str, text: str) -> None:
-        tc = self._data.setdefault("translation_cache", {})
+        if not isinstance(self._data.get("translation_cache"), dict):
+            self._data["translation_cache"] = {}
+        tc = self._data["translation_cache"]
         lang_map = tc.setdefault(lang, {})
+        if not isinstance(lang_map, dict):
+            lang_map = tc[lang] = {}
         lang_map[key] = text
 
     def merge_translation_cache(self, lang: str, entries: Dict[str, str]) -> None:
-        tc = self._data.setdefault("translation_cache", {})
-        tc.setdefault(lang, {}).update(entries)
+        if not isinstance(self._data.get("translation_cache"), dict):
+            self._data["translation_cache"] = {}
+        tc = self._data["translation_cache"]
+        lang_map = tc.setdefault(lang, {})
+        if not isinstance(lang_map, dict):
+            lang_map = tc[lang] = {}
+        lang_map.update(entries)
 
     def migrate_from_legacy_config(self, legacy: Dict[str, Any]) -> None:
         """Importa config/settings.json antiguo una sola vez."""
+        if not isinstance(legacy, dict):
+            return
         mapping = {
             "BASE_DIR": "base_dir",
             "Fluthin_APPS": "fluthin_apps",
@@ -217,7 +243,9 @@ class PMDataStore:
 
     def to_legacy_app_config(self) -> Dict[str, Any]:
         """Compatibilidad con código que espera BASE_DIR en mayúsculas."""
-        u = self._data.get("user", {})
+        u = self._data.get("user")
+        if not isinstance(u, dict):
+            u = {}
         return {
             "BASE_DIR": u.get("base_dir", ""),
             "Fluthin_APPS": u.get("fluthin_apps", ""),
@@ -254,7 +282,9 @@ def load_merged_app_config(
 ) -> Dict[str, Any]:
     """Carga pm.data y migra settings.json si hace falta."""
     store = get_pm_data()
-    u = store._data.get("user", {})
+    u = store._data.get("user")
+    if not isinstance(u, dict):
+        u = store._data["user"] = {}
     if not u.get("base_dir") and default_base_dir:
         store.set_user("base_dir", default_base_dir)
     if not u.get("fluthin_apps") and default_fluthin:
@@ -267,7 +297,7 @@ def load_merged_app_config(
                 legacy = json.load(f)
             store.migrate_from_legacy_config(legacy)
             store.save()
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
             pass
 
     store.save()

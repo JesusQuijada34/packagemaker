@@ -11,7 +11,7 @@ La integración `.mexf`/`.asksome` usa ahora un contrato YAML v1 declarativo, co
 ## Desarrollo
 
 ```bash
-python -m pip install -r requirements-dev.txt
+python -m pip install -r lib/requirements-dev.txt
 QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q
 python -m py_compile $(git ls-files '*.py')
 python -m pyflakes $(git ls-files '*.py')

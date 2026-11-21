@@ -100,6 +100,8 @@
     "section_appearance_hint": "Yogunluk, yan vurgu ve opaklik",
     "section_notifications_hint": "Sistem bildirimleri ve dokunmatik giris",
     "section_fonts_hint": "Yazi tipi durumu ve el ile indirme",
+    "font_family": "Arayuz yazi tipi",
+    "font_auto": "Otomatik (sistem varsayilani)",
     "reset_hint": "Ayarlari varsayilan degerlere dondurur"
   },
   "create": {

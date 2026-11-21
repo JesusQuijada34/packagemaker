@@ -100,6 +100,8 @@
     "section_appearance_hint": "الكثافة ولون التمييز الجانبي والعتامة",
     "section_notifications_hint": "إشعارات النظام والإدخال باللمس",
     "section_fonts_hint": "حالة الخطوط والتنزيل اليدوي",
+    "font_family": "خط الواجهة",
+    "font_auto": "تلقائي (حسب النظام)",
     "reset_hint": "يعيد الإعدادات إلى قيمها الافتراضية"
   },
   "create": {

@@ -100,6 +100,8 @@
     "section_appearance_hint": "Density, side accent and opacity",
     "section_notifications_hint": "System notices and touch input",
     "section_fonts_hint": "Font status and manual download",
+    "font_family": "Interface font",
+    "font_auto": "Automatic (system default)",
     "reset_hint": "Restore the settings to their default values"
   },
   "create": {

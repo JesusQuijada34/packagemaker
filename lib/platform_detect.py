@@ -149,6 +149,25 @@ def base_directories(os_name: Optional[str] = None) -> Tuple[str, str]:
     return ("Packagemaker Projects/", "Fluthin Apps/")
 
 
+def compile_output_directory(os_name: Optional[str] = None) -> str:
+    """Carpeta donde se exportan los artefactos compilados (``.iflapp``).
+
+    En Termux/Android el home de la app no es accesible desde el resto del
+    dispositivo, así que la salida va al almacenamiento compartido (Download).
+    En escritorio se conserva la ruta histórica para no mover artefactos que
+    los usuarios ya tienen localizados.
+    """
+    name = (os_name or detect_os()).lower()
+    if name in ("termux", "android"):
+        shared = Path("/storage/emulated/0/Download")
+        termux_downloads = Path(os.path.expanduser("~/storage/downloads"))
+        for candidate in (termux_downloads, shared):
+            if candidate.is_dir():
+                return str(candidate)
+        return str(shared)
+    return str(Path(os.path.expanduser("~")) / "Documents" / "Packagemaker Projects" / "Compiled")
+
+
 def _icon_path(os_name: str) -> str:
     if os_name.startswith("win"):
         return os.path.join("app", "app-icon.ico")
@@ -177,5 +196,6 @@ __all__ = [
     "canonical_platform",
     "normalize_platform",
     "base_directories",
+    "compile_output_directory",
     "detect_platform_info",
 ]

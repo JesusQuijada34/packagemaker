@@ -18,20 +18,18 @@ estado en lugar de fallar.
 
 from __future__ import annotations
 
+import ast
 import base64
 import hashlib
 import hmac
 import json
-import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 HARDENING_VERSION = 1
-
-_STRING_LITERAL = re.compile(r'(?<![\w.])("([^"\\\n]|\\.)*"|\'([^\'\\\n]|\\.)*\')')
 
 # Guardián de depuración mínimo, inyectable en el arranque del paquete.
 ANTI_DEBUG_GUARD = '''\
@@ -205,6 +203,70 @@ def inject_anti_debug(script: Path | str) -> HardeningReport:
     return HardeningReport("anti-debug", True, "guardián inyectado", [str(script)])
 
 
+def _char_index(line: str, byte_column: int) -> int:
+    """Traduce una columna en bytes UTF-8 (la que usa ``ast``) a caracteres."""
+    if byte_column <= 0:
+        return 0
+    return len(line.encode("utf-8")[:byte_column].decode("utf-8"))
+
+
+def _string_literal_spans(text: str, tree: ast.AST) -> List[Tuple[int, int, str]]:
+    """Devuelve ``(inicio, fin, valor)`` de los literales de texto ofuscables.
+
+    Se omiten los docstrings, las partes literales de un f-string, los patrones
+    de ``match`` y los valores de ``Literal``/``Annotated``: sustituirlos
+    rompería el código o cambiaría su semántica. Los literales concatenados de
+    forma implícita se tratan como uno solo, porque ``ast`` los une en un único
+    ``Constant``.
+    """
+    lines = text.split("\n")
+    starts: List[int] = []
+    offset = 0
+    for line in lines:
+        starts.append(offset)
+        offset += len(line) + 1
+
+    parents = {}
+    for node in ast.walk(tree):
+        for child in ast.iter_child_nodes(node):
+            parents[child] = node
+
+    def _is_docstring(node: ast.Constant) -> bool:
+        statement = parents.get(node)
+        if not isinstance(statement, ast.Expr) or statement.value is not node:
+            return False
+        container = parents.get(statement)
+        if isinstance(container, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            return bool(container.body) and container.body[0] is statement
+        return False
+
+    def _is_literal_annotation(node: ast.Constant) -> bool:
+        parent = parents.get(node)
+        if not isinstance(parent, ast.Subscript) or parent.slice is not node:
+            return False
+        value = parent.value
+        name = value.attr if isinstance(value, ast.Attribute) else getattr(value, "id", "")
+        return name in ("Literal", "Annotated")
+
+    spans: List[Tuple[int, int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or type(node.value) is not str:
+            continue
+        if len(node.value) < 8:
+            continue
+        parent = parents.get(node)
+        if isinstance(parent, (ast.JoinedStr, ast.MatchValue)):
+            continue
+        if _is_docstring(node) or _is_literal_annotation(node):
+            continue
+        start = starts[node.lineno - 1] + _char_index(lines[node.lineno - 1], node.col_offset)
+        end = starts[node.end_lineno - 1] + _char_index(
+            lines[node.end_lineno - 1], node.end_col_offset
+        )
+        spans.append((start, end, node.value))
+    return spans
+
+
 def obfuscate_strings(source: Path | str, *, output: Optional[Path | str] = None) -> HardeningReport:
     """Ofusca literales de cadena sustituyéndolos por base64 decodificado.
 
@@ -218,28 +280,24 @@ def obfuscate_strings(source: Path | str, *, output: Optional[Path | str] = None
     text = source.read_text(encoding="utf-8")
     if "b64decode(" in text:
         return HardeningReport("obfuscate", False, "el fuente ya está ofuscado", [str(source)])
+    try:
+        tree = ast.parse(text)
+    except SyntaxError as exc:
+        return HardeningReport("obfuscate", False, f"fuente no analizable: {exc}", [str(source)])
 
-    counter = {"n": 0}
-
-    def _replace(match: re.Match) -> str:
-        literal = match.group(0)
-        try:
-            value = eval(literal)  # noqa: S307 - literal validado por el patrón
-        except Exception:
-            return literal
-        if not isinstance(value, str) or len(value) < 8:
-            return literal
-        counter["n"] += 1
+    spans = _string_literal_spans(text, tree)
+    new_text = text
+    for start, end, value in sorted(spans, reverse=True):
         encoded = base64.b64encode(value.encode("utf-8")).decode("ascii")
-        return f"__import__('base64').b64decode('{encoded}').decode('utf-8')"
+        replacement = f"__import__('base64').b64decode('{encoded}').decode('utf-8')"
+        new_text = new_text[:start] + replacement + new_text[end:]
 
-    new_text = _STRING_LITERAL.sub(_replace, text)
     output = Path(output) if output else source
     output.write_text(new_text, encoding="utf-8")
     return HardeningReport(
         "obfuscate",
-        counter["n"] > 0,
-        f"{counter['n']} literales ofuscados",
+        bool(spans),
+        f"{len(spans)} literales ofuscados",
         [str(output)],
     )
 

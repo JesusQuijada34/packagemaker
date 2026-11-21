@@ -106,7 +106,9 @@ try:
     LEVIATHAN_AVAILABLE = True
 except (ImportError, SyntaxError, AttributeError) as e:
     LEVIATHAN_AVAILABLE = False
-    print(f"[WARN] Leviathan UI unavailable or syntax error: {e}")
+    # stderr: stdout queda reservado para las salidas máquina-legibles
+    # (--inspect-json, --shell-plan-json, --shell-info-json, --ide-scan-json).
+    print(f"[WARN] Leviathan UI unavailable or syntax error: {e}", file=sys.stderr)
     _leviathan_accent = None
 
     class LeviathanProgressBar(QWidget):
@@ -321,7 +323,7 @@ def _register_bundled_fonts():
 
         return load_cached_fonts()
     except Exception as exc:  # pragma: no cover - la UI no debe caer por fuentes
-        print(f"[FONT] Could not register fonts: {exc}")
+        print(f"[FONT] Could not register fonts: {exc}", file=sys.stderr)
         return {}
 
 
@@ -344,7 +346,7 @@ else:
     def code_font():
         return None
 
-    print("font: none")
+    print("font: none", file=sys.stderr)
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
 TAB_ICON_KEYS = {
@@ -452,11 +454,13 @@ Fluthin_APPS = APP_CONFIG.get("Fluthin_APPS", _PLATFORM_FLUTHIN_APPS) or _PLATFO
 try:
     os.makedirs(BASE_DIR, exist_ok=True)
     os.makedirs(Fluthin_APPS, exist_ok=True)
-    print(f"[PackageMaker] Platform detected: {linkedsys}")
-    print(f"[PackageMaker] BASE_DIR: {BASE_DIR}")
-    print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}")
+    # El banner informativo va a stderr: stdout queda limpio para las salidas
+    # máquina-legibles (--inspect-json, --shell-info-json, --ide-scan-json).
+    print(f"[PackageMaker] Platform detected: {linkedsys}", file=sys.stderr)
+    print(f"[PackageMaker] BASE_DIR: {BASE_DIR}", file=sys.stderr)
+    print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}", file=sys.stderr)
 except OSError as e:
-    print(f"[PackageMaker] WARNING: could not create directory {BASE_DIR}: {e}")
+    print(f"[PackageMaker] WARNING: could not create directory {BASE_DIR}: {e}", file=sys.stderr)
     # Intentar con directorio alternativo
     alt_dir = os.path.expanduser("~")
     BASE_DIR = os.path.join(alt_dir, "PackageMaker", "Projects")
@@ -464,9 +468,9 @@ except OSError as e:
     try:
         os.makedirs(BASE_DIR, exist_ok=True)
         os.makedirs(Fluthin_APPS, exist_ok=True)
-        print(f"[PackageMaker] Using fallback directory: {BASE_DIR}")
+        print(f"[PackageMaker] Using fallback directory: {BASE_DIR}", file=sys.stderr)
     except OSError as e2:
-        print(f"[PackageMaker] ERROR: could not create fallback directory: {e2}")
+        print(f"[PackageMaker] ERROR: could not create fallback directory: {e2}", file=sys.stderr)
 
 def save_app_config(config):
     store = get_pm_data()
@@ -4323,12 +4327,12 @@ def main():
         args = cli.parse()
 
         if hasattr(args, 'app_version') and args.app_version:
-            # Intentar obtener versión de varias fuentes
-            try:
-                from version import VERSION
-                version = VERSION
-            except ImportError:
-                version = "3.2.7" # Fallback
+            # La versión canónica vive en details.xml; el antiguo
+            # ``from version import VERSION`` nunca existió y dejaba un valor
+            # fijo que se quedaba obsoleto en cada release.
+            from lib.cliHandler import __version__ as _details_version
+
+            version = str(_details_version or "").strip().lstrip("vV") or "desconocida"
             print(f"Influent Package Maker v{version}")
             sys.exit(0)
 

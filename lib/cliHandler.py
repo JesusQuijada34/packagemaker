@@ -15,6 +15,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from lib.projectNameFormatter import ProjectNameFormatter
+from lib.project_locator import locate_project
 
 
 def _safe_print(message, stream=None):
@@ -56,6 +57,52 @@ def _find_details_xml() -> Path:
     raise FileNotFoundError(
         "No se encontró details.xml en las raíces de recursos: "
         + ", ".join(str(path) for path in candidates)
+    )
+
+
+def _bundled_app_icon() -> Path | None:
+    """Localiza el icono por defecto del producto sin depender del CWD."""
+    roots = []
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        bundle_root = Path(sys._MEIPASS)
+        roots.extend((bundle_root / "_internal", bundle_root))
+    roots.extend((
+        Path(__file__).resolve().parent.parent,
+        Path(sys.executable).resolve().parent,
+        Path.cwd(),
+    ))
+    for root in roots:
+        candidate = root / "app" / "app-icon.ico"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _canonical_folder_or_exit(publisher, app_id, version, platform, timestamp=None):
+    """Devuelve el nombre canónico o aborta con un error legible.
+
+    La validación ocurre antes de compilar: un publisher o identificador fuera
+    de la ley de nombres reventaba al final del build con un traceback y sin
+    artefacto.
+    """
+    try:
+        return ProjectNameFormatter.format_project_folder(
+            publisher, app_id, version, platform, timestamp
+        )
+    except ValueError as exc:
+        print(f"[ERROR] Metadatos de proyecto no válidos: {exc}")
+        sys.exit(1)
+
+
+def _validate_compiler_metadata(compiler, target_platform):
+    """Comprueba la ley de nombres con los metadatos ya leídos del proyecto."""
+    platform = "Knosthalij" if target_platform == "Windows" else "Danenone"
+    metadata = getattr(compiler, "metadata", None) or {}
+    _canonical_folder_or_exit(
+        metadata.get("publisher", ""),
+        metadata.get("app", ""),
+        metadata.get("version", ""),
+        platform,
     )
 
 
@@ -231,7 +278,19 @@ class CLIHandler:
             return method_names()
         requested = [part.strip() for part in text.split(',') if part.strip()]
         valid = set(method_names())
-        return [name for name in requested if name in valid]
+        unknown = [name for name in requested if name not in valid]
+        if unknown:
+            print(
+                f"[WARN] Métodos de blindaje desconocidos ignorados: {', '.join(unknown)}",
+                file=sys.stderr,
+            )
+        selected = [name for name in requested if name in valid]
+        if not selected:
+            print(
+                "[WARN] Ningún método de blindaje válido; el blindaje queda desactivado.",
+                file=sys.stderr,
+            )
+        return selected
 
     def parse(self):
         return self.parser.parse_args()
@@ -512,16 +571,19 @@ class CLIHandler:
                 shell_options,
             )
 
-        elif getattr(args, 'download_fonts', None):
+        elif getattr(args, 'download_fonts', None) or getattr(args, 'force_fonts', False):
+            # ``--force-fonts`` solo tenía sentido junto a ``--download-fonts``;
+            # sin esta rama se ignoraba y el flujo caía en la TUI/GUI. Ahora
+            # implica descargar todas las fuentes forzando la caché.
             return (
                 'download_fonts',
                 {
-                    'keys': args.download_fonts,
+                    'keys': getattr(args, 'download_fonts', None) or 'all',
                     'force': getattr(args, 'force_fonts', False),
                 },
                 shell_options,
             )
-        
+
         # === Version Update ===
         elif args.version_update:
             return ('version_update', None, shell_options)
@@ -835,7 +897,12 @@ class PackageInspectHelper:
         extract_dir = data.get("extract")
         if extract_dir:
             written = iflapp_format.export_header_assets(path, extract_dir)
-            print(f"[OK] Recursos de cabecera exportados: {written}")
+            # En modo JSON stdout ya lleva el documento; los avisos van a stderr
+            # para no invalidar la salida que consume la automatización.
+            print(
+                f"[OK] Recursos de cabecera exportados: {written}",
+                file=sys.stderr if data.get("json") else sys.stdout,
+            )
         return True
 
 
@@ -881,10 +948,12 @@ class NativeShellHelper:
         preview_dir = data.get("preview")
         if preview_dir:
             png = native_shell.export_icon_preview(target, preview_dir)
+            # Igual que en --inspect: los avisos no deben romper --shell-info-json.
+            stream = sys.stderr if data.get("json") else sys.stdout
             if png:
-                print(f"[OK] Vista previa exportada: {png}")
+                print(f"[OK] Vista previa exportada: {png}", file=stream)
             else:
-                print("[INFO] El paquete no tiene icono exportable (o falta Pillow).")
+                print("[INFO] El paquete no tiene icono exportable (o falta Pillow).", file=stream)
         return True
 
     @staticmethod
@@ -1041,7 +1110,6 @@ class IflappIdeHelper:
             path,
             backend=None if backend in (None, "auto") else backend,
             output_dir=data.get("output"),
-            log=print,
         )
         for line in outcome.log:
             print(line)
@@ -1209,10 +1277,11 @@ def _handle_shell_actions(action, data=None):
         return MexfShellHelper.uninstall(data or {})
 
     elif action == 'show_version':
-        print(f"Influent Package Maker v{__version__}")
+        version = str(__version__ or "").strip().lstrip("vV") or "desconocida"
+        print(f"Influent Package Maker v{version}")
         print("https://github.com/JesusQuijada34/packagemaker")
         return True
-    
+
     elif action == 'version_update':
         return VersionUpdateHelper.update()
 
@@ -1372,7 +1441,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         
         # Usar ProjectNameFormatter para formato consistente
         timestamp = ProjectNameFormatter.get_timestamp()
-        folder_name = ProjectNameFormatter.format_project_folder(
+        folder_name = _canonical_folder_or_exit(
             publisher, app_id, version_base, platform_value, timestamp
         )
         project_path = base_path / folder_name
@@ -1390,13 +1459,17 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             timestamp=timestamp,
         )
         
-        # Copiar icono por defecto
+        # Copiar icono por defecto. La ruta se resuelve contra la raíz del
+        # repositorio y el ejecutable: `create` debe funcionar desde cualquier
+        # directorio de trabajo, no solo desde la raíz del proyecto.
         icon_dest = project_path / "app" / "app-icon.ico"
-        icon_source = Path("app/app-icon.ico")
-        if icon_source.exists():
+        icon_source = _bundled_app_icon()
+        if icon_source is not None:
             import shutil
             shutil.copy(str(icon_source), str(icon_dest))
             print(f"[OK] Icono copiado a: {icon_dest}")
+        else:
+            print("[WARN] No se encontró app/app-icon.ico; el proyecto queda sin icono.")
         
         _safe_print(f"\n  ✔ Proyecto creado en: {project_path}\n")
         return None
@@ -1412,24 +1485,22 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         app_id = project_source.get('shortname') or (project_source.get('name') or '').strip().lower().replace(' ', '-')
         version_base = ProjectNameFormatter.normalize_version_base(project_source.get('version') or '1.0.0')
         
-        # Buscar proyecto que coincida con el patrón
-        project_path = None
-        for item in base_path.iterdir():
-            if item.is_dir() and (item / 'details.xml').exists():
-                if publisher.lower() in item.name.lower() and app_id.lower() in item.name.lower():
-                    project_path = item
-                    break
+        # Buscar el proyecto por sus metadatos, no por subcadena del nombre de
+        # carpeta: con ``demo`` y ``demo2`` el prefijo elegía el proyecto
+        # equivocado. ``locate_project`` compara publisher/app exactos y, si la
+        # carpeta base no existe, devuelve None en lugar de reventar.
+        project_path = locate_project(base_path, publisher=publisher, app_id=app_id)
         
         if not project_path:
             print(f"[ERROR] No se encontró proyecto que coincida con {publisher}.{app_id} en {base_path}")
             sys.exit(1)
         
-        # Usar ruta predeterminada para salida (misma que usa la GUI)
-        output_path = Path(os.path.expanduser("~")).resolve()
-        if sys.platform.startswith('win'):
-            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
-        else:
-            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
+        # Salida por defecto compartida con `--buildthis`: en Termux/Android el
+        # artefacto debe quedar en el almacenamiento visible (Download), no en el
+        # home privado de la app.
+        from lib.platform_detect import compile_output_directory
+
+        output_path = Path(compile_output_directory()).expanduser().resolve()
         output_path.mkdir(parents=True, exist_ok=True)
         
         # Detectar plataforma automáticamente según el sistema operativo
@@ -1457,6 +1528,8 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         if not compiler.parse_details_xml():
             sys.exit(1)
 
+        _validate_compiler_metadata(compiler, target_platform)
+
         if not compiler.find_scripts():
             sys.exit(1)
         try:
@@ -1474,6 +1547,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             package_name = ProjectNameFormatter.format_package_folder(publisher, app, version, platform_suffix)
             package_path = output_path / package_name
             iflapp_file = output_path / ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform_suffix)
+
+            if compiler.hardening_methods:
+                print(f"[INFO] Aplicando blindaje: {', '.join(compiler.hardening_methods)}")
+                compiler.apply_hardening(package_path)
 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)
@@ -1519,8 +1596,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         if output_arg:
             output_path = Path(output_arg).expanduser().resolve()
         else:
-            output_path = Path(os.path.expanduser("~")).resolve()
-            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
+            from lib.platform_detect import compile_output_directory
+
+            output_path = Path(compile_output_directory()).expanduser().resolve()
         output_path.mkdir(parents=True, exist_ok=True)
 
         # Detectar plataforma automáticamente salvo que el llamador la fije.
@@ -1560,6 +1638,8 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         if not compiler.parse_details_xml():
             sys.exit(1)
 
+        _validate_compiler_metadata(compiler, target_platform)
+
         if not compiler.find_scripts():
             sys.exit(1)
         try:
@@ -1577,6 +1657,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             package_name = ProjectNameFormatter.format_package_folder(publisher, app, version, platform_suffix)
             package_path = output_path / package_name
             iflapp_file = output_path / ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform_suffix)
+
+            if compiler.hardening_methods:
+                print(f"[INFO] Aplicando blindaje: {', '.join(compiler.hardening_methods)}")
+                compiler.apply_hardening(package_path)
 
             if not compiler.compress_to_iflapp(package_path, iflapp_file):
                 sys.exit(1)
@@ -1621,13 +1705,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             else:
                 version_base = '1.0'
         
-        # Buscar proyecto que coincida con el patrón
-        project_path = None
-        for item in base_path.iterdir():
-            if item.is_dir() and (item / 'details.xml').exists():
-                if publisher.lower() in item.name.lower() and app_id.lower() in item.name.lower():
-                    project_path = item
-                    break
+        # Buscar el proyecto por sus metadatos, no por subcadena del nombre de
+        # carpeta: con ``demo`` y ``demo2`` el prefijo elegía el proyecto
+        # equivocado. ``locate_project`` compara publisher/app exactos y, si la
+        # carpeta base no existe, devuelve None en lugar de reventar.
+        project_path = locate_project(base_path, publisher=publisher, app_id=app_id)
         
         if not project_path:
             print(f"[ERROR] No se encontró proyecto que coincida con {publisher}.{app_id} en {base_path}")
@@ -1667,7 +1749,12 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 )
                 platform_value = normalize_platform(platform_text)
             except Exception as e:
-                print(f"⚠ Advertencia: no se pudo leer details.xml: {e}")
+                # _safe_print degrada el símbolo en consolas cp1252; sin él el
+                # aviso lanzaba UnicodeEncodeError y abortaba MoonFix.
+                _safe_print(
+                    f"[WARN] Advertencia: no se pudo leer details.xml: {e}",
+                    stream=sys.stderr,
+                )
 
         if not platform_value:
             if sys.platform.startswith('linux'):
@@ -1681,16 +1768,20 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         print(f"[INFO] Ejecutando MoonFix para: {project_path}")
         print(f"[INFO] Plataforma objetivo (leída del paquete): {platform_value}")
 
-        result = repair_project_from_templates(
-            project_path,
-            publisher,
-            app_id,
-            name,
-            author,
-            platform_value,
-            version_base=version_base,
-            description=description,
-        )
+        try:
+            result = repair_project_from_templates(
+                project_path,
+                publisher,
+                app_id,
+                name,
+                author,
+                platform_value,
+                version_base=version_base,
+                description=description,
+            )
+        except ValueError as exc:
+            print(f"[ERROR] Metadatos de proyecto no válidos: {exc}")
+            sys.exit(1)
         repaired_files = result.get('files', [])
         print(f"[OK] MoonFix completado. Archivos reparados/restaurados: {len(repaired_files)}")
         for item in repaired_files:

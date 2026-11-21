@@ -100,6 +100,8 @@
     "section_appearance_hint": "Densita, accento laterale e opacita",
     "section_notifications_hint": "Avvisi di sistema e input tattile",
     "section_fonts_hint": "Stato dei caratteri e download manuale",
+    "font_family": "Font dell'interfaccia",
+    "font_auto": "Automatico (predefinito di sistema)",
     "reset_hint": "Ripristina le impostazioni predefinite"
   },
   "create": {
