@@ -64,6 +64,57 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _mapping(value) -> Dict:
+    """Devuelve *value* si es un objeto JSON; si no, un diccionario vacío."""
+    return value if isinstance(value, dict) else {}
+
+
+def _int_or_default(value, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _require_int(value, what: str) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise IflappError(f"Cabecera .iflapp inválida: {what} debe ser numérico.") from exc
+
+
+def _validate_header_shape(header: Dict) -> None:
+    """Valida los tipos de los campos que el lector consume.
+
+    La cabecera llega de un archivo externo: un ``manifest`` que no sea lista o
+    un ``payload`` que no sea objeto reventaba con ``TypeError``/``AttributeError``
+    en las propiedades y en ``--inspect``. Se rechazan con ``IflappError`` para
+    que el diagnóstico sea legible.
+    """
+    if "format_version" in header:
+        _require_int(header["format_version"], "format_version")
+    for key in ("sections", "payload"):
+        if key in header and not isinstance(header[key], dict):
+            raise IflappError(f"Cabecera .iflapp inválida: {key!r} debe ser un objeto.")
+    if "manifest" in header and not isinstance(header["manifest"], list):
+        raise IflappError("Cabecera .iflapp inválida: 'manifest' debe ser una lista.")
+    payload = header.get("payload")
+    if isinstance(payload, dict):
+        for field in ("offset", "size", "file_count", "raw_size"):
+            if field in payload:
+                _require_int(payload[field], f"payload.{field}")
+    sections = header.get("sections")
+    if isinstance(sections, dict):
+        for name, section in sections.items():
+            if not isinstance(section, dict):
+                raise IflappError(
+                    f"Cabecera .iflapp inválida: la sección {name!r} debe ser un objeto."
+                )
+            for field in ("offset", "size"):
+                if field in section:
+                    _require_int(section[field], f"sections.{name}.{field}")
+
+
 def _parse_details_identity(details: bytes) -> Dict[str, str]:
     """Extrae la identidad de un ``details.xml`` ya leído de la cabecera.
 
@@ -156,23 +207,27 @@ class IflappHeader:
 
     @property
     def format_version(self) -> int:
-        return int(self.raw.get("format_version", 0))
+        return _int_or_default(self.raw.get("format_version"), 0)
 
     @property
     def compression(self) -> str:
-        return str(self.raw.get("payload", {}).get("compression", "none"))
+        return str(_mapping(self.raw.get("payload")).get("compression", "none"))
 
     @property
     def encryption(self) -> str:
-        return str(self.raw.get("payload", {}).get("encryption", "none"))
+        return str(_mapping(self.raw.get("payload")).get("encryption", "none"))
 
     @property
     def manifest(self) -> List[Dict]:
-        return list(self.raw.get("manifest", []))
+        value = self.raw.get("manifest", [])
+        return list(value) if isinstance(value, list) else []
 
     @property
     def file_count(self) -> int:
-        return int(self.raw.get("payload", {}).get("file_count", len(self.manifest)))
+        payload = _mapping(self.raw.get("payload"))
+        if "file_count" in payload:
+            return _int_or_default(payload["file_count"], 0)
+        return len(self.manifest)
 
     def identity(self) -> Dict[str, str]:
         """Identidad del paquete tomada de la cabecera (sin descompilar).
@@ -537,6 +592,7 @@ def read_iflapp_header(path: Path | str, *, include_blobs: bool = True) -> Iflap
             raise IflappError(f"Cabecera JSON corrupta: {exc}") from exc
         if not isinstance(header, dict):
             raise IflappError("Cabecera .iflapp inválida: se esperaba un objeto JSON.")
+        _validate_header_shape(header)
 
         icon = details = b""
         if include_blobs:
@@ -580,8 +636,14 @@ def _read_section(handle, header: Dict, key: str) -> bytes:
         offset = int(section.get("offset", 0))
     except (TypeError, ValueError) as exc:
         raise IflappError(f"Sección {key!r} inválida.") from exc
-    if size <= 0:
+    if offset < 0 or size < 0:
+        raise IflappError(f"Sección {key!r} inválida: desplazamiento o tamaño negativo.")
+    if size == 0:
         return b""
+    handle.seek(0, os.SEEK_END)
+    total = handle.tell()
+    if offset + size > total:
+        raise IflappError(f"La sección {key!r} excede el tamaño del archivo.")
     handle.seek(offset)
     data = handle.read(size)
     if len(data) != size:
@@ -592,6 +654,22 @@ def _read_section(handle, header: Dict, key: str) -> bytes:
     return data
 
 
+def _payload_bounds(handle, header: Dict) -> Tuple[Dict, int, int]:
+    """Valida que el payload declarado quepa en el archivo y devuelve sus datos."""
+    payload = header.get("payload")
+    if not isinstance(payload, dict):
+        raise IflappError("Cabecera .iflapp inválida: 'payload' debe ser un objeto.")
+    offset = _require_int(payload.get("offset", 0), "payload.offset")
+    size = _require_int(payload.get("size", 0), "payload.size")
+    if offset < 0 or size < 0:
+        raise IflappError("Cabecera .iflapp inválida: el payload tiene límites negativos.")
+    handle.seek(0, os.SEEK_END)
+    total = handle.tell()
+    if offset + size > total:
+        raise IflappError("El payload declarado excede el tamaño del archivo.")
+    return payload, offset, size
+
+
 def verify_iflapp(path: Path | str, *, signing_key: bytes = DEFAULT_SIGNING_KEY) -> Dict:
     """Verifica estructura, digests y firma sin extraer el payload."""
     path = Path(path)
@@ -599,13 +677,8 @@ def verify_iflapp(path: Path | str, *, signing_key: bytes = DEFAULT_SIGNING_KEY)
     # claro, no son el payload), de modo que la identidad se puede reconstruir
     # aun cuando el empaquetador no escribió los campos planos.
     header = read_iflapp_header(path, include_blobs=True)
-    size = path.stat().st_size
-    payload = header.raw.get("payload", {})
-    payload_off = int(payload.get("offset", 0))
-    payload_size = int(payload.get("size", 0))
-    if payload_off + payload_size > size:
-        raise IflappError("El payload declarado excede el tamaño del archivo.")
     with open(path, "rb") as handle:
+        payload, payload_off, payload_size = _payload_bounds(handle, header.raw)
         handle.seek(payload_off)
         payload_bytes = handle.read(payload_size)
     digest = _sha256(payload_bytes)
@@ -621,7 +694,7 @@ def verify_iflapp(path: Path | str, *, signing_key: bytes = DEFAULT_SIGNING_KEY)
         "file_count": header.file_count,
         "identity": header.identity(),
         "payload_size": payload_size,
-        "raw_size": int(payload.get("raw_size", 0)),
+        "raw_size": _int_or_default(payload.get("raw_size", 0), 0),
         "compression": header.compression,
         "encryption": header.encryption,
     }
@@ -651,10 +724,8 @@ def read_iflapp_payload(path: Path | str, *, password: Optional[str] = None) -> 
     """Devuelve el TAR descomprimido (y descifrado si aplica) en memoria."""
     path = Path(path)
     header = read_iflapp_header(path, include_blobs=False)
-    payload = header.raw.get("payload", {})
-    payload_off = int(payload.get("offset", 0))
-    payload_size = int(payload.get("size", 0))
     with open(path, "rb") as handle:
+        payload, payload_off, payload_size = _payload_bounds(handle, header.raw)
         handle.seek(payload_off)
         stored = handle.read(payload_size)
     if payload.get("sha256") and _sha256(stored) != payload["sha256"]:
@@ -744,14 +815,15 @@ def export_header_assets(path: Path | str, out_dir: Path | str) -> Dict[str, Opt
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     written: Dict[str, Optional[str]] = {"icon": None, "details": None}
-    icon_name = header.raw.get("sections", {}).get("icon", {}).get("name", "app-icon.ico")
-    details_name = header.raw.get("sections", {}).get("details", {}).get("name", "details.xml")
+    sections = _mapping(header.raw.get("sections"))
+    icon_name = Path(str(_mapping(sections.get("icon")).get("name", "app-icon.ico"))).name
+    details_name = Path(str(_mapping(sections.get("details")).get("name", "details.xml"))).name
     if header.icon:
-        icon_path = out / Path(icon_name).name
+        icon_path = out / (icon_name or "app-icon.ico")
         icon_path.write_bytes(header.icon)
         written["icon"] = str(icon_path)
     if header.details:
-        details_path = out / Path(details_name).name
+        details_path = out / (details_name or "details.xml")
         details_path.write_bytes(header.details)
         written["details"] = str(details_path)
     return written

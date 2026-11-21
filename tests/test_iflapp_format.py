@@ -141,6 +141,65 @@ class TruncatedContainerTests(unittest.TestCase):
                 iflapp_format.read_iflapp_header(path)
 
 
+class MalformedHeaderShapeTests(unittest.TestCase):
+    """Campos de cabecera con tipos inesperados deben dar IflappError, no traceback."""
+
+    def _write(self, root: Path, header) -> Path:
+        blob = json.dumps(header).encode("utf-8")
+        path = root / "bad.iflapp"
+        path.write_bytes(iflapp_format.MAGIC + struct.pack("<I", len(blob)) + blob)
+        return path
+
+    def test_payload_must_be_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(Path(tmp), {"format_version": 2, "payload": []})
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_sections_must_be_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(Path(tmp), {"format_version": 2, "sections": []})
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_manifest_must_be_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(Path(tmp), {"format_version": 2, "manifest": 5})
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_non_numeric_payload_metadata_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp), {"format_version": 2, "payload": {"file_count": "x"}}
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_negative_section_offset_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                {"format_version": 2, "sections": {"icon": {"offset": -5, "size": 10}}},
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_export_header_assets_does_not_crash_on_odd_sections(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = self._write(root, {"format_version": 2, "sections": {"icon": []}})
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.export_header_assets(path, root / "out")
+
+    def test_header_properties_tolerate_unexpected_shapes(self):
+        header = iflapp_format.IflappHeader(raw={"payload": [], "manifest": 5})
+        self.assertEqual(header.compression, "none")
+        self.assertEqual(header.encryption, "none")
+        self.assertEqual(header.file_count, 0)
+        self.assertEqual(header.manifest, [])
+
+
 class IflappReaderTests(unittest.TestCase):
     def test_reader_summary_and_export(self):
         with tempfile.TemporaryDirectory() as tmp:
