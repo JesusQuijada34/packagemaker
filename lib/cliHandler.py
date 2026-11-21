@@ -1519,8 +1519,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         if output_arg:
             output_path = Path(output_arg).expanduser().resolve()
         else:
-            output_path = Path(os.path.expanduser("~")).resolve()
-            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
+            from lib.platform_detect import compile_output_directory
+
+            output_path = Path(compile_output_directory()).expanduser().resolve()
         output_path.mkdir(parents=True, exist_ok=True)
 
         # Detectar plataforma automáticamente salvo que el llamador la fije.

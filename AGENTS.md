@@ -145,7 +145,7 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   `sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon-x11-0`).
   `PyQt6` sin `libEGL.so.1` falla al importar `PyQt6.QtSvg`. El entorno puede
   reiniciarse y perder `pytest`/`pyflakes`/`requests`/`PyQt6`: reinstálalos con
-  `pip install -r requirements-dev.txt requests PyQt6`.
+  `pip install -r lib/requirements-dev.txt requests PyQt6`.
 - En tests con Qt, conserva una referencia a la `QApplication` (patrón
   `_ensure_app`): si se recolecta, Qt aborta el proceso con *Fatal Python
   error: Aborted* en la siguiente llamada.

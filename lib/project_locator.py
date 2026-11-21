@@ -41,6 +41,39 @@ def iter_projects(base_dir) -> List[Tuple[Path, Dict[str, str]]]:
     return projects
 
 
+# Carpetas que nunca son proyectos "crudos": salidas de compiladores, cachés y
+# entornos virtuales. Listarlas en el gestor confundía artefactos con proyectos.
+BUILD_ARTIFACT_DIRS = frozenset({
+    "build", "dist", "releases", "out", "target", "__pycache__",
+    "node_modules", "venv", "env", ".venv", ".git", ".idea", ".vscode",
+    "site-packages", "htmlcov", ".pytest_cache", ".mypy_cache",
+})
+BUILD_ARTIFACT_SUFFIXES = (".build", ".onefile-build", ".dist", ".build-cache")
+
+
+def is_project_directory(path) -> bool:
+    """``True`` si *path* parece un proyecto fuente listable por el gestor."""
+    candidate = Path(path)
+    if not candidate.is_dir():
+        return False
+    name = candidate.name
+    if name.startswith("."):
+        return False
+    if name.lower() in BUILD_ARTIFACT_DIRS:
+        return False
+    if name.endswith(BUILD_ARTIFACT_SUFFIXES):
+        return False
+    return (candidate / "details.xml").is_file()
+
+
+def list_projects(base_dir) -> List[Path]:
+    """Proyectos fuente de ``base_dir``, excluyendo artefactos de compilación."""
+    base = Path(base_dir)
+    if not base.is_dir():
+        return []
+    return [item for item in sorted(base.iterdir()) if is_project_directory(item)]
+
+
 def locate_project(
     base_dir,
     publisher: Optional[str] = None,

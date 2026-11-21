@@ -19,6 +19,7 @@ from typing import Optional, List, Dict
 from lib.projectNameFormatter import ProjectNameFormatter
 from lib.i18n import tr
 from lib.platform_detect import detect_platform_info
+from lib.project_locator import list_projects
 
 # ─── ANSI helpers ────────────────────────────────────────────────────────────
 
@@ -196,14 +197,26 @@ def _detect_platform() -> str:
 
 
 def _base_dir() -> Path:
-    if sys.platform.startswith("win"):
-        up = os.environ.get("USERPROFILE", "")
-        for sub in ("Documentos", "Documents"):
-            d = Path(up) / sub
-            if d.exists():
-                return d / "Packagemaker Projects"
-        return Path(up) / "Documents" / "Packagemaker Projects"
-    return Path.home() / "Documents" / "Packagemaker Projects"
+    try:
+        return Path(detect_platform_info().base_dir)
+    except Exception:
+        if sys.platform.startswith("win"):
+            up = os.environ.get("USERPROFILE", "")
+            for sub in ("Documentos", "Documents"):
+                d = Path(up) / sub
+                if d.exists():
+                    return d / "Packagemaker Projects"
+            return Path(up) / "Documents" / "Packagemaker Projects"
+        return Path.home() / "Documents" / "Packagemaker Projects"
+
+
+def _list_projects(base: Path) -> List[Path]:
+    """Proyectos fuente ordenados por fecha, sin artefactos de compilación."""
+    try:
+        projects = list_projects(base)
+    except OSError:
+        return []
+    return sorted(projects, key=lambda p: p.stat().st_mtime, reverse=True)
 
 
 def _find_python() -> str:
@@ -357,12 +370,7 @@ def _screen_build() -> None:
 
     # Opción: seleccionar proyecto existente o ruta manual
     base = _base_dir()
-    projects: List[Path] = []
-    if base.exists():
-        projects = sorted(
-            [p for p in base.iterdir() if p.is_dir() and (p / "details.xml").exists()],
-            key=lambda p: p.stat().st_mtime, reverse=True,
-        )
+    projects: List[Path] = _list_projects(base)
 
     project_path_str = ""
     manual_mode = False
@@ -468,10 +476,7 @@ def _screen_manager() -> None:
         _pause()
         return
 
-    projects = sorted(
-        [p for p in base.iterdir() if p.is_dir()],
-        key=lambda p: p.stat().st_mtime, reverse=True,
-    )
+    projects = _list_projects(base)
 
     if not projects:
         _warn(tr("tui.no_projects"))
@@ -496,10 +501,7 @@ def _screen_manager() -> None:
         _project_actions(proj)
 
         # Refrescar lista tras posibles cambios
-        projects = sorted(
-            [p for p in base.iterdir() if p.is_dir()],
-            key=lambda p: p.stat().st_mtime, reverse=True,
-        )
+        projects = _list_projects(base)
 
 
 def _project_actions(proj: Path) -> None:
@@ -653,10 +655,7 @@ def _screen_moonfix() -> None:
     base = _base_dir()
     projects: List[Path] = []
     if base.exists():
-        projects = sorted(
-            [p for p in base.iterdir() if p.is_dir()],
-            key=lambda p: p.stat().st_mtime, reverse=True,
-        )
+        projects = _list_projects(base)
 
     project_path_str = ""
     if projects:
