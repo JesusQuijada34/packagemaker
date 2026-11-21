@@ -39,11 +39,11 @@
     "toggle_collapse": "Menü ausblenden (Strg+B)"
   },
   "sidebar_desc": {
-    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
-    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
-    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
-    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+    "0": "### Projekt erstellen\nEntwickle Anwendungen von Grund auf. Lege eindeutige Identitaeten, Versionen und Metadaten fuer das **Influent OS**-Oekosystem in gefuehrten Schritten fest.",
+    "1": "### Paket erstellen\nPacke deine Arbeit. Verwandle Entwicklungsordner in komprimierte `.iflapp`-Dateien, bereit zur weltweiten Verteilung.",
+    "3": "### Einstellungen\nStelle die Programm-Engine ein. Steuere Pfade, Sprache, Aussehen und Optionen aus data/pm.data.",
+    "4": "### MoonFix Suite\nTiefgehende Reparatur. Scanne, erkenne und behebe Inkonsistenzen in deinen Paketen. Jede Ressource und jedes XML-Tag muss korrekt sein.",
+    "5": "### Ueber\nTechnische Projektdetails. GPL-Lizenz, Qt-Framework und das Team hinter **Package Maker**."
   },
   "config": {
     "title": "Einstellungen",
@@ -309,7 +309,7 @@
     "dropper": "Dropper erzeugen (.run)",
     "dropper_tooltip": "Das .iflapp an einen selbstextrahierenden Starter anhängen",
     "engine": "Kompilierungs-Engine:",
-    "engine_legacy": "Legacy",
+    "engine_legacy": "Veraltet",
     "engine_legacy_warning": "FlatCube v1 ist veraltet und wird nicht unterstützt. BlindCube v2 wird empfohlen.",
     "engine_required": "Du musst vor dem Kompilieren eine Engine auswählen.",
     "engine_tooltip": "Wähle die Engine explizit: FlatCube v1 (Legacy) oder BlindCube v2 (Standard)",
@@ -656,14 +656,14 @@
     "recent_projects": "Aktuelle Projekte:",
     "reset_cancelled": "Loschung abgebrochen.",
     "running_moonfix": "MoonFix wird auf {name} ausgefuhrt…",
-    "sandbox_col": "Sandbox",
+    "sandbox_col": "Isolation",
     "sandbox_secure": "Sichere Sandbox",
     "select_back_hint": " [q=Beenden, 0=Zuruck]",
     "select_platform": "Plattform auswahlen",
     "select_project": "Projekt auswahlen",
     "select_project_repair": "Zu reparierendes Projekt auswahlen",
     "slug": "Interne ID (Slug)",
-    "slug_col": "Slug",
+    "slug_col": "Kennung",
     "starting_build": "Kompilierung mit Projektmetadaten wird gestartet...",
     "summary": "Zusammenfassung:",
     "target_platform": "Zielplattform:",

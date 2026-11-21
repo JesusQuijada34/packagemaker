@@ -39,11 +39,11 @@
     "toggle_collapse": "메뉴 숨기기 (Ctrl+B)"
   },
   "sidebar_desc": {
-    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
-    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
-    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
-    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+    "0": "### 프로젝트 만들기\n애플리케이션을 처음부터 설계합니다. **Influent OS** 생태계를 위한 고유 식별자, 버전, 메타데이터를 단계별로 설정합니다.",
+    "1": "### 패키지 빌드\n작업을 패키징합니다. 개발 폴더를 전 세계 배포가 가능한 압축 `.iflapp` 파일로 변환합니다.",
+    "3": "### 설정\n프로그램 엔진을 조정합니다. 경로, 언어, 모양 및 data/pm.data 에 저장된 옵션을 관리합니다.",
+    "4": "### MoonFix Suite\n심층 복구. 패키지의 불일치를 검사, 감지, 수정합니다. 모든 자산과 XML 태그가 올바르게 유지됩니다.",
+    "5": "### 정보\n프로젝트의 기술적 세부 정보. GPL 라이선스, Qt 프레임워크, **Package Maker** 를 만든 팀을 소개합니다."
   },
   "config": {
     "title": "설정",
@@ -160,7 +160,7 @@
   },
   "common": {
     "cancel": "취소",
-    "ok": "확인",
+    "ok": "동의",
     "error": "오류",
     "warning": "경고",
     "yes": "예",
@@ -309,7 +309,7 @@
     "dropper": "드롭퍼 생성 (.run)",
     "dropper_tooltip": ".iflapp을 자기 압축 해제 런처에 첨부",
     "engine": "컴파일 엔진:",
-    "engine_legacy": "Legacy",
+    "engine_legacy": "레거시",
     "engine_legacy_warning": "FlatCube v1은 레거시이며 지원되지 않습니다. BlindCube v2를 권장합니다.",
     "engine_required": "빌드하기 전에 컴파일 엔진을 선택해야 합니다.",
     "engine_tooltip": "엔진을 명시적으로 선택하세요: FlatCube v1(레거시) 또는 BlindCube v2(표준)",
@@ -656,14 +656,14 @@
     "recent_projects": "최근 프로젝트:",
     "reset_cancelled": "삭제가 취소되었습니다.",
     "running_moonfix": "{name}에서 MoonFix 실행 중…",
-    "sandbox_col": "Sandbox",
+    "sandbox_col": "격리",
     "sandbox_secure": "안전한 샌드박스",
     "select_back_hint": " [q=종료, 0=뒤로]",
     "select_platform": "플랫폼 선택",
     "select_project": "프로젝트 선택",
     "select_project_repair": "복구할 프로젝트 선택",
     "slug": "내부 ID (Slug)",
-    "slug_col": "Slug",
+    "slug_col": "식별자",
     "starting_build": "프로젝트 메타데이터로 빌드를 시작합니다...",
     "summary": "요약:",
     "target_platform": "대상 플랫폼:",

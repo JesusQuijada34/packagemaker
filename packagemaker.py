@@ -219,11 +219,12 @@ except (ImportError, SyntaxError, AttributeError) as e:
 
 
 def get_accent_color():
-    """Acento activo: preferencia del usuario, luego Leviathan, luego azul UWP.
+    """Acento activo: preferencia del usuario, luego Leviathan, luego la marca.
 
     ``leviathan_ui`` no está presente en todos los entornos (CI, Linux sin la
     dependencia instalada), de modo que el tema cae a ``custom_accent_color``
-    de ``data/pm.data`` y, en último término, al azul de Windows 11.
+    de ``data/pm.data`` y, en último término, al naranja corporativo
+    (``design_tokens.ACCENT``).
     """
     try:
         from lib.pm_data import get_pm_data

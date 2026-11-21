@@ -39,11 +39,11 @@
     "toggle_collapse": "Menu verbergen (Ctrl+B)"
   },
   "sidebar_desc": {
-    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
-    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
-    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
-    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+    "0": "### Project maken\nOntwerp applicaties vanaf nul. Stel unieke identiteiten, versies en metadata in voor het **Influent OS**-ecosysteem met begeleide stappen.",
+    "1": "### Pakket bouwen\nVerpak je werk. Zet ontwikkelmappen om in gecomprimeerde `.iflapp`-bestanden, klaar voor wereldwijde distributie.",
+    "3": "### Instellingen\nStel de programma-engine af. Beheer paden, taal, uiterlijk en opties die in data/pm.data worden bewaard.",
+    "4": "### MoonFix Suite\nDiepgaande reparatie. Scan, detecteer en herstel inconsistenties in je pakketten. Elke asset en XML-tag moet kloppen.",
+    "5": "### Over\nTechnische projectdetails. GPL-licentie, Qt-framework en het team achter **Package Maker**."
   },
   "config": {
     "title": "Instellingen",
@@ -309,7 +309,7 @@
     "dropper": "Dropper genereren (.run)",
     "dropper_tooltip": "Het .iflapp aan een zelfuitpakkende launcher koppelen",
     "engine": "Compilatie-engine:",
-    "engine_legacy": "Legacy",
+    "engine_legacy": "Verouderd",
     "engine_legacy_warning": "FlatCube v1 is verouderd en wordt niet ondersteund. BlindCube v2 wordt aanbevolen.",
     "engine_required": "Je moet een compilatie-engine selecteren voordat je compileert.",
     "engine_tooltip": "Kies de engine expliciet: FlatCube v1 (legacy) of BlindCube v2 (standaard)",
@@ -656,14 +656,14 @@
     "recent_projects": "Recente projecten:",
     "reset_cancelled": "Verwijdering geannuleerd.",
     "running_moonfix": "MoonFix uitvoeren op {name}…",
-    "sandbox_col": "Sandbox",
+    "sandbox_col": "Isolatie",
     "sandbox_secure": "Veilige sandbox",
     "select_back_hint": " [q=Afsluiten, 0=Terug]",
     "select_platform": "Platform selecteren",
     "select_project": "Project selecteren",
     "select_project_repair": "Project selecteren om te repareren",
     "slug": "Interne ID (Slug)",
-    "slug_col": "Slug",
+    "slug_col": "Identificatie",
     "starting_build": "Compilatie met projectmetadata starten...",
     "summary": "Samenvatting:",
     "target_platform": "Doelplatform:",

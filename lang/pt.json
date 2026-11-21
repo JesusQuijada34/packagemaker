@@ -39,11 +39,11 @@
     "toggle_collapse": "Ocultar menu (Ctrl+B)"
   },
   "sidebar_desc": {
-    "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
-    "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
-    "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
-    "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+    "0": "### Criar projeto\nDesenhe aplicacoes de raiz. Defina identidades, versoes e metadados unicos para o ecossistema **Influent OS** com passos guiados.",
+    "1": "### Compilar pacote\nEmpacote o seu trabalho. Transforme pastas de desenvolvimento em ficheiros `.iflapp` comprimidos, prontos para distribuicao global.",
+    "3": "### Configuracoes\nAjuste o motor do programa. Controle caminhos, idioma, aparencia e opcoes guardadas em data/pm.data.",
+    "4": "### MoonFix Suite\nReparacao profunda. Analise, detete e corrija inconsistencias nos pacotes. Cada recurso e etiqueta XML deve estar correto.",
+    "5": "### Acerca\nDetalhes tecnicos do projeto. Licenca GPL, framework Qt e a equipa por tras do **Package Maker**."
   },
   "config": {
     "title": "Configuração",
@@ -64,7 +64,7 @@
     "device_sim": "Simulação de dispositivo",
     "interface_color": "Cor da interface",
     "auto_color": "Cor automática conforme o sistema",
-    "notifications": "Notificações",
+    "notifications": "Notificacoes",
     "accent_color": "Cor de destaque",
     "sidebar_accent": "Espessura da borda ativa (sidebar)",
     "card_opacity": "Opacidade dos cartões UI",
@@ -160,17 +160,17 @@
   },
   "common": {
     "cancel": "Cancelar",
-    "ok": "OK",
+    "ok": "Aceitar",
     "error": "Erro",
     "warning": "Aviso",
     "yes": "Sim",
     "no": "Não",
     "select_folder": "Selecionar pasta",
-    "version": "Versão",
+    "version": "Versao",
     "close": "Fechar"
   },
   "about": {
-    "version": "Versão {version}",
+    "version": "Versao {version}",
     "description": "<p><b>Package Maker</b> é a suíte definitiva para o ecossistema Influent OS.</p><p>Projetada para ajudar desenvolvedores a criar, compilar e distribuir aplicações com eficiência.</p><br><p>Utiliza o motor <b>FLARM (Fluthin Armadillo)</b> para garantir integridade e segurança.</p>",
     "engine": "Motor principal:",
     "license": "Licença:",
@@ -257,7 +257,7 @@
     "create_project_title": "Criar projeto",
     "create_project": "Criar um novo projeto",
     "project_name": "Nome do projeto:",
-    "project_version": "Versão:",
+    "project_version": "Versao:",
     "author_name": "Autor:",
     "author_placeholder": "Seu nome",
     "publisher_name": "Editora:",
@@ -271,7 +271,7 @@
     "extension_name_placeholder": "Nome sem extensão",
     "folder_info": "📁 Pasta: {name}",
     "project_info": "📁 Projeto: {name}",
-    "file_info": "📄 Arquivo: {name}",
+    "file_info": "📄 Ficheiro: {name}",
     "compile_options": "Opções de compilação",
     "compile_windows": "🪟 Compilar para Windows",
     "compile_knosthalij": "🌐 Compilar para Knosthalij",
@@ -309,7 +309,7 @@
     "dropper": "Gerar dropper (.run)",
     "dropper_tooltip": "Anexar o .iflapp a um inicializador autoextraível",
     "engine": "Motor de compilação:",
-    "engine_legacy": "Legacy",
+    "engine_legacy": "Legado",
     "engine_legacy_warning": "O FlatCube v1 é legacy e não tem suporte. Recomenda-se o BlindCube v2.",
     "engine_required": "Deve selecionar um motor de compilação antes de compilar.",
     "engine_tooltip": "Escolha o motor explicitamente: FlatCube v1 (legacy) ou BlindCube v2 (padrão)",
@@ -353,7 +353,7 @@
     "validation_segment": "{field}: use apenas letras, numeros ou hifens.",
     "validation_title": "Dados de compilacao incompletos",
     "validation_version": "Versao invalida: use X.x ou X.x.z (por exemplo 1.0).",
-    "version": "Versão:"
+    "version": "Versao:"
   },
   "window": {
     "restore": "Restaurar",
@@ -373,7 +373,7 @@
     "exclude_pyqt": "Excluir PyQt6 da verificação automática",
     "exclude_local": "Excluir módulos locais do projeto",
     "auto_check": "Verificar automaticamente as dependências ao abrir arquivos",
-    "version_label": "Versão:",
+    "version_label": "Versao:",
     "install_error": "Erro ao instalar o Python {ver}"
   },
   "wizard": {
@@ -609,7 +609,7 @@
     "help_body": "  1. Criar projeto\n     Cria uma nova estrutura de projeto de raiz. Vai introduzir:\n     - Empresa/Editora: Nome da organizacao\n     - ID interno (Slug): Identificador unico (ex. my-app-tool)\n     - Nome visivel: Nome que os utilizadores veraoo\n     - Versao inicial: Numero de versao (ex. 1.0.0)\n     - Autor: Nome de utilizador GitHub (obrigatorio)\n     - Plataforma: Windows (Knosthalij), Linux (Danenone) ou multiplataforma\n     - Sandbox: Protecao para evitar que o codigo seja prejudicial\n\n  2. Criar pacote\n     Compila um projeto existente num pacote executavel. Pode:\n     - Selecionar um projeto da lista ou introduzir o caminho manualmente\n     - Escolher o modo: Portatil (tudo-em-um) ou Lite (ficheiro unico)\n     - Especificar a pasta de saida\n\n  3. Gestor de aplicacoes\n     Gerir os seus projetos existentes. Para cada projeto pode:\n     - Compilar o pacote\n     - Reparar com MoonFix (para problemas de projeto)\n     - Abrir no explorador de ficheiros\n     - Ver detalhes do projeto\n\n  4. MoonFix — Reparar\n     Ferramenta de reparacao automatica para projetos com problemas.\n     Opcoes disponiveis:\n     - Verificar ficheiros em falta\n     - Atualizar configuracoes antigas\n     - Reparar a estrutura de pastas\n     - Verificar dependencias\n\n  5. Configuracoes\n     Ajuste as configuracoes globais da aplicacao:\n     - Pasta de projetos (onde sao guardados os novos projetos)\n     - Idioma da interface (o que tiver traducao em lang/)\n\n  6. Acerca de\n     Mostra informacoes do sistema e a versao da aplicacao.\n\n  Comandos de navegacao:\n\n  - Em qualquer menu numerado, prima [0] para voltar\n  - Prima [Enter] para confirmar selecoes\n  - Pode usar [Ctrl+C] em qualquer momento para cancelar\n\n  Modos de execucao:\n\n  GUI (interface grafica):\n    python packagemaker.py\n\n  TUI (terminal):\n    python packagemaker.py --tui\n\n  Headless (sem GUI nem TUI):\n    python packagemaker.py create /caminho/projeto --name MyApp --author user\n    python packagemaker.py compile /caminho/projeto --output ./dist --headless\n\n  Recursos adicionais:\n\n  - Documentacao: https://github.com/Influent-PackageMaker\n  - Repositorio: https://github.com/JesusQuijada34/packagemaker",
     "help_intro": "Influent Package Maker e um sistema de gestao de pacotes para criar,\ncompilar e distribuir aplicacoes facilmente. Esta versao TUI\ndestina-se a ambientes sem interface grafica (SSH, CI, WSL sem X).",
     "help_menu_options": "Opcoes do menu principal:",
-    "help_title": "Ajuda — Influent Package Maker TUI",
+    "help_title": "Ajuda — TUI do Influent Package Maker",
     "help_welcome": "Bem-vindo ao Influent Package Maker TUI",
     "icon_col": "Icone",
     "icon_opt": "Icone (.ico) [opcional]",
@@ -656,14 +656,14 @@
     "recent_projects": "Projetos recentes:",
     "reset_cancelled": "Eliminacao cancelada.",
     "running_moonfix": "A executar o MoonFix em {name}…",
-    "sandbox_col": "Sandbox",
+    "sandbox_col": "Isolamento",
     "sandbox_secure": "Sandbox segura",
     "select_back_hint": " [q=Sair, 0=Voltar]",
     "select_platform": "Selecionar plataforma",
     "select_project": "Selecionar projeto",
     "select_project_repair": "Selecionar o projeto a reparar",
     "slug": "ID interno (Slug)",
-    "slug_col": "Slug",
+    "slug_col": "Identificador",
     "starting_build": "A iniciar a compilacao com os metadados do projeto...",
     "summary": "Resumo:",
     "target_platform": "Plataforma de destino:",

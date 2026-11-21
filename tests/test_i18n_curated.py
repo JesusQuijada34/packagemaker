@@ -72,6 +72,15 @@ _IDENTICAL_BY_DESIGN = {
     "tui.help_title",
     # "Framework" se escribe igual en varios idiomas de destino.
     "about.framework",
+    # Cognados reales (Version/System/Name/Project/No) y el nombre del
+    # intérprete, que no se traduce.
+    "tui.about_python",
+    "tui.about_version",
+    "tui.about_system",
+    "tui.name_col",
+    "tui.project_col",
+    "tui.project_header",
+    "tui.no",
 }
 
 _NON_ENGLISH = ["fr", "de", "it", "pt", "nl", "pl", "tr", "ru", "ja", "ko", "zh", "ar"]
@@ -98,7 +107,11 @@ def _used_keys():
     used = set()
     for path in list(ROOT.glob("*.py")) + list(ROOT.glob("lib/*.py")):
         text = path.read_text(encoding="utf-8")
-        used.update(re.findall(r'tr\(\s*"([^"]+)"', text))
+        # Ambas comillas: media interfaz llama tr('clave') y el regex anterior
+        # sólo veía las de comilla doble, dejando pasar claves sin traducir.
+        used.update(re.findall(r"""tr\(\s*["']([^"']+)["']""", text))
+    # Claves que se resuelven por índice (descripciones del sidebar).
+    used.update({f"sidebar_desc.{index}" for index in (0, 1, 3, 4, 5)})
     return used
 
 
