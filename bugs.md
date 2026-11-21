@@ -29,15 +29,19 @@ de auditoría.
 | R-b3f71a6c | Bug — metadatos no canónicos rompen el CLI | Alta | Resuelto |
 | R-7c1e4a90 | Bug — `compile`/`moonfix` eligen mal el proyecto | Alta | Resuelto |
 | R-91b6d2f4 | Bug — verificación sandbox con `--password` | Media | Resuelto |
+| R-3a7c5e18 | Bug — avisos de importación contaminan JSON | Alta | Resuelto |
+| R-9f2b64d1 | Bug — avisos auxiliares contaminan JSON | Media | Resuelto |
+| R-6e04c8ab | Bug — aviso de MoonFix no codificable (cp1252) | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
+| R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
 | — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
 
-No hay bugs críticos ni de alta prioridad abiertos. Los diez reportes de
-auditoría interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los
-cinco del ciclo CLI, más R-b3f71a6c, R-7c1e4a90 y R-91b6d2f4) quedaron
-corregidos y probados. No se prepara release: el periodo de observación y el
-requisito de 7 días sin reportes nuevos siguen en curso.
+No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
+interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
+ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1 y
+R-6e04c8ab) quedaron corregidos y probados. No se prepara release: el periodo
+de observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
@@ -367,6 +371,75 @@ requisito de 7 días sin reportes nuevos siguen en curso.
 - **Commit:** `ab79f4a`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-3a7c5e18 — Los avisos de importación contaminaban las acciones JSON
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** al importar `packagemaker.py`, la falta de la dependencia
+  opcional `leviathan_ui` imprimía `[WARN] Leviathan UI unavailable or syntax
+  error: …` en **stdout**; sin PyQt6 se añadía además `font: none`. Cualquier
+  acción que promete JSON en stdout (`--inspect-json`, `--shell-plan-json`,
+  `--shell-info-json`, `--ide-scan-json`) quedaba precedida por esas líneas y
+  dejaba de ser parseable. Es una regresión de la misma clase que R-4b7e91a2,
+  por otra fuente de salida, y la propia prueba
+  `JsonOutputPurityTests::test_inspect_json_stdout_is_parseable` fallaba en un
+  entorno limpio sin `leviathan_ui`.
+- **Pasos para reproducir:** en un entorno sin `leviathan_ui`,
+  `python packagemaker.py --shell-plan example.mexf --shell-plan-json | python -m json.tool`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe toda la automatización que consume JSON; afecta a
+  cuatro acciones documentadas).
+- **Solución aplicada:** los avisos de importación de `leviathan_ui`, el de
+  registro de fuentes y el de ausencia de PyQt6 se escriben en `stderr`.
+  `stdout` queda reservado para el resultado de la acción.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::JsonPurityWithoutOptionalUiTests`
+  (inyecta un `leviathan_ui` que falla al importar y valida el JSON).
+- **Commit:** `7f708bb`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-9f2b64d1 — Los avisos auxiliares rompían el JSON de `--inspect`/`--shell-info`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** en modo JSON, `--inspect-extract` añadía
+  `[OK] Recursos de cabecera exportados: …` a stdout después del documento, y
+  `--shell-preview` añadía `[OK] Vista previa exportada: …` o
+  `[INFO] El paquete no tiene icono exportable …`. Las dos combinaciones
+  producían una salida que `json.loads(stdout)` no podía leer, aunque el
+  comando terminara con código 0.
+- **Pasos para reproducir:** `python packagemaker.py --inspect demo.iflapp --inspect-json --inspect-extract out`
+  o `python packagemaker.py --shell-info demo.iflapp --shell-info-json --shell-preview preview`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (fallo silencioso para el consumidor; el artefacto y la
+  exportación sí se generan).
+- **Solución aplicada:** ambos avisos se escriben en `stderr` cuando la salida
+  es JSON y en `stdout` en modo humano; el JSON de stdout no cambia.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::JsonPurityWithAuxiliaryOutputTests`
+  (2 casos).
+- **Commit:** `7f708bb`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-6e04c8ab — El aviso de MoonFix con `details.xml` corrupto abortaba en cp1252
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** cuando `moonfix` no podía leer `details.xml`, avisaba con
+  `print(f"⚠ Advertencia: …")` en stdout. En consolas Windows `cp1252` el
+  símbolo `⚠` no es representable y el `print` lanzaba `UnicodeEncodeError`,
+  abortando la reparación con traceback en lugar de continuar con los metadatos
+  de la línea de comandos. Es la misma clase de fallo que R-739d5fec, que ya se
+  había corregido en otras rutas.
+- **Pasos para reproducir:** con `details.xml` truncado y stdout en `cp1252`,
+  ejecutar `python packagemaker.py moonfix --name Demo --shortname demo --publisher Influent`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (aborta una reparación que debería degradar con aviso).
+- **Solución aplicada:** el aviso usa `_safe_print` y se escribe en `stderr`.
+  El flujo de reparación y el fallback a los metadatos del CLI no cambian.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::MoonfixEncodingWarningTests`
+  (stdout/stderr reales en `cp1252`).
+- **Commit:** `7f708bb`.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -398,6 +471,32 @@ requisito de 7 días sin reportes nuevos siguen en curso.
 - **Motivo de la espera:** cambia la ley de nombres y los nombres de carpeta,
   paquete y artefacto; afecta a `_PROJECT_PATTERN`, a la compatibilidad con
   proyectos existentes y a los tests de la ley canónica.
+
+### R-4c8e1f27 — El publisher pierde su capitalización al crear proyectos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Estado:** Pendiente de aprobación explícita. No implementado.
+- **Situación actual:** la ley de nombres exige que el publisher conserve la
+  capitalización declarada (`Influent.packagemaker.v3.2.7-…`), y
+  `ProjectNameFormatter` lo cumple. Sin embargo, los dos puntos de creación
+  pasan el publisher ya en minúsculas: `handle_cli_action('create_project')` y
+  `_ejecutarCreacionProyecto()` en `packagemaker.py` hacen
+  `.strip().lower().replace(' ', '-')`. El resultado es una carpeta
+  `influent.demox.…` y un `details.xml` con `<publisher>influent</publisher>`
+  aunque el usuario escriba `Influent`.
+- **Comportamiento solicitado:** conservar la capitalización del publisher en
+  la carpeta, el paquete, el `.iflapp` y `details.xml`, como ya hace el
+  formatter.
+- **Efectos secundarios:** cambia el nombre de los proyectos nuevos
+  (`influent.*` → `Influent.*`) y las rutas de build; los proyectos existentes
+  siguen siendo válidos porque `parse_project_folder` no distingue mayúsculas
+  en el publisher. Hay que revisar los tests que construyen carpetas con
+  publisher en minúsculas y cualquier CI que espere la ruta histórica.
+- **Archivos:** `lib/cliHandler.py`, `packagemaker.py`,
+  `tests/test_maintenance_cli_regressions.py`, `tests/test_issue4_reports.py`.
+- **Riesgo:** medio (no rompe artefactos, pero altera nombres visibles y rutas
+  de compilación; requiere decisión del responsable).
 
 ---
 
@@ -486,15 +585,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
-  `d2670a1`, el de R-b3f71a6c y `ab79f4a`), no reportes de usuario; el contador
-  de 7 días no se reinicia.
-- Verificación del ciclo de R-7c1e4a90 y R-91b6d2f4 (2026-11-21):
-  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 471 pasan, 1 omitido;
-  `pyflakes` y `py_compile` limpios; build real con `--compiler zipapp` +
-  `--password` + `--harden checksum` produce un `.iflapp` cifrado y la
-  verificación en sandbox termina en `[OK]` (antes avisaba «incompleta»);
-  `compile` con `demo` y `demo2` elige `demo`; `compile`/`moonfix` sin carpeta
-  base abortan con error legible y código 1, sin traceback.
+  `d2670a1`, el de R-b3f71a6c, `ab79f4a` y `7f708bb`), no reportes de usuario;
+  el contador de 7 días no se reinicia.
+- Verificación del ciclo de R-3a7c5e18, R-9f2b64d1 y R-6e04c8ab (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 474 pasan, 2
+  omitidos; `pyflakes` y `py_compile` limpios; las cuatro acciones JSON
+  (`--inspect-json`, `--shell-plan-json`, `--shell-info-json`,
+  `--ide-scan-json`) emiten JSON parseable sin `leviathan_ui`, incluso con
+  `--inspect-extract` y `--shell-preview`; `moonfix` con `details.xml`
+  truncado y stdout en `cp1252` avisa en stderr y repara sin traceback; build
+  real con `--compiler zipapp` genera el `.iflapp` y `--inspect` lo lee.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

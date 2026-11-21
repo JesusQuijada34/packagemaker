@@ -42,24 +42,35 @@ Hallazgos del cuarto ciclo de mantenimiento (sin reporte externo; reportados por
 - **R-7c1e4a90 — `compile`/`moonfix` compilaban el proyecto equivocado:** la búsqueda usaba `publisher in nombre and app in nombre`, así que con `demo` y `demo2` en la misma carpeta elegía `demo2`; además, si la carpeta base no existía, `iterdir()` terminaba en un traceback. Ahora ambos usan `locate_project()`, que compara la identidad canónica de la carpeta, cae a `details.xml` solo para carpetas no canónicas y devuelve un error legible si no hay carpeta base.
 - **R-91b6d2f4 — La verificación en sandbox no descifraba los paquetes con `--password`:** el script del sandbox llamaba a `extract_iflapp()` sin contraseña, así que todo build cifrado avisaba «verificación incompleta» y quedaba sin verificar. La contraseña viaja por `IFLAPP_VERIFY_PASSWORD` (entorno, no `argv`) y se pasa a `extract_iflapp(..., password=...)`.
 
+### Corregido — pureza de salida del CLI
+
+Hallazgos del quinto ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `7f708bb`.
+
+- **R-3a7c5e18 — Los avisos de importación contaminaban las acciones JSON:** la falta de `leviathan_ui` imprimía `[WARN] Leviathan UI unavailable…` en stdout (y sin PyQt6 se añadía `font: none`), así que `--inspect-json`, `--shell-plan-json`, `--shell-info-json` y `--ide-scan-json` dejaban de ser parseables. Ahora esos avisos van a stderr. Es una regresión de la misma clase que R-4b7e91a2.
+- **R-9f2b64d1 — Los avisos auxiliares rompían el JSON:** `--inspect-extract` y `--shell-preview` añadían su `[OK]`/`[INFO]` a stdout después del documento. Ahora van a stderr en modo JSON y a stdout en modo humano.
+- **R-6e04c8ab — El aviso de MoonFix no era codificable en cp1252:** un `details.xml` corrupto hacía `print("⚠ …")`, que lanzaba `UnicodeEncodeError` en consolas Windows y abortaba la reparación. Ahora usa `_safe_print` y escribe en stderr; el fallback a los metadatos del CLI no cambia.
+
 ### Mantenimiento
 
 - `lib/requirements-dev.txt` resuelve correctamente su include (`-r requirements.txt`) y la documentación usa la ruta real `lib/requirements-dev.txt`.
 
 ### Verificación
 
-- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 471 pasan, 1 omitido (el omitido depende de `leviathan_ui`).
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 474 pasan, 2 omitidos (los omitidos dependen de dependencias opcionales).
 - `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
 - Build real con `--compiler zipapp --harden integrity`: `.iflapp` válido con `.iflapp.integrity` en el manifiesto.
 - Build real con `--compiler zipapp --password` y sandbox activo: `.iflapp` cifrado y verificación en sandbox `[OK]` (antes «incompleta»).
 - `compile` con `demo` y `demo2` elige `demo`; `compile`/`moonfix` sin carpeta base abortan con error legible y código 1, sin traceback.
 - `--inspect-json` emite JSON parseable en stdout (banner en stderr).
+- Las cuatro acciones JSON emiten JSON parseable sin `leviathan_ui`, incluso combinadas con `--inspect-extract` o `--shell-preview`.
+- `moonfix` con `details.xml` truncado y stdout en `cp1252` avisa en stderr y repara sin traceback.
 - `create`, `--buildthis` y `moonfix` con metadatos no canónicos abortan con error legible y código 1, sin traceback.
 
 ### Pendiente de aprobación
 
 - **R-d23039c0 — Telemetría de errores:** no implementada (envía datos a un servidor externo).
 - **R-5d8e2a41 — Acentos en publisher/appname:** no implementada; cambia la ley de nombres.
+- **R-4c8e1f27 — Capitalización del publisher:** `create` y la GUI pasan el publisher a minúsculas, así que la carpeta y `details.xml` no conservan la capitalización que exige la ley de nombres. No implementado: cambia los nombres visibles y las rutas de build.
 - **Cambios de engine de `bugs.txt`:** registrados en `bugs.md`, sin implementar.
 
 ## 2026-11-15
