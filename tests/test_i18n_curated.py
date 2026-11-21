@@ -70,6 +70,8 @@ _IDENTICAL_BY_DESIGN = {
     "tui.platform_windows",
     "tui.version_col",
     "tui.help_title",
+    # "Framework" se escribe igual en varios idiomas de destino.
+    "about.framework",
 }
 
 _NON_ENGLISH = ["fr", "de", "it", "pt", "nl", "pl", "tr", "ru", "ja", "ko", "zh", "ar"]

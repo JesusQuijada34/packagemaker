@@ -6764,3 +6764,77 @@ CURATED['ar'].update({
     'moonfix.select_asset_pack': 'اختر Asset Pack',
     'window.exit_fullscreen': 'الخروج من ملء الشاشة',
 })
+
+# Etiquetas de la ficha técnica de «Acerca de» (Fase 3.2).
+CURATED['fr'].update({
+    'about.engine': 'Moteur principal :',
+    'about.license': 'Licence :',
+    'about.framework': 'Framework :',
+    'about.developer': 'Développeur :',
+})
+CURATED['de'].update({
+    'about.engine': 'Hauptengine:',
+    'about.license': 'Lizenz:',
+    'about.framework': 'Framework:',
+    'about.developer': 'Entwickler:',
+})
+CURATED['it'].update({
+    'about.engine': 'Motore principale:',
+    'about.license': 'Licenza:',
+    'about.framework': 'Framework:',
+    'about.developer': 'Sviluppatore:',
+})
+CURATED['pt'].update({
+    'about.engine': 'Motor principal:',
+    'about.license': 'Licença:',
+    'about.framework': 'Framework:',
+    'about.developer': 'Programador:',
+})
+CURATED['nl'].update({
+    'about.engine': 'Hoofdengine:',
+    'about.license': 'Licentie:',
+    'about.framework': 'Framework:',
+    'about.developer': 'Ontwikkelaar:',
+})
+CURATED['pl'].update({
+    'about.engine': 'Silnik główny:',
+    'about.license': 'Licencja:',
+    'about.framework': 'Framework:',
+    'about.developer': 'Twórca:',
+})
+CURATED['tr'].update({
+    'about.engine': 'Ana motor:',
+    'about.license': 'Lisans:',
+    'about.framework': 'Çatı:',
+    'about.developer': 'Geliştirici:',
+})
+CURATED['ru'].update({
+    'about.engine': 'Основной движок:',
+    'about.license': 'Лицензия:',
+    'about.framework': 'Фреймворк:',
+    'about.developer': 'Разработчик:',
+})
+CURATED['ja'].update({
+    'about.engine': 'メインエンジン:',
+    'about.license': 'ライセンス:',
+    'about.framework': 'フレームワーク:',
+    'about.developer': '開発者:',
+})
+CURATED['ko'].update({
+    'about.engine': '주 엔진:',
+    'about.license': '라이선스:',
+    'about.framework': '프레임워크:',
+    'about.developer': '개발자:',
+})
+CURATED['zh'].update({
+    'about.engine': '主引擎:',
+    'about.license': '许可证:',
+    'about.framework': '框架:',
+    'about.developer': '开发者:',
+})
+CURATED['ar'].update({
+    'about.engine': 'المحرك الرئيسي:',
+    'about.license': 'الترخيص:',
+    'about.framework': 'الإطار:',
+    'about.developer': 'المطوّر:',
+})

@@ -171,7 +171,11 @@
   },
   "about": {
     "version": "Sürüm {version}",
-    "description": "<p><b>Package Maker</b>, Influent OS ekosistemi için nihai pakettir.</p><p>Geliştiricilerin uygulamaları verimli bir şekilde oluşturmasına, derlemesine ve dağıtmasına yardımcı olmak için tasarlanmıştır.</p><br><p>Bütünlük ve güvenliği sağlamak için <b>FLARM (Fluthin Armadillo)</b> motorunu kullanır.</p>"
+    "description": "<p><b>Package Maker</b>, Influent OS ekosistemi için nihai pakettir.</p><p>Geliştiricilerin uygulamaları verimli bir şekilde oluşturmasına, derlemesine ve dağıtmasına yardımcı olmak için tasarlanmıştır.</p><br><p>Bütünlük ve güvenliği sağlamak için <b>FLARM (Fluthin Armadillo)</b> motorunu kullanır.</p>",
+    "engine": "Ana motor:",
+    "license": "Lisans:",
+    "framework": "Çatı:",
+    "developer": "Geliştirici:"
   },
   "moonfix": {
     "title": "MoonFix",

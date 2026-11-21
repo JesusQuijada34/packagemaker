@@ -171,7 +171,11 @@
   },
   "about": {
     "version": "版本 {version}",
-    "description": "<p><b>Package Maker</b> 是 Influent OS 生态系统的终极套件。</p><p>旨在帮助开发者高效地创建、编译和发布应用程序。</p><br><p>它使用 <b>FLARM (Fluthin Armadillo)</b> 引擎来确保完整性和安全性。</p>"
+    "description": "<p><b>Package Maker</b> 是 Influent OS 生态系统的终极套件。</p><p>旨在帮助开发者高效地创建、编译和发布应用程序。</p><br><p>它使用 <b>FLARM (Fluthin Armadillo)</b> 引擎来确保完整性和安全性。</p>",
+    "engine": "主引擎:",
+    "license": "许可证:",
+    "framework": "框架:",
+    "developer": "开发者:"
   },
   "moonfix": {
     "title": "MoonFix",

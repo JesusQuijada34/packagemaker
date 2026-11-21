@@ -171,7 +171,11 @@
   },
   "about": {
     "version": "Version {version}",
-    "description": "<p><b>Package Maker</b> is the definitive suite for the Influent OS ecosystem.</p><p>Designed to help developers create, build, and distribute applications efficiently.</p><br><p>It uses the <b>FLARM (Fluthin Armadillo)</b> engine to ensure integrity and security.</p>"
+    "description": "<p><b>Package Maker</b> is the definitive suite for the Influent OS ecosystem.</p><p>Designed to help developers create, build, and distribute applications efficiently.</p><br><p>It uses the <b>FLARM (Fluthin Armadillo)</b> engine to ensure integrity and security.</p>",
+    "engine": "Main engine:",
+    "license": "License:",
+    "framework": "Framework:",
+    "developer": "Developer:"
   },
   "moonfix": {
     "title": "MoonFix",

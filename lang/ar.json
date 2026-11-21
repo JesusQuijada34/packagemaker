@@ -171,7 +171,11 @@
   },
   "about": {
     "version": "الإصدار {version}",
-    "description": "<p><b>Package Maker</b> هو الحزمة النهائية لنطام Influent OS.</p><p>مُصمّم لمساعدة المطوّرين على إنشاء التطبيقات وترجمتها وتوزيعها بكفاءة.</p><br><p>يستخدم محرك <b>FLARM (Fluthin Armadillo)</b> لضمان السلامة والأمان.</p>"
+    "description": "<p><b>Package Maker</b> هو الحزمة النهائية لنطام Influent OS.</p><p>مُصمّم لمساعدة المطوّرين على إنشاء التطبيقات وترجمتها وتوزيعها بكفاءة.</p><br><p>يستخدم محرك <b>FLARM (Fluthin Armadillo)</b> لضمان السلامة والأمان.</p>",
+    "engine": "المحرك الرئيسي:",
+    "license": "الترخيص:",
+    "framework": "الإطار:",
+    "developer": "المطوّر:"
   },
   "moonfix": {
     "title": "MoonFix",

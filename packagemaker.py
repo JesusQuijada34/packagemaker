@@ -3048,10 +3048,10 @@ class PackageTodoGUI(QMainWindow):
             set_qss(v, 'packagemaker_088', append=False)
             return l, v
 
-        l1, v1 = spec_item("Engine Pricipal:", "BlindCube v2.1")
-        l2, v2 = spec_item("Licencia:", "GNU GPL v3")
-        l3, v3 = spec_item("Framework:", f"Qt {QtCore.qVersion()} (PyQt6)")
-        l4, v4 = spec_item("Desarrollador:", "Jesus Daviel")
+        l1, v1 = spec_item(tr("about.engine"), "BlindCube v2.1")
+        l2, v2 = spec_item(tr("about.license"), "GNU GPL v3")
+        l3, v3 = spec_item(tr("about.framework"), f"Qt {QtCore.qVersion()} (PyQt6)")
+        l4, v4 = spec_item(tr("about.developer"), "Jesus Daviel")
 
         grid.addWidget(l1, 0, 0); grid.addWidget(v1, 0, 1)
         grid.addWidget(l2, 1, 0); grid.addWidget(v2, 1, 1)
