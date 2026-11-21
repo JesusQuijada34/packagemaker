@@ -662,5 +662,87 @@ class MoonfixEncodingWarningTests(unittest.TestCase):
             self.assertIn("<publisher>", (project / "details.xml").read_text(encoding="utf-8"))
 
 
+class MoonFixPreservesCanonicalTimestampTests(unittest.TestCase):
+    """R-7d5b91c4: reparar no debe regenerar la marca temporal del proyecto."""
+
+    TIMESTAMP = "26.11-10.05"
+
+    def _create_project(self, root: Path, folder: str | None = None):
+        from lib.template_engine import create_project_from_templates
+
+        project = root / (folder or f"Influent.demo.v1.0-{self.TIMESTAMP}-Danenone")
+        create_project_from_templates(
+            project,
+            publisher="Influent",
+            app_id="demo",
+            name="Demo",
+            author="JesusQuijada34",
+            platform="Danenone",
+            version_base="1.0",
+            timestamp=self.TIMESTAMP,
+        )
+        return project
+
+    def _details_version(self, project: Path) -> str:
+        import xml.etree.ElementTree as ET
+
+        return (ET.parse(project / "details.xml").getroot().findtext("version") or "").strip()
+
+    def test_repair_keeps_the_folder_timestamp(self):
+        from lib.template_engine import repair_project_from_templates
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._create_project(Path(tmp))
+            result = repair_project_from_templates(
+                project,
+                "Influent",
+                "demo",
+                "Demo",
+                "JesusQuijada34",
+                "Danenone",
+                version_base="1.0",
+            )
+            self.assertEqual(self._details_version(project), f"v1.0-{self.TIMESTAMP}")
+            self.assertEqual(result["variables"]["FOLDER_NAME"], project.name)
+
+    def test_repair_falls_back_to_details_timestamp_for_legacy_folder(self):
+        from lib.template_engine import repair_project_from_templates
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._create_project(Path(tmp), folder="legacy-demo")
+            repair_project_from_templates(
+                project,
+                "Influent",
+                "demo",
+                "Demo",
+                "JesusQuijada34",
+                "Danenone",
+                version_base="1.0",
+            )
+            self.assertEqual(self._details_version(project), f"v1.0-{self.TIMESTAMP}")
+
+    def test_cli_repair_preserves_the_canonical_identity(self):
+        from lib.cliHandler import handle_cli_action
+        from lib.projectNameFormatter import ProjectNameFormatter
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._create_project(Path(tmp))
+            with redirect_stdout(io.StringIO()):
+                handle_cli_action(
+                    "repair_project",
+                    {
+                        "path": tmp,
+                        "name": "Demo",
+                        "shortname": "demo",
+                        "publisher": "Influent",
+                        "version": "1.0",
+                    },
+                    None,
+                    headless=True,
+                )
+            parsed = ProjectNameFormatter.parse_project_folder(project.name)
+            self.assertEqual(self._details_version(project), f"v1.0-{parsed['timestamp']}")
+
+
 if __name__ == "__main__":
     unittest.main()
