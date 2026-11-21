@@ -90,10 +90,17 @@
     "fonts_download": "Скачать шрифты",
     "fonts_downloading": "Загрузка шрифтов из Google Fonts...",
     "fonts_done": "Доступно {ok} из {total} шрифтов",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Уведомления и оповещения",
     "default_editor": "Редактор по умолчанию",
     "editor_placeholder": "Напр.: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Смахните двумя пальцами, чтобы сменить раздел.",
+    "confirm": "Подтвердить",
+    "section_general_hint": "Рабочие папки и автоперевод",
+    "section_language_hint": "Язык интерфейса",
+    "section_appearance_hint": "Плотность, боковой акцент и прозрачность",
+    "section_notifications_hint": "Системные уведомления и сенсорный ввод",
+    "section_fonts_hint": "Состояние шрифтов и ручная загрузка",
+    "reset_hint": "Возвращает настройки по умолчанию"
   },
   "create": {
     "sandbox": "Безопасная песочница",

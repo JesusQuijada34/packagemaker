@@ -93,7 +93,14 @@
     "section_notifications": "Notificaciones y avisos",
     "default_editor": "Editor de código por defecto",
     "editor_placeholder": "Ej.: code, gedit, notepad",
-    "touch_mode_hint": "Desliza con dos dedos para cambiar de sección."
+    "touch_mode_hint": "Desliza con dos dedos para cambiar de sección.",
+    "confirm": "Confirmar",
+    "section_general_hint": "Rutas de trabajo y traducción automática",
+    "section_language_hint": "Idioma de la interfaz",
+    "section_appearance_hint": "Densidad, acento lateral y opacidad",
+    "section_notifications_hint": "Avisos del sistema y entrada táctil",
+    "section_fonts_hint": "Estado de las fuentes y descarga manual",
+    "reset_hint": "Devuelve la configuración a los valores por defecto"
   },
   "create": {
     "sandbox": "Sandbox seguro",

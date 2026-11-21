@@ -90,10 +90,17 @@
     "fonts_download": "Telecharger les polices",
     "fonts_downloading": "Telechargement des polices depuis Google Fonts...",
     "fonts_done": "{ok} sur {total} polices disponibles",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Notifications et alertes",
     "default_editor": "Éditeur par défaut",
     "editor_placeholder": "Ex. : code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Glissez avec deux doigts pour changer de section.",
+    "confirm": "Confirmer",
+    "section_general_hint": "Dossiers de travail et traduction automatique",
+    "section_language_hint": "Langue de l'interface",
+    "section_appearance_hint": "Densite, accent lateral et opacite",
+    "section_notifications_hint": "Avis systeme et saisie tactile",
+    "section_fonts_hint": "Etat des polices et telechargement manuel",
+    "reset_hint": "Retablit les parametres par defaut"
   },
   "create": {
     "sandbox": "Sandbox sécurisé",

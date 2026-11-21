@@ -90,10 +90,17 @@
     "fonts_download": "Yazı tiplerini indir",
     "fonts_downloading": "Google Fonts'tan yazı tipleri indiriliyor...",
     "fonts_done": "{total} yazı tipinden {ok} tanesi kullanılabilir",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Bildirimler ve uyarilar",
     "default_editor": "Varsayılan düzenleyici",
     "editor_placeholder": "Örn.: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Bolumu degistirmek icin iki parmakla kaydirin.",
+    "confirm": "Onayla",
+    "section_general_hint": "Calisma klasorleri ve otomatik ceviri",
+    "section_language_hint": "Arayuz dili",
+    "section_appearance_hint": "Yogunluk, yan vurgu ve opaklik",
+    "section_notifications_hint": "Sistem bildirimleri ve dokunmatik giris",
+    "section_fonts_hint": "Yazi tipi durumu ve el ile indirme",
+    "reset_hint": "Ayarlari varsayilan degerlere dondurur"
   },
   "create": {
     "sandbox": "Güvenli sanal alan",

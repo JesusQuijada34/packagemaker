@@ -90,10 +90,17 @@
     "fonts_download": "تنزيل الخطوط",
     "fonts_downloading": "جارٍ تنزيل الخطوط من Google Fonts...",
     "fonts_done": "يتوفر {ok} من {total} خطًا",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "الإشعارات والتنبيهات",
     "default_editor": "المحرر الافتراضي",
     "editor_placeholder": "مثال: code، gedit، notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "اسحب بإصبعين للتبديل بين الأقسام.",
+    "confirm": "تأكيد",
+    "section_general_hint": "مجلدات العمل والترجمة التلقائية",
+    "section_language_hint": "لغة الواجهة",
+    "section_appearance_hint": "الكثافة ولون التمييز الجانبي والعتامة",
+    "section_notifications_hint": "إشعارات النظام والإدخال باللمس",
+    "section_fonts_hint": "حالة الخطوط والتنزيل اليدوي",
+    "reset_hint": "يعيد الإعدادات إلى قيمها الافتراضية"
   },
   "create": {
     "sandbox": "بيئة معزولة آمنة",

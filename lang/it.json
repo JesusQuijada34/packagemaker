@@ -90,10 +90,17 @@
     "fonts_download": "Scarica i caratteri",
     "fonts_downloading": "Download dei caratteri da Google Fonts...",
     "fonts_done": "{ok} di {total} caratteri disponibili",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Notifiche e avvisi",
     "default_editor": "Editor predefinito",
     "editor_placeholder": "Es.: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Scorri con due dita per cambiare sezione.",
+    "confirm": "Conferma",
+    "section_general_hint": "Cartelle di lavoro e traduzione automatica",
+    "section_language_hint": "Lingua dell'interfaccia",
+    "section_appearance_hint": "Densita, accento laterale e opacita",
+    "section_notifications_hint": "Avvisi di sistema e input tattile",
+    "section_fonts_hint": "Stato dei caratteri e download manuale",
+    "reset_hint": "Ripristina le impostazioni predefinite"
   },
   "create": {
     "sandbox": "Sandbox sicura",

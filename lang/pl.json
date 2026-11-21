@@ -90,10 +90,17 @@
     "fonts_download": "Pobierz czcionki",
     "fonts_downloading": "Pobieranie czcionek z Google Fonts...",
     "fonts_done": "Dostępnych czcionek: {ok} z {total}",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Powiadomienia i ostrzezenia",
     "default_editor": "Domyślny edytor",
     "editor_placeholder": "Np.: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Przesun dwoma palcami, aby zmienic sekcje.",
+    "confirm": "Potwierdz",
+    "section_general_hint": "Foldery robocze i tlumaczenie automatyczne",
+    "section_language_hint": "Jezyk interfejsu",
+    "section_appearance_hint": "Gestosc, akcent boczny i krycie",
+    "section_notifications_hint": "Powiadomienia systemowe i wprowadzanie dotykowe",
+    "section_fonts_hint": "Stan czcionek i reczne pobieranie",
+    "reset_hint": "Przywraca ustawienia domyslne"
   },
   "create": {
     "sandbox": "Bezpieczna piaskownica",

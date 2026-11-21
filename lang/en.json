@@ -93,7 +93,14 @@
     "section_notifications": "Notifications and alerts",
     "default_editor": "Default code editor",
     "editor_placeholder": "e.g. code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Swipe to switch sections.",
+    "confirm": "Confirm",
+    "section_general_hint": "Working paths and automatic translation",
+    "section_language_hint": "Interface language",
+    "section_appearance_hint": "Density, side accent and opacity",
+    "section_notifications_hint": "System notices and touch input",
+    "section_fonts_hint": "Font status and manual download",
+    "reset_hint": "Restore the settings to their default values"
   },
   "create": {
     "sandbox": "Secure sandbox",

@@ -51,6 +51,7 @@ DEFAULT_USER: Dict[str, Any] = {
     "card_opacity": 0.08,
     "ui_density": "normal",
     "sidebar_width": 260,
+    "ui_font_family": "",
 }
 
 _store: Optional["PMDataStore"] = None

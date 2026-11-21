@@ -90,10 +90,17 @@
     "fonts_download": "Lettertypen downloaden",
     "fonts_downloading": "Lettertypen downloaden van Google Fonts...",
     "fonts_done": "{ok} van {total} lettertypen beschikbaar",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Meldingen en waarschuwingen",
     "default_editor": "Standaardeditor",
     "editor_placeholder": "Bijv.: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Veeg met twee vingers om van sectie te wisselen.",
+    "confirm": "Bevestigen",
+    "section_general_hint": "Werkmappen en automatische vertaling",
+    "section_language_hint": "Taal van de interface",
+    "section_appearance_hint": "Dichtheid, zijaccent en dekking",
+    "section_notifications_hint": "Systeemmeldingen en aanraakinvoer",
+    "section_fonts_hint": "Status van lettertypen en handmatige download",
+    "reset_hint": "Zet de instellingen terug naar de standaardwaarden"
   },
   "create": {
     "sandbox": "Veilige sandbox",

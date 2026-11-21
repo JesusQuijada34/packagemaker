@@ -90,10 +90,17 @@
     "fonts_download": "Schriftarten herunterladen",
     "fonts_downloading": "Schriftarten werden von Google Fonts heruntergeladen...",
     "fonts_done": "{ok} von {total} Schriftarten verfügbar",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Benachrichtigungen und Hinweise",
     "default_editor": "Standard-Editor",
     "editor_placeholder": "Z. B.: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Mit zwei Fingern wischen, um den Abschnitt zu wechseln.",
+    "confirm": "Bestatigen",
+    "section_general_hint": "Arbeitsordner und automatische Ubersetzung",
+    "section_language_hint": "Sprache der Oberflache",
+    "section_appearance_hint": "Dichte, Seitenakzent und Deckkraft",
+    "section_notifications_hint": "Systemhinweise und Touch-Eingabe",
+    "section_fonts_hint": "Schriftartenstatus und manueller Download",
+    "reset_hint": "Setzt die Einstellungen auf die Standardwerte zuruck"
   },
   "create": {
     "sandbox": "Sichere Sandbox",

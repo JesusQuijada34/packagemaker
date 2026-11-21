@@ -90,10 +90,17 @@
     "fonts_download": "Baixar fontes",
     "fonts_downloading": "Baixando fontes do Google Fonts...",
     "fonts_done": "{ok} de {total} fontes disponíveis",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "Notificacoes e avisos",
     "default_editor": "Editor padrão",
     "editor_placeholder": "Ex.: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "Deslize com dois dedos para mudar de secao.",
+    "confirm": "Confirmar",
+    "section_general_hint": "Pastas de trabalho e traducao automatica",
+    "section_language_hint": "Idioma da interface",
+    "section_appearance_hint": "Densidade, acento lateral e opacidade",
+    "section_notifications_hint": "Avisos do sistema e entrada tatil",
+    "section_fonts_hint": "Estado das fontes e descarga manual",
+    "reset_hint": "Restaura as configuracoes padrao"
   },
   "create": {
     "sandbox": "Sandbox segura",

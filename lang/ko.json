@@ -90,10 +90,17 @@
     "fonts_download": "폰트 다운로드",
     "fonts_downloading": "Google Fonts에서 폰트를 다운로드 중...",
     "fonts_done": "{total}개 중 {ok}개 폰트 사용 가능",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "알림 및 경고",
     "default_editor": "기본 편집기",
     "editor_placeholder": "예: code, gedit, notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "두 손가락으로 밀어 섹션을 전환합니다.",
+    "confirm": "확인",
+    "section_general_hint": "작업 폴더 및 자동 번역",
+    "section_language_hint": "인터페이스 언어",
+    "section_appearance_hint": "밀도, 측면 강조 및 불투명도",
+    "section_notifications_hint": "시스템 알림 및 터치 입력",
+    "section_fonts_hint": "글꼴 상태 및 수동 다운로드",
+    "reset_hint": "설정을 기본값으로 되돌립니다"
   },
   "create": {
     "sandbox": "안전한 샌드박스",

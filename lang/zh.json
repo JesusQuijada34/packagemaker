@@ -90,10 +90,17 @@
     "fonts_download": "下载字体",
     "fonts_downloading": "正在从 Google Fonts 下载字体...",
     "fonts_done": "{total} 个字体中可用 {ok} 个",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "通知与提醒",
     "default_editor": "默认编辑器",
     "editor_placeholder": "例如：code、gedit、notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "用双指滑动切换分区。",
+    "confirm": "确认",
+    "section_general_hint": "工作路径与自动翻译",
+    "section_language_hint": "界面语言",
+    "section_appearance_hint": "密度、侧边强调与不透明度",
+    "section_notifications_hint": "系统通知与触摸输入",
+    "section_fonts_hint": "字体状态与手动下载",
+    "reset_hint": "将设置恢复为默认值"
   },
   "create": {
     "sandbox": "安全沙箱",

@@ -90,10 +90,17 @@
     "fonts_download": "フォントをダウンロード",
     "fonts_downloading": "Google Fonts からフォントをダウンロード中...",
     "fonts_done": "{total} 中 {ok} のフォントが利用可能",
-    "section_notifications": "Notifications and alerts",
+    "section_notifications": "通知とアラート",
     "default_editor": "既定のエディタ",
     "editor_placeholder": "例：code、gedit、notepad",
-    "touch_mode_hint": "Swipe to switch sections."
+    "touch_mode_hint": "2本指でスワイプしてセクションを切り替えます。",
+    "confirm": "確定",
+    "section_general_hint": "作業フォルダーと自動翻訳",
+    "section_language_hint": "インターフェースの言語",
+    "section_appearance_hint": "密度、サイドのアクセント、不透明度",
+    "section_notifications_hint": "システム通知とタッチ入力",
+    "section_fonts_hint": "フォントの状態と手動ダウンロード",
+    "reset_hint": "設定を既定値に戻します"
   },
   "create": {
     "sandbox": "安全なサンドボックス",

@@ -18,6 +18,15 @@ from typing import Dict
 CURATED: Dict[str, Dict[str, str]] = {}
 
 CURATED["fr"] = {
+    "config.section_notifications": 'Notifications et alertes',
+    "config.touch_mode_hint": 'Glissez avec deux doigts pour changer de section.',
+    "config.confirm": 'Confirmer',
+    "config.section_general_hint": 'Dossiers de travail et traduction automatique',
+    "config.section_language_hint": "Langue de l'interface",
+    "config.section_appearance_hint": 'Densite, accent lateral et opacite',
+    "config.section_notifications_hint": 'Avis systeme et saisie tactile',
+    "config.section_fonts_hint": 'Etat des polices et telechargement manuel',
+    "config.reset_hint": 'Retablit les parametres par defaut',
     "app.compile_project": "Compiler le projet",
     "app.install_as_package": "Installer en tant que paquet",
     "app.install_folder_as_package": "Installer le dossier en tant que paquet",
@@ -234,6 +243,15 @@ CURATED["fr"] = {
 }
 
 CURATED["de"] = {
+    "config.section_notifications": 'Benachrichtigungen und Hinweise',
+    "config.touch_mode_hint": 'Mit zwei Fingern wischen, um den Abschnitt zu wechseln.',
+    "config.confirm": 'Bestatigen',
+    "config.section_general_hint": 'Arbeitsordner und automatische Ubersetzung',
+    "config.section_language_hint": 'Sprache der Oberflache',
+    "config.section_appearance_hint": 'Dichte, Seitenakzent und Deckkraft',
+    "config.section_notifications_hint": 'Systemhinweise und Touch-Eingabe',
+    "config.section_fonts_hint": 'Schriftartenstatus und manueller Download',
+    "config.reset_hint": 'Setzt die Einstellungen auf die Standardwerte zuruck',
     "app.compile_project": "Projekt kompilieren",
     "app.install_as_package": "Als Paket installieren",
     "app.install_folder_as_package": "Ordner als Paket installieren",
@@ -450,6 +468,15 @@ CURATED["de"] = {
 }
 
 CURATED["it"] = {
+    "config.section_notifications": 'Notifiche e avvisi',
+    "config.touch_mode_hint": 'Scorri con due dita per cambiare sezione.',
+    "config.confirm": 'Conferma',
+    "config.section_general_hint": 'Cartelle di lavoro e traduzione automatica',
+    "config.section_language_hint": "Lingua dell'interfaccia",
+    "config.section_appearance_hint": 'Densita, accento laterale e opacita',
+    "config.section_notifications_hint": 'Avvisi di sistema e input tattile',
+    "config.section_fonts_hint": 'Stato dei caratteri e download manuale',
+    "config.reset_hint": 'Ripristina le impostazioni predefinite',
     "app.compile_project": "Compila il progetto",
     "app.install_as_package": "Installa come pacchetto",
     "app.install_folder_as_package": "Installa la cartella come pacchetto",
@@ -666,6 +693,15 @@ CURATED["it"] = {
 }
 
 CURATED["pt"] = {
+    "config.section_notifications": 'Notificacoes e avisos',
+    "config.touch_mode_hint": 'Deslize com dois dedos para mudar de secao.',
+    "config.confirm": 'Confirmar',
+    "config.section_general_hint": 'Pastas de trabalho e traducao automatica',
+    "config.section_language_hint": 'Idioma da interface',
+    "config.section_appearance_hint": 'Densidade, acento lateral e opacidade',
+    "config.section_notifications_hint": 'Avisos do sistema e entrada tatil',
+    "config.section_fonts_hint": 'Estado das fontes e descarga manual',
+    "config.reset_hint": 'Restaura as configuracoes padrao',
     "app.compile_project": "Compilar o projeto",
     "app.install_as_package": "Instalar como pacote",
     "app.install_folder_as_package": "Instalar pasta como pacote",
@@ -884,6 +920,15 @@ CURATED["pt"] = {
 }
 
 CURATED["nl"] = {
+    "config.section_notifications": 'Meldingen en waarschuwingen',
+    "config.touch_mode_hint": 'Veeg met twee vingers om van sectie te wisselen.',
+    "config.confirm": 'Bevestigen',
+    "config.section_general_hint": 'Werkmappen en automatische vertaling',
+    "config.section_language_hint": 'Taal van de interface',
+    "config.section_appearance_hint": 'Dichtheid, zijaccent en dekking',
+    "config.section_notifications_hint": 'Systeemmeldingen en aanraakinvoer',
+    "config.section_fonts_hint": 'Status van lettertypen en handmatige download',
+    "config.reset_hint": 'Zet de instellingen terug naar de standaardwaarden',
     "app.compile_project": "Project compileren",
     "app.install_as_package": "Als pakket installeren",
     "app.install_folder_as_package": "Map als pakket installeren",
@@ -1100,6 +1145,15 @@ CURATED["nl"] = {
 }
 
 CURATED["pl"] = {
+    "config.section_notifications": 'Powiadomienia i ostrzezenia',
+    "config.touch_mode_hint": 'Przesun dwoma palcami, aby zmienic sekcje.',
+    "config.confirm": 'Potwierdz',
+    "config.section_general_hint": 'Foldery robocze i tlumaczenie automatyczne',
+    "config.section_language_hint": 'Jezyk interfejsu',
+    "config.section_appearance_hint": 'Gestosc, akcent boczny i krycie',
+    "config.section_notifications_hint": 'Powiadomienia systemowe i wprowadzanie dotykowe',
+    "config.section_fonts_hint": 'Stan czcionek i reczne pobieranie',
+    "config.reset_hint": 'Przywraca ustawienia domyslne',
     "app.compile_project": "Skompiluj projekt",
     "app.install_as_package": "Zainstaluj jako pakiet",
     "app.install_folder_as_package": "Zainstaluj folder jako pakiet",
@@ -1316,6 +1370,15 @@ CURATED["pl"] = {
 }
 
 CURATED["tr"] = {
+    "config.section_notifications": 'Bildirimler ve uyarilar',
+    "config.touch_mode_hint": 'Bolumu degistirmek icin iki parmakla kaydirin.',
+    "config.confirm": 'Onayla',
+    "config.section_general_hint": 'Calisma klasorleri ve otomatik ceviri',
+    "config.section_language_hint": 'Arayuz dili',
+    "config.section_appearance_hint": 'Yogunluk, yan vurgu ve opaklik',
+    "config.section_notifications_hint": 'Sistem bildirimleri ve dokunmatik giris',
+    "config.section_fonts_hint": 'Yazi tipi durumu ve el ile indirme',
+    "config.reset_hint": 'Ayarlari varsayilan degerlere dondurur',
     "app.compile_project": "Projeyi derle",
     "app.install_as_package": "Paket olarak kur",
     "app.install_folder_as_package": "Klas\u00f6r\u00fc paket olarak kur",
@@ -1532,6 +1595,15 @@ CURATED["tr"] = {
 }
 
 CURATED["ru"] = {
+    "config.section_notifications": 'Уведомления и оповещения',
+    "config.touch_mode_hint": 'Смахните двумя пальцами, чтобы сменить раздел.',
+    "config.confirm": 'Подтвердить',
+    "config.section_general_hint": 'Рабочие папки и автоперевод',
+    "config.section_language_hint": 'Язык интерфейса',
+    "config.section_appearance_hint": 'Плотность, боковой акцент и прозрачность',
+    "config.section_notifications_hint": 'Системные уведомления и сенсорный ввод',
+    "config.section_fonts_hint": 'Состояние шрифтов и ручная загрузка',
+    "config.reset_hint": 'Возвращает настройки по умолчанию',
     "app.compile_project": "\u0421\u043a\u043e\u043c\u043f\u0438\u043b\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043f\u0440\u043e\u0435\u043a\u0442",
     "app.install_as_package": "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043a\u0430\u043a \u043f\u0430\u043a\u0435\u0442",
     "app.install_folder_as_package": "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u0430\u043f\u043a\u0443 \u043a\u0430\u043a \u043f\u0430\u043a\u0435\u0442",
@@ -1748,6 +1820,15 @@ CURATED["ru"] = {
 }
 
 CURATED["ja"] = {
+    "config.section_notifications": '通知とアラート',
+    "config.touch_mode_hint": '2本指でスワイプしてセクションを切り替えます。',
+    "config.confirm": '確定',
+    "config.section_general_hint": '作業フォルダーと自動翻訳',
+    "config.section_language_hint": 'インターフェースの言語',
+    "config.section_appearance_hint": '密度、サイドのアクセント、不透明度',
+    "config.section_notifications_hint": 'システム通知とタッチ入力',
+    "config.section_fonts_hint": 'フォントの状態と手動ダウンロード',
+    "config.reset_hint": '設定を既定値に戻します',
     "app.compile_project": "\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u30b3\u30f3\u30d1\u30a4\u30eb",
     "app.install_as_package": "\u30d1\u30c3\u30b1\u30fc\u30b8\u3068\u3057\u3066\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb",
     "app.install_folder_as_package": "\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u30d1\u30c3\u30b1\u30fc\u30b8\u3068\u3057\u3066\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb",
@@ -1964,6 +2045,15 @@ CURATED["ja"] = {
 }
 
 CURATED["ko"] = {
+    "config.section_notifications": '알림 및 경고',
+    "config.touch_mode_hint": '두 손가락으로 밀어 섹션을 전환합니다.',
+    "config.confirm": '확인',
+    "config.section_general_hint": '작업 폴더 및 자동 번역',
+    "config.section_language_hint": '인터페이스 언어',
+    "config.section_appearance_hint": '밀도, 측면 강조 및 불투명도',
+    "config.section_notifications_hint": '시스템 알림 및 터치 입력',
+    "config.section_fonts_hint": '글꼴 상태 및 수동 다운로드',
+    "config.reset_hint": '설정을 기본값으로 되돌립니다',
     "app.compile_project": "\ud504\ub85c\uc81d\ud2b8 \ucef4\ud30c\uc77c",
     "app.install_as_package": "\ud328\ud0a4\uc9c0\ub85c \uc124\uce58",
     "app.install_folder_as_package": "\ud3f4\ub354\ub97c \ud328\ud0a4\uc9c0\ub85c \uc124\uce58",
@@ -2180,6 +2270,15 @@ CURATED["ko"] = {
 }
 
 CURATED["zh"] = {
+    "config.section_notifications": '通知与提醒',
+    "config.touch_mode_hint": '用双指滑动切换分区。',
+    "config.confirm": '确认',
+    "config.section_general_hint": '工作路径与自动翻译',
+    "config.section_language_hint": '界面语言',
+    "config.section_appearance_hint": '密度、侧边强调与不透明度',
+    "config.section_notifications_hint": '系统通知与触摸输入',
+    "config.section_fonts_hint": '字体状态与手动下载',
+    "config.reset_hint": '将设置恢复为默认值',
     "app.compile_project": "\u7f16\u8bd1\u9879\u76ee",
     "app.install_as_package": "\u4f5c\u4e3a\u5305\u5b89\u88c5",
     "app.install_folder_as_package": "\u5c06\u6587\u4ef6\u5939\u4f5c\u4e3a\u5305\u5b89\u88c5",
@@ -2396,6 +2495,15 @@ CURATED["zh"] = {
 }
 
 CURATED["ar"] = {
+    "config.section_notifications": 'الإشعارات والتنبيهات',
+    "config.touch_mode_hint": 'اسحب بإصبعين للتبديل بين الأقسام.',
+    "config.confirm": 'تأكيد',
+    "config.section_general_hint": 'مجلدات العمل والترجمة التلقائية',
+    "config.section_language_hint": 'لغة الواجهة',
+    "config.section_appearance_hint": 'الكثافة ولون التمييز الجانبي والعتامة',
+    "config.section_notifications_hint": 'إشعارات النظام والإدخال باللمس',
+    "config.section_fonts_hint": 'حالة الخطوط والتنزيل اليدوي',
+    "config.reset_hint": 'يعيد الإعدادات إلى قيمها الافتراضية',
     "app.compile_project": "\u062a\u062c\u0645\u064a\u0639 \u0627\u0644\u0645\u0634\u0631\u0648\u0639",
     "app.install_as_package": "\u0627\u0644\u062a\u062b\u0628\u064a\u062a \u0643\u062d\u0632\u0645\u0629",
     "app.install_folder_as_package": "\u062a\u062b\u0628\u064a\u062a \u0627\u0644\u0645\u062c\u0644\u062f \u0643\u062d\u0632\u0645\u0629",

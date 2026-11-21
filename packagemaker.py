@@ -27,7 +27,7 @@ try:
     from PyQt6 import QtWidgets, QtGui, QtCore
     from PyQt6.QtWidgets import (
         QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-        QComboBox, QFileDialog, QDialog, QSizePolicy, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget, QSlider, QFrame, QGraphicsDropShadowEffect, QStatusBar
+        QComboBox, QFileDialog, QDialog, QSizePolicy, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget, QFrame, QGraphicsDropShadowEffect, QStatusBar
     )
     from PyQt6.QtGui import QFont, QIcon, QColor
     from PyQt6.QtGui import QPixmap
@@ -261,10 +261,10 @@ from lib.design_tokens import (
     TEXT,
     WINDOW_BG,
     WINDOW_RADIUS,
-    uwp_button_qss,
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
+from lib.settings_panel import SettingsPanel
 from lib.splash_window import IntegratedSplash
 from lib.window_manager_bridge import install_window_manager_bridges
 from lib.immersive_titlebar import install_immersive_titlebar
@@ -277,7 +277,7 @@ from lib.report import Reporter, classify_build_message
 LeviathanDialog = AlertDialog
 from lib.moonFixWizard import MoonFixWizard
 from lib.github_login_landing import GitHubLoginLanding
-from lib.i18n import i18n, tr, system_default_language, get_available_languages
+from lib.i18n import i18n, tr, system_default_language
 from lib.linux_icon_handler import ensure_linux_icon_support
 from lib.pm_data import get_pm_data, load_merged_app_config
 from lib.fluent_theme import (
@@ -285,7 +285,6 @@ from lib.fluent_theme import (
     BTN_STYLES,
     FluentCheckBox as QCheckBox,
     applyget,
-    conf_field_stylesheet,
     preferred_mono_font,
     preferred_ui_font,
     qss_value,
@@ -1467,6 +1466,9 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, "sidebar"):
             self.sidebar.setStyleSheet(sidebar_stylesheet(dark, accent))
 
+        if hasattr(self, "settings_panel"):
+            self.settings_panel.set_accent(accent)
+
         if hasattr(self, "sidebar_collapse_toggle"):
             set_qss(self.sidebar_collapse_toggle, 'packagemaker_067', append=False)
 
@@ -2494,36 +2496,51 @@ class PackageTodoGUI(QMainWindow):
         set_qss(lbl, 'packagemaker_038', append=False)
         return lbl
 
-    def _conf_form_label(self, text):
-        lbl = QLabel(text)
-        set_qss(lbl, 'packagemaker_039', append=False)
-        lbl.setMinimumWidth(160)
-        return lbl
-
     def init_config_tab(self, parent_widget=None):
-        """Pestaña de configuración: idioma, rutas, apariencia y data/pm.data."""
+        """Configuración en tarjetas con navegación en cascada (Fase 3.2).
+
+        La barra superior ya no lleva Guardar/Restablecer: el guardado es
+        automático y ``Restablecer`` es una tarjeta más. ``display_mode`` y el
+        editor de código desaparecen de la interfaz (la ventana se queda en el
+        diseño de cristal por defecto).
+        """
         target = parent_widget
-        # Enable styled background for proper inheritance
         target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        # Don't set individual background - let it inherit from parent
         outer = QVBoxLayout(target)
         outer.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
-        outer.setSpacing(10)
+        outer.setSpacing(8)
 
-        # Barra de acciones superior (estilo macOS): título + Guardar/Restablecer.
-        self.conf_btn_save = make_action_button(
-            tr("config.save"), "primary", get_icon("save", 16)
-        )
-        self.conf_btn_save.clicked.connect(self._save_app_config_compact)
-        self.conf_reset_btn = make_action_button(
-            tr("config.reset"), "destructive", get_icon("restart", 16)
-        )
-        self.conf_reset_btn.clicked.connect(self._reset_config)
-        self.config_action_bar, self.conf_header = install_page_action_bar(
-            outer,
-            tr("config.title"),
-            [self.conf_reset_btn, self.conf_btn_save],
-        )
+        store = get_pm_data()
+        user = {k: store.get_user(k) for k in (
+            "language", "auto_translate", "base_dir", "fluthin_apps",
+            "ui_density", "sidebar_accent_width", "card_opacity",
+            "notifications_enabled", "touch_mode",
+        )}
+        user["base_dir"] = user.get("base_dir") or BASE_DIR
+        user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
+
+        self.settings_panel = SettingsPanel(self, user)
+        self.settings_panel.settingsChanged.connect(self._on_settings_changed)
+        self.settings_panel.resetRequested.connect(self._reset_config)
+        self.settings_panel.fontsRequested.connect(self._download_ui_fonts)
+        self.settings_panel.languageChanged.connect(self._on_config_language_changed)
+        outer.addWidget(self.settings_panel, 1)
+
+        widgets = self.settings_panel.widgets
+        self.conf_base_dir = widgets["conf_base_dir"]
+        self.conf_fluthin_dir = widgets["conf_fluthin_dir"]
+        self.conf_auto_translate = widgets["conf_auto_translate"]
+        self.conf_ui_density = widgets["conf_ui_density"]
+        self.conf_sidebar_accent_slider = widgets["conf_sidebar_accent_slider"]
+        self.conf_card_opacity_slider = widgets["conf_card_opacity_slider"]
+        self.conf_notifications = widgets["conf_notifications"]
+        self.conf_touch_mode = widgets["conf_touch_mode"]
+        self.conf_fonts_btn = widgets["conf_fonts_btn"]
+        self.conf_fonts_status = widgets["conf_fonts_status"]
+        self.conf_fonts_labels = getattr(self.settings_panel, "conf_fonts_labels", {})
+        self.conf_header = self.settings_panel.header.capsule
+        self._config_language = str(user.get("language") or "es")
+        self._config_tr_labels = []
 
         self.conf_restart_banner = QFrame()
         self.conf_restart_banner.setVisible(False)
@@ -2539,234 +2556,26 @@ class PackageTodoGUI(QMainWindow):
         self.conf_restart_btn.setMinimumHeight(32)
         self.conf_restart_btn.clicked.connect(self._restart_for_config)
         rb_layout.addWidget(self.conf_restart_btn)
-
-        self._config_tr_labels = []
-        self._config_tr_labels.append((self.conf_restart_lbl, "config.restart_banner"))
-        self._config_tr_labels.append((self.conf_restart_btn, "config.restart_btn"))
-        self._config_tr_labels.append((self.conf_btn_save, "config.save"))
-        self._config_tr_labels.append((self.conf_reset_btn, "config.reset"))
         outer.addWidget(self.conf_restart_banner)
 
-        scroll = QtWidgets.QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        set_qss(scroll, 'packagemaker_043', append=False)
-        scroll_content = QWidget()
-        set_qss(scroll_content, 'packagemaker_044', append=False)
-        layout = QVBoxLayout(scroll_content)
-        layout.setSpacing(10)
+        self.settings_panel.set_accent(str(get_accent_color()))
 
-        store = get_pm_data()
-        user = {k: store.get_user(k) for k in (
-            "language", "auto_translate", "base_dir", "fluthin_apps",
-            "display_mode", "ui_density", "blur_intensity", "window_radius",
-            "sidebar_accent_width", "card_opacity", "notifications_enabled",
-            "default_editor", "touch_mode",
-        )}
-        user["base_dir"] = user.get("base_dir") or BASE_DIR
-        user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
-
-        def add_section(key):
-            lbl = self._conf_section_title(tr(key))
-            self._config_tr_labels.append((lbl, key))
-            layout.addWidget(lbl)
-
-        def add_row(label_key, widget):
-            row = QHBoxLayout()
-            lbl = self._conf_form_label(tr(label_key))
-            self._config_tr_labels.append((lbl, label_key))
-            row.addWidget(lbl)
-            row.addWidget(widget, 1)
-            layout.addLayout(row)
-
-        def add_hint(key):
-            hint = QLabel(tr(key))
-            set_qss(hint, 'packagemaker_050', append=False)
-            hint.setWordWrap(True)
-            self._config_tr_labels.append((hint, key))
-            layout.addWidget(hint)
-
-        def add_slider_row(label_key, key, minimum, maximum, value, suffix=""):
-            """Fila con etiqueta + deslizador + valor numérico en vivo."""
-            wrap = QWidget()
-            row = QHBoxLayout(wrap)
-            row.setContentsMargins(0, 0, 0, 0)
-            row.setSpacing(10)
-            slider = QSlider(Qt.Orientation.Horizontal)
-            slider.setMinimum(minimum)
-            slider.setMaximum(maximum)
-            slider.setValue(int(value))
-            slider.setFixedHeight(24)
-            value_lbl = QLabel(f"{int(value)}{suffix}")
-            value_lbl.setMinimumWidth(46)
-            value_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            set_qss(value_lbl, 'packagemaker_085', append=False)
-            slider.valueChanged.connect(
-                lambda v, l=value_lbl, s=suffix: l.setText(f"{int(v)}{s}")
-            )
-            row.addWidget(slider, 1)
-            row.addWidget(value_lbl)
-            add_row(label_key, wrap)
-            return slider
-
-        add_section("config.section_general")
-        self.conf_base_dir = QLineEdit(user["base_dir"])
-        set_qss(self.conf_base_dir, conf_field_stylesheet(), append=False)
-        btn_browse_proj = QPushButton(tr("config.browse"))
-        btn_browse_proj.setFixedSize(150, 40)
-        btn_browse_proj.setCursor(Qt.CursorShape.PointingHandCursor)
-        set_qss(btn_browse_proj, 'packagemaker_046', append=False)
-        btn_browse_proj.clicked.connect(self._browse_config_dir)
-        icon_button(btn_browse_proj, "folder", 16)
-        self._config_tr_labels.append((btn_browse_proj, "config.browse"))
-        row_proj = QHBoxLayout()
-        row_proj.addWidget(self.conf_base_dir, 1)
-        row_proj.addWidget(btn_browse_proj)
-        wrap_proj = QWidget()
-        wrap_proj.setLayout(row_proj)
-        add_row("config.projects_path", wrap_proj)
-
-        self.conf_fluthin_dir = QLineEdit(user["fluthin_apps"])
-        set_qss(self.conf_fluthin_dir, conf_field_stylesheet(), append=False)
-        btn_browse_fl = QPushButton(tr("config.browse"))
-        btn_browse_fl.setFixedSize(150, 40)
-        btn_browse_fl.clicked.connect(self._browse_fluthin_dir)
-        icon_button(btn_browse_fl, "folder", 16)
-        self._config_tr_labels.append((btn_browse_fl, "config.browse"))
-        row_fl = QHBoxLayout()
-        row_fl.addWidget(self.conf_fluthin_dir, 1)
-        row_fl.addWidget(btn_browse_fl)
-        wrap_fl = QWidget()
-        wrap_fl.setLayout(row_fl)
-        add_row("config.fluthin_path", wrap_fl)
-
-        self.conf_default_editor = QLineEdit(user.get("default_editor") or "")
-        self.conf_default_editor.setPlaceholderText(tr("config.editor_placeholder"))
-        set_qss(self.conf_default_editor, conf_field_stylesheet(), append=False)
-        add_row("config.default_editor", self.conf_default_editor)
-
-        add_section("config.section_language")
-        self.conf_lang_combo = QComboBox()
-        for code, name in get_available_languages():
-            self.conf_lang_combo.addItem(name, code)
-        idx_lang = self.conf_lang_combo.findData(user.get("language", "es"))
-        if idx_lang >= 0:
-            self.conf_lang_combo.setCurrentIndex(idx_lang)
-        set_qss(self.conf_lang_combo, conf_field_stylesheet(), append=False)
-        add_row("config.language", self.conf_lang_combo)
-
-        self.conf_auto_translate = QCheckBox(tr("config.auto_translate"))
-        self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
-        self._config_tr_labels.append((self.conf_auto_translate, "config.auto_translate"))
-        layout.addWidget(self.conf_auto_translate)
-        add_hint("config.auto_translate_hint")
-
-        add_section("config.section_appearance")
-        self.conf_display_mode = QComboBox()
-        for name in ("Sólido", "Acrylic", "GhostBlur (Cristal)"):
-            self.conf_display_mode.addItem(name, name)
-        idx_dm = self.conf_display_mode.findData(
-            str(user.get("display_mode") or "GhostBlur (Cristal)")
-        )
-        if idx_dm >= 0:
-            self.conf_display_mode.setCurrentIndex(idx_dm)
-        set_qss(self.conf_display_mode, conf_field_stylesheet(), append=False)
-        add_row("config.display_mode", self.conf_display_mode)
-
-        self.conf_ui_density = QComboBox()
-        self.conf_ui_density.addItem(tr("config.density_normal"), "normal")
-        self.conf_ui_density.addItem(tr("config.density_compact"), "compact")
-        idx_den = self.conf_ui_density.findData(str(user.get("ui_density") or "normal"))
-        if idx_den >= 0:
-            self.conf_ui_density.setCurrentIndex(idx_den)
-        set_qss(self.conf_ui_density, conf_field_stylesheet(), append=False)
-        add_row("config.ui_density", self.conf_ui_density)
-
-        self.conf_sidebar_accent_slider = add_slider_row(
-            "config.sidebar_accent", "sidebar_accent_width", 0, 8,
-            user.get("sidebar_accent_width", 3), " px",
-        )
-        self.conf_card_opacity_slider = add_slider_row(
-            "config.card_opacity", "card_opacity", 0, 40,
-            int(float(user.get("card_opacity", 0.08)) * 100), " %",
-        )
-        add_hint("config.personalization_hint")
-
-        add_section("config.section_notifications")
-        self.conf_notifications = QCheckBox(tr("config.notifications"))
-        self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
-        self._config_tr_labels.append((self.conf_notifications, "config.notifications"))
-        layout.addWidget(self.conf_notifications)
-
-        self.conf_touch_mode = QCheckBox(tr("config.touch_mode"))
-        self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
-        self._config_tr_labels.append((self.conf_touch_mode, "config.touch_mode"))
-        layout.addWidget(self.conf_touch_mode)
-        add_hint("config.touch_mode_hint")
-
-        add_section("config.section_system")
-        ro = store.get_readonly()
-        sys_grid = QGridLayout()
-        sys_grid.setSpacing(6)
-        ro_items = (
-            ("app_version", ro.get("app_version", "")),
-            ("is_compiled", tr("common.yes") if ro.get("is_compiled") else tr("common.no")),
-            ("platform_os", ro.get("platform_os", "")),
-            ("python_version", ro.get("python_version", "")),
-            ("install_id", ro.get("install_id", "")),
-            ("data_file", ro.get("data_file", "")),
-        )
-        for i, (name, val) in enumerate(ro_items):
-            n_lbl = QLabel(name)
-            set_qss(n_lbl, 'packagemaker_084', append=False)
-            v_lbl = QLabel(str(val))
-            set_qss(v_lbl, 'packagemaker_085', append=False)
-            v_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            v_lbl.setWordWrap(True)
-            sys_grid.addWidget(n_lbl, i, 0)
-            sys_grid.addWidget(v_lbl, i, 1)
-        layout.addLayout(sys_grid)
-
-        add_section("config.section_fonts")
-        fonts_grid = QGridLayout()
-        fonts_grid.setSpacing(6)
-        self.conf_fonts_labels = {}
+    def _on_config_language_changed(self, code: str) -> None:
+        """Selección única de idioma: se aplica al instante."""
+        if not code:
+            return
+        self._config_language = str(code)
         try:
-            from lib.font_manager import available_fonts_report
+            prev = i18n.get_current_lang()
+            if code != prev:
+                i18n.load_translation(code)
+            self.apply_ui_language()
+        except Exception as exc:
+            print(f"[i18n] {exc}")
 
-            for row, (key, info) in enumerate(available_fonts_report().items()):
-                name_lbl = QLabel(info["family"])
-                set_qss(name_lbl, 'packagemaker_084', append=False)
-                state_lbl = QLabel(tr("config.fonts_cached") if info["cached"] else tr("config.fonts_missing"))
-                set_qss(state_lbl, 'packagemaker_085', append=False)
-                self.conf_fonts_labels[key] = state_lbl
-                fonts_grid.addWidget(name_lbl, row, 0)
-                fonts_grid.addWidget(state_lbl, row, 1)
-            layout.addLayout(fonts_grid)
-        except Exception:
-            self.conf_fonts_labels = {}
-
-        fonts_row = QHBoxLayout()
-        fonts_row.setSpacing(10)
-        self.conf_fonts_btn = QPushButton(tr("config.fonts_download"))
-        self.conf_fonts_btn.setFixedHeight(36)
-        self.conf_fonts_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.conf_fonts_btn.setStyleSheet(uwp_button_qss(get_accent_color()))
-        icon_button(self.conf_fonts_btn, "download", 16)
-        self.conf_fonts_btn.clicked.connect(self._download_ui_fonts)
-        self._config_tr_labels.append((self.conf_fonts_btn, "config.fonts_download"))
-        fonts_row.addWidget(self.conf_fonts_btn)
-        fonts_row.addStretch()
-        layout.addLayout(fonts_row)
-
-        self.conf_fonts_status = QLabel("")
-        set_qss(self.conf_fonts_status, 'packagemaker_050', append=False)
-        self.conf_fonts_status.setWordWrap(True)
-        layout.addWidget(self.conf_fonts_status)
-
-        layout.addStretch()
-        scroll.setWidget(scroll_content)
-        outer.addWidget(scroll, 1)
+    def _on_settings_changed(self) -> None:
+        """Guardado automático disparado por cualquier cambio en el panel."""
+        self._save_app_config_compact(quiet=True)
 
     def _download_ui_fonts(self) -> None:
         """Descarga las fuentes de la interfaz y refresca su estado."""
@@ -2859,53 +2668,42 @@ class PackageTodoGUI(QMainWindow):
             LeviathanDialog.launch(self, tr("config.reset"), tr("app.error_reset").format(error=e), mode="error")
 
     def _refresh_config_form(self) -> None:
-        """Actualiza los campos del formulario con los valores por defecto"""
+        """Refresca el panel con los valores guardados (tras restablecer)."""
         try:
             store = get_pm_data()
             user = {k: store.get_user(k) for k in (
                 "language", "auto_translate", "base_dir", "fluthin_apps",
-                "display_mode", "ui_density", "blur_intensity", "window_radius",
-                "sidebar_accent_width", "card_opacity", "notifications_enabled",
-                "default_editor",
+                "ui_density", "sidebar_accent_width", "card_opacity",
+                "notifications_enabled", "touch_mode",
             )}
-            user["base_dir"] = user.get("base_dir") or BASE_DIR
-            user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
-
-            # Actualizar campos
-            self.conf_base_dir.setText(user["base_dir"])
-            self.conf_fluthin_dir.setText(user["fluthin_apps"])
-            if hasattr(self, "conf_default_editor"):
-                self.conf_default_editor.setText(user.get("default_editor") or "")
-
-            idx_lang = self.conf_lang_combo.findData(user.get("language", "es"))
-            if idx_lang >= 0:
-                self.conf_lang_combo.setCurrentIndex(idx_lang)
-
-            self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
-
-            if hasattr(self, "conf_display_mode"):
-                idx_dm = self.conf_display_mode.findData(str(user.get("display_mode") or ""))
-                if idx_dm >= 0:
-                    self.conf_display_mode.setCurrentIndex(idx_dm)
-            if hasattr(self, "conf_ui_density"):
+            panel = getattr(self, "settings_panel", None)
+            if panel is not None:
+                panel._loading = True
+            try:
+                self.conf_base_dir.setText(user.get("base_dir") or BASE_DIR)
+                self.conf_fluthin_dir.setText(user.get("fluthin_apps") or Fluthin_APPS)
+                self.conf_auto_translate.setChecked(bool(user.get("auto_translate", True)))
                 idx_den = self.conf_ui_density.findData(str(user.get("ui_density") or "normal"))
                 if idx_den >= 0:
                     self.conf_ui_density.setCurrentIndex(idx_den)
-            if hasattr(self, "conf_notifications"):
                 self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
-            if hasattr(self, "conf_touch_mode"):
                 self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
-            if hasattr(self, "conf_sidebar_accent_slider"):
-                self.conf_sidebar_accent_slider.setValue(int(user.get("sidebar_accent_width", 3)))
-            if hasattr(self, "conf_card_opacity_slider"):
+                self.conf_sidebar_accent_slider.setValue(
+                    int(user.get("sidebar_accent_width", 3) or 0)
+                )
                 self.conf_card_opacity_slider.setValue(
                     int(float(user.get("card_opacity", 0.08)) * 100)
                 )
+                self._config_language = str(user.get("language") or "es")
+                if panel is not None:
+                    for code, row in getattr(panel, "_language_rows", {}).items():
+                        row.set_checked(code == self._config_language)
+            finally:
+                if panel is not None:
+                    panel._loading = False
 
-            # Aplicar cambios
             self._apply_leviathan_and_personalization()
             self.apply_theme()
-
         except Exception as e:
             print(f"Error updating form: {e}")
 
@@ -2915,45 +2713,30 @@ class PackageTodoGUI(QMainWindow):
         restart_application()
 
     def _collect_config_from_form(self) -> dict:
-        cfg = {
+        return {
             "BASE_DIR": self.conf_base_dir.text().strip() or BASE_DIR,
             "Fluthin_APPS": self.conf_fluthin_dir.text().strip() or Fluthin_APPS,
-            "LANGUAGE": self.conf_lang_combo.currentData() or "es",
+            "LANGUAGE": self._config_language,
             "auto_translate": self.conf_auto_translate.isChecked(),
             "notifications_enabled": bool(
                 getattr(self, "conf_notifications", None)
                 and self.conf_notifications.isChecked()
             ),
         }
-        return cfg
 
     def _collect_user_settings_from_form(self) -> dict:
-        """Ajustes de usuario (apariencia/editor) leídos del formulario."""
-        settings = {}
-        if hasattr(self, "conf_display_mode"):
-            settings["display_mode"] = self.conf_display_mode.currentData()
-        if hasattr(self, "conf_ui_density"):
-            settings["ui_density"] = self.conf_ui_density.currentData()
-        if hasattr(self, "conf_default_editor"):
-            settings["default_editor"] = self.conf_default_editor.text().strip()
-        if hasattr(self, "conf_sidebar_accent_slider"):
-            settings["sidebar_accent_width"] = int(self.conf_sidebar_accent_slider.value())
-        if hasattr(self, "conf_card_opacity_slider"):
-            settings["card_opacity"] = round(self.conf_card_opacity_slider.value() / 100.0, 3)
-        if hasattr(self, "conf_touch_mode"):
-            settings["touch_mode"] = bool(self.conf_touch_mode.isChecked())
-        return settings
+        """Ajustes de usuario leídos del panel de tarjetas."""
+        return {
+            "ui_density": self.conf_ui_density.currentData(),
+            "sidebar_accent_width": int(self.conf_sidebar_accent_slider.value()),
+            "card_opacity": round(self.conf_card_opacity_slider.value() / 100.0, 3),
+            "touch_mode": bool(self.conf_touch_mode.isChecked()),
+        }
 
     def _refresh_config_tab_labels(self):
-        if hasattr(self, "conf_header"):
-            self.conf_header.setText(tr("config.title"))
-        for widget, key in getattr(self, "_config_tr_labels", []):
-            if isinstance(widget, QCheckBox):
-                widget.setText(tr(key))
-            elif isinstance(widget, QPushButton):
-                widget.setText(tr(key))
-            else:
-                widget.setText(tr(key))
+        panel = getattr(self, "settings_panel", None)
+        if panel is not None:
+            panel.retranslate()
 
     def _browse_config_dir(self):
         folder = QFileDialog.getExistingDirectory(
@@ -2969,7 +2752,13 @@ class PackageTodoGUI(QMainWindow):
         if folder:
             self.conf_fluthin_dir.setText(folder)
 
-    def _save_app_config_compact(self):
+    def _save_app_config_compact(self, quiet: bool = False):
+        """Persiste y aplica el panel; ``quiet`` omite los avisos modales.
+
+        El guardado es automático (bugs.txt Fase 3.2): un modal por cada
+        cambio de ajuste sería inaceptable, así que el aviso sólo aparece
+        cuando la acción viene de un botón explícito.
+        """
         global APP_CONFIG, BASE_DIR, Fluthin_APPS
         new_config = self._collect_config_from_form()
         lang = new_config["LANGUAGE"]
@@ -2999,8 +2788,11 @@ class PackageTodoGUI(QMainWindow):
             # Si hay ajustes que solo se aplican al reiniciar, mostrar el aviso.
             self._update_restart_banner()
 
-            LeviathanDialog.launch(self, tr("config.title"), tr("config.saved_ok"), mode="success")
-        else:
+            if not quiet:
+                LeviathanDialog.launch(
+                    self, tr("config.title"), tr("config.saved_ok"), mode="success"
+                )
+        elif not quiet:
             LeviathanDialog.launch(
                 self, tr("config.title"), tr("config.saved_error"), mode="error"
             )
@@ -3207,7 +2999,34 @@ class PackageTodoGUI(QMainWindow):
 
         layout.addLayout(grid)
 
+        # Información del sistema (movida desde Configuración, Fase 3.2).
+        layout.addWidget(self._conf_section_title(tr("config.section_system")))
+        layout.addLayout(self._build_system_info_grid())
         layout.addStretch()
+
+    def _build_system_info_grid(self) -> QGridLayout:
+        """Datos de solo lectura del ``pm.data``, en rejilla etiqueta/valor."""
+        ro = get_pm_data().get_readonly()
+        grid = QGridLayout()
+        grid.setSpacing(6)
+        items = (
+            ("app_version", ro.get("app_version", "")),
+            ("is_compiled", tr("common.yes") if ro.get("is_compiled") else tr("common.no")),
+            ("platform_os", ro.get("platform_os", "")),
+            ("python_version", ro.get("python_version", "")),
+            ("install_id", ro.get("install_id", "")),
+            ("data_file", ro.get("data_file", "")),
+        )
+        for row, (name, value) in enumerate(items):
+            name_lbl = QLabel(name)
+            set_qss(name_lbl, 'packagemaker_084', append=False)
+            value_lbl = QLabel(str(value))
+            set_qss(value_lbl, 'packagemaker_085', append=False)
+            value_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            value_lbl.setWordWrap(True)
+            grid.addWidget(name_lbl, row, 0)
+            grid.addWidget(value_lbl, row, 1)
+        return grid
 
     def _open_external_url(self, url: str) -> None:
         """Abre una URL en el navegador del sistema."""
