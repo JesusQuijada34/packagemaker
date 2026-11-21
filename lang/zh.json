@@ -726,5 +726,9 @@
     "show": "显示",
     "hide": "隐藏",
     "quit": "退出"
+  },
+  "startup": {
+    "internal_error_title": "内部错误",
+    "internal_error_body": "Package Maker 无法完成启动。"
   }
 }

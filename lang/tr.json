@@ -726,5 +726,9 @@
     "show": "Goster",
     "hide": "Gizle",
     "quit": "Cikis"
+  },
+  "startup": {
+    "internal_error_title": "Dahili hata",
+    "internal_error_body": "Package Maker başlatmayı tamamlayamadı."
   }
 }

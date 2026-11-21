@@ -543,6 +543,37 @@ def splash_container_stylesheet(accent: str = ACCENT) -> str:
     )
 
 
+def error_container_stylesheet(accent: str = ACCENT) -> str:
+    """Ventana solitaria de error de arranque (bugs.txt Fase 2.2).
+
+    El fondo de acento del splash no sirve para leer un traceback; aquí el
+    acento queda como filete superior y el resto usa la superficie oscura del
+    tema con el detalle en monoespaciada.
+    """
+    return (
+        "QWidget#StartupErrorWindow {"
+        f" background-color:{SURFACE}; border-top:3px solid {accent}; }}"
+        " QFrame#StartupErrorBody {"
+        f" background-color:{SURFACE}; border:none; }}"
+        " QLabel#StartupErrorTitle {"
+        f" color:{TEXT}; font-size:22px; font-weight:600;"
+        " font-family:'Segoe UI Variable','Segoe UI',sans-serif; }"
+        " QLabel#StartupErrorDetail {"
+        f" color:{TEXT_DIM}; font-size:12px;"
+        " font-family:'Cascadia Mono','Consolas',monospace;"
+        f" background-color:{WINDOW_BG}; border:1px solid {BORDER};"
+        f" border-radius:{CONTROL_RADIUS}px; padding:12px; }}"
+        " QScrollArea#StartupErrorScroll {"
+        " background:transparent; border:none; }"
+        " QPushButton#StartupErrorClose {"
+        f" background-color:{accent}; color:#ffffff; border:none;"
+        f" border-radius:{CONTROL_RADIUS}px; padding:8px 28px;"
+        " font-size:13px; font-weight:600; }"
+        " QPushButton#StartupErrorClose:hover {"
+        f" background-color:{accent}; }}"
+    )
+
+
 def conf_field_stylesheet(readonly=False):
     values = {
         "SURFACE": SURFACE,

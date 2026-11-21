@@ -726,5 +726,9 @@
     "show": "Mostrar",
     "hide": "Ocultar",
     "quit": "Sair"
+  },
+  "startup": {
+    "internal_error_title": "Erro interno",
+    "internal_error_body": "O Package Maker não conseguiu concluir a inicialização."
   }
 }

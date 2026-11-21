@@ -726,5 +726,9 @@
     "show": "Mostra",
     "hide": "Nascondi",
     "quit": "Esci"
+  },
+  "startup": {
+    "internal_error_title": "Errore interno",
+    "internal_error_body": "Package Maker non ha potuto completare l'avvio."
   }
 }

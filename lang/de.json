@@ -726,5 +726,9 @@
     "show": "Anzeigen",
     "hide": "Ausblenden",
     "quit": "Beenden"
+  },
+  "startup": {
+    "internal_error_title": "Interner Fehler",
+    "internal_error_body": "Package Maker konnte den Start nicht abschließen."
   }
 }

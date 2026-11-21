@@ -726,5 +726,9 @@
     "show": "Show",
     "hide": "Hide",
     "quit": "Quit"
+  },
+  "startup": {
+    "internal_error_title": "Internal error",
+    "internal_error_body": "Package Maker could not complete startup."
   }
 }

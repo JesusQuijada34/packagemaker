@@ -726,5 +726,9 @@
     "show": "Afficher",
     "hide": "Masquer",
     "quit": "Quitter"
+  },
+  "startup": {
+    "internal_error_title": "Erreur interne",
+    "internal_error_body": "Package Maker n'a pas pu terminer le démarrage."
   }
 }

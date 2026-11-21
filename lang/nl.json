@@ -726,5 +726,9 @@
     "show": "Tonen",
     "hide": "Verbergen",
     "quit": "Afsluiten"
+  },
+  "startup": {
+    "internal_error_title": "Interne fout",
+    "internal_error_body": "Package Maker kon de start niet voltooien."
   }
 }

@@ -726,5 +726,9 @@
     "show": "Показать",
     "hide": "Скрыть",
     "quit": "Выход"
+  },
+  "startup": {
+    "internal_error_title": "Внутренняя ошибка",
+    "internal_error_body": "Package Maker не удалось завершить запуск."
   }
 }

@@ -726,5 +726,9 @@
     "show": "Pokaz",
     "hide": "Ukryj",
     "quit": "Wyjdz"
+  },
+  "startup": {
+    "internal_error_title": "Błąd wewnętrzny",
+    "internal_error_body": "Package Maker nie mógł dokończyć uruchamiania."
   }
 }

@@ -267,6 +267,7 @@ from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
 from lib.splash_window import IntegratedSplash
 from lib.window_manager_bridge import install_window_manager_bridges
+from lib.immersive_titlebar import install_immersive_titlebar
 from lib.ios_progress_dialog import show_ios_progress
 from lib.alert_dialog import AlertDialog
 from lib.report import Reporter, classify_build_message
@@ -718,6 +719,9 @@ class PackageTodoGUI(QMainWindow):
         # Puentes con el gestor de ventanas del SO: arrastrar, redimensionar
         # por bordes, doble clic para maximizar, menú del sistema y snap.
         self.wm_bridge = install_window_manager_bridges(self, self.titlebar)
+        # Triple clic en la barra: primer plano + barra deslizante + botón de
+        # salir de pantalla completa (bugs.txt Fase 2.2).
+        self.immersive_controller = install_immersive_titlebar(self, self.titlebar)
 
         # Content Container (Sidebar + Stack)
         self.content_container = QWidget()
@@ -4591,6 +4595,27 @@ def main():
     current_lang = config.get("LANGUAGE") or system_default_language()
     auto_translate = bool(config.get("auto_translate", True))
     i18n.initialize(app, current_lang, auto_translate=auto_translate)
+
+    # Coreografía de arranque (bugs.txt Fase 2.2): splash → landing →
+    # verificación de errores internos → ventana principal. Los errores se
+    # comprueban antes de construir la UI pesada; si los hay, el frame se
+    # convierte en la ventana de reporte y el proceso sale con código 1.
+    from lib.startup_sequence import collect_internal_errors, plan_startup
+    from lib.startup_error_window import show_startup_error
+
+    startup_plan = plan_startup(
+        has_session=True,
+        internal_errors=collect_internal_errors(BASE_DIR, Fluthin_APPS),
+    )
+    if startup_plan.internal_errors:
+        sys.exit(
+            show_startup_error(
+                tr("startup.internal_error_title"),
+                "\n\n".join(startup_plan.internal_errors),
+                icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
+                accent=get_accent_color(),
+            )
+        )
 
     main_window = PackageTodoGUI()
     main_window.apply_ui_language()

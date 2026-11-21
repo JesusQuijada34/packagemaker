@@ -726,5 +726,9 @@
     "show": "表示",
     "hide": "非表示",
     "quit": "終了"
+  },
+  "startup": {
+    "internal_error_title": "内部エラー",
+    "internal_error_body": "Package Maker は起動を完了できませんでした。"
   }
 }

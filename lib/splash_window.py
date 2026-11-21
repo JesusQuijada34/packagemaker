@@ -69,6 +69,7 @@ except ImportError:  # pragma: no cover - entorno sin GUI
             AlignCenter = 0
 
 
+
 class IntegratedSplash(QWidget):
     """Splash integrado estilo UWP - minimalista con solo icono centrado."""
 

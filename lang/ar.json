@@ -726,5 +726,9 @@
     "show": "إظهار",
     "hide": "إخفاء",
     "quit": "خروج"
+  },
+  "startup": {
+    "internal_error_title": "خطأ داخلي",
+    "internal_error_body": "لم يتمكن Package Maker من إكمال بدء التشغيل."
   }
 }

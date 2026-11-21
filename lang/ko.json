@@ -726,5 +726,9 @@
     "show": "표시",
     "hide": "숨기기",
     "quit": "종료"
+  },
+  "startup": {
+    "internal_error_title": "내부 오류",
+    "internal_error_body": "Package Maker가 시작을 완료하지 못했습니다."
   }
 }
