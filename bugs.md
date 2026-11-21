@@ -315,7 +315,7 @@ nuevos siguen en curso.
   `create` y `moonfix` también la usan. La ley de nombres no cambia.
 - **Pruebas:** `tests/test_maintenance_cli_regressions.py::InvalidCanonicalMetadataTests`
   (3 casos; los 3 fallan en el código anterior).
-- **Commit:** pendiente de registrar en este ciclo.
+- **Commit:** `e84e367`.
 - **Fecha de resolución:** 2026-11-21.
 
 ---
