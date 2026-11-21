@@ -1958,18 +1958,32 @@ class PackageTodoGUI(QMainWindow):
             # se ponía "StoneCube", que la ley de nombres no reconoce.
             plataforma_seleccionada = _PLATFORM_INFO.platform
 
-        empresa = self.input_empresa.text().strip().lower().replace(" ", "-") or "influent"
-        nombre_logico = self.input_nombre_logico.text().strip().lower() or "mycoolapp"
+        empresa = self.input_empresa.text().strip().lower().replace(" ", "-")
+        nombre_logico = self.input_nombre_logico.text().strip().lower()
+        version_raw = self.input_version.text().strip()
+
+        # Misma puerta estricta que en la compilación: sin fabricante, nombre o
+        # versión válidos no se crea nada (antes se caía a ``influent`` y
+        # ``mycoolapp``, heredando datos de un proyecto anterior).
+        from lib.build_validation import format_errors, validate_build_fields
+
+        errors = validate_build_fields(
+            empresa, nombre_logico, version_raw, plataforma_seleccionada
+        )
+        if errors:
+            self._set_create_status(
+                tr("build.validation_title"), 'packagemaker_155'
+            )
+            self._set_create_progress(tr("build.validation_title"), format_errors(errors))
+            self._close_create_progress()
+            return
+
         nombre_completo = self.input_nombre_completo.text() or nombre_logico.strip().upper()
         from lib.projectNameFormatter import ProjectNameFormatter
         from lib.template_engine import build_variables
 
-        # El campo de versión es libre: ``1`` o ``v2`` son válidos para el
-        # usuario pero no cumplen el patrón ``X.x``. Se normaliza antes de
-        # construir nada para no romper la ley de nombres.
-        version_base = ProjectNameFormatter.normalize_version_base(
-            self.input_version.text()
-        )
+        # Ya validada arriba, aquí sólo se completa a la base canónica ``X.x``.
+        version_base = ProjectNameFormatter.normalize_version_base(version_raw)
 
         try:
             timestamp = ProjectNameFormatter.get_timestamp()
@@ -2319,18 +2333,28 @@ class PackageTodoGUI(QMainWindow):
         )
 
     def build_package_action(self):
-        version = getversion()
-        empresa = self.input_build_empresa.text().strip().lower() or "influent"
-        nombre = self.input_build_nombre.text().strip().lower() or "mycoolapp"
+        empresa = self.input_build_empresa.text().strip().lower()
+        nombre = self.input_build_nombre.text().strip().lower()
         version_input = self.input_build_version.text().strip()
+        platformLineEdit = self.input_build_platform.text().strip()
+
+        # Validación estricta antes de tocar nada: si falta un campo clave o no
+        # cumple el formato, se bloquea la compilación en vez de heredar los
+        # datos del proyecto anterior con valores por defecto.
+        from lib.build_validation import format_errors, validate_build_fields
+
+        errors = validate_build_fields(empresa, nombre, version_input, platformLineEdit)
+        if errors:
+            self.reporter.error(
+                tr("build.validation_title"), format_errors(errors), dialog=True
+            )
+            return
+
         from lib.projectNameFormatter import ProjectNameFormatter
 
         # Igual que en la creación: se acepta ``1`` o ``v2`` y se normaliza a la
         # base canónica ``X.x`` antes de armar el nombre del paquete.
-        version_full = ProjectNameFormatter.normalize_version_base(
-            version_input or f"1-{version}"
-        )
-        platformLineEdit = self.input_build_platform.text() or f"{linkedsys.capitalize()}"
+        version_full = ProjectNameFormatter.normalize_version_base(version_input)
 
         custom_path = self.input_custom_path.text().strip()
         if not custom_path: custom_path = None

@@ -1,6 +1,6 @@
 # Dependencias solo para desarrollo, CI y auditoría. Nunca en producción.
 # Instalar con: pip install -r requirements-dev.txt
--r lib/requirements.txt
+-r requirements.txt
 
 # Pruebas
 pytest

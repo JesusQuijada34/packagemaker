@@ -6115,3 +6115,122 @@ CURATED.setdefault("ar", {}).update({
     'updater.status_using_cache': 'جارٍ استخدام الذاكرة المؤقتة...',
 })
 
+CURATED.setdefault("fr", {}).update({
+    "build.validation_title": 'Donnees de compilation incompletes',
+    "build.validation_empty": '{field} : le champ ne peut pas etre vide.',
+    "build.validation_segment": '{field} : utilisez uniquement des lettres, des chiffres ou des tirets.',
+    "build.validation_version": 'Version invalide : utilisez X.x ou X.x.z (par exemple 1.0).',
+    "build.validation_platform": 'Plateforme invalide : utilisez Danenone, Knosthalij ou AlphaCube.',
+    "build.field_company": 'Fabricant',
+    "build.field_app": 'Nom interne',
+})
+
+CURATED.setdefault("de", {}).update({
+    "build.validation_title": 'Unvollstaendige Build-Daten',
+    "build.validation_empty": '{field}: Das Feld darf nicht leer sein.',
+    "build.validation_segment": '{field}: Nur Buchstaben, Zahlen oder Bindestriche verwenden.',
+    "build.validation_version": 'Ungueltige Version: Verwenden Sie X.x oder X.x.z (zum Beispiel 1.0).',
+    "build.validation_platform": 'Ungueltige Plattform: Verwenden Sie Danenone, Knosthalij oder AlphaCube.',
+    "build.field_company": 'Hersteller',
+    "build.field_app": 'Interner Name',
+})
+
+CURATED.setdefault("it", {}).update({
+    "build.validation_title": 'Dati di compilazione incompleti',
+    "build.validation_empty": '{field}: il campo non puo essere vuoto.',
+    "build.validation_segment": '{field}: usa solo lettere, numeri o trattini.',
+    "build.validation_version": 'Versione non valida: usa X.x o X.x.z (ad esempio 1.0).',
+    "build.validation_platform": 'Piattaforma non valida: usa Danenone, Knosthalij o AlphaCube.',
+    "build.field_company": 'Produttore',
+    "build.field_app": 'Nome interno',
+})
+
+CURATED.setdefault("pt", {}).update({
+    "build.validation_title": 'Dados de compilacao incompletos',
+    "build.validation_empty": '{field}: o campo nao pode estar vazio.',
+    "build.validation_segment": '{field}: use apenas letras, numeros ou hifens.',
+    "build.validation_version": 'Versao invalida: use X.x ou X.x.z (por exemplo 1.0).',
+    "build.validation_platform": 'Plataforma invalida: use Danenone, Knosthalij ou AlphaCube.',
+    "build.field_company": 'Fabricante',
+    "build.field_app": 'Nome interno',
+})
+
+CURATED.setdefault("nl", {}).update({
+    "build.validation_title": 'Onvolledige buildgegevens',
+    "build.validation_empty": '{field}: het veld mag niet leeg zijn.',
+    "build.validation_segment": '{field}: gebruik alleen letters, cijfers of streepjes.',
+    "build.validation_version": 'Ongeldige versie: gebruik X.x of X.x.z (bijvoorbeeld 1.0).',
+    "build.validation_platform": 'Ongeldig platform: gebruik Danenone, Knosthalij of AlphaCube.',
+    "build.field_company": 'Fabrikant',
+    "build.field_app": 'Interne naam',
+})
+
+CURATED.setdefault("pl", {}).update({
+    "build.validation_title": 'Niekompletne dane kompilacji',
+    "build.validation_empty": '{field}: pole nie moze byc puste.',
+    "build.validation_segment": '{field}: uzywaj tylko liter, cyfr lub myslnikow.',
+    "build.validation_version": 'Nieprawidlowa wersja: uzyj X.x lub X.x.z (na przyklad 1.0).',
+    "build.validation_platform": 'Nieprawidlowa platforma: uzyj Danenone, Knosthalij lub AlphaCube.',
+    "build.field_company": 'Producent',
+    "build.field_app": 'Nazwa wewnetrzna',
+})
+
+CURATED.setdefault("tr", {}).update({
+    "build.validation_title": 'Eksik derleme verileri',
+    "build.validation_empty": '{field}: alan bos birakilamaz.',
+    "build.validation_segment": '{field}: yalnizca harf, rakam veya tire kullanin.',
+    "build.validation_version": 'Gecersiz surum: X.x veya X.x.z kullanin (ornegin 1.0).',
+    "build.validation_platform": 'Gecersiz platform: Danenone, Knosthalij veya AlphaCube kullanin.',
+    "build.field_company": 'Uretici',
+    "build.field_app": 'Ic ad',
+})
+
+CURATED.setdefault("ru", {}).update({
+    "build.validation_title": 'Неполные данные сборки',
+    "build.validation_empty": '{field}: поле не может быть пустым.',
+    "build.validation_segment": '{field}: используйте только буквы, цифры или дефисы.',
+    "build.validation_version": 'Неверная версия: используйте X.x или X.x.z (например, 1.0).',
+    "build.validation_platform": 'Неверная платформа: используйте Danenone, Knosthalij или AlphaCube.',
+    "build.field_company": 'Изготовитель',
+    "build.field_app": 'Внутреннее имя',
+})
+
+CURATED.setdefault("ja", {}).update({
+    "build.validation_title": 'ビルドデータが不完全です',
+    "build.validation_empty": '{field}: この項目は空にできません。',
+    "build.validation_segment": '{field}: 文字、数字、ハイフンのみ使用できます。',
+    "build.validation_version": '無効なバージョンです: X.x または X.x.z を使用してください（例: 1.0）。',
+    "build.validation_platform": '無効なプラットフォームです: Danenone、Knosthalij、AlphaCube のいずれかを使用してください。',
+    "build.field_company": '製造元',
+    "build.field_app": '内部名',
+})
+
+CURATED.setdefault("ko", {}).update({
+    "build.validation_title": '빌드 데이터가 불완전합니다',
+    "build.validation_empty": '{field}: 필드는 비워 둘 수 없습니다.',
+    "build.validation_segment": '{field}: 문자, 숫자 또는 하이픈만 사용하세요.',
+    "build.validation_version": '잘못된 버전입니다: X.x 또는 X.x.z를 사용하세요(예: 1.0).',
+    "build.validation_platform": '잘못된 플랫폼입니다: Danenone, Knosthalij 또는 AlphaCube를 사용하세요.',
+    "build.field_company": '제조사',
+    "build.field_app": '내부 이름',
+})
+
+CURATED.setdefault("zh", {}).update({
+    "build.validation_title": '构建数据不完整',
+    "build.validation_empty": '{field}：该字段不能为空。',
+    "build.validation_segment": '{field}：只能使用字母、数字或连字符。',
+    "build.validation_version": '版本无效：请使用 X.x 或 X.x.z（例如 1.0）。',
+    "build.validation_platform": '平台无效：请使用 Danenone、Knosthalij 或 AlphaCube。',
+    "build.field_company": '制造商',
+    "build.field_app": '内部名称',
+})
+
+CURATED.setdefault("ar", {}).update({
+    "build.validation_title": 'بيانات البناء غير مكتملة',
+    "build.validation_empty": '{field}: لا يمكن ترك الحقل فارغًا.',
+    "build.validation_segment": '{field}: استخدم الحروف أو الأرقام أو الشرطات فقط.',
+    "build.validation_version": 'إصدار غير صالح: استخدم X.x أو X.x.z (على سبيل المثال 1.0).',
+    "build.validation_platform": 'منصة غير صالحة: استخدم Danenone أو Knosthalij أو AlphaCube.',
+    "build.field_company": 'الجهة المصنعة',
+    "build.field_app": 'الاسم الداخلي',
+})
