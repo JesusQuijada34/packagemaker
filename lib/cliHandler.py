@@ -853,13 +853,16 @@ class PackageInspectHelper:
         from lib.blindcubeEngine import iflapp_format
 
         path = data.get("path")
+        # En modo JSON stdout es el documento: los errores van a stderr para que
+        # `--inspect-json` siga siendo parseable.
+        errors = sys.stderr if data.get("json") else sys.stdout
         if not path:
-            print("[ERROR] Debes indicar la ruta del .iflapp con --inspect")
+            print("[ERROR] Debes indicar la ruta del .iflapp con --inspect", file=errors)
             return False
         try:
             header = iflapp_format.read_iflapp_header(path)
         except Exception as exc:
-            print(f"[ERROR] No se pudo leer la cabecera: {exc}")
+            print(f"[ERROR] No se pudo leer la cabecera: {exc}", file=errors)
             return False
 
         identity = header.identity()
@@ -917,17 +920,18 @@ class NativeShellHelper:
         from lib import native_shell
 
         path = data.get("path")
+        errors = sys.stderr if data.get("json") else sys.stdout
         if not path:
-            print("[ERROR] Debes indicar un archivo con --shell-info")
+            print("[ERROR] Debes indicar un archivo con --shell-info", file=errors)
             return False
         target = Path(path).expanduser()
         if not target.is_file():
-            print(f"[ERROR] No existe el archivo: {target}")
+            print(f"[ERROR] No existe el archivo: {target}", file=errors)
             return False
         try:
             info = native_shell.package_info(target)
         except ValueError as exc:
-            print(f"[ERROR] {exc}")
+            print(f"[ERROR] {exc}", file=errors)
             return False
 
         if data.get("json"):
