@@ -571,16 +571,19 @@ class CLIHandler:
                 shell_options,
             )
 
-        elif getattr(args, 'download_fonts', None):
+        elif getattr(args, 'download_fonts', None) or getattr(args, 'force_fonts', False):
+            # ``--force-fonts`` solo tenía sentido junto a ``--download-fonts``;
+            # sin esta rama se ignoraba y el flujo caía en la TUI/GUI. Ahora
+            # implica descargar todas las fuentes forzando la caché.
             return (
                 'download_fonts',
                 {
-                    'keys': args.download_fonts,
+                    'keys': getattr(args, 'download_fonts', None) or 'all',
                     'force': getattr(args, 'force_fonts', False),
                 },
                 shell_options,
             )
-        
+
         # === Version Update ===
         elif args.version_update:
             return ('version_update', None, shell_options)
@@ -1274,10 +1277,11 @@ def _handle_shell_actions(action, data=None):
         return MexfShellHelper.uninstall(data or {})
 
     elif action == 'show_version':
-        print(f"Influent Package Maker v{__version__}")
+        version = str(__version__ or "").strip().lstrip("vV") or "desconocida"
+        print(f"Influent Package Maker v{version}")
         print("https://github.com/JesusQuijada34/packagemaker")
         return True
-    
+
     elif action == 'version_update':
         return VersionUpdateHelper.update()
 

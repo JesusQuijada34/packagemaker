@@ -4419,12 +4419,12 @@ def main():
         args = cli.parse()
 
         if hasattr(args, 'app_version') and args.app_version:
-            # Intentar obtener versión de varias fuentes
-            try:
-                from version import VERSION
-                version = VERSION
-            except ImportError:
-                version = "3.2.7" # Fallback
+            # La versión canónica vive en details.xml; el antiguo
+            # ``from version import VERSION`` nunca existió y dejaba un valor
+            # fijo que se quedaba obsoleto en cada release.
+            from lib.cliHandler import __version__ as _details_version
+
+            version = str(_details_version or "").strip().lstrip("vV") or "desconocida"
             print(f"Influent Package Maker v{version}")
             sys.exit(0)
 

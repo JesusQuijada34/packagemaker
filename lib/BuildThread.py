@@ -42,6 +42,31 @@ from lib.hardware_sandbox import HardwareSandbox
 from lib.mexf_compiler import MexfCompiler
 from lib.project_locator import describe_available, locate_project
 
+
+def package_identity(
+    metadata: Dict[str, str], details_bytes: Optional[bytes]
+) -> Dict[str, str]:
+    """Alinea la identidad de la cabecera con el ``details.xml`` empaquetado.
+
+    ``create_package`` reescribe ``<platform>`` con la plataforma objetivo (p.
+    ej. ``Danenone`` al compilar un proyecto ``AlphaCube`` en Linux). La
+    cabecera conservaba la plataforma declarada del proyecto, así que
+    ``--inspect`` y ``--shell-info`` mostraban una plataforma distinta de la del
+    ``details.xml`` incluido en el mismo contenedor.
+    """
+    identity = dict(metadata)
+    if not details_bytes:
+        return identity
+    try:
+        root = ET.fromstring(details_bytes)
+    except ET.ParseError:
+        return identity
+    platform_value = (root.findtext("platform") or "").strip()
+    if platform_value:
+        identity["platform"] = platform_value
+    return identity
+
+
 class FlangCompiler:
     """Compilador principal unificado para el ecosistema Fluthin (Version Robusta)."""
 
@@ -693,7 +718,7 @@ class FlangCompiler:
                 icon=icon_bytes,
                 icon_name=icon_name,
                 details=details_bytes,
-                identity=self.metadata,
+                identity=package_identity(self.metadata, details_bytes),
                 password=self.package_password,
                 signing_key=self.signing_key,
             )

@@ -13,8 +13,49 @@ import os
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QTimer, QPropertyAnimation
-from leviathan_ui import WipeWindow
+
 from lib.app_icons import icon_button
+
+try:
+    from leviathan_ui import WipeWindow
+    LEVIATHAN_AVAILABLE = True
+except (ImportError, SyntaxError):
+    LEVIATHAN_AVAILABLE = False
+
+    class WipeWindow:
+        """Respaldo sin efectos cuando ``leviathan_ui`` no está instalado.
+
+        El updater se copia a todos los proyectos empaquetados y también se usa
+        en modo headless (``--version``/``--check``/``--install``); sin este
+        respaldo, la ausencia de la dependencia opcional abortaba con
+        ``ImportError`` antes de parsear los argumentos.
+        """
+
+        def __init__(self, parent=None):
+            self._parent = parent
+
+        @classmethod
+        def create(cls):
+            return cls()
+
+        def set_mode(self, *args, **kwargs):
+            return self
+
+        def set_radius(self, *args, **kwargs):
+            return self
+
+        def set_blur(self, *args, **kwargs):
+            return self
+
+        def apply(self, *args, **kwargs):
+            return self
+
+        def show(self, *args, **kwargs):
+            return self
+
+        def close(self, *args, **kwargs):
+            return self
+
 
 # Import core updater module
 from lib.coreUpdater import (
@@ -278,13 +319,14 @@ class IntegratedSplash(QWidget):
         self.deleteLater()
 
 def get_accent_color():
-    from leviathan_ui import get_accent_color as _leviathan_accent
-    if _leviathan_accent is not None:
-        try:
-            return str(_leviathan_accent())
-        except Exception:
-            pass
-    return "#0078D4"
+    try:
+        from leviathan_ui import get_accent_color as _leviathan_accent
+    except (ImportError, SyntaxError):
+        return "#0078D4"
+    try:
+        return str(_leviathan_accent())
+    except Exception:
+        return "#0078D4"
 
 def show_info_gui():
     app = QApplication.instance() or QApplication(sys.argv)
