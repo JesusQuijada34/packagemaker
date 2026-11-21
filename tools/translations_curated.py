@@ -7345,3 +7345,17 @@ CURATED.setdefault('ar', {}).update({
     'tui.slug_col': 'المعرّف',
     'tui.version_col': 'الإصدار',
 })
+
+# Seleccion del paquete de iconos en MoonFix.
+CURATED.setdefault('fr', {}).update({'moonfix.select_icon_pack': 'Selectionner Icon Pack'})
+CURATED.setdefault('de', {}).update({'moonfix.select_icon_pack': 'Icon-Pack auswaehlen'})
+CURATED.setdefault('it', {}).update({'moonfix.select_icon_pack': 'Seleziona Icon Pack'})
+CURATED.setdefault('pt', {}).update({'moonfix.select_icon_pack': 'Selecionar Icon Pack'})
+CURATED.setdefault('nl', {}).update({'moonfix.select_icon_pack': 'Icon Pack selecteren'})
+CURATED.setdefault('pl', {}).update({'moonfix.select_icon_pack': 'Wybierz Icon Pack'})
+CURATED.setdefault('tr', {}).update({'moonfix.select_icon_pack': 'Icon Pack sec'})
+CURATED.setdefault('ru', {}).update({'moonfix.select_icon_pack': 'Выбрать Icon Pack'})
+CURATED.setdefault('ja', {}).update({'moonfix.select_icon_pack': 'Icon Pack を選択'})
+CURATED.setdefault('ko', {}).update({'moonfix.select_icon_pack': 'Icon Pack 선택'})
+CURATED.setdefault('zh', {}).update({'moonfix.select_icon_pack': '选择图标包'})
+CURATED.setdefault('ar', {}).update({'moonfix.select_icon_pack': 'اختيار حزمة الأيقونات'})

@@ -193,7 +193,8 @@
     "internet_hint": "GitHub profillerini doğrulamanız gerekirse İnternet bağlantınız olduğundan emin olun.",
     "upload_icon_pack": "Icon Pack yükle",
     "upload_asset_pack": "Asset Pack yükle",
-    "select_asset_pack": "Asset Pack seç"
+    "select_asset_pack": "Asset Pack seç",
+    "select_icon_pack": "Icon Pack sec"
   },
   "editor": {
     "project": "Project",

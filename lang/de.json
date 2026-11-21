@@ -193,7 +193,8 @@
     "internet_hint": "Stellen Sie eine Internetverbindung sicher, falls Sie GitHub-Profile überprüfen müssen.",
     "upload_icon_pack": "Icon-Paket hochladen",
     "upload_asset_pack": "Asset-Paket hochladen",
-    "select_asset_pack": "Asset-Paket auswählen"
+    "select_asset_pack": "Asset-Paket auswählen",
+    "select_icon_pack": "Icon-Pack auswaehlen"
   },
   "editor": {
     "project": "Project",

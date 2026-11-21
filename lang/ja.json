@@ -193,7 +193,8 @@
     "internet_hint": "GitHub プロフィールを検証する必要がある場合は、インターネット接続を確認してください。",
     "upload_icon_pack": "Icon Pack をアップロード",
     "upload_asset_pack": "Asset Pack をアップロード",
-    "select_asset_pack": "Asset Pack を選択"
+    "select_asset_pack": "Asset Pack を選択",
+    "select_icon_pack": "Icon Pack を選択"
   },
   "editor": {
     "project": "Project",

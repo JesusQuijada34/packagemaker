@@ -193,7 +193,8 @@
     "internet_hint": "تأكد من وجود اتصال بالإنترنت إذا كنت بحاجة إلى التحقق من ملفات GitHub الشخصية.",
     "upload_icon_pack": "تحميل Icon Pack",
     "upload_asset_pack": "تحميل Asset Pack",
-    "select_asset_pack": "اختر Asset Pack"
+    "select_asset_pack": "اختر Asset Pack",
+    "select_icon_pack": "اختيار حزمة الأيقونات"
   },
   "editor": {
     "project": "Project",

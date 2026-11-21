@@ -193,7 +193,8 @@
     "internet_hint": "Убедитесь, что есть подключение к Интернету, если нужно проверить профили GitHub.",
     "upload_icon_pack": "Загрузить Icon Pack",
     "upload_asset_pack": "Загрузить Asset Pack",
-    "select_asset_pack": "Выбрать Asset Pack"
+    "select_asset_pack": "Выбрать Asset Pack",
+    "select_icon_pack": "Выбрать Icon Pack"
   },
   "editor": {
     "project": "Project",

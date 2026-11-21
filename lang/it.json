@@ -193,7 +193,8 @@
     "internet_hint": "Assicurati di avere una connessione a Internet se devi verificare profili GitHub.",
     "upload_icon_pack": "Carica Icon Pack",
     "upload_asset_pack": "Carica Asset Pack",
-    "select_asset_pack": "Seleziona Asset Pack"
+    "select_asset_pack": "Seleziona Asset Pack",
+    "select_icon_pack": "Seleziona Icon Pack"
   },
   "editor": {
     "project": "Project",

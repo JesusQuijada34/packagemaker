@@ -193,7 +193,8 @@
     "internet_hint": "如果需要验证 GitHub 个人资料，请确保已连接互联网。",
     "upload_icon_pack": "上传 Icon Pack",
     "upload_asset_pack": "上传 Asset Pack",
-    "select_asset_pack": "选择 Asset Pack"
+    "select_asset_pack": "选择 Asset Pack",
+    "select_icon_pack": "选择图标包"
   },
   "editor": {
     "project": "Project",

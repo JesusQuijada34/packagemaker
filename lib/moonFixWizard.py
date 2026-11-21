@@ -832,7 +832,7 @@ class MoonFixWizard(QDialog):
             shutil.copy(splash_setup_src, os.path.join(path, "assets", "splash_Setup.png"))
 
     def upload_icon_pack(self, index):
-        f, _ = QFileDialog.getOpenFileName(self, "Seleccionar Icon Pack", "", "Icon Pack (*.ipm-iconpck)")
+        f, _ = QFileDialog.getOpenFileName(self, tr("moonfix.select_icon_pack"), "", "Icon Pack (*.ipm-iconpck)")
         if f: self.process_ipm_iconpck(f)
 
     def upload_asset_pack(self, index):

@@ -193,7 +193,8 @@
     "internet_hint": "Zorg voor een internetverbinding als u GitHub-profielen moet verifiëren.",
     "upload_icon_pack": "Icon Pack uploaden",
     "upload_asset_pack": "Asset Pack uploaden",
-    "select_asset_pack": "Asset Pack selecteren"
+    "select_asset_pack": "Asset Pack selecteren",
+    "select_icon_pack": "Icon Pack selecteren"
   },
   "editor": {
     "project": "Project",
