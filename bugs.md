@@ -19,12 +19,15 @@ de auditoría.
 | R-e2d317ce | Bug — gestor de apps | Media | Resuelto |
 | R-739d5fec | Bug — consola Windows | Media | Resuelto |
 | R-e1a87de9 | Bug — persistencia de ajustes | Alta | Resuelto |
+| R-8f2c41d9 | Bug — empaquetado con backend zipapp | Alta | Resuelto |
+| R-c47a9e12 | Bug — `--harden` ignorado en CLI headless | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
 
-No hay bugs críticos ni de alta prioridad abiertos. No se prepara release:
-el periodo de observación y el requisito de 7 días sin reportes nuevos siguen
-en curso.
+No hay bugs críticos ni de alta prioridad abiertos. Los dos últimos reportes
+proceden de la auditoría interna de este ciclo (no de un usuario externo) y
+quedaron corregidos y probados. No se prepara release: el periodo de
+observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
@@ -152,6 +155,46 @@ en curso.
 - **Commit:** `b305945`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-8f2c41d9 — El backend zipapp no podía empaquetarse
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `zipapp` es el backend de reserva y el único siempre
+  disponible (stdlib), pero cualquier build con `--compiler zipapp` abortaba en
+  `create_package()` con «El paquete no contiene todos los binarios compilados
+  esperados». El backend entrega `<guion>.pyz` y el pipeline solo aceptaba
+  `<guion>` (Linux) o `<guion>.exe` (Windows): nunca había paquete.
+- **Pasos para reproducir:** crear un proyecto y ejecutar
+  `python packagemaker.py --buildthis <proyecto> --output <dir> --platform Linux --compiler zipapp --no-sandbox`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (deja sin build a quien no tenga Nuitka/PyInstaller).
+- **Solución aplicada:** `_copy_package_files()` copia los `.pyz` de `dist/` al
+  paquete y `create_package()` los acepta como artefacto compilado del guion.
+  La validación de artefactos ausentes se conserva.
+- **Pruebas:** `tests/test_zipapp_packaging.py` (3 casos; los dos de empaquetado
+  fallan sin la corrección).
+- **Commit:** `5aa823b`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-c47a9e12 — `--harden` ignorado en compilaciones headless
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** la CLI aceptaba `--harden` y lo pasaba a `FlangCompiler`,
+  pero las rutas headless de `buildthis` y `compile` no llamaban a
+  `apply_hardening()`: el blindaje se descartaba en silencio. Solo la GUI lo
+  aplicaba (`FlangCompiler.run`).
+- **Pasos para reproducir:** `python packagemaker.py --buildthis <proyecto> --compiler zipapp --harden integrity`
+  y comprobar que el `.iflapp` no contiene `.iflapp.integrity`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (opción documentada sin efecto; no rompe el build).
+- **Solución aplicada:** ambas rutas headless aplican `apply_hardening()`
+  sobre el árbol del paquete antes de `compress_to_iflapp()`, en el mismo orden
+  que la GUI, e informan de los métodos aplicados.
+- **Pruebas:** `tests/test_cli_hardening.py::CliBuildHardeningTests`.
+- **Commit:** `5aa823b`.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -254,5 +297,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Bugs abiertos: 0.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
+- Último reporte externo conocido: issue #4 (2026-07-05). El ciclo actual solo
+  añadió dos correcciones de auditoría interna (commits `5aa823b`), no reportes
+  de usuario; el contador de 7 días no se reinicia.
+- Verificación de este ciclo: `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`
+  → 457 pasan, 2 omitidos; `pyflakes` y `py_compile` limpios; build real con
+  `--compiler zipapp` + `--harden integrity` produce un `.iflapp` válido con
+  `.iflapp.integrity`.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo.
