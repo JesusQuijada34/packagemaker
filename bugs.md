@@ -26,13 +26,16 @@ de auditoría.
 | R-9c1d5f60 | Bug — icono no copiado fuera del repo | Media | Resuelto |
 | R-a5f06c38 | Bug — `--harden` inválido silencioso | Media | Resuelto |
 | R-d74e0b19 | Bug — `--ide-compile` duplica salida | Baja | Resuelto |
+| R-b3f71a6c | Bug — metadatos no canónicos rompen el CLI | Alta | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
+| R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
 
-No hay bugs críticos ni de alta prioridad abiertos. Los siete reportes de
-auditoría interna de este ciclo (R-8f2c41d9, R-c47a9e12 y los cinco del ciclo
-CLI) quedaron corregidos y probados. No se prepara release: el periodo de
-observación y el requisito de 7 días sin reportes nuevos siguen en curso.
+No hay bugs críticos ni de alta prioridad abiertos. Los ocho reportes de
+auditoría interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los
+cinco del ciclo CLI, más R-b3f71a6c) quedaron corregidos y probados. No se
+prepara release: el periodo de observación y el requisito de 7 días sin reportes
+nuevos siguen en curso.
 
 ---
 
@@ -290,6 +293,31 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Commit:** `d2670a1`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-b3f71a6c — Metadatos no canónicos rompían el CLI con un traceback
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** la ley de nombres valida publisher e identificador con
+  `_SAFE_SEGMENT_PATTERN` (solo ASCII), pero `create`, `--buildthis`, `compile` y
+  `moonfix` llamaban a `format_project_folder()` sin capturar el `ValueError`.
+  Un publisher natural en español (`Jesús`), un acento en el shortname o
+  cualquier carácter fuera del patrón terminaba en un traceback de Python.
+  En `--buildthis` era peor: el proyecto se compilaba completo y solo al final,
+  al calcular el nombre del paquete, saltaba el error; no se generaba artefacto.
+- **Pasos para reproducir:** `python packagemaker.py create --name Demo --shortname demo --publisher "Jesús" --headless`
+  o `python packagemaker.py --buildthis <proyecto con publisher acentuado> --compiler zipapp`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (pierde el build completo sin artefacto y sin mensaje útil).
+- **Solución aplicada:** helper `_canonical_folder_or_exit()` en `lib/cliHandler.py`
+  valida la ley de nombres y aborta con `[ERROR] Metadatos de proyecto no válidos: …`
+  y código 1. `_validate_compiler_metadata()` la aplica tras `parse_details_xml()`
+  y antes de `compile_binaries()`, tanto en `--buildthis` como en `compile`;
+  `create` y `moonfix` también la usan. La ley de nombres no cambia.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::InvalidCanonicalMetadataTests`
+  (3 casos; los 3 fallan en el código anterior).
+- **Commit:** pendiente de registrar en este ciclo.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -306,6 +334,21 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Propuesta mínima si se aprueba:** módulo `lib/errorReporter.py` con envío
   asíncrono opcional, consentimiento explícito, sin rutas de usuario ni
   credenciales, y URL configurable.
+
+### R-5d8e2a41 — Acentos en publisher e identificador de aplicación
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Estado:** Pendiente de aprobación explícita. No implementado.
+- **Situación actual:** la ley de nombres solo admite `A-Za-z0-9` y guiones en
+  publisher y appname. Un publisher como `Jesús` se rechaza (R-b3f71a6c ya
+  evita el traceback y muestra un error legible, pero el proyecto no se puede
+  crear ni compilar).
+- **Solicitado:** admitir acentos transliterándolos (`Jesús` → `Jesus`) o
+  permitiéndolos en el nombre canónico.
+- **Motivo de la espera:** cambia la ley de nombres y los nombres de carpeta,
+  paquete y artefacto; afecta a `_PROJECT_PATTERN`, a la compatibilidad con
+  proyectos existentes y a los tests de la ley canónica.
 
 ---
 
@@ -393,11 +436,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
-  solo añadieron correcciones de auditoría interna (commits `5aa823b` y
-  `d2670a1`), no reportes de usuario; el contador de 7 días no se reinicia.
-- Verificación de este ciclo: `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`
-  → 464 pasan, 1 omitido; `pyflakes` y `py_compile` limpios; build real con
-  `--compiler zipapp` + `--harden integrity` produce un `.iflapp` válido con
-  `.iflapp.integrity`; `--inspect-json` emite JSON parseable en stdout.
+  solo añadieron correcciones de auditoría interna (commits `5aa823b`,
+  `d2670a1` y el de R-b3f71a6c), no reportes de usuario; el contador de 7 días
+  no se reinicia.
+- Verificación del ciclo de R-b3f71a6c (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 467 pasan, 1 omitido;
+  `pyflakes` y `py_compile` limpios; build real con `--compiler zipapp` +
+  `--harden integrity` produce un `.iflapp` válido con `.iflapp.integrity`;
+  `--inspect-json` emite JSON parseable en stdout; `create`, `--buildthis` y
+  `moonfix` con metadatos no canónicos abortan con error legible y código 1,
+  sin traceback.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
-  ciclo.
+  ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
+  reportes nuevos siguen en curso.

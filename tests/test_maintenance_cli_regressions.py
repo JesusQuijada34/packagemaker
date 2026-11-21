@@ -173,6 +173,117 @@ class HardeningParseWarningTests(unittest.TestCase):
         self.assertIn("blindaje queda desactivado", buffer.getvalue())
 
 
+class InvalidCanonicalMetadataTests(unittest.TestCase):
+    """La ley de nombres debe fallar antes de compilar y sin traceback."""
+
+    def test_create_reports_invalid_publisher_without_traceback(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            base.mkdir()
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                with self.assertRaises(SystemExit) as ctx:
+                    handle_cli_action(
+                        "create_project",
+                        {
+                            "path": str(base),
+                            "name": "Demo",
+                            "shortname": "demo",
+                            "version": "1.0.0",
+                            "author": "JesusQuijada34",
+                            "publisher": "Jesús",
+                            "platform": "Danenone",
+                        },
+                        None,
+                        headless=True,
+                    )
+            self.assertEqual(ctx.exception.code, 1)
+            self.assertIn("[ERROR] Metadatos de proyecto no válidos", buffer.getvalue())
+            self.assertEqual(list(base.iterdir()), [], "no debe crear el proyecto")
+
+    def test_buildthis_validates_before_compiling(self):
+        from lib.cliHandler import handle_cli_action
+
+        class _RecordingCompiler:
+            instances = []
+
+            def __init__(self, project_path, output_path, **kwargs):
+                self.metadata = {
+                    "publisher": "Jesús",
+                    "app": "demo",
+                    "version": "v1.0.0-26.11-06.07",
+                    "platform": "Danenone",
+                }
+                self.compiled = False
+                type(self).instances.append(self)
+
+            def parse_details_xml(self):
+                return True
+
+            def find_scripts(self):
+                return True
+
+            def compile_binaries(self, platform):
+                self.compiled = True
+                return True
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "influent.demo.v1.0.0-26.11-06.07-Danenone"
+            project.mkdir()
+            (project / "details.xml").write_text(DETAILS, encoding="utf-8")
+
+            _RecordingCompiler.instances = []
+            buffer = io.StringIO()
+            with patch("lib.BuildThread.FlangCompiler", _RecordingCompiler):
+                with redirect_stdout(buffer):
+                    with self.assertRaises(SystemExit) as ctx:
+                        handle_cli_action(
+                            "buildthis",
+                            {"path": str(project)},
+                            None,
+                            headless=True,
+                            output=str(Path(tmp) / "out"),
+                            sandbox=False,
+                        )
+
+            self.assertEqual(ctx.exception.code, 1)
+            self.assertIn("[ERROR] Metadatos de proyecto no válidos", buffer.getvalue())
+            self.assertTrue(_RecordingCompiler.instances)
+            self.assertFalse(
+                _RecordingCompiler.instances[0].compiled,
+                "debe abortar antes de compilar binarios",
+            )
+
+    def test_repair_reports_invalid_publisher_without_traceback(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "influent.demo.v1.0.0-26.11-06.07-Danenone"
+            project.mkdir()
+            (project / "details.xml").write_text(
+                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>Jesús</publisher>"),
+                encoding="utf-8",
+            )
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                with self.assertRaises(SystemExit) as ctx:
+                    handle_cli_action(
+                        "repair_project",
+                        {
+                            "path": tmp,
+                            "name": "demo",
+                            "shortname": "demo",
+                            "publisher": "Influent",
+                        },
+                        None,
+                        headless=True,
+                    )
+            self.assertEqual(ctx.exception.code, 1)
+            self.assertIn("[ERROR] Metadatos de proyecto no válidos", buffer.getvalue())
+
+
 class JsonOutputPurityTests(unittest.TestCase):
     """R-4b7e91a2: stdout de las acciones ``*-json`` debe ser JSON válido."""
 

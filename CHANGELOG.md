@@ -29,20 +29,28 @@ Hallazgos del segundo ciclo de mantenimiento (sin reporte externo; reportados po
 - **R-a5f06c38 — `--harden` inválido en silencio:** un método mal escrito se descartaba sin aviso y podía dejar el build sin blindaje aparentando tenerlo. Ahora se informa de los métodos ignorados y de la desactivación total.
 - **R-d74e0b19 — `--ide-compile` duplicaba la salida:** el log se imprimía por el callback y otra vez al recorrer `outcome.log`. Ahora se imprime una sola vez.
 
+### Corregido — metadatos no canónicos en el CLI
+
+Hallazgo del tercer ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna).
+
+- **R-b3f71a6c — Un publisher o identificador fuera de la ley de nombres rompía el CLI:** `create`, `--buildthis`, `compile` y `moonfix` llamaban a `format_project_folder()` sin capturar el `ValueError`, así que un publisher como `Jesús` terminaba en un traceback. En `--buildthis` el proyecto se compilaba completo y el fallo aparecía al final, sin generar artefacto. Ahora `_canonical_folder_or_exit()` valida antes de compilar y aborta con `[ERROR] Metadatos de proyecto no válidos: …` y código 1; `create` y `moonfix` usan la misma validación. La ley de nombres no cambia.
+
 ### Mantenimiento
 
 - `lib/requirements-dev.txt` resuelve correctamente su include (`-r requirements.txt`) y la documentación usa la ruta real `lib/requirements-dev.txt`.
 
 ### Verificación
 
-- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 464 pasan, 1 omitido (el omitido depende de `leviathan_ui`).
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 467 pasan, 1 omitido (el omitido depende de `leviathan_ui`).
 - `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
 - Build real con `--compiler zipapp --harden integrity`: `.iflapp` válido con `.iflapp.integrity` en el manifiesto.
 - `--inspect-json` emite JSON parseable en stdout (banner en stderr).
+- `create`, `--buildthis` y `moonfix` con metadatos no canónicos abortan con error legible y código 1, sin traceback.
 
 ### Pendiente de aprobación
 
 - **R-d23039c0 — Telemetría de errores:** no implementada (envía datos a un servidor externo).
+- **R-5d8e2a41 — Acentos en publisher/appname:** no implementada; cambia la ley de nombres.
 - **Cambios de engine de `bugs.txt`:** registrados en `bugs.md`, sin implementar.
 
 ## 2026-11-15

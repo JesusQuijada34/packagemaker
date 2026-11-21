@@ -77,6 +77,34 @@ def _bundled_app_icon() -> Path | None:
     return None
 
 
+def _canonical_folder_or_exit(publisher, app_id, version, platform, timestamp=None):
+    """Devuelve el nombre canónico o aborta con un error legible.
+
+    La validación ocurre antes de compilar: un publisher o identificador fuera
+    de la ley de nombres reventaba al final del build con un traceback y sin
+    artefacto.
+    """
+    try:
+        return ProjectNameFormatter.format_project_folder(
+            publisher, app_id, version, platform, timestamp
+        )
+    except ValueError as exc:
+        print(f"[ERROR] Metadatos de proyecto no válidos: {exc}")
+        sys.exit(1)
+
+
+def _validate_compiler_metadata(compiler, target_platform):
+    """Comprueba la ley de nombres con los metadatos ya leídos del proyecto."""
+    platform = "Knosthalij" if target_platform == "Windows" else "Danenone"
+    metadata = getattr(compiler, "metadata", None) or {}
+    _canonical_folder_or_exit(
+        metadata.get("publisher", ""),
+        metadata.get("app", ""),
+        metadata.get("version", ""),
+        platform,
+    )
+
+
 _DETAILS_XML_PATH = _find_details_xml()
 with _DETAILS_XML_PATH.open("r", encoding="utf-8") as f:
     tree = ET.parse(f)
@@ -1401,7 +1429,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         
         # Usar ProjectNameFormatter para formato consistente
         timestamp = ProjectNameFormatter.get_timestamp()
-        folder_name = ProjectNameFormatter.format_project_folder(
+        folder_name = _canonical_folder_or_exit(
             publisher, app_id, version_base, platform_value, timestamp
         )
         project_path = base_path / folder_name
@@ -1489,6 +1517,8 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
         if not compiler.parse_details_xml():
             sys.exit(1)
+
+        _validate_compiler_metadata(compiler, target_platform)
 
         if not compiler.find_scripts():
             sys.exit(1)
@@ -1597,6 +1627,8 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
 
         if not compiler.parse_details_xml():
             sys.exit(1)
+
+        _validate_compiler_metadata(compiler, target_platform)
 
         if not compiler.find_scripts():
             sys.exit(1)
@@ -1723,16 +1755,20 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         print(f"[INFO] Ejecutando MoonFix para: {project_path}")
         print(f"[INFO] Plataforma objetivo (leída del paquete): {platform_value}")
 
-        result = repair_project_from_templates(
-            project_path,
-            publisher,
-            app_id,
-            name,
-            author,
-            platform_value,
-            version_base=version_base,
-            description=description,
-        )
+        try:
+            result = repair_project_from_templates(
+                project_path,
+                publisher,
+                app_id,
+                name,
+                author,
+                platform_value,
+                version_base=version_base,
+                description=description,
+            )
+        except ValueError as exc:
+            print(f"[ERROR] Metadatos de proyecto no válidos: {exc}")
+            sys.exit(1)
         repaired_files = result.get('files', [])
         print(f"[OK] MoonFix completado. Archivos reparados/restaurados: {len(repaired_files)}")
         for item in repaired_files:
