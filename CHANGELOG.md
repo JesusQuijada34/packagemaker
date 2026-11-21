@@ -93,6 +93,26 @@ Hallazgo del octavo ciclo de mantenimiento (sin reporte externo; reportado por J
 
 - **R-8a4f1c6d — Una cabecera `.iflapp` con tipos inesperados rompía `--inspect` con traceback:** `read_iflapp_header()` solo validaba que la cabecera fuera un objeto JSON. Un `manifest` que no fuera lista terminaba en `TypeError`; un `payload` que no fuera objeto, en `AttributeError` al leer compresión, cifrado o número de archivos; un `file_count` no numérico, en `ValueError`; una sección mal tipada rompía `--inspect-extract`; y un offset negativo producía un `OSError [Errno 22]` críptico. Ahora `_validate_header_shape()` valida tipos y metadatos numéricos, `_read_section()` y `_payload_bounds()` validan los límites contra el archivo, y las propiedades de `IflappHeader` y `export_header_assets()` toleran formas inesperadas. Todos los casos devuelven un `IflappError` legible.
 
+### Corregido — dependencias del editor, updater y metadatos del CLI
+
+Hallazgos del noveno ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna).
+
+- **R-1c93e4b7 — El editor trataba módulos estándar como dependencias de PyPI:** `lib/dependency_manager.py` usaba una lista fija de módulos estándar que omitía `hmac`, `asyncio`, `ctypes`, `email`, `decimal`, `tomllib`, `sysconfig`, `operator`, `shlex`, `signal` o `zoneinfo`. Un script con `import hmac` hacía que el editor escribiera `hmac` en `requirements.txt` e intentara `pip install hmac`. Ahora la lista se une con `sys.stdlib_module_names` (autoridad desde Python 3.10), conservando la lista histórica como respaldo.
+- **R-4d7b2e91 — `updater.py` abortaba sin `leviathan_ui`:** el updater se copia a todos los proyectos empaquetados y se usa en modo headless (`--version`, `--check`, `--install`), pero importaba `leviathan_ui` de forma incondicional. Ahora `WipeWindow` tiene un respaldo no-op (mismo patrón que `packagemaker.py` y `lib/window_chrome.py`) y `get_accent_color()` cae a `#0078D4`; `--version` y la validación de argumentos funcionan sin la dependencia opcional.
+- **R-6b1f8d20 — `--force-fonts` se ignoraba y abría la TUI:** el flag solo se leía dentro de la rama de `--download-fonts`, así que usado solo no resolvía ninguna acción y arrancaba la interfaz de texto. Ahora implica `--download-fonts all` con `force=True` y respeta las claves si se combinan ambos flags.
+- **R-9e2a5c73 — `--app-version` reportaba una versión fija:** el entrypoint importaba el inexistente `version.VERSION` y caía en `3.2.7`, ignorando `details.xml`; `show_version` además imprimía `vv…`. Ahora ambos caminos leen la versión canónica de `details.xml` (`lib.cliHandler.__version__`), normalizan el prefijo y usan «desconocida» si falta. El formato `Influent Package Maker v<versión>` no cambia.
+- **R-2a7f6b41 — La cabecera `.iflapp` no coincidía con su `details.xml`:** `create_package()` reescribe `<platform>` con la plataforma objetivo, pero la cabecera conservaba la del proyecto. Un proyecto `AlphaCube` compilado en Linux mostraba `Plataforma: AlphaCube` en `--inspect` y `Danenone` dentro del contenedor. `package_identity()` alinea la cabecera con el XML empaquetado y conserva los metadatos si el XML falta o está dañado.
+
+Commit `64c083a`.
+
+### Verificación — noveno ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 509 pasan, 1 omitido, 35 subtests.
+- `python -m pyflakes`, `python -m py_compile` y `ruff` (`F821/F822/F823/F811/F841/B006/B008/B017/B904/E722`) limpios.
+- Las 18 pruebas nuevas fallan con el código anterior (comprobado con `git stash` de cada archivo corregido).
+- Build real `create` + `--buildthis --compiler zipapp --no-sandbox --harden integrity`: `.iflapp` válido (`verify_iflapp() → valid: True`), `--inspect` muestra la misma plataforma que el `details.xml` interno y `--app-version` informa `v3.2.7-26.05-20.13`.
+- `updater.py --version` y `updater.py --accept-license` funcionan con `leviathan_ui` inaccesible (antes: `ModuleNotFoundError`).
+
 ### Pendiente de aprobación
 
 - **R-d23039c0 — Telemetría de errores:** no implementada (envía datos a un servidor externo).

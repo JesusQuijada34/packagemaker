@@ -36,6 +36,11 @@ de auditoría.
 | R-3f9a2c71 | Bug — dropper lanza `updater.py` en builds zipapp | Media | Resuelto |
 | R-7b1d4e92 | Bug — `--inspect` acepta cabeceras truncadas | Baja | Resuelto |
 | R-8a4f1c6d | Bug — cabeceras con tipos inesperados rompen `--inspect` | Baja | Resuelto |
+| R-1c93e4b7 | Bug — stdlib tratada como dependencia PyPI en el editor | Media | Resuelto |
+| R-4d7b2e91 | Bug — `updater.py` aborta sin `leviathan_ui` | Alta | Resuelto |
+| R-6b1f8d20 | Bug — `--force-fonts` ignorado y cae en la TUI | Media | Resuelto |
+| R-9e2a5c73 | Bug — `--app-version` reporta una versión fija | Media | Resuelto |
+| R-2a7f6b41 | Bug — plataforma de la cabecera ≠ `details.xml` | Baja | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -44,8 +49,9 @@ de auditoría.
 No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
-R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92 y R-8a4f1c6d) quedaron
-corregidos y probados. No se prepara release: el periodo de observación y el
+R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
+R-4d7b2e91, R-6b1f8d20, R-9e2a5c73 y R-2a7f6b41) quedaron corregidos y
+probados. No se prepara release: el periodo de observación y el
 requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
@@ -571,6 +577,134 @@ requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-1c93e4b7 — El editor trataba módulos de la biblioteca estándar como dependencias de PyPI
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `lib/dependency_manager.py` decide qué imports externos
+  necesita el proyecto del editor con una lista fija de módulos estándar.
+  Esa lista omite módulos como `hmac`, `asyncio`, `ctypes`, `email`, `decimal`,
+  `tomllib`, `sysconfig`, `operator`, `shlex`, `signal` o `zoneinfo`, así que un
+  script que los importe hace que el editor escriba `hmac`, `email`, etc. en
+  `requirements.txt` e intente `pip install` de paquetes que no existen.
+- **Pasos para reproducir:** en el editor, abrir un script con
+  `import hmac` + `import requests` y ejecutar «Verificar dependencias»;
+  `requirements.txt` termina con `hmac` y `requests`, y la instalación de
+  `hmac` falla.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (falso positivo en todos los proyectos que usan stdlib
+  moderna; ensucia `requirements.txt` y muestra errores de instalación).
+- **Solución aplicada:** `_STDLIB_MODULES` une la lista histórica con
+  `sys.stdlib_module_names` (autoridad desde Python 3.10). La lista antigua se
+  conserva como respaldo para intérpretes anteriores.
+- **Pruebas:** `tests/test_dependency_manager_stdlib.py` (6 casos; los de
+  detección fallan con el código anterior).
+- **Commit:** `64c083a`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
+## R-4d7b2e91 — `updater.py` abortaba sin `leviathan_ui`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** el updater se copia a todos los proyectos empaquetados y se
+  usa en modo headless (`--version`, `--check`, `--install`), pero importaba
+  `leviathan_ui` de forma incondicional en la cabecera. En una máquina sin esa
+  dependencia opcional (CI, Linux mínimo, proyecto recién creado) terminaba con
+  `ModuleNotFoundError` antes de leer los argumentos, así que ni siquiera
+  `updater.py --version` funcionaba. `get_accent_color()` tenía el mismo
+  problema.
+- **Pasos para reproducir:** con un `leviathan_ui` que no se puede importar,
+  `python updater.py --version` termina con traceback y código 1.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (el actualizador queda inutilizable sin la dependencia
+  opcional, incluidos los flujos headless).
+- **Solución aplicada:** `WipeWindow` tiene un respaldo no-op en el
+  `except ImportError` (mismo patrón que `packagemaker.py` y
+  `lib/window_chrome.py`), se expone `LEVIATHAN_AVAILABLE` y
+  `get_accent_color()` cae a `#0078D4` cuando el import falla.
+- **Pruebas:** `tests/test_updater_optional_dependencies.py` (3 casos; los 3
+  fallan con el código anterior).
+- **Commit:** `64c083a`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
+## R-6b1f8d20 — `--force-fonts` se ignoraba y abría la TUI
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** el flag está documentado como «forzar la redescarga aunque
+  estén en caché», pero `get_action()` solo lo leía dentro de la rama de
+  `--download-fonts`. Usado solo, ninguna acción coincidía y el flujo principal
+  abría la TUI (o la GUI), sin descargar nada. En un script o en CI quedaba
+  esperando entrada.
+- **Pasos para reproducir:** `python packagemaker.py --force-fonts` con
+  `stdin` cerrado: arranca la TUI en lugar de descargar las fuentes.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (opción documentada sin efecto y arranque inesperado de
+  la interfaz).
+- **Solución aplicada:** `get_action()` trata `--force-fonts` como
+  `--download-fonts all` con `force=True`; combinado con
+  `--download-fonts <claves>` conserva las claves indicadas.
+- **Pruebas:** `tests/test_cli_font_flags.py` (3 casos; el de `--force-fonts`
+  solo falla con el código anterior).
+- **Commit:** `64c083a`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
+## R-9e2a5c73 — `--app-version` reportaba una versión fija
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** el entrypoint intentaba `from version import VERSION`, módulo
+  que no existe en el repositorio, y caía en `version = "3.2.7"`. El comando
+  ignoraba la versión canónica de `details.xml` y quedaría obsoleto tras
+  cualquier release, justo cuando se usa para verificar el número de versión.
+  Además, `show_version` (rama muerta porque `main()` intercepta el flag)
+  imprimía `v` + `__version__` y producía `vv3.2.7-…`.
+- **Pasos para reproducir:** `python packagemaker.py --app-version` imprime
+  `Influent Package Maker v3.2.7` aunque `details.xml` declare
+  `v3.2.7-26.05-20.13`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (información de versión incorrecta; afecta a la
+  verificación previa al release).
+- **Solución aplicada:** ambos caminos leen `lib.cliHandler.__version__`
+  (derivada de `details.xml`), normalizan el prefijo `v` y usan
+  «desconocida» si falta el dato. El formato de salida sigue siendo
+  `Influent Package Maker v<versión>`.
+- **Pruebas:** `tests/test_cli_version_reporting.py` (2 casos).
+- **Commit:** `64c083a`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
+## R-2a7f6b41 — La plataforma de la cabecera no coincidía con el `details.xml` empaquetado
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `create_package()` reescribe `<platform>` en el
+  `details.xml` del paquete con la plataforma objetivo, pero la cabecera
+  `.iflapp` recibía `self.metadata`, que conserva la plataforma declarada del
+  proyecto. Al compilar un proyecto `AlphaCube` en Linux, `--inspect` mostraba
+  `Plataforma: AlphaCube` y, en el mismo contenedor, un `details.xml` con
+  `Danenone`.
+- **Pasos para reproducir:** crear un proyecto con `--platform all`, compilar
+  con `--compiler zipapp` en Linux y ejecutar
+  `python packagemaker.py --inspect <artefacto>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja (metadatos contradictorios; no impide abrir ni verificar).
+- **Solución aplicada:** `package_identity()` alinea la identidad de la
+  cabecera con el `<platform>` del `details.xml` que se empaqueta; si el XML
+  falta, está corrupto o no declara plataforma, se conservan los metadatos.
+- **Pruebas:** `tests/test_package_identity_platform.py` (4 casos).
+- **Commit:** `64c083a`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 ### R-d23039c0 — Telemetría centralizada de errores
@@ -755,6 +889,14 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   real `--compiler zipapp --no-sandbox` genera el `.iflapp`, `--inspect-json`
   lo lee, `--inspect-extract` exporta icono y `details.xml`, y
   `verify_iflapp()` devuelve `valid: True`.
+- Verificación del ciclo de R-1c93e4b7, R-4d7b2e91, R-6b1f8d20, R-9e2a5c73 y
+  R-2a7f6b41 (2026-11-21): `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`
+  → 509 pasan, 1 omitido, 35 subtests; `pyflakes`, `py_compile` y `ruff`
+  (`F821/F822/F823/F811/F841/B006/B008/B017/B904/E722`) limpios; build real
+  `create` + `--buildthis --compiler zipapp --no-sandbox --harden integrity`
+  genera un `.iflapp` válido (`verify_iflapp() → valid: True`), `--inspect`
+  coincide ahora con el `details.xml` interno (`Plataforma: Danenone`) y
+  `--app-version` informa `v3.2.7-26.05-20.13` desde `details.xml`.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
