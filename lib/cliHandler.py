@@ -15,6 +15,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from lib.projectNameFormatter import ProjectNameFormatter
+from lib.project_locator import locate_project
 
 
 def _safe_print(message, stream=None):
@@ -1473,13 +1474,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         app_id = project_source.get('shortname') or (project_source.get('name') or '').strip().lower().replace(' ', '-')
         version_base = ProjectNameFormatter.normalize_version_base(project_source.get('version') or '1.0.0')
         
-        # Buscar proyecto que coincida con el patrón
-        project_path = None
-        for item in base_path.iterdir():
-            if item.is_dir() and (item / 'details.xml').exists():
-                if publisher.lower() in item.name.lower() and app_id.lower() in item.name.lower():
-                    project_path = item
-                    break
+        # Buscar el proyecto por sus metadatos, no por subcadena del nombre de
+        # carpeta: con ``demo`` y ``demo2`` el prefijo elegía el proyecto
+        # equivocado. ``locate_project`` compara publisher/app exactos y, si la
+        # carpeta base no existe, devuelve None en lugar de reventar.
+        project_path = locate_project(base_path, publisher=publisher, app_id=app_id)
         
         if not project_path:
             print(f"[ERROR] No se encontró proyecto que coincida con {publisher}.{app_id} en {base_path}")
@@ -1695,13 +1694,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             else:
                 version_base = '1.0'
         
-        # Buscar proyecto que coincida con el patrón
-        project_path = None
-        for item in base_path.iterdir():
-            if item.is_dir() and (item / 'details.xml').exists():
-                if publisher.lower() in item.name.lower() and app_id.lower() in item.name.lower():
-                    project_path = item
-                    break
+        # Buscar el proyecto por sus metadatos, no por subcadena del nombre de
+        # carpeta: con ``demo`` y ``demo2`` el prefijo elegía el proyecto
+        # equivocado. ``locate_project`` compara publisher/app exactos y, si la
+        # carpeta base no existe, devuelve None en lugar de reventar.
+        project_path = locate_project(base_path, publisher=publisher, app_id=app_id)
         
         if not project_path:
             print(f"[ERROR] No se encontró proyecto que coincida con {publisher}.{app_id} en {base_path}")

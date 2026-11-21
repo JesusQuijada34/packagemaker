@@ -321,5 +321,179 @@ class JsonOutputPurityTests(unittest.TestCase):
             self.assertIn("Platform detected", result.stderr)
 
 
+
+class CompileProjectSelectionTests(unittest.TestCase):
+    """El subcomando ``compile`` debe elegir el proyecto exacto y no reventar."""
+
+    def _make_project(self, base: Path, app: str) -> Path:
+        project = base / f"influent.{app}.v1.0.0-26.11-08.00-Danenone"
+        project.mkdir()
+        (project / "details.xml").write_text(
+            DETAILS.replace("<app>demo</app>", f"<app>{app}</app>").replace(
+                "<name>demo</name>", f"<name>{app}</name>"
+            ),
+            encoding="utf-8",
+        )
+        return project
+
+    def test_compile_selects_exact_app_not_prefix(self):
+        from lib.cliHandler import handle_cli_action
+
+        class _RecordingCompiler:
+            chosen = []
+
+            def __init__(self, project_path, output_path, **kwargs):
+                type(self).chosen.append(Path(project_path))
+
+            def parse_details_xml(self):
+                return False
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            base.mkdir()
+            # ``demo2`` se crea primero para que el orden del directorio lo
+            # devuelva antes; la coincidencia por subcadena elegía ese proyecto.
+            self._make_project(base, "demo2")
+            self._make_project(base, "demo")
+            _RecordingCompiler.chosen = []
+
+            with patch("lib.BuildThread.FlangCompiler", _RecordingCompiler), patch(
+                "lib.platform_detect.compile_output_directory",
+                return_value=str(Path(tmp) / "out"),
+            ):
+                with redirect_stdout(io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        handle_cli_action(
+                            "compile_project",
+                            {
+                                "path": str(base),
+                                "name": "Demo",
+                                "shortname": "demo",
+                                "publisher": "Influent",
+                            },
+                            None,
+                            headless=True,
+                        )
+
+            self.assertEqual(len(_RecordingCompiler.chosen), 1)
+            self.assertIn("influent.demo.v", _RecordingCompiler.chosen[0].name)
+            self.assertNotIn("demo2", _RecordingCompiler.chosen[0].name)
+
+    def test_compile_missing_base_dir_reports_error_without_traceback(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / "does-not-exist"
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                with self.assertRaises(SystemExit) as ctx:
+                    handle_cli_action(
+                        "compile_project",
+                        {
+                            "path": str(missing),
+                            "name": "Demo",
+                            "shortname": "demo",
+                            "publisher": "Influent",
+                        },
+                        None,
+                        headless=True,
+                    )
+            self.assertEqual(ctx.exception.code, 1)
+            self.assertIn("No se encontró proyecto", buffer.getvalue())
+
+    def test_moonfix_missing_base_dir_reports_error_without_traceback(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / "does-not-exist"
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                with self.assertRaises(SystemExit) as ctx:
+                    handle_cli_action(
+                        "repair_project",
+                        {
+                            "path": str(missing),
+                            "name": "Demo",
+                            "shortname": "demo",
+                            "publisher": "Influent",
+                        },
+                        None,
+                        headless=True,
+                    )
+            self.assertEqual(ctx.exception.code, 1)
+            self.assertIn("No se encontró proyecto", buffer.getvalue())
+
+
+class EncryptedSandboxVerificationTests(unittest.TestCase):
+    """La verificación en sandbox debe descifrar los paquetes con ``--password``."""
+
+    def test_encrypted_package_verifies_inside_sandbox(self):
+        from lib.BuildThread import FlangCompiler
+        from lib.hardware_sandbox import SandboxResult
+        from lib.iflapp_format import pack_iflapp
+
+        class _RealRunSandbox:
+            backend = "fake"
+
+            def __init__(self, workspace):
+                self.workspace = Path(workspace)
+
+            def describe(self):
+                return {"selected": "fake", "hardware_virtualization": False}
+
+            def prepare_workspace(self, output_path, *, writable=True):
+                self.workspace.mkdir(parents=True, exist_ok=True)
+                return self.workspace
+
+            def run(self, argv, workspace, *, env=None, **kwargs):
+                run_env = os.environ.copy()
+                run_env.update(env or {})
+                proc = subprocess.run(
+                    list(argv),
+                    cwd=str(workspace),
+                    env=run_env,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+                return SandboxResult(
+                    proc.returncode, proc.stdout, proc.stderr, "fake", list(argv)
+                )
+
+            def cleanup(self, workspace):
+                pass
+
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = Path(tmp) / "payload"
+            payload.mkdir()
+            (payload / "app.py").write_text("print('hola')\n", encoding="utf-8")
+            artifact = Path(tmp) / "demo.iflapp"
+            pack_iflapp(
+                payload,
+                artifact,
+                details=DETAILS.encode("utf-8"),
+                identity={"publisher": "Influent", "app": "demo"},
+                password="secreto",
+            )
+
+            project = Path(tmp) / "project"
+            project.mkdir()
+            output = Path(tmp) / "out"
+            logs = []
+            compiler = FlangCompiler(
+                project,
+                output,
+                log_callback=logs.append,
+                sandbox=False,
+                package_password="secreto",
+            )
+            compiler._sandbox = _RealRunSandbox(Path(tmp) / "sandbox")
+
+            self.assertTrue(compiler.verify_in_sandbox(artifact))
+            joined = "\n".join(logs)
+            self.assertNotIn("incompleta", joined)
+            self.assertTrue((Path(tmp) / "sandbox" / "unpacked" / "app.py").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

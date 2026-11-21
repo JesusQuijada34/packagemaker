@@ -795,12 +795,13 @@ class FlangCompiler:
             extract_script.write_text(
                 "\n".join(
                     [
+                        "import os",
                         "import sys",
                         "from lib.iflapp_format import extract_iflapp, verify_iflapp, read_iflapp_header",
                         "pkg = sys.argv[1]",
                         "dest = sys.argv[2]",
                         "verify_iflapp(pkg)",
-                        "extract_iflapp(pkg, dest)",
+                        "extract_iflapp(pkg, dest, password=os.environ.get('IFLAPP_VERIFY_PASSWORD') or None)",
                         "header = read_iflapp_header(pkg, include_blobs=False)",
                         "print('IFLAPP_OK', header.file_count, header.identity().get('app', ''))",
                     ]
@@ -813,6 +814,10 @@ class FlangCompiler:
             sandbox_env = {"PYTHONPATH": os.pathsep.join(
                 [str(project_root), os.environ.get("PYTHONPATH", "")]
             ).rstrip(os.pathsep)}
+            # La contraseña viaja por entorno, no por argv: el paquete cifrado
+            # necesita descifrarse para extraerlo y verificar su arranque.
+            if self.package_password:
+                sandbox_env["IFLAPP_VERIFY_PASSWORD"] = self.package_password
             result = self._sandbox.run(
                 [sys.executable, str(extract_script), str(iflapp_path), str(Path(workspace) / "unpacked")],
                 workspace,
