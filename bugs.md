@@ -34,6 +34,7 @@ de auditoría.
 | R-6e04c8ab | Bug — aviso de MoonFix no codificable (cp1252) | Media | Resuelto |
 | R-7d5b91c4 | Bug — MoonFix rompe la marca temporal canónica | Media | Resuelto |
 | R-3f9a2c71 | Bug — dropper lanza `updater.py` en builds zipapp | Media | Resuelto |
+| R-7b1d4e92 | Bug — `--inspect` acepta cabeceras truncadas | Baja | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -42,9 +43,9 @@ de auditoría.
 No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
-R-6e04c8ab, R-7d5b91c4 y R-3f9a2c71) quedaron corregidos y probados. No se
-prepara release: el periodo de observación y el requisito de 7 días sin reportes
-nuevos siguen en curso.
+R-6e04c8ab, R-7d5b91c4, R-3f9a2c71 y R-7b1d4e92) quedaron corregidos y
+probados. No se prepara release: el periodo de observación y el requisito de 7
+días sin reportes nuevos siguen en curso.
 
 ---
 
@@ -507,6 +508,33 @@ nuevos siguen en curso.
 - **Commit:** `325c0e9`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-7b1d4e92 — `--inspect` aceptaba cabeceras truncadas como paquete válido
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `read_iflapp_header()` no comprobaba que la cabecera declarada
+  cupiera en el archivo. Un `.iflapp` cortado justo después de la longitud
+  declarada se inspeccionaba con código 0 y un JSON aparentemente válido
+  (`format_version: 0`, identidad vacía), así que una descarga incompleta
+  parecía un paquete legítimo. Si faltaban los cuatro bytes de longitud, el
+  error era `struct.error`; un JSON que no fuera objeto producía
+  `AttributeError` y metadatos de sección no numéricos, `ValueError`.
+- **Pasos para reproducir:** escribir `IFLAPP2\0` + longitud 1000 + `{}` en un
+  archivo y ejecutar `python packagemaker.py --inspect <archivo> --inspect-json`;
+  terminaba con código 0 y una cabecera vacía.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja (no corrompe nada; oculta un paquete truncado y da un
+  diagnóstico engañoso).
+- **Solución aplicada:** `read_iflapp_header()` valida los cuatro bytes de
+  longitud, que el blob leído mida exactamente lo declarado, que el JSON sea un
+  objeto y que la cabecera de cola también esté completa. `_read_section()`
+  valida el tipo de `sections`, los metadatos numéricos y que la sección no
+  exceda el archivo. Todos los casos producen `IflappError` legible.
+- **Pruebas:** `tests/test_iflapp_format.py::TruncatedContainerTests` (5 casos;
+  los 5 fallan con el código anterior).
+- **Commit:** `850de5c`.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -652,8 +680,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
-  `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4 y
-  `325c0e9`), no reportes de usuario; el contador de 7 días no se reinicia.
+  `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4,
+  `325c0e9` y `850de5c`), no reportes de usuario; el contador de 7 días no se
+  reinicia.
 - Verificación del ciclo de R-3a7c5e18, R-9f2b64d1 y R-6e04c8ab (2026-11-21):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 474 pasan, 2
   omitidos; `pyflakes` y `py_compile` limpios; las cuatro acciones JSON
@@ -676,6 +705,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `.run` regenerado con el stub corregido ejecuta `demo.pyz` e imprime
   `Hola desde demo!` (antes lanzaba `updater.py` y no terminaba). La prueba
   nueva falla con el código anterior (`wrong-entrypoint`).
+- Verificación del ciclo de R-7b1d4e92 (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 484 pasan, 1
+  omitido; `pyflakes` y `py_compile` limpios; `--inspect-json` sobre una
+  cabecera cortada, un JSON `null` o una sección fuera del archivo termina con
+  código 1 y un `IflappError` legible (antes: código 0 con cabecera vacía o
+  `struct.error`/`AttributeError`/`ValueError`).
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

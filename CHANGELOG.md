@@ -62,14 +62,21 @@ Hallazgo del séptimo ciclo de mantenimiento (sin reporte externo; reportado por
 
 - **R-3f9a2c71 — El dropper lanzaba `updater.py` en los builds zipapp:** el stub solo probaba `<guion>`, `<guion>.exe` y `<guion>.py`, pero el backend zipapp entrega `<guion>.pyz`. Al no encontrar el punto de entrada, el respaldo ejecutaba el primer `.py` de la raíz del paquete (`updater.py`) y el `.run` quedaba en el actualizador en lugar de arrancar la aplicación. Ahora los candidatos incluyen `.pyz` y el respaldo prefiere artefactos Python compilados antes que los guiones auxiliares.
 
+### Corregido — cabeceras `.iflapp` truncadas
+
+Hallazgo del mismo ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `850de5c`.
+
+- **R-7b1d4e92 — `--inspect` aceptaba cabeceras truncadas como paquete válido:** `read_iflapp_header()` no comprobaba que la cabecera declarada cupiera en el archivo, así que un `.iflapp` cortado se inspeccionaba con código 0 y `format_version: 0`/identidad vacía; faltando los 4 bytes de longitud lanzaba `struct.error`, y un JSON que no fuera objeto o metadatos de sección no numéricos terminaban en `AttributeError`/`ValueError`. Ahora todos esos casos producen un `IflappError` legible.
+
 ### Mantenimiento
 
 - `lib/requirements-dev.txt` resuelve correctamente su include (`-r requirements.txt`) y la documentación usa la ruta real `lib/requirements-dev.txt`.
 
 ### Verificación
 
-- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 479 pasan, 1 omitido (la dependencia opcional `leviathan_ui` está instalada en este entorno).
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 484 pasan, 1 omitido (la dependencia opcional `leviathan_ui` está instalada en este entorno).
 - `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- `--inspect-json` sobre un `.iflapp` con cabecera cortada, JSON `null` o sección fuera del archivo termina con código 1 y un error legible (antes: código 0 con cabecera vacía o excepción cruda).
 - Build real con `--compiler zipapp --no-sandbox --dropper`: genera `.iflapp` y `.run`; el `.run` ejecuta `demo.pyz` e imprime `Hola desde demo!` (antes lanzaba `updater.py` y no terminaba).
 - Build real con `--compiler zipapp --harden integrity`: `.iflapp` válido con `.iflapp.integrity` en el manifiesto.
 - Build real con `--compiler zipapp --password` y sandbox activo: `.iflapp` cifrado y verificación en sandbox `[OK]` (antes «incompleta»).
