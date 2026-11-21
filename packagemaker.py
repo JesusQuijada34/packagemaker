@@ -236,7 +236,7 @@ def get_accent_color():
             return str(_leviathan_accent())
         except Exception:
             pass
-    return "#0078D4"
+    return ACCENT
 
 
 from lib.blindcubeEngine.BuildThread import BuildThread
@@ -252,13 +252,13 @@ from lib.window_chrome import (
 from lib.uwp_animations import play_bounce_down_close
 from lib.page_action_bar import install_page_action_bar, make_action_button, make_icon_button
 from lib.design_tokens import (
+    ACCENT,
     CONTENT_PADDING,
     INPUT_HEIGHT,
     SIDEBAR_ITEM_HEIGHT,
     SIDEBAR_PADDING,
     SIDEBAR_TOP_MARGIN,
     TEXT,
-    TEXT_LIGHT,
     WINDOW_BG,
     WINDOW_RADIUS,
     uwp_button_qss,
@@ -281,11 +281,10 @@ from lib.i18n import i18n, tr, system_default_language, get_available_languages
 from lib.linux_icon_handler import ensure_linux_icon_support
 from lib.pm_data import get_pm_data, load_merged_app_config
 from lib.fluent_theme import (
+    global_stylesheet,
     BTN_STYLES,
     FluentCheckBox as QCheckBox,
-    application_stylesheet,
     applyget,
-    checkbox_stylesheet,
     conf_field_stylesheet,
     preferred_mono_font,
     preferred_ui_font,
@@ -1000,12 +999,20 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, "sidebar_resize_handle"):
             self.sidebar_resize_handle.setVisible(not collapsed)
 
+        # Colapsado se siguen viendo los iconos, ajustados al lateral; lo que
+        # desaparece es el texto, la tarjeta de contexto y el bloque de login.
         for btn in self._sidebar_btn_keys:
-            btn.setVisible(not collapsed)
+            btn.setVisible(True)
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            if hasattr(btn, "set_compact"):
+                btn.set_compact(collapsed)
         self.lbl_menu_main.setVisible(not collapsed)
         if hasattr(self.desc_card, "setVisible"):
             self.desc_card.setVisible(not collapsed)
+        if hasattr(self, "github_card") and self.github_card is not None:
+            self.github_card.setVisible(not collapsed)
+        if hasattr(self, "sidebar_collapse_toggle"):
+            self.sidebar_collapse_toggle.setVisible(True)
 
     def enterCompactShellMode(self):
         """Arranca con el sidebar colapsado (modos ``--compact`` / ``--shell-mode``).
@@ -1429,10 +1436,7 @@ class PackageTodoGUI(QMainWindow):
 
         app = QApplication.instance()
         if app is not None:
-            app.setStyleSheet(
-                application_stylesheet(dark, accent)
-                + checkbox_stylesheet(accent, TEXT if dark else TEXT_LIGHT)
-            )
+            app.setStyleSheet(global_stylesheet(accent, dark))
 
         set_qss(self.central, applyget(accent, dark), append=False)
         set_qss(
@@ -1455,6 +1459,8 @@ class PackageTodoGUI(QMainWindow):
                 # ``SidebarItem`` pinta su propio indicador y elige sus colores
                 # según el tema; aplicar aquí el QSS genérico lo pisaría.
                 btn.set_dark(dark)
+                if hasattr(btn, "set_accent"):
+                    btn.set_accent(accent)
             else:
                 btn.setStyleSheet(sidebar_button_stylesheet(dark, accent, border_w))
 
@@ -4554,7 +4560,7 @@ def main():
 
             if PYQT6_AVAILABLE:
                 app = QApplication(sys.argv)
-                app.setStyleSheet(checkbox_stylesheet(get_accent_color()))
+                app.setStyleSheet(global_stylesheet(get_accent_color()))
                 font = app_font()
                 if font is not None:
                     app.setFont(font)
@@ -4586,7 +4592,7 @@ def main():
         return
 
     app = QApplication(sys.argv)
-    app.setStyleSheet(checkbox_stylesheet(get_accent_color()))
+    app.setStyleSheet(global_stylesheet(get_accent_color()))
     font = app_font()
     if font is not None:
         app.setFont(font)

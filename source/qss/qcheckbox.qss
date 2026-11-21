@@ -25,7 +25,7 @@ QCheckBox::indicator:hover {
 
 QCheckBox::indicator:pressed {
     border-color: __ACCENT__;
-    background: rgba(0, 120, 212, 0.24);
+    background: __ACCENT_SOFT__;
 }
 
 QCheckBox::indicator:checked {

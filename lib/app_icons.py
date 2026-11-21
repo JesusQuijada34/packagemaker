@@ -22,7 +22,6 @@ from lib.design_tokens import SIDEBAR_ICON_DARK, SIDEBAR_ICON_LIGHT
 
 ACCENT = "#ffffff"
 ACCENT_LIGHT = "#ff8a65"
-WIN_ACCENT = "#0078D4"
 MUTED = "#9aa4b2"
 
 ICONS_SVG = {

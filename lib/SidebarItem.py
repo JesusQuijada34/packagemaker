@@ -94,6 +94,9 @@ class SidebarItem(QPushButton):
         self._compact = False
         self._dark = bool(dark)
         self._icon_key = icon_key
+        # Acento del indicador: el token por defecto, o el que fije la app al
+        # reaplicar el tema (la preferencia del usuario manda sobre el token).
+        self._accent = ACCENT
         # Progreso del indicador (0.0 oculto, 1.0 visible). Se anima para que el
         # cambio de página tenga una transición en vez de aparecer de golpe.
         self._indicator_progress = 1.0 if self.isChecked() else 0.0
@@ -168,6 +171,12 @@ class SidebarItem(QPushButton):
         self.setText("" if self._compact else text)
         self.setToolTip(text if self._compact else "")
 
+    def set_accent(self, accent: str) -> None:
+        """Fija el color del indicador de selección."""
+        if accent:
+            self._accent = str(accent)
+            self.update()
+
     def set_compact(self, compact):
         self._compact = bool(compact)
         self.set_label_text(self._label_text)
@@ -235,7 +244,7 @@ class SidebarItem(QPushButton):
         painter.setPen(Qt.PenStyle.NoPen)
         # El indicador crece y aparece con el progreso animado; el color azul
         # mantiene su intensidad plena al final de la transición.
-        color = QColor(ACCENT)
+        color = QColor(self._accent)
         color.setAlphaF(progress)
         painter.setBrush(color)
         height = max(1.0, SIDEBAR_INDICATOR_HEIGHT * progress)

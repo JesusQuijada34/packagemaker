@@ -20,7 +20,9 @@ def test_checkbox_uses_native_painting_and_shared_root_stylesheet():
     assert "qcheckbox" in tokens
     assert 'image: url("__CHECK_ICON__")' in stylesheet
     assert 'image: url("__PARTIAL_ICON__")' in stylesheet
-    assert "app.setStyleSheet(checkbox_stylesheet" in entrypoint
+    # La hoja raíz única instala también el QSS del checkbox (Fase 3.1).
+    assert "app.setStyleSheet(global_stylesheet" in entrypoint
+    assert "checkbox_stylesheet(accent, text)" in theme
 
 
 def test_theme_and_font_have_system_fallbacks():

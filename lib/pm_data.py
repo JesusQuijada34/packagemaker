@@ -13,6 +13,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from lib.design_tokens import ACCENT as _DEFAULT_ACCENT
+
 # Personalización visual bloqueada en ejecutable compilado (definir antes del build)
 COMPILED_LOCKED_USER_KEYS = frozenset({
     "custom_accent_color",
@@ -42,7 +44,7 @@ DEFAULT_USER: Dict[str, Any] = {
     "auto_color": True,
     "notifications_enabled": False,
     "default_editor": "",
-    "custom_accent_color": "#0078D4",
+    "custom_accent_color": _DEFAULT_ACCENT,
     "blur_intensity": 14,
     "window_radius": 12,
     "sidebar_accent_width": 3,
@@ -227,7 +229,7 @@ class PMDataStore:
             "auto_color": u.get("auto_color", True),
             "auto_translate": u.get("auto_translate", True),
             "notifications_enabled": u.get("notifications_enabled", False),
-            "custom_accent_color": u.get("custom_accent_color", "#0078D4"),
+            "custom_accent_color": u.get("custom_accent_color", _DEFAULT_ACCENT),
             "blur_intensity": u.get("blur_intensity", 14),
             "window_radius": u.get("window_radius", 12),
             "sidebar_accent_width": u.get("sidebar_accent_width", 3),

@@ -2,6 +2,7 @@
 
 import os
 import sys
+from typing import Optional
 
 from lib import qss_loader
 from lib.design_tokens import (
@@ -37,6 +38,7 @@ from lib.design_tokens import (
     WINDOW_RADIUS,
     accent_states,
     checkbox_qss,
+    with_alpha,
     destructive_button_qss,
     input_qss,
     mono_value_qss,
@@ -386,6 +388,8 @@ def sidebar_stylesheet(dark, accent="#0078d4"):
         SIDEBAR_TEXT_GRAY=SIDEBAR_TEXT_GRAY,
         CARD_RADIUS=CARD_RADIUS,
         FONT_STACK=FONT_STACK,
+        ACCENT=accent,
+        ACCENT_SOFT=with_alpha(accent, 0.16),
     )
 
 
@@ -405,6 +409,7 @@ def sidebar_button_stylesheet(dark, accent="#0078d4", border_width=3):
         CONTROL_RADIUS=CONTROL_RADIUS,
         FONT_STACK=FONT_STACK,
         ACCENT=accent,
+        ACCENT_SOFT=with_alpha(accent, 0.16),
     )
 
 
@@ -469,6 +474,20 @@ def application_stylesheet(dark: bool = True, accent: str = ACCENT) -> str:
             qss_loader.qss("qlistwidget", role="ide", **common),
         ]
     )
+
+
+def global_stylesheet(accent: str = ACCENT, dark: Optional[bool] = None) -> str:
+    """Hoja de estilo raíz única de la aplicación (bugs.txt Fase 3.1).
+
+    Antes el arranque sólo aplicaba la hoja del checkbox y cada página se
+    estilaba por su cuenta; ahora ``main`` instala **una** hoja global y los
+    widgets nuevos heredan de ella declarando sólo su ``objectName``. El tema
+    se resuelve del sistema cuando no se indica.
+    """
+    if dark is None:
+        dark = system_theme_mode() != "light"
+    text = TEXT if dark else TEXT_LIGHT
+    return application_stylesheet(dark, accent) + "\n" + checkbox_stylesheet(accent, text)
 
 
 def splash_titlebar_stylesheet():

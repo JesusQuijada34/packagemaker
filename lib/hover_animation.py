@@ -10,7 +10,7 @@ texto, borde, radios e iconos se siguen pintando con las reglas originales.
 Uso típico::
 
     from lib.hover_animation import enable_hover_fade
-    enable_hover_fade(button, hover_color="#1084D8")
+    enable_hover_fade(button, hover_color=ACCENT_HOVER)
 
 Si el widget no tiene ninguna declaración de fondo, la función no hace nada.
 """
@@ -167,6 +167,7 @@ class _HoverFade(QObject):
         self._base_qss = widget.styleSheet()
         self._base_color = _base_background_color(self._base_qss)
         self._hovered = False
+        self._last_stylesheet: Optional[str] = None
         # Una sola animación reutilizada durante toda la vida del animador. Con
         # ``DeleteWhenStopped`` Qt destruía el objeto C++ al terminar y la
         # referencia quedaba colgando: el siguiente ``stop()`` lanzaba
@@ -185,7 +186,14 @@ class _HoverFade(QObject):
     def _set_progress(self, value: float) -> None:
         self._progress = float(value)
         color = _blend(self._base_color, self._hover_color, self._progress)
-        self._widget.setStyleSheet(_with_hover_background(self._base_qss, color))
+        stylesheet = _with_hover_background(self._base_qss, color)
+        # Re-aplicar la misma hoja fuerza un re-polish que reevalúa ``:hover``
+        # en mitad de la animación; eso producía el parpadeo azul/gris del
+        # sidebar. Con la hoja idéntica no hay nada que repintar.
+        if stylesheet == self._last_stylesheet:
+            return
+        self._last_stylesheet = stylesheet
+        self._widget.setStyleSheet(stylesheet)
 
     _progress = 0.0
     progress = pyqtProperty(float, _get_progress, _set_progress)
@@ -193,6 +201,7 @@ class _HoverFade(QObject):
     def refresh(self) -> None:
         """Vuelve a leer el QSS base del widget tras un cambio de estilo."""
         self._base_qss = self._widget.styleSheet()
+        self._last_stylesheet = None
         self._base_color = _base_background_color(self._base_qss)
         self._progress = 0.0
 
@@ -212,7 +221,11 @@ class _HoverFade(QObject):
         return False
 
     def _animate(self, target: float) -> None:
-        if self._only_when is not None and not self._only_when():
+        # ``only_when`` sólo decide si **entra** el resalte: al salir el ratón
+        # siempre se vuelve al estado base. Si se aplicara también a la salida,
+        # un ítem que pasa a seleccionado mientras el puntero está encima se
+        # quedaba con el fondo de hover encima del de selección.
+        if target > 0.5 and self._only_when is not None and not self._only_when():
             return
         if self._hovered == (target > 0.5):
             return

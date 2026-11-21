@@ -23,9 +23,11 @@ from lib import qss_loader
 # --------------------------------------------------------------------------- #
 # Paleta
 # --------------------------------------------------------------------------- #
-ACCENT = "#0078D4"
-ACCENT_HOVER = "#1084D8"
-ACCENT_PRESSED = "#005FB8"
+# Acento corporativo: el naranja de la marca (bugs.txt Fase 3.1). Sustituye al
+# azul de Windows 11 en focos de teclado, bordes activos y selección.
+ACCENT = "#FF6B00"
+ACCENT_HOVER = "#FF8324"
+ACCENT_PRESSED = "#D95A00"
 
 WINDOW_BG = "#1C1C1E"
 SURFACE = "#2D2D2D"
@@ -92,8 +94,9 @@ TEXT_ALT = "#AAAAAA"          # descripciones de apoyo
 TEXT_SOFT = "#BBBBBB"         # texto secundario suave
 TITLEBAR_TEXT = "#EEEEEE"     # rótulo del título de la barra superior
 
-# Anillo de foco del indicador de navegación por teclado.
-FOCUS_RING = "#F9826C"
+# Anillo de foco del indicador de navegación por teclado. Comparte el acento
+# corporativo para que el foco y la selección hablen el mismo idioma visual.
+FOCUS_RING = ACCENT
 
 # --------------------------------------------------------------------------- #
 # Geometría
@@ -334,6 +337,7 @@ def checkbox_qss(accent: str = ACCENT, color: str = TEXT_MUTED, size: int = 13) 
     return qss_loader.qss(
         "qcheckbox",
         ACCENT=accent,
+        ACCENT_SOFT=with_alpha(accent, 0.24),
         TEXT_COLOR=color,
         FONT_STACK=FONT_STACK,
         FONT_SIZE=int(size),
@@ -395,6 +399,7 @@ def sidebar_qss(dark: bool = True, accent: str = ACCENT) -> str:
         CONTROL_RADIUS=CONTROL_RADIUS,
         FONT_STACK=FONT_STACK,
         ACCENT=accent,
+        ACCENT_SOFT=with_alpha(accent, 0.16),
     )
 
 

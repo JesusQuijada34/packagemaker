@@ -20,6 +20,7 @@ from typing import Dict, List, Optional, Sequence
 
 from lib.dialog_effect import install_partial_effect
 from lib.i18n import tr
+from lib.design_tokens import ACCENT
 
 try:
     from PyQt6.QtCore import Qt
@@ -61,7 +62,7 @@ def _palette(dark: bool) -> Dict[str, str]:
             "message": "rgba(235, 235, 245, 0.72)",
             "row": "rgba(255, 255, 255, 0.05)",
             "text": "#ffffff",
-            "accent": "#0078D4",
+            "accent": ACCENT,
         }
     return {
         "bg": "#ffffff",
@@ -70,7 +71,7 @@ def _palette(dark: bool) -> Dict[str, str]:
         "message": "rgba(60, 60, 67, 0.72)",
         "row": "rgba(0, 0, 0, 0.04)",
         "text": "#1c1c1e",
-        "accent": "#0078D4",
+        "accent": ACCENT,
     }
 
 

@@ -92,7 +92,7 @@ def _editor_accent() -> str:
 
         return ACCENT
     except Exception:
-        return "#0078D4"
+        return "#FF6B00"
 
 
 def _shade(color: str, factor: float) -> str:
