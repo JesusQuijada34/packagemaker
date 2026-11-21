@@ -21,12 +21,17 @@ de auditoría.
 | R-e1a87de9 | Bug — persistencia de ajustes | Alta | Resuelto |
 | R-8f2c41d9 | Bug — empaquetado con backend zipapp | Alta | Resuelto |
 | R-c47a9e12 | Bug — `--harden` ignorado en CLI headless | Media | Resuelto |
+| R-2e83a7bd | Bug — `compile` ignora salida Termux | Alta | Resuelto |
+| R-4b7e91a2 | Bug — banner contamina salida JSON | Media | Resuelto |
+| R-9c1d5f60 | Bug — icono no copiado fuera del repo | Media | Resuelto |
+| R-a5f06c38 | Bug — `--harden` inválido silencioso | Media | Resuelto |
+| R-d74e0b19 | Bug — `--ide-compile` duplica salida | Baja | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
 
-No hay bugs críticos ni de alta prioridad abiertos. Los dos últimos reportes
-proceden de la auditoría interna de este ciclo (no de un usuario externo) y
-quedaron corregidos y probados. No se prepara release: el periodo de
+No hay bugs críticos ni de alta prioridad abiertos. Los siete reportes de
+auditoría interna de este ciclo (R-8f2c41d9, R-c47a9e12 y los cinco del ciclo
+CLI) quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
@@ -195,6 +200,96 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Commit:** `5aa823b`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-2e83a7bd — El subcomando `compile` ignoraba la salida de Termux
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `--buildthis` exporta al almacenamiento compartido en
+  Termux/Android desde R-dd68f3f4, pero el subcomando moderno `compile`
+  conservaba una ruta fija `~/Documents/Packagemaker Projects/Compiled`. En
+  Termux ese home es privado de la app, así que el `.iflapp` quedaba
+  inaccesible para el resto del dispositivo: la misma regresión reportada,
+  por otra puerta de entrada.
+- **Pasos para reproducir:** en Termux, `python packagemaker.py compile --name Demo --shortname demo --headless` y buscar el artefacto en Download.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (el artefacto no es accesible en Android/Termux).
+- **Solución aplicada:** la ruta de salida se obtiene de
+  `lib/platform_detect.compile_output_directory()`, compartida con
+  `--buildthis`; en escritorio devuelve la misma ruta histórica.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::CompileSubcommandOutputDirectoryTests`.
+- **Commit:** `d2670a1`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-4b7e91a2 — El banner de plataforma contaminaba la salida JSON
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `--inspect-json`, `--shell-info-json` y `--ide-scan-json`
+  prometen JSON en stdout, pero las tres líneas del banner
+  (`[PackageMaker] Platform detected…`, `BASE_DIR`, `Fluthin_APPS`) se
+  imprimían en stdout y rompían a cualquier consumidor que hiciera
+  `json.loads(stdout)`.
+- **Pasos para reproducir:** `python packagemaker.py --inspect paquete.iflapp --inspect-json | python -m json.tool`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (rompe automatización y CI; la salida humana no cambia).
+- **Solución aplicada:** el banner y sus mensajes de fallback se escriben en
+  `stderr`; stdout queda reservado para el resultado de la acción.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::JsonOutputPurityTests`.
+- **Commit:** `d2670a1`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-9c1d5f60 — `create` no copiaba el icono fuera de la raíz del repo
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** el subcomando `create --headless` copiaba el icono desde la
+  ruta relativa `app/app-icon.ico`. Si se ejecutaba desde otro directorio de
+  trabajo (caso normal de un comando instalado), el proyecto se creaba sin
+  icono y sin aviso; el `.iflapp` resultante llevaba `Icono: 0 bytes`.
+- **Pasos para reproducir:** `cd /tmp && python /ruta/packagemaker.py create --name Demo --shortname demo --headless` y comprobar `app/app-icon.ico`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (artefacto final sin icono, fallo silencioso).
+- **Solución aplicada:** `_bundled_app_icon()` busca el icono en la raíz del
+  repositorio, el bundle de PyInstaller, el directorio del ejecutable y el CWD;
+  si no lo encuentra, avisa en lugar de callar.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::CreateIconOutsideRepoRootTests`.
+- **Commit:** `d2670a1`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-a5f06c38 — Un método de `--harden` mal escrito desactivaba el blindaje
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `_parse_hardening()` descartaba en silencio los métodos
+  desconocidos. `--harden strip,bogus` aplicaba solo `strip` sin avisar y
+  `--harden bogus` dejaba el build sin ningún blindaje, con apariencia de
+  haberlo aplicado.
+- **Pasos para reproducir:** `python packagemaker.py --buildthis <proyecto> --harden bogus` y revisar el `.iflapp`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (fallo silencioso con implicación de seguridad).
+- **Solución aplicada:** se informa por `stderr` de los métodos ignorados y, si
+  no queda ninguno válido, de que el blindaje queda desactivado. La selección
+  de métodos válidos no cambia.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::HardeningParseWarningTests`.
+- **Commit:** `d2670a1`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-d74e0b19 — `--ide-compile` imprimía cada línea dos veces
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `IflappIdeHelper.compile()` pasaba `log=print` (que ya
+  escribe cada mensaje) y después recorría `outcome.log` volviendo a imprimirlo,
+  duplicando la salida de `--ide-compile`.
+- **Pasos para reproducir:** `python packagemaker.py --ide-compile <proyecto> --ide-backend zipapp` y contar las líneas `[INFO] Compilando…`.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja (cosmético; no altera el artefacto).
+- **Solución aplicada:** se deja de pasar `log=print`; el log se imprime una
+  sola vez desde `outcome.log`.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::IdeCompileLoggingTests`.
+- **Commit:** `d2670a1`.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -297,12 +392,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Bugs abiertos: 0.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
-- Último reporte externo conocido: issue #4 (2026-07-05). El ciclo actual solo
-  añadió dos correcciones de auditoría interna (commits `5aa823b`), no reportes
-  de usuario; el contador de 7 días no se reinicia.
+- Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
+  solo añadieron correcciones de auditoría interna (commits `5aa823b` y
+  `d2670a1`), no reportes de usuario; el contador de 7 días no se reinicia.
 - Verificación de este ciclo: `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`
-  → 457 pasan, 2 omitidos; `pyflakes` y `py_compile` limpios; build real con
+  → 464 pasan, 1 omitido; `pyflakes` y `py_compile` limpios; build real con
   `--compiler zipapp` + `--harden integrity` produce un `.iflapp` válido con
-  `.iflapp.integrity`.
+  `.iflapp.integrity`; `--inspect-json` emite JSON parseable en stdout.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo.
