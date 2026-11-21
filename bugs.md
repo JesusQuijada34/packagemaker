@@ -32,6 +32,7 @@ de auditoría.
 | R-3a7c5e18 | Bug — avisos de importación contaminan JSON | Alta | Resuelto |
 | R-9f2b64d1 | Bug — avisos auxiliares contaminan JSON | Media | Resuelto |
 | R-6e04c8ab | Bug — aviso de MoonFix no codificable (cp1252) | Media | Resuelto |
+| R-7d5b91c4 | Bug — MoonFix rompe la marca temporal canónica | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -39,9 +40,10 @@ de auditoría.
 
 No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
-ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1 y
-R-6e04c8ab) quedaron corregidos y probados. No se prepara release: el periodo
-de observación y el requisito de 7 días sin reportes nuevos siguen en curso.
+ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
+R-6e04c8ab y R-7d5b91c4) quedaron corregidos y probados. No se prepara release:
+el periodo de observación y el requisito de 7 días sin reportes nuevos siguen en
+curso.
 
 ---
 
@@ -440,6 +442,41 @@ de observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Commit:** `7f708bb`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-7d5b91c4 — MoonFix regeneraba la marca temporal y rompía la ley canónica
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `repair_project_from_templates()` regeneraba `details.xml` con
+  una marca temporal nueva (`ProjectNameFormatter.get_timestamp()`) porque
+  ninguno de sus llamadores pasaba `timestamp`. El nombre de carpeta no cambia
+  durante la reparación, así que, tras ejecutar `moonfix`, la carpeta
+  `influent.demo.v1.0-26.11-10.05-Danenone` contenía un `details.xml` con
+  `<version>v1.0-26.11-10.06</version>`. Carpeta y metadatos dejaban de
+  compartir timestamp, en contra de la ley de nombres canónicos, y cada
+  reparación volvía a mover la marca. Además, el artefacto compilado tomaba la
+  identidad de la carpeta mientras `details.xml` declaraba otra distinta.
+- **Pasos para reproducir:** crear un proyecto canónico, ejecutar
+  `python packagemaker.py moonfix --name "Mi App" --shortname mi-app --publisher Influent`
+  y comparar el sufijo de la carpeta con `<version>` en `details.xml`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (no impide compilar, pero corrompe la identidad canónica
+  del proyecto en cada reparación).
+- **Causa raíz:** `repair_project_from_templates()` llamaba a `build_variables()`
+  sin `timestamp`; `build_variables()` genera uno nuevo cuando no lo recibe.
+  Los tres llamadores (CLI, diálogo de MoonFix y wizard) solo conservaban la
+  versión base, nunca la marca temporal.
+- **Solución aplicada:** `repair_project_from_templates()` acepta `timestamp` y,
+  si no se le pasa, recupera el existente con `_existing_timestamp()`: primero
+  del nombre canónico de la carpeta (`parse_project_folder`) y, si la carpeta no
+  es canónica, de `<version>` en `details.xml`. Solo genera una marca nueva si
+  el proyecto no tiene ninguna. El arreglo es central, así que cubre la CLI, la
+  GUI y `moonFixWizard` sin cambiar sus flujos.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::MoonFixPreservesCanonicalTimestampTests`
+  (3 casos: carpeta canónica, carpeta legacy con `details.xml` y ruta real del
+  CLI; los 3 fallan con el comportamiento anterior).
+- **Commit:** `c36df67`.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -585,8 +622,8 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
-  `d2670a1`, el de R-b3f71a6c, `ab79f4a` y `7f708bb`), no reportes de usuario;
-  el contador de 7 días no se reinicia.
+  `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb` y el de R-7d5b91c4), no
+  reportes de usuario; el contador de 7 días no se reinicia.
 - Verificación del ciclo de R-3a7c5e18, R-9f2b64d1 y R-6e04c8ab (2026-11-21):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 474 pasan, 2
   omitidos; `pyflakes` y `py_compile` limpios; las cuatro acciones JSON
@@ -595,6 +632,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `--inspect-extract` y `--shell-preview`; `moonfix` con `details.xml`
   truncado y stdout en `cp1252` avisa en stderr y repara sin traceback; build
   real con `--compiler zipapp` genera el `.iflapp` y `--inspect` lo lee.
+- Verificación del ciclo de R-7d5b91c4 (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 477 pasan, 2
+  omitidos; `pyflakes` y `py_compile` limpios; `create` + `moonfix` reales
+  conservan el sufijo `26.11-10.07` tanto en la carpeta como en
+  `<version>` de `details.xml`; build real con `--compiler zipapp
+  --harden integrity` genera un `.iflapp` válido e `--inspect-json` lo lee.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
