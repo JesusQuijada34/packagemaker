@@ -2,6 +2,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 from pathlib import Path
 
@@ -58,6 +59,33 @@ class DropperTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("main-entrypoint-ok", result.stdout)
+
+    def test_dropper_launches_zipapp_entrypoint(self):
+        # Regresión: el backend zipapp produce ``<guion>.pyz``. El stub no lo
+        # reconocía como punto de entrada y el respaldo lanzaba un guion
+        # auxiliar del paquete (``updater.py``), que no es la aplicación.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = root / "pkg"
+            package.mkdir(parents=True)
+            (package / "details.xml").write_text("<app><app>demo</app></app>", encoding="utf-8")
+            with zipfile.ZipFile(package / "demo.pyz", "w") as archive:
+                archive.writestr("__main__.py", "print('zipapp-entrypoint-ok')\n")
+            (package / "aaa_updater.py").write_text(
+                "print('wrong-entrypoint')\n", encoding="utf-8"
+            )
+            out = root / "demo.iflapp"
+            iflapp_format.pack_iflapp(package, out, identity={"app": "demo"})
+            dropper = create_dropper(out, root / "demo.run")
+            result = subprocess.run(
+                [sys.executable, str(dropper)],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("zipapp-entrypoint-ok", result.stdout)
+            self.assertNotIn("wrong-entrypoint", result.stdout)
 
     def test_dropper_with_encrypted_package(self):
         with tempfile.TemporaryDirectory() as tmp:
