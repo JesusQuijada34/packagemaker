@@ -2388,16 +2388,39 @@ class PackageTodoGUI(QMainWindow):
         if hasattr(self, 'sandbox_switch'):
             sandbox_enabled = self.sandbox_switch.isChecked()
 
+        # Si el proyecto trae un .env, se pregunta cómo inyectarlo antes de
+        # empaquetar (entorno global o variables elegidas una a una).
+        env_payload = self._ask_env_injection(custom_path, nombre)
+
         self.build_thread = BuildThread(
             empresa, nombre, version_full, platformLineEdit, parent=self,
             custom_path=custom_path, base_dir=BASE_DIR, build_mode=build_mode,
             compiler_name=compiler_name, sandbox=sandbox_enabled,
             build_dropper=build_dropper, hardening=hardening,
+            env_payload=env_payload,
         )
         self.build_thread.progress.connect(self._on_build_progress)
         self.build_thread.finished.connect(self._on_build_finished)
         self.build_thread.error.connect(self._on_build_error)
         self.build_thread.start()
+
+    def _ask_env_injection(self, custom_path, app_name):
+        """Diálogo del .env del proyecto; ``{}`` si no hay o se cancela."""
+        from lib.build_preflight import find_env_file, parse_env_file
+
+        if not custom_path:
+            return {}
+        project = Path(custom_path)
+        env_file = find_env_file(project)
+        if env_file is None:
+            return {}
+        variables = parse_env_file(env_file)
+        if not variables:
+            return {}
+
+        from lib.env_injection_dialog import ask_env_injection
+
+        return ask_env_injection(self, variables, project, app_name)
 
     def _build_controls(self):
         """Controles que se bloquean mientras el empaquetado está en marcha."""

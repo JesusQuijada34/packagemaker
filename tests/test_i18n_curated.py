@@ -16,6 +16,7 @@ LANG_DIR = ROOT / "lang"
 
 # Nombres propios, marcas y cadenas que son idénticas en inglés por diseño.
 _IDENTICAL_BY_DESIGN = {
+    "common.ok",
     "app.title",
     "about.version",
     "build.button",

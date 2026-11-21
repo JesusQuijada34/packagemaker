@@ -1006,6 +1006,8 @@ class BuildThread(QThread):
         sandbox=True,
         build_dropper=False,
         hardening=None,
+        env_payload=None,
+        preflight=True,
     ):
         super().__init__(parent)
         self.empresa = empresa
@@ -1019,6 +1021,8 @@ class BuildThread(QThread):
         self.sandbox = sandbox
         self.build_dropper = build_dropper
         self.hardening = list(hardening) if hardening else []
+        self.env_payload = dict(env_payload) if env_payload else {}
+        self.preflight = preflight
 
     def run(self):
         if self.custom_path:
@@ -1043,6 +1047,25 @@ class BuildThread(QThread):
                     )
                 )
                 return
+        # BlindCube ejecuta las pruebas previas (sintaxis + arranque offscreen)
+        # y detiene el empaquetado si el proyecto no arranca.
+        if self.preflight:
+            from lib.build_preflight import run_preflight
+
+            self.progress.emit(tr("build.preflight_title"))
+            report = run_preflight(repo_path)
+            for check in report.checks:
+                state = "OK" if check.ok else "ERROR"
+                self.progress.emit(f"[{state}] {check.name}: {check.detail}")
+            if not report.ok:
+                self.error.emit(
+                    tr("build.preflight_failed").format(detail=report.summary())
+                )
+                return
+
+        if self.env_payload:
+            self._persist_env_payload(repo_path)
+
         compiler = FlangCompiler(
             repo_path,
             Path(self.base_dir or Path.cwd()),
@@ -1064,6 +1087,35 @@ class BuildThread(QThread):
         else:
             error_message = compiler.last_error or tr("build_log.fail_generic")
             self.error.emit(error_message)
+
+    def _persist_env_payload(self, repo_path: Path) -> None:
+        """Guarda la elección del ``.env`` en ``config/settings.json``.
+
+        El lanzador lee ``environment`` al arrancar; así la inyección viaja con
+        el paquete sin recompilar el guion.
+        """
+        settings_path = Path(repo_path) / "config" / "settings.json"
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            settings = (
+                json.loads(settings_path.read_text(encoding="utf-8"))
+                if settings_path.is_file()
+                else {}
+            )
+        except (OSError, json.JSONDecodeError):
+            settings = {}
+        if not isinstance(settings, dict):
+            settings = {}
+        settings["environment"] = self.env_payload
+        try:
+            settings_path.write_text(
+                json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            self.progress.emit(
+                f"[INFO] Variables de entorno inyectadas ({self.env_payload.get('mode')})"
+            )
+        except OSError as error:
+            self.progress.emit(f"[WARN] No se pudo guardar la inyección .env: {error}")
 
     def handle_compiler_log(self, msg):
         """Publica el log real del compilador, sin relleno."""
