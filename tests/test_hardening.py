@@ -119,3 +119,69 @@ class NewHardeningMethodTests(unittest.TestCase):
             report = hardening.compile_to_bytecode(script)
             self.assertTrue(report.applied, report.detail)
             self.assertTrue(Path(report.artifacts[0]).is_file())
+
+
+class ObfuscateRobustnessTests(unittest.TestCase):
+    SCRIPT = '''"""Docstring del modulo con "una cita larga" dentro."""
+from typing import Literal
+
+name = "mundo"
+mensaje = ("parte uno " "parte dos")
+print(f"Hola {name}")
+print(mensaje)
+
+
+def saluda(valor="valor por defecto"):
+    """Docstring de la funcion con "comillas" largas."""
+    return valor
+
+
+print(saluda())
+clave = "alfa"
+match clave:
+    case "alfabeto largo":
+        print("patron")
+    case _:
+        print("otro")
+anotado: Literal["literal largo"] = "literal largo"
+print(anotado)
+'''
+
+    def test_obfuscate_keeps_valid_python_for_concatenation_and_fstrings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "app.py"
+            script.write_text(self.SCRIPT, encoding="utf-8")
+            expected = subprocess.run(
+                [sys.executable, str(script)], capture_output=True, text=True
+            )
+            self.assertEqual(expected.returncode, 0, expected.stderr)
+
+            report = hardening.obfuscate_strings(script)
+            self.assertTrue(report.applied, report.detail)
+            result = subprocess.run(
+                [sys.executable, str(script)], capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, expected.stdout)
+
+    def test_obfuscate_skips_docstrings_fstrings_patterns_and_literal_annotations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "app.py"
+            script.write_text(self.SCRIPT, encoding="utf-8")
+            hardening.obfuscate_strings(script)
+            text = script.read_text(encoding="utf-8")
+            self.assertIn('"""Docstring del modulo con "una cita larga" dentro."""', text)
+            self.assertIn('"""Docstring de la funcion con "comillas" largas."""', text)
+            self.assertIn('print(f"Hola {name}")', text)
+            self.assertIn('case "alfabeto largo":', text)
+            self.assertIn('Literal["literal largo"]', text)
+            self.assertIn("b64decode", text)
+
+    def test_obfuscate_refuses_unparsable_source_without_touching_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "app.py"
+            broken = "print('sin cerrar'\n"
+            script.write_text(broken, encoding="utf-8")
+            report = hardening.obfuscate_strings(script)
+            self.assertFalse(report.applied)
+            self.assertEqual(script.read_text(encoding="utf-8"), broken)

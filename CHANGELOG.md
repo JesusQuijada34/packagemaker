@@ -113,11 +113,26 @@ Commit `64c083a`.
 - Build real `create` + `--buildthis --compiler zipapp --no-sandbox --harden integrity`: `.iflapp` válido (`verify_iflapp() → valid: True`), `--inspect` muestra la misma plataforma que el `details.xml` interno y `--app-version` informa `v3.2.7-26.05-20.13`.
 - `updater.py --version` y `updater.py --accept-license` funcionan con `leviathan_ui` inaccesible (antes: `ModuleNotFoundError`).
 
+### Corregido — blindaje por ofuscación y contenedores de motor
+
+Hallazgos del décimo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna).
+
+- **R-6f2b9d31 — `--harden obfuscate` podía dejar el paquete inservible:** `obfuscate_strings()` localizaba los literales con una expresión regular. Con concatenación implícita (`("parte uno " "parte dos")`) la sustitución producía dos llamadas seguidas, un `SyntaxError`; el blindaje informaba `OK` y el build terminaba, pero el `updater.py` empaquetado ya no se ejecutaba. El patrón además reescribía texto entre comillas dentro de docstrings y f-strings. Ahora el fuente se analiza con `ast` y solo se sustituyen los `ast.Constant` de texto completos; se omiten docstrings, partes literales de f-strings, patrones de `match` y valores de `Literal`/`Annotated`. Un fuente no analizable devuelve `applied=False` sin tocarlo.
+- **R-8c4e1a72 — Los contenedores `.blindkpkg`/`.flatkpkg` lanzaban excepciones crudas:** `BuildEngine.read_header()` y `blindcubeEngine.read_header()` no comprobaban que la cabecera declarada cupiera en el archivo (`struct.error`), ni que el JSON fuera un objeto (`TypeError`); un payload LZMA corrupto o parámetros de cifrado incompletos salían como `LZMAError`/`KeyError`, y `flatcubeEngine.unpack()` devolvía `BadZipFile`, `JSONDecodeError` o un manifiesto que no era diccionario. Ahora los tres lectores validan longitudes y tipos y traducen esos fallos a `EngineError`/`BlindCubeError`/`FlatCubeError`. El formato válido no cambia.
+
+### Verificación — décimo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 521 pasan, 1 omitido, 35 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las 12 pruebas nuevas fallan con el código anterior (ofuscación por `SyntaxError`; contenedores por `struct.error`/`BadZipFile`).
+- Build real `create` + `--buildthis --compiler zipapp --no-sandbox --harden obfuscate`: `.iflapp` válido (`verify_iflapp() → valid: True`), el `updater.py` empaquetado compila con `py_compile`, el `.pyz` del proyecto imprime `Hola desde demoobf!` y la fuente del proyecto queda intacta.
+
 ### Pendiente de aprobación
 
 - **R-d23039c0 — Telemetría de errores:** no implementada (envía datos a un servidor externo).
 - **R-5d8e2a41 — Acentos en publisher/appname:** no implementada; cambia la ley de nombres.
 - **R-4c8e1f27 — Capitalización del publisher:** `create` y la GUI pasan el publisher a minúsculas, así que la carpeta y `details.xml` no conservan la capitalización que exige la ley de nombres. No implementado: cambia los nombres visibles y las rutas de build.
+- **R-3e7d1c58 — `compile-only` no retira el fuente del paquete:** el método solo añade el `.pyc` optimizado y el `.py` legible sigue en el artefacto. No implementado: borrar el fuente es destructivo y puede romper el punto de entrada de un build zipapp.
 - **Cambios de engine de `bugs.txt`:** registrados en `bugs.md`, sin implementar.
 
 ## 2026-11-15

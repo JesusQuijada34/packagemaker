@@ -41,18 +41,21 @@ de auditoría.
 | R-6b1f8d20 | Bug — `--force-fonts` ignorado y cae en la TUI | Media | Resuelto |
 | R-9e2a5c73 | Bug — `--app-version` reporta una versión fija | Media | Resuelto |
 | R-2a7f6b41 | Bug — plataforma de la cabecera ≠ `details.xml` | Baja | Resuelto |
+| R-6f2b9d31 | Bug — `--harden obfuscate` generaba Python inválido | Alta | Resuelto |
+| R-8c4e1a72 | Bug — contenedores de motor con cabecera corrupta | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
+| R-3e7d1c58 | Mejora — `compile-only` deja el fuente en el paquete | Baja | Pendiente de aprobación |
 | — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
 
 No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
-R-4d7b2e91, R-6b1f8d20, R-9e2a5c73 y R-2a7f6b41) quedaron corregidos y
-probados. No se prepara release: el periodo de observación y el
-requisito de 7 días sin reportes nuevos siguen en curso.
+R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31 y R-8c4e1a72)
+quedaron corregidos y probados. No se prepara release: el periodo de
+observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
@@ -703,6 +706,63 @@ requisito de 7 días sin reportes nuevos siguen en curso.
 - **Commit:** `64c083a`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-6f2b9d31 — `--harden obfuscate` generaba Python inválido
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `obfuscate_strings()` localizaba los literales con una
+  expresión regular que sustituía cada cadena por una llamada a
+  `b64decode()`. Con literales concatenados de forma implícita
+  (`("parte uno " "parte dos")`) la sustitución producía
+  `(...) (...)`, un `SyntaxError`; el blindaje informaba `OK` y el build
+  terminaba bien, pero el `updater.py` empaquetado ya no se podía ejecutar.
+  Además, el patrón también reescribía texto entre comillas que vivía dentro
+  de un docstring o de un f-string, alterando su contenido sin avisar.
+- **Pasos para reproducir:** empaquetar un proyecto cuyo `updater.py` (o
+  cualquier `.py` del paquete) use concatenación implícita de cadenas y
+  compilar con `--compiler zipapp --harden obfuscate`; extraer el `.iflapp` y
+  ejecutar `python -m py_compile updater.py`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (el artefacto publicado queda inservible sin que el build
+  falle).
+- **Solución aplicada:** `obfuscate_strings()` analiza el fuente con `ast` y
+  sustituye únicamente los `ast.Constant` de texto que son expresiones
+  completas. Se omiten docstrings, partes literales de f-strings, patrones de
+  `match` y valores de `Literal`/`Annotated`. Un fuente no analizable devuelve
+  `applied=False` sin modificar el archivo. La concatenación implícita se
+  reemplaza como un único literal, conservando el valor.
+- **Pruebas:** `tests/test_hardening.py::ObfuscateRobustnessTests` (3 casos:
+  validez y equivalencia de salida, omisión de docstrings/f-strings/patrones y
+  rechazo de fuentes no analizables).
+- **Commit:** pendiente de registrar en este ciclo.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-8c4e1a72 — Los contenedores de motor lanzaban excepciones crudas con cabeceras corruptas
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `BuildEngine.read_header()` y
+  `blindcubeEngine.read_header()` desestructuraban longitudes sin comprobar
+  que la cabecera cupiera en el archivo: un contenedor cortado lanzaba
+  `struct.error`; un JSON que no fuera objeto terminaba en `TypeError`; un
+  payload LZMA corrupto o unos parámetros de cifrado incompletos salían como
+  `LZMAError`/`KeyError`. `flatcubeEngine.unpack()` devolvía `BadZipFile`,
+  `JSONDecodeError` o un manifiesto que no era diccionario.
+- **Pasos para reproducir:** `blindcubeEngine.read_header(blindcubeEngine.MAGIC)`,
+  `blindcubeEngine.unpack(build_header(...) + b"no-es-lzma")` o
+  `flatcubeEngine.unpack(b"PK\x03\x04" + bytes(12))`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (solo afecta a contenedores dañados o manipulados; el
+  formato válido no cambia).
+- **Solución aplicada:** los tres lectores validan longitud mínima, tamaño
+  declarado, decodificación UTF-8 y que el JSON sea un objeto, y traducen
+  `LZMAError`, `KeyError`/`ValueError` de cifrado, `BadZipFile` y errores de
+  manifiesto a `EngineError`/`BlindCubeError`/`FlatCubeError` legibles.
+- **Pruebas:** `tests/test_engines_and_platform.py::MalformedEngineContainerTests`
+  (9 casos).
+- **Commit:** pendiente de registrar en este ciclo.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -760,6 +820,26 @@ requisito de 7 días sin reportes nuevos siguen en curso.
   `tests/test_maintenance_cli_regressions.py`, `tests/test_issue4_reports.py`.
 - **Riesgo:** medio (no rompe artefactos, pero altera nombres visibles y rutas
   de compilación; requiere decisión del responsable).
+
+### R-3e7d1c58 — `compile-only` no elimina el fuente original del paquete
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Estado:** Pendiente de aprobación explícita. No implementado.
+- **Situación actual:** `hardening.compile_to_bytecode()` escribe el `.pyc`
+  optimizado (O2) junto al `.py`, pero no retira el fuente. El paquete sigue
+  conteniendo el `.py` legible, así que el método no cumple lo que promete su
+  documentación («sin fuentes legibles»).
+- **Comportamiento solicitado:** tras compilar, eliminar el `.py` del árbol del
+  paquete (nunca del proyecto fuente) o registrar explícitamente que solo se
+  añade el bytecode.
+- **Efectos secundarios:** borrar archivos del paquete es destructivo; si el
+  `.py` es el punto de entrada del backend zipapp, el artefacto deja de
+  arrancar. Requiere verificar el tipo de backend y excluir los `.pyz`.
+- **Archivos:** `lib/hardening.py`, `lib/BuildThread.py`,
+  `tests/test_hardening.py`.
+- **Riesgo:** medio (puede romper el arranque de paquetes que dependan del
+  fuente; no se implementa sin aprobación).
 
 ---
 
@@ -897,6 +977,17 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   genera un `.iflapp` válido (`verify_iflapp() → valid: True`), `--inspect`
   coincide ahora con el `details.xml` interno (`Plataforma: Danenone`) y
   `--app-version` informa `v3.2.7-26.05-20.13` desde `details.xml`.
+- Verificación del ciclo de R-6f2b9d31 y R-8c4e1a72 (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 521 pasan, 1
+  omitido, 35 subtests; `pyflakes` y `py_compile` limpios; los 12 casos nuevos
+  fallan con el código anterior (el de ofuscación por `SyntaxError` y los de
+  motor por `struct.error`/`BadZipFile`). Build real
+  `create` + `--buildthis --compiler zipapp --no-sandbox --harden obfuscate`
+  genera un `.iflapp` válido (`verify_iflapp() → valid: True`), el `updater.py`
+  empaquetado compila con `py_compile` y el `.pyz` del proyecto imprime
+  `Hola desde demoobf!`; la fuente del proyecto no se modifica. Además,
+  `obfuscate_strings()` sobre una copia del `updater.py` del repo (54
+  literales) produce un archivo compilable.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
