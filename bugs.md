@@ -734,7 +734,7 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Pruebas:** `tests/test_hardening.py::ObfuscateRobustnessTests` (3 casos:
   validez y equivalencia de salida, omisión de docstrings/f-strings/patrones y
   rechazo de fuentes no analizables).
-- **Commit:** pendiente de registrar en este ciclo.
+- **Commit:** `f8fe305`.
 - **Fecha de resolución:** 2026-11-21.
 
 ## R-8c4e1a72 — Los contenedores de motor lanzaban excepciones crudas con cabeceras corruptas
@@ -760,7 +760,7 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
   manifiesto a `EngineError`/`BlindCubeError`/`FlatCubeError` legibles.
 - **Pruebas:** `tests/test_engines_and_platform.py::MalformedEngineContainerTests`
   (9 casos).
-- **Commit:** pendiente de registrar en este ciclo.
+- **Commit:** `f8fe305`.
 - **Fecha de resolución:** 2026-11-21.
 
 ---
