@@ -56,14 +56,21 @@ Hallazgo del sexto ciclo de mantenimiento (sin reporte externo; reportado por Je
 
 - **R-7d5b91c4 — MoonFix regeneraba la marca temporal y rompía la ley canónica:** `repair_project_from_templates()` escribía `details.xml` con una marca temporal nueva porque ningún llamador pasaba `timestamp`. Tras `moonfix`, una carpeta `influent.demo.v1.0-26.11-10.05-Danenone` contenía `<version>v1.0-26.11-10.06</version>`, así que carpeta y metadatos dejaban de coincidir y cada reparación volvía a mover la marca. Ahora la reparación conserva el timestamp de la carpeta canónica o, si la carpeta es legacy, el de `details.xml`; solo genera uno nuevo cuando el proyecto no tiene ninguno. El arreglo es central y cubre CLI, GUI y `moonFixWizard`.
 
+### Corregido — dropper autoextraíble
+
+Hallazgo del séptimo ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `325c0e9`.
+
+- **R-3f9a2c71 — El dropper lanzaba `updater.py` en los builds zipapp:** el stub solo probaba `<guion>`, `<guion>.exe` y `<guion>.py`, pero el backend zipapp entrega `<guion>.pyz`. Al no encontrar el punto de entrada, el respaldo ejecutaba el primer `.py` de la raíz del paquete (`updater.py`) y el `.run` quedaba en el actualizador en lugar de arrancar la aplicación. Ahora los candidatos incluyen `.pyz` y el respaldo prefiere artefactos Python compilados antes que los guiones auxiliares.
+
 ### Mantenimiento
 
 - `lib/requirements-dev.txt` resuelve correctamente su include (`-r requirements.txt`) y la documentación usa la ruta real `lib/requirements-dev.txt`.
 
 ### Verificación
 
-- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 477 pasan, 2 omitidos (los omitidos dependen de dependencias opcionales).
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 479 pasan, 1 omitido (la dependencia opcional `leviathan_ui` está instalada en este entorno).
 - `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Build real con `--compiler zipapp --no-sandbox --dropper`: genera `.iflapp` y `.run`; el `.run` ejecuta `demo.pyz` e imprime `Hola desde demo!` (antes lanzaba `updater.py` y no terminaba).
 - Build real con `--compiler zipapp --harden integrity`: `.iflapp` válido con `.iflapp.integrity` en el manifiesto.
 - Build real con `--compiler zipapp --password` y sandbox activo: `.iflapp` cifrado y verificación en sandbox `[OK]` (antes «incompleta»).
 - `compile` con `demo` y `demo2` elige `demo`; `compile`/`moonfix` sin carpeta base abortan con error legible y código 1, sin traceback.

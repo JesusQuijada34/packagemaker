@@ -33,6 +33,7 @@ de auditoría.
 | R-9f2b64d1 | Bug — avisos auxiliares contaminan JSON | Media | Resuelto |
 | R-6e04c8ab | Bug — aviso de MoonFix no codificable (cp1252) | Media | Resuelto |
 | R-7d5b91c4 | Bug — MoonFix rompe la marca temporal canónica | Media | Resuelto |
+| R-3f9a2c71 | Bug — dropper lanza `updater.py` en builds zipapp | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -41,9 +42,9 @@ de auditoría.
 No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
-R-6e04c8ab y R-7d5b91c4) quedaron corregidos y probados. No se prepara release:
-el periodo de observación y el requisito de 7 días sin reportes nuevos siguen en
-curso.
+R-6e04c8ab, R-7d5b91c4 y R-3f9a2c71) quedaron corregidos y probados. No se
+prepara release: el periodo de observación y el requisito de 7 días sin reportes
+nuevos siguen en curso.
 
 ---
 
@@ -477,6 +478,35 @@ curso.
 - **Commit:** `c36df67`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-3f9a2c71 — El dropper lanzaba `updater.py` en los builds zipapp
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** con `--compiler zipapp` (el backend de reserva, único siempre
+  disponible) el paquete contiene `<guion>.pyz`, no `<guion>`. El stub del
+  dropper solo probaba `<guion>`, `<guion>.exe` y `<guion>.py`; al no
+  encontrarlos, el respaldo lanzaba el primer `.py` de la raíz del paquete, que
+  es `updater.py`. El `.run` abría el actualizador y quedaba esperando en vez de
+  arrancar la aplicación.
+- **Pasos para reproducir:** crear un proyecto y ejecutar
+  `python packagemaker.py --buildthis <proyecto> --output <dir> --platform Linux --compiler zipapp --no-sandbox --dropper`;
+  después ejecutar el `.run` generado y comprobar que no aparece la salida de la
+  aplicación (`Hola desde demo!`) y que el proceso no termina.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el `.iflapp` es correcto; solo el `.run` no arranca la
+  aplicación, pero afecta a quien depende de zipapp).
+- **Causa raíz:** `_launch()` del stub no consideraba `.pyz` entre los puntos de
+  entrada y el respaldo elegía cualquier `.py` de la raíz, incluido el
+  actualizador auxiliar.
+- **Solución aplicada:** los candidatos incluyen `<app>.pyz` y `<stem>.pyz`, y
+  `.py`/`.pyz` se ejecutan con `sys.executable`. El respaldo prueba primero los
+  `.pyz`, después los `.py` y deja los ejecutables nativos al final.
+- **Pruebas:** `tests/test_iflapp_dropper_sandbox.py::DropperTests::test_dropper_launches_zipapp_entrypoint`
+  (con el código anterior imprime `wrong-entrypoint`; con la corrección ejecuta
+  `demo.pyz`).
+- **Commit:** `325c0e9`.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -622,8 +652,8 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
-  `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb` y el de R-7d5b91c4), no
-  reportes de usuario; el contador de 7 días no se reinicia.
+  `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4 y
+  `325c0e9`), no reportes de usuario; el contador de 7 días no se reinicia.
 - Verificación del ciclo de R-3a7c5e18, R-9f2b64d1 y R-6e04c8ab (2026-11-21):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 474 pasan, 2
   omitidos; `pyflakes` y `py_compile` limpios; las cuatro acciones JSON
@@ -638,6 +668,14 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   conservan el sufijo `26.11-10.07` tanto en la carpeta como en
   `<version>` de `details.xml`; build real con `--compiler zipapp
   --harden integrity` genera un `.iflapp` válido e `--inspect-json` lo lee.
+- Verificación del ciclo de R-3f9a2c71 (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 479 pasan, 1
+  omitido (la dependencia opcional `leviathan_ui` está instalada en este
+  entorno); `pyflakes` y `py_compile` limpios; build real
+  `--compiler zipapp --no-sandbox --dropper` genera `.iflapp` y `.run`, y el
+  `.run` regenerado con el stub corregido ejecuta `demo.pyz` e imprime
+  `Hola desde demo!` (antes lanzaba `updater.py` y no terminaba). La prueba
+  nueva falla con el código anterior (`wrong-entrypoint`).
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
