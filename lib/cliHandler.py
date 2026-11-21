@@ -894,7 +894,12 @@ class PackageInspectHelper:
         extract_dir = data.get("extract")
         if extract_dir:
             written = iflapp_format.export_header_assets(path, extract_dir)
-            print(f"[OK] Recursos de cabecera exportados: {written}")
+            # En modo JSON stdout ya lleva el documento; los avisos van a stderr
+            # para no invalidar la salida que consume la automatización.
+            print(
+                f"[OK] Recursos de cabecera exportados: {written}",
+                file=sys.stderr if data.get("json") else sys.stdout,
+            )
         return True
 
 
@@ -940,10 +945,12 @@ class NativeShellHelper:
         preview_dir = data.get("preview")
         if preview_dir:
             png = native_shell.export_icon_preview(target, preview_dir)
+            # Igual que en --inspect: los avisos no deben romper --shell-info-json.
+            stream = sys.stderr if data.get("json") else sys.stdout
             if png:
-                print(f"[OK] Vista previa exportada: {png}")
+                print(f"[OK] Vista previa exportada: {png}", file=stream)
             else:
-                print("[INFO] El paquete no tiene icono exportable (o falta Pillow).")
+                print("[INFO] El paquete no tiene icono exportable (o falta Pillow).", file=stream)
         return True
 
     @staticmethod
@@ -1738,7 +1745,12 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 )
                 platform_value = normalize_platform(platform_text)
             except Exception as e:
-                print(f"⚠ Advertencia: no se pudo leer details.xml: {e}")
+                # _safe_print degrada el símbolo en consolas cp1252; sin él el
+                # aviso lanzaba UnicodeEncodeError y abortaba MoonFix.
+                _safe_print(
+                    f"[WARN] Advertencia: no se pudo leer details.xml: {e}",
+                    stream=sys.stderr,
+                )
 
         if not platform_value:
             if sys.platform.startswith('linux'):

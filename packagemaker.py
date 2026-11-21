@@ -100,7 +100,9 @@ try:
     LEVIATHAN_AVAILABLE = True
 except (ImportError, SyntaxError) as e:
     LEVIATHAN_AVAILABLE = False
-    print(f"[WARN] Leviathan UI unavailable or syntax error: {e}")
+    # stderr: stdout queda reservado para las salidas máquina-legibles
+    # (--inspect-json, --shell-plan-json, --shell-info-json, --ide-scan-json).
+    print(f"[WARN] Leviathan UI unavailable or syntax error: {e}", file=sys.stderr)
     _leviathan_accent = None
 
     class LeviathanProgressBar(QWidget):
@@ -316,7 +318,7 @@ def _register_bundled_fonts():
 
         return load_cached_fonts()
     except Exception as exc:  # pragma: no cover - la UI no debe caer por fuentes
-        print(f"[FONT] Could not register fonts: {exc}")
+        print(f"[FONT] Could not register fonts: {exc}", file=sys.stderr)
         return {}
 
 
@@ -339,7 +341,7 @@ else:
     def code_font():
         return None
 
-    print("font: none")
+    print("font: none", file=sys.stderr)
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
 TAB_ICON_KEYS = {

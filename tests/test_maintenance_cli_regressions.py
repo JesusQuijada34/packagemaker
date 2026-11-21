@@ -9,6 +9,12 @@ Cubre defectos detectados en la auditoría de este ciclo:
 - ``R-a5f06c38``: un método de ``--harden`` mal escrito desactivaba el blindaje
   en silencio.
 - ``R-d74e0b19``: ``--ide-compile`` imprimía cada línea dos veces.
+- ``R-3a7c5e18``: la ausencia de ``leviathan_ui`` contaminaba stdout y rompía
+  todas las acciones ``*-json``.
+- ``R-9f2b64d1``: ``--inspect-extract``/``--shell-preview`` añadían texto humano
+  al JSON de stdout.
+- ``R-6e04c8ab``: el aviso de ``moonfix`` con ``details.xml`` corrupto usaba un
+  símbolo no representable en consolas cp1252 y abortaba el comando.
 """
 
 import io
@@ -493,6 +499,167 @@ class EncryptedSandboxVerificationTests(unittest.TestCase):
             joined = "\n".join(logs)
             self.assertNotIn("incompleta", joined)
             self.assertTrue((Path(tmp) / "sandbox" / "unpacked" / "app.py").is_file())
+
+
+class JsonPurityWithoutOptionalUiTests(unittest.TestCase):
+    """R-3a7c5e18: sin ``leviathan_ui`` stdout sigue siendo JSON válido."""
+
+    def test_shell_plan_json_stays_parseable_without_leviathan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            stub = Path(tmp) / "leviathan_ui.py"
+            stub.write_text(
+                "raise ImportError('leviathan_ui ausente en la prueba')\n",
+                encoding="utf-8",
+            )
+            env = os.environ.copy()
+            env["PYTHONPATH"] = os.pathsep.join(
+                part for part in (tmp, env.get("PYTHONPATH")) if part
+            )
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "packagemaker.py"),
+                    "--shell-plan",
+                    str(ROOT / "example.mexf"),
+                    "--shell-plan-json",
+                ],
+                cwd=tmp,
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=120,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(result.stdout)
+            self.assertEqual(data["id"], "com.fluthin.packagemaker")
+            self.assertIn("Leviathan UI unavailable", result.stderr)
+            self.assertNotIn("Leviathan UI unavailable", result.stdout)
+
+
+class JsonPurityWithAuxiliaryOutputTests(unittest.TestCase):
+    """R-9f2b64d1: los avisos auxiliares no rompen el JSON de stdout."""
+
+    @staticmethod
+    def _artifact(tmp: Path) -> Path:
+        from lib.iflapp_format import pack_iflapp
+
+        payload = tmp / "payload"
+        payload.mkdir()
+        (payload / "hello.txt").write_text("hola\n", encoding="utf-8")
+        artifact = tmp / "demo.iflapp"
+        pack_iflapp(
+            payload,
+            artifact,
+            details=DETAILS.encode("utf-8"),
+            identity={
+                "publisher": "Influent",
+                "app": "demo",
+                "name": "demo",
+                "version": "v1.0.0-26.11-04.08",
+                "platform": "Danenone",
+            },
+        )
+        return artifact
+
+    def test_inspect_json_with_extract_stays_parseable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            artifact = self._artifact(tmp_path)
+            extract_dir = tmp_path / "extract"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "packagemaker.py"),
+                    "--inspect",
+                    str(artifact),
+                    "--inspect-json",
+                    "--inspect-extract",
+                    str(extract_dir),
+                ],
+                cwd=tmp,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(result.stdout)
+            self.assertEqual(data["identity"]["app"], "demo")
+            self.assertIn("Recursos de cabecera exportados", result.stderr)
+            self.assertTrue((extract_dir / "details.xml").is_file())
+
+    def test_shell_info_json_with_preview_stays_parseable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            artifact = self._artifact(tmp_path)
+            preview_dir = tmp_path / "preview"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "packagemaker.py"),
+                    "--shell-info",
+                    str(artifact),
+                    "--shell-info-json",
+                    "--shell-preview",
+                    str(preview_dir),
+                ],
+                cwd=tmp,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(result.stdout)
+            self.assertEqual(data["identity"]["app"], "demo")
+            self.assertIn("icono exportable", result.stderr)
+
+
+class MoonfixEncodingWarningTests(unittest.TestCase):
+    """R-6e04c8ab: un details.xml corrupto no aborta MoonFix en cp1252."""
+
+    def test_corrupt_details_xml_warns_without_unicode_error(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "influent.demo.v1.0.0-26.11-09.00-Danenone"
+            project.mkdir()
+            (project / "details.xml").write_text("<details>\n", encoding="utf-8")
+
+            out_buffer = io.BytesIO()
+            out = io.TextIOWrapper(out_buffer, encoding="cp1252")
+            err_buffer = io.BytesIO()
+            err = io.TextIOWrapper(err_buffer, encoding="cp1252")
+            try:
+                with redirect_stdout(out), redirect_stderr(err):
+                    handle_cli_action(
+                        "repair_project",
+                        {
+                            "path": tmp,
+                            "name": "Demo",
+                            "shortname": "demo",
+                            "publisher": "Influent",
+                            "version": "1.0.0",
+                            "author": "Unknown",
+                        },
+                        None,
+                        headless=True,
+                    )
+                out.flush()
+                err.flush()
+                stdout_text = out_buffer.getvalue().decode("cp1252")
+                stderr_text = err_buffer.getvalue().decode("cp1252")
+            finally:
+                out.close()
+                err.close()
+
+            self.assertIn("MoonFix completado", stdout_text)
+            self.assertIn("no se pudo leer details.xml", stderr_text)
+            self.assertIn("<publisher>", (project / "details.xml").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
