@@ -27,15 +27,17 @@ de auditoría.
 | R-a5f06c38 | Bug — `--harden` inválido silencioso | Media | Resuelto |
 | R-d74e0b19 | Bug — `--ide-compile` duplica salida | Baja | Resuelto |
 | R-b3f71a6c | Bug — metadatos no canónicos rompen el CLI | Alta | Resuelto |
+| R-7c1e4a90 | Bug — `compile`/`moonfix` eligen mal el proyecto | Alta | Resuelto |
+| R-91b6d2f4 | Bug — verificación sandbox con `--password` | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
 
-No hay bugs críticos ni de alta prioridad abiertos. Los ocho reportes de
+No hay bugs críticos ni de alta prioridad abiertos. Los diez reportes de
 auditoría interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los
-cinco del ciclo CLI, más R-b3f71a6c) quedaron corregidos y probados. No se
-prepara release: el periodo de observación y el requisito de 7 días sin reportes
-nuevos siguen en curso.
+cinco del ciclo CLI, más R-b3f71a6c, R-7c1e4a90 y R-91b6d2f4) quedaron
+corregidos y probados. No se prepara release: el periodo de observación y el
+requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
@@ -318,6 +320,53 @@ nuevos siguen en curso.
 - **Commit:** `e84e367`.
 - **Fecha de resolución:** 2026-11-21.
 
+## R-7c1e4a90 — `compile`/`moonfix` compilaban el proyecto equivocado
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** los subcomandos `compile` y `moonfix`/`repair` localizaban el
+  proyecto recorriendo la carpeta base con `publisher in nombre and app in
+  nombre`. Con `demo` y `demo2` en la misma carpeta, el prefijo elegía `demo2`
+  (el primero que devolviera el sistema de archivos) y compilaba el proyecto
+  equivocado. Además, si la carpeta base aún no existía, `iterdir()` lanzaba
+  `FileNotFoundError` con traceback en lugar de un error legible.
+- **Pasos para reproducir:** crear `influent.demo2…` y `influent.demo…` en la
+  carpeta base y ejecutar `python packagemaker.py compile --name Demo --shortname demo --publisher Influent`;
+  o ejecutar `compile` en una instalación nueva sin carpeta de proyectos.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (puede compilar y publicar el proyecto equivocado).
+- **Solución aplicada:** ambos subcomandos usan `locate_project()`, que compara
+  la identidad canónica de la carpeta (`parse_project_folder`) y cae a
+  `details.xml` solo para carpetas no canónicas. La búsqueda no depende del orden
+  del sistema de archivos, sigue encontrando proyectos con metadatos inválidos
+  (necesario para MoonFix) y devuelve `None` si la carpeta base no existe.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::CompileProjectSelectionTests`
+  (3 casos; el de selección falla en el código anterior con `demo2`).
+- **Commit:** `ab79f4a`.
+- **Fecha de resolución:** 2026-11-21.
+
+## R-91b6d2f4 — La verificación en sandbox no descifraba los paquetes con `--password`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `FlangCompiler.verify_in_sandbox()` genera un script que llama
+  a `extract_iflapp(pkg, dest)` sin pasar la contraseña. En cualquier build con
+  `--password` la extracción fallaba (`IflappError` de descifrado) y la
+  verificación se degradaba a `[WARN] Verificación en sandbox incompleta`, de
+  modo que los paquetes cifrados nunca se verificaban.
+- **Pasos para reproducir:** `python packagemaker.py --buildthis <proyecto> --compiler zipapp --password secret123`
+  y revisar el aviso de verificación incompleta.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el build se genera, pero se omite la verificación de un
+  paquete cifrado).
+- **Solución aplicada:** la contraseña viaja por la variable de entorno
+  `IFLAPP_VERIFY_PASSWORD` (no por `argv`) y el script del sandbox la pasa a
+  `extract_iflapp(..., password=...)`. Sin contraseña el comportamiento no cambia.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::EncryptedSandboxVerificationTests`
+  (ejecuta el script real del sandbox contra un `.iflapp` cifrado).
+- **Commit:** `ab79f4a`.
+- **Fecha de resolución:** 2026-11-21.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -437,15 +486,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
-  `d2670a1` y el de R-b3f71a6c), no reportes de usuario; el contador de 7 días
-  no se reinicia.
-- Verificación del ciclo de R-b3f71a6c (2026-11-21):
-  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 467 pasan, 1 omitido;
+  `d2670a1`, el de R-b3f71a6c y `ab79f4a`), no reportes de usuario; el contador
+  de 7 días no se reinicia.
+- Verificación del ciclo de R-7c1e4a90 y R-91b6d2f4 (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 471 pasan, 1 omitido;
   `pyflakes` y `py_compile` limpios; build real con `--compiler zipapp` +
-  `--harden integrity` produce un `.iflapp` válido con `.iflapp.integrity`;
-  `--inspect-json` emite JSON parseable en stdout; `create`, `--buildthis` y
-  `moonfix` con metadatos no canónicos abortan con error legible y código 1,
-  sin traceback.
+  `--password` + `--harden checksum` produce un `.iflapp` cifrado y la
+  verificación en sandbox termina en `[OK]` (antes avisaba «incompleta»);
+  `compile` con `demo` y `demo2` elige `demo`; `compile`/`moonfix` sin carpeta
+  base abortan con error legible y código 1, sin traceback.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
