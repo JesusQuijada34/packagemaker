@@ -59,6 +59,24 @@ def _find_details_xml() -> Path:
     )
 
 
+def _bundled_app_icon() -> Path | None:
+    """Localiza el icono por defecto del producto sin depender del CWD."""
+    roots = []
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        bundle_root = Path(sys._MEIPASS)
+        roots.extend((bundle_root / "_internal", bundle_root))
+    roots.extend((
+        Path(__file__).resolve().parent.parent,
+        Path(sys.executable).resolve().parent,
+        Path.cwd(),
+    ))
+    for root in roots:
+        candidate = root / "app" / "app-icon.ico"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 _DETAILS_XML_PATH = _find_details_xml()
 with _DETAILS_XML_PATH.open("r", encoding="utf-8") as f:
     tree = ET.parse(f)
@@ -231,7 +249,19 @@ class CLIHandler:
             return method_names()
         requested = [part.strip() for part in text.split(',') if part.strip()]
         valid = set(method_names())
-        return [name for name in requested if name in valid]
+        unknown = [name for name in requested if name not in valid]
+        if unknown:
+            print(
+                f"[WARN] Métodos de blindaje desconocidos ignorados: {', '.join(unknown)}",
+                file=sys.stderr,
+            )
+        selected = [name for name in requested if name in valid]
+        if not selected:
+            print(
+                "[WARN] Ningún método de blindaje válido; el blindaje queda desactivado.",
+                file=sys.stderr,
+            )
+        return selected
 
     def parse(self):
         return self.parser.parse_args()
@@ -1041,7 +1071,6 @@ class IflappIdeHelper:
             path,
             backend=None if backend in (None, "auto") else backend,
             output_dir=data.get("output"),
-            log=print,
         )
         for line in outcome.log:
             print(line)
@@ -1390,13 +1419,17 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             timestamp=timestamp,
         )
         
-        # Copiar icono por defecto
+        # Copiar icono por defecto. La ruta se resuelve contra la raíz del
+        # repositorio y el ejecutable: `create` debe funcionar desde cualquier
+        # directorio de trabajo, no solo desde la raíz del proyecto.
         icon_dest = project_path / "app" / "app-icon.ico"
-        icon_source = Path("app/app-icon.ico")
-        if icon_source.exists():
+        icon_source = _bundled_app_icon()
+        if icon_source is not None:
             import shutil
             shutil.copy(str(icon_source), str(icon_dest))
             print(f"[OK] Icono copiado a: {icon_dest}")
+        else:
+            print("[WARN] No se encontró app/app-icon.ico; el proyecto queda sin icono.")
         
         _safe_print(f"\n  ✔ Proyecto creado en: {project_path}\n")
         return None
@@ -1424,12 +1457,12 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             print(f"[ERROR] No se encontró proyecto que coincida con {publisher}.{app_id} en {base_path}")
             sys.exit(1)
         
-        # Usar ruta predeterminada para salida (misma que usa la GUI)
-        output_path = Path(os.path.expanduser("~")).resolve()
-        if sys.platform.startswith('win'):
-            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
-        else:
-            output_path = output_path / "Documents" / "Packagemaker Projects" / "Compiled"
+        # Salida por defecto compartida con `--buildthis`: en Termux/Android el
+        # artefacto debe quedar en el almacenamiento visible (Download), no en el
+        # home privado de la app.
+        from lib.platform_detect import compile_output_directory
+
+        output_path = Path(compile_output_directory()).expanduser().resolve()
         output_path.mkdir(parents=True, exist_ok=True)
         
         # Detectar plataforma automáticamente según el sistema operativo

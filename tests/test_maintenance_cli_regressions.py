@@ -1,0 +1,214 @@
+# -*- coding: utf-8 -*-
+"""Regresiones de mantenimiento del CLI headless.
+
+Cubre defectos detectados en la auditoría de este ciclo:
+
+- ``R-4b7e91a2``: el banner de plataforma contaminaba la salida JSON.
+- ``R-9c1d5f60``: ``create`` no copiaba el icono si se lanzaba fuera del repo.
+- ``R-2e83a7bd``: el subcomando ``compile`` ignoraba la salida de Termux.
+- ``R-a5f06c38``: un método de ``--harden`` mal escrito desactivaba el blindaje
+  en silencio.
+- ``R-d74e0b19``: ``--ide-compile`` imprimía cada línea dos veces.
+"""
+
+import io
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+
+DETAILS = """<?xml version="1.0" encoding="utf-8"?>
+<app>
+  <publisher>Influent</publisher>
+  <app>demo</app>
+  <name>demo</name>
+  <version>1.0.0</version>
+  <platform>Danenone</platform>
+  <author>JesusQuijada34</author>
+</app>
+"""
+
+
+class CreateIconOutsideRepoRootTests(unittest.TestCase):
+    """R-9c1d5f60: el icono debe copiarse aunque el CWD no sea la raíz."""
+
+    def test_create_copies_icon_from_any_working_directory(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            base.mkdir()
+            elsewhere = Path(tmp) / "elsewhere"
+            elsewhere.mkdir()
+            original = os.getcwd()
+            os.chdir(elsewhere)
+            try:
+                with redirect_stdout(io.StringIO()):
+                    handle_cli_action(
+                        "create_project",
+                        {
+                            "path": str(base),
+                            "name": "Cwd Test",
+                            "shortname": "cwd-test",
+                            "version": "1.0.0",
+                            "author": "JesusQuijada34",
+                            "publisher": "Influent",
+                            "platform": "Danenone",
+                            "description": "proyecto de prueba",
+                        },
+                        None,
+                        headless=True,
+                    )
+            finally:
+                os.chdir(original)
+
+            projects = list(base.glob("influent.cwd-test.*"))
+            self.assertEqual(len(projects), 1, "no se creó el proyecto")
+            icon = projects[0] / "app" / "app-icon.ico"
+            self.assertTrue(icon.is_file(), "el icono por defecto no se copió")
+            self.assertGreater(icon.stat().st_size, 0)
+
+
+class CompileSubcommandOutputDirectoryTests(unittest.TestCase):
+    """R-2e83a7bd: ``compile`` usa la misma salida que ``--buildthis``."""
+
+    def test_compile_uses_platform_output_directory(self):
+        from lib.cliHandler import handle_cli_action
+
+        class _RecordingCompiler:
+            instances = []
+
+            def __init__(self, project_path, output_path, **kwargs):
+                self.output_path = Path(output_path)
+                type(self).instances.append(self)
+
+            def parse_details_xml(self):
+                return False
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            project = base / "influent.demoapp.v1.0.0-26.11-04.08-Danenone"
+            project.mkdir(parents=True)
+            (project / "details.xml").write_text(DETAILS, encoding="utf-8")
+            shared_output = Path(tmp) / "shared-download"
+
+            _RecordingCompiler.instances = []
+            with patch("lib.BuildThread.FlangCompiler", _RecordingCompiler), patch(
+                "lib.platform_detect.compile_output_directory",
+                return_value=str(shared_output),
+            ):
+                with redirect_stdout(io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        handle_cli_action(
+                            "compile_project",
+                            {
+                                "path": str(base),
+                                "name": "Demo App",
+                                "shortname": "demoapp",
+                                "publisher": "Influent",
+                            },
+                            None,
+                            headless=True,
+                        )
+
+            self.assertTrue(_RecordingCompiler.instances)
+            compiler = _RecordingCompiler.instances[0]
+            self.assertEqual(compiler.output_path, shared_output.resolve())
+            self.assertTrue(shared_output.is_dir())
+
+
+class IdeCompileLoggingTests(unittest.TestCase):
+    """R-d74e0b19: cada línea del log debe imprimirse una sola vez."""
+
+    def test_ide_compile_prints_each_line_once(self):
+        from lib.cliHandler import IflappIdeHelper
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "influent.demo.v1.0.0-26.11-04.08-Danenone"
+            project.mkdir()
+            (project / "details.xml").write_text(DETAILS, encoding="utf-8")
+            (project / "demo.py").write_text("print('demo')\n", encoding="utf-8")
+            output = Path(tmp) / "out"
+
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                ok = IflappIdeHelper.compile(
+                    {"path": str(project), "backend": "zipapp", "output": str(output)}
+                )
+            text = buffer.getvalue()
+
+            self.assertTrue(ok)
+            self.assertEqual(text.count("[INFO] Compilando demo.py"), 1)
+            self.assertEqual(text.count("[OK]"), 1)
+
+
+class HardeningParseWarningTests(unittest.TestCase):
+    """R-a5f06c38: los métodos desconocidos no deben pasar en silencio."""
+
+    def test_unknown_method_is_reported_and_filtered(self):
+        from lib.cliHandler import CLIHandler
+
+        handler = CLIHandler()
+        buffer = io.StringIO()
+        with redirect_stderr(buffer):
+            parsed = handler._parse_hardening("strip,bogus")
+        self.assertEqual(parsed, ["strip"])
+        self.assertIn("bogus", buffer.getvalue())
+
+    def test_all_unknown_methods_disable_hardening_with_warning(self):
+        from lib.cliHandler import CLIHandler
+
+        handler = CLIHandler()
+        buffer = io.StringIO()
+        with redirect_stderr(buffer):
+            parsed = handler._parse_hardening("bogus")
+        self.assertEqual(parsed, [])
+        self.assertIn("blindaje queda desactivado", buffer.getvalue())
+
+
+class JsonOutputPurityTests(unittest.TestCase):
+    """R-4b7e91a2: stdout de las acciones ``*-json`` debe ser JSON válido."""
+
+    def test_inspect_json_stdout_is_parseable(self):
+        from lib.iflapp_format import pack_iflapp
+
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = Path(tmp) / "payload"
+            payload.mkdir()
+            (payload / "hello.txt").write_text("hola\n", encoding="utf-8")
+            artifact = Path(tmp) / "demo.iflapp"
+            pack_iflapp(
+                payload,
+                artifact,
+                details=DETAILS.encode("utf-8"),
+                identity={
+                    "publisher": "Influent",
+                    "app": "demo",
+                    "name": "demo",
+                    "version": "v1.0.0-26.11-04.08",
+                    "platform": "Danenone",
+                },
+            )
+
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "packagemaker.py"), "--inspect", str(artifact), "--inspect-json"],
+                cwd=tmp,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(result.stdout)
+            self.assertEqual(data["identity"]["app"], "demo")
+            self.assertIn("Platform detected", result.stderr)
+
+
+if __name__ == "__main__":
+    unittest.main()

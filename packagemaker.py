@@ -447,11 +447,13 @@ Fluthin_APPS = APP_CONFIG.get("Fluthin_APPS", _PLATFORM_FLUTHIN_APPS) or _PLATFO
 try:
     os.makedirs(BASE_DIR, exist_ok=True)
     os.makedirs(Fluthin_APPS, exist_ok=True)
-    print(f"[PackageMaker] Platform detected: {linkedsys}")
-    print(f"[PackageMaker] BASE_DIR: {BASE_DIR}")
-    print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}")
+    # El banner informativo va a stderr: stdout queda limpio para las salidas
+    # máquina-legibles (--inspect-json, --shell-info-json, --ide-scan-json).
+    print(f"[PackageMaker] Platform detected: {linkedsys}", file=sys.stderr)
+    print(f"[PackageMaker] BASE_DIR: {BASE_DIR}", file=sys.stderr)
+    print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}", file=sys.stderr)
 except OSError as e:
-    print(f"[PackageMaker] WARNING: could not create directory {BASE_DIR}: {e}")
+    print(f"[PackageMaker] WARNING: could not create directory {BASE_DIR}: {e}", file=sys.stderr)
     # Intentar con directorio alternativo
     alt_dir = os.path.expanduser("~")
     BASE_DIR = os.path.join(alt_dir, "PackageMaker", "Projects")
@@ -459,9 +461,9 @@ except OSError as e:
     try:
         os.makedirs(BASE_DIR, exist_ok=True)
         os.makedirs(Fluthin_APPS, exist_ok=True)
-        print(f"[PackageMaker] Using fallback directory: {BASE_DIR}")
+        print(f"[PackageMaker] Using fallback directory: {BASE_DIR}", file=sys.stderr)
     except OSError as e2:
-        print(f"[PackageMaker] ERROR: could not create fallback directory: {e2}")
+        print(f"[PackageMaker] ERROR: could not create fallback directory: {e2}", file=sys.stderr)
 
 def save_app_config(config):
     store = get_pm_data()
