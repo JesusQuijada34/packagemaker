@@ -43,6 +43,9 @@ de auditoría.
 | R-2a7f6b41 | Bug — plataforma de la cabecera ≠ `details.xml` | Baja | Resuelto |
 | R-6f2b9d31 | Bug — `--harden obfuscate` generaba Python inválido | Alta | Resuelto |
 | R-8c4e1a72 | Bug — contenedores de motor con cabecera corrupta | Media | Resuelto |
+| R-1f4a7c92 | Bug — `pm.data`/`settings.json` con forma no-objeto tumban el arranque | Alta | Resuelto |
+| R-2b6d8e13 | Bug — cabeceras `.asksome` malformadas rompen `--shell-info` | Media | Resuelto |
+| R-3c9e1a57 | Bug — extracción `.asksome` acepta rutas de unidad y errores crudos | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -53,7 +56,8 @@ No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
-R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31 y R-8c4e1a72)
+R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
+R-1f4a7c92, R-2b6d8e13 y R-3c9e1a57)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -765,6 +769,95 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-1f4a7c92 — Un `pm.data` o `settings.json` con forma no-objeto impedía arrancar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `PMDataStore.load()` solo capturaba `JSONDecodeError` y
+  `OSError`. Un `data/pm.data` que seguía siendo JSON válido pero no un objeto
+  (`[]`, `"texto"`, `42`, `null`) llegaba a `_ensure_structure()` y lanzaba
+  `TypeError: list indices must be integers or slices, not str`; lo mismo
+  ocurría si `user`, `readonly` o `translation_cache` tenían otro tipo. Como
+  `packagemaker.py` construye `APP_CONFIG = load_app_config()` al importarse,
+  la aplicación no arrancaba ni en GUI ni en CLI (`--app-version`,
+  `--list-compilers`, builds). Un `config/settings.json` con forma de lista
+  también abortaba la migración con `AttributeError: 'list' object has no
+  attribute 'get'`.
+- **Pasos para reproducir:** escribir `[]` en `data/pm.data` y ejecutar
+  `python packagemaker.py --app-version`; o dejar `config/settings.json` con
+  `[1, 2, 3]` y arrancar la aplicación.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (bloquea por completo el arranque).
+- **Solución aplicada:** `load()` descarta un documento que no sea diccionario;
+  `_ensure_structure()` reconstruye cualquier sección (`user`, `readonly`,
+  `translation_cache`) que no sea un objeto conservando las claves válidas de
+  las demás. Los accesores y `migrate_from_legacy_config()` validan el tipo
+  antes de operar, y `load_merged_app_config()` ignora un `settings.json` que
+  no sea un objeto. No se borran preferencias válidas.
+- **Pruebas:** `tests/test_pm_data_reset.py::PMDataCorruptionTests` (5 casos).
+- **Commit:** `543e173`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
+## R-2b6d8e13 — Las cabeceras `.asksome` malformadas rompían `--shell-info` y la verificación
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `read_asksome_header()` devolvía el JSON sin comprobar su
+  forma ni que el tamaño declarado cupiera en el archivo. Una cabecera `[]`
+  hacía que `verify_asksome()`, `extract_asksome()`, `package_info()` y
+  `icon_bytes()` fallaran con `AttributeError: 'list' object has no attribute
+  'get'`; `metadata` como lista rompía `dict(...)` con `TypeError`; `manifest`
+  no lista rompía `len(...)`; un `icon` no textual o base64 inválido abortaba
+  el hover del shell; y una cabecera truncada se aceptaba como válida.
+- **Pasos para reproducir:** `verify_asksome()` o
+  `python packagemaker.py --shell-info archivo.asksome` sobre un contenedor con
+  cabecera `[]`, `{"metadata": []}` o un tamaño declarado mayor que el archivo.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (solo afecta a artefactos dañados o manipulados; el
+  formato válido no cambia).
+- **Solución aplicada:** un único `_read_container()` valida el tamaño
+  declarado, decodifica el JSON y exige un objeto; `_validate_header()`
+  comprueba los tipos de `metadata`, `manifest`, `encryption_params`,
+  `format_version` y de los campos textuales. `verify_asksome()` y
+  `extract_asksome()` comparten la lectura validada. `native_shell` decodifica
+  el icono con un helper que devuelve `None` ante base64 inválido.
+- **Pruebas:** `tests/test_mexf_asksome.py::TestAsksomeMalformedHeaderTests`
+  (13 casos) y `tests/test_native_shell.py::test_package_info_rejects_malformed_header`,
+  `test_invalid_base64_icon_does_not_break_shell_info`.
+- **Commit:** `543e173`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
+## R-3c9e1a57 — La extracción `.asksome` aceptaba rutas de unidad y exponía errores crudos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `_safe_member()` solo rechazaba rutas POSIX absolutas y
+  `..`; una entrada `C:/Windows/...` o `C:archivo` pasaba la validación y en
+  Windows `Path(destino) / "C:/..."` resuelve fuera del destino (escritura
+  arbitraria durante `--install-asksome`). Además, un payload LZMA/TAR
+  corrupto salía como `lzma.LZMAError`/`tarfile.ReadError` en lugar de un
+  `AsksomeError` legible. La clave de firma `.asksome` es local y pública, así
+  que un artefacto de terceros puede estar manipulado.
+- **Pasos para reproducir:** instalar un `.asksome` cuyo TAR contenga
+  `C:/Windows/evil.txt`, o extraer uno con payload LZMA corrupto.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (seguridad y robustez; no afecta a artefactos válidos).
+- **Solución aplicada:** `_safe_member_target()` rechaza rutas absolutas,
+  unidades de Windows, componentes `..`, nombres vacíos y cualquier resolución
+  que escape del destino, igual que `lib/iflapp_format.py`; `extract_asksome()`
+  comprueba también symlinks preexistentes y traduce `LZMAError`/`EOFError` y
+  `TarError` a `AsksomeError`.
+- **Pruebas:** `tests/test_mexf_asksome.py::TestAsksomeMalformedHeaderTests::test_unsafe_member_paths_are_rejected`
+  (5 rutas) y `test_corrupt_payload_raises_asksome_error`.
+- **Commit:** `543e173`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 ### R-d23039c0 — Telemetría centralizada de errores
@@ -929,8 +1022,8 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
   `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4,
-  `325c0e9`, `850de5c` y `f60f9ac`), no reportes de usuario; el contador de
-  7 días no se reinicia.
+  `325c0e9`, `850de5c`, `f60f9ac` y `543e173`), no reportes de usuario; el
+  contador de 7 días no se reinicia.
 - Verificación del ciclo de R-3a7c5e18, R-9f2b64d1 y R-6e04c8ab (2026-11-21):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 474 pasan, 2
   omitidos; `pyflakes` y `py_compile` limpios; las cuatro acciones JSON
@@ -988,6 +1081,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `Hola desde demoobf!`; la fuente del proyecto no se modifica. Además,
   `obfuscate_strings()` sobre una copia del `updater.py` del repo (54
   literales) produce un archivo compilable.
+- Verificación del ciclo de R-1f4a7c92, R-2b6d8e13 y R-3c9e1a57 (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 541 pasan, 1
+  omitido, 39 subtests; `pyflakes` y `py_compile` limpios; los 20 casos nuevos
+  fallan con el código anterior. Con `data/pm.data` = `[]`, `--app-version` y
+  `--list-compilers` arrancan (antes `TypeError`); `--compile-mexf` +
+  `--shell-info-json` + `--install-asksome`/`--uninstall-asksome` reales
+  funcionan sobre un `.asksome` firmado; una cabecera `[]`, una truncada o con
+  `metadata` no objeto termina en `AsksomeError` legible (antes
+  `AttributeError`/`TypeError`) y una entrada `C:/...`/`C:...` se rechaza.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

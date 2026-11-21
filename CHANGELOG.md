@@ -2,6 +2,14 @@
 
 ## 2026-11-21
 
+### Corregido — robustez de arranque y contenedores `.asksome`
+
+Hallazgos del octavo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `543e173`.
+
+- **R-1f4a7c92 — Un `pm.data` o `settings.json` con forma no-objeto impedía arrancar:** `PMDataStore.load()` solo capturaba errores de sintaxis u E/S. Un `data/pm.data` que seguía siendo JSON válido pero no un objeto (`[]`, `"texto"`, `42`, `null`) reventaba en `_ensure_structure()` con `TypeError`, y como `packagemaker.py` carga `APP_CONFIG` al importarse, la aplicación no arrancaba ni en GUI ni en CLI. Lo mismo ocurría con `user`, `readonly` o `translation_cache` de otro tipo y con un `config/settings.json` que fuera una lista (`AttributeError` en la migración). Ahora el documento no-objeto se descarta, cada sección se reconstruye conservando las claves válidas de las demás y la migración ignora un `settings.json` no-objeto.
+- **R-2b6d8e13 — Las cabeceras `.asksome` malformadas rompían `--shell-info` y la verificación:** `read_asksome_header()` no comprobaba que el tamaño declarado cupiera en el archivo ni la forma del JSON. Una cabecera `[]` terminaba en `AttributeError` en `verify_asksome()`, `extract_asksome()`, `package_info()` e `icon_bytes()`; `metadata` como lista o `manifest` no lista daban `TypeError`; un icono base64 inválido abortaba el hover del shell. Ahora una lectura única valida tamaño, JSON y tipos, y el shell ignora iconos no decodificables.
+- **R-3c9e1a57 — La extracción `.asksome` aceptaba rutas de unidad y exponía errores crudos:** `_safe_member()` solo rechazaba rutas POSIX absolutas y `..`, así que una entrada `C:/Windows/...` o `C:archivo` pasaba y en Windows resolvía fuera del destino. Además, un payload LZMA/TAR corrupto salía como `LZMAError`/`ReadError`. Ahora se rechazan rutas absolutas, unidades de Windows, `..` y cualquier resolución que escape, se comprueban symlinks preexistentes y los errores se traducen a `AsksomeError`.
+
 ### Corregido
 
 Reportes del [issue #4](https://github.com/JesusQuijada34/packagemaker/issues/4), reportados por JesusQuijada34.
