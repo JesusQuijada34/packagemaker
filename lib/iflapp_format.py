@@ -516,10 +516,15 @@ def read_iflapp_header(path: Path | str, *, include_blobs: bool = True) -> Iflap
     with open(path, "rb") as handle:
         magic = handle.read(len(MAGIC))
         if magic == MAGIC:
-            (header_len,) = struct.unpack("<I", handle.read(4))
+            raw_len = handle.read(4)
+            if len(raw_len) != 4:
+                raise IflappError("Cabecera .iflapp truncada.")
+            (header_len,) = struct.unpack("<I", raw_len)
             if header_len <= 0 or header_len > 64 * 1024 * 1024:
                 raise IflappError("Longitud de cabecera inválida.")
             blob = handle.read(header_len)
+            if len(blob) != header_len:
+                raise IflappError("Cabecera .iflapp truncada.")
         else:
             # Recuperación: la cabecera delantera está dañada; usar la cola.
             trailer = _read_trailer(handle)
@@ -530,6 +535,8 @@ def read_iflapp_header(path: Path | str, *, include_blobs: bool = True) -> Iflap
             header = json.loads(blob.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise IflappError(f"Cabecera JSON corrupta: {exc}") from exc
+        if not isinstance(header, dict):
+            raise IflappError("Cabecera .iflapp inválida: se esperaba un objeto JSON.")
 
         icon = details = b""
         if include_blobs:
@@ -555,19 +562,30 @@ def _read_trailer(handle) -> Optional[Tuple[int, bytes]]:
     (header_len,) = struct.unpack("<I", raw_len)
     if header_len <= 0 or header_len > 64 * 1024 * 1024:
         return None
-    return header_len, handle.read(header_len)
+    blob = handle.read(header_len)
+    if len(blob) != header_len:
+        return None
+    return header_len, blob
 
 
 def _read_section(handle, header: Dict, key: str) -> bytes:
-    section = header.get("sections", {}).get(key)
+    sections = header.get("sections")
+    if not isinstance(sections, dict):
+        return b""
+    section = sections.get(key)
     if not isinstance(section, dict):
         return b""
-    size = int(section.get("size", 0))
+    try:
+        size = int(section.get("size", 0))
+        offset = int(section.get("offset", 0))
+    except (TypeError, ValueError) as exc:
+        raise IflappError(f"Sección {key!r} inválida.") from exc
     if size <= 0:
         return b""
-    offset = int(section.get("offset", 0))
     handle.seek(offset)
     data = handle.read(size)
+    if len(data) != size:
+        raise IflappError(f"La sección {key!r} está truncada.")
     expected = section.get("sha256")
     if expected and _sha256(data) != expected:
         raise IflappError(f"La sección {key!r} no coincide con su digest.")

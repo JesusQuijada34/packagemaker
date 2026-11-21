@@ -1,3 +1,5 @@
+import json
+import struct
 import tempfile
 import unittest
 from pathlib import Path
@@ -77,6 +79,66 @@ class IflappFormatTests(unittest.TestCase):
     def test_path_traversal_is_rejected(self):
         with self.assertRaises(iflapp_format.IflappError):
             iflapp_format._safe_member_target(Path("/tmp"), "../evil")
+
+
+class TruncatedContainerTests(unittest.TestCase):
+    """Una descarga cortada no debe parecer un paquete válido y vacío."""
+
+    def _write(self, root: Path, name: str, data: bytes) -> Path:
+        path = root / name
+        path.write_bytes(data)
+        return path
+
+    def test_magic_without_header_length_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(Path(tmp), "cut.iflapp", iflapp_format.MAGIC)
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_declared_header_longer_than_file_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                "cut.iflapp",
+                iflapp_format.MAGIC + struct.pack("<I", 1024) + b"{}",
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_header_must_be_a_json_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            blob = b"null"
+            path = self._write(
+                Path(tmp),
+                "bad.iflapp",
+                iflapp_format.MAGIC + struct.pack("<I", len(blob)) + blob,
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_section_beyond_end_of_file_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            header = {"format_version": 2, "sections": {"icon": {"offset": 4096, "size": 8}}}
+            blob = json.dumps(header).encode("utf-8")
+            path = self._write(
+                Path(tmp),
+                "cut.iflapp",
+                iflapp_format.MAGIC + struct.pack("<I", len(blob)) + blob,
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_invalid_section_metadata_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            header = {"sections": {"icon": {"offset": "nope", "size": 8}}}
+            blob = json.dumps(header).encode("utf-8")
+            path = self._write(
+                Path(tmp),
+                "bad.iflapp",
+                iflapp_format.MAGIC + struct.pack("<I", len(blob)) + blob,
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
 
 
 class IflappReaderTests(unittest.TestCase):
