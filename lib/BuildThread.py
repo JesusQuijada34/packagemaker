@@ -1,7 +1,6 @@
 import os
 import json
 import sys
-import time
 import shutil
 import platform
 import fnmatch
@@ -38,6 +37,7 @@ from lib.compilers import (
     ensure_backend,
     resolve_backend,
 )
+from lib.file_ops import copy_file, remove_tree
 from lib.hardware_sandbox import HardwareSandbox
 from lib.mexf_compiler import MexfCompiler
 from lib.project_locator import describe_available, locate_project
@@ -176,28 +176,34 @@ class FlangCompiler:
         """
         if self._backend is not None and self._backend.is_available():
             return self._backend
-        preferred = self.compiler_name
+
+        # El motor fija su backend: BlindCube compila con Nuitka y FlatCube con
+        # PyInstaller. Antes se caía en silencio al otro backend, de modo que un
+        # paquete BlindCube podía acabar construido por PyInstaller.
+        target = (self.compiler_name or "nuitka").strip().lower()
         try:
-            self._backend = resolve_backend(preferred, log_callback=self.log)
-            self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
-            return self._backend
+            self._backend = resolve_backend(target, log_callback=self.log)
+            if self._backend.name == target:
+                self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
+                return self._backend
+            self.log(
+                f"[WARN] {target!r} resolvió a {self._backend.name!r}; "
+                "se intenta instalar el backend del motor."
+            )
         except CompilerUnavailableError:
             pass
 
-        target = (preferred or "nuitka").strip().lower()
         self.log(f"[INFO] Compilador {target!r} no disponible; instalando dependencias...")
         if ensure_backend(target, log_callback=self.log):
             self._backend = resolve_backend(target, log_callback=self.log)
-            self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
-            return self._backend
+            if self._backend.name == target:
+                self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
+                return self._backend
 
-        # Último recurso: PyInstaller histórico.
-        if ensure_backend("pyinstaller", log_callback=self.log):
-            self._backend = resolve_backend("pyinstaller", log_callback=self.log)
-            self.log(f"[WARN] Usando compilador de respaldo: {self._backend.display_name}")
-            return self._backend
-
-        self.last_error = "No hay ningún compilador disponible (Nuitka, PyInstaller, cx_Freeze)."
+        self.last_error = (
+            f"El motor requiere el backend {target!r} y no está disponible. "
+            "Instala sus dependencias o cambia de motor."
+        )
         self.log(f"[ERROR] {self.last_error}")
         return None
 
@@ -452,7 +458,7 @@ class FlangCompiler:
             )
             if exe_path and os.path.exists(exe_path):
                 accumulated_exe = dist_dir / Path(exe_path).name
-                shutil.copy2(exe_path, accumulated_exe)
+                copy_file(exe_path, accumulated_exe)
                 if not windowed:
                     try:
                         os.chmod(accumulated_exe, 0o755)
@@ -469,7 +475,7 @@ class FlangCompiler:
             return False
         finally:
             backend.cleanup()
-            shutil.rmtree(build_dir, ignore_errors=True)
+            remove_tree(build_dir)
             if injected is not None:
                 bootloader_injection.cleanup_injected_copy(script_path)
 
@@ -1013,27 +1019,8 @@ class BuildThread(QThread):
         self.sandbox = sandbox
         self.build_dropper = build_dropper
         self.hardening = list(hardening) if hardening else []
-        self.curiosity_phrases = [
-            tr("build_log.curiosity_1"),
-            tr("build_log.curiosity_2"),
-            tr("build_log.curiosity_3"),
-            tr("build_log.curiosity_4"),
-            tr("build_log.curiosity_5"),
-            tr("build_log.curiosity_6"),
-            tr("build_log.curiosity_7"),
-            tr("build_log.curiosity_8"),
-            tr("build_log.curiosity_9"),
-            tr("build_log.curiosity_10"),
-        ]
-        self._curiosity_timer = None
-
-    def emit_random_curiosity(self):
-        import random
-        phrase = random.choice(self.curiosity_phrases)
-        self.progress.emit(f"{tr('build_log.curiosity_prefix')}: {phrase}")
 
     def run(self):
-        self.emit_random_curiosity()
         if self.custom_path:
             repo_path = Path(self.custom_path)
             if not repo_path.exists():
@@ -1079,10 +1066,5 @@ class BuildThread(QThread):
             self.error.emit(error_message)
 
     def handle_compiler_log(self, msg):
+        """Publica el log real del compilador, sin relleno."""
         self.progress.emit(msg)
-        if not hasattr(self, '_last_phrase_time'):
-            self._last_phrase_time = time.time()
-        if time.time() - self._last_phrase_time > 8:
-            import random
-            self.progress.emit(f"{tr('build_log.curiosity_prefix')}: {random.choice(self.curiosity_phrases)}")
-            self._last_phrase_time = time.time()

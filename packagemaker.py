@@ -2372,8 +2372,7 @@ class PackageTodoGUI(QMainWindow):
         compiler_name = engine.backend
 
         self.reporter.progress(tr("build.progress_building"))
-        self.build_progress.setVisible(True)
-        self.build_progress.setMarquee(True)
+        self._set_build_running(True)
 
         build_dropper = bool(getattr(self, 'dropper_checkbox', None) and self.dropper_checkbox.isChecked())
         hardening = None
@@ -2400,16 +2399,43 @@ class PackageTodoGUI(QMainWindow):
         self.build_thread.error.connect(self._on_build_error)
         self.build_thread.start()
 
+    def _build_controls(self):
+        """Controles que se bloquean mientras el empaquetado está en marcha."""
+        return (
+            self.input_build_empresa,
+            self.input_build_nombre,
+            self.input_build_version,
+            self.engine_combo,
+            self.radio_portable,
+            self.radio_lite,
+            self.dropper_checkbox,
+            self.hardening_checkbox,
+            self.btn_select_folder,
+            self.btn_blindcube,
+        )
+
+    def _set_build_running(self, running: bool) -> None:
+        """Deshabilita los inputs y acciones mientras compila.
+
+        Sin esto se podía lanzar un segundo empaquetado o cambiar el motor a
+        mitad del proceso, dejando estados incoherentes.
+        """
+        for control in self._build_controls():
+            control.setEnabled(not running)
+        self.build_progress.setVisible(running)
+        if running:
+            self.build_progress.setMarquee(True)
+
     def _on_build_progress(self, msg):
         """Progreso continuo: solo barra de estado, sin abrir diálogos."""
         self.reporter.progress(msg)
 
     def _on_build_finished(self, msg):
-        self.build_progress.setVisible(False)
+        self._set_build_running(False)
         self.reporter.success(tr("build.compilation_complete"), msg, dialog=True)
 
     def _on_build_error(self, msg):
-        self.build_progress.setVisible(False)
+        self._set_build_running(False)
         self.reporter.error(tr("build.compilation_error"), msg, dialog=True)
 
     def closeEvent(self, event):
