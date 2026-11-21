@@ -35,6 +35,7 @@ de auditoría.
 | R-7d5b91c4 | Bug — MoonFix rompe la marca temporal canónica | Media | Resuelto |
 | R-3f9a2c71 | Bug — dropper lanza `updater.py` en builds zipapp | Media | Resuelto |
 | R-7b1d4e92 | Bug — `--inspect` acepta cabeceras truncadas | Baja | Resuelto |
+| R-8a4f1c6d | Bug — cabeceras con tipos inesperados rompen `--inspect` | Baja | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -43,9 +44,9 @@ de auditoría.
 No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
-R-6e04c8ab, R-7d5b91c4, R-3f9a2c71 y R-7b1d4e92) quedaron corregidos y
-probados. No se prepara release: el periodo de observación y el requisito de 7
-días sin reportes nuevos siguen en curso.
+R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92 y R-8a4f1c6d) quedaron
+corregidos y probados. No se prepara release: el periodo de observación y el
+requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
@@ -537,6 +538,39 @@ días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-8a4f1c6d — Cabeceras con tipos inesperados rompían `--inspect`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** `read_iflapp_header()` comprobaba que la cabecera fuera un
+  objeto JSON, pero no los tipos de sus campos. Un `manifest` que no fuera lista
+  lanzaba `TypeError: 'int' object is not iterable`; un `payload` que no fuera
+  objeto lanzaba `AttributeError` en `compression`/`encryption`/`file_count`; un
+  `file_count` no numérico lanzaba `ValueError`; `sections` con una sección que
+  no fuera objeto rompía `export_header_assets()` con `AttributeError`; y un
+  offset negativo terminaba en `OSError [Errno 22]`. `--inspect`,
+  `--inspect-json` y `--inspect-extract` morían con traceback en lugar de dar un
+  diagnóstico de formato.
+- **Pasos para reproducir:** escribir `IFLAPP2\0` + longitud 4096 +
+  `{"format_version": 2, "manifest": 5}` y ejecutar
+  `python packagemaker.py --inspect <archivo> --inspect-json`; terminaba con
+  `TypeError` y traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja (no corrompe nada; un paquete dañado o manipulado provoca
+  un traceback en vez de un error legible).
+- **Solución aplicada:** `_validate_header_shape()` valida los tipos de
+  `format_version`, `sections`, `payload`, `manifest` y de los metadatos
+  numéricos. `_read_section()` y `_payload_bounds()` rechazan offsets y tamaños
+  negativos o fuera del archivo. Las propiedades de `IflappHeader` y
+  `export_header_assets()` toleran formas inesperadas. Todos los casos producen
+  `IflappError` con un mensaje legible.
+- **Pruebas:** `tests/test_iflapp_format.py::MalformedHeaderShapeTests` (7 casos;
+  los 7 fallan con el código anterior).
+- **Commit:** `f60f9ac`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 ### R-d23039c0 — Telemetría centralizada de errores
@@ -681,8 +715,8 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
   `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4,
-  `325c0e9` y `850de5c`), no reportes de usuario; el contador de 7 días no se
-  reinicia.
+  `325c0e9`, `850de5c` y `f60f9ac`), no reportes de usuario; el contador de
+  7 días no se reinicia.
 - Verificación del ciclo de R-3a7c5e18, R-9f2b64d1 y R-6e04c8ab (2026-11-21):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 474 pasan, 2
   omitidos; `pyflakes` y `py_compile` limpios; las cuatro acciones JSON
@@ -711,6 +745,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   cabecera cortada, un JSON `null` o una sección fuera del archivo termina con
   código 1 y un `IflappError` legible (antes: código 0 con cabecera vacía o
   `struct.error`/`AttributeError`/`ValueError`).
+- Verificación del ciclo de R-8a4f1c6d (2026-11-21):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 491 pasan, 1
+  omitido; `pyflakes` y `py_compile` limpios; `--inspect-json` sobre cabeceras
+  con `manifest` no lista, `payload`/`sections` no objeto, metadatos no
+  numéricos u offset negativo termina con código 1 y un `IflappError` legible
+  (antes: traceback `TypeError`/`AttributeError`/`ValueError` u `OSError`
+  críptico); `--inspect-extract` ya no rompe con secciones mal tipadas. Build
+  real `--compiler zipapp --no-sandbox` genera el `.iflapp`, `--inspect-json`
+  lo lee, `--inspect-extract` exporta icono y `details.xml`, y
+  `verify_iflapp()` devuelve `valid: True`.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

@@ -87,6 +87,12 @@ Hallazgo del mismo ciclo de mantenimiento (sin reporte externo; reportado por Je
 - `create`, `--buildthis` y `moonfix` con metadatos no canónicos abortan con error legible y código 1, sin traceback.
 - `create` + `moonfix` reales conservan el mismo sufijo temporal en la carpeta y en `<version>` de `details.xml` (R-7d5b91c4).
 
+### Corregido — robustez del lector de cabeceras `.iflapp`
+
+Hallazgo del octavo ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `f60f9ac`.
+
+- **R-8a4f1c6d — Una cabecera `.iflapp` con tipos inesperados rompía `--inspect` con traceback:** `read_iflapp_header()` solo validaba que la cabecera fuera un objeto JSON. Un `manifest` que no fuera lista terminaba en `TypeError`; un `payload` que no fuera objeto, en `AttributeError` al leer compresión, cifrado o número de archivos; un `file_count` no numérico, en `ValueError`; una sección mal tipada rompía `--inspect-extract`; y un offset negativo producía un `OSError [Errno 22]` críptico. Ahora `_validate_header_shape()` valida tipos y metadatos numéricos, `_read_section()` y `_payload_bounds()` validan los límites contra el archivo, y las propiedades de `IflappHeader` y `export_header_assets()` toleran formas inesperadas. Todos los casos devuelven un `IflappError` legible.
+
 ### Pendiente de aprobación
 
 - **R-d23039c0 — Telemetría de errores:** no implementada (envía datos a un servidor externo).
