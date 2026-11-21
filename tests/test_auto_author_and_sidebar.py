@@ -93,9 +93,11 @@ def test_build_tab_forces_explicit_engine_choice(qapp):
         # BlindCube v2 (estándar) va preseleccionado; el combo nunca queda vacío.
         assert win.engine_combo.currentData() == "blindcube"
         assert win._selected_engine().id == "blindcube"
-        # El motor legacy se marca en la etiqueta.
+        # El motor legacy se marca en la etiqueta (texto traducido).
+        from lib.i18n import tr
+
         legacy_index = win.engine_combo.findData("flatcube")
-        assert "Legacy" in win.engine_combo.itemText(legacy_index)
+        assert tr("build.engine_legacy") in win.engine_combo.itemText(legacy_index)
     finally:
         win.close()
         qapp.processEvents()

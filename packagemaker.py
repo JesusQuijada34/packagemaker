@@ -29,7 +29,7 @@ try:
         QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
         QComboBox, QFileDialog, QDialog, QSizePolicy, QGroupBox, QRadioButton, QButtonGroup, QGridLayout, QTextEdit, QStackedWidget, QFrame, QGraphicsDropShadowEffect, QStatusBar
     )
-    from PyQt6.QtGui import QFont, QIcon, QColor
+    from PyQt6.QtGui import QFont, QFontDatabase, QIcon, QColor
     from PyQt6.QtGui import QPixmap
     from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer, QEvent, QObject, QPoint, QEasingCurve
     PYQT6_AVAILABLE = True
@@ -330,16 +330,34 @@ def _register_bundled_fonts():
 if PYQT6_AVAILABLE:
     # La familia preferida sólo puede resolverse cuando existe una
     # QGuiApplication; app_font() se evalúa tras construir QApplication.
+    def _ui_font_for_family(family: str, size: int = 11):
+        """Fuente con la familia elegida a mano, o la preferida si ``family`` vacía."""
+        if not family:
+            return preferred_ui_font(size)
+        font = QFont(family, size)
+        if QFontDatabase.families() and family.casefold() not in {
+            name.casefold() for name in QFontDatabase.families()
+        }:
+            return preferred_ui_font(size)
+        return font
+
     def app_font():
         """Devuelve la fuente de UI preferida una vez creada la aplicación."""
         _register_bundled_fonts()
-        return preferred_ui_font(11)
+        try:
+            family = str(get_pm_data().get_user("ui_font_family") or "")
+        except Exception:
+            family = ""
+        return _ui_font_for_family(family, 11)
 
     def code_font():
         """Fuente monoespaciada para editor y terminal."""
         _register_bundled_fonts()
         return preferred_mono_font(10)
 else:
+    def _ui_font_for_family(family: str, size: int = 11):
+        return None
+
     def app_font():
         return None
 
@@ -896,6 +914,7 @@ class PackageTodoGUI(QMainWindow):
             status_bar=self.status_bar,
             dialog_parent=self,
             dialog_launcher=AlertDialog.launch,
+            notifier=self._notify_user,
         )
 
         # Set default
@@ -2518,7 +2537,7 @@ class PackageTodoGUI(QMainWindow):
         user = {k: store.get_user(k) for k in (
             "language", "auto_translate", "base_dir", "fluthin_apps",
             "ui_density", "sidebar_accent_width", "card_opacity",
-            "notifications_enabled", "touch_mode",
+            "notifications_enabled", "touch_mode", "ui_font_family",
         )}
         user["base_dir"] = user.get("base_dir") or BASE_DIR
         user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
@@ -2528,6 +2547,7 @@ class PackageTodoGUI(QMainWindow):
         self.settings_panel.resetRequested.connect(self._reset_config)
         self.settings_panel.fontsRequested.connect(self._download_ui_fonts)
         self.settings_panel.languageChanged.connect(self._on_config_language_changed)
+        self.settings_panel.fontChosen.connect(self._on_font_family_chosen)
         outer.addWidget(self.settings_panel, 1)
 
         widgets = self.settings_panel.widgets
@@ -2563,6 +2583,39 @@ class PackageTodoGUI(QMainWindow):
         outer.addWidget(self.conf_restart_banner)
 
         self.settings_panel.set_accent(str(get_accent_color()))
+
+    def _notify_user(self, mode: str, title: str, message: str) -> bool:
+        """Publica una notificación animada si el usuario las tiene activas.
+
+        Devuelve ``True`` cuando la notificación sustituye al modal; con el
+        ajuste desactivado (valor por defecto) el aviso sigue siendo un diálogo.
+        """
+        try:
+            if not bool(get_pm_data().get_user("notifications_enabled", False)):
+                return False
+            from lib.notificationSystem import get_notification_manager
+
+            get_notification_manager().notify(
+                title or tr("config.title"),
+                message,
+                notification_type=mode if mode in ("info", "warning", "error", "success") else "info",
+            )
+            return True
+        except Exception:
+            return False
+
+    def _on_font_family_chosen(self, family: str) -> None:
+        """Aplica y guarda la fuente de interfaz elegida ("" = automática)."""
+        store = get_pm_data()
+        store.set_user("ui_font_family", str(family or ""))
+        store.save()
+        app = QApplication.instance()
+        if app is None:
+            return
+        font = _ui_font_for_family(family)
+        if font is not None:
+            app.setFont(font)
+            self.setFont(font)
 
     def _on_config_language_changed(self, code: str) -> None:
         """Selección única de idioma: se aplica al instante."""
@@ -2645,6 +2698,7 @@ class PackageTodoGUI(QMainWindow):
             store.set_user("auto_translate", True)
             store.set_user("base_dir", BASE_DIR)
             store.set_user("fluthin_apps", Fluthin_APPS)
+            store.set_user("ui_font_family", "")
 
             # Eliminar personalización de colores y efectos
             store.remove_user("display_mode")
@@ -2702,6 +2756,9 @@ class PackageTodoGUI(QMainWindow):
                 if panel is not None:
                     for code, row in getattr(panel, "_language_rows", {}).items():
                         row.set_checked(code == self._config_language)
+                    chosen_font = str(store.get_user("ui_font_family") or "")
+                    for family, row in getattr(panel, "_font_rows", {}).items():
+                        row.set_checked(family == chosen_font)
             finally:
                 if panel is not None:
                     panel._loading = False

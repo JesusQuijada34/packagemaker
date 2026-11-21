@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - Otomatik onarım",
     "optimization_title": "Proje optimizasyonu",
-    "internet_hint": "GitHub profillerini doğrulamanız gerekirse İnternet bağlantınız olduğundan emin olun."
+    "internet_hint": "GitHub profillerini doğrulamanız gerekirse İnternet bağlantınız olduğundan emin olun.",
+    "upload_icon_pack": "Icon Pack yükle",
+    "upload_asset_pack": "Asset Pack yükle",
+    "select_asset_pack": "Asset Pack seç"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "Orijinal dosyayı seç",
     "select_new": "Yeni dosya seç",
     "file_metrics_title": "Dosya metrikleri",
-    "download_another": "Başka bir yorumlayıcı indir..."
+    "download_another": "Başka bir yorumlayıcı indir...",
+    "compare_original": "Orijinal: {name}",
+    "compare_new": "Yeni: {name}",
+    "current_in_editor": "[Düzenleyicideki güncel]",
+    "case_sensitive": "Büyük/küçük harf duyarlı",
+    "whole_words": "Tam sözcükler",
+    "select_interpreter_hint": "Betiği çalıştırmak için yorumlayıcıyı seçin:",
+    "select_original_file": "Orijinal dosyayı seç",
+    "select_new_file": "Yeni dosyayı seç"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "Geri yükle",
     "minimize": "Küçült",
     "maximize": "Büyüt",
-    "close": "Kapat"
+    "close": "Kapat",
+    "exit_fullscreen": "Tam ekrandan çık"
   },
   "interpreter": {
     "title": "Python yorumlayıcı yönetimi",

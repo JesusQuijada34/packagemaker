@@ -89,10 +89,12 @@ class Reporter:
         status_bar=None,
         dialog_parent=None,
         dialog_launcher: Optional[Callable] = None,
+        notifier: Optional[Callable] = None,
     ):
         self._status_bar = status_bar
         self._dialog_parent = dialog_parent
         self._dialog_launcher = dialog_launcher
+        self._notifier = notifier
         self.last_message: str = ""
 
     # -- configuración tardía ----------------------------------------
@@ -102,6 +104,10 @@ class Reporter:
     def attach_dialog_launcher(self, launcher: Callable) -> None:
         """``launcher(parent, title, message, mode, buttons)``."""
         self._dialog_launcher = launcher
+
+    def attach_notifier(self, notifier: Optional[Callable]) -> None:
+        """``notifier(mode, title, message) -> bool``; ``True`` si ya se mostró."""
+        self._notifier = notifier
 
     # -- API pública --------------------------------------------------
     def info(self, title: str, message: str, *, dialog: bool = False) -> None:
@@ -130,8 +136,22 @@ class Reporter:
             mode = "info"
         self.last_message = f"{title}: {message}" if title else str(message)
         self._show_status(self.last_message)
+        # Una notificación nativa sustituye al modal cuando el ajuste está
+        # activo: aparece desde el borde de la pantalla sin bloquear la UI.
+        if dialog and self._show_notification(mode, title, message):
+            return
         if dialog:
             self._show_dialog(title, message, mode)
+
+    def _show_notification(self, mode: str, title: str, message: str) -> bool:
+        notifier = self._notifier
+        if notifier is None:
+            return False
+        detail = summarize_message(message) if mode in ("error", "warning") else message
+        try:
+            return bool(notifier(mode, title, detail))
+        except Exception:
+            return False
 
     def _show_status(self, message: str) -> None:
         bar = self._status_bar

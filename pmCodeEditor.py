@@ -1122,17 +1122,17 @@ class DiffDialog(QDialog):
         self.file2_path = None
     
     def _select_file1(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo original")
+        path, _ = QFileDialog.getOpenFileName(self, tr("editor.select_original_file"))
         if path:
             self.file1_path = path
-            self.file1_btn.setText(f"Original: {os.path.basename(path)}")
+            self.file1_btn.setText(tr("editor.compare_original").format(name=os.path.basename(path)))
             self._check_ready()
     
     def _select_file2(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo nuevo")
+        path, _ = QFileDialog.getOpenFileName(self, tr("editor.select_new_file"))
         if path:
             self.file2_path = path
-            self.file2_btn.setText(f"Nuevo: {os.path.basename(path)}")
+            self.file2_btn.setText(tr("editor.compare_new").format(name=os.path.basename(path)))
             self._check_ready()
     
     def _check_ready(self):
@@ -1196,9 +1196,9 @@ class DiffDialog(QDialog):
     def compare_with_content(self, file_path: str, content: str):
         """Compara un archivo con contenido en memoria."""
         self.file1_path = file_path
-        self.file1_btn.setText(f"Original: {os.path.basename(file_path)}")
-        self.file2_path = "[Actual en editor]"
-        self.file2_btn.setText("Nuevo: [Actual en editor]")
+        self.file1_btn.setText(tr("editor.compare_original").format(name=os.path.basename(file_path)))
+        self.file2_path = tr("editor.current_in_editor")
+        self.file2_btn.setText(tr("editor.compare_new").format(name=tr("editor.current_in_editor")))
         self._check_ready()
         
         try:
@@ -1396,8 +1396,8 @@ class FindDialog(QDialog):
         
         # Opciones
         options_layout = QHBoxLayout()
-        self.case_sensitive = QCheckBox("Distinguir mayúsculas")
-        self.whole_words = QCheckBox("Palabras completas")
+        self.case_sensitive = QCheckBox(tr("editor.case_sensitive"))
+        self.whole_words = QCheckBox(tr("editor.whole_words"))
         options_layout.addWidget(self.case_sensitive)
         options_layout.addWidget(self.whole_words)
         options_layout.addStretch()
@@ -2539,7 +2539,7 @@ class EditorWindow(QMainWindow):
         dialog.setStyleSheet(DARK_QSS)
 
         layout = QVBoxLayout(dialog)
-        label = QLabel("Selecciona el intérprete para ejecutar el script:")
+        label = QLabel(tr("editor.select_interpreter_hint"))
         layout.addWidget(label)
 
         list_widget = QListWidget()

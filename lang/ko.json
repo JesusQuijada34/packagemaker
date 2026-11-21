@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - 자동 복구",
     "optimization_title": "프로젝트 최적화",
-    "internet_hint": "GitHub 프로필을 확인해야 하는 경우 인터넷 연결을 확인하세요."
+    "internet_hint": "GitHub 프로필을 확인해야 하는 경우 인터넷 연결을 확인하세요.",
+    "upload_icon_pack": "Icon Pack 업로드",
+    "upload_asset_pack": "Asset Pack 업로드",
+    "select_asset_pack": "Asset Pack 선택"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "원본 파일 선택",
     "select_new": "새 파일 선택",
     "file_metrics_title": "파일 메트릭",
-    "download_another": "다른 인터프리터 다운로드..."
+    "download_another": "다른 인터프리터 다운로드...",
+    "compare_original": "원본: {name}",
+    "compare_new": "새 파일: {name}",
+    "current_in_editor": "[편집기의 현재 내용]",
+    "case_sensitive": "대/소문자 구분",
+    "whole_words": "단어 단위",
+    "select_interpreter_hint": "스크립트를 실행할 인터프리터를 선택하세요:",
+    "select_original_file": "원본 파일 선택",
+    "select_new_file": "새 파일 선택"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "복원",
     "minimize": "최소화",
     "maximize": "최대화",
-    "close": "닫기"
+    "close": "닫기",
+    "exit_fullscreen": "전체 화면 종료"
   },
   "interpreter": {
     "title": "Python 인터프리터 관리",

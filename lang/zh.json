@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - 自动修复",
     "optimization_title": "项目优化",
-    "internet_hint": "如果需要验证 GitHub 个人资料，请确保已连接互联网。"
+    "internet_hint": "如果需要验证 GitHub 个人资料，请确保已连接互联网。",
+    "upload_icon_pack": "上传 Icon Pack",
+    "upload_asset_pack": "上传 Asset Pack",
+    "select_asset_pack": "选择 Asset Pack"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "选择原始文件",
     "select_new": "选择新文件",
     "file_metrics_title": "文件指标",
-    "download_another": "下载其他解释器..."
+    "download_another": "下载其他解释器...",
+    "compare_original": "原始文件: {name}",
+    "compare_new": "新文件: {name}",
+    "current_in_editor": "[编辑器中的当前内容]",
+    "case_sensitive": "区分大小写",
+    "whole_words": "全字匹配",
+    "select_interpreter_hint": "选择运行脚本的解释器:",
+    "select_original_file": "选择原始文件",
+    "select_new_file": "选择新文件"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "还原",
     "minimize": "最小化",
     "maximize": "最大化",
-    "close": "关闭"
+    "close": "关闭",
+    "exit_fullscreen": "退出全屏"
   },
   "interpreter": {
     "title": "Python 解释器管理",

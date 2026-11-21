@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - 自動修復",
     "optimization_title": "プロジェクトの最適化",
-    "internet_hint": "GitHub プロフィールを検証する必要がある場合は、インターネット接続を確認してください。"
+    "internet_hint": "GitHub プロフィールを検証する必要がある場合は、インターネット接続を確認してください。",
+    "upload_icon_pack": "Icon Pack をアップロード",
+    "upload_asset_pack": "Asset Pack をアップロード",
+    "select_asset_pack": "Asset Pack を選択"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "元のファイルを選択",
     "select_new": "新しいファイルを選択",
     "file_metrics_title": "ファイルメトリックス",
-    "download_another": "別のインタープリタをダウンロード..."
+    "download_another": "別のインタープリタをダウンロード...",
+    "compare_original": "元のファイル: {name}",
+    "compare_new": "新しいファイル: {name}",
+    "current_in_editor": "[エディター内の現在の内容]",
+    "case_sensitive": "大文字と小文字を区別",
+    "whole_words": "単語単位で検索",
+    "select_interpreter_hint": "スクリプトを実行するインタープリターを選択:",
+    "select_original_file": "元のファイルを選択",
+    "select_new_file": "新しいファイルを選択"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "復元",
     "minimize": "最小化",
     "maximize": "最大化",
-    "close": "閉じる"
+    "close": "閉じる",
+    "exit_fullscreen": "全画面表示を終了"
   },
   "interpreter": {
     "title": "Python インタープリタの管理",

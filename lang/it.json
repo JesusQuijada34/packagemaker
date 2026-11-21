@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - Riparazione automatica",
     "optimization_title": "Ottimizzazione del progetto",
-    "internet_hint": "Assicurati di avere una connessione a Internet se devi verificare profili GitHub."
+    "internet_hint": "Assicurati di avere una connessione a Internet se devi verificare profili GitHub.",
+    "upload_icon_pack": "Carica Icon Pack",
+    "upload_asset_pack": "Carica Asset Pack",
+    "select_asset_pack": "Seleziona Asset Pack"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "Seleziona file originale",
     "select_new": "Seleziona nuovo file",
     "file_metrics_title": "Metriche del file",
-    "download_another": "Scarica un altro interprete..."
+    "download_another": "Scarica un altro interprete...",
+    "compare_original": "Originale: {name}",
+    "compare_new": "Nuovo: {name}",
+    "current_in_editor": "[Corrente nell'editor]",
+    "case_sensitive": "Distingui maiuscole e minuscole",
+    "whole_words": "Parole intere",
+    "select_interpreter_hint": "Seleziona l'interprete per eseguire lo script:",
+    "select_original_file": "Seleziona file originale",
+    "select_new_file": "Seleziona nuovo file"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "Ripristina",
     "minimize": "Riduci a icona",
     "maximize": "Massimizza",
-    "close": "Chiudi"
+    "close": "Chiudi",
+    "exit_fullscreen": "Esci da schermo intero"
   },
   "interpreter": {
     "title": "Gestione degli interpreti Python",

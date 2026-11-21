@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - الإصلاح التلقائي",
     "optimization_title": "تحسين المشروع",
-    "internet_hint": "تأكد من وجود اتصال بالإنترنت إذا كنت بحاجة إلى التحقق من ملفات GitHub الشخصية."
+    "internet_hint": "تأكد من وجود اتصال بالإنترنت إذا كنت بحاجة إلى التحقق من ملفات GitHub الشخصية.",
+    "upload_icon_pack": "تحميل Icon Pack",
+    "upload_asset_pack": "تحميل Asset Pack",
+    "select_asset_pack": "اختر Asset Pack"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "اختيار الملف الأصلي",
     "select_new": "اختيار ملف جديد",
     "file_metrics_title": "مقاييس الملف",
-    "download_another": "تنزيل مفسر آخر..."
+    "download_another": "تنزيل مفسر آخر...",
+    "compare_original": "الأصل: {name}",
+    "compare_new": "الجديد: {name}",
+    "current_in_editor": "[الحالي في المحرر]",
+    "case_sensitive": "مراعاة حالة الأحرف",
+    "whole_words": "كلمات كاملة",
+    "select_interpreter_hint": "اختر المفسّر لتشغيل السكربت:",
+    "select_original_file": "اختر الملف الأصلي",
+    "select_new_file": "اختر الملف الجديد"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "استعادة",
     "minimize": "تصغير",
     "maximize": "تكبير",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "exit_fullscreen": "الخروج من ملء الشاشة"
   },
   "interpreter": {
     "title": "إدارة مفسرات Python",

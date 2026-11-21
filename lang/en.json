@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - Automatic Repair",
     "optimization_title": "Project Optimization",
-    "internet_hint": "Make sure you have an internet connection if you need to verify GitHub profiles."
+    "internet_hint": "Make sure you have an internet connection if you need to verify GitHub profiles.",
+    "upload_icon_pack": "Upload Icon Pack",
+    "upload_asset_pack": "Upload Asset Pack",
+    "select_asset_pack": "Select Asset Pack"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "Select Original File",
     "select_new": "Select New File",
     "file_metrics_title": "File Metrics",
-    "download_another": "Download another interpreter..."
+    "download_another": "Download another interpreter...",
+    "compare_original": "Original: {name}",
+    "compare_new": "New: {name}",
+    "current_in_editor": "[Current in editor]",
+    "case_sensitive": "Match case",
+    "whole_words": "Whole words",
+    "select_interpreter_hint": "Select the interpreter to run the script:",
+    "select_original_file": "Select original file",
+    "select_new_file": "Select new file"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "Restore",
     "minimize": "Minimize",
     "maximize": "Maximize",
-    "close": "Close"
+    "close": "Close",
+    "exit_fullscreen": "Exit full screen"
   },
   "interpreter": {
     "title": "Python Interpreter Management",

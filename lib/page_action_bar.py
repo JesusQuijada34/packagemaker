@@ -120,6 +120,18 @@ def make_icon_button(icon, tooltip: str = "", size: int = 34) -> "QPushButton":
     return btn
 
 
+def _apply_bar_shadow(bar) -> None:
+    """Sombra suave bajo la barra superior (relieve del cristal, Fase 3.2)."""
+    if not PYQT6_AVAILABLE:
+        return
+    try:
+        from lib.settings_cards import apply_soft_shadow
+
+        apply_soft_shadow(bar, blur=18, offset=4, alpha=90)
+    except Exception:
+        pass
+
+
 def install_page_action_bar(
     parent_layout,
     title: str,
@@ -138,6 +150,7 @@ def install_page_action_bar(
         f"QWidget#PageActionBar{{background:rgba(255,255,255,0.04);"
         f"border:1px solid rgba(255,255,255,0.07);border-radius:{WINDOW_RADIUS}px;}}"
     )
+    _apply_bar_shadow(bar)
 
     row = QHBoxLayout(bar)
     row.setContentsMargins(16, 0, 12, 0)

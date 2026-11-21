@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - Automatische reparatie",
     "optimization_title": "Projectoptimalisatie",
-    "internet_hint": "Zorg voor een internetverbinding als u GitHub-profielen moet verifiëren."
+    "internet_hint": "Zorg voor een internetverbinding als u GitHub-profielen moet verifiëren.",
+    "upload_icon_pack": "Icon Pack uploaden",
+    "upload_asset_pack": "Asset Pack uploaden",
+    "select_asset_pack": "Asset Pack selecteren"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "Origineel bestand selecteren",
     "select_new": "Nieuw bestand selecteren",
     "file_metrics_title": "Bestandsmetrieken",
-    "download_another": "Een andere interpreter downloaden..."
+    "download_another": "Een andere interpreter downloaden...",
+    "compare_original": "Origineel: {name}",
+    "compare_new": "Nieuw: {name}",
+    "current_in_editor": "[Huidige in editor]",
+    "case_sensitive": "Hoofdlettergevoelig",
+    "whole_words": "Hele woorden",
+    "select_interpreter_hint": "Selecteer de interpreter om het script uit te voeren:",
+    "select_original_file": "Origineel bestand selecteren",
+    "select_new_file": "Nieuw bestand selecteren"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "Herstellen",
     "minimize": "Minimaliseren",
     "maximize": "Maximaliseren",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "exit_fullscreen": "Volledig scherm verlaten"
   },
   "interpreter": {
     "title": "Beheer van Python-interpreters",

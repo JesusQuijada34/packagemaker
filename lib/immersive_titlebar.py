@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from lib.i18n import tr
+
 TRIPLE_CLICK = 3
 DEFAULT_INTERVAL_MS = 600
 
@@ -165,7 +167,7 @@ class ImmersiveTitleBar:
             pixmap = QPixmap()
             pixmap.loadFromData(EXIT_FULLSCREEN_SVG)
             btn_max.setIcon(QIcon(pixmap))
-            btn_max.setToolTip("Salir de pantalla completa")
+            btn_max.setToolTip(tr("window.exit_fullscreen"))
         else:
             if self._default_max_icon is not None and not self._default_max_icon.isNull():
                 btn_max.setIcon(self._default_max_icon)

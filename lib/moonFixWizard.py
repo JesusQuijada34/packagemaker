@@ -600,13 +600,13 @@ class MoonFixWizard(QDialog):
             )
             
             if missing_icons:
-                btn_i = QPushButton("Subir Icon Pack")
+                btn_i = QPushButton(tr("moonfix.upload_icon_pack"))
                 btn_i.setStyleSheet(btn_pack_css)
                 btn_i.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn_i.clicked.connect(lambda: self.upload_icon_pack(index))
                 pack_box.addWidget(btn_i)
             if missing_assets:
-                btn_a = QPushButton("Subir Asset Pack")
+                btn_a = QPushButton(tr("moonfix.upload_asset_pack"))
                 btn_a.setStyleSheet(btn_pack_css.replace(ACCENT_COLOR, SUCCESS))
                 btn_a.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn_a.clicked.connect(lambda: self.upload_asset_pack(index))
@@ -836,7 +836,7 @@ class MoonFixWizard(QDialog):
         if f: self.process_ipm_iconpck(f)
 
     def upload_asset_pack(self, index):
-        f, _ = QFileDialog.getOpenFileName(self, "Seleccionar Asset Pack", "", "Asset Pack (*.ipm-assetpck)")
+        f, _ = QFileDialog.getOpenFileName(self, tr("moonfix.select_asset_pack"), "", "Asset Pack (*.ipm-assetpck)")
         if f: self.process_ipm_assetpck(f)
 
     def _uwp_close_then(self, callback):

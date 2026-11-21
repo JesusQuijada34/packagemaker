@@ -186,7 +186,10 @@
     "warning": "Warning",
     "auto_repair_title": "MoonFix - Автоматическое восстановление",
     "optimization_title": "Оптимизация проекта",
-    "internet_hint": "Убедитесь, что есть подключение к Интернету, если нужно проверить профили GitHub."
+    "internet_hint": "Убедитесь, что есть подключение к Интернету, если нужно проверить профили GitHub.",
+    "upload_icon_pack": "Загрузить Icon Pack",
+    "upload_asset_pack": "Загрузить Asset Pack",
+    "select_asset_pack": "Выбрать Asset Pack"
   },
   "editor": {
     "project": "Project",
@@ -199,7 +202,15 @@
     "select_original": "Выбрать исходный файл",
     "select_new": "Выбрать новый файл",
     "file_metrics_title": "Метрики файла",
-    "download_another": "Скачать другой интерпретатор..."
+    "download_another": "Скачать другой интерпретатор...",
+    "compare_original": "Оригинал: {name}",
+    "compare_new": "Новый: {name}",
+    "current_in_editor": "[Текущий в редакторе]",
+    "case_sensitive": "Учитывать регистр",
+    "whole_words": "Слова целиком",
+    "select_interpreter_hint": "Выберите интерпретатор для запуска скрипта:",
+    "select_original_file": "Выбрать исходный файл",
+    "select_new_file": "Выбрать новый файл"
   },
   "updater": {
     "title": "PackageMaker Updater",
@@ -344,7 +355,8 @@
     "restore": "Восстановить",
     "minimize": "Свернуть",
     "maximize": "Развернуть",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "exit_fullscreen": "Выйти из полноэкранного режима"
   },
   "interpreter": {
     "title": "Управление интерпретаторами Python",
