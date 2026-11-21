@@ -742,7 +742,8 @@
     "proc_verify": "De .iflapp verifieren in de geisoleerde sandbox",
     "proc_dropper": "Zelfuitpakkende .run-dropper genereren",
     "proc_cleanup": "Tijdelijke artefacten en pakketmap opruimen",
-    "proc_done": "Procedure voltooid"
+    "proc_done": "Procedure voltooid",
+    "folder_locked": "nog in gebruik door een ander proces"
   },
   "install_console": {
     "title": "Installatievoortgang",

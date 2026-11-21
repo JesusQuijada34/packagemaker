@@ -742,7 +742,8 @@
     "proc_verify": "隔離サンドボックスで .iflapp を検証",
     "proc_dropper": "自己展開型 .run dropper を生成",
     "proc_cleanup": "一時ファイルとパッケージフォルダを整理",
-    "proc_done": "手順が完了しました"
+    "proc_done": "手順が完了しました",
+    "folder_locked": "別のプロセスがまだ使用中です"
   },
   "install_console": {
     "title": "インストールの進行状況",

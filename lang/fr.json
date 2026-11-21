@@ -742,7 +742,8 @@
     "proc_verify": "Verifier le .iflapp dans le bac a sable isole",
     "proc_dropper": "Generer un dropper .run autoextractible",
     "proc_cleanup": "Nettoyer les artefacts temporaires et le dossier du paquet",
-    "proc_done": "Procedure terminee"
+    "proc_done": "Procedure terminee",
+    "folder_locked": "toujours utilise par un autre processus"
   },
   "install_console": {
     "title": "Progression de l'installation",

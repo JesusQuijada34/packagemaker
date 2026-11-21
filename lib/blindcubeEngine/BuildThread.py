@@ -880,11 +880,15 @@ class FlangCompiler:
         # Eliminar carpetas dist y build si existen
         for folder in [dist_dir, build_dir]:
             if folder.exists() and folder.is_dir():
-                try:
-                    shutil.rmtree(folder)
+                if remove_tree(folder):
                     self.log("[INFO] " + tr("build_log.folder_removed").format(name=folder.name))
-                except Exception as e:
-                    self.log("[WARN] " + tr("build_log.folder_remove_failed").format(name=folder.name, error=e))
+                else:
+                    self.log(
+                        "[WARN] "
+                        + tr("build_log.folder_remove_failed").format(
+                            name=folder.name, error=tr("build_log.folder_locked")
+                        )
+                    )
         
         # Eliminar archivos .spec
         for spec_file in self.repo_path.glob("*.spec"):
@@ -899,21 +903,29 @@ class FlangCompiler:
             for leftover in self.repo_path.glob(pattern):
                 if not leftover.is_dir():
                     continue
-                try:
-                    shutil.rmtree(leftover)
+                if remove_tree(leftover):
                     self.log("[INFO] " + tr("build_log.folder_removed").format(name=leftover.name))
-                except Exception as e:
-                    self.log("[WARN] " + tr("build_log.folder_remove_failed").format(name=leftover.name, error=e))
+                else:
+                    self.log(
+                        "[WARN] "
+                        + tr("build_log.folder_remove_failed").format(
+                            name=leftover.name, error=tr("build_log.folder_locked")
+                        )
+                    )
 
     def _cleanup_package_folder(self, package_path: Path, iflapp_path: Path):
         """Elimina la carpeta temporal del paquete tras crear el `.iflapp`."""
         if package_path.exists() and package_path.is_dir() and iflapp_path.exists():
-            try:
-                shutil.rmtree(package_path)
+            if remove_tree(package_path):
                 self.log("[INFO] " + tr("build_log.package_folder_removed").format(name=package_path.name))
                 self.log("[INFO] " + tr("build_log.only_iflapp_left").format(name=iflapp_path.name))
-            except OSError as exc:
-                self.log("[WARN] " + tr("build_log.package_folder_remove_failed").format(name=package_path.name, error=exc))
+            else:
+                self.log(
+                    "[WARN] "
+                    + tr("build_log.package_folder_remove_failed").format(
+                        name=package_path.name, error=tr("build_log.folder_locked")
+                    )
+                )
 
     def cleanup_processed_project(self, iflapp_path: Path, allow_delete: bool = False) -> bool:
         """Elimina el proyecto fuente solo cuando el llamador lo autoriza.
@@ -933,13 +945,16 @@ class FlangCompiler:
         if source_path == artifact_path.parent or source_path in artifact_path.parents:
             self.log("[WARN] " + tr("build_log.source_kept_inside"))
             return False
-        try:
-            shutil.rmtree(source_path)
+        if remove_tree(source_path):
             self.log("[INFO] " + tr("build_log.source_removed").format(name=source_path.name))
             return True
-        except OSError as exc:
-            self.log("[WARN] " + tr("build_log.source_remove_failed").format(name=source_path.name, error=exc))
-            return False
+        self.log(
+            "[WARN] "
+            + tr("build_log.source_remove_failed").format(
+                name=source_path.name, error=tr("build_log.folder_locked")
+            )
+        )
+        return False
 
     def run(self, build_mode="portable") -> Optional[Path]:
         if not self.parse_details_xml():

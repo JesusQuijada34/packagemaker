@@ -742,7 +742,8 @@
     "proc_verify": "Verificar o .iflapp na sandbox isolada",
     "proc_dropper": "Gerar dropper .run autoextraivel",
     "proc_cleanup": "Limpar artefactos temporarios e pasta do pacote",
-    "proc_done": "Procedimento concluido"
+    "proc_done": "Procedimento concluido",
+    "folder_locked": "ainda em uso por outro processo"
   },
   "install_console": {
     "title": "Progresso da instalacao",

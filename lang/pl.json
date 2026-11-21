@@ -742,7 +742,8 @@
     "proc_verify": "Zweryfikuj .iflapp w izolowanym sandboxie",
     "proc_dropper": "Wygeneruj samorozpakowujacy dropper .run",
     "proc_cleanup": "Wyczysc tymczasowe artefakty i folder pakietu",
-    "proc_done": "Procedura zakonczona"
+    "proc_done": "Procedura zakonczona",
+    "folder_locked": "nadal uzywany przez inny proces"
   },
   "install_console": {
     "title": "Postep instalacji",

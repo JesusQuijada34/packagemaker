@@ -742,7 +742,8 @@
     "proc_verify": ".iflapp'i yalitilmis sandbox'ta dogrula",
     "proc_dropper": "Kendinden cikarilabilir .run dropper olustur",
     "proc_cleanup": "Gecici dosyalari ve paket klasorunu temizle",
-    "proc_done": "Prosedur tamamlandi"
+    "proc_done": "Prosedur tamamlandi",
+    "folder_locked": "hala baska bir surec tarafindan kullaniliyor"
   },
   "install_console": {
     "title": "Yukleme ilerlemesi",

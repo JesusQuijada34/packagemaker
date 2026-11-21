@@ -226,3 +226,18 @@ def test_build_thread_never_falls_back_to_another_backend():
     assert "backup" not in body.lower()
     assert "respaldo" not in body
     assert "no está disponible. " in body
+
+
+def test_build_thread_cleanup_uses_retrying_removal():
+    """La limpieza del build debe tolerar ``WinError 32`` (Fase 1.2).
+
+    ``shutil.rmtree`` crudo se rinde en la primera pasada cuando Nuitka o
+    PyInstaller todavía tienen el binario abierto; ``remove_tree`` reintenta.
+    """
+    source = (ROOT / "lib" / "blindcubeEngine" / "BuildThread.py").read_text(encoding="utf-8")
+    for method in ("def cleanup", "def _cleanup_package_folder", "def cleanup_processed_project"):
+        start = source.index(method)
+        end = source.find("\n    def ", start + 1)
+        body = source[start : end if end != -1 else len(source)]
+        assert "shutil.rmtree(" not in body, method
+        assert "remove_tree(" in body, method

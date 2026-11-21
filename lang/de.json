@@ -742,7 +742,8 @@
     "proc_verify": "Die .iflapp in der isolierten Sandbox prufen",
     "proc_dropper": "Selbstextrahierenden .run-Dropper erzeugen",
     "proc_cleanup": "Temporare Artefakte und Paketordner bereinigen",
-    "proc_done": "Vorgang abgeschlossen"
+    "proc_done": "Vorgang abgeschlossen",
+    "folder_locked": "wird noch von einem anderen Prozess verwendet"
   },
   "install_console": {
     "title": "Installationsfortschritt",

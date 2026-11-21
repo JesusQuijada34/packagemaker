@@ -742,7 +742,8 @@
     "proc_verify": "在隔离沙箱中验证 .iflapp",
     "proc_dropper": "生成自解压 .run dropper",
     "proc_cleanup": "清理临时产物和包文件夹",
-    "proc_done": "流程已完成"
+    "proc_done": "流程已完成",
+    "folder_locked": "仍被其他进程占用"
   },
   "install_console": {
     "title": "安装进度",

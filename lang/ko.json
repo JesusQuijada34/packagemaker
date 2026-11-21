@@ -742,7 +742,8 @@
     "proc_verify": "격리된 샌드박스에서 .iflapp 검증",
     "proc_dropper": "자동 압축 해제 .run dropper 생성",
     "proc_cleanup": "임시 아티팩트와 패키지 폴더 정리",
-    "proc_done": "절차 완료"
+    "proc_done": "절차 완료",
+    "folder_locked": "다른 프로세스가 아직 사용 중입니다"
   },
   "install_console": {
     "title": "설치 진행률",

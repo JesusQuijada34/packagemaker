@@ -7359,3 +7359,17 @@ CURATED.setdefault('ja', {}).update({'moonfix.select_icon_pack': 'Icon Pack を�
 CURATED.setdefault('ko', {}).update({'moonfix.select_icon_pack': 'Icon Pack 선택'})
 CURATED.setdefault('zh', {}).update({'moonfix.select_icon_pack': '选择图标包'})
 CURATED.setdefault('ar', {}).update({'moonfix.select_icon_pack': 'اختيار حزمة الأيقونات'})
+
+# Carpetas bloqueadas por un proceso hijo (WinError 32) al limpiar el build.
+CURATED.setdefault('fr', {}).update({'build_log.folder_locked': 'toujours utilise par un autre processus'})
+CURATED.setdefault('de', {}).update({'build_log.folder_locked': 'wird noch von einem anderen Prozess verwendet'})
+CURATED.setdefault('it', {}).update({'build_log.folder_locked': 'ancora in uso da un altro processo'})
+CURATED.setdefault('pt', {}).update({'build_log.folder_locked': 'ainda em uso por outro processo'})
+CURATED.setdefault('nl', {}).update({'build_log.folder_locked': 'nog in gebruik door een ander proces'})
+CURATED.setdefault('pl', {}).update({'build_log.folder_locked': 'nadal uzywany przez inny proces'})
+CURATED.setdefault('tr', {}).update({'build_log.folder_locked': 'hala baska bir surec tarafindan kullaniliyor'})
+CURATED.setdefault('ru', {}).update({'build_log.folder_locked': 'всё ещё используется другим процессом'})
+CURATED.setdefault('ja', {}).update({'build_log.folder_locked': '別のプロセスがまだ使用中です'})
+CURATED.setdefault('ko', {}).update({'build_log.folder_locked': '다른 프로세스가 아직 사용 중입니다'})
+CURATED.setdefault('zh', {}).update({'build_log.folder_locked': '仍被其他进程占用'})
+CURATED.setdefault('ar', {}).update({'build_log.folder_locked': 'لا يزال قيد الاستخدام من قبل عملية أخرى'})
