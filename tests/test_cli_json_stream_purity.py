@@ -13,7 +13,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lib.cliHandler import NativeShellHelper, PackageInspectHelper
+from lib.cliHandler import IflappIdeHelper, MexfShellHelper, NativeShellHelper, PackageInspectHelper
 
 
 class JsonStreamPurityTests(unittest.TestCase):
@@ -45,6 +45,22 @@ class JsonStreamPurityTests(unittest.TestCase):
         self.assertFalse(result)
         self.assertEqual(out, "")
         self.assertIn("No existe el archivo", err)
+
+    def test_shell_plan_json_keeps_stdout_empty_on_missing_file(self):
+        result, out, err = self._run(
+            MexfShellHelper.plan, {"path": "/nonexistent/app.mexf", "json": True}
+        )
+        self.assertFalse(result)
+        self.assertEqual(out, "")
+        self.assertIn("No se pudo leer el plan de shell", err)
+
+    def test_ide_scan_json_keeps_stdout_empty_on_missing_dir(self):
+        result, out, err = self._run(
+            IflappIdeHelper.scan, {"path": "/nonexistent/proyecto", "as_json": True}
+        )
+        self.assertFalse(result)
+        self.assertEqual(out, "")
+        self.assertTrue(err.strip(), "el motivo debe llegar por stderr")
 
     def test_inspect_json_output_is_parseable(self):
         from lib.blindcubeEngine.iflapp_format import pack_iflapp

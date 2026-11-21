@@ -872,11 +872,13 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Pasos para reproducir:** `python packagemaker.py --inspect /noexiste.iflapp --inspect-json | python -m json.tool`.
 - **Estado:** Resuelto.
 - **Prioridad:** Media (rompe automatización; la salida humana no cambia).
-- **Solución aplicada:** `PackageInspectHelper.inspect` y
-  `NativeShellHelper.info` eligen el flujo según `data["json"]`: errores a
-  `stderr` en modo JSON, a `stdout` en modo texto.
-- **Pruebas:** `tests/test_cli_json_stream_purity.py` (stdout vacío al fallar y
-  documento parseable en el camino feliz).
+- **Solución aplicada:** las cuatro acciones con salida JSON
+  (`PackageInspectHelper.inspect`, `NativeShellHelper.info`,
+  `MexfShellHelper.plan`/`_install_or_remove` e `IflappIdeHelper.scan`) eligen
+  el flujo de los errores según su bandera (`json`/`as_json`): a `stderr` en
+  modo JSON y a `stdout` en modo texto.
+- **Pruebas:** `tests/test_cli_json_stream_purity.py` (6 casos: stdout vacío al
+  fallar en las cuatro acciones y documento parseable en el camino feliz).
 - **Commit:** `78f9c28`.
 - **Fecha de resolución:** 2026-11-21.
 

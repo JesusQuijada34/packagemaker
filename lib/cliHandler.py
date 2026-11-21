@@ -648,10 +648,11 @@ class MexfShellHelper:
         from lib.mexf_parser import MexfError
         from lib.mexf_shell import load_shell_plan
 
+        errors = sys.stderr if data.get('json') else sys.stdout
         try:
             plan = load_shell_plan(data['path'])
         except (MexfError, FileNotFoundError, OSError) as exc:
-            print(f"[ERROR] No se pudo leer el plan de shell: {exc}")
+            print(f"[ERROR] No se pudo leer el plan de shell: {exc}", file=errors)
             return False
         payload = plan.to_dict()
         if data.get('json'):
@@ -673,10 +674,11 @@ class MexfShellHelper:
         from lib.mexf_parser import MexfError
         from lib.mexf_shell import install_plan, load_shell_plan, uninstall_plan
 
+        errors = sys.stderr if data.get('json') else sys.stdout
         try:
             plan = load_shell_plan(data['path'])
         except (MexfError, FileNotFoundError, OSError) as exc:
-            print(f"[ERROR] No se pudo leer el plan de shell: {exc}")
+            print(f"[ERROR] No se pudo leer el plan de shell: {exc}", file=errors)
             return False
         try:
             if action == 'install':
@@ -686,7 +688,7 @@ class MexfShellHelper:
                 result = uninstall_plan(plan)
                 verb = "eliminado"
         except OSError as exc:
-            print(f"[ERROR] {exc}")
+            print(f"[ERROR] {exc}", file=sys.stderr if data.get('json') else sys.stdout)
             return False
         for path in result.get('written', result.get('removed', [])):
             print(f"[OK] {verb}: {path}")
@@ -1077,13 +1079,14 @@ class IflappIdeHelper:
         from lib.iflapp_ide import scan_project
 
         path = data.get("path")
+        errors = sys.stderr if data.get("as_json") else sys.stdout
         if not path:
-            print("[ERROR] Debes indicar la carpeta del proyecto con --ide-scan")
+            print("[ERROR] Debes indicar la carpeta del proyecto con --ide-scan", file=errors)
             return False
         try:
             project = scan_project(path)
         except (FileNotFoundError, OSError) as exc:
-            print(f"[ERROR] {exc}")
+            print(f"[ERROR] {exc}", file=errors)
             return False
         info = project.as_dict()
         if data.get("as_json"):
