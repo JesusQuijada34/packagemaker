@@ -46,6 +46,7 @@ de auditoría.
 | R-1f4a7c92 | Bug — `pm.data`/`settings.json` con forma no-objeto tumban el arranque | Alta | Resuelto |
 | R-2b6d8e13 | Bug — cabeceras `.asksome` malformadas rompen `--shell-info` | Media | Resuelto |
 | R-3c9e1a57 | Bug — extracción `.asksome` acepta rutas de unidad y errores crudos | Media | Resuelto |
+| R-5f8c2d91 | Bug — errores de `--inspect`/`--shell-info` contaminan el JSON | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -57,7 +58,7 @@ interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
 R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
-R-1f4a7c92, R-2b6d8e13 y R-3c9e1a57)
+R-1f4a7c92, R-2b6d8e13, R-3c9e1a57 y R-5f8c2d91)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -854,6 +855,29 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Pruebas:** `tests/test_mexf_asksome.py::TestAsksomeMalformedHeaderTests::test_unsafe_member_paths_are_rejected`
   (5 rutas) y `test_corrupt_payload_raises_asksome_error`.
 - **Commit:** `543e173`.
+- **Fecha de resolución:** 2026-11-21.
+
+---
+
+## R-5f8c2d91 — Los errores de `--inspect`/`--shell-info` contaminaban la salida JSON
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-21
+- **Descripción:** con `--inspect-json` y `--shell-info-json` el documento JSON
+  se imprime en stdout, pero las rutas de error (`[ERROR] No se pudo leer la
+  cabecera…`, `[ERROR] No existe el archivo…`) seguían yendo a stdout. Un
+  consumidor que hiciera `json.loads(stdout)` recibía
+  `JSONDecodeError: Expecting value: line 1 column 1`. Es la misma clase de bug
+  que R-4b7e91a2 y R-9f2b64d1, que solo cubrieron los avisos auxiliares.
+- **Pasos para reproducir:** `python packagemaker.py --inspect /noexiste.iflapp --inspect-json | python -m json.tool`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (rompe automatización; la salida humana no cambia).
+- **Solución aplicada:** `PackageInspectHelper.inspect` y
+  `NativeShellHelper.info` eligen el flujo según `data["json"]`: errores a
+  `stderr` en modo JSON, a `stdout` en modo texto.
+- **Pruebas:** `tests/test_cli_json_stream_purity.py` (stdout vacío al fallar y
+  documento parseable en el camino feliz).
+- **Commit:** `78f9c28`.
 - **Fecha de resolución:** 2026-11-21.
 
 ---
