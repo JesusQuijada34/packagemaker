@@ -195,7 +195,7 @@ class BuildArtifactCleanupTests(unittest.TestCase):
     def test_cleanup_removes_pyinstaller_and_nuitka_artifacts(self):
         import tempfile
 
-        from lib.BuildThread import FlangCompiler
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
 
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "project"
@@ -286,7 +286,7 @@ class BuildProcedureTests(unittest.TestCase):
     def test_flang_compiler_records_procedure(self):
         import tempfile
 
-        from lib.BuildThread import FlangCompiler
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
 
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "project"
@@ -297,7 +297,7 @@ class BuildProcedureTests(unittest.TestCase):
             self.assertEqual(compiler.procedure, ["Paso de prueba"])
 
     def test_run_publishes_procedure_steps(self):
-        text = source("lib/BuildThread.py")
+        text = source("lib/blindcubeEngine/BuildThread.py")
         self.assertIn("Procedimiento detrás del .iflapp", text)
         self.assertIn("self._record_procedure(", text)
 
@@ -400,10 +400,12 @@ class WindowEffectsTests(unittest.TestCase):
         app = QApplication.instance() or QApplication([])
         from lib.window_chrome import apply_display_mode, _wipe_filters
 
+        from lib import leviathan_bridge
+
         try:
-            from leviathan_ui import WipeWindow
+            WipeWindow = leviathan_bridge.attribute("WipeWindow")
         except ImportError:
-            self.skipTest("leviathan_ui no está instalado")
+            self.skipTest("leviathan_ui no está disponible")
 
         window = QWidget()
         window.resize(400, 300)

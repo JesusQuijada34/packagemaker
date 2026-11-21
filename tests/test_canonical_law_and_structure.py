@@ -21,16 +21,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from lib.iflapp_format import (
+from lib.blindcubeEngine.iflapp_format import (
     IflappError,
     pack_iflapp,
     read_iflapp_header,
     sniff_format,
     verify_iflapp,
 )
-from lib.iflapp_reader import IflappReader
+from lib.blindcubeEngine.iflapp_reader import IflappReader
 from lib.projectNameFormatter import ProjectNameFormatter
-from lib.template_engine import build_variables, create_project_from_templates
+from lib.makeselfEngine.template_engine import build_variables, create_project_from_templates
 
 TIMESTAMP = "26.08-15.38"
 CANONICAL = "Influent.packagemaker.v3.2.7-26.05-20.13-AlphaCube"
@@ -301,7 +301,7 @@ class IflappPipelineLawTests(unittest.TestCase):
             out = base / f"{CANONICAL}.iflapp"
             pack_iflapp(pkg, out, compression="lzma", password="correcta")
 
-            from lib.iflapp_format import extract_iflapp
+            from lib.blindcubeEngine.iflapp_format import extract_iflapp
 
             with self.assertRaises(IflappError):
                 extract_iflapp(out, base / "dest", password="incorrecta")

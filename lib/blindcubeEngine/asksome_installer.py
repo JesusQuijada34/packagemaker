@@ -28,7 +28,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from lib.asksome_format import extract_asksome, verify_asksome
+from lib.blindcubeEngine.asksome_format import extract_asksome, verify_asksome
 
 RECORD_NAME = "install.json"
 REMOVEME_NAME = "removeme.py"
@@ -495,7 +495,7 @@ def compile_removeme_binary(
     zipapp). Devuelve la ruta del binario escrito en *target*, o ``None`` si no
     se pudo compilar (en cuyo caso queda el script ``removeme.py``).
     """
-    from lib.compilers import CompilerUnavailableError, get_backend, resolve_backend
+    from lib.blindcubeEngine.compilers import CompilerUnavailableError, get_backend, resolve_backend
 
     target = Path(target)
     script = target / REMOVEME_NAME

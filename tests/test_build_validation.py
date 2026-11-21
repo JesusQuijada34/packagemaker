@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT))
 
 
 def validate(*args):
-    from lib.build_validation import validate_build_fields
+    from lib.blindcubeEngine.build_validation import validate_build_fields
 
     return validate_build_fields(*args)
 
@@ -68,7 +68,7 @@ def test_platform_aliases_are_accepted():
 
 
 def test_messages_are_human_readable():
-    from lib.build_validation import format_errors
+    from lib.blindcubeEngine.build_validation import format_errors
 
     text = format_errors(validate("", "", ""))
     assert text.count("•") == 3

@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional
 
-from lib.iflapp_format import (
+from lib.blindcubeEngine.iflapp_format import (
     IflappError,
     read_iflapp_header,
     sniff_format,

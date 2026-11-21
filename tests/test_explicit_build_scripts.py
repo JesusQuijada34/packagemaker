@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lib.BuildThread import FlangCompiler
+from lib.blindcubeEngine.BuildThread import FlangCompiler
 
 
 class ExplicitBuildScriptsTests(unittest.TestCase):

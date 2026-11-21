@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from lib.iflapp_ide import compile_project, run_script, scan_project  # noqa: E402
-from lib.template_engine import create_project_from_templates, templates_available  # noqa: E402
+from lib.makeselfEngine.template_engine import create_project_from_templates, templates_available  # noqa: E402
 
 MAIN_MEXF = """format: mexf
 version: 1
@@ -86,7 +86,7 @@ def test_full_lifecycle_create_scan_compile_install_run_uninstall(tmp_path):
 
 
 def test_mexf_asksome_install_run_uninstall(tmp_path):
-    from lib.asksome_installer import install_asksome, list_installed
+    from lib.blindcubeEngine.asksome_installer import install_asksome, list_installed
     from lib.mexf_compiler import compile_mexf_project
 
     project = _create_project(tmp_path)
@@ -124,7 +124,7 @@ def test_mexf_asksome_install_run_uninstall(tmp_path):
 
 
 def test_lifecycle_record_is_json_and_lists_payload(tmp_path):
-    from lib.asksome_installer import install_asksome
+    from lib.blindcubeEngine.asksome_installer import install_asksome
 
     from lib.mexf_compiler import compile_mexf_project
 

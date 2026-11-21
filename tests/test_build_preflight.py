@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 
 def test_discover_scripts_finds_root_and_source(tmp_path):
-    from lib.build_preflight import discover_scripts
+    from lib.blindcubeEngine.build_preflight import discover_scripts
 
     (tmp_path / "app.py").write_text("print(1)\n", encoding="utf-8")
     (tmp_path / "source").mkdir()
@@ -25,7 +25,7 @@ def test_discover_scripts_finds_root_and_source(tmp_path):
 
 
 def test_syntax_check_passes_on_valid_scripts(tmp_path):
-    from lib.build_preflight import check_syntax
+    from lib.blindcubeEngine.build_preflight import check_syntax
 
     script = tmp_path / "ok.py"
     script.write_text("def f():\n    return 1\n", encoding="utf-8")
@@ -34,7 +34,7 @@ def test_syntax_check_passes_on_valid_scripts(tmp_path):
 
 
 def test_syntax_check_reports_line_and_message(tmp_path):
-    from lib.build_preflight import check_syntax
+    from lib.blindcubeEngine.build_preflight import check_syntax
 
     script = tmp_path / "broken.py"
     script.write_text("def f(:\n", encoding="utf-8")
@@ -44,13 +44,13 @@ def test_syntax_check_reports_line_and_message(tmp_path):
 
 
 def test_syntax_check_without_scripts_is_not_a_failure(tmp_path):
-    from lib.build_preflight import check_syntax
+    from lib.blindcubeEngine.build_preflight import check_syntax
 
     assert check_syntax([]).ok
 
 
 def test_offscreen_check_detects_import_errors(tmp_path):
-    from lib.build_preflight import check_offscreen
+    from lib.blindcubeEngine.build_preflight import check_offscreen
 
     script = tmp_path / "boom.py"
     script.write_text("import modulo_que_no_existe\n", encoding="utf-8")
@@ -60,7 +60,7 @@ def test_offscreen_check_detects_import_errors(tmp_path):
 
 
 def test_offscreen_check_accepts_clean_script(tmp_path):
-    from lib.build_preflight import check_offscreen
+    from lib.blindcubeEngine.build_preflight import check_offscreen
 
     script = tmp_path / "fine.py"
     script.write_text("print('ok')\n", encoding="utf-8")
@@ -68,7 +68,7 @@ def test_offscreen_check_accepts_clean_script(tmp_path):
 
 
 def test_preflight_report_aggregates_failures(tmp_path):
-    from lib.build_preflight import run_preflight
+    from lib.blindcubeEngine.build_preflight import run_preflight
 
     (tmp_path / "bad.py").write_text("def f(:\n", encoding="utf-8")
     report = run_preflight(tmp_path, offscreen=False)
@@ -78,7 +78,7 @@ def test_preflight_report_aggregates_failures(tmp_path):
 
 
 def test_env_file_found_in_root_and_config(tmp_path):
-    from lib.build_preflight import find_env_file
+    from lib.blindcubeEngine.build_preflight import find_env_file
 
     assert find_env_file(tmp_path) is None
     (tmp_path / "config").mkdir()
@@ -88,7 +88,7 @@ def test_env_file_found_in_root_and_config(tmp_path):
 
 
 def test_parse_env_ignores_comments_and_quotes(tmp_path):
-    from lib.build_preflight import parse_env_file
+    from lib.blindcubeEngine.build_preflight import parse_env_file
 
     env = tmp_path / ".env"
     env.write_text(
@@ -99,7 +99,7 @@ def test_parse_env_ignores_comments_and_quotes(tmp_path):
 
 
 def test_global_payload_carries_every_variable():
-    from lib.build_preflight import INJECTION_GLOBAL, build_env_payload
+    from lib.blindcubeEngine.build_preflight import INJECTION_GLOBAL, build_env_payload
 
     payload = build_env_payload({"A": "1", "B": "2"}, INJECTION_GLOBAL)
     assert payload["mode"] == "global"
@@ -107,21 +107,21 @@ def test_global_payload_carries_every_variable():
 
 
 def test_custom_payload_only_carries_selected_variables():
-    from lib.build_preflight import INJECTION_CUSTOM, build_env_payload
+    from lib.blindcubeEngine.build_preflight import INJECTION_CUSTOM, build_env_payload
 
     payload = build_env_payload({"A": "1", "B": "2"}, INJECTION_CUSTOM, ["B"])
     assert payload["environment"] == {"B": "2"}
 
 
 def test_unknown_injection_mode_is_rejected():
-    from lib.build_preflight import build_env_payload
+    from lib.blindcubeEngine.build_preflight import build_env_payload
 
     with pytest.raises(ValueError):
         build_env_payload({"A": "1"}, "inventado")
 
 
 def test_build_thread_persists_env_payload_into_settings(tmp_path):
-    from lib.BuildThread import BuildThread
+    from lib.blindcubeEngine.BuildThread import BuildThread
 
     thread = BuildThread(
         "acme", "demo", "1.0", "Danenone",
@@ -139,7 +139,7 @@ def test_build_thread_persists_env_payload_into_settings(tmp_path):
 
 
 def test_build_thread_preflight_can_be_disabled():
-    from lib.BuildThread import BuildThread
+    from lib.blindcubeEngine.BuildThread import BuildThread
 
     assert BuildThread("a", "b", "1.0", "Danenone", preflight=False).preflight is False
     assert BuildThread("a", "b", "1.0", "Danenone").preflight is True
@@ -213,5 +213,5 @@ def test_build_flow_asks_env_only_for_external_projects():
 
 
 def test_build_thread_runs_preflight_before_compiling():
-    source = (ROOT / "lib" / "BuildThread.py").read_text(encoding="utf-8")
+    source = (ROOT / "lib" / "blindcubeEngine" / "BuildThread.py").read_text(encoding="utf-8")
     assert source.index("run_preflight") < source.index("compiler = FlangCompiler(")

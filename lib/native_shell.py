@@ -38,13 +38,13 @@ def detect_kind(path: Path | str) -> str:
 
 
 def _asksome_header(path: Path) -> Dict:
-    from lib.asksome_format import read_asksome_header
+    from lib.blindcubeEngine.asksome_format import read_asksome_header
 
     return read_asksome_header(path)
 
 
 def _iflapp_reader(path: Path):
-    from lib.iflapp_reader import IflappReader
+    from lib.blindcubeEngine.iflapp_reader import IflappReader
 
     return IflappReader(path)
 

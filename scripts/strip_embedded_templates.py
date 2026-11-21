@@ -7,11 +7,11 @@ TARGET = ROOT / "packagemaker.py"
 
 HELPERS = '''
 def load_updater_template():
-    from lib.template_engine import load_template
+    from lib.makeselfEngine.template_engine import load_template
     return load_template("project/updater.py.template")
 
 def load_docs_template():
-    from lib.template_engine import load_template
+    from lib.makeselfEngine.template_engine import load_template
     return load_template("docs/index.html.template")
 
 '''

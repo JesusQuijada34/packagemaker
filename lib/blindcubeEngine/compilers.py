@@ -119,14 +119,14 @@ class PyInstallerBackend(CompilerBackend):
 
     def version(self) -> str:
         try:
-            from lib.pyinstaller_embedded import pyi_version
+            from lib.flatcubeEngine.pyinstaller_embedded import pyi_version
 
             return pyi_version
         except Exception:
             return super().version()
 
     def compile(self, **kwargs) -> Optional[str]:
-        from lib.pyinstaller_embedded import get_pyinstaller
+        from lib.flatcubeEngine.pyinstaller_embedded import get_pyinstaller
 
         pyi = get_pyinstaller()
         if not pyi.is_available():
@@ -151,7 +151,7 @@ class PyInstallerBackend(CompilerBackend):
 
     def cleanup(self) -> None:
         try:
-            from lib.pyinstaller_embedded import get_pyinstaller
+            from lib.flatcubeEngine.pyinstaller_embedded import get_pyinstaller
 
             get_pyinstaller().cleanup()
         except Exception:
@@ -178,14 +178,14 @@ class NuitkaBackend(CompilerBackend):
 
     def version(self) -> str:
         try:
-            from lib.nuitka_embedded import nuitka_version
+            from lib.blindcubeEngine.nuitka_embedded import nuitka_version
 
             return nuitka_version
         except Exception:
             return super().version()
 
     def compile(self, **kwargs) -> Optional[str]:
-        from lib.nuitka_embedded import get_nuitka
+        from lib.blindcubeEngine.nuitka_embedded import get_nuitka
 
         nk = get_nuitka()
         if not nk.is_available():
@@ -210,7 +210,7 @@ class NuitkaBackend(CompilerBackend):
 
     def cleanup(self) -> None:
         try:
-            from lib.nuitka_embedded import get_nuitka
+            from lib.blindcubeEngine.nuitka_embedded import get_nuitka
 
             get_nuitka().cleanup()
         except Exception:

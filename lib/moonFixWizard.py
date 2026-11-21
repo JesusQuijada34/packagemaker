@@ -43,6 +43,7 @@ except ImportError:
 
 # XML handling
 import xml.etree.ElementTree as ET
+from lib import leviathan_bridge
 
 # Optional Windows registry
 try:
@@ -52,7 +53,7 @@ except ImportError:
 
 # Leviathan UI imports
 try:
-    from leviathan_ui import WipeWindow
+    WipeWindow = leviathan_bridge.attribute("WipeWindow")
 except (ImportError, SyntaxError):
     class WipeWindow: pass
 
@@ -782,7 +783,7 @@ class MoonFixWizard(QDialog):
         version_base = self.clean_version_str(version_raw)
 
         from pathlib import Path
-        from lib.template_engine import normalize_platform, repair_project_from_templates
+        from lib.makeselfEngine.template_engine import normalize_platform, repair_project_from_templates
 
         repair_project_from_templates(
             Path(path),

@@ -24,11 +24,13 @@ except (ImportError, SyntaxError):
     QVBoxLayout = QHBoxLayout = QLabel = QListWidget = QListWidgetItem = QPushButton = object
     QPixmap = QIcon = object
 
+from lib import leviathan_bridge
+
 # ``leviathan_ui`` se importa aparte del bloque de PyQt6: si se acoplaba y el
 # paquete no estaba instalado, se perdía también Qt y el diálogo crasheaba en
 # ``setWindowFlags``.
 try:
-    from leviathan_ui import CustomTitleBar
+    CustomTitleBar = leviathan_bridge.attribute("CustomTitleBar")
 except (ImportError, SyntaxError):
     class CustomTitleBar(QWidget):
         """Barra de título mínima cuando ``leviathan_ui`` no está instalado.
@@ -48,7 +50,7 @@ except (ImportError, SyntaxError):
     class LeviathanDialog:
         @staticmethod
         def launch(*args, **kwargs): pass
-from lib.BuildThread import BuildThread
+from lib.blindcubeEngine.BuildThread import BuildThread
 from lib.outputTerminalDialog import OutputTerminalDialog
 from lib.notificationSystem import warning, error, success, NotificationAction
 from lib.safe_zip import safe_extract_zip
@@ -452,7 +454,7 @@ class ProjectDetailsDialog(QDialog):
             os.makedirs(target_dir, exist_ok=True)
             
             self.install_console.log(tr("manager.extracting_to").format(path=target_dir))
-            from lib.iflapp_format import extract_iflapp, sniff_format
+            from lib.blindcubeEngine.iflapp_format import extract_iflapp, sniff_format
 
             if sniff_format(valid_file) == "iflapp2":
                 extract_iflapp(valid_file, target_dir)

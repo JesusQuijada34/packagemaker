@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import sys
 from typing import Any, Dict, Optional, TYPE_CHECKING
+from lib import leviathan_bridge
 
 try:
     from PyQt6.QtCore import QObject, QRect
@@ -30,7 +31,7 @@ except (ImportError, SyntaxError):
         def instance(): return None
 
 try:
-    from leviathan_ui import WipeWindow
+    WipeWindow = leviathan_bridge.attribute("WipeWindow")
     LEVIATHAN_WIPE_AVAILABLE = True
 except (ImportError, SyntaxError):
     LEVIATHAN_WIPE_AVAILABLE = False

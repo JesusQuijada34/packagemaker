@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from lib.projectNameFormatter import ProjectNameFormatter
-from lib.template_engine import build_variables
+from lib.makeselfEngine.template_engine import build_variables
 
 
 class ProjectNameFormatterTests(unittest.TestCase):

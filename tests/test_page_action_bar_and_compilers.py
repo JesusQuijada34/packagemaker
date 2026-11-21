@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from lib import compilers  # noqa: E402
+from lib.blindcubeEngine import compilers  # noqa: E402
 
 
 class CompilerRegistryTests(unittest.TestCase):
@@ -58,7 +58,7 @@ class CompilerRegistryTests(unittest.TestCase):
 
 class NuitkaEmbeddedTests(unittest.TestCase):
     def test_build_arguments_are_pure_and_deterministic(self):
-        from lib.nuitka_embedded import EmbeddedNuitka
+        from lib.blindcubeEngine.nuitka_embedded import EmbeddedNuitka
 
         nk = EmbeddedNuitka()
         args = nk.build_arguments(
@@ -77,7 +77,7 @@ class NuitkaEmbeddedTests(unittest.TestCase):
         self.assertNotIn("subprocess", str(type(nk)).lower())
 
     def test_compile_without_nuitka_reports_error(self):
-        from lib import nuitka_embedded
+        from lib.blindcubeEngine import nuitka_embedded
 
         original = nuitka_embedded.NUITKA_AVAILABLE
         try:

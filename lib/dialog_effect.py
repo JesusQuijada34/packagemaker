@@ -9,6 +9,7 @@ tapar por completo lo que hay detrás.
 from __future__ import annotations
 
 from typing import Optional
+from lib import leviathan_bridge
 
 try:
     from PyQt6.QtCore import Qt
@@ -43,7 +44,7 @@ class PartialEffectOverlay(QWidget):
     def _apply_blur(self) -> None:
         """Desenfoque del contenido de la ventana principal."""
         try:
-            from leviathan_ui import WipeWindow
+            WipeWindow = leviathan_bridge.attribute("WipeWindow")
 
             # ghostBlur difumina el contenido de debajo (Windows).
             self._blur = (

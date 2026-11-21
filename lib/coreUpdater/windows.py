@@ -43,6 +43,7 @@ except ImportError:
 from .workers import InstallerWorker, IFLAPPInstallerWorker, EXEInstallerWorker
 from .system_tray import get_tray_icon, set_tray_icon, set_updater_window
 from lib.i18n import tr
+from lib import leviathan_bridge
 
 try:
     from lib.alert_dialog import AlertDialog as LeviathanDialog
@@ -53,7 +54,10 @@ except (ImportError, SyntaxError):
 
 # --- LEVIATHAN UI CHECK ---
 try:
-    from leviathan_ui import WipeWindow, LeviathanProgressBar, CustomTitleBar, InmersiveSplash
+    WipeWindow = leviathan_bridge.attribute("WipeWindow")
+    LeviathanProgressBar = leviathan_bridge.attribute("LeviathanProgressBar")
+    CustomTitleBar = leviathan_bridge.attribute("CustomTitleBar")
+    InmersiveSplash = leviathan_bridge.attribute("InmersiveSplash")
     HAS_LEVIATHAN = True
 except ImportError:
     HAS_LEVIATHAN = False

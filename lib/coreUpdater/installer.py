@@ -17,6 +17,7 @@ except ImportError:
     QApplication = None
 
 from .core import log, _rXml, _rXml_r, _fR, _fR_exe
+from lib import leviathan_bridge
 
 # Windows y GUI con fallback
 try:
@@ -29,7 +30,7 @@ except ImportError:
 
 # --- LEVIATHAN UI CHECK ---
 try:
-    from leviathan_ui import InmersiveSplash
+    InmersiveSplash = leviathan_bridge.attribute("InmersiveSplash")
     HAS_LEVIATHAN = True
 except ImportError:
     HAS_LEVIATHAN = False

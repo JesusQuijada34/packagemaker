@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from lib.asksome_format import pack_asksome
+from lib.blindcubeEngine.asksome_format import pack_asksome
 from lib.mexf_parser import (
     Diagnostic,
     MexfDocument,
@@ -177,7 +177,7 @@ ARTIFACT = Path(__file__).with_name({artifact!r})
 
 
 def main():
-    from lib.asksome_format import AsksomeError, verify_asksome
+    from lib.blindcubeEngine.asksome_format import AsksomeError, verify_asksome
 
     if not ARTIFACT.is_file():
         print(f"[syntax] missing artifact: {{ARTIFACT}}", file=sys.stderr)
@@ -211,7 +211,7 @@ EXPECTED_PLATFORM = {platform!r}
 
 
 def main():
-    from lib.asksome_format import verify_asksome
+    from lib.blindcubeEngine.asksome_format import verify_asksome
 
     print(f"[env] python {{sys.version.split()[0]}} on {{platform.system()}}")
     header = verify_asksome(ARTIFACT)

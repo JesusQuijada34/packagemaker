@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lib import hardening
+from lib.blindcubeEngine import hardening
 
 
 class HardeningTests(unittest.TestCase):

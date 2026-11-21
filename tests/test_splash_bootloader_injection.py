@@ -9,7 +9,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from lib import bootloader_injection, splash_bootloader
+from lib.blindcubeEngine import bootloader_injection, splash_bootloader
 
 _SAMPLE = '''"""Demo app."""
 from __future__ import annotations

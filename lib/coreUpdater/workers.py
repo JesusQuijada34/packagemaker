@@ -133,7 +133,7 @@ class IFLAPPInstallerWorker(QObject):
             os.makedirs(self.target_dir, exist_ok=True)
             
             # Extraer archivo .iflapp (contenedor v2 o ZIP histórico)
-            from lib.iflapp_format import extract_iflapp, read_iflapp_header, sniff_format
+            from lib.blindcubeEngine.iflapp_format import extract_iflapp, read_iflapp_header, sniff_format
 
             if sniff_format(self.iflapp_path) == "iflapp2":
                 files = extract_iflapp(self.iflapp_path, self.target_dir)

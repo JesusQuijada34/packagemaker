@@ -220,7 +220,7 @@ def test_engine_environment_carries_the_engine_requirements(tmp_path):
 
 def test_build_thread_never_falls_back_to_another_backend():
     """``_ensure_compiler`` ya no cae en silencio a PyInstaller."""
-    source = (ROOT / "lib" / "BuildThread.py").read_text(encoding="utf-8")
+    source = (ROOT / "lib" / "blindcubeEngine" / "BuildThread.py").read_text(encoding="utf-8")
     start = source.index("def _ensure_compiler")
     body = source[start : source.index("def parse_details_xml")]
     assert "backup" not in body.lower()

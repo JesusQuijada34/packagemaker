@@ -148,7 +148,7 @@ class CLIHandler:
         buildthis_group.add_argument('--output', metavar='PATH', help='Directorio externo para el artefacto `.iflapp`')
         buildthis_group.add_argument('--platform', choices=['Linux', 'Windows'], help='Plataforma objetivo; por defecto se detecta el sistema actual')
         try:
-            from lib.compilers import backend_names as _backend_names
+            from lib.blindcubeEngine.compilers import backend_names as _backend_names
 
             _compiler_choices = _backend_names()
         except Exception:
@@ -224,7 +224,7 @@ class CLIHandler:
         """
         if value is None:
             return None
-        from lib.hardening import method_names
+        from lib.blindcubeEngine.hardening import method_names
 
         text = str(value).strip().lower()
         if text in ('', 'all', 'todos'):
@@ -678,7 +678,7 @@ class CompilerReportHelper:
 
     @staticmethod
     def report():
-        from lib.compilers import available_backends
+        from lib.blindcubeEngine.compilers import available_backends
 
         report = available_backends(log_callback=_safe_print)
         print("Compiladores disponibles:")
@@ -713,7 +713,7 @@ class HardeningReportHelper:
 
     @staticmethod
     def report():
-        from lib.hardening import available_methods, method_names
+        from lib.blindcubeEngine.hardening import available_methods, method_names
 
         status = available_methods()
         print("Métodos de blindaje disponibles:")
@@ -788,7 +788,7 @@ class PackageInspectHelper:
     def inspect(data):
         import json as _json
 
-        from lib import iflapp_format
+        from lib.blindcubeEngine import iflapp_format
 
         path = data.get("path")
         if not path:
@@ -1103,9 +1103,9 @@ class AsksomeInstallHelper:
     def install(data):
         from pathlib import Path
 
-        from lib.asksome_format import AsksomeError
-        from lib.asksome_installer import AsksomeInstallError, install_asksome
-        from lib.iflapp_format import IflappError
+        from lib.blindcubeEngine.asksome_format import AsksomeError
+        from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, install_asksome
+        from lib.blindcubeEngine.iflapp_format import IflappError
 
         path = data.get("path")
         if not path:
@@ -1139,7 +1139,7 @@ class AsksomeInstallHelper:
 
     @staticmethod
     def build_removeme(data):
-        from lib.asksome_installer import AsksomeInstallError, build_removeme
+        from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, build_removeme
 
         app_id = data.get("app_id")
         if not app_id:
@@ -1164,7 +1164,7 @@ class AsksomeInstallHelper:
 
     @staticmethod
     def uninstall(data):
-        from lib.asksome_installer import AsksomeInstallError, uninstall_asksome
+        from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, uninstall_asksome
 
         app_id = data.get("app_id")
         if not app_id:
@@ -1183,7 +1183,7 @@ class AsksomeInstallHelper:
 
     @staticmethod
     def list_installed(data):
-        from lib.asksome_installer import list_installed
+        from lib.blindcubeEngine.asksome_installer import list_installed
 
         root = AsksomeInstallHelper._root(data)
         records = list_installed(root)
@@ -1358,7 +1358,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
     
     # Manejar acciones headless (create, compile, repair)
     if action == 'create_project' and kwargs.get('headless'):
-        from lib.template_engine import create_project_from_templates, normalize_platform
+        from lib.makeselfEngine.template_engine import create_project_from_templates, normalize_platform
         project_source = data if isinstance(data, dict) else {'path': data}
         base_path = Path(project_source.get('path')).resolve()
         
@@ -1402,7 +1402,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         return None
     
     elif action == 'compile_project' and kwargs.get('headless'):
-        from lib.BuildThread import FlangCompiler
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
         
         project_source = data if isinstance(data, dict) else {'path': data}
         base_path = Path(project_source.get('path')).resolve()
@@ -1499,7 +1499,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         return None
     
     elif action == 'buildthis' and kwargs.get('headless'):
-        from lib.BuildThread import FlangCompiler
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
         
         project_source = data if isinstance(data, dict) else {'path': data}
         project_path = Path(project_source.get('path')).resolve()
@@ -1597,7 +1597,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         return None
     
     elif action == 'repair_project' and kwargs.get('headless'):
-        from lib.template_engine import normalize_platform, repair_project_from_templates
+        from lib.makeselfEngine.template_engine import normalize_platform, repair_project_from_templates
         from xml.etree import ElementTree as ET
         
         project_source = data if isinstance(data, dict) else {'path': data}

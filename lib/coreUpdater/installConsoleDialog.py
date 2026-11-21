@@ -6,6 +6,7 @@ Consola aparte para registro/debug de compilación e instalación.
 
 import sys
 from lib.i18n import tr
+from lib import leviathan_bridge
 try:
     from PyQt6.QtCore import Qt
     from PyQt6.QtWidgets import (
@@ -28,7 +29,7 @@ except (ImportError, SyntaxError):
 # faltara el propio Qt (y el diálogo crasheara) cuando el paquete de UI no está
 # instalado.
 try:
-    from leviathan_ui import CustomTitleBar
+    CustomTitleBar = leviathan_bridge.attribute("CustomTitleBar")
 except (ImportError, SyntaxError):
     class CustomTitleBar(QWidget):
         """Barra de título mínima cuando ``leviathan_ui`` no está instalado.

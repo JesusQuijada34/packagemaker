@@ -106,7 +106,7 @@ class ProjectLocatorTests(unittest.TestCase):
 
     def test_build_thread_run_uses_locator(self):
         """``run`` debe localizar por metadatos y no emitir 'No se encontró la carpeta'."""
-        from lib.BuildThread import BuildThread
+        from lib.blindcubeEngine.BuildThread import BuildThread
 
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
@@ -134,7 +134,7 @@ class PlatformGatingTests(unittest.TestCase):
     """Bug 5: AlphaCube compila para el SO anfitrión; el resto queda acotado."""
 
     def _compiler(self, platform_type, current):
-        from lib.BuildThread import FlangCompiler
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
 
         compiler = FlangCompiler.__new__(FlangCompiler)
         compiler.platform_type = platform_type

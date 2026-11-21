@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from lib.iflapp_format import pack_iflapp
+from lib.blindcubeEngine.iflapp_format import pack_iflapp
 
 def get_metadata():
     details_path = Path("details.xml")

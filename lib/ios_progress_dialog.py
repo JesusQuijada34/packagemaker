@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Optional
 
 from lib.dialog_effect import install_partial_effect
+from lib import leviathan_bridge
 
 try:
     from PyQt6.QtCore import (
@@ -178,7 +179,7 @@ class IOSProgressDialog(QDialog):
     def _apply_blur(self) -> None:
         """Blur temporal (macOS advantage) sobre el propio diálogo."""
         try:
-            from leviathan_ui import WipeWindow
+            WipeWindow = leviathan_bridge.attribute("WipeWindow")
 
             self._blur_builder = WipeWindow.create().set_mode("ghostBlur").set_radius(16)
             self._blur_builder.apply(self)

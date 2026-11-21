@@ -7,7 +7,7 @@ payload. Está pensado para consumirse desde el CLI, la GUI y pruebas.
 
 Uso::
 
-    from lib.iflapp_reader import IflappReader
+    from lib.blindcubeEngine.iflapp_reader import IflappReader
 
     reader = IflappReader("Paquete.iflapp")
     print(reader.summary())
@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from lib.iflapp_format import (
+from lib.blindcubeEngine.iflapp_format import (
     DEFAULT_SIGNING_KEY,
     IflappError,
     IflappHeader,

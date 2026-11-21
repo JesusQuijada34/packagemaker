@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from lib.asksome_format import AsksomeError, extract_asksome, pack_asksome, verify_asksome
+from lib.blindcubeEngine.asksome_format import AsksomeError, extract_asksome, pack_asksome, verify_asksome
 from lib.mexf_parser import MexfError, detect_mexf_format, migrate_legacy_mexf, parse_mexf
 
 
@@ -172,7 +172,7 @@ def test_mexf_compiler_skips_projects_without_mexf_dir(tmp_path):
 
 
 def test_buildthread_compiles_mexf_before_iflapp(tmp_path):
-    from lib.BuildThread import FlangCompiler
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
 
     root = _make_project(tmp_path)
     output = tmp_path / "releases"
@@ -187,7 +187,7 @@ def test_buildthread_compiles_mexf_before_iflapp(tmp_path):
 
 
 def test_buildthread_skips_mexf_when_absent(tmp_path):
-    from lib.BuildThread import FlangCompiler
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
 
     root = tmp_path / "plain"
     root.mkdir()
@@ -209,7 +209,7 @@ def _install_fixture(tmp_path):
 
 
 def test_install_asksome_extracts_and_records(tmp_path):
-    from lib.asksome_installer import install_asksome, list_installed, read_record
+    from lib.blindcubeEngine.asksome_installer import install_asksome, list_installed, read_record
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
@@ -224,7 +224,7 @@ def test_install_asksome_extracts_and_records(tmp_path):
 
 
 def test_uninstall_asksome_purges_files_and_shortcuts(tmp_path):
-    from lib.asksome_installer import install_asksome, list_installed, uninstall_asksome
+    from lib.blindcubeEngine.asksome_installer import install_asksome, list_installed, uninstall_asksome
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
@@ -236,7 +236,7 @@ def test_uninstall_asksome_purges_files_and_shortcuts(tmp_path):
 
 
 def test_uninstall_silent_on_missing(tmp_path):
-    from lib.asksome_installer import AsksomeInstallError, uninstall_asksome
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, uninstall_asksome
 
     assert uninstall_asksome("nope", tmp_path / "installed", silent=True) == []
     with pytest.raises(AsksomeInstallError):
@@ -247,7 +247,7 @@ def test_generated_removeme_runs_silently(tmp_path):
     import subprocess
     import sys as _sys
 
-    from lib.asksome_installer import install_asksome
+    from lib.blindcubeEngine.asksome_installer import install_asksome
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
@@ -263,8 +263,8 @@ def test_generated_removeme_runs_silently(tmp_path):
 
 
 def test_install_rejects_tampered_artifact(tmp_path):
-    from lib.asksome_format import AsksomeError
-    from lib.asksome_installer import install_asksome
+    from lib.blindcubeEngine.asksome_format import AsksomeError
+    from lib.blindcubeEngine.asksome_installer import install_asksome
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     data = bytearray(artifact.read_bytes())
@@ -313,7 +313,7 @@ def test_lint_reports_contract_violation_with_line():
 
 
 def test_compile_source_builds_asksome(tmp_path):
-    from lib.asksome_format import verify_asksome
+    from lib.blindcubeEngine.asksome_format import verify_asksome
     from lib.mexf_editor import compile_source
 
     output = compile_source(VALID_SOURCE, tmp_path / "editor.asksome")
@@ -344,7 +344,7 @@ def test_encrypted_asksome_round_trips_with_password(tmp_path):
 
 
 def test_encrypted_asksome_requires_correct_password(tmp_path):
-    from lib.iflapp_format import IflappSignatureError
+    from lib.blindcubeEngine.iflapp_format import IflappSignatureError
     from lib.mexf_compiler import compile_mexf_project
 
     root = _make_project(tmp_path)
@@ -354,7 +354,7 @@ def test_encrypted_asksome_requires_correct_password(tmp_path):
 
 
 def test_encrypted_asksome_needs_password(tmp_path):
-    from lib.iflapp_format import IflappError
+    from lib.blindcubeEngine.iflapp_format import IflappError
     from lib.mexf_compiler import compile_mexf_project
 
     root = _make_project(tmp_path)
@@ -392,7 +392,7 @@ def test_syntax_wrapper_runs_against_valid_artifact(tmp_path):
 
 def test_generated_removeme_is_autonomous_and_self_contained(tmp_path):
     """El script no debe depender del repositorio de PackageMaker."""
-    from lib.asksome_installer import install_asksome
+    from lib.blindcubeEngine.asksome_installer import install_asksome
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
@@ -405,7 +405,7 @@ def test_generated_removeme_is_autonomous_and_self_contained(tmp_path):
 def test_removeme_binary_name_matches_platform():
     import sys as _sys
 
-    from lib.asksome_installer import removeme_binary_name
+    from lib.blindcubeEngine.asksome_installer import removeme_binary_name
 
     name = removeme_binary_name()
     if _sys.platform.startswith("win"):
@@ -418,7 +418,7 @@ def test_removeme_binary_name_matches_platform():
 
 def test_install_compiles_removeme_binary(tmp_path):
     """Con ``removeme_binary=True`` se escribe el binario nativo y se registra."""
-    from lib.asksome_installer import install_asksome, removeme_binary_name
+    from lib.blindcubeEngine.asksome_installer import install_asksome, removeme_binary_name
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(
@@ -434,7 +434,7 @@ def test_install_compiles_removeme_binary(tmp_path):
 def test_compiled_removeme_binary_purges_installation(tmp_path):
     import subprocess
 
-    from lib.asksome_installer import install_asksome, list_installed
+    from lib.blindcubeEngine.asksome_installer import install_asksome, list_installed
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(
@@ -450,7 +450,7 @@ def test_compiled_removeme_binary_purges_installation(tmp_path):
 
 
 def test_build_removeme_for_existing_installation(tmp_path):
-    from lib.asksome_installer import build_removeme, install_asksome, removeme_binary_name
+    from lib.blindcubeEngine.asksome_installer import build_removeme, install_asksome, removeme_binary_name
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
@@ -462,7 +462,7 @@ def test_build_removeme_for_existing_installation(tmp_path):
 
 def test_removeme_has_gui_with_console_fallback(tmp_path):
     """La plantilla trae GUI (PyQt6) con respaldo a consola, sin importar ``lib``."""
-    from lib.asksome_installer import install_asksome
+    from lib.blindcubeEngine.asksome_installer import install_asksome
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
@@ -476,7 +476,7 @@ def test_generated_removeme_console_mode_reports_removals(tmp_path):
     import subprocess
     import sys as _sys
 
-    from lib.asksome_installer import install_asksome
+    from lib.blindcubeEngine.asksome_installer import install_asksome
 
     artifact, install_root, shortcuts = _install_fixture(tmp_path)
     record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])

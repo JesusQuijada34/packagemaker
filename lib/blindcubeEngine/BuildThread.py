@@ -30,15 +30,15 @@ except ImportError:
         def connect(self, func): pass
         def emit(self, *args, **kwargs): pass
 
-from lib import iflapp_format
-from lib.compilers import (
+from lib.blindcubeEngine import iflapp_format
+from lib.blindcubeEngine.compilers import (
     CompilerUnavailableError,
     available_backends,
     ensure_backend,
     resolve_backend,
 )
 from lib.file_ops import copy_file, remove_tree
-from lib.hardware_sandbox import HardwareSandbox
+from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
 from lib.mexf_compiler import MexfCompiler
 from lib.project_locator import describe_available, locate_project
 
@@ -148,7 +148,7 @@ class FlangCompiler:
 
     def _check_pyinstaller_installed(self) -> bool:
         """Compatibilidad: indica si el backend PyInstaller está disponible."""
-        from lib.compilers import PyInstallerBackend
+        from lib.blindcubeEngine.compilers import PyInstallerBackend
 
         return PyInstallerBackend().is_available()
 
@@ -403,7 +403,7 @@ class FlangCompiler:
         # Fase 3: bootloader de splash. Se compila una copia inyectada del guion
         # (junto al original, para resolver assets relativos) y se copia la
         # librería de splash a ``lib/`` del proyecto.
-        from lib import bootloader_injection
+        from lib.blindcubeEngine import bootloader_injection
 
         compile_path = script_path
         injected = bootloader_injection.prepare_for_build(script_path, self.repo_path)
@@ -716,7 +716,7 @@ class FlangCompiler:
 
     def create_dropper(self, iflapp_path: Path, output_file: Optional[Path] = None) -> Optional[Path]:
         """Genera un dropper autoextraíble a partir del ``.iflapp`` validado."""
-        from lib.dropper import create_dropper
+        from lib.blindcubeEngine.dropper import create_dropper
 
         output_file = output_file or Path(iflapp_path).with_suffix(".run")
         try:
@@ -733,7 +733,7 @@ class FlangCompiler:
         Se ejecuta antes del empaquetado final, cuando el árbol del paquete ya
         está construido y los binarios existen en disco.
         """
-        from lib import hardening as hardening_mod
+        from lib.blindcubeEngine import hardening as hardening_mod
 
         if not self.hardening_methods:
             return []
@@ -787,7 +787,7 @@ class FlangCompiler:
                 "\n".join(
                     [
                         "import sys",
-                        "from lib.iflapp_format import extract_iflapp, verify_iflapp, read_iflapp_header",
+                        "from lib.blindcubeEngine.iflapp_format import extract_iflapp, verify_iflapp, read_iflapp_header",
                         "pkg = sys.argv[1]",
                         "dest = sys.argv[2]",
                         "verify_iflapp(pkg)",
@@ -800,7 +800,7 @@ class FlangCompiler:
             )
             # El script aislado importa ``lib.iflapp_format``; hay que exponer el
             # directorio de PackageMaker en el entorno del sandbox.
-            project_root = Path(__file__).resolve().parent.parent
+            project_root = Path(__file__).resolve().parents[2]
             sandbox_env = {"PYTHONPATH": os.pathsep.join(
                 [str(project_root), os.environ.get("PYTHONPATH", "")]
             ).rstrip(os.pathsep)}
@@ -1050,7 +1050,7 @@ class BuildThread(QThread):
         # BlindCube ejecuta las pruebas previas (sintaxis + arranque offscreen)
         # y detiene el empaquetado si el proyecto no arranca.
         if self.preflight:
-            from lib.build_preflight import run_preflight
+            from lib.blindcubeEngine.build_preflight import run_preflight
 
             self.progress.emit(tr("build.preflight_title"))
             report = run_preflight(repo_path)

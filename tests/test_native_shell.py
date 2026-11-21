@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from lib.asksome_format import pack_asksome
+from lib.blindcubeEngine.asksome_format import pack_asksome
 
 
 def _make_staging(tmp_path):

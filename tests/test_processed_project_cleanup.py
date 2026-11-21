@@ -3,8 +3,8 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from lib import iflapp_format
-from lib.BuildThread import FlangCompiler
+from lib.blindcubeEngine import iflapp_format
+from lib.blindcubeEngine.BuildThread import FlangCompiler
 
 
 class ProcessedProjectCleanupTests(unittest.TestCase):

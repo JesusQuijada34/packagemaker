@@ -5,10 +5,10 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 
-from lib import iflapp_format
-from lib.dropper import create_dropper, read_dropper_header
-from lib.hardware_sandbox import HardwareSandbox
-from lib import compilers
+from lib.blindcubeEngine import iflapp_format
+from lib.blindcubeEngine.dropper import create_dropper, read_dropper_header
+from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
+from lib.blindcubeEngine import compilers
 
 
 def _make_package(root: Path, *, password=None) -> Path:
@@ -100,7 +100,7 @@ class HardwareSandboxTests(unittest.TestCase):
 
     def test_qemu_not_advertised_without_guest_assets(self):
         """Sin kernel/initrd no se puede arrancar un huésped: no debe anunciarse."""
-        from lib import hardware_sandbox
+        from lib.blindcubeEngine import hardware_sandbox
 
         with patch.object(hardware_sandbox, "_qemu_guest_assets", return_value=None), \
                 patch.object(hardware_sandbox.shutil, "which", return_value="/usr/bin/qemu-system-x86_64"), \
@@ -110,7 +110,7 @@ class HardwareSandboxTests(unittest.TestCase):
         self.assertFalse(capabilities.backends["qemu-kvm"])
 
     def test_qemu_command_uses_kvm_and_shares_workspace(self):
-        from lib import hardware_sandbox
+        from lib.blindcubeEngine import hardware_sandbox
 
         sandbox = HardwareSandbox(backend="qemu-kvm")
         sandbox.capabilities.cpu_count = 2
@@ -123,7 +123,7 @@ class HardwareSandboxTests(unittest.TestCase):
         self.assertIn("mount_tag=workspace", joined)
 
     def test_qemu_without_assets_returns_error_result(self):
-        from lib import hardware_sandbox
+        from lib.blindcubeEngine import hardware_sandbox
 
         sandbox = HardwareSandbox(backend="qemu-kvm")
         with patch.object(hardware_sandbox, "_qemu_guest_assets", return_value=None):
@@ -135,8 +135,8 @@ class HardwareSandboxTests(unittest.TestCase):
 class SandboxVerificationTests(unittest.TestCase):
     def test_verify_in_sandbox_exposes_lib_on_pythonpath(self):
         """El script aislado importa ``lib``; el entorno debe exponer el repo."""
-        from lib.BuildThread import FlangCompiler
-        from lib import iflapp_format
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
+        from lib.blindcubeEngine import iflapp_format
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -230,7 +230,7 @@ if PYQT6_AVAILABLE:
             return container
 
         def _confirm(self) -> None:
-            from lib.build_preflight import INJECTION_CUSTOM, INJECTION_GLOBAL
+            from lib.blindcubeEngine.build_preflight import INJECTION_CUSTOM, INJECTION_GLOBAL
 
             if self._global_radio.isChecked():
                 self._mode = INJECTION_GLOBAL
@@ -244,7 +244,7 @@ if PYQT6_AVAILABLE:
 
         def payload(self) -> Dict[str, object]:
             """Payload elegido; lista vacía si se canceló."""
-            from lib.build_preflight import build_env_payload
+            from lib.blindcubeEngine.build_preflight import build_env_payload
 
             if self._mode is None:
                 return {}

@@ -185,7 +185,7 @@ def compile_project(
     Reutiliza ``lib.compilers`` tal cual: el IDE no reimplementa la compilación,
     solo elige el guion de entrada y los imports ocultos.
     """
-    from lib.compilers import CompilerUnavailableError, resolve_backend
+    from lib.blindcubeEngine.compilers import CompilerUnavailableError, resolve_backend
 
     project = scan_project(root)
     target_dir = Path(output_dir).expanduser().resolve() if output_dir else project.root / "dist"
@@ -220,7 +220,7 @@ def compile_project(
             continue
         output_name = script_path.stem
         # Fase 3: bootloader de splash (copia inyectada + librería en lib/).
-        from lib import bootloader_injection
+        from lib.blindcubeEngine import bootloader_injection
 
         compile_path = script_path
         injected = bootloader_injection.prepare_for_build(script_path, project.root)

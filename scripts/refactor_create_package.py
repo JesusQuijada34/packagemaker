@@ -9,7 +9,7 @@ FOLDER_BLOCK = """        folder_name = f\"{empresa}.{nombre_logico}.v{version}\
         full_path = os.path.join(BASE_DIR, folder_name)"""
 
 FOLDER_BLOCK_NEW = """        version_base = (self.input_version.text().strip() or \"1\").split(\"-\")[0]
-        from lib.template_engine import build_variables
+        from lib.makeselfEngine.template_engine import build_variables
 
         _vars = build_variables(
             empresa, nombre_logico, nombre_completo, autor, plataforma_seleccionada, version_base
@@ -22,7 +22,7 @@ START = "            for folder in DEFAULT_FOLDERS.split(\",\"):"
 END = "            icon_dest = os.path.join(full_path, \"app\", \"app-icon.ico\")"
 
 REPLACEMENT = """            from pathlib import Path as _Path
-            from lib.template_engine import create_project_from_templates
+            from lib.makeselfEngine.template_engine import create_project_from_templates
 
             os.makedirs(full_path, exist_ok=True)
             create_project_from_templates(

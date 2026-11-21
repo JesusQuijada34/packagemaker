@@ -58,7 +58,7 @@ def pack_asksome(staging_dir: Path | str, output_file: Path | str, *, metadata: 
     # El cifrado reutiliza exactamente la cripto del contenedor .iflapp
     # (AES-256-GCM si hay ``cryptography``, si no HMAC-SHA256-CTR), de modo que
     # la cabecera del .asksome describe el modo real aplicado.
-    from lib import iflapp_format
+    from lib.blindcubeEngine import iflapp_format
 
     payload, encryption = iflapp_format._encrypt_payload(payload, password)
     header = {"format": "asksome", "format_version": 1, "launcher": launcher, "manifest": manifest, "metadata": metadata or {}, "compression": "lzma", "encryption": encryption.get("encryption", "none"), "encryption_params": encryption, "payload_sha256": hashlib.sha256(payload).hexdigest()}
@@ -108,7 +108,7 @@ def extract_asksome(path: Path | str, destination: Path | str, *, password: str 
     start = len(MAGIC) + 4 + len(_canonical(header))
     payload = data[start:]
     if header.get("encryption", "none") != "none":
-        from lib import iflapp_format
+        from lib.blindcubeEngine import iflapp_format
 
         payload = iflapp_format._decrypt_payload(payload, password, header.get("encryption_params", {}))
     raw = lzma.decompress(payload, format=lzma.FORMAT_ALONE)

@@ -93,12 +93,18 @@ except ImportError:
         class MouseButton: pass
 import requests
 
+from lib import leviathan_bridge
+
 try:
-    from leviathan_ui import InmersiveSplash, LightsOff, WipeWindow, LeviathanProgressBar, CustomTitleBar
-    from leviathan_ui import get_accent_color as _leviathan_accent
-    from leviathan_ui.touchscreen import TouchScreen
+    InmersiveSplash = leviathan_bridge.attribute("InmersiveSplash")
+    LightsOff = leviathan_bridge.attribute("LightsOff")
+    WipeWindow = leviathan_bridge.attribute("WipeWindow")
+    LeviathanProgressBar = leviathan_bridge.attribute("LeviathanProgressBar")
+    CustomTitleBar = leviathan_bridge.attribute("CustomTitleBar")
+    _leviathan_accent = leviathan_bridge.attribute("get_accent_color")
+    TouchScreen = leviathan_bridge.submodule("touchscreen").TouchScreen
     LEVIATHAN_AVAILABLE = True
-except (ImportError, SyntaxError) as e:
+except (ImportError, SyntaxError, AttributeError) as e:
     LEVIATHAN_AVAILABLE = False
     print(f"[WARN] Leviathan UI unavailable or syntax error: {e}")
     _leviathan_accent = None
@@ -233,7 +239,7 @@ def get_accent_color():
     return "#0078D4"
 
 
-from lib.BuildThread import BuildThread
+from lib.blindcubeEngine.BuildThread import BuildThread
 from lib.app_icons import get_icon, icon_button
 from lib.window_chrome import (
     apply_display_mode,
@@ -420,11 +426,11 @@ DEFAULT_CONFIG = {
 # --- UTILITY FUNCTIONS ---
 
 def load_updater_template():
-    from lib.template_engine import load_template
+    from lib.makeselfEngine.template_engine import load_template
     return load_template("project/updater.py.template")
 
 def load_docs_template():
-    from lib.template_engine import load_template
+    from lib.makeselfEngine.template_engine import load_template
     return load_template("docs/index.html.template")
 
 def getversion():
@@ -1965,7 +1971,7 @@ class PackageTodoGUI(QMainWindow):
         # Misma puerta estricta que en la compilación: sin fabricante, nombre o
         # versión válidos no se crea nada (antes se caía a ``influent`` y
         # ``mycoolapp``, heredando datos de un proyecto anterior).
-        from lib.build_validation import format_errors, validate_build_fields
+        from lib.blindcubeEngine.build_validation import format_errors, validate_build_fields
 
         errors = validate_build_fields(
             empresa, nombre_logico, version_raw, plataforma_seleccionada
@@ -1980,7 +1986,7 @@ class PackageTodoGUI(QMainWindow):
 
         nombre_completo = self.input_nombre_completo.text() or nombre_logico.strip().upper()
         from lib.projectNameFormatter import ProjectNameFormatter
-        from lib.template_engine import build_variables
+        from lib.makeselfEngine.template_engine import build_variables
 
         # Ya validada arriba, aquí sólo se completa a la base canónica ``X.x``.
         version_base = ProjectNameFormatter.normalize_version_base(version_raw)
@@ -2009,7 +2015,7 @@ class PackageTodoGUI(QMainWindow):
         hv = _vars["CORRELATIONID"]
         try:
             from pathlib import Path as _Path
-            from lib.template_engine import (
+            from lib.makeselfEngine.template_engine import (
                 create_project_from_templates,
                 templates_available,
             )
@@ -2341,7 +2347,7 @@ class PackageTodoGUI(QMainWindow):
         # Validación estricta antes de tocar nada: si falta un campo clave o no
         # cumple el formato, se bloquea la compilación en vez de heredar los
         # datos del proyecto anterior con valores por defecto.
-        from lib.build_validation import format_errors, validate_build_fields
+        from lib.blindcubeEngine.build_validation import format_errors, validate_build_fields
 
         errors = validate_build_fields(empresa, nombre, version_input, platformLineEdit)
         if errors:
@@ -2378,7 +2384,7 @@ class PackageTodoGUI(QMainWindow):
         hardening = None
         if getattr(self, 'hardening_checkbox', None) and self.hardening_checkbox.isChecked():
             try:
-                from lib.hardening import method_names
+                from lib.blindcubeEngine.hardening import method_names
 
                 hardening = method_names()
             except Exception:
@@ -2406,7 +2412,7 @@ class PackageTodoGUI(QMainWindow):
 
     def _ask_env_injection(self, custom_path, app_name):
         """Diálogo del .env del proyecto; ``{}`` si no hay o se cancela."""
-        from lib.build_preflight import find_env_file, parse_env_file
+        from lib.blindcubeEngine.build_preflight import find_env_file, parse_env_file
 
         if not custom_path:
             return {}
@@ -3381,7 +3387,7 @@ class PackageTodoGUI(QMainWindow):
                 if respuesta != 1:  # No aceptado
                     return
 
-            from lib.template_engine import create_project_from_templates
+            from lib.makeselfEngine.template_engine import create_project_from_templates
 
             app_id = nombreProyecto.strip().lower().replace(" ", "-")
             pub = (publisher or autor or "influent").strip().lower().replace(" ", "-")
@@ -3898,7 +3904,7 @@ class PackageTodoGUI(QMainWindow):
     def _ejecutarMoonFix(self, projectPath, checkArchivos, checkConfig, checkEstructura, checkDeps, progressBar, txtLog, btnReparar, btnCerrar):
         """Ejecuta MoonFix para reparar el proyecto usando plantillas en src/templates/."""
         try:
-            from lib.template_engine import normalize_platform, repair_project_from_templates
+            from lib.makeselfEngine.template_engine import normalize_platform, repair_project_from_templates
 
             btnReparar.setEnabled(False)
             txtLog.append("=== 🌙 MoonFix - Iniciando Reparación ===\n")
@@ -4098,7 +4104,7 @@ class PackageTodoGUI(QMainWindow):
     def openPackageFile(self, filePath):
         """Muestra las cabeceras de un .iflapp sin descifrar ni descompilar."""
         try:
-            from lib.iflapp_reader import IflappReader
+            from lib.blindcubeEngine.iflapp_reader import IflappReader
 
             info = IflappReader(filePath).info().summary()
             LeviathanDialog.launch(

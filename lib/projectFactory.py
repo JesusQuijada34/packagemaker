@@ -7,7 +7,7 @@ Project Factory - Creacion de proyectos PackageMaker via plantillas externas.
 import os
 from pathlib import Path
 
-from lib.template_engine import (
+from lib.makeselfEngine.template_engine import (
     DEFAULT_FOLDERS,
     build_variables,
     create_project_from_templates,

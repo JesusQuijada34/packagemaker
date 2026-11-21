@@ -1,4 +1,4 @@
-from lib.iflapp_reader import IflappReader
+from lib.blindcubeEngine.iflapp_reader import IflappReader
 
 reader = input("dir?")
 reader = IflappReader(reader)

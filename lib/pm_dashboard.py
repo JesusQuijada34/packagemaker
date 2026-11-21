@@ -259,7 +259,7 @@ class NewProjectWizard(QDialog):
             return
 
         try:
-            from lib.template_engine import create_project_from_templates
+            from lib.makeselfEngine.template_engine import create_project_from_templates
 
             create_project_from_templates(
                 project_path,

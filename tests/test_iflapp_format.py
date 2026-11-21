@@ -2,8 +2,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lib import iflapp_format
-from lib.iflapp_reader import IflappReader
+from lib.blindcubeEngine import iflapp_format
+from lib.blindcubeEngine.iflapp_reader import IflappReader
 
 
 def _make_package(root: Path, *, password=None, icon=True) -> Path:
@@ -163,8 +163,8 @@ class HeaderIdentityFallbackTests(unittest.TestCase):
     """La identidad debe derivarse de details.xml sin descifrar el payload."""
 
     def test_identity_falls_back_to_details_xml_in_header(self):
-        from lib import iflapp_format
-        from lib.iflapp_reader import IflappReader
+        from lib.blindcubeEngine import iflapp_format
+        from lib.blindcubeEngine.iflapp_reader import IflappReader
 
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -183,8 +183,8 @@ class HeaderIdentityFallbackTests(unittest.TestCase):
             self.assertEqual(info.identity["app"], "packagemaker")
 
     def test_reader_exposes_summary(self):
-        from lib import iflapp_format
-        from lib.iflapp_reader import IflappReader
+        from lib.blindcubeEngine import iflapp_format
+        from lib.blindcubeEngine.iflapp_reader import IflappReader
 
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

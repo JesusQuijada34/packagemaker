@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from lib.cliHandler import CLIHandler
-from lib import iflapp_format
+from lib.blindcubeEngine import iflapp_format
 
 
 class CliHardeningParseTests(unittest.TestCase):
@@ -15,7 +15,7 @@ class CliHardeningParseTests(unittest.TestCase):
         self.assertIsNone(self.handler._parse_hardening(None))
 
     def test_all_keywords_select_every_method(self):
-        from lib.hardening import method_names
+        from lib.blindcubeEngine.hardening import method_names
 
         for token in ("", "all", "todos"):
             self.assertEqual(self.handler._parse_hardening(token), method_names())

@@ -8,7 +8,7 @@ from pathlib import Path
 # Añadir el directorio raíz al path para importar lib
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
-from lib.BuildThread import FlangCompiler
+from lib.blindcubeEngine.BuildThread import FlangCompiler
 from lib.projectNameFormatter import ProjectNameFormatter
 
 def main():

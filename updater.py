@@ -13,8 +13,11 @@ import os
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QTimer, QPropertyAnimation
-from leviathan_ui import WipeWindow
+
+from lib import leviathan_bridge
 from lib.app_icons import icon_button
+
+WipeWindow = leviathan_bridge.attribute("WipeWindow")
 
 # Import core updater module
 from lib.coreUpdater import (
@@ -278,7 +281,7 @@ class IntegratedSplash(QWidget):
         self.deleteLater()
 
 def get_accent_color():
-    from leviathan_ui import get_accent_color as _leviathan_accent
+    _leviathan_accent = leviathan_bridge.attribute("get_accent_color")
     if _leviathan_accent is not None:
         try:
             return str(_leviathan_accent())

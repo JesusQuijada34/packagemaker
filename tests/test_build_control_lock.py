@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT))
 
 
 def test_build_thread_has_no_random_phrases():
-    source = (ROOT / "lib" / "BuildThread.py").read_text(encoding="utf-8")
+    source = (ROOT / "lib" / "blindcubeEngine" / "BuildThread.py").read_text(encoding="utf-8")
     assert "curiosity_phrases" not in source
     assert "emit_random_curiosity" not in source
     assert "curiosity_prefix" not in source
@@ -24,7 +24,7 @@ def test_build_thread_has_no_random_phrases():
 
 
 def test_compiler_log_is_forwarded_verbatim():
-    source = (ROOT / "lib" / "BuildThread.py").read_text(encoding="utf-8")
+    source = (ROOT / "lib" / "blindcubeEngine" / "BuildThread.py").read_text(encoding="utf-8")
     start = source.index("def handle_compiler_log")
     body = source[start : start + 400]
     assert "self.progress.emit(msg)" in body

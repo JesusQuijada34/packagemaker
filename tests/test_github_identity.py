@@ -188,7 +188,7 @@ def test_avatar_cache_roundtrip(store, monkeypatch):
 
 def test_buildthread_injects_github_signer(store, tmp_path, monkeypatch):
     from lib import github_identity
-    from lib.BuildThread import FlangCompiler
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
 
     github_identity.save_profile(github_identity.GitHubProfile(login="JesusQuijada34"))
     project = tmp_path / "proj"
