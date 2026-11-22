@@ -186,6 +186,18 @@ class MalformedEngineContainerTests(unittest.TestCase):
         with self.assertRaises(blindcubeEngine.BlindCubeError):
             blindcubeEngine.unpack(container, password="pw")
 
+    def test_blindcube_non_text_crypto_parameters_are_reported(self):
+        for meta in (
+            {"encryption": "hmac-sha256-ctr", "salt": 5, "nonce": "00"},
+            {"encryption": "hmac-sha256-ctr", "salt": "00", "nonce": 5},
+            {"encryption": "hmac-sha256-ctr", "salt": "00", "nonce": "00", "mac": 5},
+            {"encryption": "hmac-sha256-ctr", "salt": "no-hex", "nonce": "00"},
+        ):
+            container = blindcubeEngine.container.build_header(0, meta)
+            with self.subTest(meta=meta):
+                with self.assertRaises(blindcubeEngine.BlindCubeError):
+                    blindcubeEngine.unpack(container, password="pw")
+
     def test_engine_core_read_header_rejects_truncated_input(self):
         engine = get_engine(BLINDCUBE_ID)
         for raw in (blindcubeEngine.MAGIC, blindcubeEngine.MAGIC + b"\x00\x00\x00\x00"):

@@ -371,14 +371,25 @@ def _encrypt_payload(data: bytes, password: Optional[str]) -> Tuple[bytes, Dict]
     }
 
 
+def _decode_parameter(params: Dict, field: str) -> bytes:
+    """Decodifica en base64 un parámetro de cifrado o lanza un error legible."""
+    value = params.get(field)
+    if not isinstance(value, str):
+        raise IflappError("Parámetros de cifrado incompletos o inválidos.")
+    try:
+        return base64.b64decode(value)
+    except ValueError as exc:
+        raise IflappError("Parámetros de cifrado incompletos o inválidos.") from exc
+
+
 def _decrypt_payload(data: bytes, password: Optional[str], params: Dict) -> bytes:
     mode = params.get("encryption", "none")
     if mode == "none":
         return data
     if not password:
         raise IflappError("El paquete está cifrado y no se proporcionó contraseña.")
-    salt = base64.b64decode(params["salt"])
-    nonce = base64.b64decode(params["nonce"])
+    salt = _decode_parameter(params, "salt")
+    nonce = _decode_parameter(params, "nonce")
     key = _derive_key(password, salt)
     if mode == "aes-256-gcm":
         aes = _try_aesgcm()
@@ -394,7 +405,9 @@ def _decrypt_payload(data: bytes, password: Optional[str], params: Dict) -> byte
                 "La contraseña no es válida o el payload cifrado fue alterado."
             ) from exc
     if mode == "hmac-sha256-ctr":
-        expected = params.get("mac", "")
+        expected = params.get("mac")
+        if not isinstance(expected, str):
+            expected = ""
         actual = hmac.new(key, nonce + _xor(data, _keystream(key, nonce, len(data))), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, actual):
             raise IflappSignatureError("El MAC del payload cifrado no coincide.")

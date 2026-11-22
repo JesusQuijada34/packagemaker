@@ -58,6 +58,47 @@ class InstallRecord:
         return asdict(self)
 
 
+_REQUIRED_TEXT_FIELDS = (
+    "app_id",
+    "name",
+    "version",
+    "install_dir",
+    "artifact",
+    "artifact_sha256",
+    "launcher",
+)
+_OPTIONAL_TEXT_FIELDS = ("installed_at", "remover")
+
+
+def _record_from_mapping(data: Dict[str, Any]) -> InstallRecord:
+    """Construye un ``InstallRecord`` validando los tipos de sus campos.
+
+    ``InstallRecord(**data)`` acepta cualquier tipo porque el dataclass no
+    valida, así que un ``install.json`` editado a mano con ``"shortcuts": 5``
+    producía un registro que reventaba más tarde al iterarlo. Los campos de
+    texto obligatorios deben ser cadenas; los opcionales y las colecciones se
+    degradan a su valor por defecto para que la desinstalación siga funcionando.
+    """
+    if not isinstance(data, dict):
+        raise TypeError("el registro no es un objeto")
+    values: Dict[str, Any] = {}
+    for field_name in _REQUIRED_TEXT_FIELDS:
+        value = data.get(field_name)
+        if not isinstance(value, str):
+            raise TypeError(f"{field_name} debe ser texto")
+        values[field_name] = value
+    for field_name in _OPTIONAL_TEXT_FIELDS:
+        value = data.get(field_name, "")
+        values[field_name] = value if isinstance(value, str) else ""
+    shortcuts = data.get("shortcuts", [])
+    values["shortcuts"] = [str(item) for item in shortcuts] if isinstance(shortcuts, list) else []
+    files = data.get("files", [])
+    values["files"] = [str(item) for item in files] if isinstance(files, list) else []
+    metadata = data.get("metadata", {})
+    values["metadata"] = dict(metadata) if isinstance(metadata, dict) else {}
+    return InstallRecord(**values)
+
+
 def _utcnow() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -225,12 +266,10 @@ def read_record(app_id: str, install_root: Path | str) -> InstallRecord:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise AsksomeInstallError(f"Registro de instalación ilegible para {app_id}: {exc}") from exc
-    if not isinstance(data, dict):
-        raise AsksomeInstallError(f"Registro de instalación inválido para {app_id}")
     try:
-        return InstallRecord(**data)
+        return _record_from_mapping(data)
     except TypeError as exc:
-        raise AsksomeInstallError(f"Registro de instalación incompleto para {app_id}: {exc}") from exc
+        raise AsksomeInstallError(f"Registro de instalación inválido para {app_id}: {exc}") from exc
 
 
 def build_removeme(
@@ -272,8 +311,8 @@ def list_installed(install_root: Path | str) -> List[InstallRecord]:
         record_path = entry / RECORD_NAME
         if entry.is_dir() and record_path.is_file():
             try:
-                records.append(InstallRecord(**json.loads(record_path.read_text(encoding="utf-8"))))
-            except (OSError, json.JSONDecodeError, TypeError):
+                records.append(_record_from_mapping(json.loads(record_path.read_text(encoding="utf-8"))))
+            except (OSError, ValueError, TypeError):
                 continue
     return records
 
@@ -299,8 +338,8 @@ def uninstall_asksome(
     record_path = target / RECORD_NAME
     if record_path.is_file():
         try:
-            record = InstallRecord(**json.loads(record_path.read_text(encoding="utf-8")))
-        except (OSError, json.JSONDecodeError, TypeError):
+            record = _record_from_mapping(json.loads(record_path.read_text(encoding="utf-8")))
+        except (OSError, ValueError, TypeError):
             record = None
         if record:
             for shortcut in record.shortcuts:

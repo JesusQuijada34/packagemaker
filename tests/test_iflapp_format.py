@@ -200,6 +200,43 @@ class MalformedHeaderShapeTests(unittest.TestCase):
         self.assertEqual(header.manifest, [])
 
 
+class MalformedEncryptionParameterTests(unittest.TestCase):
+    """Parámetros de cifrado con tipos inesperados deben dar IflappError."""
+
+    def _mutate_payload(self, path: Path, **overrides) -> Path:
+        raw = bytearray(path.read_bytes())
+        header_len = struct.unpack("<I", raw[8:12])[0]
+        header = json.loads(bytes(raw[12 : 12 + header_len]).decode("utf-8"))
+        header["payload"].update(overrides)
+        blob = json.dumps(header, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        self.assertLessEqual(len(blob), header_len)
+        raw[12 : 12 + header_len] = blob + b" " * (header_len - len(blob))
+        path.write_bytes(bytes(raw))
+        return path
+
+    def test_non_text_crypto_parameters_are_reported(self):
+        cases = (
+            {"salt": 5},
+            {"nonce": 5},
+            {"salt": "no-es-base64"},
+            {"salt": None},
+        )
+        for overrides in cases:
+            with tempfile.TemporaryDirectory() as tmp:
+                path = _make_package(Path(tmp), password="secreto")
+                self._mutate_payload(path, **overrides)
+                with self.subTest(overrides=overrides):
+                    with self.assertRaises(iflapp_format.IflappError):
+                        iflapp_format.read_iflapp_payload(path, password="secreto")
+
+    def test_non_text_mac_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _make_package(Path(tmp), password="secreto")
+            self._mutate_payload(path, encryption="hmac-sha256-ctr", mac=5)
+            with self.assertRaises(iflapp_format.IflappSignatureError):
+                iflapp_format.read_iflapp_payload(path, password="secreto")
+
+
 class IflappReaderTests(unittest.TestCase):
     def test_reader_summary_and_export(self):
         with tempfile.TemporaryDirectory() as tmp:

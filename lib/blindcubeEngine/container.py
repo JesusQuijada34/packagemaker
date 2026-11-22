@@ -92,12 +92,14 @@ def _encrypt(data: bytes, password: Optional[str]) -> Tuple[bytes, Dict]:
 
 def _decrypt_parameters(params: Dict) -> Tuple[bytes, bytes]:
     """Decodifica ``salt``/``nonce`` de la cabecera con un error legible."""
+    salt_hex = params.get("salt")
+    nonce_hex = params.get("nonce")
+    if not isinstance(salt_hex, str) or not isinstance(nonce_hex, str):
+        raise BlindCubeError("Parámetros de cifrado incompletos o inválidos.")
     try:
-        salt = bytes.fromhex(params["salt"])
-        nonce = bytes.fromhex(params["nonce"])
-    except (KeyError, ValueError) as exc:
+        return bytes.fromhex(salt_hex), bytes.fromhex(nonce_hex)
+    except ValueError as exc:
         raise BlindCubeError("Parámetros de cifrado incompletos o inválidos.") from exc
-    return salt, nonce
 
 
 def _decrypt(data: bytes, password: Optional[str], params: Dict) -> bytes:
@@ -117,7 +119,9 @@ def _decrypt(data: bytes, password: Optional[str], params: Dict) -> bytes:
         except Exception as exc:
             raise BlindCubeError("Contraseña incorrecta o payload corrupto.") from exc
     if mode == "hmac-sha256-ctr":
-        expected = params.get("mac", "")
+        expected = params.get("mac")
+        if not isinstance(expected, str):
+            expected = ""
         actual = hmac.new(key, nonce + data, hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, actual):
             raise BlindCubeError("Contraseña incorrecta o payload corrupto.")

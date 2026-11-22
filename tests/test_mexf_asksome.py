@@ -678,6 +678,58 @@ def test_build_removeme_reports_corrupt_record(tmp_path):
         build_removeme("influent.demo", tmp_path / "installed")
 
 
+def test_read_record_rejects_non_text_required_fields(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, read_record
+
+    app_dir = tmp_path / "influent.demo"
+    app_dir.mkdir()
+    data = {
+        "app_id": 5,
+        "name": "Demo",
+        "version": "v1.0",
+        "install_dir": str(app_dir),
+        "artifact": "demo.asksome",
+        "artifact_sha256": "0" * 64,
+        "launcher": "launcher.py",
+    }
+    (app_dir / "install.json").write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(AsksomeInstallError):
+        read_record("influent.demo", tmp_path)
+
+
+def test_uninstall_tolerates_wrong_field_types_in_record(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import read_record, uninstall_asksome
+
+    install_root = tmp_path / "installed"
+    app_dir = install_root / "influent.demo"
+    app_dir.mkdir(parents=True)
+    (app_dir / "install.json").write_text(
+        json.dumps(
+            {
+                "app_id": "influent.demo",
+                "name": "Demo",
+                "version": "v1.0",
+                "install_dir": str(app_dir),
+                "artifact": "demo.asksome",
+                "artifact_sha256": "0" * 64,
+                "launcher": "launcher.py",
+                "shortcuts": 5,
+                "files": "launcher.py",
+                "metadata": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    record = read_record("influent.demo", install_root)
+    assert record.shortcuts == []
+    assert record.files == []
+    assert record.metadata == {}
+
+    assert uninstall_asksome("influent.demo", install_root) == [str(app_dir)]
+    assert not app_dir.exists()
+
+
 def test_legacy_mexf_with_wrong_section_types_is_normalized(tmp_path):
     from lib.mexf_shell import plan_from_document
 
