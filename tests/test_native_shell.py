@@ -5,6 +5,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -222,3 +223,63 @@ def test_info_cli_with_unknown_file_reports_error(tmp_path):
     assert result.returncode == 1
     assert "[ERROR]" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_shell_info_reports_unreadable_package_without_traceback(tmp_path, capsys):
+    from lib.cliHandler import NativeShellHelper
+
+    target = tmp_path / "sin-permiso.iflapp"
+    target.write_bytes(b"IFLAPP" + b"\x00" * 32)
+    with patch.object(
+        Path, "read_bytes", side_effect=PermissionError(13, "denegado", str(target))
+    ):
+        ok = NativeShellHelper.info({"path": str(target)})
+    captured = capsys.readouterr()
+    assert ok is False
+    assert "[ERROR]" in captured.out
+    assert "Traceback" not in captured.out
+
+
+def test_shell_info_json_keeps_stdout_clean_when_package_unreadable(tmp_path, capsys):
+    from lib.cliHandler import NativeShellHelper
+
+    target = tmp_path / "sin-permiso.iflapp"
+    target.write_bytes(b"IFLAPP" + b"\x00" * 32)
+    with patch.object(
+        Path, "read_bytes", side_effect=PermissionError(13, "denegado", str(target))
+    ):
+        ok = NativeShellHelper.info({"path": str(target), "json": True})
+    captured = capsys.readouterr()
+    assert ok is False
+    assert captured.out == ""
+    assert "[ERROR]" in captured.err
+
+
+def test_shell_info_reports_blocked_preview_directory(tmp_path, capsys):
+    from lib.cliHandler import NativeShellHelper
+
+    staging = _make_staging(tmp_path)
+    artifact = pack_asksome(
+        staging,
+        tmp_path / "a.asksome",
+        icon=b"\x89PNG\r\n\x1a\n" + b"0" * 16,
+    )
+    blocked = tmp_path / "blocked"
+    blocked.write_text("no es un directorio", encoding="utf-8")
+    ok = NativeShellHelper.info({"path": str(artifact), "preview": str(blocked)})
+    captured = capsys.readouterr()
+    assert ok is False
+    assert "No se pudo exportar la vista previa" in captured.out
+    assert "Traceback" not in captured.out
+
+
+def test_thumbnail_main_handles_unreadable_source(tmp_path):
+    from lib import native_shell
+
+    target = tmp_path / "sin-permiso.iflapp"
+    target.write_bytes(b"IFLAPP" + b"\x00" * 32)
+    with patch.object(
+        Path, "read_bytes", side_effect=PermissionError(13, "denegado", str(target))
+    ):
+        code = native_shell._thumbnail_main([str(target), str(tmp_path / "out.png"), "64"])
+    assert code == 1

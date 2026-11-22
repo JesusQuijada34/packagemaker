@@ -277,11 +277,14 @@ def _thumbnail_main(argv: List[str]) -> int:
         size = int(argv[2])
     except (IndexError, ValueError):
         size = 256
-    png = export_icon_preview(source, Path(destination).parent, size=size)
-    if not png:
+    try:
+        png = export_icon_preview(source, Path(destination).parent, size=size)
+        if not png:
+            return 1
+        if png != Path(destination):
+            Path(destination).write_bytes(png.read_bytes())
+    except (ValueError, OSError):
         return 1
-    if png != Path(destination):
-        Path(destination).write_bytes(png.read_bytes())
     return 0
 
 

@@ -947,7 +947,7 @@ class NativeShellHelper:
             return False
         try:
             info = native_shell.package_info(target)
-        except ValueError as exc:
+        except (ValueError, OSError) as exc:
             print(f"[ERROR] {exc}", file=errors)
             return False
 
@@ -968,9 +968,13 @@ class NativeShellHelper:
 
         preview_dir = data.get("preview")
         if preview_dir:
-            png = native_shell.export_icon_preview(target, preview_dir)
             # Igual que en --inspect: los avisos no deben romper --shell-info-json.
             stream = sys.stderr if data.get("json") else sys.stdout
+            try:
+                png = native_shell.export_icon_preview(target, preview_dir)
+            except (ValueError, OSError) as exc:
+                print(f"[ERROR] No se pudo exportar la vista previa: {exc}", file=stream)
+                return False
             if png:
                 print(f"[OK] Vista previa exportada: {png}", file=stream)
             else:
