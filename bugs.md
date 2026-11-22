@@ -1084,7 +1084,11 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
   sustituye separadores, espacios y `..`; se usa en el XML MIME, los
   `.desktop`, los `servicemenus` y `environment.d` de instalación y desinstalación.
   `_flat_value()` aplana los saltos de línea de los valores `.desktop` y de
-  `environment.d`. El identificador visible del plan no cambia.
+  `environment.d`. El identificador visible del plan no cambia. Efecto
+  secundario: un identificador que ya usaba espacios u otros caracteres no
+  seguros cambia de nombre de fichero, así que una desinstalación de la versión
+  anterior no retira esos ficheros previos (reinstalar la integración los deja
+  en su sitio).
 - **Pruebas:** `tests/test_mexf_shell.py::test_install_plan_keeps_identifier_from_escaping_base`,
   `::test_uninstall_plan_does_not_remove_files_outside_base`,
   `::test_desktop_entries_flatten_values_that_would_inject_keys` y
