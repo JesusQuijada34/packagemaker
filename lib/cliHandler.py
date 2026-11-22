@@ -106,6 +106,21 @@ def _validate_compiler_metadata(compiler, target_platform):
     )
 
 
+def _prepare_output_directory(output_path: Path) -> Path:
+    """Crea la carpeta de salida o aborta con un error legible.
+
+    Una ruta bajo un archivo, sin permisos o en una unidad inexistente lanzaba
+    ``FileNotFoundError``/``NotADirectoryError`` como traceback antes de
+    siquiera compilar.
+    """
+    try:
+        output_path.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(f"[ERROR] No se pudo preparar la carpeta de salida {output_path}: {exc}")
+        sys.exit(1)
+    return output_path
+
+
 _DETAILS_XML_PATH = _find_details_xml()
 with _DETAILS_XML_PATH.open("r", encoding="utf-8") as f:
     tree = ET.parse(f)
@@ -1512,7 +1527,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         from lib.platform_detect import compile_output_directory
 
         output_path = Path(compile_output_directory()).expanduser().resolve()
-        output_path.mkdir(parents=True, exist_ok=True)
+        _prepare_output_directory(output_path)
         
         # Detectar plataforma automáticamente según el sistema operativo
         target_platform = 'Windows' if sys.platform.startswith('win') else 'Linux'
@@ -1610,7 +1625,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             from lib.platform_detect import compile_output_directory
 
             output_path = Path(compile_output_directory()).expanduser().resolve()
-        output_path.mkdir(parents=True, exist_ok=True)
+        _prepare_output_directory(output_path)
 
         # Detectar plataforma automáticamente salvo que el llamador la fije.
         target_platform = kwargs.get('platform') or (

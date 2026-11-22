@@ -70,6 +70,8 @@ de auditoría.
 | R-9d4c2f18 | Bug — la versión canónica bloquea la compilación | Alta | Resuelto |
 | R-6c2a8f14 | Bug — `settings.json` no-objeto tumba el build | Alta | Resuelto |
 | R-8b3d1e57 | Bug — raíz de instalación `.asksome` inválida lanza traceback | Media | Resuelto |
+| R-2c7e9b41 | Bug — metadatos no canónicos matan la QThread del build sin aviso | Alta | Resuelto |
+| R-5b3d8f27 | Bug — carpeta de salida inaccesible lanza traceback al compilar | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -96,7 +98,10 @@ auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
 abortaba la compilación con `AttributeError`) y R-8b3d1e57 (una raíz de
 instalación `.asksome` que era un archivo o un destino bloqueado escapaba como
 `FileExistsError`/`NotADirectoryError`). Ambos quedaron corregidos en el commit
-`b656928`.
+`b656928`. El mismo día, el decimoctavo ciclo añadió R-2c7e9b41 (los metadatos
+no canónicos mataban la QThread del build sin emitir `error`) y R-5b3d8f27 (una
+carpeta de salida inaccesible lanzaba traceback en el CLI y en la GUI); ambos
+quedaron corregidos y probados en este ciclo.
 
 ---
 
@@ -1508,6 +1513,66 @@ instalación `.asksome` que era un archivo o un destino bloqueado escapaba como
 - **Commit:** `b656928`.
 - **Fecha de resolución:** 2026-11-22.
 
+## R-2c7e9b41 — Metadatos no canónicos matan la QThread del build sin aviso
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** el CLI valida la ley de nombres con
+  `_validate_compiler_metadata()` antes de compilar, pero la GUI no. En
+  `BuildThread.run()` se construye `FlangCompiler` y se llama a `run()`; cuando
+  `details.xml` traía un publisher con acentos (`Jesús`), un `app` con
+  caracteres no admitidos o una versión sin `X.x`,
+  `ProjectNameFormatter.format_package_folder()` lanzaba `ValueError` al crear
+  el nombre del paquete. La excepción escapaba de `QThread.run()`, que no
+  emite `error` al terminar por excepción: la interfaz quedaba en «compilando»
+  sin mensaje ni forma de reintentar. En el CLI el mismo proyecto sí mostraba
+  un error legible.
+- **Pasos para reproducir:** crear un proyecto con
+  `<publisher>Jesús</publisher>` en `details.xml`, abrirlo en la GUI y pulsar
+  Compilar.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (build inutilizable sin diagnóstico para proyectos con
+  metadatos no canónicos, incluido el caso de acentos de la mejora R-5d8e2a41).
+- **Solución aplicada:** `FlangCompiler._validate_metadata_naming()` valida
+  publisher/app/versión con la misma autoridad (`ProjectNameFormatter`) al
+  inicio de `run()` y convierte el `ValueError` en `last_error` con
+  `[ERROR]`, de modo que la GUI emite `error` y el CLI conserva su mensaje.
+  Además, `BuildThread.run()` envuelve la construcción y ejecución del
+  compilador en un `try/except` que emite `error`: una QThread nunca debe
+  morir en silencio ante una excepción imprevista.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::BuildThreadMetadataGuardTests`
+  (3 casos: error emitido por la QThread, `FlangCompiler.run()` sin excepción
+  y excepción inesperada convertida en `error`).
+- **Commit:** pendiente de registrar.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-5b3d8f27 — Carpeta de salida inaccesible lanza traceback al compilar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `--buildthis --output <ruta>` y el subcomando `compile`
+  hacían `output_path.mkdir(parents=True, exist_ok=True)` sin proteger
+  `OSError`. Una ruta bajo un archivo (`/tmp/blocker/out`), una unidad
+  inexistente o una carpeta sin permisos terminaba en
+  `FileNotFoundError`/`NotADirectoryError`/`PermissionError` con traceback
+  antes de compilar. En la GUI, `FlangCompiler.__init__` hacía el mismo
+  `mkdir` dentro de la QThread, con el mismo efecto de hilo muerto sin
+  `error`. `create_package()` repetía el patrón al crear la carpeta del
+  paquete.
+- **Pasos para reproducir:** crear un archivo normal `/tmp/blocker` y ejecutar
+  `--buildthis <proyecto> --output /tmp/blocker/out`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (error de uso, sin pérdida de datos).
+- **Solución aplicada:** `_prepare_output_directory()` en `cliHandler` crea la
+  carpeta o responde `[ERROR] No se pudo preparar la carpeta de salida …` con
+  código 1. `FlangCompiler` registra el fallo en `last_error` y
+  `output_path_ready`, y `run()` lo publica sin lanzar; `create_package()`
+  traduce el fallo de `mkdir` a un `False` con mensaje.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py::UnwritableOutputDirectoryTests`
+  (2 casos: CLI con código 1 y compilador que difiere el error a `run()`).
+- **Commit:** pendiente de registrar.
+- **Fecha de resolución:** 2026-11-22.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -1688,6 +1753,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
+- Verificación del ciclo de R-2c7e9b41 y R-5b3d8f27 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 834 pasan, 1
+  omitido, 55 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior, `--buildthis <proyecto> --output /tmp/blocker/out` (archivo normal
+  en el camino) termina en `FileNotFoundError`/`NotADirectoryError` con
+  traceback; ahora responde `[ERROR] No se pudo preparar la carpeta de salida
+  …` y código 1. Un proyecto con `<publisher>Jesús</publisher>` hacía que la
+  QThread del build muriera sin emitir `error`; ahora
+  `BuildThread.run()` emite `Metadatos de proyecto no válidos: Publisher
+  inválido…` y `FlangCompiler.run()` devuelve `None` sin excepción (3 de los 4
+  casos nuevos fallan con el código anterior, comprobado con `git stash` de
+  `BuildThread.py`).
 - Verificación del ciclo de R-6c2a8f14 y R-8b3d1e57 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 829 pasan, 1
   omitido, 55 subtests; `pyflakes` y `py_compile` limpios. El subtest de

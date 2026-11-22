@@ -15,6 +15,10 @@ Cubre defectos detectados en la auditoría de este ciclo:
   al JSON de stdout.
 - ``R-6e04c8ab``: el aviso de ``moonfix`` con ``details.xml`` corrupto usaba un
   símbolo no representable en consolas cp1252 y abortaba el comando.
+- ``R-2c7e9b41``: la QThread del build moría en silencio con metadatos no
+  canónicos (publisher con acentos, versión sin ``X.x``).
+- ``R-5b3d8f27``: una carpeta de salida inaccesible lanzaba traceback en el CLI
+  y en el compilador de la GUI.
 """
 
 import io
@@ -745,6 +749,133 @@ class MoonFixPreservesCanonicalTimestampTests(unittest.TestCase):
                 )
             parsed = ProjectNameFormatter.parse_project_folder(project.name)
             self.assertEqual(self._details_version(project), f"v1.0-{parsed['timestamp']}")
+
+
+class UnwritableOutputDirectoryTests(unittest.TestCase):
+    """Una carpeta de salida inaccesible debe informarse, nunca reventar."""
+
+    def test_buildthis_reports_uncreatable_output_without_traceback(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "influent.demo.v1.0.0-26.11-06.07-Danenone"
+            project.mkdir()
+            (project / "details.xml").write_text(DETAILS, encoding="utf-8")
+            blocker = Path(tmp) / "blocker"
+            blocker.write_text("archivo", encoding="utf-8")
+
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                with self.assertRaises(SystemExit) as ctx:
+                    handle_cli_action(
+                        "buildthis",
+                        {"path": str(project)},
+                        None,
+                        headless=True,
+                        output=str(blocker / "out"),
+                        sandbox=False,
+                    )
+
+            self.assertEqual(ctx.exception.code, 1)
+            self.assertIn("[ERROR] No se pudo preparar la carpeta de salida", buffer.getvalue())
+
+    def test_flangcompiler_defers_output_error_to_run(self):
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proyecto"
+            project.mkdir()
+            (project / "details.xml").write_text(DETAILS, encoding="utf-8")
+            (project / "demo.py").write_text("print(1)\n", encoding="utf-8")
+            blocker = Path(tmp) / "blocker"
+            blocker.write_text("archivo", encoding="utf-8")
+
+            compiler = FlangCompiler(project, blocker / "out", log_callback=lambda _msg: None)
+            self.assertFalse(compiler.output_path_ready)
+            self.assertIsNone(compiler.run())
+            self.assertIn("carpeta de salida", compiler.last_error)
+
+
+class BuildThreadMetadataGuardTests(unittest.TestCase):
+    """La GUI debe emitir ``error`` si los metadatos rompen la ley de nombres."""
+
+    def test_invalid_publisher_emits_error_instead_of_killing_the_thread(self):
+        from lib.blindcubeEngine.BuildThread import BuildThread
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proyecto"
+            project.mkdir()
+            (project / "details.xml").write_text(
+                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>Jesús</publisher>"),
+                encoding="utf-8",
+            )
+            (project / "demo.py").write_text("print(1)\n", encoding="utf-8")
+
+            thread = BuildThread(
+                empresa="Jesús",
+                nombre="demo",
+                version="1.0",
+                plataforma="Danenone",
+                custom_path=str(project),
+                base_dir=str(Path(tmp) / "out"),
+                preflight=False,
+            )
+            errors, finished = [], []
+            thread.error.connect(errors.append)
+            thread.finished.connect(finished.append)
+            thread.run()
+
+            self.assertEqual(finished, [])
+            self.assertTrue(errors, "la QThread debe emitir error y no morir en silencio")
+            self.assertIn("Metadatos de proyecto no válidos", errors[0])
+
+    def test_unexpected_compiler_exception_is_reported(self):
+        from lib.blindcubeEngine import BuildThread as build_module
+
+        class _ExplodingCompiler:
+            def __init__(self, *args, **kwargs):
+                self.procedure = []
+
+            def run(self, build_mode="portable"):
+                raise RuntimeError("boom")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proyecto"
+            project.mkdir()
+            (project / "details.xml").write_text(DETAILS, encoding="utf-8")
+
+            thread = build_module.BuildThread(
+                empresa="Influent",
+                nombre="demo",
+                version="1.0",
+                plataforma="Danenone",
+                custom_path=str(project),
+                base_dir=str(Path(tmp) / "out"),
+                preflight=False,
+            )
+            errors = []
+            thread.error.connect(errors.append)
+            with patch.object(build_module, "FlangCompiler", _ExplodingCompiler):
+                thread.run()
+
+            self.assertTrue(errors, "la QThread debe convertir la excepción en error")
+            self.assertIn("boom", errors[0])
+
+    def test_flangcompiler_run_reports_invalid_metadata_without_raising(self):
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proyecto"
+            project.mkdir()
+            (project / "details.xml").write_text(
+                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>Jesús</publisher>"),
+                encoding="utf-8",
+            )
+            (project / "demo.py").write_text("print(1)\n", encoding="utf-8")
+
+            compiler = FlangCompiler(project, Path(tmp) / "out", log_callback=lambda _msg: None)
+            self.assertIsNone(compiler.run())
+            self.assertIn("Metadatos de proyecto no válidos", compiler.last_error)
 
 
 if __name__ == "__main__":

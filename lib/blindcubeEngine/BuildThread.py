@@ -104,7 +104,18 @@ class FlangCompiler:
         # produce el artefacto final, para volcarlo al terminar la compilación.
         self.procedure: List[str] = []
 
-        self.output_path.mkdir(parents=True, exist_ok=True)
+        # La carpeta de salida puede ser inaccesible (ruta bajo un archivo,
+        # permisos, unidad inexistente). Se registra el fallo en vez de lanzarlo
+        # desde ``__init__``, que corre dentro de la QThread de la GUI.
+        self.output_path_ready = True
+        try:
+            self.output_path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            self.output_path_ready = False
+            self.last_error = (
+                f"No se pudo preparar la carpeta de salida {self.output_path}: {exc}"
+            )
+            self.log(f"[ERROR] {self.last_error}")
         self.log(f"[FlangCompiler IT] Inicializado en: {self.repo_path}")
         self.log(f"[FlangCompiler IT] Plataforma actual: {self.current_platform}")
         if self._sandbox:
@@ -522,7 +533,12 @@ class FlangCompiler:
             platform_suffix
         )
         package_path = self.output_path / package_name
-        package_path.mkdir(parents=True, exist_ok=True)
+        try:
+            package_path.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            self.last_error = f"No se pudo crear la carpeta del paquete {package_path}: {exc}"
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         self.log(f"[INFO] Creando paquete en: {package_path}")
         self._copy_package_files(package_path, target_platform)
         self._update_and_copy_details_xml(package_path, platform_suffix)
@@ -958,8 +974,35 @@ class FlangCompiler:
         )
         return False
 
+    def _validate_metadata_naming(self) -> bool:
+        """Comprueba la ley de nombres antes de tocar el compilador.
+
+        El CLI valida los metadatos de forma explícita, pero la GUI no: un
+        publisher con acentos o una versión sin ``X.x`` reventaban al construir
+        el nombre del paquete dentro de la QThread, que moría sin emitir
+        ``error`` y dejaba la interfaz en «compilando».
+        """
+        platform_suffix = "Knosthalij" if self.current_platform == "Windows" else "Danenone"
+        try:
+            ProjectNameFormatter.format_package_folder(
+                self.metadata.get("publisher", ""),
+                self.metadata.get("app", ""),
+                self.metadata.get("version", ""),
+                platform_suffix,
+            )
+        except ValueError as exc:
+            self.last_error = f"Metadatos de proyecto no válidos: {exc}"
+            self.log(f"[ERROR] {self.last_error}")
+            return False
+        return True
+
     def run(self, build_mode="portable") -> Optional[Path]:
+        if not self.output_path_ready:
+            self.log(f"[ERROR] {self.last_error}")
+            return None
         if not self.parse_details_xml():
+            return None
+        if not self._validate_metadata_naming():
             return None
         if not self.find_scripts():
             self.log("[WARN] No scripts found")
@@ -1137,7 +1180,13 @@ class BuildThread(QThread):
             build_dropper=self.build_dropper,
             hardening=self.hardening,
         )
-        result = compiler.run(build_mode=self.build_mode)
+        # Una QThread no debe morir en silencio: sin este límite, cualquier
+        # excepción no prevista dejaba la GUI en «compilando» sin mensaje.
+        try:
+            result = compiler.run(build_mode=self.build_mode)
+        except Exception as exc:  # noqa: BLE001 - se informa al usuario
+            self.error.emit(f"Error inesperado durante la compilación: {exc}")
+            return
         if result:
             summary = f"Paquete construido con exito: {result.name}"
             if compiler.procedure:
