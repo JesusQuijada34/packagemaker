@@ -74,6 +74,7 @@ de auditoría.
 | R-5b3d8f27 | Bug — carpeta de salida inaccesible lanza traceback al compilar | Media | Resuelto |
 | R-7f2b9c63 | Bug — `.run` con `.iflapp` corrupto lanza traceback | Media | Resuelto |
 | R-7c9e2a45 | Bug — `editor_config.json` con forma no válida rompe el arranque | Media | Resuelto |
+| R-4e8b2d17 | Bug — `--shell-info` lanza traceback con paquete ilegible o vista previa bloqueada | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -108,6 +109,12 @@ R-7c9e2a45: un `data/pmCodeEditor/editor_config.json` con forma no válida (no
 objeto, o `default_interpreter` que no es texto) rompía el arranque del panel y
 del editor. Queda corregido y probado; no hay bugs abiertos, solo las mejoras y
 los cambios de engine pendientes de aprobación en `CONFIRM.MD`.
+
+El vigésimo primer ciclo añadió R-4e8b2d17: `--shell-info` solo traducía
+`ValueError`, así que un paquete sin permiso de lectura escapaba como
+`PermissionError` con traceback; `--shell-preview` hacía lo propio con un
+destino ocupado por un archivo (`FileExistsError`). Queda corregido y probado en
+el commit `edb049f`; la cola sigue sin bugs abiertos.
 
 ---
 
@@ -1648,6 +1655,44 @@ los cambios de engine pendientes de aprobación en `CONFIRM.MD`.
 
 ---
 
+## R-4e8b2d17 — `--shell-info` lanzaba traceback con un paquete ilegible o una vista previa bloqueada
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `NativeShellHelper.info()` solo traducía `ValueError`, pero
+  `native_shell.package_info()` lee el archivo con `Path.read_bytes()`. Un
+  paquete sin permiso de lectura escapaba como `PermissionError` con traceback.
+  Del mismo modo, `export_icon_preview()` crea el directorio de destino con
+  `mkdir()` fuera del `try`, así que `--shell-preview` con una ruta ocupada por
+  un archivo normal (o sin permiso de escritura) terminaba en
+  `FileExistsError`/`PermissionError`. El propio
+  `python -m lib.native_shell --info` ya trataba `(ValueError, OSError)` como
+  error esperado, de modo que el CLI era inconsistente con su contrato.
+- **Pasos para reproducir:** `chmod 000 paquete.iflapp && python packagemaker.py
+  --shell-info paquete.iflapp`; o `python packagemaker.py --shell-info
+  paquete.asksome --shell-preview /ruta/a/archivo_normal`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el comando termina en traceback, pero no hay pérdida de
+  datos ni corrupción).
+- **Solución aplicada:** `NativeShellHelper.info()` captura `(ValueError,
+  OSError)` al leer los metadatos y al exportar la vista previa, e informa
+  `[ERROR] …` / `[ERROR] No se pudo exportar la vista previa: …` con código 1.
+  En modo `--shell-info-json` el error va a stderr y stdout queda vacío, así que
+  el documento JSON sigue siendo parseable. `native_shell._thumbnail_main()`
+  también traduce `(ValueError, OSError)` a código 1 para que el generador de
+  miniaturas del escritorio no muestre traceback.
+- **Pruebas:** `tests/test_native_shell.py` —
+  `test_shell_info_reports_unreadable_package_without_traceback`,
+  `test_shell_info_json_keeps_stdout_clean_when_package_unreadable`,
+  `test_shell_info_reports_blocked_preview_directory` y
+  `test_thumbnail_main_handles_unreadable_source`. Las cuatro fallan con el
+  código anterior (comprobado con `git stash` de `lib/cliHandler.py` y
+  `lib/native_shell.py`).
+- **Commit:** `edb049f`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
@@ -1988,6 +2033,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `--ide-compile /tmp/no-existe` responde `[ERROR]` y código 1 (antes
   traceback); `debug_script()` sobre un guion con `1/0` devuelve
   `DebugOutcome(error=…)` (antes `ZeroDivisionError`).
+- Verificación del ciclo de R-4e8b2d17 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 846 pasan, 1
+  omitido, 55 subtests; `pyflakes` y `py_compile` limpios; las 4 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/cliHandler.py` y `lib/native_shell.py`). `--shell-info` sobre un
+  `.iflapp` con permisos `000` responde `[ERROR] … Permission denied` y código
+  1 (antes `PermissionError` con traceback); `--shell-info-json` deja stdout
+  vacío y el error en stderr; `--shell-preview` sobre un archivo normal responde
+  `[ERROR] No se pudo exportar la vista previa: … File exists` sin traceback.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

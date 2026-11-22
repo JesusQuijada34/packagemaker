@@ -1,7 +1,7 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-22 (vigésimo ciclo, R-7c9e2a45)
-- **Último commit de `CONFIRM.MD` procesado:** `a593c75` (2026-11-22), autor `openhands <openhands@all-hands.dev>` (verificado con la API de GitHub); sin casillas marcadas, así que no hay respuestas válidas que aplicar. Solo JesusQuijada34 puede aprobar; el silencio no es un sí.
+- **Última revisión:** 2026-11-22 (vigésimo primer ciclo, R-4e8b2d17)
+- **Último commit de `CONFIRM.MD` procesado:** `ee13356` (2026-11-22), autor `openhands <openhands@all-hands.dev>` (verificado con la API de GitHub); sin casillas marcadas, así que no hay respuestas válidas que aplicar. Solo JesusQuijada34 puede aprobar; el silencio no es un sí.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
 - **Estado:** 10 preguntas pendientes, 0 aprobadas, 0 rechazadas.
 

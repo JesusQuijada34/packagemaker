@@ -2,6 +2,29 @@
 
 ## 2026-11-22
 
+### Corregido — `--shell-info` y la vista previa lanzaban traceback con rutas inaccesibles
+
+Hallazgo del vigésimo primer ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `edb049f`.
+
+- **R-4e8b2d17 — `--shell-info` y `--shell-preview` terminaban en traceback con un paquete ilegible o un destino bloqueado:** `NativeShellHelper.info()` solo capturaba `ValueError`, pero `native_shell.package_info()` lee el archivo con `Path.read_bytes()`, de modo que un paquete sin permiso de lectura escapaba como `PermissionError`. Además, `export_icon_preview()` crea el directorio de destino con `mkdir()` fuera del `try`, así que `--shell-preview` sobre una ruta ocupada por un archivo normal terminaba en `FileExistsError` (y sobre una ruta sin permiso, en `PermissionError`). El propio `python -m lib.native_shell --info` ya trataba `(ValueError, OSError)` como error esperado. Ahora `NativeShellHelper.info()` captura `(ValueError, OSError)` en ambos pasos y responde `[ERROR] …` / `[ERROR] No se pudo exportar la vista previa: …` con código 1; en modo `--shell-info-json` el error va a stderr y stdout queda vacío. `native_shell._thumbnail_main()` también traduce esos fallos a código 1 para que el generador de miniaturas del escritorio no muestre traceback.
+
+### Verificación — vigésimo primer ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 846 pasan, 1 omitido, 55 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las 4 pruebas nuevas de `tests/test_native_shell.py` fallan con el código anterior (comprobado con `git stash` de `lib/cliHandler.py` y `lib/native_shell.py`) y pasan con `edb049f`.
+- Reproducción real: `--shell-info` sobre un archivo `.iflapp` con permisos `000` respondía con `PermissionError` y traceback; ahora imprime `[ERROR] [Errno 13] Permission denied: …` y devuelve 1. `--shell-info <asksome> --shell-preview <archivo normal>` respondía `FileExistsError`; ahora imprime `[ERROR] No se pudo exportar la vista previa: [Errno 17] File exists: …` sin traceback. `--shell-info-json` mantiene stdout vacío y el error en stderr.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `ee13356`, autor `openhands <openhands@all-hands.dev>`): `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo el del propietario del 2026-11-22, de modo que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
+## 2026-11-22
+
 ### Corregido — `editor_config.json` con forma no válida rompía el arranque
 
 Hallazgo del vigésimo ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `6f45dd0`.
