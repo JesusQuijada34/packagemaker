@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-22
+
+### Corregido — accesos directos `.asksome` y robustez de `.mexf` legacy
+
+Hallazgos del undécimo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `6fa3c51`.
+
+- **R-7e3a9c14 — Los accesos directos `.desktop` no citaban rutas con espacios:** `_write_linux_desktop()` escribía `Exec={sys.executable} {launcher}` sin comillas. Si la carpeta de instalación (`--install-root`) o el home contienen espacios (`/home/ana/My Apps/...`), el lanzador parte la ruta en varios argumentos e intenta ejecutar una ruta truncada, así que la aplicación instalada no abre desde el menú. `create_desktop_file()` de `lib/linux_icon_handler.py` tenía el mismo defecto. Además, `Name` y `Comment` copiaban el nombre sin aplanar, de modo que un `name` con saltos de línea inyectaba claves nuevas en el `.desktop`. Ahora `_desktop_exec_quote()` cita cada argumento del campo `Exec` y escapa `\`, `"`, backtick, `$` y los códigos de campo (`%` → `%%`); `_desktop_text()` aplana nombre y comentario.
+- **R-4b8d2f61 — Un `install.json` corrupto rompía `--build-removeme`:** `read_record()` hacía `json.loads()` y `InstallRecord(**data)` sin validar. Un registro truncado lanzaba `JSONDecodeError`; un documento que no era objeto o al que le faltaban campos lanzaba `TypeError`. Como el CLI solo captura `AsksomeInstallError`, ambos casos terminaban en un traceback. Ahora `read_record()` valida la lectura y la forma del documento y traduce los fallos a `AsksomeInstallError` legible, que el CLI muestra como `[ERROR]` con código 1.
+- **R-9c5f1e28 — Un `.mexf` legacy con tipos inesperados rompía `--shell-plan`:** los documentos JSON legacy se convertían sin validar sus tipos. `shell_commands` como entero lanzaba `TypeError` al iterarlo; una sección `extensions`/`context_menus` no iterable, `environments` que no fuera objeto o `shortcuts` que no fuera diccionario rompían igualmente el plan con `TypeError`/`AttributeError`/`ValueError`. Ahora `_legacy_to_v1()` normaliza las secciones a lista o diccionario y convierte los metadatos a texto, y `plan_from_document()` usa `_as_list()`/`_as_dict()` para no confiar en el tipo de ninguna sección.
+
+### Verificación — undécimo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 547 pasan, 1 omitido, 39 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las 6 pruebas nuevas fallan con el código anterior (comprobado con `git stash` de los archivos corregidos).
+- Instalación real de un `.asksome` en `/tmp/pm e2e/My Installed Apps` con accesos en `My Shortcuts`: el `.desktop` generado contiene `Exec="…" "…"` citado (antes la ruta con espacios quedaba sin comillas).
+- `--build-removeme` sobre un `install.json` corrupto termina con `[ERROR]` y código 1, sin traceback.
+- `--shell-plan` sobre un `.mexf` legacy con `extensions`, `shell_commands` y `context_menus` de tipo inesperado funciona sin traceback.
+
 ## 2026-11-21
 
 ### Corregido — robustez de arranque y contenedores `.asksome`

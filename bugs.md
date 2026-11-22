@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-21
+Última actualización: 2026-11-22
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -46,6 +46,9 @@ de auditoría.
 | R-1f4a7c92 | Bug — `pm.data`/`settings.json` con forma no-objeto tumban el arranque | Alta | Resuelto |
 | R-2b6d8e13 | Bug — cabeceras `.asksome` malformadas rompen `--shell-info` | Media | Resuelto |
 | R-3c9e1a57 | Bug — extracción `.asksome` acepta rutas de unidad y errores crudos | Media | Resuelto |
+| R-7e3a9c14 | Bug — accesos `.desktop` con rutas con espacios | Alta | Resuelto |
+| R-4b8d2f61 | Bug — `install.json` corrupto rompe `--build-removeme` | Media | Resuelto |
+| R-9c5f1e28 | Bug — `.mexf` legacy con tipos inesperados rompe `--shell-plan` | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -57,7 +60,7 @@ interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
 R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
-R-1f4a7c92, R-2b6d8e13 y R-3c9e1a57)
+R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-7e3a9c14, R-4b8d2f61 y R-9c5f1e28)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -858,6 +861,78 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-7e3a9c14 — Los accesos directos `.desktop` no citaban rutas con espacios
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `_write_linux_desktop()` escribía
+  `Exec={sys.executable} {launcher}` sin comillas. Si la carpeta de instalación
+  (`--install-root`) o el home contienen espacios (`/home/ana/My Apps/...`), el
+  lanzador parte la ruta en varios argumentos e intenta ejecutar una ruta
+  truncada, así que la aplicación instalada no abre desde el menú.
+  `create_desktop_file()` de `lib/linux_icon_handler.py` tenía el mismo defecto.
+  Además, `Name` y `Comment` copiaban el nombre sin aplanar, de modo que un
+  `name` con saltos de línea inyectaba claves nuevas en el `.desktop`.
+- **Pasos para reproducir:** instalar un `.asksome` con
+  `--install-root "/tmp/Mis Apps"` y revisar la línea `Exec` del `.desktop`
+  generado (sin comillas) o abrir el acceso desde el menú (no arranca).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (el acceso directo queda inservible en rutas con espacios).
+- **Solución aplicada:** `_desktop_exec_quote()` cita cada argumento del campo
+  `Exec` y escapa `\`, `"`, backtick, `$` y los códigos de campo (`%` → `%%`);
+  `_desktop_text()` aplana nombre y comentario. `linux_icon_handler` usa el
+  mismo citado.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_linux_desktop_quotes_exec_arguments_with_spaces`,
+  `::test_linux_desktop_name_cannot_inject_new_keys` y
+  `::test_desktop_exec_quote_escapes_field_codes`.
+- **Commit:** `6fa3c51`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-4b8d2f61 — Un `install.json` corrupto rompía `--build-removeme`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `read_record()` hacía `json.loads()` y
+  `InstallRecord(**data)` sin validar. Un `install.json` truncado lanzaba
+  `JSONDecodeError`; un documento que no era objeto o al que le faltaban campos
+  lanzaba `TypeError`. `--build-removeme` solo captura `AsksomeInstallError`,
+  así que ambos casos terminaban en un traceback.
+- **Pasos para reproducir:** escribir `{bad` en
+  `<install_root>/<app_id>/install.json` y ejecutar
+  `--build-removeme <app_id> --install-root <install_root>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (robustez del CLI; no afecta a instalaciones sanas).
+- **Solución aplicada:** `read_record()` valida la lectura y la forma del
+  documento y traduce los fallos a `AsksomeInstallError` con un mensaje
+  legible, que el CLI ya muestra como `[ERROR]` con código 1.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_read_record_rejects_corrupt_and_incomplete`
+  y `::test_build_removeme_reports_corrupt_record`.
+- **Commit:** `6fa3c51`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-9c5f1e28 — Un `.mexf` legacy con tipos inesperados rompía `--shell-plan`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** los documentos JSON legacy se convertían sin validar sus
+  tipos. `shell_commands` como entero lanzaba `TypeError` al iterarlo; una
+  sección `extensions`/`context_menus` no iterable, `environments` que no fuera
+  objeto o `shortcuts` que no fuera diccionario rompían igualmente
+  `--shell-plan` con `TypeError`/`AttributeError`/`ValueError`.
+- **Pasos para reproducir:** crear un `.mexf` con
+  `{"extensions": 3, "shell_commands": 5, "context_menus": "x"}` y ejecutar
+  `--shell-plan <archivo>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (robustez del CLI ante documentos antiguos dañados).
+- **Solución aplicada:** `_legacy_to_v1()` normaliza las secciones a lista o
+  diccionario y convierte los metadatos a texto; `plan_from_document()` usa
+  `_as_list()`/`_as_dict()` para no confiar en el tipo de ninguna sección.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_legacy_mexf_with_wrong_section_types_is_normalized`.
+- **Commit:** `6fa3c51`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 ### R-d23039c0 — Telemetría centralizada de errores
@@ -1022,8 +1097,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
   solo añadieron correcciones de auditoría interna (commits `5aa823b`,
   `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4,
-  `325c0e9`, `850de5c`, `f60f9ac` y `543e173`), no reportes de usuario; el
+  `325c0e9`, `850de5c`, `f60f9ac`, `543e173` y `6fa3c51`), no reportes de usuario; el
   contador de 7 días no se reinicia.
+- Verificación del ciclo de R-7e3a9c14, R-4b8d2f61 y R-9c5f1e28 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 547 pasan, 1
+  omitido, 39 subtests; `pyflakes` y `py_compile` limpios; los 6 casos nuevos
+  fallan con el código anterior. Instalación real de un `.asksome` en
+  `/tmp/pm e2e/My Installed Apps` con accesos en `My Shortcuts` genera un
+  `.desktop` con `Exec="…" "…"` citado (antes la ruta con espacios quedaba sin
+  comillas); `--build-removeme` sobre un `install.json` corrupto termina con
+  `[ERROR]` y código 1 sin traceback; `--shell-plan` sobre un `.mexf` legacy
+  con `extensions`/`shell_commands`/`context_menus` de tipo inesperado
+  funciona sin traceback.
 - Verificación del ciclo de R-3a7c5e18, R-9f2b64d1 y R-6e04c8ab (2026-11-21):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 474 pasan, 2
   omitidos; `pyflakes` y `py_compile` limpios; las cuatro acciones JSON
