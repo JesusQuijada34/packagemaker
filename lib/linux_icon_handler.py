@@ -103,6 +103,14 @@ def install_icon_to_system(ico_path: str, app_name: str, size: int = 64) -> bool
     return False
 
 
+def _desktop_exec_quote(value: str) -> str:
+    """Cita un argumento del campo ``Exec`` (rutas con espacios y ``%``)."""
+    text = str(value)
+    for char in ("\\", '"', "`", "$"):
+        text = text.replace(char, "\\" + char)
+    return f'"{text.replace("%", "%%")}"'
+
+
 def create_desktop_file(project_path: str, app_name: str, display_name: str, executable_path: str) -> Optional[str]:
     """
     Crea un archivo .desktop para que la aplicación aparezca en el menú de aplicaciones.
@@ -117,7 +125,7 @@ def create_desktop_file(project_path: str, app_name: str, display_name: str, exe
         content = f"""[Desktop Entry]
 Type=Application
 Name={display_name}
-Exec={executable_path}
+Exec={_desktop_exec_quote(executable_path)}
 Icon={app_name}
 Categories=Development;Utility;
 Comment=Application created with PackageMaker

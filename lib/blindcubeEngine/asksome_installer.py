@@ -88,6 +88,25 @@ def default_shortcut_dirs() -> List[Path]:
     return [home / ".local" / "share" / "applications"]
 
 
+def _desktop_exec_quote(value: object) -> str:
+    """Cita un argumento del campo ``Exec`` según la especificación Desktop Entry.
+
+    Sin las comillas, una ruta con espacios se parte en varios argumentos y el
+    lanzador intenta ejecutar la ruta truncada. Los caracteres reservados dentro
+    de comillas y los códigos de campo (``%``) también se escapan.
+    """
+    text = str(value)
+    for char in ("\\", '"', "`", "$"):
+        text = text.replace(char, "\\" + char)
+    text = text.replace("%", "%%")
+    return f'"{text}"'
+
+
+def _desktop_text(value: object) -> str:
+    """Aplana un valor de texto para que no inyecte claves nuevas en el .desktop."""
+    return " ".join(str(value).split())
+
+
 def _write_linux_desktop(target: Path, record: InstallRecord) -> Optional[Path]:
     try:
         target.mkdir(parents=True, exist_ok=True)
@@ -98,9 +117,9 @@ def _write_linux_desktop(target: Path, record: InstallRecord) -> Optional[Path]:
     body = (
         "[Desktop Entry]\n"
         "Type=Application\n"
-        f"Name={record.name}\n"
-        f"Comment=Instalado por PackageMaker ({record.version})\n"
-        f"Exec={sys.executable} {launcher}\n"
+        f"Name={_desktop_text(record.name)}\n"
+        f"Comment={_desktop_text(f'Instalado por PackageMaker ({record.version})')}\n"
+        f"Exec={_desktop_exec_quote(sys.executable)} {_desktop_exec_quote(launcher)}\n"
         "Terminal=false\n"
     )
     entry.write_text(body, encoding="utf-8")
@@ -202,8 +221,16 @@ def read_record(app_id: str, install_root: Path | str) -> InstallRecord:
     path = Path(install_root).resolve() / app_id / RECORD_NAME
     if not path.is_file():
         raise AsksomeInstallError(f"No hay registro de instalación para {app_id}")
-    data = json.loads(path.read_text(encoding="utf-8"))
-    return InstallRecord(**data)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise AsksomeInstallError(f"Registro de instalación ilegible para {app_id}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise AsksomeInstallError(f"Registro de instalación inválido para {app_id}")
+    try:
+        return InstallRecord(**data)
+    except TypeError as exc:
+        raise AsksomeInstallError(f"Registro de instalación incompleto para {app_id}: {exc}") from exc
 
 
 def build_removeme(
