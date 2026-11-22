@@ -154,6 +154,8 @@ class FlangCompiler:
             self.last_error = f"No se pudo leer config/settings.json: {error}"
             self.log(f"[ERROR] {self.last_error}")
             return []
+        if not isinstance(settings, dict):
+            return None
         build = settings.get("build")
         if not isinstance(build, dict) or "scripts" not in build:
             return None

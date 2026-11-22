@@ -237,13 +237,28 @@ def install_asksome(
     app_id = _validated_app_id(_safe_app_id(metadata))
 
     root = Path(install_root).resolve()
-    root.mkdir(parents=True, exist_ok=True)
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo preparar la raíz de instalación {root}: {exc}"
+        ) from exc
     target = root / app_id
-    if target.exists():
-        shutil.rmtree(target)
-    target.mkdir(parents=True)
+    try:
+        if target.exists():
+            shutil.rmtree(target)
+        target.mkdir(parents=True)
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo preparar el destino de instalación {target}: {exc}"
+        ) from exc
 
-    extracted = extract_asksome(source, target, password=password)
+    try:
+        extracted = extract_asksome(source, target, password=password)
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo extraer el artefacto en {target}: {exc}"
+        ) from exc
     files = sorted(str(Path(item).relative_to(target)) for item in extracted)
 
     record = InstallRecord(

@@ -401,6 +401,22 @@ def test_read_record_and_build_removeme_reject_unsafe_app_id(tmp_path):
         build_removeme("../outside", install_root)
 
 
+def test_install_reports_unusable_install_root(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, install_asksome
+
+    artifact, install_root, _shortcuts = _install_fixture(tmp_path)
+
+    blocked_root = tmp_path / "blocked-root"
+    blocked_root.write_text("no es un directorio", encoding="utf-8")
+    with pytest.raises(AsksomeInstallError):
+        install_asksome(artifact, blocked_root, create_desktop_shortcuts=False)
+
+    install_root.mkdir()
+    (install_root / "influent.demo").write_text("bloquea el destino", encoding="utf-8")
+    with pytest.raises(AsksomeInstallError):
+        install_asksome(artifact, install_root, create_desktop_shortcuts=False)
+
+
 def test_install_rejects_dot_app_id_without_deleting_parent(tmp_path):
     """Un ``.asksome`` con id ``..`` no puede borrar el padre de la raíz."""
     from lib.blindcubeEngine.asksome_installer import install_asksome

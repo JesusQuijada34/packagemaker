@@ -41,6 +41,21 @@ class ExplicitBuildScriptsTests(unittest.TestCase):
             self.assertFalse(compiler.find_scripts())
             self.assertIn("no seguro", compiler.last_error)
 
+    def test_non_object_settings_fall_back_to_script_discovery(self):
+        for settings in ([], "texto", 5, {"build": "texto"}):
+            with self.subTest(settings=settings), tempfile.TemporaryDirectory() as temp_dir:
+                root = Path(temp_dir)
+                project = self._project(root, settings)
+                compiler = FlangCompiler(project, root / "output")
+
+                self.assertIsNone(compiler.scripts_to_compile)
+                self.assertTrue(compiler.parse_details_xml())
+                self.assertTrue(compiler.find_scripts())
+                self.assertEqual(
+                    sorted(script["name"] for script in compiler.scripts),
+                    ["foundstore", "test_foundstore_ui"],
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
