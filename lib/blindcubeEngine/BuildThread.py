@@ -1168,21 +1168,21 @@ class BuildThread(QThread):
                 )
                 return
 
-        if self.env_payload:
-            self._persist_env_payload(repo_path)
-
-        compiler = FlangCompiler(
-            repo_path,
-            Path(self.base_dir or Path.cwd()),
-            log_callback=self.handle_compiler_log,
-            compiler_name=self.compiler_name,
-            sandbox=self.sandbox,
-            build_dropper=self.build_dropper,
-            hardening=self.hardening,
-        )
         # Una QThread no debe morir en silencio: sin este límite, cualquier
         # excepción no prevista dejaba la GUI en «compilando» sin mensaje.
         try:
+            if self.env_payload:
+                self._persist_env_payload(repo_path)
+
+            compiler = FlangCompiler(
+                repo_path,
+                Path(self.base_dir or Path.cwd()),
+                log_callback=self.handle_compiler_log,
+                compiler_name=self.compiler_name,
+                sandbox=self.sandbox,
+                build_dropper=self.build_dropper,
+                hardening=self.hardening,
+            )
             result = compiler.run(build_mode=self.build_mode)
         except Exception as exc:  # noqa: BLE001 - se informa al usuario
             self.error.emit(f"Error inesperado durante la compilación: {exc}")
@@ -1206,7 +1206,11 @@ class BuildThread(QThread):
         el paquete sin recompilar el guion.
         """
         settings_path = Path(repo_path) / "config" / "settings.json"
-        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            settings_path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            self.progress.emit(f"[WARN] No se pudo guardar la inyección .env: {error}")
+            return
         try:
             settings = (
                 json.loads(settings_path.read_text(encoding="utf-8"))

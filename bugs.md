@@ -1541,8 +1541,9 @@ quedaron corregidos y probados en este ciclo.
   compilador en un `try/except` que emite `error`: una QThread nunca debe
   morir en silencio ante una excepción imprevista.
 - **Pruebas:** `tests/test_maintenance_cli_regressions.py::BuildThreadMetadataGuardTests`
-  (3 casos: error emitido por la QThread, `FlangCompiler.run()` sin excepción
-  y excepción inesperada convertida en `error`).
+  (4 casos: error emitido por la QThread, `FlangCompiler.run()` sin excepción,
+  excepción inesperada convertida en `error` y payload `.env` con `config/`
+  bloqueado).
 - **Commit:** `3920254`.
 - **Fecha de resolución:** 2026-11-22.
 
@@ -1569,7 +1570,8 @@ quedaron corregidos y probados en este ciclo.
   `output_path_ready`, y `run()` lo publica sin lanzar; `create_package()`
   traduce el fallo de `mkdir` a un `False` con mensaje.
 - **Pruebas:** `tests/test_maintenance_cli_regressions.py::UnwritableOutputDirectoryTests`
-  (2 casos: CLI con código 1 y compilador que difiere el error a `run()`).
+  (2 casos: CLI con código 1 y compilador que difiere el error a `run()`) y
+  `BuildThreadMetadataGuardTests` (guardado de `.env` sin excepción).
 - **Commit:** `3920254`.
 - **Fecha de resolución:** 2026-11-22.
 
@@ -1754,7 +1756,7 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
 - Verificación del ciclo de R-2c7e9b41 y R-5b3d8f27 (2026-11-22):
-  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 834 pasan, 1
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 835 pasan, 1
   omitido, 55 subtests; `pyflakes` y `py_compile` limpios. Con el código
   anterior, `--buildthis <proyecto> --output /tmp/blocker/out` (archivo normal
   en el camino) termina en `FileNotFoundError`/`NotADirectoryError` con
@@ -1762,7 +1764,7 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   …` y código 1. Un proyecto con `<publisher>Jesús</publisher>` hacía que la
   QThread del build muriera sin emitir `error`; ahora
   `BuildThread.run()` emite `Metadatos de proyecto no válidos: Publisher
-  inválido…` y `FlangCompiler.run()` devuelve `None` sin excepción (3 de los 4
+  inválido…` y `FlangCompiler.run()` devuelve `None` sin excepción (3 de los 6
   casos nuevos fallan con el código anterior, comprobado con `git stash` de
   `BuildThread.py`).
 - Verificación del ciclo de R-6c2a8f14 y R-8b3d1e57 (2026-11-22):

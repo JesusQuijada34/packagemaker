@@ -7,14 +7,14 @@
 Hallazgos del decimoctavo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `3920254`.
 
 - **R-2c7e9b41 — Metadatos no canónicos mataban la QThread del build sin aviso:** el CLI valida la ley de nombres con `_validate_compiler_metadata()`, pero la GUI no. Un `details.xml` con `<publisher>Jesús</publisher>`, un `app` con caracteres no admitidos o una versión sin `X.x` hacía que `ProjectNameFormatter.format_package_folder()` lanzara `ValueError` dentro de `QThread.run()`. La excepción no emitía `error`, así que la interfaz quedaba en «compilando» sin mensaje. Ahora `FlangCompiler._validate_metadata_naming()` valida publisher/app/versión al inicio de `run()` y convierte el fallo en `last_error` con `[ERROR]`; además, `BuildThread.run()` envuelve la construcción y ejecución del compilador en un `try/except` que emite `error`, de modo que ninguna excepción imprevista deja la GUI colgada.
-- **R-5b3d8f27 — Una carpeta de salida inaccesible lanzaba traceback:** `--buildthis --output`, el subcomando `compile`, `FlangCompiler.__init__` y `create_package()` llamaban a `mkdir()` sin proteger `OSError`. Una ruta bajo un archivo, sin permisos o en una unidad inexistente terminaba en `FileNotFoundError`/`NotADirectoryError`/`PermissionError` con traceback (y en la GUI, con el hilo muerto sin `error`). Ahora `_prepare_output_directory()` en el CLI responde `[ERROR] No se pudo preparar la carpeta de salida …` con código 1, y el compilador registra el fallo en `last_error`/`output_path_ready` para publicarlo sin lanzar.
+- **R-5b3d8f27 — Una carpeta de salida inaccesible lanzaba traceback:** `--buildthis --output`, el subcomando `compile`, `FlangCompiler.__init__` y `create_package()` llamaban a `mkdir()` sin proteger `OSError`. Una ruta bajo un archivo, sin permisos o en una unidad inexistente terminaba en `FileNotFoundError`/`NotADirectoryError`/`PermissionError` con traceback (y en la GUI, con el hilo muerto sin `error`). Ahora `_prepare_output_directory()` en el CLI responde `[ERROR] No se pudo preparar la carpeta de salida …` con código 1, y el compilador registra el fallo en `last_error`/`output_path_ready` para publicarlo sin lanzar. La persistencia del payload `.env` también avisa si `config/` está bloqueado en vez de lanzar desde la QThread.
 
 ### Verificación — decimoctavo ciclo
 
-- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 834 pasan, 1 omitido, 55 subtests.
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 835 pasan, 1 omitido, 55 subtests.
 - `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
 - Reproducción real: `--buildthis <proyecto> --output /tmp/blocker/out` (con `/tmp/blocker` como archivo normal) responde `[ERROR] No se pudo preparar la carpeta de salida /tmp/blocker/out: [Errno 20] Not a directory` con código 1, sin traceback.
-- Un proyecto con `<publisher>Jesús</publisher>` ya no mata la QThread: `BuildThread.run()` emite `Metadatos de proyecto no válidos: Publisher inválido…` y `FlangCompiler.run()` devuelve `None` sin excepción. 3 de los 4 casos nuevos fallan con el código anterior (comprobado con `git stash` de `BuildThread.py`).
+- Un proyecto con `<publisher>Jesús</publisher>` ya no mata la QThread: `BuildThread.run()` emite `Metadatos de proyecto no válidos: Publisher inválido…` y `FlangCompiler.run()` devuelve `None` sin excepción. 3 de los 6 casos nuevos fallan con el código anterior (comprobado con `git stash` de `BuildThread.py`).
 
 ### Aprobaciones — `CONFIRM.MD`
 

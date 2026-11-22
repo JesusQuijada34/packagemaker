@@ -861,6 +861,32 @@ class BuildThreadMetadataGuardTests(unittest.TestCase):
             self.assertTrue(errors, "la QThread debe convertir la excepción en error")
             self.assertIn("boom", errors[0])
 
+    def test_env_payload_with_blocked_config_dir_warns_instead_of_raising(self):
+        from lib.blindcubeEngine.BuildThread import BuildThread
+
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proyecto"
+            project.mkdir()
+            (project / "config").write_text("archivo", encoding="utf-8")
+
+            thread = BuildThread(
+                empresa="Influent",
+                nombre="demo",
+                version="1.0",
+                plataforma="Danenone",
+                custom_path=str(project),
+                preflight=False,
+                env_payload={"mode": "dotenv", "variables": {"A": "B"}},
+            )
+            messages = []
+            thread.progress.connect(messages.append)
+            thread._persist_env_payload(project)
+
+            self.assertTrue(
+                any("inyección .env" in message for message in messages),
+                "el fallo debe avisarse sin lanzar desde la QThread",
+            )
+
     def test_flangcompiler_run_reports_invalid_metadata_without_raising(self):
         from lib.blindcubeEngine.BuildThread import FlangCompiler
 
