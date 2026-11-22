@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import sys
@@ -103,10 +104,29 @@ def _utcnow() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+_APP_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
 def _safe_app_id(metadata: Dict[str, Any]) -> str:
     raw = str(metadata.get("id") or metadata.get("app") or "asksome.app").strip()
     cleaned = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in raw)
-    return cleaned or "asksome.app"
+    # ``.`` y ``..`` son componentes de ruta, no identificadores: usarlos como
+    # carpeta de instalación apuntaría a la raíz o a su directorio padre.
+    if not cleaned.strip("."):
+        return "asksome.app"
+    return cleaned
+
+
+def _validated_app_id(app_id: object) -> str:
+    """Valida un ``app_id`` recibido por API/CLI antes de tocar el disco.
+
+    Debe ser un único componente de ruta (sin separadores, sin ``..`` y sin
+    unidad de Windows) para que la instalación no escape de su raíz.
+    """
+    text = str(app_id or "").strip()
+    if text in (".", "..") or not _APP_ID_PATTERN.match(text):
+        raise AsksomeInstallError(f"Identificador de app inválido: {app_id!r}")
+    return text
 
 
 def _sha256_file(path: Path) -> str:
@@ -214,7 +234,7 @@ def install_asksome(
 
     header = verify_asksome(source)
     metadata = dict(header.get("metadata", {}))
-    app_id = _safe_app_id(metadata)
+    app_id = _validated_app_id(_safe_app_id(metadata))
 
     root = Path(install_root).resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -259,7 +279,8 @@ def install_asksome(
 
 
 def read_record(app_id: str, install_root: Path | str) -> InstallRecord:
-    path = Path(install_root).resolve() / app_id / RECORD_NAME
+    name = _validated_app_id(app_id)
+    path = Path(install_root).resolve() / name / RECORD_NAME
     if not path.is_file():
         raise AsksomeInstallError(f"No hay registro de instalación para {app_id}")
     try:
@@ -286,7 +307,7 @@ def build_removeme(
     registro y devuelve la ruta del binario (o ``None`` si no se pudo compilar).
     """
     root = Path(install_root).resolve()
-    target = root / app_id
+    target = root / _validated_app_id(app_id)
     record = read_record(app_id, install_root)
     _write_removeme(target, record)
     binary = compile_removeme_binary(
@@ -328,7 +349,7 @@ def uninstall_asksome(
     Devuelve las rutas eliminadas. Con ``silent=True`` no falla si ya no existe.
     """
     root = Path(install_root).resolve()
-    target = root / app_id
+    target = root / _validated_app_id(app_id)
     if not target.is_dir():
         if silent:
             return []

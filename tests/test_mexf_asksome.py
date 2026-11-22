@@ -350,6 +350,67 @@ def test_uninstall_silent_on_missing(tmp_path):
         uninstall_asksome("nope", tmp_path / "installed")
 
 
+@pytest.mark.parametrize("app_id", ["..", ".", "../victim", "/etc", "C:evil", "a/b", "a\\b"])
+def test_uninstall_rejects_app_id_that_escapes_install_root(tmp_path, app_id):
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, uninstall_asksome
+
+    install_root = tmp_path / "installed"
+    install_root.mkdir()
+    victim = tmp_path / "victim"
+    victim.mkdir()
+    (victim / "keep.txt").write_text("importante", encoding="utf-8")
+
+    with pytest.raises(AsksomeInstallError):
+        uninstall_asksome(app_id, install_root)
+
+    assert (victim / "keep.txt").is_file()
+
+
+def test_read_record_and_build_removeme_reject_unsafe_app_id(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import (
+        AsksomeInstallError,
+        build_removeme,
+        read_record,
+    )
+
+    install_root = tmp_path / "installed"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "install.json").write_text("{}", encoding="utf-8")
+
+    with pytest.raises(AsksomeInstallError):
+        read_record("../outside", install_root)
+    with pytest.raises(AsksomeInstallError):
+        build_removeme("../outside", install_root)
+
+
+def test_install_rejects_dot_app_id_without_deleting_parent(tmp_path):
+    """Un ``.asksome`` con id ``..`` no puede borrar el padre de la raíz."""
+    from lib.blindcubeEngine.asksome_installer import install_asksome
+
+    payload = tmp_path / "payload"
+    payload.mkdir()
+    (payload / "launcher.py").write_text("print('hola')\n", encoding="utf-8")
+    artifact = tmp_path / "evil.asksome"
+    pack_asksome(
+        payload,
+        artifact,
+        metadata={"id": "..", "name": "Evil", "version": "1.0"},
+        launcher="launcher.py",
+    )
+
+    install_root = tmp_path / "installed"
+    install_root.mkdir()
+    marker = tmp_path / "marker.txt"
+    marker.write_text("no borrar", encoding="utf-8")
+
+    record = install_asksome(artifact, install_root, create_desktop_shortcuts=False)
+
+    assert marker.is_file()
+    assert Path(record.install_dir) == (install_root / "asksome.app").resolve()
+    assert Path(record.install_dir).is_dir()
+
+
 def test_generated_removeme_runs_silently(tmp_path):
     import subprocess
     import sys as _sys
