@@ -270,6 +270,23 @@ def test_compile_mexf_project_rejects_asset_traversal(tmp_path):
         compile_mexf_project(root, tmp_path / "bad.asksome")
 
 
+def test_compile_mexf_project_reports_unwritable_output_as_compile_error(tmp_path):
+    """Un destino que es carpeta o no se puede escribir no debe lanzar OSError crudo."""
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    root = _make_project(tmp_path)
+    output_dir = tmp_path / "salida"
+    output_dir.mkdir()
+
+    with pytest.raises(MexfCompileError):
+        compile_mexf_project(root, output_dir)
+
+    blocker = tmp_path / "archivo"
+    blocker.write_text("no soy un directorio", encoding="utf-8")
+    with pytest.raises(MexfCompileError):
+        compile_mexf_project(root, blocker / "demo.asksome")
+
+
 def test_mexf_compiler_skips_projects_without_mexf_dir(tmp_path):
     from lib.mexf_compiler import MexfCompiler
 

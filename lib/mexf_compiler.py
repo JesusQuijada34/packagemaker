@@ -319,22 +319,26 @@ def compile_mexf_project(
     output = Path(output_file) if output_file else root / f"{details['app']}.asksome"
 
     icon = _find_project_icon(root, details["app"])
-    if staging_dir is not None:
-        _stage_project(root, Path(staging_dir), merged)
-        pack_asksome(staging_dir, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password, icon=icon)
-    else:
-        with tempfile.TemporaryDirectory(prefix="mexf-build-") as tmp:
-            _stage_project(root, Path(tmp), merged)
-            pack_asksome(tmp, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password, icon=icon)
-
     result = CompileResult(
         output=output,
         modules=module_names,
         diagnostics=diagnostics,
         metadata=metadata,
     )
-    if wrappers:
-        result.wrappers = write_test_wrappers(merged, output, metadata)
+    try:
+        if staging_dir is not None:
+            _stage_project(root, Path(staging_dir), merged)
+            pack_asksome(staging_dir, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password, icon=icon)
+        else:
+            with tempfile.TemporaryDirectory(prefix="mexf-build-") as tmp:
+                _stage_project(root, Path(tmp), merged)
+                pack_asksome(tmp, output, metadata=metadata, launcher=LAUNCHER_NAME, password=password, icon=icon)
+        if wrappers:
+            result.wrappers = write_test_wrappers(merged, output, metadata)
+    except OSError as exc:
+        raise MexfCompileError(
+            f"No se pudo preparar o escribir el .asksome en {output}: {exc}"
+        ) from exc
     return result
 
 
