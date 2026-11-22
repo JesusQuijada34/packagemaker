@@ -61,6 +61,9 @@ de auditoría.
 | R-7f3a9c21 | Bug — `--ide-scan` revienta con `settings.json` `build` no-objeto | Alta | Resuelto |
 | R-2c8e5d14 | Bug — `--ide-compile` lanza traceback con una carpeta inexistente | Media | Resuelto |
 | R-5a1f8e63 | Bug — `--ide-debug` deja escapar las excepciones del guion | Alta | Resuelto |
+| R-3b8e5c71 | Bug — `install.json` con campos mal tipados rompe `--uninstall-asksome` | Media | Resuelto |
+| R-7c4d2a96 | Bug — parámetros criptográficos mal tipados en `.blindkpkg` | Media | Resuelto |
+| R-1d9f6b34 | Bug — parámetros criptográficos mal tipados en `.iflapp` | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -74,7 +77,8 @@ R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
 R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
 R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-5f8c2d91, R-7e3a9c14, R-4b8d2f61,
 R-9c5f1e28, R-4a1e7b93, R-8d2c5f60, R-9b4e7a52, R-2f7c8d31, R-6a1d3c94,
-R-8e5b2f17, R-4e7c2b91, R-9a3d6f20, R-7f3a9c21, R-2c8e5d14 y R-5a1f8e63)
+R-8e5b2f17, R-4e7c2b91, R-9a3d6f20, R-7f3a9c21, R-2c8e5d14, R-5a1f8e63,
+R-3b8e5c71, R-7c4d2a96 y R-1d9f6b34)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -1256,6 +1260,79 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-3b8e5c71 — `install.json` con campos mal tipados rompía `--uninstall-asksome`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `InstallRecord(**data)` no valida tipos, así que un
+  `install.json` editado a mano o corrompido con `"shortcuts": 5` se aceptaba y
+  `uninstall_asksome()` reventaba al iterarlo
+  (`TypeError: 'int' object is not iterable`). Un `"shortcuts": "texto"`
+  iteraba los caracteres e intentaba borrar rutas inexistentes, y
+  `--list-asksome` mostraba el registro dañado como si fuera válido. La
+  desinstalación quedaba bloqueada justo cuando más falta hace: para retirar
+  una instalación dañada.
+- **Pasos para reproducir:** escribir
+  `<install_root>/<app>/install.json` con los campos obligatorios y
+  `"shortcuts": 5`, y ejecutar `--uninstall-asksome <app>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** `_record_from_mapping()` construye el registro
+  validando los campos de texto obligatorios y degradando `shortcuts`, `files`
+  y `metadata` a su valor por defecto cuando no tienen el tipo esperado.
+  `read_record()`, `list_installed()` y `uninstall_asksome()` lo usan, así que
+  la desinstalación funciona aunque el registro esté parcialmente dañado y un
+  campo obligatorio no textual sigue produciendo `AsksomeInstallError` legible.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_uninstall_tolerates_wrong_field_types_in_record`
+  y `::test_read_record_rejects_non_text_required_fields`.
+- **Commit:** `e9437cb`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-7c4d2a96 — Parámetros criptográficos mal tipados en `.blindkpkg`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `_decrypt_parameters()` solo capturaba `KeyError` y
+  `ValueError`. Un contenedor `.blindkpkg` con `"salt": 5` o `"nonce": 5`
+  lanzaba `TypeError` desde `bytes.fromhex()` y un `"mac": 5` lanzaba
+  `TypeError` en `hmac.compare_digest()`, en lugar del `BlindCubeError`
+  legible que la API promete para cabeceras corruptas.
+- **Pasos para reproducir:** `blindcubeEngine.unpack(build_header(0, {"encryption": "hmac-sha256-ctr", "salt": 5, "nonce": "00"}), password="pw")`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** `_decrypt_parameters()` exige `salt`/`nonce` de tipo
+  texto y traduce los fallos de decodificación a `BlindCubeError`; el MAC no
+  textual se trata como ausente y produce el error de contraseña/payload.
+- **Pruebas:** `tests/test_engines_and_platform.py::MalformedEngineContainerTests::test_blindcube_non_text_crypto_parameters_are_reported`.
+- **Commit:** `e9437cb`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-1d9f6b34 — Parámetros criptográficos mal tipados en `.iflapp`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `_decrypt_payload()` hacía
+  `base64.b64decode(params["salt"])` sin validar el tipo. Una cabecera
+  `.iflapp` dañada con `salt`/`nonce` numéricos lanzaba `TypeError`, su ausencia
+  `KeyError`, un valor no base64 `binascii.Error` y un `mac` numérico
+  `TypeError` en `compare_digest`. Ninguno de esos fallos es un `IflappError`,
+  así que la extracción (verificación del sandbox, actualizador, instalación
+  desde el gestor) terminaba en traceback en vez de en un mensaje legible.
+  El `.asksome` cifrado hereda el mismo arreglo porque delega en este módulo.
+- **Pasos para reproducir:** empaquetar un `.iflapp` con `--password`, cambiar
+  `payload.salt` por un entero en la cabecera y ejecutar
+  `read_iflapp_payload(path, password=...)`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** `_decode_parameter()` valida que `salt`/`nonce` sean
+  texto y traduce los errores de base64 a `IflappError`; un `mac` no textual se
+  trata como ausente y produce `IflappSignatureError`.
+- **Pruebas:** `tests/test_iflapp_format.py::MalformedEncryptionParameterTests`.
+- **Commit:** `e9437cb`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
@@ -1440,6 +1517,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Aprobaciones (2026-11-22): se creó `CONFIRM.MD` con 10 preguntas pendientes
   (`Q-001`…`Q-010`: las 4 mejoras y los 6 cambios de engine). Ninguna está
   aprobada; no se aplicó ningún cambio de engine.
+- Verificación del ciclo de R-3b8e5c71, R-7c4d2a96 y R-1d9f6b34 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 809 pasan, 1
+  omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 5 casos nuevos
+  fallan con el código anterior (comprobado con `git stash` de los tres
+  módulos corregidos). `--uninstall-asksome` con `"shortcuts": 5` en
+  `install.json` elimina la instalación sin traceback; un `.blindkpkg` y un
+  `.iflapp` con `salt`/`nonce`/`mac` mal tipados devuelven
+  `BlindCubeError`/`IflappError`; build real `create` +
+  `--buildthis --compiler zipapp --no-sandbox --harden integrity` genera un
+  `.iflapp` válido (21 archivos) que `--inspect-json` lee.
 - Verificación del ciclo de R-7e3a9c14, R-4b8d2f61 y R-9c5f1e28 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 547 pasan, 1
   omitido, 39 subtests; `pyflakes` y `py_compile` limpios; los 6 casos nuevos

@@ -2,6 +2,28 @@
 
 ## 2026-11-22
 
+### Corregido — parámetros y registros mal tipados en contenedores y `.asksome`
+
+Hallazgos del decimoquinto ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `e9437cb`.
+
+- **R-3b8e5c71 — Un `install.json` con campos mal tipados rompía `--uninstall-asksome`:** `InstallRecord(**data)` no valida tipos, así que un registro con `"shortcuts": 5` se aceptaba y `uninstall_asksome()` reventaba al iterarlo (`TypeError: 'int' object is not iterable`); `"shortcuts": "texto"` iteraba caracteres e intentaba borrar rutas inexistentes. La desinstalación quedaba bloqueada justo cuando se necesita: para retirar una instalación dañada. Ahora `_record_from_mapping()` valida los campos de texto obligatorios y degrada `shortcuts`, `files` y `metadata` a su valor por defecto; `read_record()`, `list_installed()` y `uninstall_asksome()` lo usan. Un campo obligatorio no textual sigue produciendo `AsksomeInstallError` legible.
+- **R-7c4d2a96 — Parámetros criptográficos mal tipados en `.blindkpkg`:** `_decrypt_parameters()` solo capturaba `KeyError`/`ValueError`. Un contenedor con `"salt": 5` o `"nonce": 5` lanzaba `TypeError` desde `bytes.fromhex()`, y `"mac": 5` lanzaba `TypeError` en `hmac.compare_digest()`, en lugar del `BlindCubeError` que la API promete para cabeceras corruptas. Ahora se exige texto y se traducen los fallos de decodificación; un MAC no textual se trata como ausente.
+- **R-1d9f6b34 — Parámetros criptográficos mal tipados en `.iflapp`:** `_decrypt_payload()` hacía `base64.b64decode(params["salt"])` sin validar. Una cabecera dañada con `salt`/`nonce` numéricos lanzaba `TypeError`, su ausencia `KeyError`, un valor no base64 `binascii.Error` y un `mac` numérico `TypeError` en `compare_digest`; ninguno es un `IflappError`, así que la extracción (verificación en sandbox, actualizador, instalación desde el gestor) terminaba en traceback. Ahora `_decode_parameter()` valida el tipo y traduce los errores a `IflappError`; un MAC no textual produce `IflappSignatureError`. El `.asksome` cifrado hereda el arreglo porque delega en este módulo.
+
+### Verificación — decimoquinto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 809 pasan, 1 omitido, 51 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Los 5 casos nuevos fallan con el código anterior (comprobado con `git stash` de los tres módulos corregidos).
+- `--uninstall-asksome` sobre un `install.json` con `"shortcuts": 5`, `"files": "x"` y `"metadata": []` elimina la instalación con `[OK]` y código 0 (antes: `TypeError`).
+- `--inspect-json` lee el `.iflapp` real generado por `create` + `--buildthis --compiler zipapp --no-sandbox --harden integrity` (21 archivos, lzma, sin cifrado).
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado: `Q-001`…`Q-010` siguen sin casillas marcadas y el último commit que toca el archivo no es de `JesusQuijada34`, así que no hay respuestas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+## 2026-11-22
+
 ### Corregido — robustez del IDE headless (escaneo, compilación y depuración)
 
 Hallazgos del decimocuarto ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `38f0791`.
