@@ -1544,7 +1544,7 @@ quedaron corregidos y probados en este ciclo.
   (4 casos: error emitido por la QThread, `FlangCompiler.run()` sin excepción,
   excepción inesperada convertida en `error` y payload `.env` con `config/`
   bloqueado).
-- **Commit:** `3920254`.
+- **Commit:** `3920254` y `81e1aec`.
 - **Fecha de resolución:** 2026-11-22.
 
 ## R-5b3d8f27 — Carpeta de salida inaccesible lanza traceback al compilar
@@ -1572,7 +1572,7 @@ quedaron corregidos y probados en este ciclo.
 - **Pruebas:** `tests/test_maintenance_cli_regressions.py::UnwritableOutputDirectoryTests`
   (2 casos: CLI con código 1 y compilador que difiere el error a `run()`) y
   `BuildThreadMetadataGuardTests` (guardado de `.env` sin excepción).
-- **Commit:** `3920254`.
+- **Commit:** `3920254` y `81e1aec`.
 - **Fecha de resolución:** 2026-11-22.
 
 ---
