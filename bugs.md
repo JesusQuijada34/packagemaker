@@ -73,6 +73,7 @@ de auditoría.
 | R-2c7e9b41 | Bug — metadatos no canónicos matan la QThread del build sin aviso | Alta | Resuelto |
 | R-5b3d8f27 | Bug — carpeta de salida inaccesible lanza traceback al compilar | Media | Resuelto |
 | R-7f2b9c63 | Bug — `.run` con `.iflapp` corrupto lanza traceback | Media | Resuelto |
+| R-7c9e2a45 | Bug — `editor_config.json` con forma no válida rompe el arranque | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -102,7 +103,11 @@ instalación `.asksome` que era un archivo o un destino bloqueado escapaba como
 `b656928`. El mismo día, el decimoctavo ciclo añadió R-2c7e9b41 (los metadatos
 no canónicos mataban la QThread del build sin emitir `error`) y R-5b3d8f27 (una
 carpeta de salida inaccesible lanzaba traceback en el CLI y en la GUI); ambos
-quedaron corregidos y probados en este ciclo.
+quedaron corregidos y probados en este ciclo. El vigésimo ciclo añadió
+R-7c9e2a45: un `data/pmCodeEditor/editor_config.json` con forma no válida (no
+objeto, o `default_interpreter` que no es texto) rompía el arranque del panel y
+del editor. Queda corregido y probado; no hay bugs abiertos, solo las mejoras y
+los cambios de engine pendientes de aprobación en `CONFIRM.MD`.
 
 ---
 
@@ -1603,6 +1608,42 @@ quedaron corregidos y probados en este ciclo.
   payload corrupto, payload truncado, `--password` sin valor y base64
   corrupto en el lector). Los 4 fallan con el código anterior.
 - **Commit:** `caeef80`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
+## R-7c9e2a45 — Un `editor_config.json` con forma no válida rompía el arranque
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** el panel (`DashboardWindow`) y el editor (`EditorWindow`)
+  comparten `data/pmCodeEditor/editor_config.json`. Un archivo editado a mano o
+  escrito a medias que sigue siendo JSON válido pero no tiene la forma esperada
+  tumbaba la ventana al construirla: en el panel, un `default_interpreter` que
+  no era texto (`123`, `["x"]`, `{...}`) se asignaba a `os.environ`, que lanza
+  `TypeError: str expected`; en el editor, un documento no-objeto (`[]`,
+  `"texto"`) reventaba en `cfg.get()` con `AttributeError`, y un
+  `default_interpreter` lista/objeto lo hacía en `os.path.isfile()` con
+  `TypeError`. La corrección anterior R-9a3d6f20 solo cubrió el caso no-objeto
+  del panel, no el valor mal tipado ni el editor.
+- **Pasos para reproducir:** escribir
+  `data/pmCodeEditor/editor_config.json` con `{"default_interpreter": 123}` y
+  abrir el panel, o con `[]`/`{"default_interpreter": ["x"]}` y abrir el
+  editor; la ventana no se construye y el arranque termina en traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (impide abrir el panel/editor, pero no hay pérdida de datos).
+- **Solución aplicada:** `DashboardWindow.load_config()` solo adopta el
+  intérprete si es una cadena no vacía antes de exportarlo a `PM_PYTHON_PATH`;
+  `EditorWindow._load_editor_config()` descarta los documentos que no son
+  objeto y exige que `default_interpreter` sea una cadena no vacía antes de
+  comprobarla con `os.path.isfile()`.
+- **Pruebas:** `tests/test_local_config_robustness.py` —
+  `TestDashboardConfigShapes::test_non_string_interpreter_is_ignored`,
+  `TestEditorConfigShapes::test_non_object_config_is_ignored` y
+  `TestEditorConfigShapes::test_non_string_interpreter_is_ignored`. Las tres
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/pm_dashboard.py` y `pmCodeEditor.py`).
+- **Commit:** `6f45dd0`.
 - **Fecha de resolución:** 2026-11-22.
 
 ---

@@ -2,6 +2,29 @@
 
 ## 2026-11-22
 
+### Corregido — `editor_config.json` con forma no válida rompía el arranque
+
+Hallazgo del vigésimo ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `6f45dd0`.
+
+- **R-7c9e2a45 — Un `data/pmCodeEditor/editor_config.json` válido pero con forma inesperada tumbaba el panel y el editor:** el panel (`DashboardWindow`) y el editor (`EditorWindow`) comparten ese archivo. Un `default_interpreter` que no era texto (`123`, `["x"]`, `{...}`) se asignaba a `os.environ`, que lanza `TypeError: str expected`, de modo que el panel no se construía. En el editor, un documento no-objeto (`[]`, `"texto"`) reventaba en `cfg.get()` con `AttributeError`, y un `default_interpreter` lista/objeto lo hacía en `os.path.isfile()` con `TypeError`. La corrección anterior R-9a3d6f20 solo cubrió el caso no-objeto del panel, no el valor mal tipado ni el editor. Ahora `DashboardWindow.load_config()` adopta el intérprete solo si es una cadena no vacía, y `EditorWindow._load_editor_config()` descarta los documentos que no son objeto y exige una cadena no vacía antes de `os.path.isfile()`.
+
+### Verificación — vigésimo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 842 pasan, 1 omitido, 55 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las 3 pruebas nuevas de `tests/test_local_config_robustness.py` (`test_non_string_interpreter_is_ignored` del panel y las dos de `TestEditorConfigShapes`) fallan con el código anterior (comprobado con `git stash` de `lib/pm_dashboard.py` y `pmCodeEditor.py`) y pasan con `6f45dd0`.
+- Reproducción real: con `{"default_interpreter": 123}` el panel terminaba en `TypeError: str expected, not int`; con `[]` el editor en `AttributeError: 'list' object has no attribute 'get'`; con `{"default_interpreter": ["x"]}` en `TypeError: stat: path should be string...`. Ahora ambos abren y conservan un `python_path` textual.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `a593c75`, autor `openhands <openhands@all-hands.dev>`): `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo el del propietario del 2026-11-22, de modo que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
+## 2026-11-22
+
 ### Corregido — el dropper `.run` lanzaba traceback con un paquete corrupto
 
 Hallazgo del decimonoveno ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `caeef80`.
