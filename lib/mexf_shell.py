@@ -103,15 +103,23 @@ class ShellPlan:
         }
 
 
+def _as_list(value: Any) -> List[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _as_dict(value: Any) -> Dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
 def plan_from_document(data: Dict[str, Any], *, source_path: str = "") -> ShellPlan:
     """Normaliza las secciones de shell de un documento ``.mexf`` v1."""
-    metadata = data.get("metadata") or {}
+    metadata = _as_dict(data.get("metadata"))
     identifier = str(metadata.get("id") or metadata.get("name") or "mexf.shell")
     name = str(metadata.get("name") or identifier)
     icon = str(data.get("icon") or "")
 
     associations: List[FileAssociation] = []
-    for item in data.get("file_associations") or data.get("extensions") or []:
+    for item in _as_list(data.get("file_associations") or data.get("extensions") or []):
         if not isinstance(item, dict):
             continue
         raw_ext = str(item.get("extension") or item.get("ext") or "")
@@ -130,16 +138,16 @@ def plan_from_document(data: Dict[str, Any], *, source_path: str = "") -> ShellP
         )
 
     context_menus: List[ContextMenu] = []
-    for item in data.get("context_menus") or []:
+    for item in _as_list(data.get("context_menus") or []):
         if not isinstance(item, dict):
             continue
         label = str(item.get("label") or item.get("name") or "")
         command = str(item.get("command") or item.get("exec") or "")
         if not (label and command):
             continue
-        raw_exts = item.get("extensions") or (
+        raw_exts = _as_list(item.get("extensions") or (
             [item["extension"]] if item.get("extension") else []
-        )
+        ))
         extensions = [
             value if str(value).startswith(".") else f".{value}" for value in raw_exts
         ]
@@ -155,11 +163,11 @@ def plan_from_document(data: Dict[str, Any], *, source_path: str = "") -> ShellP
 
     environments = {
         str(key): str(value)
-        for key, value in (data.get("environments") or {}).items()
+        for key, value in _as_dict(data.get("environments")).items()
     }
     registry = [
         item
-        for item in (data.get("registry") or data.get("registry_keys") or [])
+        for item in _as_list(data.get("registry") or data.get("registry_keys") or [])
         if isinstance(item, dict)
     ]
     return ShellPlan(
@@ -169,7 +177,7 @@ def plan_from_document(data: Dict[str, Any], *, source_path: str = "") -> ShellP
         icon=icon,
         associations=associations,
         context_menus=context_menus,
-        shortcuts=dict(data.get("shortcuts") or {}),
+        shortcuts=dict(_as_dict(data.get("shortcuts"))),
         environments=environments,
         registry=registry,
         source_path=source_path,

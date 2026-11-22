@@ -131,13 +131,23 @@ def parse_mexf(path: Path | str, *, project_root: Path | None = None) -> MexfDoc
     return MexfDocument(data, "yaml-v1", str(source))
 
 
+def _legacy_list(value: Any) -> List[Any]:
+    return value if isinstance(value, list) else []
+
+
 def _legacy_to_v1(data: Dict[str, Any]) -> Dict[str, Any]:
-    metadata = {"id": data.get("app_id", "legacy.mexf"), "name": data.get("app_name", "Legacy MEXF"), "version": str(data.get("version", "1.0"))}
+    metadata = {
+        "id": str(data.get("app_id") or "legacy.mexf"),
+        "name": str(data.get("app_name") or "Legacy MEXF"),
+        "version": str(data.get("version") or "1.0"),
+    }
     commands = []
-    for item in data.get("shell_commands", []):
+    for item in _legacy_list(data.get("shell_commands")):
         if isinstance(item, dict) and item.get("name") and item.get("path"):
-            commands.append({"id": item["name"], "executable": item["path"], "args": []})
-    return {"format": "mexf", "version": 1, "metadata": metadata, "runtime": {"launcher": "argv"}, "triggers": [], "commands": commands, "file_associations": copy.deepcopy(data.get("file_associations", data.get("extensions", []))), "context_menus": copy.deepcopy(data.get("context_menus", [])), "shortcuts": copy.deepcopy(data.get("shortcuts", {})), "environments": {}, "assets": []}
+            commands.append({"id": str(item["name"]), "executable": str(item["path"]), "args": []})
+    associations = data.get("file_associations", data.get("extensions", []))
+    shortcuts = data.get("shortcuts", {})
+    return {"format": "mexf", "version": 1, "metadata": metadata, "runtime": {"launcher": "argv"}, "triggers": [], "commands": commands, "file_associations": copy.deepcopy(_legacy_list(associations)), "context_menus": copy.deepcopy(_legacy_list(data.get("context_menus"))), "shortcuts": copy.deepcopy(shortcuts if isinstance(shortcuts, dict) else {}), "environments": {}, "assets": []}
 
 
 def canonicalize_mexf(document: MexfDocument | Dict[str, Any]) -> bytes:

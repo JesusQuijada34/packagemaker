@@ -590,3 +590,107 @@ def test_generated_removeme_console_mode_reports_removals(tmp_path):
     assert result.returncode == 0, result.stderr
     assert "eliminado:" in result.stdout
     assert not Path(record.install_dir).exists()
+
+
+# --- Accesos directos .desktop y registros de instalación -------------------
+
+
+def _record_with(install_dir: Path, **overrides) -> "object":
+    from lib.asksome_installer import InstallRecord
+
+    data = dict(
+        app_id="influent.demo",
+        name="Demo",
+        version="v1.0-26.11-10.00",
+        install_dir=str(install_dir),
+        artifact="demo.asksome",
+        artifact_sha256="0" * 64,
+        launcher="launcher.py",
+    )
+    data.update(overrides)
+    return InstallRecord(**data)
+
+
+def test_linux_desktop_quotes_exec_arguments_with_spaces(tmp_path):
+    from lib.asksome_installer import _write_linux_desktop
+
+    install_dir = tmp_path / "My Apps" / "influent.demo"
+    install_dir.mkdir(parents=True)
+    entry = _write_linux_desktop(tmp_path / "shortcuts", _record_with(install_dir))
+    exec_line = next(
+        line for line in entry.read_text(encoding="utf-8").splitlines() if line.startswith("Exec=")
+    )
+    # Dos argumentos citados: intérprete y lanzador.
+    assert exec_line.count('"') == 4
+    assert f'"{install_dir / "launcher.py"}"' in exec_line
+
+
+def test_linux_desktop_name_cannot_inject_new_keys(tmp_path):
+    from lib.asksome_installer import _write_linux_desktop
+
+    install_dir = tmp_path / "influent.demo"
+    install_dir.mkdir()
+    record = _record_with(install_dir, name="Demo\nTerminal=true\nExec=/bin/sh")
+    body = _write_linux_desktop(tmp_path / "shortcuts", record).read_text(encoding="utf-8")
+    assert "\nTerminal=true" not in body
+    assert body.count("\nExec=") == 1
+    assert "Name=Demo Terminal=true Exec=/bin/sh" in body
+
+
+def test_desktop_exec_quote_escapes_field_codes():
+    from lib.linux_icon_handler import _desktop_exec_quote
+
+    assert _desktop_exec_quote("/tmp/100%/app") == '"/tmp/100%%/app"'
+
+
+def test_read_record_rejects_corrupt_and_incomplete(tmp_path):
+    from lib.asksome_installer import AsksomeInstallError, read_record
+
+    app_dir = tmp_path / "influent.demo"
+    app_dir.mkdir()
+
+    (app_dir / "install.json").write_text("{not json", encoding="utf-8")
+    with pytest.raises(AsksomeInstallError):
+        read_record("influent.demo", tmp_path)
+
+    (app_dir / "install.json").write_text("[]", encoding="utf-8")
+    with pytest.raises(AsksomeInstallError):
+        read_record("influent.demo", tmp_path)
+
+    (app_dir / "install.json").write_text(json.dumps({"app_id": "influent.demo"}), encoding="utf-8")
+    with pytest.raises(AsksomeInstallError):
+        read_record("influent.demo", tmp_path)
+
+
+def test_build_removeme_reports_corrupt_record(tmp_path):
+    from lib.asksome_installer import AsksomeInstallError, build_removeme
+
+    app_dir = tmp_path / "installed" / "influent.demo"
+    app_dir.mkdir(parents=True)
+    (app_dir / "install.json").write_text("{bad", encoding="utf-8")
+    with pytest.raises(AsksomeInstallError):
+        build_removeme("influent.demo", tmp_path / "installed")
+
+
+def test_legacy_mexf_with_wrong_section_types_is_normalized(tmp_path):
+    from lib.mexf_shell import plan_from_document
+
+    source = tmp_path / "legacy.mexf"
+    source.write_text(
+        json.dumps(
+            {
+                "extensions": 3,
+                "context_menus": "not-a-list",
+                "shell_commands": 5,
+                "shortcuts": "not-a-dict",
+                "app_name": 42,
+            }
+        ),
+        encoding="utf-8",
+    )
+    document = parse_mexf(source)
+    plan = plan_from_document(document.data)
+    assert plan.associations == []
+    assert plan.context_menus == []
+    assert plan.shortcuts == {}
+    assert document.metadata["name"] == "42"
