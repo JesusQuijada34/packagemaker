@@ -147,6 +147,33 @@ class CuratedTranslationTests(unittest.TestCase):
             self.assertIn(code, CURATED, f"falta el idioma {code} en CURATED")
             self.assertGreater(len(CURATED[code]), 100, f"{code} tiene muy pocas curadas")
 
+    def test_curated_alone_translates_the_dashboard_error(self):
+        """Generar desde cero (sin reinyectar el JSON) debe dar la traducción.
+
+        El generador mezcla el ``lang/<code>.json`` existente, así que una clave
+        puesta sólo en el JSON sobrevive a la regeneración. Pero un checkout
+        limpio o un fichero borrado parten de es+en+``TRANSLATIONS``+``CURATED``;
+        si la traducción sólo vive en el JSON, ahí se pierde y cae al inglés.
+        """
+        from tools import generate_lang_files as gen
+        from tools.translations_curated import CURATED
+
+        source = json.loads((LANG_DIR / "es.json").read_text(encoding="utf-8"))
+        fallback = json.loads((LANG_DIR / "en.json").read_text(encoding="utf-8"))
+        english = _load("en")["dashboard.create_failed"]
+
+        for code in _NON_ENGLISH:
+            merged = gen._deep_merge(source, fallback)
+            merged = gen._deep_merge(merged, gen.TRANSLATIONS[code])
+            merged = gen._deep_merge(merged, gen._nest(CURATED.get(code, {})))
+            translated = merged["dashboard"]["create_failed"]
+            self.assertNotEqual(
+                translated,
+                english,
+                f"{code} caería al inglés sin el JSON previo: añade "
+                f"dashboard.create_failed a CURATED[{code!r}]",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
