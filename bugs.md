@@ -67,6 +67,7 @@ de auditoría.
 | R-4f9b2c81 | Bug — `.asksome` con id `.`/`..` borra fuera de la raíz de instalación | Crítica | Resuelto |
 | R-7a3d5e62 | Bug — `--uninstall-asksome`/`--build-removeme` aceptan `app_id` con traversal | Alta | Resuelto |
 | R-2b9e4f73 | Bug — `--compile-mexf` lanza traceback si no puede escribir el `.asksome` | Media | Resuelto |
+| R-9d4c2f18 | Bug — la versión canónica bloquea la compilación | Alta | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -81,9 +82,12 @@ R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
 R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-5f8c2d91, R-7e3a9c14, R-4b8d2f61,
 R-9c5f1e28, R-4a1e7b93, R-8d2c5f60, R-9b4e7a52, R-2f7c8d31, R-6a1d3c94,
 R-8e5b2f17, R-4e7c2b91, R-9a3d6f20, R-7f3a9c21, R-2c8e5d14, R-5a1f8e63,
-R-3b8e5c71, R-7c4d2a96, R-1d9f6b34, R-4f9b2c81, R-7a3d5e62 y R-2b9e4f73)
-quedaron corregidos y probados. No se prepara release: el periodo de
-observación y el requisito de 7 días sin reportes nuevos siguen en curso.
+R-3b8e5c71, R-7c4d2a96, R-1d9f6b34, R-4f9b2c81, R-7a3d5e62, R-2b9e4f73 y
+R-9d4c2f18) quedaron corregidos y probados. El 2026-11-22 el propietario
+reportó en `bugs.txt` (commit `bed2e83`) el bloqueo por versión canónica; se
+corrigió el mismo día como R-9d4c2f18. No se prepara release: ese reporte
+reinicia el requisito de 7 días sin reportes nuevos y el periodo de
+observación sigue en curso.
 
 ---
 
@@ -1413,6 +1417,36 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-9d4c2f18 — La versión canónica bloqueaba la compilación
+
+- **Usuario:** JesusQuijada34 (reporte manual en `bugs.txt`, commit `bed2e83`)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** al compilar, el propietario pegó la versión exacta del
+  proyecto (`v1.0-26.11-22.00`, tal como la guarda `details.xml`) y la
+  compilación se bloqueó con «Versión inválida: usa X.x o X.x.z». El validador
+  estricto añadido para impedir datos fantasma (`_VERSION`) solo admitía
+  `X.x[.z]`, aunque `ProjectNameFormatter` y `normalize_version_base` aceptan
+  la forma canónica completa con timestamp y sufijo de plataforma. El usuario
+  lo percibió como que la búsqueda exacta del proyecto se había roto.
+- **Pasos para reproducir:** abrir la página de compilación, escribir en
+  «Versión» `v1.0-26.11-22.00` (o `1.0-26.11-22.00`) y pulsar compilar; la
+  alerta «Datos de compilación incompletos» impide continuar.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (bloquea el build con un valor legítimo).
+- **Solución aplicada:** `_VERSION` acepta ahora `X.x[.z]` con un timestamp
+  canónico opcional `-YY.MM-HH.MM` y el sufijo opcional `-Danenone`,
+  `-Knosthalij` o `-AlphaCube`, igual que la autoridad de nombres. La base se
+  sigue normalizando con `normalize_version_base()` antes de compilar, así que
+  el timestamp se descarta para el nombre del artefacto. Los timestamps
+  malformados y las plataformas desconocidas siguen rechazándose.
+- **Pruebas:** `tests/test_build_validation.py::test_canonical_versions_with_timestamp_are_accepted`
+  (4 casos), `::test_malformed_timestamp_versions_are_rejected` (3 casos) y
+  `::test_canonical_version_normalizes_to_base_for_the_build`.
+- **Commit:** `2011588`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
@@ -1543,6 +1577,13 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Solicitado:** fade tipo cortina, splash convertido en ventana de error,
   `destroy()` tras códigos de salida y triple clic en la titlebar para
   pantalla completa con ocultación animada.
+- **Reporte del propietario (2026-11-22, `bugs.txt` commit `bed2e83`):** el
+  splash integrado se dibuja a la vez que la ventana principal en lugar de
+  ejecutarse primero, y en Windows la consola muestra avisos
+  `QWidgetWindow(...) must be a top level window` y
+  `UpdateLayeredWindowIndirect failed for ptDst=...`. Se registran aquí como
+  evidencia del cambio de engine pendiente; no se han modificado el splash ni
+  el ciclo de vida de ventanas.
 - **Efectos secundarios:** ciclo de vida de ventanas y manejo de errores.
 - **Archivos:** `lib/splash_bootloader.py`, `lib/splash_window.py`,
   `lib/window_chrome.py`, `lib/window_manager_bridge.py`, `packagemaker.py`.
@@ -1579,11 +1620,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Bugs abiertos: 0.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
-- Último reporte externo conocido: issue #4 (2026-07-05). Los ciclos actuales
-  solo añadieron correcciones de auditoría interna (commits `5aa823b`,
-  `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4,
-  `325c0e9`, `850de5c`, `f60f9ac`, `543e173` y `6fa3c51`), no reportes de usuario; el
-  contador de 7 días no se reinicia.
+- Último reporte externo conocido: 2026-11-22, reporte manual del propietario
+  en `bugs.txt` (commit `bed2e83`): versión canónica rechazada (corregido como
+  R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
+  pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
+  reinicia el 2026-11-22.
+- Verificación del ciclo de R-9d4c2f18 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 827 pasan, 1
+  omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 4 casos de
+  versión canónica con timestamp fallan con el código anterior (comprobado con
+  `git stash` de `build_validation.py`). Reproducción: `v1.0-26.11-22.00`
+  bloqueaba la compilación con «Versión inválida»; ahora no produce errores y
+  se normaliza a `1.0` para el nombre del artefacto.
 - Verificación del ciclo de R-9b4e7a52, R-2f7c8d31, R-6a1d3c94 y R-8e5b2f17
   (2026-11-22): `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 788
   pasan, 1 omitido, 39 subtests; `pyflakes` y `py_compile` limpios; los 16 casos

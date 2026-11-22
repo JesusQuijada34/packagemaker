@@ -2,6 +2,29 @@
 
 ## 2026-11-22
 
+### Corregido — la versión canónica del proyecto bloqueaba la compilación
+
+Reporte del propietario (JesusQuijada34) en `bugs.txt`, commit `bed2e83`. Commit `2011588`.
+
+- **R-9d4c2f18 — Pegar la versión exacta de `details.xml` impedía compilar:** la validación estricta de la página de compilación (`lib/blindcubeEngine/build_validation.py`) solo admitía `X.x[.z]`, así que una versión canónica como `v1.0-26.11-22.00` —el valor que guarda el propio proyecto— se rechazaba con «Versión inválida: usa X.x o X.x.z» y el build no arrancaba. El usuario lo describió como una rotura de la búsqueda exacta del proyecto. Ahora la validación acepta el timestamp canónico `-YY.MM-HH.MM` y el sufijo opcional de plataforma, igual que `ProjectNameFormatter`; `normalize_version_base()` sigue reduciendo la versión a su base antes de construir el nombre del artefacto. Los timestamps malformados y las plataformas desconocidas siguen bloqueados.
+
+### Verificación — ciclo de R-9d4c2f18
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 827 pasan, 1 omitido, 51 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Los 4 casos nuevos de versión canónica con timestamp fallan con el código anterior (comprobado con `git stash` de `build_validation.py`).
+- Reproducción real: `validate_build_fields("influent", "jalen", "v1.0-26.11-22.00", "Knosthalij")` devolvía `version` inválida; ahora devuelve una lista vacía y `normalize_version_base()` produce `1.0`.
+
+### Registrado — reporte de coreografía del splash
+
+- El mismo reporte del propietario (`bugs.txt`, commit `bed2e83`) describe que el splash integrado se dibuja a la vez que la ventana principal y no antes, con avisos de Windows `QWidgetWindow(...) must be a top level window` y `UpdateLayeredWindowIndirect failed`. Es un cambio de comportamiento del engine: queda anotado en «Cambios de engine pendientes» nº 4 y en `CONFIRM.MD` (`Q-008`), sin implementar.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `6028ac4`, autor `openhands-agent`): `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+## 2026-11-22
+
 ### Corregido — el identificador de `.asksome` podía borrar datos fuera de la raíz de instalación
 
 Hallazgos del decimosexto ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commits `3f89823` y `f9f635a`.

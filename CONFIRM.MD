@@ -1,7 +1,7 @@
 # Confirmaciones del propietario — Influent Package Maker
 
 - **Última revisión:** 2026-11-22
-- **Último commit de `CONFIRM.MD` procesado:** ninguno con casillas marcadas; revisado de nuevo el 2026-11-22 en el ciclo del commit de código `3f89823` (el último commit que toca este archivo no es de `JesusQuijada34`, así que no hay respuestas válidas que aplicar)
+- **Último commit de `CONFIRM.MD` procesado:** `6028ac4` (2026-11-22), autor `openhands-agent`; sin casillas marcadas, así que no hay respuestas válidas que aplicar
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
 - **Estado:** 10 preguntas pendientes, 0 aprobadas, 0 rechazadas.
 
@@ -119,6 +119,10 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `lib/window_manager_bridge.py`, `packagemaker.py`.
 - **Riesgo y efectos secundarios:** cambia el ciclo de vida de ventanas y el
   manejo de errores de arranque. Riesgo medio-alto.
+- **Evidencia del propietario (2026-11-22, `bugs.txt` commit `bed2e83`):** el
+  splash integrado se ejecuta a la vez que la ventana principal en lugar de
+  primero, y en Windows aparecen los avisos `QWidgetWindow(...) must be a top
+  level window` y `UpdateLayeredWindowIndirect failed for ptDst=...`.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ### Q-009 — Rediseño de UI (acento naranja, tarjetas iOS, configuración)
