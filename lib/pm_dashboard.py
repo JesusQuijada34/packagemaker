@@ -539,9 +539,10 @@ class DashboardWindow(QMainWindow):
                 "exclude_local": True,
                 "auto_check": True,
             }
-        if self.config.get("default_interpreter"):
-            self.python_path = self.config["default_interpreter"]
-            os.environ["PM_PYTHON_PATH"] = self.python_path
+        interpreter = self.config.get("default_interpreter")
+        if isinstance(interpreter, str) and interpreter:
+            self.python_path = interpreter
+            os.environ["PM_PYTHON_PATH"] = interpreter
         self._update_recent_list()
 
     def save_config(self):

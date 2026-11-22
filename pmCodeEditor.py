@@ -2376,10 +2376,13 @@ class EditorWindow(QMainWindow):
         try:
             with open(EDITOR_CONFIG_PATH, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
+            if not isinstance(cfg, dict):
+                return
             self._auto_check_deps = cfg.get("auto_check", True)
-            if cfg.get("default_interpreter") and os.path.isfile(cfg["default_interpreter"]):
-                self.python_path = cfg["default_interpreter"]
-                os.environ["PM_PYTHON_PATH"] = self.python_path
+            interpreter = cfg.get("default_interpreter")
+            if isinstance(interpreter, str) and interpreter and os.path.isfile(interpreter):
+                self.python_path = interpreter
+                os.environ["PM_PYTHON_PATH"] = interpreter
             dep = get_dependency_manager(self)
             dep.exclude_pyqt = cfg.get("exclude_pyqt", True)
             dep.exclude_local = cfg.get("exclude_local", True)

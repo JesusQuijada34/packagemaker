@@ -129,6 +129,56 @@ class TestDashboardConfigShapes:
         finally:
             window.deleteLater()
 
+    def test_non_string_interpreter_is_ignored(self, tmp_path, monkeypatch):
+        pytest.importorskip("PyQt6.QtWidgets")
+        import lib.pm_dashboard as dashboard
+
+        config_path = tmp_path / "editor_config.json"
+        for payload in (123, ["x"], {"a": 1}):
+            config_path.write_text(
+                json.dumps({"default_interpreter": payload}), encoding="utf-8"
+            )
+            monkeypatch.setattr(dashboard, "EDITOR_CONFIG_PATH", config_path)
+            window = dashboard.DashboardWindow()
+            try:
+                assert isinstance(window.python_path, str) and window.python_path
+            finally:
+                window.deleteLater()
+
+
+class TestEditorConfigShapes:
+    """El editor usa el mismo ``editor_config.json`` que el panel."""
+
+    def test_non_object_config_is_ignored(self, tmp_path, monkeypatch):
+        pytest.importorskip("PyQt6.QtWidgets")
+        import pmCodeEditor
+
+        config_path = tmp_path / "editor_config.json"
+        for payload in ([], "texto", 42):
+            config_path.write_text(json.dumps(payload), encoding="utf-8")
+            monkeypatch.setattr(pmCodeEditor, "EDITOR_CONFIG_PATH", config_path)
+            window = pmCodeEditor.EditorWindow()
+            try:
+                assert isinstance(window.python_path, str) and window.python_path
+            finally:
+                window.deleteLater()
+
+    def test_non_string_interpreter_is_ignored(self, tmp_path, monkeypatch):
+        pytest.importorskip("PyQt6.QtWidgets")
+        import pmCodeEditor
+
+        config_path = tmp_path / "editor_config.json"
+        for payload in (["x"], {"a": 1}):
+            config_path.write_text(
+                json.dumps({"default_interpreter": payload}), encoding="utf-8"
+            )
+            monkeypatch.setattr(pmCodeEditor, "EDITOR_CONFIG_PATH", config_path)
+            window = pmCodeEditor.EditorWindow()
+            try:
+                assert isinstance(window.python_path, str) and window.python_path
+            finally:
+                window.deleteLater()
+
 
 class TestProjectConfigShapes:
     def test_malformed_document_is_ignored(self, tmp_path):
