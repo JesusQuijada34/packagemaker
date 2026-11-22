@@ -83,3 +83,25 @@ El orden estricto de arranque y verificación de condiciones debe ser el siguien
 
 ---
 *Instrucciones listas para ser ejecutadas por el agente de desarrollo.*
+
+---
+
+# Otras que escribi manualmente:
+ esta es la salida en la terminal:
+ [PackageMaker] Platform detected: knosthalij
+[PackageMaker] BASE_DIR: C:\Users\Jesus Quijada\Documents\Packagemaker Projects
+[PackageMaker] Fluthin_APPS: C:\Users\Jesus Quijada\Documents\Fluthin Apps
+[PackageMaker] Verificando el username de GitHub...
+[PackageMaker] Proyecto creado en: influent.jalen.v1.0-26.11-22.00-Knosthalij/ (sha256: 3d384a8dd61d743d188048f3c26af460b40b04cafbc1b834f0c503e2822ee15d)
+QWidgetWindow(0x22f17595b80, name="CentralWidgetWindow") must be a top level window.
+QWidgetWindow(0x22f17595b80, name="CentralWidgetWindow") must be a top level window.
+QWidgetWindow(0x22f17595b80, name="CentralWidgetWindow") must be a top level window.
+UpdateLayeredWindowIndirect failed for ptDst=(986, 638), size=(360x100), dirty=(389x129 -15, -9) (El parßmetro no es correcto.)
+UpdateLayeredWindowIndirect failed for ptDst=(986, 638), size=(360x100), dirty=(387x127 -14, -8) (El parßmetro no es correcto.)
+UpdateLayeredWindowIndirect failed for ptDst=(986, 638), size=(360x100), dirty=(386x126 -13, -7) (El parßmetro no es correcto.)
+UpdateLayeredWindowIndirect failed for ptDst=(986, 638), size=(360x100), dirty=(377x117 -9, -5) (El parßmetro no es correcto.)
+UpdateLayeredWindowIndirect failed for ptDst=(986, 638), size=(360x100), dirty=(379x119 -10, -6) (El parßmetro no es correcto.)
+UpdateLayeredWindowIndirect failed for ptDst=(986, 638), size=(360x100), dirty=(380x120 -10, -6) (El parßmetro no es correcto.)
+.
+
+ ! aqui hay un bug, sabes que antes cuando iba a compilar el armaba el nombre completo canonico y buscaba entre las carpetas del proyecto a ver si los datos coincidian exactamente con el proyecto que se apunto, bueno, puse exactamente la version y me salio error de normalizacion, ajuro y que X.x.x o algo asi, eso lo configurastes tu y digo que se hecho a perder, bueno en fin, digo que no hemos terminado el motor de leviathan para el splash integrado de primero y las siguientes ideas del frame que te di anteriormente, porque al iniciar no parece que fuera que leviathan un motor de leviathan porque el splash integrado se junta con la ventana principal y se ejecuta al mismo tiempo que la app principal y en vez de primero llamar al splash
