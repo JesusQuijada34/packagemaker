@@ -50,6 +50,8 @@ de auditoría.
 | R-7e3a9c14 | Bug — accesos `.desktop` con rutas con espacios | Alta | Resuelto |
 | R-4b8d2f61 | Bug — `install.json` corrupto rompe `--build-removeme` | Media | Resuelto |
 | R-9c5f1e28 | Bug — `.mexf` legacy con tipos inesperados rompe `--shell-plan` | Media | Resuelto |
+| R-4a1e7b93 | Bug — limpieza del build sin reintentos (`WinError 32`) | Alta | Resuelto |
+| R-8d2c5f60 | Bug — `blindcubeEngine` acoplado a `makeselfEngine` | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -61,7 +63,8 @@ interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
 R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
-R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-5f8c2d91, R-7e3a9c14, R-4b8d2f61 y R-9c5f1e28)
+R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-5f8c2d91, R-7e3a9c14, R-4b8d2f61,
+R-9c5f1e28, R-4a1e7b93 y R-8d2c5f60)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -884,6 +887,7 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
   fallar en las cuatro acciones y documento parseable en el camino feliz).
 - **Commit:** `78f9c28`.
 - **Fecha de resolución:** 2026-11-21.
+
 ## R-7e3a9c14 — Los accesos directos `.desktop` no citaban rutas con espacios
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
@@ -952,6 +956,50 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
   `_as_list()`/`_as_dict()` para no confiar en el tipo de ninguna sección.
 - **Pruebas:** `tests/test_mexf_asksome.py::test_legacy_mexf_with_wrong_section_types_is_normalized`.
 - **Commit:** `6fa3c51`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-4a1e7b93 — La limpieza del build se rendía ante el primer `WinError 32`
+
+- **Usuario:** JesusQuijada34 (auditoría de la Fase 1.2 de `bugs.txt`; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `lib/file_ops.py` ya reintentaba ante bloqueos, pero
+  `BuildThread` seguía llamando a `shutil.rmtree` crudo en los cuatro puntos
+  donde el bloqueo es más probable: la limpieza de `dist/` y `build/`, los
+  restos de Nuitka (`*.build`, `*.onefile-build`, `*.dist`, `*.build-cache`), la
+  carpeta temporal del paquete tras crear el `.iflapp` y el borrado autorizado
+  del proyecto fuente. En Windows los procesos hijos pueden mantener el binario
+  abierto al terminar, así que el primer intento fallaba y quedaba basura en el
+  proyecto (o el paquete sin recoger) sin reintento.
+- **Pasos para reproducir:** compilar en Windows con un antivirus que retenga
+  el `.exe` recién creado y observar el `[WARN]` de carpeta no eliminada.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (deja artefactos y rompe el contrato de "sólo queda el `.iflapp`").
+- **Solución aplicada:** los cuatro puntos usan `remove_tree`, que reintenta con
+  espera creciente y limpia el bit de sólo lectura. Nueva clave
+  `build_log.folder_locked` en los 12 idiomas para explicar el motivo.
+- **Pruebas:** `tests/test_engine_isolation.py::test_build_thread_cleanup_uses_retrying_removal`
+  (los tres métodos no vuelven a llamar a `shutil.rmtree`), más el test
+  existente que simula dos pasadas bloqueadas.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-8d2c5f60 — `blindcubeEngine` importaba `ProjectNameFormatter` de otro motor
+
+- **Usuario:** JesusQuijada34 (auditoría de la Fase 2.1 de `bugs.txt`; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** al agrupar los módulos por motor, `build_validation.py` quedó
+  dentro de `blindcubeEngine` pero seguía importando
+  `lib.makeselfEngine.naming.ProjectNameFormatter` en la cabecera. El motor
+  BlindCube dependía así de otro motor, contra el aislamiento que pide la Fase
+  2.1; empaquetar o sustituir un motor arrastraba el otro.
+- **Pasos para reproducir:** `python -c "import lib.blindcubeEngine.build_validation"`
+  con `makeselfEngine` eliminado del árbol.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (deuda de arquitectura; no rompía la ejecución normal).
+- **Solución aplicada:** se usa la fachada transversal
+  `lib.projectNameFormatter`, que reexporta la autoridad de la ley de nombres.
+- **Pruebas:** `tests/test_engine_packages_layout.py::test_engines_do_not_couple_to_other_engines_at_import_time`
+  (parametrizado por motor; permite las dependencias perezosas del registro de
+  compiladores).
 - **Fecha de resolución:** 2026-11-22.
 
 ---
