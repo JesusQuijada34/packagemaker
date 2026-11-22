@@ -56,6 +56,8 @@ de auditoría.
 | R-2f7c8d31 | Bug — el identificador `.mexf` escapa del directorio de integración | Alta | Resuelto |
 | R-6a1d3c94 | Bug — `.mexf` no UTF-8 provoca traceback en el CLI | Media | Resuelto |
 | R-8e5b2f17 | Bug — `lib.native_shell --info` sin archivo lanza traceback | Baja | Resuelto |
+| R-4e7c2b91 | Bug — caché de sesión o idioma corruptos impiden arrancar | Alta | Resuelto |
+| R-9a3d6f20 | Bug — configuración local no-objeto rompe el editor y «Abrir con» | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -1139,6 +1141,59 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-4e7c2b91 — Una caché de sesión o un fichero de idioma corruptos impedían arrancar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `session_cache.load_session()` hacía `data.get("token")` sin
+  comprobar que el JSON descifrado fuera un objeto y `dict(profile)` sin
+  comprobar que el perfil fuera un objeto. Un documento `[]` lanzaba
+  `AttributeError` y un perfil como `["login"]`, `ValueError`. La llamada se
+  hace en `start_session_gate()` al terminar el splash, sin `try`, así que el
+  arranque de la GUI abortaba. Del mismo modo, `i18n._load_lang_file()` devolvía
+  cualquier JSON y `_flatten_translations()` hacía `.items()`: un `lang/es.json`
+  con `[]` reventaba en `i18n.initialize()`, antes de crear la ventana.
+- **Pasos para reproducir:** escribir `data/session.cache` con `_encrypt(b"[]")`
+  (o `lang/es.json` con `[]`) y arrancar la aplicación.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (impide el arranque).
+- **Solución aplicada:** `load_session()` descarta documentos que no sean objeto
+  y degrada un `profile` no-objeto a `{}`; `_load_lang_file()` ignora ficheros
+  que no contengan un objeto y `_flatten_translations()` devuelve `{}` ante una
+  entrada no-objeto.
+- **Pruebas:** `tests/test_local_config_robustness.py::TestSessionCacheShapes` y
+  `::TestLanguageFileShapes`.
+- **Commit:** `7ce7a84`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-9a3d6f20 — Una configuración local con forma no-objeto rompía el editor y «Abrir con»
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** tres lectores de configuración aceptaban cualquier JSON.
+  `pm_dashboard.load_config()` asignaba la lista a `self.config` y luego llamaba
+  `.get()` (`AttributeError`), y `recent_projects` no-lista reventaba al
+  iterarla; `python_portable_manager._load_config()` hacía `.get().items()` y
+  `data["path"]` sobre formas inesperadas (`AttributeError`/`TypeError`), con lo
+  que el gestor de intérpretes no se podía construir; y `ProjectConfig`
+  (`get_project_editor`, `set_project_editor`, `get_editor_path`,
+  `set_editor_path`) asumía que `projects`/`editors` eran objetos, así que
+  `_on_accept()` de «Abrir con» fallaba al pulsar «Siempre».
+- **Pasos para reproducir:** escribir `data/pmCodeEditor/config.json` o
+  `config/project_config.json` con `[]`, `"texto"` o `{"projects": []}` y abrir
+  la página del editor o el diálogo «Abrir con».
+- **Estado:** Resuelto.
+- **Prioridad:** Media (afecta a la UI del editor, no al arranque).
+- **Solución aplicada:** cada lector exige un objeto JSON, degrada las secciones
+  no-objeto (`recent_projects`, `installations`, `projects`, `editors`) a su
+  valor por defecto e ignora entradas de instalación incompletas.
+- **Pruebas:** `tests/test_local_config_robustness.py::TestPortableManagerConfigShapes`,
+  `::TestDashboardConfigShapes` y `::TestProjectConfigShapes`.
+- **Commit:** `7ce7a84`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
@@ -1399,6 +1454,13 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   funcionan sobre un `.asksome` firmado; una cabecera `[]`, una truncada o con
   `metadata` no objeto termina en `AsksomeError` legible (antes
   `AttributeError`/`TypeError`) y una entrada `C:/...`/`C:...` se rechaza.
+- Verificación del ciclo de R-4e7c2b91 y R-9a3d6f20 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 799 pasan, 1
+  omitido, 39 subtests; `pyflakes` y `py_compile` limpios; 7 de las 11 pruebas
+  nuevas fallan con el código anterior (comprobado con `git stash` de los cinco
+  módulos). Build real `create` + `--buildthis --compiler zipapp --no-sandbox
+  --harden integrity` genera un `.iflapp` válido (`verify_iflapp() →
+  valid: True`, 21 archivos) e `--inspect-json` lo lee.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

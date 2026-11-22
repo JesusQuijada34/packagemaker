@@ -2,6 +2,20 @@
 
 ## 2026-11-22
 
+### Corregido — configuraciones locales corruptas tumbaban el arranque y el editor
+
+Hallazgos del decimotercer ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `7ce7a84`.
+
+- **R-4e7c2b91 — Una caché de sesión o un fichero de idioma corruptos impedían arrancar:** `session_cache.load_session()` hacía `data.get("token")` sin comprobar que el JSON descifrado fuera un objeto y `dict(profile)` sin comprobar que el perfil fuera un objeto. Un documento `[]` lanzaba `AttributeError` y un perfil como `["login"]`, `ValueError`. La llamada ocurre en `start_session_gate()` al terminar el splash, sin `try`, así que la GUI abortaba al arrancar. Del mismo modo, `i18n._load_lang_file()` devolvía cualquier JSON y `_flatten_translations()` hacía `.items()`: un `lang/es.json` con `[]` reventaba en `i18n.initialize()`, antes de crear la ventana. Ahora `load_session()` descarta documentos que no sean objeto y degrada un `profile` no-objeto a `{}`; `_load_lang_file()` ignora ficheros que no contengan un objeto y `_flatten_translations()` devuelve `{}` ante una entrada no-objeto.
+- **R-9a3d6f20 — Una configuración local con forma no-objeto rompía el editor y «Abrir con»:** `pm_dashboard.load_config()` asignaba la lista a `self.config` y después llamaba `.get()` (`AttributeError`), y un `recent_projects` no-lista reventaba al iterarlo; `python_portable_manager._load_config()` hacía `.get().items()` y `data["path"]` sobre formas inesperadas (`AttributeError`/`TypeError`), de modo que el gestor de intérpretes no se podía construir; y `ProjectConfig` (`get_project_editor`, `set_project_editor`, `get_editor_path`, `set_editor_path`) asumía que `projects`/`editors` eran objetos, así que `_on_accept()` de «Abrir con» fallaba al pulsar «Siempre». Ahora cada lector exige un objeto JSON, degrada las secciones no-objeto (`recent_projects`, `installations`, `projects`, `editors`) a su valor por defecto e ignora entradas de instalación incompletas.
+
+### Verificación — decimotercer ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 799 pasan, 1 omitido, 39 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- 7 de las 11 pruebas nuevas fallan con el código anterior (comprobado con `git stash` de los cinco módulos corregidos).
+- Build real `create` + `--buildthis --compiler zipapp --no-sandbox --harden integrity`: `.iflapp` válido (`verify_iflapp() → valid: True`, 21 archivos) y `--inspect-json` lo lee.
+
 ### Corregido — robustez de `.mexf` y del shell nativo
 
 Hallazgos del duodécimo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `935da3c`.
