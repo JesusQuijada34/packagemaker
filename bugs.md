@@ -68,6 +68,8 @@ de auditoría.
 | R-7a3d5e62 | Bug — `--uninstall-asksome`/`--build-removeme` aceptan `app_id` con traversal | Alta | Resuelto |
 | R-2b9e4f73 | Bug — `--compile-mexf` lanza traceback si no puede escribir el `.asksome` | Media | Resuelto |
 | R-9d4c2f18 | Bug — la versión canónica bloquea la compilación | Alta | Resuelto |
+| R-6c2a8f14 | Bug — `settings.json` no-objeto tumba el build | Alta | Resuelto |
+| R-8b3d1e57 | Bug — raíz de instalación `.asksome` inválida lanza traceback | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -88,6 +90,13 @@ reportó en `bugs.txt` (commit `bed2e83`) el bloqueo por versión canónica; se
 corrigió el mismo día como R-9d4c2f18. No se prepara release: ese reporte
 reinicia el requisito de 7 días sin reportes nuevos y el periodo de
 observación sigue en curso.
+
+En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
+auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
+abortaba la compilación con `AttributeError`) y R-8b3d1e57 (una raíz de
+instalación `.asksome` que era un archivo o un destino bloqueado escapaba como
+`FileExistsError`/`NotADirectoryError`). Ambos quedaron corregidos en el commit
+`b656928`.
 
 ---
 
@@ -1447,6 +1456,60 @@ observación sigue en curso.
 
 ---
 
+## R-6c2a8f14 — Un `config/settings.json` no-objeto tumbaba la compilación
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `FlangCompiler._load_scripts_to_compile()` leía
+  `config/settings.json` y llamaba directamente a `settings.get("build")`. Un
+  archivo editado a mano o truncado que seguía siendo JSON válido pero no era
+  un objeto (`[]`, `"texto"`, `5`) lanzaba `AttributeError` en el constructor
+  del compilador. El build de la GUI y el de `--buildthis`/`compile` se
+  interrumpían con un traceback antes de poder mostrar un error legible, y el
+  proyecto ni siquiera llegaba a la validación de metadatos.
+- **Pasos para reproducir:** escribir `[]` en `config/settings.json` de un
+  proyecto y ejecutar `--buildthis` (o instanciar `FlangCompiler`).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (bloquea la compilación de un proyecto dañado).
+- **Solución aplicada:** si el documento no es un objeto se devuelve `None` y
+  se conserva el descubrimiento histórico de guiones, igual que hace
+  `_persist_env_payload()` y la lectura de `--ide-scan`. Un `build` que no sea
+  objeto o unos `scripts` mal tipados siguen rechazándose con el mensaje ya
+  existente.
+- **Pruebas:** `tests/test_explicit_build_scripts.py::test_non_object_settings_fall_back_to_script_discovery`
+  (4 subtests: lista, cadena, número y `build` no-objeto).
+- **Commit:** `b656928`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-8b3d1e57 — Una raíz de instalación `.asksome` inválida lanzaba traceback
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `install_asksome()` hacía `root.mkdir()` y
+  `shutil.rmtree(target)` sin proteger los fallos del sistema de archivos. Si
+  `--install-root` apuntaba a un archivo existente, a una ruta sin permisos o
+  el destino era un archivo, el CLI terminaba con `FileExistsError`,
+  `PermissionError` o `NotADirectoryError` en lugar de un `[ERROR]` legible.
+  `AsksomeInstallHelper.install()` solo captura `AsksomeError`,
+  `AsksomeInstallError` e `IflappError`, así que el traceback llegaba al
+  usuario.
+- **Pasos para reproducir:** crear un `.asksome` válido, crear un archivo
+  normal en `/tmp/blocked-root` y ejecutar
+  `--install-asksome demo.asksome --install-root /tmp/blocked-root`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (error de uso del CLI, sin pérdida de datos).
+- **Solución aplicada:** la preparación de la raíz, la limpieza del destino y
+  la extracción traducen `OSError` a `AsksomeInstallError` con la ruta
+  afectada. El CLI responde `[ERROR] Instalación .asksome fallida: …` con
+  código 1. El identificador de la app sigue validándose antes de tocar el
+  disco.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_install_reports_unusable_install_root`
+  (raíz que es un archivo y destino bloqueado por un archivo).
+- **Commit:** `b656928`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
@@ -1625,6 +1688,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
+- Verificación del ciclo de R-6c2a8f14 y R-8b3d1e57 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 829 pasan, 1
+  omitido, 55 subtests; `pyflakes` y `py_compile` limpios. El subtest de
+  `settings.json` no-objeto falla con el código anterior (`AttributeError:
+  'list' object has no attribute 'get'`) y la prueba de la raíz de instalación
+  falla con `FileExistsError`; ambas pasan con `b656928`. Reproducción real:
+  `--install-asksome demo.asksome --install-root /tmp/blocked-root` (archivo
+  normal) responde `[ERROR] Instalación .asksome fallida: No se pudo preparar
+  la raíz de instalación …` con código 1, sin traceback.
 - Verificación del ciclo de R-9d4c2f18 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 827 pasan, 1
   omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 4 casos de

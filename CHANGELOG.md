@@ -2,6 +2,30 @@
 
 ## 2026-11-22
 
+### Corregido — configuración de build y raíz de instalación no válidas
+
+Hallazgos del decimoséptimo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `b656928`.
+
+- **R-6c2a8f14 — Un `config/settings.json` no-objeto tumbaba la compilación:** `FlangCompiler._load_scripts_to_compile()` llamaba a `settings.get("build")` sin comprobar el tipo del documento. Un archivo editado a mano que seguía siendo JSON válido pero no era un objeto (`[]`, `"texto"`, `5`) lanzaba `AttributeError` en el constructor del compilador, así que la GUI y `--buildthis`/`compile` se interrumpían con un traceback antes de la validación de metadatos. Ahora un documento no-objeto degrada al descubrimiento histórico de guiones; un `build` no-objeto o unos `scripts` mal tipados siguen rechazándose con el mensaje existente.
+- **R-8b3d1e57 — Una raíz de instalación `.asksome` inválida lanzaba traceback:** `install_asksome()` no protegía `root.mkdir()` ni `shutil.rmtree(target)`. Si `--install-root` apuntaba a un archivo, a una ruta sin permisos o el destino era un archivo, el CLI terminaba con `FileExistsError`/`PermissionError`/`NotADirectoryError` en lugar de un `[ERROR]` legible. Ahora la preparación de la raíz, la limpieza del destino y la extracción traducen `OSError` a `AsksomeInstallError`; el CLI responde `[ERROR] Instalación .asksome fallida: …` con código 1. El `app_id` se sigue validando antes de tocar el disco.
+
+### Verificación — decimoséptimo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 829 pasan, 1 omitido, 55 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- El subtest de `settings.json` no-objeto falla con el código anterior (`AttributeError: 'list' object has no attribute 'get'`) y la prueba de la raíz de instalación falla con `FileExistsError`; ambas pasan con `b656928`.
+- Reproducción real: `--install-asksome demo.asksome --install-root /tmp/blocked-root` (archivo normal) responde `[ERROR] Instalación .asksome fallida: No se pudo preparar la raíz de instalación …` con código 1, sin traceback.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `3f36cc9`, autor `openhands <openhands@all-hands.dev>`): `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo el del propietario del 2026-11-22, de modo que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
+## 2026-11-22
+
 ### Corregido — la versión canónica del proyecto bloqueaba la compilación
 
 Reporte del propietario (JesusQuijada34) en `bugs.txt`, commit `bed2e83`. Commit `2011588`.
