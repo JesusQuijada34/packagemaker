@@ -2,6 +2,29 @@
 
 ## 2026-11-22
 
+### Corregido — `--compile-mexf` lanzaba traceback con entradas ilegibles
+
+Hallazgo del vigésimo segundo ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `f8ea814`.
+
+- **R-6d2f8a41 — `--compile-mexf` no traducía los fallos del sistema de archivos:** `compile_mexf_project()` leía `details.xml` con `ET.parse()` y los módulos `.mexf` con `Path.read_text()` sin capturar `OSError`. Un `details.xml` sin permiso de lectura terminaba en `PermissionError`; un `.mexf/main.mexf` ilegible hacía lo propio desde `parse_mexf()`; y un directorio `.mexf/` sin permiso reventaba en `main.is_file()` dentro de `discover_mexf_modules()`. `MexfCompileHelper.compile()` solo capturaba `MexfCompileError`, de modo que el CLI mostraba un traceback. Ahora `parse_mexf()` traduce `OSError` a `MexfError`, `detect_mexf_format()` devuelve `"unknown"` cuando no puede leer, `read_project_details()` y `discover_mexf_modules()` convierten los fallos en `MexfCompileError`, y el helper del CLI responde `[ERROR] Compilación .mexf fallida: …` con código 1. Un proyecto legible sigue generando el `.asksome` firmado.
+
+### Verificación — vigésimo segundo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 851 pasan, 1 omitido, 55 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las 5 pruebas nuevas de `tests/test_mexf_asksome.py` fallan con el código anterior (comprobado con `git stash` de `lib/mexf_parser.py`, `lib/mexf_compiler.py` y `lib/cliHandler.py`) y pasan con `f8ea814`.
+- Reproducción real: `--compile-mexf` sobre un proyecto con `details.xml`, `.mexf/main.mexf` o el directorio `.mexf/` sin permisos terminaba en `PermissionError` con traceback; ahora imprime `[ERROR] Compilación .mexf fallida: …` y devuelve 1. Un proyecto legible sigue generando el `.asksome` (`[OK] Artefacto .asksome generado`, código 0).
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `5fde875`, autor `openhands <openhands@all-hands.dev>`): `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo el del propietario del 2026-11-22, de modo que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
+## 2026-11-22
+
 ### Corregido — `--shell-info` y la vista previa lanzaban traceback con rutas inaccesibles
 
 Hallazgo del vigésimo primer ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `edb049f`.

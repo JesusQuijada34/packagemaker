@@ -75,6 +75,7 @@ de auditoría.
 | R-7f2b9c63 | Bug — `.run` con `.iflapp` corrupto lanza traceback | Media | Resuelto |
 | R-7c9e2a45 | Bug — `editor_config.json` con forma no válida rompe el arranque | Media | Resuelto |
 | R-4e8b2d17 | Bug — `--shell-info` lanza traceback con paquete ilegible o vista previa bloqueada | Media | Resuelto |
+| R-6d2f8a41 | Bug — `--compile-mexf` lanza traceback con entradas ilegibles | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -115,6 +116,11 @@ El vigésimo primer ciclo añadió R-4e8b2d17: `--shell-info` solo traducía
 `PermissionError` con traceback; `--shell-preview` hacía lo propio con un
 destino ocupado por un archivo (`FileExistsError`). Queda corregido y probado en
 el commit `edb049f`; la cola sigue sin bugs abiertos.
+
+El vigésimo segundo ciclo añadió R-6d2f8a41: `--compile-mexf` dejaba escapar
+`PermissionError`/`IsADirectoryError` con traceback cuando `details.xml`, un
+`.mexf` o el propio directorio `.mexf/` no se podían leer. Queda corregido y
+probado en el commit `f8ea814`; la cola sigue sin bugs abiertos.
 
 ---
 
@@ -1693,6 +1699,47 @@ el commit `edb049f`; la cola sigue sin bugs abiertos.
 
 ---
 
+## R-6d2f8a41 — `--compile-mexf` lanzaba traceback con entradas ilegibles
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `compile_mexf_project()` leía `details.xml`, descubría los
+  módulos y parseaba cada `.mexf` sin traducir los fallos del sistema de
+  archivos. Un `details.xml` sin permiso de lectura escapaba desde
+  `ET.parse()` como `PermissionError`; un `.mexf/main.mexf` ilegible hacía lo
+  propio desde `Path.read_text()` en `parse_mexf()`; y un directorio `.mexf/`
+  sin permiso reventaba en `main.is_file()` dentro de
+  `discover_mexf_modules()`. `MexfCompileHelper.compile()` solo capturaba
+  `MexfCompileError`, así que el CLI mostraba un traceback en vez de un mensaje
+  legible. `detect_mexf_format()` también dejaba escapar `OSError` pese a que su
+  contrato es devolver `"unknown"` cuando no puede leer el documento.
+- **Pasos para reproducir:** `chmod 000 proyecto/.mexf/main.mexf && python
+  packagemaker.py --compile-mexf proyecto`; repetir con `details.xml` o con el
+  directorio `.mexf/` sin permisos.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el comando termina en traceback, pero no hay pérdida de
+  datos ni corrupción).
+- **Solución aplicada:** `parse_mexf()` traduce `OSError` a `MexfError` con la
+  ruta y el motivo; `detect_mexf_format()` trata `(UnicodeDecodeError, OSError)`
+  como `"unknown"`; `read_project_details()` captura `(ET.ParseError, OSError)`
+  y `discover_mexf_modules()` envuelve la comprobación y el `rglob` para
+  devolver `MexfCompileError`. `compile_mexf_project()` acepta
+  `(MexfError, OSError)` al parsear los módulos y `MexfCompileHelper.compile()`
+  responde `[ERROR] Compilación .mexf fallida: …` con código 1. Un proyecto
+  legible sigue generando el `.asksome` firmado.
+- **Pruebas:** `tests/test_mexf_asksome.py` —
+  `test_parse_mexf_reports_unreadable_source_as_mexf_error`,
+  `test_compile_mexf_project_reports_unreadable_module_as_compile_error`,
+  `test_compile_mexf_project_reports_unreadable_details_as_compile_error`,
+  `test_compile_mexf_project_reports_unreadable_module_directory` y
+  `test_compile_mexf_helper_reports_unreadable_input_without_traceback`. Las
+  cinco fallan con el código anterior (comprobado con `git stash` de
+  `lib/mexf_parser.py`, `lib/mexf_compiler.py` y `lib/cliHandler.py`).
+- **Commit:** `f8ea814`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
@@ -1871,6 +1918,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
+- Verificación del ciclo de R-6d2f8a41 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 851 pasan, 1
+  omitido, 55 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior, `--compile-mexf` sobre un proyecto con `details.xml`, `.mexf/main.mexf`
+  o el directorio `.mexf/` sin permisos terminaba en `PermissionError` con
+  traceback; ahora responde `[ERROR] Compilación .mexf fallida: …` y código 1.
+  Las 5 pruebas nuevas fallan con el código anterior (comprobado con
+  `git stash` de `lib/mexf_parser.py`, `lib/mexf_compiler.py` y
+  `lib/cliHandler.py`). Un proyecto legible sigue generando el `.asksome`
+  firmado (`--compile-mexf` → `[OK] Artefacto .asksome generado`, código 0).
 - Verificación del ciclo de R-7f2b9c63 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 839 pasan, 1
   omitido, 55 subtests; `pyflakes` y `py_compile` limpios. Un `.run` con el
