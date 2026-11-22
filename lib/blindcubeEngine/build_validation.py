@@ -24,7 +24,13 @@ _SEGMENT = re.compile(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$")
 # Se acepta ``1`` y ``v2`` porque el campo es libre y
 # ``normalize_version_base`` completa el componente menor; lo que se bloquea es
 # el campo vacío o un valor sin números (que antes caía en silencio a ``1.0``).
-_VERSION = re.compile(r"^v?\d+(?:\.\d+)*$")
+# También se acepta la versión canónica que guarda ``details.xml``
+# (``v1.0-26.11-22.00``), que el usuario puede pegar tal cual; el timestamp y
+# la plataforma se descartan al normalizar a la base.
+_VERSION = re.compile(
+    r"^v?\d+(?:\.\d+)*"
+    r"(?:-\d{2}\.\d{2}-\d{2}\.\d{2}(?:-(?:Danenone|Knosthalij|AlphaCube))?)?$"
+)
 
 
 @dataclass(frozen=True)

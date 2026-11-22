@@ -47,6 +47,39 @@ def test_free_form_numeric_versions_are_accepted(version):
     assert validate("influent", "mycoolapp", version) == []
 
 
+@pytest.mark.parametrize(
+    "version",
+    [
+        "1.0-26.11-22.00",
+        "v1.0-26.11-22.00",
+        "3.2.7-26.05-20.13",
+        "v3.2.7-26.05-20.13-AlphaCube",
+    ],
+)
+def test_canonical_versions_with_timestamp_are_accepted(version):
+    """La versión exacta de ``details.xml`` no debe bloquear la compilación.
+
+    El campo se rellena a veces pegando el valor canónico completo
+    (``v1.0-26.11-22.00``); el validador lo rechazaba como «X.x» aunque
+    ``ProjectNameFormatter`` y ``normalize_version_base`` lo aceptan.
+    """
+    assert validate("influent", "mycoolapp", version) == []
+
+
+@pytest.mark.parametrize(
+    "version", ["1.0-26.11", "1.0-2026.11-22.00", "1.0-26.11-22.00-StoneCube"]
+)
+def test_malformed_timestamp_versions_are_rejected(version):
+    assert fields(validate("influent", "mycoolapp", version)) == ["version"]
+
+
+def test_canonical_version_normalizes_to_base_for_the_build():
+    from lib.projectNameFormatter import ProjectNameFormatter
+
+    assert ProjectNameFormatter.normalize_version_base("v1.0-26.11-22.00") == "1.0"
+    assert ProjectNameFormatter.normalize_version_base("3.2.7-26.05-20.13") == "3.2.7"
+
+
 @pytest.mark.parametrize("version", ["abc", "uno", "1.x", "v", "-1"])
 def test_non_numeric_versions_are_rejected(version):
     assert fields(validate("influent", "mycoolapp", version)) == ["version"]
