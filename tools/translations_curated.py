@@ -18,6 +18,7 @@ from typing import Dict
 CURATED: Dict[str, Dict[str, str]] = {}
 
 CURATED["fr"] = {
+    'dashboard.create_failed': 'Impossible de créer le projet : {error}',
     "config.font_family": "Police de l'interface",
     "config.font_auto": "Automatique (selon le systeme)",
     "config.section_notifications": 'Notifications et alertes',
@@ -245,6 +246,7 @@ CURATED["fr"] = {
 }
 
 CURATED["de"] = {
+    'dashboard.create_failed': 'Das Projekt konnte nicht erstellt werden: {error}',
     "config.font_family": "Schriftart der Oberflaeche",
     "config.font_auto": "Automatisch (Systemvorgabe)",
     "config.section_notifications": 'Benachrichtigungen und Hinweise',
@@ -472,6 +474,7 @@ CURATED["de"] = {
 }
 
 CURATED["it"] = {
+    'dashboard.create_failed': 'Impossibile creare il progetto: {error}',
     "config.font_family": "Font dell'interfaccia",
     "config.font_auto": "Automatico (predefinito di sistema)",
     "config.section_notifications": 'Notifiche e avvisi',
@@ -699,6 +702,7 @@ CURATED["it"] = {
 }
 
 CURATED["pt"] = {
+    'dashboard.create_failed': 'Não foi possível criar o projeto: {error}',
     "config.font_family": "Fonte da interface",
     "config.font_auto": "Automatica (padrao do sistema)",
     "config.section_notifications": 'Notificacoes e avisos',
@@ -928,6 +932,7 @@ CURATED["pt"] = {
 }
 
 CURATED["nl"] = {
+    'dashboard.create_failed': 'Kan het project niet aanmaken: {error}',
     "config.font_family": "Lettertype van de interface",
     "config.font_auto": "Automatisch (systeemstandaard)",
     "config.section_notifications": 'Meldingen en waarschuwingen',
@@ -1155,6 +1160,7 @@ CURATED["nl"] = {
 }
 
 CURATED["pl"] = {
+    'dashboard.create_failed': 'Nie można utworzyć projektu: {error}',
     "config.font_family": "Czcionka interfejsu",
     "config.font_auto": "Automatycznie (domyslna systemowa)",
     "config.section_notifications": 'Powiadomienia i ostrzezenia',
@@ -1382,6 +1388,7 @@ CURATED["pl"] = {
 }
 
 CURATED["tr"] = {
+    'dashboard.create_failed': 'Proje oluşturulamadı: {error}',
     "config.font_family": "Arayuz yazi tipi",
     "config.font_auto": "Otomatik (sistem varsayilani)",
     "config.section_notifications": 'Bildirimler ve uyarilar',
@@ -1609,6 +1616,7 @@ CURATED["tr"] = {
 }
 
 CURATED["ru"] = {
+    'dashboard.create_failed': 'Не удалось создать проект: {error}',
     "config.font_family": "Шрифт интерфейса",
     "config.font_auto": "Автоматически (по системе)",
     "config.section_notifications": 'Уведомления и оповещения',
@@ -1836,6 +1844,7 @@ CURATED["ru"] = {
 }
 
 CURATED["ja"] = {
+    'dashboard.create_failed': 'プロジェクトを作成できませんでした: {error}',
     "config.font_family": "インターフェースのフォント",
     "config.font_auto": "自動（システムに従う）",
     "config.section_notifications": '通知とアラート',
@@ -2063,6 +2072,7 @@ CURATED["ja"] = {
 }
 
 CURATED["ko"] = {
+    'dashboard.create_failed': '프로젝트를 만들 수 없습니다: {error}',
     "config.font_family": "인터페이스 글꼴",
     "config.font_auto": "자동 (시스템 기본값)",
     "config.section_notifications": '알림 및 경고',
@@ -2290,6 +2300,7 @@ CURATED["ko"] = {
 }
 
 CURATED["zh"] = {
+    'dashboard.create_failed': '无法创建项目：{error}',
     "config.font_family": "界面字体",
     "config.font_auto": "自动（跟随系统）",
     "config.section_notifications": '通知与提醒',
@@ -2517,6 +2528,7 @@ CURATED["zh"] = {
 }
 
 CURATED["ar"] = {
+    'dashboard.create_failed': 'تعذر إنشاء المشروع: {error}',
     "config.font_family": "خط الواجهة",
     "config.font_auto": "تلقائي (حسب النظام)",
     "config.section_notifications": 'الإشعارات والتنبيهات',
