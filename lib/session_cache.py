@@ -127,10 +127,13 @@ def load_session() -> Optional[Tuple[str, Dict[str, Any]]]:
         data = json.loads(plaintext.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
         return None
+    if not isinstance(data, dict):
+        return None
     token = str(data.get("token", "") or "")
     if not token:
         return None
-    return token, dict(data.get("profile", {}) or {})
+    profile = data.get("profile")
+    return token, dict(profile) if isinstance(profile, dict) else {}
 
 
 def clear_session() -> None:

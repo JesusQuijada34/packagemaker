@@ -503,6 +503,8 @@ class DashboardWindow(QMainWindow):
 
     def _add_to_recent(self, path: str):
         recents = self.config.get("recent_projects", [])
+        if not isinstance(recents, list):
+            recents = []
         if path in recents:
             recents.remove(path)
         recents.insert(0, path)
@@ -512,8 +514,11 @@ class DashboardWindow(QMainWindow):
 
     def _update_recent_list(self):
         self.recent_list.clear()
-        for path in self.config.get("recent_projects", []):
-            if os.path.isdir(path):
+        recents = self.config.get("recent_projects", [])
+        if not isinstance(recents, list):
+            return
+        for path in recents:
+            if isinstance(path, str) and os.path.isdir(path):
                 item = QListWidgetItem(f"{os.path.basename(path)}\n{path}")
                 item.setData(Qt.ItemDataRole.UserRole, path)
                 self.recent_list.addItem(item)
@@ -522,7 +527,8 @@ class DashboardWindow(QMainWindow):
         if EDITOR_CONFIG_PATH.exists():
             try:
                 with open(EDITOR_CONFIG_PATH, "r", encoding="utf-8") as f:
-                    self.config = json.load(f)
+                    loaded = json.load(f)
+                self.config = loaded if isinstance(loaded, dict) else {}
             except (json.JSONDecodeError, OSError):
                 self.config = {}
         if not self.config:

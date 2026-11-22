@@ -34,7 +34,8 @@ class ProjectConfig:
         
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                loaded = json.load(f)
+            return loaded if isinstance(loaded, dict) else {}
         except Exception as e:
             print(f"[ERROR] Error cargando configuración: {e}")
             return {}
@@ -59,6 +60,8 @@ class ProjectConfig:
         """
         config = self.get_config()
         projects = config.get('projects', {})
+        if not isinstance(projects, dict):
+            return None
         
         # Usar la ruta como clave
         return projects.get(project_path)
@@ -73,7 +76,7 @@ class ProjectConfig:
         """
         config = self.get_config()
         
-        if 'projects' not in config:
+        if not isinstance(config.get('projects'), dict):
             config['projects'] = {}
         
         config['projects'][project_path] = editor_name
@@ -88,8 +91,9 @@ class ProjectConfig:
         """
         config = self.get_config()
         
-        if 'projects' in config and project_path in config['projects']:
-            del config['projects'][project_path]
+        projects = config.get('projects')
+        if isinstance(projects, dict) and project_path in projects:
+            del projects[project_path]
             self.save_config(config)
     
     def get_editor_path(self, editor_name: str) -> Optional[str]:
@@ -104,6 +108,8 @@ class ProjectConfig:
         """
         config = self.get_config()
         editors = config.get('editors', {})
+        if not isinstance(editors, dict):
+            return None
         
         return editors.get(editor_name)
     
@@ -117,7 +123,7 @@ class ProjectConfig:
         """
         config = self.get_config()
         
-        if 'editors' not in config:
+        if not isinstance(config.get('editors'), dict):
             config['editors'] = {}
         
         config['editors'][editor_name] = exe_path

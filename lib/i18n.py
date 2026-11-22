@@ -64,7 +64,11 @@ def _load_lang_file(lang_code: str) -> Dict[str, Any]:
     try:
         if os.path.exists(file_path):
             with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                data = loaded
+            else:
+                print(f"[i18n] {file_path} no contiene un objeto JSON; se ignora")
     except Exception as e:
         print(f"[i18n] Error cargando {file_path}: {e}")
     _translation_cache[lang_code] = data
@@ -73,6 +77,8 @@ def _load_lang_file(lang_code: str) -> Dict[str, Any]:
 
 def _flatten_translations(data: Dict[str, Any], prefix: str = "") -> Dict[str, str]:
     result: Dict[str, str] = {}
+    if not isinstance(data, dict):
+        return result
     for key, value in data.items():
         if key.startswith("_"):
             continue

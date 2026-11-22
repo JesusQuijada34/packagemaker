@@ -141,7 +141,15 @@ class PythonPortableManager(QObject):
         try:
             with open(self.config_file, "r", encoding="utf-8") as f:
                 config = json.load(f)
-            for ver, data in config.get("installations", {}).items():
+        except (json.JSONDecodeError, OSError):
+            return
+        installations = config.get("installations") if isinstance(config, dict) else None
+        if not isinstance(installations, dict):
+            return
+        for ver, data in installations.items():
+            if not isinstance(data, dict):
+                continue
+            try:
                 self.installations[ver] = PythonInstallation(
                     version=ver,
                     path=Path(data["path"]),
@@ -150,8 +158,8 @@ class PythonPortableManager(QObject):
                     is_installed=data.get("is_installed", False),
                     size_mb=data.get("size_mb", 0),
                 )
-        except (json.JSONDecodeError, KeyError, OSError):
-            pass
+            except (KeyError, TypeError, ValueError):
+                continue
 
     def _save_config(self):
         config = {
