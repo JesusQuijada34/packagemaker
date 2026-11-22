@@ -2,6 +2,27 @@
 
 ## 2026-11-22
 
+### Corregido — robustez del IDE headless (escaneo, compilación y depuración)
+
+Hallazgos del decimocuarto ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `38f0791`.
+
+- **R-7f3a9c21 — Un `config/settings.json` con `build` no-objeto rompía `--ide-scan`:** `_declared_scripts()` hacía `data.get("build", {}).get("scripts")`. Si el fichero era un objeto pero `build` era una lista, una cadena, `null` o un número, la segunda llamada lanzaba `AttributeError`: `--ide-scan` terminaba en traceback, `--ide-scan-json` contaminaba la salida JSON y la página del IDE no podía construir el proyecto. Ahora `build` debe ser un objeto para leer `scripts`; en caso contrario se usa el descubrimiento de `.py` de la raíz.
+- **R-2c8e5d14 — `--ide-compile` lanzaba traceback con una carpeta inexistente:** `IflappIdeHelper.compile()` llamaba a `compile_project()` sin protección. `scan_project()` lanza `FileNotFoundError` si la ruta no es un proyecto y `mkdir()` puede lanzar `OSError` si `--ide-output` apunta a un archivo. Ahora el helper captura `OSError` y responde `[ERROR] No se pudo compilar el proyecto: …` con código 1.
+- **R-5a1f8e63 — `--ide-debug` dejaba escapar las excepciones del guion depurado:** `debug_script()` solo capturaba `OSError` y `SyntaxError`, así que un `ZeroDivisionError`, un `RuntimeError` o un `SystemExit` del guion llegaban al CLI o al hilo de la UI en lugar de rellenar `DebugOutcome.error`. Ahora cualquier fallo del guion, incluido `SystemExit`, se devuelve como error del resultado de depuración.
+
+### Verificación — decimocuarto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 804 pasan, 1 omitido, 43 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las 6 pruebas nuevas fallan con el código anterior (comprobado con `git stash` de `lib/iflapp_ide.py` y `lib/cliHandler.py`).
+- `--ide-scan --ide-scan-json` con `{"build": []}` emite JSON parseable; `--ide-compile /tmp/no-existe` responde `[ERROR]` y código 1 sin traceback; `debug_script()` sobre un guion con `1/0` devuelve `DebugOutcome(error=…)`.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado: `Q-001`…`Q-010` siguen sin casillas marcadas y el último commit que toca el archivo no es de `JesusQuijada34`, así que no hay respuestas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+## 2026-11-22
+
 ### Corregido — configuraciones locales corruptas tumbaban el arranque y el editor
 
 Hallazgos del decimotercer ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `7ce7a84`.

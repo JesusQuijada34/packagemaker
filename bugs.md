@@ -58,6 +58,9 @@ de auditoría.
 | R-8e5b2f17 | Bug — `lib.native_shell --info` sin archivo lanza traceback | Baja | Resuelto |
 | R-4e7c2b91 | Bug — caché de sesión o idioma corruptos impiden arrancar | Alta | Resuelto |
 | R-9a3d6f20 | Bug — configuración local no-objeto rompe el editor y «Abrir con» | Media | Resuelto |
+| R-7f3a9c21 | Bug — `--ide-scan` revienta con `settings.json` `build` no-objeto | Alta | Resuelto |
+| R-2c8e5d14 | Bug — `--ide-compile` lanza traceback con una carpeta inexistente | Media | Resuelto |
+| R-5a1f8e63 | Bug — `--ide-debug` deja escapar las excepciones del guion | Alta | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -70,8 +73,8 @@ ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
 R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
 R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-5f8c2d91, R-7e3a9c14, R-4b8d2f61,
-R-9c5f1e28, R-4a1e7b93, R-8d2c5f60, R-9b4e7a52, R-2f7c8d31, R-6a1d3c94 y
-R-8e5b2f17)
+R-9c5f1e28, R-4a1e7b93, R-8d2c5f60, R-9b4e7a52, R-2f7c8d31, R-6a1d3c94,
+R-8e5b2f17, R-4e7c2b91, R-9a3d6f20, R-7f3a9c21, R-2c8e5d14 y R-5a1f8e63)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -1192,6 +1195,65 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 - **Commit:** `7ce7a84`.
 - **Fecha de resolución:** 2026-11-22.
 
+## R-7f3a9c21 — Un `settings.json` con `build` no-objeto rompía `--ide-scan`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `_declared_scripts()` hacía `data.get("build", {}).get("scripts")`.
+  Si `config/settings.json` era un objeto pero `build` era una lista, una cadena,
+  `null` o un número (edición manual o corrupción), la segunda llamada a `.get()`
+  lanzaba `AttributeError` y `--ide-scan` terminaba en traceback. En modo
+  `--ide-scan-json` el traceback además contaminaba la salida que consume el
+  shell, y la página del IDE no podía construir el proyecto.
+- **Pasos para reproducir:** escribir `config/settings.json` con `{"build": []}`
+  y ejecutar `python packagemaker.py --ide-scan <carpeta> --ide-scan-json`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe una acción headless y la página del IDE).
+- **Solución aplicada:** `_declared_scripts()` exige que `build` sea un objeto
+  antes de leer `scripts`; si no lo es, cae al descubrimiento de `.py` de la raíz.
+- **Pruebas:** `tests/test_iflapp_ide.py::IdeProjectTests::test_find_scripts_tolerates_non_object_build_settings`
+  y `tests/test_cli_json_stream_purity.py::JsonStreamPurityTests::test_ide_scan_json_tolerates_non_object_build_settings`.
+- **Commit:** `38f0791`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-2c8e5d14 — `--ide-compile` lanzaba traceback con una carpeta inexistente
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `IflappIdeHelper.compile()` llamaba a `compile_project()` sin
+  protección. `scan_project()` lanza `FileNotFoundError` cuando la ruta no es
+  una carpeta de proyecto y `mkdir()` puede lanzar `OSError` si `--ide-output`
+  apunta a un archivo; ambos terminaban en un traceback en lugar de un mensaje
+  `[ERROR]` con código 1.
+- **Pasos para reproducir:** `python packagemaker.py --ide-compile /tmp/no-existe`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (acción headless, sin pérdida de datos).
+- **Solución aplicada:** el helper captura `OSError` (incluye
+  `FileNotFoundError`) y responde `[ERROR] No se pudo compilar el proyecto: …`
+  devolviendo `False`.
+- **Pruebas:** `tests/test_cli_json_stream_purity.py::JsonStreamPurityTests::test_ide_compile_missing_dir_reports_error_without_traceback`.
+- **Commit:** `38f0791`.
+- **Fecha de resolución:** 2026-11-22.
+
+## R-5a1f8e63 — `--ide-debug` dejaba escapar las excepciones del guion depurado
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `debug_script()` solo capturaba `OSError` y `SyntaxError`.
+  Si el guion depurado lanzaba una excepción en tiempo de ejecución
+  (`ZeroDivisionError`, `RuntimeError`, `SystemExit`…), la excepción escapaba de
+  `trace_script()` y llegaba al CLI o al hilo de la UI, en lugar de rellenar
+  `DebugOutcome.error`, que existe precisamente para eso.
+- **Pasos para reproducir:** `--ide-debug` sobre un guion con `1/0`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (puede tumbar el IDE al depurar código con errores).
+- **Solución aplicada:** `debug_script()` captura el fallo del guion, incluido
+  `SystemExit`, y lo devuelve en `DebugOutcome(error=...)`.
+- **Pruebas:** `tests/test_iflapp_ide.py::IdeDebugTests::test_debug_script_reports_runtime_error`
+  y `::test_debug_script_reports_system_exit`.
+- **Commit:** `38f0791`.
+- **Fecha de resolución:** 2026-11-22.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -1461,6 +1523,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   módulos). Build real `create` + `--buildthis --compiler zipapp --no-sandbox
   --harden integrity` genera un `.iflapp` válido (`verify_iflapp() →
   valid: True`, 21 archivos) e `--inspect-json` lo lee.
+- Verificación del ciclo de R-7f3a9c21, R-2c8e5d14 y R-5a1f8e63 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 804 pasan, 1
+  omitido, 43 subtests; `pyflakes` y `py_compile` limpios; las 6 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/iflapp_ide.py` y `lib/cliHandler.py`). `--ide-scan --ide-scan-json` con
+  `{"build": []}` emite JSON parseable (antes `AttributeError`);
+  `--ide-compile /tmp/no-existe` responde `[ERROR]` y código 1 (antes
+  traceback); `debug_script()` sobre un guion con `1/0` devuelve
+  `DebugOutcome(error=…)` (antes `ZeroDivisionError`).
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
