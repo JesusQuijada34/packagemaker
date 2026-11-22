@@ -1024,7 +1024,7 @@ class MexfCompileHelper:
                 password=data.get("password"),
                 wrappers=bool(data.get("wrappers")),
             )
-        except MexfCompileError as exc:
+        except (MexfCompileError, OSError) as exc:
             print(f"[ERROR] Compilación .mexf fallida: {exc}")
             return False
 

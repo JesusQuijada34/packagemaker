@@ -287,6 +287,82 @@ def test_compile_mexf_project_reports_unwritable_output_as_compile_error(tmp_pat
         compile_mexf_project(root, blocker / "demo.asksome")
 
 
+_UNREADABLE_SKIP = pytest.mark.skipif(
+    os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+    reason="los permisos POSIX no bloquean la lectura en Windows ni como root",
+)
+
+
+@_UNREADABLE_SKIP
+def test_parse_mexf_reports_unreadable_source_as_mexf_error(tmp_path):
+    """Un .mexf sin permiso de lectura no debe escapar como OSError crudo."""
+    source = tmp_path / "main.mexf"
+    source.write_text(MAIN_MEXF, encoding="utf-8")
+    source.chmod(0)
+    try:
+        assert detect_mexf_format(source) == "unknown"
+        with pytest.raises(MexfError):
+            parse_mexf(source)
+    finally:
+        source.chmod(0o644)
+
+
+@_UNREADABLE_SKIP
+def test_compile_mexf_project_reports_unreadable_module_as_compile_error(tmp_path):
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    root = _make_project(tmp_path)
+    module = root / ".mexf" / "main.mexf"
+    module.chmod(0)
+    try:
+        with pytest.raises(MexfCompileError):
+            compile_mexf_project(root, tmp_path / "out.asksome")
+    finally:
+        module.chmod(0o644)
+
+
+@_UNREADABLE_SKIP
+def test_compile_mexf_project_reports_unreadable_details_as_compile_error(tmp_path):
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    root = _make_project(tmp_path)
+    details = root / "details.xml"
+    details.chmod(0)
+    try:
+        with pytest.raises(MexfCompileError):
+            compile_mexf_project(root, tmp_path / "out.asksome")
+    finally:
+        details.chmod(0o644)
+
+
+@_UNREADABLE_SKIP
+def test_compile_mexf_project_reports_unreadable_module_directory(tmp_path):
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    root = _make_project(tmp_path)
+    mexf_dir = root / ".mexf"
+    mexf_dir.chmod(0)
+    try:
+        with pytest.raises(MexfCompileError):
+            compile_mexf_project(root, tmp_path / "out.asksome")
+    finally:
+        mexf_dir.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_compile_mexf_helper_reports_unreadable_input_without_traceback(tmp_path, capsys):
+    from lib.cliHandler import MexfCompileHelper
+
+    root = _make_project(tmp_path)
+    details = root / "details.xml"
+    details.chmod(0)
+    try:
+        assert MexfCompileHelper.compile({"path": str(root)}) is False
+    finally:
+        details.chmod(0o644)
+    assert "[ERROR] Compilación .mexf fallida:" in capsys.readouterr().out
+
+
 def test_mexf_compiler_skips_projects_without_mexf_dir(tmp_path):
     from lib.mexf_compiler import MexfCompiler
 

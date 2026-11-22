@@ -78,7 +78,7 @@ def read_project_details(project_root: Path | str) -> Dict[str, Any]:
         raise MexfCompileError(f"No se encontró details.xml en {root}")
     try:
         node = ET.parse(details).getroot()
-    except ET.ParseError as exc:
+    except (ET.ParseError, OSError) as exc:
         raise MexfCompileError(f"details.xml inválido: {exc}") from exc
     return {
         "publisher": node.findtext("publisher") or node.findtext("empresa") or "Unknown",
@@ -93,13 +93,16 @@ def read_project_details(project_root: Path | str) -> Dict[str, Any]:
 def discover_mexf_modules(project_root: Path | str) -> List[Path]:
     """Devuelve ``main.mexf`` primero y luego los submódulos, ordenados."""
     mexf_dir = Path(project_root) / MEXF_DIRNAME
-    if not mexf_dir.is_dir():
-        raise MexfCompileError(f"No existe el directorio {MEXF_DIRNAME}/ en {project_root}")
-    main = mexf_dir / MAIN_MEXF_NAME
-    if not main.is_file():
-        raise MexfCompileError(f"Falta {MEXF_DIRNAME}/{MAIN_MEXF_NAME}")
-    modules = [main]
-    modules.extend(sorted(path for path in mexf_dir.rglob("*.mexf") if path != main))
+    try:
+        if not mexf_dir.is_dir():
+            raise MexfCompileError(f"No existe el directorio {MEXF_DIRNAME}/ en {project_root}")
+        main = mexf_dir / MAIN_MEXF_NAME
+        if not main.is_file():
+            raise MexfCompileError(f"Falta {MEXF_DIRNAME}/{MAIN_MEXF_NAME}")
+        modules = [main]
+        modules.extend(sorted(path for path in mexf_dir.rglob("*.mexf") if path != main))
+    except OSError as exc:
+        raise MexfCompileError(f"No se pudo leer {mexf_dir}: {exc}") from exc
     return modules
 
 
@@ -294,7 +297,7 @@ def compile_mexf_project(
     modules = discover_mexf_modules(root)
     try:
         documents = [parse_mexf(module, project_root=root) for module in modules]
-    except MexfError as exc:
+    except (MexfError, OSError) as exc:
         raise MexfCompileError(str(exc)) from exc
     merged = merge_documents(documents)
     _apply_details_defaults(merged, details)

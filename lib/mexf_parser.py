@@ -43,7 +43,7 @@ class MexfDocument:
 def detect_mexf_format(path: Path | str) -> Literal["yaml-v1", "legacy-json", "unknown"]:
     try:
         raw = Path(path).read_text(encoding="utf-8-sig")
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, OSError):
         return "unknown"
     try:
         value = json.loads(raw)
@@ -124,6 +124,8 @@ def parse_mexf(path: Path | str, *, project_root: Path | None = None) -> MexfDoc
         raw = source.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as exc:
         raise MexfError(f"El documento .mexf no está en UTF-8: {exc}") from exc
+    except OSError as exc:
+        raise MexfError(f"No se pudo leer el documento .mexf {source}: {exc}") from exc
     fmt = detect_mexf_format(source)
     if fmt == "legacy-json":
         data = json.loads(raw)
