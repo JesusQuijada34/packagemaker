@@ -64,6 +64,8 @@ de auditoría.
 | R-3b8e5c71 | Bug — `install.json` con campos mal tipados rompe `--uninstall-asksome` | Media | Resuelto |
 | R-7c4d2a96 | Bug — parámetros criptográficos mal tipados en `.blindkpkg` | Media | Resuelto |
 | R-1d9f6b34 | Bug — parámetros criptográficos mal tipados en `.iflapp` | Media | Resuelto |
+| R-4f9b2c81 | Bug — `.asksome` con id `.`/`..` borra fuera de la raíz de instalación | Crítica | Resuelto |
+| R-7a3d5e62 | Bug — `--uninstall-asksome`/`--build-removeme` aceptan `app_id` con traversal | Alta | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -78,7 +80,7 @@ R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
 R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-5f8c2d91, R-7e3a9c14, R-4b8d2f61,
 R-9c5f1e28, R-4a1e7b93, R-8d2c5f60, R-9b4e7a52, R-2f7c8d31, R-6a1d3c94,
 R-8e5b2f17, R-4e7c2b91, R-9a3d6f20, R-7f3a9c21, R-2c8e5d14, R-5a1f8e63,
-R-3b8e5c71, R-7c4d2a96 y R-1d9f6b34)
+R-3b8e5c71, R-7c4d2a96, R-1d9f6b34, R-4f9b2c81 y R-7a3d5e62)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -1333,6 +1335,58 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-4f9b2c81 — Un `.asksome` con id `.`/`..` borraba fuera de la raíz de instalación
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `_safe_app_id()` sólo sustituía los caracteres no alfanuméricos
+  por `_`, pero conservaba `.` y `..`. `install_asksome()` hacía
+  `target = install_root / app_id` y, si el destino existía, `shutil.rmtree(target)`.
+  Un `.asksome` con `metadata.id` igual a `..` apuntaba al **directorio padre** de
+  la raíz de instalación y lo borraba antes de fallar; con `.` borraba la propia
+  raíz, es decir, todas las apps instaladas. El id viaja en la cabecera del
+  artefacto, así que un paquete manipulado podía destruir datos del usuario.
+- **Pasos para reproducir:** empaquetar un `.asksome` con
+  `metadata={"id": ".."}` e instalarlo con `--install-asksome --install-root DIR`;
+  el directorio padre de `DIR` desaparecía y la instalación terminaba en
+  `FileNotFoundError`.
+- **Estado:** Resuelto.
+- **Prioridad:** Crítica.
+- **Solución aplicada:** `_safe_app_id()` devuelve `asksome.app` cuando el
+  identificador queda vacío al quitar los puntos; `_validated_app_id()` exige un
+  único componente de ruta (`^[A-Za-z0-9._-]+$`, sin `.`/`..`) y
+  `install_asksome()` lo aplica antes de crear o borrar el destino.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_install_rejects_dot_app_id_without_deleting_parent`.
+- **Commit:** `3f89823`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
+## R-7a3d5e62 — `--uninstall-asksome`/`--build-removeme` aceptaban `app_id` con traversal
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `uninstall_asksome()`, `read_record()` y `build_removeme()`
+  construían la ruta con `install_root / app_id` sin validar el identificador
+  recibido por la CLI. `--uninstall-asksome "../victima"` borraba con
+  `shutil.rmtree()` un directorio **fuera** de la raíz de instalación, y una ruta
+  absoluta (`/etc`, `C:...`) se usaba tal cual. `--build-removeme` escribía
+  `removeme.py` fuera de la raíz con el mismo truco.
+- **Pasos para reproducir:** crear `ROOT/victima/importante.txt` y ejecutar
+  `--uninstall-asksome "../victima" --install-root ROOT`; el directorio externo
+  se eliminaba y el comando informaba `[OK]`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta.
+- **Solución aplicada:** los tres puntos de entrada validan el `app_id` con
+  `_validated_app_id()` y lanzan `AsksomeInstallError`, que el CLI traduce a
+  `[ERROR]` con código 1. El `app_id` de instalación también pasa por el validador.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_uninstall_rejects_app_id_that_escapes_install_root`
+  y `::test_read_record_and_build_removeme_reject_unsafe_app_id`.
+- **Commit:** `3f89823`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
@@ -1517,6 +1571,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Aprobaciones (2026-11-22): se creó `CONFIRM.MD` con 10 preguntas pendientes
   (`Q-001`…`Q-010`: las 4 mejoras y los 6 cambios de engine). Ninguna está
   aprobada; no se aplicó ningún cambio de engine.
+- Verificación del ciclo de R-4f9b2c81 y R-7a3d5e62 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 818 pasan, 1
+  omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 5 casos nuevos
+  de traversal fallan con el código anterior (comprobado con `git stash` de
+  `asksome_installer.py`). Reproducción real: un `.asksome` con `id: ".."` borró
+  el padre de la raíz de instalación antes del arreglo; ahora se instala en
+  `asksome.app` y el marcador externo sobrevive. `--uninstall-asksome
+  "../victim"` y `--build-removeme "../victim"` responden `[ERROR]
+  Identificador de app inválido` con código 1 y no tocan el directorio externo.
 - Verificación del ciclo de R-3b8e5c71, R-7c4d2a96 y R-1d9f6b34 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 809 pasan, 1
   omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 5 casos nuevos

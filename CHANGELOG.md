@@ -2,6 +2,26 @@
 
 ## 2026-11-22
 
+### Corregido — el identificador de `.asksome` podía borrar datos fuera de la raíz de instalación
+
+Hallazgos del decimosexto ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `3f89823`.
+
+- **R-4f9b2c81 — Un `.asksome` con id `.`/`..` borraba fuera de la raíz de instalación:** `_safe_app_id()` sustituía los caracteres no alfanuméricos por `_` pero conservaba los puntos, así que un artefacto con `metadata.id: ".."` producía `target = install_root/..`; `install_asksome()` lo veía existente y ejecutaba `shutil.rmtree()`, borrando el directorio **padre** de la raíz de instalación antes de fallar con `FileNotFoundError`. Con `id: "."` borraba la propia raíz, es decir, todas las apps instaladas. Ahora `_safe_app_id()` devuelve `asksome.app` cuando el identificador queda vacío al quitar los puntos y un nuevo `_validated_app_id()` exige un único componente de ruta antes de crear o borrar el destino.
+- **R-7a3d5e62 — `--uninstall-asksome`/`--build-removeme` aceptaban `app_id` con traversal:** `uninstall_asksome()`, `read_record()` y `build_removeme()` construían la ruta con `install_root / app_id` sin validar el valor recibido por la CLI. `--uninstall-asksome "../victima"` borraba un directorio externo y una ruta absoluta (`/etc`, `C:...`) se usaba tal cual; `--build-removeme` escribía `removeme.py` fuera de la raíz. Los tres puntos de entrada validan ahora el identificador y lanzan `AsksomeInstallError`, que el CLI presenta como `[ERROR]` con código 1.
+
+### Verificación — decimosexto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 818 pasan, 1 omitido, 51 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Los 5 casos nuevos de traversal fallan con el código anterior (comprobado con `git stash` de `lib/blindcubeEngine/asksome_installer.py`).
+- Reproducción real: instalar un `.asksome` con `id: ".."` borraba el padre de la raíz de instalación; ahora se instala en `<root>/asksome.app` y el marcador externo sobrevive. `--uninstall-asksome "../victim"` y `--build-removeme "../victim"` responden `[ERROR] Identificador de app inválido` con código 1 y dejan intacto el directorio externo.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado: `Q-001`…`Q-010` siguen sin casillas marcadas y el último commit que toca el archivo no es de `JesusQuijada34`, así que no hay respuestas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+## 2026-11-22
+
 ### Corregido — parámetros y registros mal tipados en contenedores y `.asksome`
 
 Hallazgos del decimoquinto ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `e9437cb`.
