@@ -108,16 +108,20 @@ def merge_documents(documents: List[MexfDocument]) -> Dict[str, Any]:
     if not documents:
         raise MexfCompileError("No hay documentos .mexf que fusionar.")
     base = documents[0].data
+    metadata = base.get("metadata")
+    runtime = base.get("runtime")
     merged: Dict[str, Any] = {
         "format": "mexf",
         "version": 1,
-        "metadata": dict(base.get("metadata", {})),
-        "runtime": dict(base.get("runtime", {})),
+        "metadata": dict(metadata) if isinstance(metadata, dict) else {},
+        "runtime": dict(runtime) if isinstance(runtime, dict) else {},
     }
     for section in _LIST_SECTIONS:
-        merged[section] = list(base.get(section, []))
+        value = base.get(section)
+        merged[section] = list(value) if isinstance(value, list) else []
     for section in _DICT_SECTIONS:
-        merged[section] = dict(base.get(section, {}))
+        value = base.get(section)
+        merged[section] = dict(value) if isinstance(value, dict) else {}
     for document in documents[1:]:
         data = document.data
         for section in _LIST_SECTIONS:

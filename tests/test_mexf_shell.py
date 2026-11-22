@@ -10,6 +10,7 @@ from lib.mexf_shell import (
     load_shell_plan,
     plan_from_document,
     render_desktop_entries,
+    render_environment_d,
     render_mime_xml,
     render_registry,
     render_servicemenus,
@@ -147,3 +148,63 @@ def test_parse_mexf_still_accepts_plan_document(tmp_path):
     path = tmp_path / "main.mexf"
     path.write_text(MEXF, encoding="utf-8")
     assert parse_mexf(path).metadata["id"] == "influent.shell"
+
+
+def test_install_plan_keeps_identifier_from_escaping_base(tmp_path):
+    plan = plan_from_document(
+        {
+            "metadata": {"id": "../../escape/demo", "name": "Demo", "version": "1.0"},
+            "file_associations": [{"extension": ".txt", "open_command": "demo %1"}],
+        }
+    )
+    base = tmp_path / "share"
+    written = install_plan(plan, base_dir=base, platform_name="linux")["written"]
+    assert written
+    for path in written:
+        assert Path(path).resolve().is_relative_to(base.resolve())
+    assert not (tmp_path / "escape").exists()
+
+
+def test_uninstall_plan_does_not_remove_files_outside_base(tmp_path):
+    victim = tmp_path / "a" / "victim--txt.desktop"
+    victim.parent.mkdir()
+    victim.write_text("conservar", encoding="utf-8")
+    (tmp_path / "a" / "share" / "applications").mkdir(parents=True)
+    plan = plan_from_document(
+        {
+            "metadata": {"id": "../../victim", "name": "Demo", "version": "1.0"},
+            "file_associations": [{"extension": ".txt", "open_command": "demo %1"}],
+        }
+    )
+    uninstall_plan(plan, base_dir=tmp_path / "a" / "share", platform_name="linux")
+    assert victim.exists()
+
+
+def test_desktop_entries_flatten_values_that_would_inject_keys():
+    plan = plan_from_document(
+        {
+            "metadata": {
+                "id": "demo.app",
+                "name": "Demo\nExec=sh -c evil",
+                "version": "1.0",
+            },
+            "file_associations": [
+                {
+                    "extension": ".txt",
+                    "open_command": "demo %1\nX-Injected=1",
+                }
+            ],
+        }
+    )
+    body = next(iter(render_desktop_entries(plan).values()))
+    lines = body.splitlines()
+    assert len([line for line in lines if line.startswith("Exec=")]) == 1
+    assert not any(line.startswith("X-Injected=") for line in lines)
+    assert not any(line.startswith("Exec=sh -c evil") for line in lines)
+
+
+def test_environment_d_flattens_values():
+    plan = plan_from_document(
+        {"metadata": {"id": "demo.app"}, "environments": {"A": "1\nB=2"}}
+    )
+    assert render_environment_d(plan) == "A=1 B=2\n"

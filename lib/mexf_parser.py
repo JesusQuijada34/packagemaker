@@ -41,7 +41,10 @@ class MexfDocument:
 
 
 def detect_mexf_format(path: Path | str) -> Literal["yaml-v1", "legacy-json", "unknown"]:
-    raw = Path(path).read_text(encoding="utf-8-sig")
+    try:
+        raw = Path(path).read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        return "unknown"
     try:
         value = json.loads(raw)
     except json.JSONDecodeError:
@@ -94,6 +97,12 @@ def validate_mexf(data: Dict[str, Any], *, project_root: Path | None = None) -> 
                 diagnostics.append(Diagnostic("command.executable es obligatorio.", f"{section}[{index}]"))
             if section == "commands" and not isinstance(item.get("args", []), list):
                 diagnostics.append(Diagnostic("command.args debe ser una lista argv.", f"{section}[{index}].args"))
+    for section in ("file_associations", "context_menus", "registry"):
+        if section in data and not isinstance(data[section], list):
+            diagnostics.append(Diagnostic(f"{section} debe ser una lista.", section))
+    for section in ("shortcuts", "environments", "runtime"):
+        if section in data and not isinstance(data[section], dict):
+            diagnostics.append(Diagnostic(f"{section} debe ser un objeto.", section))
     assets = data.get("assets", [])
     if not isinstance(assets, list):
         diagnostics.append(Diagnostic("assets debe ser una lista.", "assets"))
@@ -111,7 +120,10 @@ def validate_mexf(data: Dict[str, Any], *, project_root: Path | None = None) -> 
 
 def parse_mexf(path: Path | str, *, project_root: Path | None = None) -> MexfDocument:
     source = Path(path)
-    raw = source.read_text(encoding="utf-8-sig")
+    try:
+        raw = source.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise MexfError(f"El documento .mexf no está en UTF-8: {exc}") from exc
     fmt = detect_mexf_format(source)
     if fmt == "legacy-json":
         data = json.loads(raw)

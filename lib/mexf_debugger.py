@@ -80,18 +80,23 @@ def default_runner(
 def load_commands(document: Any) -> List[Dict[str, Any]]:
     """Extrae la lista de comandos de un documento ``.mexf`` o de su ``data``."""
     data = getattr(document, "data", document)
-    commands = data.get("commands") or []
+    commands = data.get("commands") if isinstance(data, dict) else []
+    if not isinstance(commands, list):
+        commands = []
     normalized: List[Dict[str, Any]] = []
     for index, item in enumerate(commands):
         if not isinstance(item, dict) or not item.get("id"):
             continue
+        args = item.get("args")
+        env = item.get("env")
+        cwd = item.get("cwd")
         normalized.append(
             {
                 "id": str(item["id"]),
                 "executable": str(item.get("executable") or ""),
-                "args": [str(arg) for arg in item.get("args") or []],
-                "env": dict(item.get("env") or {}),
-                "cwd": item.get("cwd"),
+                "args": [str(arg) for arg in args] if isinstance(args, list) else [],
+                "env": {str(k): str(v) for k, v in env.items()} if isinstance(env, dict) else {},
+                "cwd": str(cwd) if cwd else None,
                 "on_error": str(item.get("on_error") or "stop"),
                 "index": index,
             }
@@ -112,10 +117,16 @@ class MexfDebugger:
         timeout: Optional[float] = None,
     ):
         data = getattr(document, "data", document) if not isinstance(document, dict) else document
-        self.metadata: Dict[str, Any] = dict(data.get("metadata") or {})
+        metadata = data.get("metadata")
+        environments = data.get("environments")
+        self.metadata: Dict[str, Any] = dict(metadata) if isinstance(metadata, dict) else {}
         self.commands = load_commands(document)
         self.runner = runner or default_runner
-        self.environment = {str(k): str(v) for k, v in (data.get("environments") or {}).items()}
+        self.environment = (
+            {str(k): str(v) for k, v in environments.items()}
+            if isinstance(environments, dict)
+            else {}
+        )
         self.environment.update(environment or {})
         self.dry_run = dry_run
         self.timeout = timeout

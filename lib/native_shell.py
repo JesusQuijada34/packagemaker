@@ -292,7 +292,15 @@ if __name__ == "__main__":
     if args and args[0] == "--info":
         import json
 
-        print(json.dumps(package_info(args[1]), indent=2, ensure_ascii=False))
+        if len(args) < 2:
+            print("uso: -m lib.native_shell --info FILE", file=sys.stderr)
+            raise SystemExit(2)
+        try:
+            payload = package_info(args[1])
+        except (ValueError, OSError) as exc:
+            print(f"[ERROR] {exc}", file=sys.stderr)
+            raise SystemExit(1)
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
         raise SystemExit(0)
     print("uso: -m lib.native_shell --thumbnail IN OUT SIZE | --info FILE", file=sys.stderr)
     raise SystemExit(2)

@@ -183,5 +183,23 @@ class CliDebugTests(unittest.TestCase):
         self.assertFalse(ok)
 
 
+
+class MalformedDocumentTests(unittest.TestCase):
+    def test_non_mapping_metadata_and_environments_are_ignored(self):
+        debugger = MexfDebugger(
+            {"metadata": [], "environments": ["A"], "commands": 5}, dry_run=True
+        )
+        self.assertEqual(debugger.metadata, {})
+        self.assertEqual(debugger.environment, {})
+        self.assertEqual(debugger.commands, [])
+
+    def test_command_arguments_and_environment_are_normalized(self):
+        commands = load_commands(
+            {"commands": [{"id": "demo.uno", "executable": "x", "args": 5, "env": [1]}]}
+        )
+        self.assertEqual(commands[0]["args"], [])
+        self.assertEqual(commands[0]["env"], {})
+
+
 if __name__ == "__main__":
     unittest.main()

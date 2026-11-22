@@ -39,6 +39,17 @@ def _slug(value: str, fallback: str = "item") -> str:
     return cleaned or fallback
 
 
+def _file_stem(value: str, fallback: str = "mexf") -> str:
+    """Nombre de fichero seguro: sin separadores de ruta ni componentes ``..``."""
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "-", str(value or "")).strip(".-_")
+    return cleaned or fallback
+
+
+def _flat_value(value: str) -> str:
+    """Aplana saltos de línea para que un valor no inyecte claves ``.desktop``."""
+    return " ".join(str(value or "").splitlines())
+
+
 def _default_mime(extension: str) -> str:
     ext = extension.lstrip(".").lower()
     return f"{DEFAULT_MIME_PREFIX}{ext}" if ext else ""
@@ -216,13 +227,13 @@ def render_mime_xml(plan: ShellPlan) -> str:
 
 
 def _desktop_entry(*, name: str, exec_cmd: str, mime_types: List[str], icon: str) -> str:
-    mime = "".join(f"{value};" for value in mime_types)
+    mime = "".join(f"{_flat_value(value)};" for value in mime_types)
     return (
         "[Desktop Entry]\n"
         "Type=Application\n"
-        f"Name={name}\n"
-        f"Exec={exec_cmd}\n"
-        f"Icon={icon or 'application-x-executable'}\n"
+        f"Name={_flat_value(name)}\n"
+        f"Exec={_flat_value(exec_cmd)}\n"
+        f"Icon={_flat_value(icon) or 'application-x-executable'}\n"
         f"MimeType={mime}\n"
         "NoDisplay=true\n"
         "Terminal=false\n"
@@ -232,11 +243,12 @@ def _desktop_entry(*, name: str, exec_cmd: str, mime_types: List[str], icon: str
 def render_desktop_entries(plan: ShellPlan) -> Dict[str, str]:
     """Un ``.desktop`` por asociación con comando de apertura."""
     entries: Dict[str, str] = {}
+    stem = _file_stem(plan.identifier)
     for assoc in plan.associations:
         if not assoc.open_command:
             continue
         key = _slug(assoc.prog_id or assoc.extension.lstrip("."))
-        entries[f"{plan.identifier}--{key}.desktop"] = _desktop_entry(
+        entries[f"{stem}--{key}.desktop"] = _desktop_entry(
             name=f"{plan.name} ({assoc.description or assoc.extension})",
             exec_cmd=_freedesktop_exec(assoc.open_command),
             mime_types=[assoc.mime_type] if assoc.mime_type else [],
@@ -248,6 +260,7 @@ def render_desktop_entries(plan: ShellPlan) -> Dict[str, str]:
 def render_servicemenus(plan: ShellPlan) -> Dict[str, str]:
     """``servicemenus`` de KDE a partir de los menús contextuales declarados."""
     menus: Dict[str, str] = {}
+    stem = _file_stem(plan.identifier)
     for index, menu in enumerate(plan.context_menus):
         action = _slug(menu.label, f"action{index}")
         mime_types = (
@@ -255,18 +268,18 @@ def render_servicemenus(plan: ShellPlan) -> Dict[str, str]:
             if menu.target == "file" and menu.extensions
             else ["inode/directory"]
         )
-        mime = "".join(f"{value};" for value in mime_types)
-        menus[f"{plan.identifier}--{_slug(menu.label, str(index))}.desktop"] = (
+        mime = "".join(f"{_flat_value(value)};" for value in mime_types)
+        menus[f"{stem}--{_slug(menu.label, str(index))}.desktop"] = (
             "[Desktop Entry]\n"
             "Type=Service\n"
             "ServiceTypes=KonqPopupMenu/Plugin\n"
             f"MimeType={mime}\n"
             f"Actions={action};\n"
-            f"Icon={menu.icon or 'application-x-executable'}\n"
+            f"Icon={_flat_value(menu.icon) or 'application-x-executable'}\n"
             "\n"
             f"[Desktop Action {action}]\n"
-            f"Name={menu.label}\n"
-            f"Exec={_freedesktop_exec(menu.command)}\n"
+            f"Name={_flat_value(menu.label)}\n"
+            f"Exec={_flat_value(_freedesktop_exec(menu.command))}\n"
         )
     return menus
 
@@ -279,12 +292,12 @@ def render_shortcuts(plan: ShellPlan) -> Dict[str, str]:
     if not launcher:
         return {}
     return {
-        f"{plan.identifier}.desktop": (
+        f"{_file_stem(plan.identifier)}.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            f"Name={plan.name}\n"
-            f"Exec={_freedesktop_exec(launcher)}\n"
-            f"Icon={plan.icon or 'application-x-executable'}\n"
+            f"Name={_flat_value(plan.name)}\n"
+            f"Exec={_flat_value(_freedesktop_exec(launcher))}\n"
+            f"Icon={_flat_value(plan.icon) or 'application-x-executable'}\n"
             "Terminal=false\n"
         )
     }
@@ -292,7 +305,10 @@ def render_shortcuts(plan: ShellPlan) -> Dict[str, str]:
 
 def render_environment_d(plan: ShellPlan) -> str:
     """Fichero ``environment.d`` con las variables declaradas."""
-    return "".join(f"{key}={value}\n" for key, value in plan.environments.items())
+    return "".join(
+        f"{_flat_value(key)}={_flat_value(value)}\n"
+        for key, value in plan.environments.items()
+    )
 
 
 def _reg_escape(value: str) -> str:
@@ -382,16 +398,17 @@ def install_plan(
         return {"written": written, "skipped": skipped}
 
     base = Path(base_dir) if base_dir else Path.home() / ".local" / "share"
+    stem = _file_stem(plan.identifier)
     try:
         if plan.associations:
-            _write(base / "mime" / "packages" / f"{plan.identifier}.xml", render_mime_xml(plan), written)
+            _write(base / "mime" / "packages" / f"{stem}.xml", render_mime_xml(plan), written)
         for name, content in render_desktop_entries(plan).items():
             _write(base / "applications" / name, content, written)
         for name, content in render_servicemenus(plan).items():
             _write(base / "kio" / "servicemenus" / name, content, written)
         if plan.environments:
             _write(
-                Path.home() / ".config" / "environment.d" / f"{plan.identifier}.conf",
+                Path.home() / ".config" / "environment.d" / f"{stem}.conf",
                 render_environment_d(plan),
                 written,
             )
@@ -426,11 +443,12 @@ def uninstall_plan(
         return {"removed": removed, "skipped": skipped}
 
     base = Path(base_dir) if base_dir else Path.home() / ".local" / "share"
-    targets = [base / "mime" / "packages" / f"{plan.identifier}.xml"]
+    stem = _file_stem(plan.identifier)
+    targets = [base / "mime" / "packages" / f"{stem}.xml"]
     targets += [base / "applications" / name for name in render_desktop_entries(plan)]
     targets += [base / "kio" / "servicemenus" / name for name in render_servicemenus(plan)]
     targets += [base / "applications" / name for name in render_shortcuts(plan)]
-    targets.append(Path.home() / ".config" / "environment.d" / f"{plan.identifier}.conf")
+    targets.append(Path.home() / ".config" / "environment.d" / f"{stem}.conf")
     for target in targets:
         try:
             if target.exists():

@@ -2,12 +2,16 @@
 import hashlib
 import hmac
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from lib.blindcubeEngine import asksome_format
 from lib.blindcubeEngine.asksome_format import pack_asksome
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _craft_signed_asksome(path, **header_extra):
@@ -193,3 +197,28 @@ def test_invalid_base64_icon_does_not_break_shell_info(tmp_path):
     artifact = _craft_signed_asksome(tmp_path / "icon.asksome", icon="abcde")
     assert icon_bytes(artifact) is None
     assert package_info(artifact)["icon_bytes"] == 0
+
+
+def _run_native_shell(*args):
+    return subprocess.run(
+        [sys.executable, "-m", "lib.native_shell", *args],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_info_cli_without_argument_reports_usage():
+    result = _run_native_shell("--info")
+    assert result.returncode == 2
+    assert "uso:" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_info_cli_with_unknown_file_reports_error(tmp_path):
+    target = tmp_path / "desconocido.iflapp"
+    target.write_bytes(b"no es un paquete")
+    result = _run_native_shell("--info", str(target))
+    assert result.returncode == 1
+    assert "[ERROR]" in result.stderr
+    assert "Traceback" not in result.stderr

@@ -11,7 +11,13 @@ import pytest
 
 from lib.blindcubeEngine import asksome_format
 from lib.blindcubeEngine.asksome_format import AsksomeError, extract_asksome, pack_asksome, verify_asksome
-from lib.mexf_parser import MexfError, detect_mexf_format, migrate_legacy_mexf, parse_mexf
+from lib.mexf_parser import (
+    MexfDocument,
+    MexfError,
+    detect_mexf_format,
+    migrate_legacy_mexf,
+    parse_mexf,
+)
 
 
 def test_legacy_mexf_is_detected_and_migrated(tmp_path):
@@ -694,3 +700,59 @@ def test_legacy_mexf_with_wrong_section_types_is_normalized(tmp_path):
     assert plan.context_menus == []
     assert plan.shortcuts == {}
     assert document.metadata["name"] == "42"
+
+
+@pytest.mark.parametrize(
+    ("section", "value"),
+    [
+        ("file_associations", 5),
+        ("context_menus", "texto"),
+        ("registry", 1),
+        ("shortcuts", [1]),
+        ("environments", [1]),
+        ("runtime", []),
+    ],
+)
+def test_wrong_typed_sections_are_rejected(tmp_path, section, value):
+    document = {
+        "format": "mexf",
+        "version": 1,
+        "metadata": {"id": "demo.app", "name": "Demo", "version": "1.0"},
+    }
+    document[section] = value
+    path = tmp_path / "bad.mexf"
+    path.write_text(json.dumps(document), encoding="utf-8")
+    with pytest.raises(MexfError) as excinfo:
+        parse_mexf(path)
+    assert section in str(excinfo.value)
+
+
+def test_merge_documents_normalizes_unexpected_sections():
+    from lib.mexf_compiler import merge_documents
+
+    document = MexfDocument(
+        {
+            "format": "mexf",
+            "version": 1,
+            "metadata": {"id": "a.b", "name": "A", "version": "1.0"},
+            "runtime": [],
+            "file_associations": 5,
+            "shortcuts": [1],
+            "environments": "texto",
+        },
+        "yaml-v1",
+    )
+    merged = merge_documents([document])
+    assert merged["runtime"] == {}
+    assert merged["file_associations"] == []
+    assert merged["shortcuts"] == {}
+    assert merged["environments"] == {}
+
+
+def test_binary_mexf_is_reported_without_traceback(tmp_path):
+    path = tmp_path / "binary.mexf"
+    path.write_bytes(b"\xff\xfe\x00binario")
+    assert detect_mexf_format(path) == "unknown"
+    with pytest.raises(MexfError) as excinfo:
+        parse_mexf(path)
+    assert "UTF-8" in str(excinfo.value)
