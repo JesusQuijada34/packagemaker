@@ -1543,7 +1543,7 @@ quedaron corregidos y probados en este ciclo.
 - **Pruebas:** `tests/test_maintenance_cli_regressions.py::BuildThreadMetadataGuardTests`
   (3 casos: error emitido por la QThread, `FlangCompiler.run()` sin excepción
   y excepción inesperada convertida en `error`).
-- **Commit:** pendiente de registrar.
+- **Commit:** `3920254`.
 - **Fecha de resolución:** 2026-11-22.
 
 ## R-5b3d8f27 — Carpeta de salida inaccesible lanza traceback al compilar
@@ -1570,7 +1570,7 @@ quedaron corregidos y probados en este ciclo.
   traduce el fallo de `mkdir` a un `False` con mensaje.
 - **Pruebas:** `tests/test_maintenance_cli_regressions.py::UnwritableOutputDirectoryTests`
   (2 casos: CLI con código 1 y compilador que difiere el error a `run()`).
-- **Commit:** pendiente de registrar.
+- **Commit:** `3920254`.
 - **Fecha de resolución:** 2026-11-22.
 
 ---
