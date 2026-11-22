@@ -134,3 +134,34 @@ def test_vendored_framework_imports_without_the_pypi_package(monkeypatch):
 
     module = importlib.import_module("lib.leviathan_ui")
     assert hasattr(module, "WipeWindow")
+
+
+ENGINES = ("blindcubeEngine", "flatcubeEngine", "makeselfEngine")
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_engines_do_not_couple_to_other_engines_at_import_time(engine):
+    """Un motor sólo puede depender de ``lib`` transversal, nunca de otro motor.
+
+    Las dependencias perezosas (dentro de una función) son tolerables porque el
+    registro de compiladores las usa para no arrastrar PyInstaller; lo que se
+    prohíbe es el acoplamiento en la cabecera del módulo.
+    """
+    import ast
+
+    for path in (ROOT / "lib" / engine).rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.ImportFrom):
+                modules = [node.module or ""]
+            elif isinstance(node, ast.Import):
+                modules = [alias.name for alias in node.names]
+            else:
+                continue
+            for module in modules:
+                for other in ENGINES:
+                    if other == engine:
+                        continue
+                    assert not module.startswith(f"lib.{other}"), (
+                        f"{path.name} importa {module} en la cabecera"
+                    )

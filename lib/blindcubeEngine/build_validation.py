@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from lib.i18n import tr
-from lib.makeselfEngine.naming import ProjectNameFormatter
+from lib.projectNameFormatter import ProjectNameFormatter
 
 _SEGMENT = re.compile(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$")
 # Se acepta ``1`` y ``v2`` porque el campo es libre y
