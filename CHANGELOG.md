@@ -2,6 +2,29 @@
 
 ## 2026-11-22
 
+### Corregido — el dropper `.run` lanzaba traceback con un paquete corrupto
+
+Hallazgo del decimonoveno ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `caeef80`.
+
+- **R-7f2b9c63 — Un `.run` con el `.iflapp` embebido corrupto lanzaba traceback:** el stub autónomo generado por `create_dropper()` confiaba en la cabecera embebida. Una descarga cortada o un payload alterado hacía que `_header()` decodificara JSON sin comprobar longitud y que `_extract_v2()` indexara `header["payload"]` sin validar el tipo, así que el usuario final veía `UnicodeDecodeError`, `JSONDecodeError`, `KeyError`, `binascii.Error` o `IndexError` en lugar de un mensaje legible. Ahora `_decode_header()` valida JSON y objeto, `_header()` valida longitudes y truncamiento, y `_extract_v2()` valida `payload`/`offset`/`size` y traduce los fallos de descifrado, `lzma` y `tar` a `SystemExit` legible. `_extract_zip()` y `main()` hacen lo propio con ZIP y con `--password` sin valor; `read_dropper_header()` devuelve `IflappError` en vez de `binascii.Error`. Un dropper válido sigue ejecutando la app con código 0.
+
+### Verificación — decimonoveno ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 839 pasan, 1 omitido, 55 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Los 4 casos nuevos de `tests/test_iflapp_dropper_sandbox.py` (payload corrupto, payload truncado, `--password` sin valor y base64 corrupto en el lector) fallan con el código anterior (comprobado con `git stash` de `dropper.py`).
+- Reproducción real: un `.run` con el bloque base64 sustituido por bytes aleatorios terminaba en `UnicodeDecodeError`/`JSONDecodeError` con traceback; ahora responde `Cabecera .iflapp truncada.` o `Cabecera .iflapp corrupta: …` y código 1. El dropper válido imprime `Hola desde demo!` y devuelve 0.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado: `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo el del propietario del 2026-11-22, de modo que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
+## 2026-11-22
+
 ### Corregido — el build de la GUI moría en silencio y la carpeta de salida lanzaba traceback
 
 Hallazgos del decimoctavo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commits `3920254` y `81e1aec`.

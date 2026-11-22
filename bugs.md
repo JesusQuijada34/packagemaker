@@ -72,6 +72,7 @@ de auditoría.
 | R-8b3d1e57 | Bug — raíz de instalación `.asksome` inválida lanza traceback | Media | Resuelto |
 | R-2c7e9b41 | Bug — metadatos no canónicos matan la QThread del build sin aviso | Alta | Resuelto |
 | R-5b3d8f27 | Bug — carpeta de salida inaccesible lanza traceback al compilar | Media | Resuelto |
+| R-7f2b9c63 | Bug — `.run` con `.iflapp` corrupto lanza traceback | Media | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -1575,6 +1576,35 @@ quedaron corregidos y probados en este ciclo.
 - **Commit:** `3920254` y `81e1aec`.
 - **Fecha de resolución:** 2026-11-22.
 
+## R-7f2b9c63 — Un `.run` con el `.iflapp` corrupto lanza traceback
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `create_dropper()` genera un `.run` que embebe el `.iflapp`
+  en base64. Si la descarga se corta o el bloque embebido se altera, el stub
+  llamaba a `_header()` sin comprobar longitud ni JSON y `_extract_v2()`
+  indexaba `header["payload"]` sin validar el tipo. El usuario final veía un
+  traceback con `UnicodeDecodeError`, `JSONDecodeError`, `KeyError`,
+  `binascii.Error` o `IndexError` en lugar de un mensaje legible. Además,
+  `--password` sin valor terminaba en `IndexError`, y `read_dropper_header()`
+  dejaba escapar `binascii.Error` en vez de `IflappError`.
+- **Pasos para reproducir:** crear un dropper válido, sustituir el bloque
+  base64 embebido por bytes aleatorios y ejecutar `python demo.run`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el paquete no arranca, pero no hay pérdida de datos).
+- **Solución aplicada:** `_decode_header()` valida JSON y tipo de objeto;
+  `_header()` valida longitudes y truncamiento; `_extract_v2()` valida el
+  bloque `payload`, el rango `offset`/`size` y traduce los fallos de
+  descifrado, `lzma` y `tar` a `SystemExit` legible; `_extract_zip()` y
+  `main()` hacen lo propio con ZIP y con `--password` sin valor.
+  `read_dropper_header()` convierte el payload base64 inválido en
+  `IflappError`.
+- **Pruebas:** `tests/test_iflapp_dropper_sandbox.py::DropperTests` (4 casos:
+  payload corrupto, payload truncado, `--password` sin valor y base64
+  corrupto en el lector). Los 4 fallan con el código anterior.
+- **Commit:** `caeef80`.
+- **Fecha de resolución:** 2026-11-22.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -1755,6 +1785,14 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
+- Verificación del ciclo de R-7f2b9c63 (2026-11-22):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 839 pasan, 1
+  omitido, 55 subtests; `pyflakes` y `py_compile` limpios. Un `.run` con el
+  bloque base64 alterado terminaba en `UnicodeDecodeError`/`JSONDecodeError`
+  con traceback; ahora responde `Cabecera .iflapp truncada.`/`Cabecera .iflapp
+  corrupta: …` y código 1. Los 4 casos nuevos fallan con el código anterior
+  (comprobado con `git stash` de `dropper.py`). Un dropper válido sigue
+  ejecutando la app (`Hola desde demo!`, código 0).
 - Verificación del ciclo de R-2c7e9b41 y R-5b3d8f27 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 835 pasan, 1
   omitido, 55 subtests; `pyflakes` y `py_compile` limpios. Con el código
