@@ -84,7 +84,8 @@ def _declared_scripts(root: Path) -> List[str]:
         data = json.loads(settings.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return []
-    scripts = data.get("build", {}).get("scripts") if isinstance(data, dict) else None
+    build = data.get("build") if isinstance(data, dict) else None
+    scripts = build.get("scripts") if isinstance(build, dict) else None
     if not isinstance(scripts, list):
         return []
     return [str(item) for item in scripts if str(item).strip()]
@@ -351,6 +352,10 @@ def debug_script(
         stops = trace_script(path, breakpoints=breakpoints, max_stops=max_stops)
     except (OSError, SyntaxError) as exc:
         return DebugOutcome(error=str(exc))
+    except SystemExit as exc:
+        return DebugOutcome(error=f"el guion terminó con SystemExit({exc.code})")
+    except Exception as exc:  # noqa: BLE001 - el fallo del guion se reporta al IDE
+        return DebugOutcome(error=f"{type(exc).__name__}: {exc}")
     return DebugOutcome(stops=stops)
 
 

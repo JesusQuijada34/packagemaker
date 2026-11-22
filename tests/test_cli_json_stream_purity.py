@@ -62,6 +62,36 @@ class JsonStreamPurityTests(unittest.TestCase):
         self.assertEqual(out, "")
         self.assertTrue(err.strip(), "el motivo debe llegar por stderr")
 
+    def test_ide_scan_json_tolerates_non_object_build_settings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proyecto"
+            (project / "config").mkdir(parents=True)
+            (project / "details.xml").write_text(
+                "<app><publisher>p</publisher><app>demo</app><name>Demo</name>"
+                "<version>v1.0</version><platform>Danenone</platform></app>",
+                encoding="utf-8",
+            )
+            (project / "demo.py").write_text("print(1)\n", encoding="utf-8")
+            (project / "config" / "settings.json").write_text(
+                '{"build": []}', encoding="utf-8"
+            )
+
+            result, out, err = self._run(
+                IflappIdeHelper.scan, {"path": str(project), "as_json": True}
+            )
+
+            self.assertTrue(result)
+            self.assertEqual(err, "")
+            payload = json.loads(out)
+            self.assertEqual(payload["scripts"], ["demo.py"])
+
+    def test_ide_compile_missing_dir_reports_error_without_traceback(self):
+        result, out, err = self._run(
+            IflappIdeHelper.compile, {"path": "/nonexistent/proyecto"}
+        )
+        self.assertFalse(result)
+        self.assertIn("[ERROR] No se pudo compilar el proyecto", out)
+
     def test_inspect_json_output_is_parseable(self):
         from lib.blindcubeEngine.iflapp_format import pack_iflapp
 

@@ -87,6 +87,17 @@ class IdeProjectTests(unittest.TestCase):
         self.assertIn("otro.py", scripts)
         self.assertNotIn("updater.py", scripts)
 
+    def test_find_scripts_tolerates_non_object_build_settings(self):
+        for build in ([], "texto", None, 5):
+            with self.subTest(build=build):
+                (self.root / "config" / "settings.json").write_text(
+                    json.dumps({"build": build}), encoding="utf-8"
+                )
+                scripts = find_scripts(self.root)
+                self.assertIn("demo.py", scripts)
+                project = scan_project(self.root)
+                self.assertEqual(project.scripts, ["demo.py"])
+
     def test_detect_hidden_imports(self):
         imports = detect_hidden_imports(self.root / "demo.py")
         self.assertIn("os", imports)
@@ -163,6 +174,18 @@ class IdeDebugTests(unittest.TestCase):
         self.script.write_text("def :\n", encoding="utf-8")
         outcome = debug_script(self.script)
         self.assertFalse(outcome.ok)
+
+    def test_debug_script_reports_runtime_error(self):
+        self.script.write_text("def f():\n    return 1/0\n\nf()\n", encoding="utf-8")
+        outcome = debug_script(self.script)
+        self.assertFalse(outcome.ok)
+        self.assertIn("ZeroDivisionError", outcome.error)
+
+    def test_debug_script_reports_system_exit(self):
+        self.script.write_text("raise SystemExit(3)\n", encoding="utf-8")
+        outcome = debug_script(self.script)
+        self.assertFalse(outcome.ok)
+        self.assertIn("SystemExit", outcome.error)
 
     def test_debug_script_run_mode_captures_output(self):
         outcome = debug_script(self.script, run=True)

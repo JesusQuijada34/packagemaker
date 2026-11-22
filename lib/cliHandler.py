@@ -1113,11 +1113,15 @@ class IflappIdeHelper:
             print("[ERROR] Debes indicar la carpeta del proyecto con --ide-compile")
             return False
         backend = data.get("backend")
-        outcome = compile_project(
-            path,
-            backend=None if backend in (None, "auto") else backend,
-            output_dir=data.get("output"),
-        )
+        try:
+            outcome = compile_project(
+                path,
+                backend=None if backend in (None, "auto") else backend,
+                output_dir=data.get("output"),
+            )
+        except OSError as exc:
+            print(f"[ERROR] No se pudo compilar el proyecto: {exc}")
+            return False
         for line in outcome.log:
             print(line)
         print(f"Backend   : {outcome.backend}")
