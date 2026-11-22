@@ -52,6 +52,10 @@ de auditoría.
 | R-9c5f1e28 | Bug — `.mexf` legacy con tipos inesperados rompe `--shell-plan` | Media | Resuelto |
 | R-4a1e7b93 | Bug — limpieza del build sin reintentos (`WinError 32`) | Alta | Resuelto |
 | R-8d2c5f60 | Bug — `blindcubeEngine` acoplado a `makeselfEngine` | Media | Resuelto |
+| R-9b4e7a52 | Bug — `.mexf` v1 con secciones mal tipadas rompe `--compile-mexf`/`--debug-mexf` | Alta | Resuelto |
+| R-2f7c8d31 | Bug — el identificador `.mexf` escapa del directorio de integración | Alta | Resuelto |
+| R-6a1d3c94 | Bug — `.mexf` no UTF-8 provoca traceback en el CLI | Media | Resuelto |
+| R-8e5b2f17 | Bug — `lib.native_shell --info` sin archivo lanza traceback | Baja | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -64,7 +68,8 @@ ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
 R-4d7b2e91, R-6b1f8d20, R-9e2a5c73, R-2a7f6b41, R-6f2b9d31, R-8c4e1a72,
 R-1f4a7c92, R-2b6d8e13, R-3c9e1a57, R-5f8c2d91, R-7e3a9c14, R-4b8d2f61,
-R-9c5f1e28, R-4a1e7b93 y R-8d2c5f60)
+R-9c5f1e28, R-4a1e7b93, R-8d2c5f60, R-9b4e7a52, R-2f7c8d31, R-6a1d3c94 y
+R-8e5b2f17)
 quedaron corregidos y probados. No se prepara release: el periodo de
 observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
@@ -1029,7 +1034,113 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-9b4e7a52 — `.mexf` v1 con secciones mal tipadas rompía `--compile-mexf` y `--debug-mexf`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `validate_mexf()` solo comprobaba `triggers`, `commands` y
+  `assets`. Un documento v1 con `shortcuts`/`environments` no-objeto o
+  `file_associations`/`context_menus`/`registry`/`runtime` no-lista pasaba la
+  validación y reventaba después: `merge_documents()` hacía `dict(valor)` o
+  `list(valor)` y `MexfDebugger.__init__()` llamaba `.items()` sobre
+  `environments`.
+- **Pasos para reproducir:** un `.mexf` con `shortcuts: 5` y
+  `python packagemaker.py --compile-mexf <carpeta>` terminaba en
+  `TypeError: 'int' object is not iterable`; con `environments: [A, B]` y
+  `--debug-mexf` terminaba en `AttributeError: 'list' object has no attribute 'items'`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (el CLI abortaba con traceback en vez de dar un error legible).
+- **Solución aplicada:** `validate_mexf()` valida la forma de `file_associations`,
+  `context_menus`, `registry`, `shortcuts`, `environments` y `runtime`;
+  `merge_documents()` normaliza cada sección con `isinstance`; `load_commands()`
+  y `MexfDebugger` ignoran metadatos, entorno, `args`, `env` y `cwd` con tipos
+  inesperados.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_wrong_typed_sections_are_rejected`
+  (6 casos), `::test_merge_documents_normalizes_unexpected_sections` y
+  `tests/test_mexf_debugger.py::MalformedDocumentTests` (2 casos).
+- **Commit:** `935da3c`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
+## R-2f7c8d31 — El identificador `.mexf` permitía escribir y borrar fuera del directorio de integración
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `install_plan()`/`uninstall_plan()` y los renderizadores de
+  `.desktop` usaban `plan.identifier` (tomado de `metadata.id`) como nombre de
+  fichero sin sanear. Un `.mexf` con `id: "../../evil/demo"` escribía el XML
+  MIME y los `.desktop` fuera de `share/applications` (incluso fuera del home con
+  más `../`) y `--uninstall-mexf-shell` podía borrar archivos ajenos. Además,
+  `Name`/`Exec`/`Icon` no aplanaban saltos de línea, de modo que un valor podía
+  inyectar claves nuevas en el `.desktop`.
+- **Pasos para reproducir:** `plan_from_document({"metadata": {"id": "../../evil/demo"}, ...})`
+  + `install_plan(plan, base_dir=...)` escribía en `share/evil/demo.xml`; con el
+  directorio `applications` creado, `uninstall_plan()` eliminaba
+  `share/victim--txt.desktop` fuera de `applications`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (escritura y borrado arbitrario inducidos por el documento).
+- **Solución aplicada:** nuevo `_file_stem()` que conserva `[A-Za-z0-9._-]` y
+  sustituye separadores, espacios y `..`; se usa en el XML MIME, los
+  `.desktop`, los `servicemenus` y `environment.d` de instalación y desinstalación.
+  `_flat_value()` aplana los saltos de línea de los valores `.desktop` y de
+  `environment.d`. El identificador visible del plan no cambia.
+- **Pruebas:** `tests/test_mexf_shell.py::test_install_plan_keeps_identifier_from_escaping_base`,
+  `::test_uninstall_plan_does_not_remove_files_outside_base`,
+  `::test_desktop_entries_flatten_values_that_would_inject_keys` y
+  `::test_environment_d_flattens_values`.
+- **Commit:** `935da3c`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
+## R-6a1d3c94 — Un `.mexf` no UTF-8 provocaba traceback en el CLI
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** `parse_mexf()` leía el documento con `utf-8-sig` sin capturar
+  `UnicodeDecodeError`. Un `.mexf` binario o con otra codificación abortaba
+  `--shell-plan`, `--compile-mexf` y `--debug-mexf` con un traceback de codecs.
+- **Pasos para reproducir:** `printf '\xff\xfe\x00binario' > bad.mexf` y
+  `python packagemaker.py --shell-plan bad.mexf`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (entrada inválida; el proceso no quedaba estable).
+- **Solución aplicada:** `parse_mexf()` traduce `UnicodeDecodeError` a `MexfError`
+  con mensaje legible y `detect_mexf_format()` devuelve `"unknown"` en vez de
+  lanzar.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_binary_mexf_is_reported_without_traceback`.
+- **Commit:** `935da3c`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
+## R-8e5b2f17 — `lib.native_shell --info` sin archivo lanzaba traceback
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** el entrypoint `python -m lib.native_shell --info` hacía
+  `args[1]` sin comprobar la longitud (`IndexError`) y no capturaba el
+  `ValueError`/`OSError` de `package_info()` para rutas desconocidas o
+  ilegibles, así que el integrador del gestor de archivos recibía un traceback.
+- **Pasos para reproducir:** `python -m lib.native_shell --info` y
+  `python -m lib.native_shell --info archivo-no-paquete`.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja (herramienta auxiliar, no afecta a la GUI).
+- **Solución aplicada:** se valida el argumento (uso y código 2) y los errores
+  de lectura se imprimen como `[ERROR] …` con código 1.
+- **Pruebas:** `tests/test_native_shell.py::test_info_cli_without_argument_reports_usage`
+  y `::test_info_cli_with_unknown_file_reports_error`.
+- **Commit:** `935da3c`.
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
+
+Las cuatro propuestas de esta sección y los seis cambios de engine están
+recogidos como preguntas `Q-001`…`Q-010` en `CONFIRM.MD`, el único canal de
+aprobación válido (solo JesusQuijada34). Ninguna se implementa sin una casilla
+`[x] SÍ` verificada por autoría.
 
 ### R-d23039c0 — Telemetría centralizada de errores
 
@@ -1195,6 +1306,19 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `d2670a1`, el de R-b3f71a6c, `ab79f4a`, `7f708bb`, el de R-7d5b91c4,
   `325c0e9`, `850de5c`, `f60f9ac`, `543e173` y `6fa3c51`), no reportes de usuario; el
   contador de 7 días no se reinicia.
+- Verificación del ciclo de R-9b4e7a52, R-2f7c8d31, R-6a1d3c94 y R-8e5b2f17
+  (2026-11-22): `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 788
+  pasan, 1 omitido, 39 subtests; `pyflakes` y `py_compile` limpios; los 16 casos
+  nuevos fallan con el código anterior (comprobado con `git stash` de los
+  módulos corregidos). `--compile-mexf` y `--debug-mexf` con `shortcuts: 5` o
+  `environments: [A, B]` terminan en `[ERROR]` legible y código 1; un `.mexf`
+  binario ya no lanza traceback; `install_plan()`/`uninstall_plan()` con
+  `id: "../../evil/demo"` mantienen todas las rutas dentro de `base_dir` y no
+  borran archivos externos; `python -m lib.native_shell --info` sin argumento
+  devuelve uso (código 2) y con archivo desconocido `[ERROR]` (código 1).
+- Aprobaciones (2026-11-22): se creó `CONFIRM.MD` con 10 preguntas pendientes
+  (`Q-001`…`Q-010`: las 4 mejoras y los 6 cambios de engine). Ninguna está
+  aprobada; no se aplicó ningún cambio de engine.
 - Verificación del ciclo de R-7e3a9c14, R-4b8d2f61 y R-9c5f1e28 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 547 pasan, 1
   omitido, 39 subtests; `pyflakes` y `py_compile` limpios; los 6 casos nuevos

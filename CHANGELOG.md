@@ -2,6 +2,26 @@
 
 ## 2026-11-22
 
+### Corregido — robustez de `.mexf` y del shell nativo
+
+Hallazgos del duodécimo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `935da3c`.
+
+- **R-9b4e7a52 — Un `.mexf` v1 con secciones mal tipadas rompía `--compile-mexf` y `--debug-mexf`:** `validate_mexf()` solo comprobaba `triggers`, `commands` y `assets`. Un documento con `shortcuts`/`environments` no-objeto o `file_associations`/`context_menus`/`registry`/`runtime` no-lista pasaba la validación y reventaba después en `merge_documents()` (`dict(valor)`/`list(valor)`) o en `MexfDebugger.__init__()` (`.items()` sobre `environments`). Ahora la validación rechaza esas formas con un `MexfError` legible y las rutas de fusión y depuración normalizan cada sección con `isinstance`, de modo que el CLI responde `[ERROR]` con código 1 en vez de un traceback.
+- **R-2f7c8d31 — El identificador `.mexf` escapaba del directorio de integración:** `install_plan()`, `uninstall_plan()` y los renderizadores de `.desktop` usaban `metadata.id` como nombre de fichero sin sanear. Un `id` con `../` escribía el XML MIME y los lanzadores fuera de `share/applications` y `--uninstall-mexf-shell` podía borrar archivos ajenos; además, los valores con saltos de línea podían inyectar claves en el `.desktop`. Ahora un nombre saneado (`_file_stem`) se usa en todas las rutas y `_flat_value()` aplana `Name`/`Exec`/`Icon` y `environment.d`. El identificador visible del plan no cambia.
+- **R-6a1d3c94 — Un `.mexf` no UTF-8 provocaba traceback:** `parse_mexf()` leía con `utf-8-sig` sin capturar `UnicodeDecodeError`, así que un archivo binario abortaba `--shell-plan`, `--compile-mexf` y `--debug-mexf`. Ahora se traduce a `MexfError` y `detect_mexf_format()` devuelve `"unknown"`.
+- **R-8e5b2f17 — `lib.native_shell --info` sin archivo lanzaba traceback:** el entrypoint hacía `args[1]` sin comprobar la longitud y no capturaba los errores de `package_info()`. Ahora responde con uso (código 2) o `[ERROR]` (código 1).
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Se creó `CONFIRM.MD` como canal único de aprobación del propietario, con 10 preguntas pendientes: `Q-001`…`Q-004` (telemetría, acentos, capitalización del publisher y `compile-only`) y `Q-005`…`Q-010` (aislamiento BlindCube/FlatCube, pruebas y `.env`, reorganización y GlassCube, coreografía de splash, rediseño de UI y sidebar). Ninguna está aprobada y no se aplicó ningún cambio de engine.
+
+### Verificación — duodécimo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 788 pasan, 1 omitido, 39 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Los 16 casos nuevos fallan con el código anterior (comprobado con `git stash` de los módulos corregidos).
+- `--compile-mexf` y `--debug-mexf` con `shortcuts: 5` o `environments: [A, B]` terminan en `[ERROR]` y código 1; un `.mexf` binario ya no lanza traceback; `install_plan()`/`uninstall_plan()` con `id: "../../evil/demo"` mantienen todas las rutas dentro de `base_dir` y no borran archivos externos; `python -m lib.native_shell --info` sin argumento devuelve uso (2) y con archivo desconocido `[ERROR]` (1).
+
 ### Corregido — accesos directos `.asksome` y robustez de `.mexf` legacy
 
 Hallazgos del undécimo ciclo de mantenimiento (sin reporte externo; reportados por JesusQuijada34 en la auditoría interna). Commit `6fa3c51`.
