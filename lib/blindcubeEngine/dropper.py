@@ -120,14 +120,32 @@ def _decrypt(data, password, params):
     raise SystemExit("Modo de cifrado no soportado por el stub: " + mode)
 
 
+def _decode_header(blob):
+    try:
+        header = json.loads(blob.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise SystemExit("Cabecera .iflapp corrupta: %s." % exc)
+    if not isinstance(header, dict):
+        raise SystemExit("Cabecera .iflapp corrupta: no es un objeto JSON.")
+    return header
+
+
 def _header(data):
     if data[:8] == MAGIC:
+        if len(data) < 12:
+            raise SystemExit("Cabecera .iflapp truncada.")
         (length,) = struct.unpack("<I", data[8:12])
-        return json.loads(data[12:12 + length].decode("utf-8"))
+        if length > len(data) - 12:
+            raise SystemExit("Cabecera .iflapp truncada.")
+        return _decode_header(data[12:12 + length])
     index = data.rfind(TRAILER)
     if index >= 0:
+        if len(data) < index + 12:
+            raise SystemExit("Cabecera .iflapp truncada.")
         (length,) = struct.unpack("<I", data[index + 8:index + 12])
-        return json.loads(data[index + 12:index + 12 + length].decode("utf-8"))
+        if length > len(data) - (index + 12):
+            raise SystemExit("Cabecera .iflapp truncada.")
+        return _decode_header(data[index + 12:index + 12 + length])
     raise SystemExit("Cabecera .iflapp no reconocida.")
 
 
@@ -143,29 +161,47 @@ def _safe(dest, name):
 
 def _extract_v2(data, dest, password):
     header = _header(data)
-    payload = header["payload"]
-    stored = data[payload["offset"]:payload["offset"] + payload["size"]]
+    payload = header.get("payload")
+    if not isinstance(payload, dict):
+        raise SystemExit("Cabecera .iflapp corrupta: falta el bloque payload.")
+    offset = payload.get("offset")
+    size = payload.get("size")
+    if not isinstance(offset, int) or not isinstance(size, int) or offset < 0 or size < 0:
+        raise SystemExit("Cabecera .iflapp corrupta: rango del payload inválido.")
+    if offset + size > len(data):
+        raise SystemExit("Payload .iflapp truncado.")
+    stored = data[offset:offset + size]
     if payload.get("sha256") and _sha(stored) != payload["sha256"]:
         raise SystemExit("El payload no coincide con su digest.")
-    raw = _decrypt(stored, password, payload)
-    if payload.get("compression") == "lzma":
-        raw = lzma.decompress(raw, format=lzma.FORMAT_ALONE)
+    try:
+        raw = _decrypt(stored, password, payload)
+        if payload.get("compression") == "lzma":
+            raw = lzma.decompress(raw, format=lzma.FORMAT_ALONE)
+    except SystemExit:
+        raise
+    except Exception as exc:
+        raise SystemExit("Payload .iflapp corrupto o contraseña incorrecta: %s." % exc)
     files = []
-    with tarfile.open(fileobj=io.BytesIO(raw), mode="r") as tar:
-        for member in tar.getmembers():
-            if member.issym() or member.islnk():
-                raise SystemExit("Enlaces no permitidos en el paquete.")
-            target = _safe(dest, member.name)
-            if member.isdir():
-                os.makedirs(target, exist_ok=True)
-                continue
-            if not member.isfile():
-                continue
-            os.makedirs(os.path.dirname(target), exist_ok=True)
-            source = tar.extractfile(member)
-            with open(target, "wb") as output:
-                output.write(source.read())
-            files.append(target)
+    try:
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r") as tar:
+            for member in tar.getmembers():
+                if member.issym() or member.islnk():
+                    raise SystemExit("Enlaces no permitidos en el paquete.")
+                target = _safe(dest, member.name)
+                if member.isdir():
+                    os.makedirs(target, exist_ok=True)
+                    continue
+                if not member.isfile():
+                    continue
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                source = tar.extractfile(member)
+                with open(target, "wb") as output:
+                    output.write(source.read())
+                files.append(target)
+    except SystemExit:
+        raise
+    except (tarfile.TarError, OSError, ValueError) as exc:
+        raise SystemExit("Contenido .iflapp corrupto: %s." % exc)
     return files, header
 
 
@@ -176,8 +212,13 @@ def _extract_zip(data, dest):
     try:
         with zipfile.ZipFile(zip_path) as archive:
             archive.extractall(dest)
+    except (zipfile.BadZipFile, OSError, ValueError) as exc:
+        raise SystemExit("Contenido ZIP corrupto: %s." % exc)
     finally:
-        os.unlink(zip_path)
+        try:
+            os.unlink(zip_path)
+        except OSError:
+            pass
     return [], {"app": "", "name": ""}
 
 
@@ -228,8 +269,16 @@ def _launch(dest, header):
 def main():
     password = None
     if "--password" in sys.argv:
-        password = sys.argv[sys.argv.index("--password") + 1]
-    data = _load_payload()
+        index = sys.argv.index("--password")
+        if index + 1 >= len(sys.argv):
+            raise SystemExit("Falta el valor de --password.")
+        password = sys.argv[index + 1]
+    try:
+        data = _load_payload()
+    except SystemExit:
+        raise
+    except Exception as exc:
+        raise SystemExit("Dropper corrupto: %s." % exc)
     workdir = tempfile.mkdtemp(prefix="iflapp_run_")
     try:
         if data[:2] == b"PK":
@@ -239,6 +288,10 @@ def main():
             _extract_v2(data, workdir, password)
             header = _header(data)
         return _launch(workdir, header)
+    except SystemExit:
+        raise
+    except Exception as exc:
+        raise SystemExit("No se pudo ejecutar el paquete: %s." % exc)
     finally:
         if "--keep" not in sys.argv:
             shutil.rmtree(workdir, ignore_errors=True)
@@ -301,7 +354,11 @@ def dropper_payload_offset(path: Path | str) -> int:
 
 
 def read_dropper_header(path: Path | str):
-    """Lee la cabecera del ``.iflapp`` adjunto sin extraerlo."""
+    """Lee la cabecera del ``.iflapp`` adjunto sin extraerlo.
+
+    Un dropper truncado o con el payload alterado se traduce a ``IflappError``;
+    antes ``base64``/``struct`` escapaban como errores crípticos.
+    """
     data = Path(path).read_bytes()
     index = data.rfind(DROPPER_MARKER)
     if index < 0:
@@ -311,7 +368,12 @@ def read_dropper_header(path: Path | str):
     if stop >= 0:
         body = body[:stop]
     chunks = [line[1:].strip() for line in body.splitlines() if line.startswith(b"#")]
-    payload = base64.b64decode(b"".join(chunks))
+    try:
+        payload = base64.b64decode(b"".join(chunks))
+    except ValueError as exc:
+        raise IflappError(f"El payload del dropper está corrupto: {exc}") from exc
+    if not payload:
+        raise IflappError("El dropper no contiene un paquete adjunto.")
     temp_dir = Path(tempfile.mkdtemp(prefix="iflapp_dropper_"))
     temp_file = temp_dir / "embedded.iflapp"
     temp_file.write_bytes(payload)

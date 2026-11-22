@@ -1,3 +1,4 @@
+import base64
 import subprocess
 import sys
 import tempfile
@@ -7,7 +8,13 @@ from unittest.mock import patch
 from pathlib import Path
 
 from lib.blindcubeEngine import iflapp_format
-from lib.blindcubeEngine.dropper import create_dropper, read_dropper_header
+from lib.blindcubeEngine.dropper import (
+    DROPPER_END,
+    DROPPER_MARKER,
+    create_dropper,
+    read_dropper_header,
+)
+from lib.blindcubeEngine.iflapp_format import IflappError
 from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
 from lib.blindcubeEngine import compilers
 
@@ -98,6 +105,77 @@ class DropperTests(unittest.TestCase):
                 text=True,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
+
+    @staticmethod
+    def _replace_embedded_payload(dropper: Path, payload: bytes) -> Path:
+        data = dropper.read_bytes()
+        start = data.find(DROPPER_MARKER) + len(DROPPER_MARKER)
+        end = data.find(DROPPER_END)
+        encoded = base64.b64encode(payload).decode("ascii")
+        lines = [("#" + encoded[i:i + 76]).encode("ascii") for i in range(0, len(encoded), 76)]
+        corrupted = dropper.with_name(dropper.stem + "-corrupt.run")
+        corrupted.write_bytes(data[:start] + b"\n".join(lines) + b"\n" + data[end:])
+        return corrupted
+
+    def test_corrupt_embedded_package_reports_clean_error(self):
+        """Un ``.run`` con el ``.iflapp`` alterado no debe escupir un traceback."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = _make_package(root)
+            dropper = create_dropper(package, root / "demo.run")
+            corrupted = self._replace_embedded_payload(dropper, b"IFLAPP2\x00" + b"\xff" * 48)
+            result = subprocess.run(
+                [sys.executable, str(corrupted)],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertIn(".iflapp", result.stderr)
+
+    def test_truncated_embedded_package_reports_clean_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = _make_package(root)
+            dropper = create_dropper(package, root / "demo.run")
+            corrupted = self._replace_embedded_payload(dropper, b"IFLAPP2\x00\x05\x00\x00\x00")
+            result = subprocess.run(
+                [sys.executable, str(corrupted)],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertIn("truncada", result.stderr)
+
+    def test_password_without_value_reports_clean_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = _make_package(root)
+            dropper = create_dropper(package, root / "demo.run")
+            result = subprocess.run(
+                [sys.executable, str(dropper), "--password"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertIn("Falta el valor de --password", result.stderr)
+
+    def test_read_dropper_header_rejects_corrupt_base64(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = _make_package(root)
+            dropper = create_dropper(package, root / "demo.run")
+            data = dropper.read_bytes()
+            index = data.find(DROPPER_MARKER) + len(DROPPER_MARKER)
+            broken = root / "broken.run"
+            broken.write_bytes(data[:index] + b"#!!!!not-base64!!!!\n")
+            with self.assertRaises(IflappError):
+                read_dropper_header(broken)
 
 
 class CompilerBackendTests(unittest.TestCase):
