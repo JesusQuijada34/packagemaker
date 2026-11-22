@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "Multiplatform",
     "required_fields": "Uitgever, ID en Naam zijn verplicht.",
-    "folder_exists": "De map bestaat al:\n{path}"
+    "folder_exists": "De map bestaat al:\n{path}",
+    "create_failed": "Kan het project niet aanmaken: {error}"
   },
   "mexf_editor": {
     "title": ".mexf-editor",

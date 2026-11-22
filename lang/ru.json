@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "Мультиплатформенный",
     "required_fields": "Издатель, ID и Имя обязательны.",
-    "folder_exists": "Папка уже существует:\n{path}"
+    "folder_exists": "Папка уже существует:\n{path}",
+    "create_failed": "Не удалось создать проект: {error}"
   },
   "mexf_editor": {
     "title": "Редактор .mexf",

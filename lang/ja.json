@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "マルチプラットフォーム",
     "required_fields": "出版者、ID、名前は必須です。",
-    "folder_exists": "フォルダはすでに存在します:\n{path}"
+    "folder_exists": "フォルダはすでに存在します:\n{path}",
+    "create_failed": "プロジェクトを作成できませんでした: {error}"
   },
   "mexf_editor": {
     "title": ".mexf エディタ",

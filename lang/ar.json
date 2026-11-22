@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "متعدد المنصات",
     "required_fields": "الناشر والمعرّف والاسم مطلوبة.",
-    "folder_exists": "المجلد موجود بالفعل:\n{path}"
+    "folder_exists": "المجلد موجود بالفعل:\n{path}",
+    "create_failed": "تعذر إنشاء المشروع: {error}"
   },
   "mexf_editor": {
     "title": "محرر .mexf",

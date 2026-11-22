@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "Çoklu platform",
     "required_fields": "Yayinci, Kimlik ve Ad zorunludur.",
-    "folder_exists": "Klasor zaten var:\n{path}"
+    "folder_exists": "Klasor zaten var:\n{path}",
+    "create_failed": "Proje oluşturulamadı: {error}"
   },
   "mexf_editor": {
     "title": ".mexf Düzenleyici",

@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "Cross-platform",
     "required_fields": "Publisher, ID and Name are required.",
-    "folder_exists": "The folder already exists:\n{path}"
+    "folder_exists": "The folder already exists:\n{path}",
+    "create_failed": "Could not create the project: {error}"
   },
   "mexf_editor": {
     "title": ".mexf Editor",

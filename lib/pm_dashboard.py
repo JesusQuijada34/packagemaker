@@ -226,7 +226,9 @@ class NewProjectWizard(QDialog):
         author = self.input_author.text().strip()
 
         if not publisher or not app_id or not name:
-            QMessageBox.warning(self, tr("common.warning"), tr("dashboard.required_fields"))
+            self._notify(
+                "warning", tr("common.warning"), tr("dashboard.required_fields")
+            )
             return
 
         platform_map = {
@@ -250,12 +252,16 @@ class NewProjectWizard(QDialog):
                 pub_slug, app_id, version, plat, timestamp
             )
         except ValueError as exc:
-            QMessageBox.critical(self, "Error", str(exc))
+            self._notify("error", tr("common.error"), str(exc))
             return
         project_path = Path(base_dir) / folder_name
 
         if project_path.exists():
-            QMessageBox.warning(self, tr("common.warning"), tr("dashboard.folder_exists").format(path=project_path))
+            self._notify(
+                "warning",
+                tr("common.warning"),
+                tr("dashboard.folder_exists").format(path=project_path),
+            )
             return
 
         try:
@@ -275,7 +281,30 @@ class NewProjectWizard(QDialog):
             self.project_path = str(project_path)
             self.accept()
         except (OSError, FileNotFoundError) as e:
-            QMessageBox.critical(self, "Error", f"No se pudo crear el proyecto:\n{e}")
+            self._notify(
+                "error",
+                tr("common.error"),
+                tr("dashboard.create_failed").format(error=e),
+            )
+
+    def _notify(self, kind: str, title: str, message: str) -> None:
+        """Avisa con la notificacion animada; cae a ``QMessageBox`` si falla.
+
+        Las notificaciones son ventanas sin marco: si el manager no puede
+        construirse (sin pantalla, Qt parcial) el aviso se perderia en
+        silencio, y un error al crear el proyecto debe verse igualmente.
+        """
+        try:
+            from lib.notificationSystem import error, warning
+
+            (error if kind == "error" else warning)(title, message)
+            return
+        except Exception:  # noqa: BLE001 - cualquier fallo cae al dialogo
+            pass
+        if kind == "error":
+            QMessageBox.critical(self, title, message)
+        else:
+            QMessageBox.warning(self, title, message)
 
     def get_project_path(self) -> Optional[str]:
         return self.project_path

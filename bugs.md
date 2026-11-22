@@ -1004,6 +1004,31 @@ observación y el requisito de 7 días sin reportes nuevos siguen en curso.
 
 ---
 
+## R-5b1e9d47 — El asistente de proyecto avisaba con `QMessageBox` secos
+
+- **Usuario:** JesusQuijada34 (auditoría de la Fase 3.3 de `bugs.txt`; sin issue externo)
+- **Fecha del reporte:** 2026-11-22
+- **Descripción:** la Fase 3.3 pide sustituir las alertas rudimentarias por
+  notificaciones con transiciones y animaciones. `NewProjectWizard` seguía
+  usando cuatro `QMessageBox` (campos vacíos, nombre no canónico, carpeta
+  existente y fallo de plantillas), de modo que crear un proyecto desde el
+  dashboard rompía el lenguaje visual del resto de la app.
+- **Pasos para reproducir:** abrir el dashboard, pulsar «Crear» sin rellenar
+  editorial/ID/nombre y observar el diálogo modal del sistema.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja (cosmética; la validación era correcta).
+- **Solución aplicada:** `NewProjectWizard._notify()` envía la notificación
+  animada (`warning`/`error` de `lib.notificationSystem`) y, si el manager no
+  puede construirse, cae al `QMessageBox` de siempre para no perder el aviso.
+  El texto del fallo de plantillas pasa a la clave i18n
+  `dashboard.create_failed`, traducida en los 14 idiomas.
+- **Pruebas:** `tests/test_dashboard_notifications.py` (5 casos: tres rutas de
+  error, el aviso de carpeta existente y el respaldo cuando la notificación
+  falla).
+- **Fecha de resolución:** 2026-11-22.
+
+---
+
 ## Mejoras pendientes de aprobación
 
 ### R-d23039c0 — Telemetría centralizada de errores

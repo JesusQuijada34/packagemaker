@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "Multipiattaforma",
     "required_fields": "Editore, ID e Nome sono obbligatori.",
-    "folder_exists": "La cartella esiste già:\n{path}"
+    "folder_exists": "La cartella esiste già:\n{path}",
+    "create_failed": "Impossibile creare il progetto: {error}"
   },
   "mexf_editor": {
     "title": "Editor .mexf",

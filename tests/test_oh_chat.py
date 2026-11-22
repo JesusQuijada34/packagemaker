@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Regresiones de ``scripts/oh_chat.py`` (control de OpenHands por terminal)."""
 
-import json
 import sys
 from pathlib import Path
 

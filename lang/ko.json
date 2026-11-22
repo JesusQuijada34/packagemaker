@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "멀티 플랫폼",
     "required_fields": "발행자, ID 및 이름은 필수입니다.",
-    "folder_exists": "폴더가 이미 존재합니다:\n{path}"
+    "folder_exists": "폴더가 이미 존재합니다:\n{path}",
+    "create_failed": "프로젝트를 만들 수 없습니다: {error}"
   },
   "mexf_editor": {
     "title": ".mexf 편집기",

@@ -407,7 +407,8 @@
     "platform_linux": "Linux",
     "platform_multi": "多平台",
     "required_fields": "发布者、ID 和名称为必填项。",
-    "folder_exists": "文件夹已存在:\n{path}"
+    "folder_exists": "文件夹已存在:\n{path}",
+    "create_failed": "无法创建项目：{error}"
   },
   "mexf_editor": {
     "title": ".mexf 编辑器",
