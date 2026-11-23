@@ -95,6 +95,28 @@ def _canonical_folder_or_exit(publisher, app_id, version, platform, timestamp=No
         sys.exit(1)
 
 
+def _normalize_publisher_or_exit(publisher):
+    """Normaliza el publisher conservando su capitalización o aborta con aviso."""
+    try:
+        return ProjectNameFormatter.normalize_publisher(publisher)
+    except ValueError as exc:
+        print(f"[ERROR] Metadatos de proyecto no válidos: {exc}")
+        sys.exit(1)
+
+
+def _safe_publisher(publisher):
+    """Normaliza para *localizar* un proyecto; ante metadatos raros no aborta.
+
+    Las acciones ``compile``/``repair`` no crean nombres: sólo buscan el
+    proyecto por sus metadatos. Un publisher fuera de la ley no debe reventar
+    el CLI, así que se degrada al formato histórico en minúsculas.
+    """
+    try:
+        return ProjectNameFormatter.normalize_publisher(publisher)
+    except ValueError:
+        return str(publisher or "influent").strip().lower().replace(" ", "-")
+
+
 def _validate_compiler_metadata(compiler, target_platform):
     """Comprueba la ley de nombres con los metadatos ya leídos del proyecto."""
     platform = "Knosthalij" if target_platform == "Windows" else "Danenone"
@@ -1465,7 +1487,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         base_path = Path(project_source.get('path')).resolve()
         
         # Obtener valores de proyecto
-        publisher = (project_source.get('publisher') or project_source.get('author') or 'influent').strip().lower().replace(' ', '-')
+        publisher = _normalize_publisher_or_exit(
+            project_source.get('publisher') or project_source.get('author') or 'influent'
+        )
         app_id = project_source.get('shortname') or (project_source.get('name') or base_path.name).strip().lower().replace(' ', '-')
         version_base = ProjectNameFormatter.normalize_version_base(project_source.get('version') or '1.0.0')
         platform_value = normalize_platform(project_source.get('platform')) if project_source.get('platform') else normalize_platform('Knosthalij')
@@ -1514,7 +1538,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         base_path = Path(project_source.get('path')).resolve()
         
         # Construir nombre de carpeta para buscar el proyecto
-        publisher = (project_source.get('publisher') or project_source.get('author') or 'influent').strip().lower().replace(' ', '-')
+        publisher = _safe_publisher(
+            project_source.get('publisher') or project_source.get('author') or 'influent'
+        )
         app_id = project_source.get('shortname') or (project_source.get('name') or '').strip().lower().replace(' ', '-')
         version_base = ProjectNameFormatter.normalize_version_base(project_source.get('version') or '1.0.0')
         
@@ -1721,7 +1747,9 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         base_path = Path(project_source.get('path')).resolve()
         
         # Construir nombre de carpeta para buscar el proyecto
-        publisher = (project_source.get('publisher') or project_source.get('author') or 'influent').strip().lower().replace(' ', '-')
+        publisher = _safe_publisher(
+            project_source.get('publisher') or project_source.get('author') or 'influent'
+        )
         app_id = project_source.get('shortname') or (project_source.get('name') or '').strip().lower().replace(' ', '-')
         version_raw_input = str(project_source.get('version') or '1.0.0').strip()
         try:

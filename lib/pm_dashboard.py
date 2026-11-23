@@ -241,15 +241,16 @@ class NewProjectWizard(QDialog):
         base_dir = self.input_location.text().strip() or str(
             Path.home() / "Documents" / "Packagemaker Projects"
         )
-        pub_slug = publisher.strip().lower().replace(" ", "-")
         # Nombre canónico completo (con versión y sufijo de plataforma), no
         # ``publisher.app`` a secas: la carpeta debe cumplir la ley de nombres.
         from lib.projectNameFormatter import ProjectNameFormatter
 
         try:
+            # El publisher conserva su capitalización también en la carpeta.
+            publisher = ProjectNameFormatter.normalize_publisher(publisher)
             timestamp = ProjectNameFormatter.get_timestamp()
             folder_name = ProjectNameFormatter.format_project_folder(
-                pub_slug, app_id, version, plat, timestamp
+                publisher, app_id, version, plat, timestamp
             )
         except ValueError as exc:
             self._notify("error", tr("common.error"), str(exc))

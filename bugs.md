@@ -87,13 +87,18 @@ de auditoría.
 | R-2b7d4a90 | Bug — `find_flarm_project` revienta con carpeta o config ilegible | Alta | Resuelto |
 | R-5d8f1c36 | Bug — depuración `.mexf` lanza `yaml.YAMLError` en un slot | Media | Resuelto |
 | R-8a2f6d51 | Bug — `uninstall_plan` (Windows) deja escapar `OSError` | Baja | Resuelto |
-| R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
-| R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
-| R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
-| R-3e7d1c58 | Mejora — `compile-only` deja el fuente en el paquete | Baja | Pendiente de aprobación |
-| — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
+| R-d23039c0 | Mejora — telemetría | Media | Resuelto (Q-001) |
+| R-5d8e2a41 | Mejora — nombres con acentos | Media | Resuelto (Q-002) |
+| R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Resuelto (Q-003) |
+| R-3e7d1c58 | Mejora — `compile-only` deja el fuente en el paquete | Baja | Pendiente de aclaración (Q-004) |
+| — | Cambios de engine (`bugs.txt`) | — | Q-005/Q-006/Q-009/Q-010 aplicados; Q-007/Q-008 pendientes |
+| R-5b1d9e47 | Bug — parpadeo del hover del sidebar y ancho escaso | Media | Resuelto |
+| R-7a3e1d92 | Bug — `CONFIRM.MD` con marcadores de conflicto | Alta | Resuelto |
+| R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Pendiente de aprobación (Q-008) |
 
-No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
+Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
+registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
+que depende de la aprobación Q-008 y por eso no se ha modificado. Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
@@ -2004,47 +2009,62 @@ probado en el commit `f8ea814`; la cola sigue sin bugs abiertos.
 
 ---
 
-## Mejoras pendientes de aprobación
+## Mejoras: estado de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
 recogidos como preguntas `Q-001`…`Q-010` en `CONFIRM.MD`, el único canal de
-aprobación válido (solo JesusQuijada34). Ninguna se implementa sin una casilla
-`[x] SÍ` verificada por autoría.
+aprobación válido (solo JesusQuijada34). El 2026-11-23 el propietario marcó
+`[x] SÍ` en Q-001, Q-002, Q-003, Q-005, Q-006, Q-009 y Q-010 (commit `0ac5457`,
+autoría verificada con la API de GitHub). Q-001, Q-002 y Q-003 se aplicaron en
+el vigésimo quinto ciclo; Q-005, Q-006, Q-009 y Q-010 ya estaban implementados
+y quedan verificados por la suite. Q-004 necesita aclaración y Q-007/Q-008
+siguen pendientes.
 
 ### R-d23039c0 — Telemetría centralizada de errores
 
 - **Usuario:** JesusQuijada34 (issue #4)
 - **Fecha del reporte:** 2026-07-05
-- **Estado:** Pendiente de aprobación explícita. No implementado.
-- **Motivo:** envía tracebacks y datos de entorno a un servidor externo. Es una
-  funcionalidad nueva con implicaciones de privacidad y red; no debe mezclarse
-  con correcciones de bugs ni activarse por defecto sin decisión del
-  responsable.
-- **Propuesta mínima si se aprueba:** módulo `lib/errorReporter.py` con envío
-  asíncrono opcional, consentimiento explícito, sin rutas de usuario ni
-  credenciales, y URL configurable.
+- **Estado:** Resuelto (Q-001 aprobada el 2026-11-23, commit `0ac5457`).
+- **Solución aplicada:** `lib/errorReporter.py` con envío asíncrono en un hilo
+  daemon (límite de 5 s), consentimiento explícito (`telemetry_enabled` +
+  `telemetry_endpoint`) y `sanitize()`, que sustituye la carpeta personal por
+  `~`, cualquier ruta absoluta por `<path>` y los valores con pinta de
+  credencial por `<redacted>`. Desactivado por defecto; `install_excepthook()`
+  se encadena al hook original y nunca altera su comportamiento. Documentado en
+  `docs/privacy.md`.
+- **Pruebas:** `tests/test_error_reporter.py`.
+- **Fecha de resolución:** 2026-11-23.
 
 ### R-5d8e2a41 — Acentos en publisher e identificador de aplicación
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
 - **Fecha del reporte:** 2026-11-21
-- **Estado:** Pendiente de aprobación explícita. No implementado.
-- **Situación actual:** la ley de nombres solo admite `A-Za-z0-9` y guiones en
-  publisher y appname. Un publisher como `Jesús` se rechaza (R-b3f71a6c ya
-  evita el traceback y muestra un error legible, pero el proyecto no se puede
-  crear ni compilar).
-- **Solicitado:** admitir acentos transliterándolos (`Jesús` → `Jesus`) o
-  permitiéndolos en el nombre canónico.
-- **Motivo de la espera:** cambia la ley de nombres y los nombres de carpeta,
-  paquete y artefacto; afecta a `_PROJECT_PATTERN`, a la compatibilidad con
-  proyectos existentes y a los tests de la ley canónica.
+- **Estado:** Resuelto (Q-002 aprobada el 2026-11-23, commit `0ac5457`).
+- **Solución aplicada:** `ProjectNameFormatter.transliterate()` (NFKD sin
+  marcas diacríticas) se aplica en `normalize_publisher()` y
+  `normalize_app_id()`. `Jesús` → `Jesus`, `Ñandú Labs` → `Nandu-Labs`. El
+  nombre canónico sigue siendo ASCII, así que `_PROJECT_PATTERN` y la lectura
+  de proyectos existentes no cambian.
+- **Pruebas:** `AccentTransliterationTests` en
+  `tests/test_project_name_formatter.py` y
+  `AccentedPublisherCreateTests` en `tests/test_maintenance_cli_regressions.py`.
+- **Fecha de resolución:** 2026-11-23.
 
 ### R-4c8e1f27 — El publisher pierde su capitalización al crear proyectos
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
 - **Fecha del reporte:** 2026-11-21
-- **Estado:** Pendiente de aprobación explícita. No implementado.
-- **Situación actual:** la ley de nombres exige que el publisher conserve la
+- **Estado:** Resuelto (Q-003 aprobada el 2026-11-23, commit `0ac5457`).
+- **Solución aplicada:** `handle_cli_action('create_project')`,
+  `_ejecutarCreacionProyecto()`, `DashboardWindow`, la TUI y las acciones
+  `compile`/`repair` pasan el publisher por
+  `ProjectNameFormatter.normalize_publisher()` en vez de forzar `.lower()`. La
+  búsqueda de proyectos sigue sin distinguir mayúsculas, así que los proyectos
+  existentes se localizan igual.
+- **Pruebas:** `test_create_copies_icon_from_any_working_directory` (ahora
+  espera `Influent.cwd-test.*`) y `AccentTransliterationTests`.
+- **Fecha de resolución:** 2026-11-23.
+- **Situación histórica:** la ley de nombres exige que el publisher conserve la
   capitalización declarada (`Influent.packagemaker.v3.2.7-…`), y
   `ProjectNameFormatter` lo cumple. Sin embargo, los dos puntos de creación
   pasan el publisher ya en minúsculas: `handle_cli_action('create_project')` y
@@ -2069,7 +2089,11 @@ aprobación válido (solo JesusQuijada34). Ninguna se implementa sin una casilla
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
 - **Fecha del reporte:** 2026-11-21
-- **Estado:** Pendiente de aprobación explícita. No implementado.
+- **Estado:** Pendiente de aclaración (Q-004). La respuesta del propietario
+  («decide tú, un zip app no debe contener archivos python, solamente el
+  ejecutable compilado con pyinstaller y ya») mezcla una decisión delegada con
+  una condición que contradice el propio backend zipapp, que por definición
+  empaqueta código Python. No se aplica hasta desambiguar.
 - **Situación actual:** `hardening.compile_to_bytecode()` escribe el `.pyc`
   optimizado (O2) junto al `.py`, pero no retira el fuente. El paquete sigue
   conteniendo el `.py` legible, así que el método no cumple lo que promete su
@@ -2094,6 +2118,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 1. Aislamiento estricto BlindCube / FlatCube y formato `.blindkpkg`
 
+- **Estado:** Aprobado (Q-005) e implementado en `main`
+  (`lib/engines.py`, `lib/blindcubeEngine/container.py` con `.blindkpkg`,
+  `lib/engine_isolation.py`, `lib/flatcubeEngine/pyinstaller_embedded.py`).
+  Verificado por `tests/test_engines_and_platform.py`,
+  `tests/test_engine_isolation.py` y `tests/test_engine_packages_layout.py`.
+
 - **Actual:** `lib/compilers.py` resuelve backend con fallback Nuitka →
   PyInstaller → zipapp; `.iflapp` es el contenedor de salida.
 - **Solicitado:** BlindCube compila siempre con Nuitka en entorno aislado y
@@ -2106,6 +2136,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Riesgo:** alto (compatibilidad de artefactos y CI).
 
 ### 2. Pruebas previas y diálogo `.env` en BlindCube
+
+- **Estado:** Aprobado (Q-006) e implementado en `main`
+  (`lib/blindcubeEngine/build_preflight.py`, `lib/env_injection_dialog.py`,
+  cableado en `BuildThread` y `packagemaker.py`). Verificado por
+  `tests/test_build_preflight.py`.
 
 - **Actual:** el build no ejecuta pruebas de sintaxis/offscreen ni pregunta por
   la inyección de `.env`.
@@ -2129,6 +2164,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 4. Coreografía de splash y ventanas
 
+- **Estado:** Pendiente. La respuesta de Q-008 quedó partida por un conflicto
+  de merge (`[ ] SÍ` en un lado, `[x] SÍ` en el otro), así que se trata como no
+  respondida y se ha vuelto a preguntar. El defecto se registra como
+  R-4f8a2c60. No se ha tocado el ciclo de vida de ventanas.
+
 - **Actual:** splash y titlebar existentes, sin la secuencia completa
   splash → login → verificación interna → ventana principal.
 - **Solicitado:** fade tipo cortina, splash convertido en ventana de error,
@@ -2148,6 +2188,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 5. Rediseño de UI (acento naranja, tarjetas iOS, configuración)
 
+- **Estado:** Aprobado (Q-009) e implementado en `main`: acento naranja
+  `#FF6B00`, tarjetas de configuración (`lib/settings_cards.py`,
+  `lib/settings_panel.py`), guardado automático, sin editor de código ni
+  selector de modo de ventana, notificaciones (`lib/notificationSystem.py`) y
+  selección de fuentes (`lib/font_manager.py`).
+
 - **Actual:** acento azul `#0078D4`, configuración con botones Guardar/Restaurar,
   opción de editor de código y selector de modo de ventana.
 - **Solicitado:** acento naranja corporativo, tarjetas con navegación en
@@ -2162,6 +2208,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 6. Sidebar: hover y modo contraído
 
+- **Estado:** Aprobado (Q-010) y aplicado. El parpadeo se corrigió pintando el
+  resalte en `paintEvent` (sin re-polish) y el ancho por defecto pasó a 270 px;
+  el modo contraído ya ocultaba texto, tarjeta de contexto y login. Detalle en
+  R-5b1d9e47.
+
 - **Actual:** el hover se anima con `hover_animation.py`; el login permanece en
   la barra lateral contraída.
 - **Solicitado:** corregir el parpadeo azul/gris y ocultar el bloque de login al
@@ -2172,9 +2223,73 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ---
 
+## R-5b1d9e47 — El hover del sidebar parpadeaba y los iconos quedaban apretados
+
+- **Usuario:** JesusQuijada34 (respuesta a Q-010 en `CONFIRM.MD`, commit `0ac5457`)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** al pasar el ratón, el ítem alternaba entre el azul/gris
+  heredado y el gris de reposo («el parpadeo sigue»), y los iconos quedaban muy
+  apretados: faltaban unos 10 px de ancho.
+- **Pasos para reproducirlo:** abrir la aplicación, pasar el ratón por los
+  ítems del sidebar y hacer clic en uno mientras el puntero sigue encima.
+- **Causa raíz:** `_HoverFade` reescribía la hoja de estilo del ítem en cada
+  fotograma; cada `setStyleSheet()` fuerza un re-polish y, en ese intervalo, se
+  reevaluaba la regla heredada `QWidget#NavigationSidebar QPushButton:hover` (y
+  `:checked` con borde de acento). Además, el fondo de selección del tema claro
+  era un azul fijo `rgba(0, 120, 212, 0.18)` ajeno al token de acento.
+- **Solución aplicada:** el resalte se pinta en `paintEvent` con la propiedad
+  animada `hoverProgress` (una sola `QPropertyAnimation` reutilizada) y sin
+  tocar el QSS; el selector propio
+  `QPushButton#SidebarNavItem[pmNavItem="true"]` se impone a la regla heredada;
+  el fondo de selección se deriva del acento con `with_alpha()`; el ancho por
+  defecto pasa a 270 px (migración única desde 260) y el padding derecho a
+  14 px. Al seleccionar un ítem se retira el tinte de hover.
+- **Pruebas:** `tests/test_hover_and_tokens.py` (hover sin re-polish, ítem
+  seleccionado sin tinte, fondo derivado del acento, ancho por defecto).
+- **Commit:** vigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-7a3e1d92 — `CONFIRM.MD` quedó commiteado con marcadores de conflicto
+
+- **Usuario:** JesusQuijada34 (commit `0ac5457`)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta (rompe el único canal de aprobación)
+- **Descripción:** el bloque Q-008 contenía `<<<<<<< HEAD`, `=======` y
+  `>>>>>>> 418c3e3`, con `[ ] SÍ` en un lado y `[x] SÍ` en el otro. Las demás
+  respuestas convivían con ese texto ilegible.
+- **Solución aplicada:** se repara el archivo, se registran las decisiones
+  verificadas en `Historial` y Q-008 vuelve a `Pendientes` como pregunta única.
+  La autoría del commit se verificó con la API de GitHub
+  (`author.login == "JesusQuijada34"`).
+- **Pruebas:** `tests/test_confirm_channel.py` (sin marcadores de conflicto y
+  sin preguntas duplicadas).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-4f8a2c60 — Splash simultáneo y avisos de ventana en Windows
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`, commit `bed2e83`; evidencia en Q-008)
+- **Fecha del reporte:** 2026-11-22
+- **Prioridad:** Alta
+- **Descripción:** al abrir la aplicación aparecen varias ventanas vacías que
+  se abren y cierran, el splash se dibuja a la vez que la ventana principal en
+  lugar de primero, y en Windows la consola muestra
+  `QWidgetWindow(...) must be a top level window` y
+  `UpdateLayeredWindowIndirect failed for ptDst=...`.
+- **Causa probable:** `IntegratedSplash` se crea con `parent=main_window` y
+  `WA_TranslucentBackground`, y el efecto `WipeWindow` (ventana por capas) se
+  aplica sobre un widget hijo. `UpdateLayeredWindowIndirect` y el gestor de
+  ventanas de Qt exigen una ventana de nivel superior.
+- **Estado:** Pendiente. Depende del cambio de engine Q-008, cuya respuesta
+  quedó ambigua; no se ha modificado el ciclo de vida de ventanas.
+- **Propuesta:** splash de nivel superior (sin padre) mostrado antes de
+  `main_window.show()`, aplicar `WipeWindow` solo a ventanas top-level y
+  cerrar con `destroy()`.
+- **Riesgo:** alto sin verificación visual en Windows.
+
 ## Periodo de observación y release
 
-- Bugs abiertos: 0.
+- Bugs abiertos: 1 (R-4f8a2c60, pendiente de la aprobación Q-008).
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
@@ -2249,9 +2364,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `id: "../../evil/demo"` mantienen todas las rutas dentro de `base_dir` y no
   borran archivos externos; `python -m lib.native_shell --info` sin argumento
   devuelve uso (código 2) y con archivo desconocido `[ERROR]` (código 1).
-- Aprobaciones (2026-11-22): se creó `CONFIRM.MD` con 10 preguntas pendientes
-  (`Q-001`…`Q-010`: las 4 mejoras y los 6 cambios de engine). Ninguna está
-  aprobada; no se aplicó ningún cambio de engine.
+- Aprobaciones (2026-11-23, vigésimo quinto ciclo): el propietario marcó
+  `[x] SÍ` en Q-001, Q-002, Q-003, Q-005, Q-006, Q-009 y Q-010 (commit
+  `0ac5457`, autoría verificada con la API de GitHub). Se aplicaron Q-001
+  (telemetría opcional), Q-002 (acentos) y Q-003 (capitalización del
+  publisher). Q-005/Q-006/Q-009/Q-010 ya estaban implementados y quedan
+  verificados. Q-004 se reenvía para aclaración; Q-007 sigue sin aprobar y
+  Q-008 se repite porque su respuesta estaba partida por un conflicto de merge.
+- Verificación del vigésimo quinto ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 892 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
 - Verificación del ciclo de R-4f9b2c81, R-7a3d5e62 y R-2b9e4f73 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 819 pasan, 1
   omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 6 casos nuevos

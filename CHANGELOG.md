@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-11-23 — vigésimo quinto ciclo
+
+### Corregido — el hover del sidebar parpadeaba y los iconos quedaban apretados
+
+Reportado por **JesusQuijada34** en su respuesta a Q-010 de `CONFIRM.MD` (commit `0ac5457`). Registrado como **R-5b1d9e47**.
+
+- **R-5b1d9e47 — el ítem de la barra lateral cambiaba de color a destiempo:** `_HoverFade` reescribía la hoja de estilo del ítem en cada fotograma. Cada `setStyleSheet()` fuerza un re-polish y, mientras se reevaluaba el estilo, se aplicaba la regla heredada `QWidget#NavigationSidebar QPushButton:hover` (y `:checked`, con borde de acento), de modo que el fondo saltaba entre el color de hover y el gris de reposo. Además, el fondo de selección del tema claro era un azul fijo `rgba(0, 120, 212, 0.18)` ajeno al acento configurado. Ahora `SidebarItem` pinta el resalte en `paintEvent` con la propiedad animada `hoverProgress` (una sola `QPropertyAnimation` reutilizada) sin tocar el QSS, su selector `QPushButton#SidebarNavItem[pmNavItem="true"]` se impone a la regla heredada, el fondo de selección se deriva del acento con `with_alpha()` y, al seleccionar un ítem, se retira el tinte de hover.
+- **R-5b1d9e47 — iconos apretados:** el ancho por defecto de la barra lateral pasa de 260 a 270 px (`SIDEBAR_MAX_WIDTH`, `DEFAULT_USER["sidebar_width"]`) y el padding derecho del ítem de 10 a 14 px. Los perfiles con el valor heredado 260 se migran una sola vez (clave `sidebar_width_migrated`), sin tocar un ancho elegido a mano por el usuario.
+
+### Añadido — mejoras aprobadas por el propietario
+
+Aprobadas con `[x] SÍ` en `CONFIRM.MD` (commit `0ac5457`, autoría verificada con la API de GitHub).
+
+- **R-d23039c0 (Q-001) — reporte de errores opcional:** nuevo `lib/errorReporter.py`. Sólo envía si `telemetry_enabled` es verdadero **y** `telemetry_endpoint` está configurado; lo hace en un hilo daemon con 5 s de límite. `sanitize()` sustituye la carpeta personal por `~`, cualquier ruta absoluta por `<path>` y los valores con pinta de credencial por `<redacted>`; nunca envía variables de entorno. `install_excepthook()` se encadena al hook original sin alterar su comportamiento y se instala en `main()`. Desactivado por defecto; documentado en `docs/privacy.md`.
+- **R-5d8e2a41 (Q-002) — acentos en publisher y appname:** `ProjectNameFormatter.transliterate()` (NFKD sin marcas diacríticas) se aplica en `normalize_publisher()` y `normalize_app_id()`. `Jesús` → `Jesus`, `Ñandú Labs` → `Nandu-Labs`. El nombre canónico sigue siendo ASCII, así que la lectura de proyectos existentes no cambia.
+- **R-4c8e1f27 (Q-003) — el publisher conserva su capitalización:** `handle_cli_action('create_project')`, `_ejecutarCreacionProyecto()`, `DashboardWindow`, la TUI y las acciones `compile`/`repair` dejan de forzar `.lower()` y pasan el publisher por `normalize_publisher()`. Los proyectos nuevos se llaman `Influent.demo.…` y su `details.xml` declara `<publisher>Influent</publisher>`; la búsqueda sigue sin distinguir mayúsculas, así que los proyectos antiguos se localizan igual.
+
+### Reparado — canal de aprobación
+
+- **R-7a3e1d92 — `CONFIRM.MD` tenía marcadores de conflicto de merge:** el bloque Q-008 contenía `<<<<<<< HEAD`/`=======`/`>>>>>>> 418c3e3` con dos respuestas contradictorias. Se reparó el archivo, se registraron las decisiones verificadas en `Historial` y Q-008 vuelve a `Pendientes` como pregunta única. `tests/test_confirm_channel.py` impide que vuelva a committearse con conflictos o con preguntas duplicadas.
+
+### Registrado — bug pendiente de aprobación de engine
+
+- **R-4f8a2c60 — splash simultáneo y avisos de ventana en Windows:** `IntegratedSplash` se crea con `parent=main_window` y `WA_TranslucentBackground`, y el efecto `WipeWindow` (ventana por capas) se aplica sobre un widget hijo; de ahí los avisos `QWidgetWindow(...) must be a top level window` y `UpdateLayeredWindowIndirect failed for ptDst=...`, y que el splash se dibuje a la vez que la ventana principal. Depende del cambio de engine Q-008, cuya respuesta quedó ambigua por el conflicto de merge, así que **no se ha tocado el ciclo de vida de ventanas**.
+
+### Verificación — vigésimo quinto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 892 pasan, 1 omitido, 64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_error_reporter.py` (6), `AccentTransliterationTests` (5), `AccentedPublisherCreateTests` (1), las cuatro de sidebar en `tests/test_hover_and_tokens.py` y `tests/test_confirm_channel.py`.
+- Comprobación real offscreen: un `SidebarItem` dentro de un `QWidget#NavigationSidebar` pasa de `(40, 40, 40)` en reposo a `(55, 55, 55)` con `hoverProgress = 1.0`, sin reaplicar la hoja de estilo; `Jesús` + `Aplicación Demo` crea `Jesus.aplicacion-demo.…-Danenone` con `<publisher>Jesus</publisher>`; e `Influent` + `cwd-test` crea `Influent.cwd-test.…` con `<publisher>Influent</publisher>`.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `0ac5457`, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, verificado con la API de GitHub). Aplicadas Q-001, Q-002 y Q-003; Q-005, Q-006, Q-009 y Q-010 quedan verificadas como ya implementadas. Q-004 se reenvía para aclaración (la respuesta mezcla una decisión delegada con una condición incompatible con el backend zipapp); Q-007 sigue sin marcar y Q-008 se repite porque su respuesta estaba partida por el conflicto.
+
+### Release — no preparado
+
+- El último reporte externo es del 2026-11-22 y este ciclo añade R-4f8a2c60, así que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23
 
 ### Corregido — configuración y proyectos corruptos tumbaban el arranque

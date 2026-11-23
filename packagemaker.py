@@ -259,6 +259,7 @@ from lib.design_tokens import (
     CONTENT_PADDING,
     INPUT_HEIGHT,
     SIDEBAR_ITEM_HEIGHT,
+    SIDEBAR_MAX_WIDTH,
     SIDEBAR_PADDING,
     SIDEBAR_TOP_MARGIN,
     TEXT,
@@ -718,7 +719,7 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_animation = None
         self._page_fade = None
         self._page_fade_widget = None
-        self.sidebar_target_width = 260
+        self.sidebar_target_width = SIDEBAR_MAX_WIDTH
 
         # Layout principal vertical (TitleBar + ContentArea)
         self.v_layout = QVBoxLayout(self.central)
@@ -757,8 +758,8 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar = QWidget()
         self.sidebar.setObjectName("NavigationSidebar")
         self.sidebar.setMinimumWidth(60)
-        self.sidebar.setMaximumWidth(260)
-        self.sidebar.resize(260, 480)
+        self.sidebar.setMaximumWidth(SIDEBAR_MAX_WIDTH)
+        self.sidebar.resize(SIDEBAR_MAX_WIDTH, 480)
         self.sidebar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.sidebar.setMouseTracking(True)
         set_qss(self.sidebar, 'packagemaker_003', append=False)
@@ -774,8 +775,18 @@ class PackageTodoGUI(QMainWindow):
         # Ancho manual (estilo VS Code): se ajusta arrastrando el borde y se
         # recuerda entre sesiones en data/pm.data.
         self.sidebar_target_width = (
-            get_pm_data().get_user_int("sidebar_width", 260) or 260
+            get_pm_data().get_user_int("sidebar_width", SIDEBAR_MAX_WIDTH)
+            or SIDEBAR_MAX_WIDTH
         )
+        # Migración: el ancho por defecto anterior (260) dejaba los iconos
+        # apretados. Sólo se ensancha ese valor heredado, no una elección del
+        # usuario, y se marca para no repetir la migración.
+        if self.sidebar_target_width == 260 and not get_pm_data().get_user(
+            "sidebar_width_migrated"
+        ):
+            self.sidebar_target_width = SIDEBAR_MAX_WIDTH
+            get_pm_data().set_user("sidebar_width", SIDEBAR_MAX_WIDTH)
+            get_pm_data().set_user("sidebar_width_migrated", True)
         self.sidebar_target_width = max(180, min(480, self.sidebar_target_width))
         self.sidebar.setMinimumWidth(self.sidebar_target_width)
         self.sidebar.setMaximumWidth(self.sidebar_target_width)
@@ -3286,7 +3297,6 @@ class PackageTodoGUI(QMainWindow):
             from lib.makeselfEngine.template_engine import create_project_from_templates
 
             app_id = nombreProyecto.strip().lower().replace(" ", "-")
-            pub = (publisher or autor or "influent").strip().lower().replace(" ", "-")
 
             # El nombre de la carpeta debe ser el canónico (con versión y
             # plataforma), no ``publisher.app`` a secas.
@@ -3297,6 +3307,12 @@ class PackageTodoGUI(QMainWindow):
             )
 
             try:
+                # El publisher conserva su capitalización (``Influent``, no
+                # ``influent``) y los acentos se transliteran al nombre canónico.
+                pub = ProjectNameFormatter.normalize_publisher(
+                    publisher or autor or "influent"
+                )
+                app_id = ProjectNameFormatter.normalize_app_id(app_id)
                 timestamp = ProjectNameFormatter.get_timestamp()
                 folder_name = ProjectNameFormatter.format_project_folder(
                     pub, app_id, version_base, "Knosthalij", timestamp
@@ -4381,6 +4397,15 @@ main_window = None
 
 def main():
     global main_window
+
+    # Reporte de errores opcional (Q-001). Con la telemetría apagada —el valor
+    # por defecto— sólo se encadena el hook y no se envía nada.
+    try:
+        from lib.errorReporter import install_excepthook
+
+        install_excepthook()
+    except Exception:
+        pass
 
     from lib.cliHandler import CLIHandler, handle_cli_action
 
