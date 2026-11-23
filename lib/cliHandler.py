@@ -876,7 +876,10 @@ class FontReportHelper:
         if ok:
             notice = write_license_notice()
             print(f"[OK] Fuentes disponibles: {', '.join(ok)}")
-            print(f"[OK] Aviso de licencias: {notice}")
+            if notice:
+                print(f"[OK] Aviso de licencias: {notice}")
+            else:
+                print("[WARN] No se pudo escribir el aviso de licencias (caché de solo lectura)")
         if missing:
             print(f"[WARN] No se pudieron obtener: {', '.join(missing)}")
         return not missing

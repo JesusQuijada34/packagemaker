@@ -74,7 +74,7 @@ class DownloadTests(unittest.TestCase):
         self.cache.mkdir()
         self._orig_dir = font_manager.font_cache_dir
         self._orig_fetch = font_manager._fetch
-        font_manager.font_cache_dir = lambda: self.cache
+        font_manager.font_cache_dir = lambda create=True: self.cache
         self.addCleanup(self._restore)
 
     def _restore(self):

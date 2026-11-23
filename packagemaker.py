@@ -2741,9 +2741,17 @@ class PackageTodoGUI(QMainWindow):
 
         self.conf_fonts_status.setText(tr("config.fonts_downloading"))
         QApplication.processEvents()
-        results = ensure_fonts(list(FONT_REGISTRY), download=True, log_callback=print)
-        load_cached_fonts()
-        write_license_notice()
+        try:
+            results = ensure_fonts(list(FONT_REGISTRY), download=True, log_callback=print)
+            load_cached_fonts()
+            notice = write_license_notice()
+        except OSError as exc:
+            # La caché puede ser de solo lectura (instalación en Program Files).
+            # Un fallo aquí no debe abortar la interfaz desde un slot de Qt.
+            self.conf_fonts_status.setText(f"[FONT] Caché no disponible: {exc}")
+            return
+        if notice is None:
+            print("[FONT] Aviso de licencias no escrito (caché de solo lectura)", file=sys.stderr)
 
         for key, label in getattr(self, "conf_fonts_labels", {}).items():
             label.setText(

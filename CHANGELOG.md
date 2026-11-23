@@ -1,5 +1,64 @@
 # Changelog
 
+## 2026-11-23 — vigésimo octavo ciclo
+
+### Corregido — cachés de solo lectura y respuestas de GitHub
+
+Sin reportes externos nuevos. Dos hallazgos de auditoría interna de la misma
+familia (una instalación cuyo directorio `data/` no se puede escribir), más la
+validación de la respuesta de la API de GitHub. Ninguno cambia el
+comportamiento del engine.
+
+- **R-3b6f9d24 — una caché de fuentes de solo lectura tumbaba el CLI y la
+  interfaz:** `cached_path()` creaba `data/fonts` como efecto secundario, así
+  que `--list-fonts` y `--download-fonts` terminaban en `PermissionError` con
+  traceback y el botón «Descargar fuentes» de Configuración abortaba la
+  aplicación (`OSError` dentro de un slot de Qt). Ahora las consultas usan
+  `font_cache_dir(create=False)`/`cached_path(..., create=False)`,
+  `is_cached()`/`verify_file()`/`available_fonts_report()`/`load_cached_fonts()`
+  y `ensure_fonts()` degradan a «ausente», `download_font()` comprueba la
+  escritura antes de descargar, `write_license_notice()` devuelve `None` y el
+  slot muestra el fallo en su etiqueta de estado en vez de cerrar el proceso.
+- **R-9f4c2a71 — caché de avatares no escribible y respuestas de GitHub
+  no-JSON:** `cache_avatar()`/`load_cached_avatar()` capturan `OSError` (el
+  avatar es opcional), `_request()` separa la lectura del cuerpo del parseo y
+  responde «GitHub devolvió una respuesta que no es JSON» ante un portal
+  cautivo, y `_profile_from_payload()` exige un objeto en vez de fallar con
+  `AttributeError`.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 desde el vigésimo séptimo
+  ciclo (último comentario: 2026-11-23T08:10Z).
+- Sin pull requests abiertos. Sigue abierto solo el issue #4 (backlog).
+- Bugs pendientes que no se tocan: **R-4f8a2c60** (splash, espera Q-008) y
+  **R-6a1f8c23** (arrastre con la ventana maximizada, espera Q-011).
+
+### Verificación — vigésimo octavo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 942 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_font_cache_robustness.py` (9) y tres casos en
+  `tests/test_github_identity.py`. Con el código anterior fallan 8 de las 9 del
+  primer archivo y los 3 del segundo (comprobado con `git stash`).
+- Build real `create` + `--buildthis --compiler zipapp --no-sandbox --dropper`:
+  genera `.iflapp` y `.run`; `verify_iflapp()` → `valid: True` (20 archivos) y
+  `--inspect` coincide con el `details.xml` interno.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: el último commit que toca el archivo es `38dea0b` (openhands,
+  vigésimo séptimo ciclo) y no hay respuestas nuevas del propietario desde
+  `0ac5457`. Q-004, Q-007, Q-008 y Q-011…Q-014 siguen pendientes. No se aplicó
+  ninguna mejora ni cambio de engine sin aprobación.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo del 2026-11-23 (`bugs.txt`), así que
+  el requisito de 7 días sin reportes nuevos y el periodo de observación no han
+  terminado. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23 — vigésimo séptimo ciclo
 
 ### Corregido — editor predeterminado, removedor generado y vista previa `.mexf`

@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (vigésimo séptimo ciclo)
+Última actualización: 2026-11-23 (vigésimo octavo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -102,6 +102,8 @@ de auditoría.
 | R-2e7c4a91 | Bug — editor predeterminado guardado en `lib/config` y JSON no-objeto | Media | Resuelto |
 | R-8b4d1f62 | Bug — el removedor generado revienta con `install.json` corrupto | Media | Resuelto |
 | R-5c9a3e27 | Bug — metadatos `.mexf` ilegibles abortan el diálogo de instalación | Baja | Resuelto |
+| R-3b6f9d24 | Bug — caché de fuentes de solo lectura tumba el CLI y la GUI | Media | Resuelto |
+| R-9f4c2a71 | Bug — caché de avatares no escribible y respuestas de GitHub no-JSON | Baja | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -123,6 +125,8 @@ R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27 (corregidos y probados, sin cambios de
 comportamiento del engine). No se prepara release: ese reporte reinicia el
 requisito de 7 días sin reportes nuevos y el periodo de observación sigue en
 curso.
+El vigésimo octavo ciclo registra R-3b6f9d24 y R-9f4c2a71 (corregidos y
+probados, sin cambios de comportamiento del engine).
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -2541,12 +2545,76 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** vigésimo séptimo ciclo (2026-11-23).
 - **Fecha de resolución:** 2026-11-23.
 
+## R-3b6f9d24 — Una caché de fuentes de solo lectura tumbaba el CLI y la interfaz
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `cached_path()` llamaba a `font_cache_dir()`, que creaba
+  `data/fonts` con `mkdir()`. En una instalación de solo lectura (Program Files
+  en Windows, `/usr` en Linux, `data` sin permisos) `--list-fonts` y
+  `--download-fonts` terminaban en `PermissionError` con traceback, y el botón
+  de descarga de Configuración abortaba la aplicación: el `OSError` subía desde
+  un slot de Qt y Python cerraba el proceso.
+- **Pasos para reproducir:** con `data/fonts` inexistente y `data` sin permiso
+  de escritura, ejecutar `python packagemaker.py --list-fonts` (antes:
+  traceback, código 1) o pulsar «Descargar fuentes» en Configuración.
+- **Causa raíz:** las rutas de **lectura** del estado de la caché creaban el
+  directorio como efecto secundario y no traducían `OSError`; la escritura del
+  aviso de licencias tampoco.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `font_cache_dir(create=False)` y
+  `cached_path(..., create=False)` permiten consultar sin tocar el disco;
+  `is_cached()`, `verify_file()`, `available_fonts_report()`,
+  `load_cached_fonts()` y `ensure_fonts()` degradan a «ausente» con `OSError`;
+  `download_font()` comprueba la escritura antes de descargar y devuelve
+  `None`; `write_license_notice()` devuelve `None`; el CLI avisa
+  `[WARN] No se pudo escribir el aviso de licencias` y el slot
+  `_download_ui_fonts()` captura `OSError` y lo muestra en la etiqueta de
+  estado en vez de abortar.
+- **Pruebas:** `tests/test_font_cache_robustness.py` (9 casos, incluido el slot
+  de Configuración y el CLI con la caché bloqueada).
+- **Commit:** vigésimo octavo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9f4c2a71 — Caché de avatares no escribible y respuestas de GitHub no-JSON
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Baja
+- **Descripción:** dos caminos del inicio de sesión de GitHub escapaban con
+  excepciones crudas: (1) `cache_avatar()` escribía en `data/avatars` sin
+  `try/except`, así que un `data` de solo lectura lanzaba `OSError` dentro del
+  slot de login y podía cerrar la aplicación; `load_cached_avatar()` tampoco
+  protegía la creación del directorio, y se llama al refrescar la tarjeta del
+  sidebar al arrancar. (2) `_request()` devolvía `json.loads(...)` sin validar
+  la forma: un portal cautivo que responde HTML con código 200 producía el
+  mensaje engañoso «el token contiene caracteres no válidos», y un JSON que no
+  fuera objeto lanzaba `AttributeError` en `_profile_from_payload()`.
+- **Pasos para reproducir:** con `data` sin permiso de escritura, iniciar
+  sesión de GitHub (antes: aborto del proceso al cachear el avatar). Con un
+  proxy que responde `200 <html>…</html>`, llamar a `_request()` (antes:
+  mensaje erróneo) o devolver `["octocat"]` desde `/user` (antes:
+  `AttributeError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** `cache_avatar()` y `load_cached_avatar()` capturan
+  `OSError` y devuelven `None` (el avatar es opcional); `_request()` separa la
+  lectura del cuerpo del parseo y traduce el fallo a «GitHub devolvió una
+  respuesta que no es JSON»; `_profile_from_payload()` exige un objeto.
+- **Pruebas:** `tests/test_github_identity.py` (3 casos nuevos: cuerpo no-JSON,
+  carga no-objeto y caché de avatares bloqueada).
+- **Commit:** vigésimo octavo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
   Q-011). R-4d8f2b61 se cerró como no reproducido.
 - Vigésimo séptimo ciclo (2026-11-23): R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27
   corregidos y probados; no se prepara release.
+- Vigésimo octavo ciclo (2026-11-23): R-3b6f9d24 y R-9f4c2a71 corregidos y
+  probados (robustez de cachés con `data` de solo lectura); no se prepara
+  release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
