@@ -83,6 +83,10 @@ de auditoría.
 | R-7b3e9c28 | Bug — `--install-asksome` lanza traceback con artefacto ilegible | Media | Resuelto |
 | R-5a9d2f74 | Bug — abrir carpeta genérica o MoonFix por lotes tumba la GUI con carpeta ilegible | Media | Resuelto |
 | R-2f8a4d61 | Bug — `remove_tree` lanza `PermissionError` pese a prometer que no lanza | Baja | Resuelto |
+| R-9c1e5b74 | Bug — `pm.data` con números corruptos impide arrancar la GUI | Alta | Resuelto |
+| R-2b7d4a90 | Bug — `find_flarm_project` revienta con carpeta o config ilegible | Alta | Resuelto |
+| R-5d8f1c36 | Bug — depuración `.mexf` lanza `yaml.YAMLError` en un slot | Media | Resuelto |
+| R-8a2f6d51 | Bug — `uninstall_plan` (Windows) deja escapar `OSError` | Baja | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -1901,6 +1905,101 @@ probado en el commit `f8ea814`; la cola sigue sin bugs abiertos.
 - **Pruebas:** `tests/test_unreadable_paths.py` —
   `test_remove_tree_keeps_its_no_raise_contract`.
 - **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9c1e5b74 — Valores numéricos corruptos en `pm.data` impedían arrancar la GUI
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `SettingsPanel._build_cards()` convertía
+  `sidebar_accent_width` con `int(...)` y `card_opacity` con
+  `int(float(...) * 100)`; `PackageTodoGUI.apply_theme()` hacía lo propio con
+  `sidebar_accent_width`, el sidebar con `sidebar_width` y
+  `_update_restart_banner()` con `dpi_scale`/`applied_dpi_scale`. `data/pm.data`
+  es editable a mano, así que un texto, una lista o `null` en esas claves
+  lanzaba `ValueError`/`TypeError` durante la construcción de la ventana
+  principal (`init_config_tab` se ejecuta al arrancar) y la aplicación no
+  abría.
+- **Pasos para reproducir:** escribir `"sidebar_accent_width": "tres"`,
+  `"card_opacity": null` o `"sidebar_width": [260]` en `data/pm.data` y
+  arrancar la aplicación.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (impide arrancar; la recuperación exige editar el archivo).
+- **Solución aplicada:** `lib/pm_data.py` gana `coerce_int()` y
+  `coerce_float()` (más `PMDataStore.get_user_int()`/`get_user_float()`), que
+  aceptan números o texto numérico y caen al valor por defecto con cualquier
+  otro tipo. Los cinco puntos de lectura usan esos getters y
+  `SettingsPanel` importa los conversores.
+- **Pruebas:** `tests/test_startup_corruption_robustness.py` —
+  `CoercionTests` y `SettingsPanelRobustnessTests`.
+- **Commit:** `4e78f2e`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-2b7d4a90 — `find_flarm_project` revienta con una carpeta de proyectos ilegible o un `package_config.json` corrupto
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** al arrancar `pmCodeEditor` con un nombre de proyecto,
+  `find_flarm_project()` recorría `~/Documents/Packagemaker Projects` con
+  `os.listdir()` sin capturar `OSError` (en Python 3.13 una carpeta `chmod 000`
+  lanza `PermissionError`) y leía cada `package_config.json` capturando solo
+  `(OSError, KeyError)`. Un JSON truncado lanzaba `JSONDecodeError`, un JSON que
+  no era objeto lanzaba `AttributeError` en `.get()` y un campo no textual
+  rompía en `.lower()`. El traceback cortaba el arranque del editor.
+- **Pasos para reproducir:** con un `package_config.json` con `{no es json`, con
+  `[1, 2]` o con `{"titulo": 5}`, ejecutar `find_flarm_project("demo")`; repetir
+  con la carpeta de proyectos en modo `000`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (traceback en el arranque del editor).
+- **Solución aplicada:** la carpeta se lista una sola vez dentro de `try/except
+  OSError`; las lecturas de configuración capturan `(OSError, ValueError)`,
+  exigen un objeto JSON y convierten los campos a texto antes de compararlos.
+- **Pruebas:** `tests/test_startup_corruption_robustness.py` —
+  `FindFlarmProjectTests` (config corrupta, config no-objeto, campos no
+  textuales, caso válido y carpeta ilegible).
+- **Commit:** `4e78f2e`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-5d8f1c36 — La depuración del editor `.mexf` lanzaba `yaml.YAMLError` en un slot de Qt
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `MexfEditorDialog._document()` convertía el texto con
+  `yaml.safe_load()` sin capturar `yaml.YAMLError`. Los botones «Paso»,
+  «Continuar», «Detener» y el punto de ruptura llaman a `_ensure_debugger()` →
+  `MexfDebugger(self._document())`, de modo que un documento a medio escribir
+  (por ejemplo `metadata: [unclosed`) lanzaba la excepción dentro del slot y
+  PyQt6 abortaba la aplicación. La ruta CLI de `--debug-mexf` ya lo gestionaba.
+- **Pasos para reproducir:** abrir el editor `.mexf`, escribir un YAML inválido
+  y pulsar «Paso» o marcar un punto de ruptura.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (crash de la GUI mientras se edita).
+- **Solución aplicada:** `_document()` captura `yaml.YAMLError` y devuelve un
+  documento vacío; el lint sigue mostrando el diagnóstico y la depuración
+  informa «depuración finalizada» en lugar de abortar.
+- **Pruebas:** `tests/test_mexf_editor_dialog.py` —
+  `test_invalid_yaml_does_not_break_debug_controls`.
+- **Commit:** `4e78f2e`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-8a2f6d51 — `uninstall_plan` (rama Windows) dejaba escapar `OSError`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `lib.mexf_shell.uninstall_plan()` documenta que retira lo que
+  pueda y acumula el resto en `skipped`; la rama Linux captura `OSError` por
+  objetivo, pero la rama Windows comprobaba `reg.exists()` y llamaba a
+  `unlink()` fuera de todo `try`. Un directorio base ilegible (o un `.reg` sin
+  permiso de borrado) lanzaba `PermissionError` y rompía el contrato.
+- **Pasos para reproducir:** `uninstall_plan(plan, base_dir=<dir 000>,
+  platform_name="win32")`.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja (inconsistencia de contrato; sin pérdida de datos).
+- **Solución aplicada:** la rama Windows envuelve la comprobación y el borrado
+  en `try/except OSError` y registra el motivo en `skipped`.
+- **Pruebas:** `tests/test_mexf_shell.py` —
+  `test_uninstall_plan_windows_survives_unreadable_directory`.
+- **Commit:** `4e78f2e`.
 - **Fecha de resolución:** 2026-11-23.
 
 ---

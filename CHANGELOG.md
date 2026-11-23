@@ -2,6 +2,30 @@
 
 ## 2026-11-23
 
+### Corregido — configuración y proyectos corruptos tumbaban el arranque
+
+Hallazgo del vigésimo cuarto ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `4e78f2e`.
+
+- **R-9c1e5b74 — valores numéricos corruptos en `pm.data` impedían arrancar la GUI:** el panel de configuración, `apply_theme()`, el ancho inicial de la barra lateral y el aviso de reinicio convertían `sidebar_width`, `sidebar_accent_width`, `card_opacity`, `dpi_scale` y `applied_dpi_scale` con `int()`/`float()` directos. Como `data/pm.data` es editable a mano, un texto, una lista o `null` en esas claves lanzaba `ValueError`/`TypeError` al construir la ventana principal. `lib/pm_data.py` gana `coerce_int()`, `coerce_float()`, `PMDataStore.get_user_int()` y `get_user_float()`: aceptan números o texto numérico y caen al valor por defecto con cualquier otro tipo.
+- **R-2b7d4a90 — `find_flarm_project()` revienta con la carpeta de proyectos ilegible o un `package_config.json` corrupto:** `pmCodeEditor` recorría `~/Documents/Packagemaker Projects` con `os.listdir()` sin capturar `OSError` y leía cada configuración capturando solo `(OSError, KeyError)`. Un JSON truncado (`JSONDecodeError`), un JSON que no era objeto (`AttributeError`) o un campo no textual (`.lower()` sobre un número) cortaban el arranque del editor con un traceback. Ahora la carpeta se lista una sola vez dentro de `try/except OSError`, la lectura captura `(OSError, ValueError)`, exige un objeto y normaliza los campos a texto.
+- **R-5d8f1c36 — la depuración del editor `.mexf` lanzaba `yaml.YAMLError` dentro de un slot de Qt:** `MexfEditorDialog._document()` llamaba a `yaml.safe_load()` sin protegerlo. Con un documento a medio escribir, «Paso», «Continuar», «Detener» o el punto de ruptura provocaban una excepción no controlada y PyQt6 abortaba la aplicación. Ahora `_document()` captura `yaml.YAMLError` y devuelve un documento vacío; el lint sigue señalando el error y la depuración termina con «depuración finalizada».
+- **R-8a2f6d51 — `uninstall_plan` (rama Windows) dejaba escapar `OSError`:** la rama Linux captura `OSError` por objetivo, pero la de Windows comprobaba `reg.exists()` y llamaba a `unlink()` fuera de todo `try`, rompiendo el contrato de la función. Ahora registra el motivo en `skipped`.
+
+### Verificación — vigésimo cuarto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 877 pasan, 1 omitido, 64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las pruebas nuevas fallan con el código anterior (18 fallos, comprobado revirtiendo los seis archivos fuente a `6a8a977`): `CoercionTests` (4), `SettingsPanelRobustnessTests` (5 subtests), `FindFlarmProjectTests` (5), el caso de YAML inválido del editor `.mexf` y el de `uninstall_plan` en Windows.
+- Reproducción real (Python 3.13, `QT_QPA_PLATFORM=offscreen`): `SettingsPanel` con `sidebar_accent_width="tres"`/`card_opacity=None`/`[1]` lanzaba `ValueError`/`TypeError`; `find_flarm_project` con `{no es json`, `[1, 2]`, `{"titulo": 5}` o la carpeta en modo `000` lanzaba `JSONDecodeError`/`AttributeError`/`PermissionError`; los botones de depuración `.mexf` lanzaban `yaml.ParserError`; y `uninstall_plan(..., platform_name="win32")` con un directorio ilegible lanzaba `PermissionError`. Ahora todos degradan a valores por defecto, lista vacía, «depuración finalizada» o `skipped`.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `6a8a977`, autor `openhands <openhands@all-hands.dev>` verificado con la API de GitHub): `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo el del propietario del 2026-11-22, de modo que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
 ### Corregido — las rutas sin permisos terminaban en traceback
 
 Hallazgo del vigésimo tercer ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `743c914`.
