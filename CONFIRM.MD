@@ -28,7 +28,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   documentación de privacidad.
 - **Riesgo y efectos secundarios:** implica red y privacidad; si se activa por
   error enviaría datos de entorno. Requiere decisión del responsable.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-002 — Acentos en publisher y appname (R-5d8e2a41)
 - **Tipo:** mejora
@@ -41,7 +41,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia la ley de nombres y la resolución de
   proyectos existentes con acentos; puede alterar nombres de carpeta, paquete y
   artefacto. Compatibilidad de lectura debe verificarse antes de aplicar.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-003 — Conservar la capitalización del publisher al crear proyectos (R-4c8e1f27)
 - **Tipo:** mejora
@@ -54,7 +54,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia nombres visibles y rutas de build de
   los proyectos nuevos (`influent.*` → `Influent.*`). Los proyectos existentes
   siguen siendo legibles porque la comparación del publisher ignora mayúsculas.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-004 — `compile-only` elimina el fuente del paquete (R-3e7d1c58)
 - **Tipo:** mejora
@@ -67,7 +67,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** borrado destructivo dentro del paquete; si
   el `.py` es el punto de entrada de un build zipapp, el artefacto deja de
   arrancar. Exige excluir `.pyz` y verificar el backend.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[decide tu, un zip app no debe de contener archivos python, solamente el ejecutable compilado con pyinstaller y ya] SÍ`  `[ ] NO`: 
 
 ### Q-005 — Aislamiento estricto BlindCube/FlatCube y formato `.blindkpkg`
 - **Tipo:** cambio de engine
@@ -81,7 +81,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** nuevo formato de artefacto y cambios en
   verificación, instalación y compatibilidad con `.iflapp` existentes. Riesgo
   alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-006 — Pruebas previas y diálogo `.env` en BlindCube
 - **Tipo:** cambio de engine
@@ -93,7 +93,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `lib/projectConfig.py`, `lib/projectDetailsDialog.py`, `lib/alert_dialog.py`.
 - **Riesgo y efectos secundarios:** ejecuta código del proyecto antes de
   empaquetar, alarga el build y añade UI modal. Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-007 — Reorganización de `lib/` y renombrado a GlassCube
 - **Tipo:** cambio de engine
@@ -119,11 +119,15 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `lib/window_manager_bridge.py`, `packagemaker.py`.
 - **Riesgo y efectos secundarios:** cambia el ciclo de vida de ventanas y el
   manejo de errores de arranque. Riesgo medio-alto.
+<<<<<<< HEAD
 - **Evidencia del propietario (2026-11-22, `bugs.txt` commit `bed2e83`):** el
   splash integrado se ejecuta a la vez que la ventana principal en lugar de
   primero, y en Windows aparecen los avisos `QWidgetWindow(...) must be a top
   level window` y `UpdateLayeredWindowIndirect failed for ptDst=...`.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+=======
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+>>>>>>> 418c3e3 (>> : New bugs and suggested recomendations)
 
 ### Q-009 — Rediseño de UI (acento naranja, tarjetas iOS, configuración)
 - **Tipo:** cambio de engine
@@ -138,7 +142,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia la identidad visual y elimina
   opciones que algunos usuarios usan; afecta traducciones y tests visuales.
   Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[ya se propuso anteriormente, pero revisa igual] SÍ`  `[ ] NO`
 
 ### Q-010 — Sidebar: hover y modo contraído
 - **Tipo:** cambio de engine
@@ -149,7 +153,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `lib/hover_animation.py`, `packagemaker.py`.
 - **Riesgo y efectos secundarios:** altera estados visuales del sidebar.
   Riesgo medio.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[se hizo pero el parpadeo sigue, los iconos estan muy apretados y falta mas ancho, calculo yo que faltan como 10 pix por ahi] SÍ`  `[ ] NO`
 
 ---
 
