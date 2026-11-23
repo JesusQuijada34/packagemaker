@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (vigésimo sexto ciclo)
+Última actualización: 2026-11-23 (vigésimo séptimo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -99,6 +99,9 @@ de auditoría.
 | R-9e2b4d17 | Bug — Configuración repintaba el tema dos veces y reiniciaba el motor | Media | Resuelto |
 | R-6a1f8c23 | Bug — la titlebar arrastra la ventana maximizada | Media | Pendiente de aprobación (Q-011) |
 | R-4d8f2b61 | Bug — botón Guardar en Configuración (no reproducido) | Baja | Cerrado sin cambios de UI |
+| R-2e7c4a91 | Bug — editor predeterminado guardado en `lib/config` y JSON no-objeto | Media | Resuelto |
+| R-8b4d1f62 | Bug — el removedor generado revienta con `install.json` corrupto | Media | Resuelto |
+| R-5c9a3e27 | Bug — metadatos `.mexf` ilegibles abortan el diálogo de instalación | Baja | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -115,9 +118,11 @@ R-8e5b2f17, R-4e7c2b91, R-9a3d6f20, R-7f3a9c21, R-2c8e5d14, R-5a1f8e63,
 R-3b8e5c71, R-7c4d2a96, R-1d9f6b34, R-4f9b2c81, R-7a3d5e62, R-2b9e4f73 y
 R-9d4c2f18) quedaron corregidos y probados. El 2026-11-22 el propietario
 reportó en `bugs.txt` (commit `bed2e83`) el bloqueo por versión canónica; se
-corrigió el mismo día como R-9d4c2f18. No se prepara release: ese reporte
-reinicia el requisito de 7 días sin reportes nuevos y el periodo de
-observación sigue en curso.
+corrigió el mismo día como R-9d4c2f18. El vigésimo séptimo ciclo registra
+R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27 (corregidos y probados, sin cambios de
+comportamiento del engine). No se prepara release: ese reporte reinicia el
+requisito de 7 días sin reportes nuevos y el periodo de observación sigue en
+curso.
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -2467,10 +2472,81 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** vigésimo sexto ciclo.
 - **Fecha de resolución:** 2026-11-23 (verificado como no reproducido).
 
+## R-2e7c4a91 — La preferencia de editor se guardaba dentro de `lib/` y un JSON no-objeto rompía «Abrir con»
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `lib/.walkcube/editorDetector.py` resolvía `settings.json`
+  con `Path(__file__).resolve().parent.parent`, que desde `lib/.walkcube/`
+  apunta a `lib/config/settings.json`. La opción «Siempre» de «Abrir con»
+  escribía allí, fuera de la configuración canónica, y en un ejecutable
+  congelado el archivo caía en el bundle temporal y se perdía al cerrar.
+  Además, `get_default_editor()` hacía `.get()` sobre el JSON sin comprobar el
+  tipo (un archivo con `[]` lanzaba `AttributeError`) y
+  `save_default_editor()` asignaba una clave sobre una lista (`TypeError`).
+- **Pasos para reproducir:** elegir «Siempre» en «Abrir con» y comprobar que
+  aparece `lib/config/settings.json`; después escribir `[]` en ese archivo y
+  abrir de nuevo «Abrir con» (traceback `AttributeError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** la ruta pasa a `<raíz de la app>/config/settings.json`
+  (o junto a `sys.executable` si está congelado). Las dos funciones exigen un
+  objeto JSON, degradan a `{}` o `None` y tratan `OSError` al crear o escribir
+  como preferencia no guardada, sin romper el diálogo.
+- **Pruebas:** `tests/test_config_and_removeme_robustness.py` (ruta normal,
+  ruta congelada, cinco formas no-objeto, reescritura y conservación de claves).
+- **Commit:** vigésimo séptimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-8b4d1f62 — El removedor generado revienta si `install.json` no es un objeto
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** el stub `removeme.py` generado por `build_removeme()` leía
+  `install.json` y hacía `data.get("shortcuts")` sin validar el tipo. Un
+  registro corrupto (`[]`, `"texto"`, `5` o `{"shortcuts": 5}`) lanzaba
+  `AttributeError`/`TypeError` y la desinstalación se detenía con traceback,
+  dejando la aplicación instalada.
+- **Pasos para reproducir:** generar el removedor, escribir `[]` en
+  `install.json` y ejecutar `removeme.py --silent` (código 1 y rastro de
+  `AttributeError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_shortcuts()` sólo acepta un objeto JSON con una
+  lista en `shortcuts`; cualquier otra forma cae a los accesos directos
+  incrustados y la desinstalación continúa.
+- **Pruebas:** `tests/test_config_and_removeme_robustness.py` (seis formas
+  corruptas y un acceso directo real que sigue borrándose).
+- **Commit:** vigésimo séptimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-5c9a3e27 — Metadatos `.mexf` ilegibles abortaban el diálogo de instalación
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Baja
+- **Descripción:** la vista previa de `showInstallMexfDialog()` envolvía la
+  lectura en `except (OSError, KeyError, ET.ParseError)`, que no incluye
+  `json.JSONDecodeError` ni `AttributeError`. Un `.mexf` que no fuera JSON u
+  objeto escapaba al `except` exterior y cerraba el diálogo entero con
+  «Error showing install-MEXF dialog», en vez de abrirlo sin detalles.
+- **Pasos para reproducir:** elegir «Instalar extensiones MEXF» y seleccionar
+  un archivo con texto no JSON.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_mexf_preview_metadata()` lee y valida el objeto una
+  sola vez y devuelve `None` cuando no se puede; el diálogo se abre igual y
+  omite el bloque de detalles.
+- **Pruebas:** `tests/test_config_and_removeme_robustness.py` (texto no JSON,
+  lista, cadena, número, archivo ausente y objeto válido).
+- **Commit:** vigésimo séptimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
   Q-011). R-4d8f2b61 se cerró como no reproducido.
+- Vigésimo séptimo ciclo (2026-11-23): R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27
+  corregidos y probados; no se prepara release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
@@ -2478,6 +2554,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
+- Verificación del ciclo de R-2e7c4a91…R-5c9a3e27 (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 930 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 17 de las 21 pruebas nuevas de
+  `tests/test_config_and_removeme_robustness.py` (comprobado con `git stash` de
+  los tres archivos tocados). Reproducción real: `_config_file_path()` devolvía
+  `lib/config/settings.json`; un `settings.json` con `[]` daba
+  `AttributeError` al leer y `TypeError` al guardar; el `removeme.py` generado
+  salía con código 1 y dejaba la app instalada ante un `install.json` con `[]`;
+  y la vista previa `.mexf` sólo toleraba `OSError`/`KeyError`.
 - Verificación del ciclo de R-4c7a9e13…R-2f8a4d61 (2026-11-23):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 865 pasan, 1
   omitido, 55 subtests; `pyflakes` y `py_compile` limpios. 13 de las 14 pruebas

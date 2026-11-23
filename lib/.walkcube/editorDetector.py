@@ -482,22 +482,39 @@ def get_available_editors() -> List[Tuple[EditorInfo, str]]:
 
 
 def _config_file_path() -> Path:
-    return Path(__file__).resolve().parent.parent / "config" / "settings.json"
+    """Ruta de ``config/settings.json`` en la raíz de la aplicación.
+
+    Este módulo vive en ``lib/.walkcube/``; en un ejecutable congelado la
+    preferencia debe quedar junto al binario y no dentro del bundle temporal,
+    que se borra al cerrar.
+    """
+    if getattr(sys, "frozen", False):
+        root = Path(sys.executable).resolve().parent
+    else:
+        root = Path(__file__).resolve().parent.parent.parent
+    return root / "config" / "settings.json"
 
 
 def save_default_editor(editor_name: str):
     """Guarda el editor predeterminado en settings.json."""
     import json
     cfg_path = _config_file_path()
-    cfg_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
     data = {}
     if cfg_path.is_file():
         try:
-            data = json.loads(cfg_path.read_text(encoding="utf-8"))
+            loaded = json.loads(cfg_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            data = {}
+            loaded = {}
+        data = loaded if isinstance(loaded, dict) else {}
     data["default_editor"] = editor_name
-    cfg_path.write_text(json.dumps(data, indent=4), encoding="utf-8")
+    try:
+        cfg_path.write_text(json.dumps(data, indent=4), encoding="utf-8")
+    except OSError:
+        pass
 
 
 def get_default_editor() -> Optional[str]:
@@ -507,9 +524,13 @@ def get_default_editor() -> Optional[str]:
     if not cfg_path.is_file():
         return None
     try:
-        return json.loads(cfg_path.read_text(encoding="utf-8")).get("default_editor")
+        data = json.loads(cfg_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return None
+    if not isinstance(data, dict):
+        return None
+    value = data.get("default_editor")
+    return value if isinstance(value, str) else None
 
 
 if __name__ == "__main__":

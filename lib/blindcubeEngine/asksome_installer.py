@@ -445,9 +445,12 @@ def _shortcuts(target):
     if record.is_file():
         try:
             data = json.loads(record.read_text(encoding="utf-8"))
-            return list(data.get("shortcuts") or EMBEDDED_SHORTCUTS)
         except (OSError, ValueError):
-            pass
+            data = None
+        if isinstance(data, dict):
+            shortcuts = data.get("shortcuts")
+            if isinstance(shortcuts, list):
+                return list(shortcuts) or list(EMBEDDED_SHORTCUTS)
     return list(EMBEDDED_SHORTCUTS)
 
 

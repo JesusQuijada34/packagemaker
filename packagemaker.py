@@ -570,6 +570,26 @@ def save_app_config(config):
     return store.save()
 
 
+def _mexf_preview_metadata(file_path):
+    """Metadatos legibles de un ``.mexf`` para la vista previa del instalador.
+
+    Devuelve ``None`` si el archivo no se puede leer o no es un objeto JSON;
+    un ``.mexf`` mal formado no debe impedir abrir el diálogo de instalación.
+    """
+    try:
+        with open(file_path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    return {
+        "name": data.get("name", "N/A"),
+        "version": data.get("version", "N/A"),
+        "description": data.get("description", "N/A"),
+    }
+
+
 AGE_RATINGS = {
     "project1" : "NO SEGURO!",
     "editor" : "PERSONAL USE",
@@ -4156,22 +4176,14 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.addWidget(lblInfo)
 
             # Información del archivo MEXF
-            try:
-                with open(filePath, 'r', encoding='utf-8') as f:
-                    mexfData = json.load(f)
-
-                infoText = tr("dialog.mexf_details").format(
-                    name=mexfData.get("name", "N/A"),
-                    version=mexfData.get("version", "N/A"),
-                    description=mexfData.get("description", "N/A"),
-                )
+            info = _mexf_preview_metadata(filePath)
+            if info is not None:
+                infoText = tr("dialog.mexf_details").format(**info)
 
                 lblDetalles = QLabel(infoText)
                 set_qss(lblDetalles, 'packagemaker_157', append=False)
                 lblDetalles.setWordWrap(True)
                 contentLayout.addWidget(lblDetalles)
-            except (OSError, KeyError, ET.ParseError):
-                pass
 
             # Barra de progreso
             progressBar = LeviathanProgressBar(self)

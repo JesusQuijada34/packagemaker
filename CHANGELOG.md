@@ -1,5 +1,64 @@
 # Changelog
 
+## 2026-11-23 — vigésimo séptimo ciclo
+
+### Corregido — editor predeterminado, removedor generado y vista previa `.mexf`
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna, corregidos y
+probados; ninguno cambia el comportamiento del engine.
+
+- **R-2e7c4a91 — la preferencia de editor se guardaba dentro de `lib/` y un
+  `settings.json` no-objeto rompía «Abrir con»:** `_config_file_path()` partía
+  de `lib/.walkcube/` y resolvía `lib/config/settings.json`, fuera de la
+  configuración canónica; en un ejecutable congelado el archivo caía en el
+  bundle temporal y se perdía. Ahora apunta a `config/settings.json` de la raíz
+  (o junto a `sys.executable` si está congelado). `get_default_editor()` y
+  `save_default_editor()` exigen un objeto JSON: un archivo con `[]`, texto o
+  número devuelve `None` al leer y se reescribe como objeto al guardar, sin
+  `AttributeError`/`TypeError`.
+- **R-8b4d1f62 — el removedor generado revienta si `install.json` no es un
+  objeto:** `_shortcuts()` del stub `removeme.py` hacía `data.get()` sin
+  comprobar el tipo; un registro con `[]`, texto o `{"shortcuts": 5}` detenía la
+  desinstalación con traceback y dejaba la app instalada. Ahora sólo acepta un
+  objeto con una lista en `shortcuts` y cae a los accesos directos incrustados
+  en cualquier otro caso.
+- **R-5c9a3e27 — metadatos `.mexf` ilegibles abortaban el diálogo de
+  instalación:** la vista previa sólo capturaba `OSError`/`KeyError`, así que un
+  `JSONDecodeError` o un JSON no-objeto escapaba al `except` exterior y cerraba
+  el diálogo entero. El nuevo `_mexf_preview_metadata()` valida el objeto y
+  devuelve `None`; el diálogo se abre igual y omite los detalles.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 desde el vigésimo sexto
+  ciclo (último comentario: 2026-11-23T06:23Z).
+- Sin pull requests abiertos. Sigue abierto solo el issue #4 (backlog).
+- Bugs pendientes que no se tocan: **R-4f8a2c60** (splash, espera Q-008) y
+  **R-6a1f8c23** (arrastre con la ventana maximizada, espera Q-011).
+
+### Verificación — vigésimo séptimo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 930 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_config_and_removeme_robustness.py` (21). Con el
+  código anterior fallan 17 de las 21 (comprobado con `git stash` de los tres
+  archivos tocados); las 4 restantes cubren rutas y el camino válido que no
+  cambiaban.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: el último commit que toca el archivo es `b5e269d` (openhands,
+  vigésimo sexto ciclo) y no hay respuestas nuevas del propietario desde
+  `0ac5457`. Q-004, Q-007, Q-008 y Q-011…Q-014 siguen pendientes. No se aplicó
+  ninguna mejora ni cambio de engine sin aprobación.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo del 2026-11-23 (`bugs.txt`), así que
+  el requisito de 7 días sin reportes nuevos y el periodo de observación no han
+  terminado. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23 — vigésimo sexto ciclo
 
 ### Corregido — el guardado de Configuración abortaba la aplicación y congelaba la ventana
