@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 import json
 import tempfile
 from pathlib import Path
+from typing import Optional
 import importlib
 
 
@@ -240,6 +241,65 @@ def get_accent_color():
         except Exception:
             pass
     return ACCENT
+
+
+def settings_appearance_state(store) -> dict:
+    """Valores de apariencia que obligan a repintar la ventana completa.
+
+    Guardar una ruta o un aviso no cambia el tema. Comparar este estado antes y
+    después de guardar evita reaplicar la hoja de estilos global en cada
+    pulsación del panel: cada reaplicación re-polish todos los widgets y la
+    interfaz se quedaba congelada un instante perceptible.
+    """
+    return {
+        "accent": str(get_accent_color()),
+        "accent_width": store.get_user_int("sidebar_accent_width", 3) or 3,
+        "density": str(store.get_user("ui_density", "normal")),
+        "display_mode": str(
+            store.get_user("display_mode") or APP_CONFIG.get("DISPLAY_MODE", "")
+        ),
+        "font_family": str(store.get_user("ui_font_family") or ""),
+    }
+
+
+def settings_reapply_plan(before: dict, after: dict, *, language_changed: bool) -> dict:
+    """Qué hay que reaplicar tras guardar ajustes.
+
+    ``_apply_leviathan_and_personalization`` ya repinta el tema, así que pedir
+    además ``theme`` duplicaba el trabajo. Sólo se retraducen los textos cuando
+    cambió el idioma: ``apply_ui_language`` vuelve a poblar el selector de
+    motores y perdía la elección del usuario.
+    """
+    plan = {
+        "language": bool(language_changed),
+        "theme": False,
+        "personalization": False,
+    }
+    if before != after:
+        if before.get("display_mode") != after.get("display_mode"):
+            plan["personalization"] = True
+        else:
+            plan["theme"] = True
+    return plan
+
+
+def ensure_config_directories(*paths) -> Optional[str]:
+    """Crea las carpetas de configuración; devuelve el error o ``None``.
+
+    Una ruta que no se puede crear (unidad inexistente, carpeta de sólo
+    lectura, un archivo con ese nombre) escapaba como ``OSError`` desde el
+    guardado automático, que corre dentro de un slot de PyQt6: la excepción no
+    controlada abortaba la aplicación mientras el usuario escribía la ruta.
+    """
+    for path in paths:
+        text = str(path or "").strip()
+        if not text:
+            continue
+        try:
+            os.makedirs(text, exist_ok=True)
+        except OSError as exc:
+            return f"{text}: {exc}"
+    return None
 
 
 from lib.blindcubeEngine.BuildThread import BuildThread
@@ -2830,21 +2890,35 @@ class PackageTodoGUI(QMainWindow):
 
         El guardado es automático (bugs.txt Fase 3.2): un modal por cada
         cambio de ajuste sería inaceptable, así que el aviso sólo aparece
-        cuando la acción viene de un botón explícito.
+        cuando la acción viene de un botón explícito. Sólo se repinta lo que
+        cambió de verdad: reaplicar el tema y retraducir la interfaz en cada
+        pulsación congelaba la ventana un instante perceptible.
         """
         global APP_CONFIG, BASE_DIR, Fluthin_APPS
         new_config = self._collect_config_from_form()
         lang = new_config["LANGUAGE"]
 
+        dirs_error = ensure_config_directories(
+            new_config["BASE_DIR"], new_config["Fluthin_APPS"]
+        )
+        if dirs_error:
+            # Este slot corre dentro de Qt: un OSError sin capturar abortaba la
+            # aplicación mientras el usuario escribía una ruta.
+            self.reporter.warning(
+                tr("config.title"),
+                f"{tr('config.saved_error')} {dirs_error}",
+                dialog=not quiet,
+            )
+            return
+
+        store = get_pm_data()
+        before = settings_appearance_state(store)
         if save_app_config(new_config):
             APP_CONFIG = load_app_config()
             BASE_DIR = APP_CONFIG["BASE_DIR"]
             Fluthin_APPS = APP_CONFIG["Fluthin_APPS"]
-            os.makedirs(BASE_DIR, exist_ok=True)
-            os.makedirs(Fluthin_APPS, exist_ok=True)
 
             # Ajustes de usuario (apariencia, editor, notificaciones).
-            store = get_pm_data()
             for key, value in self._collect_user_settings_from_form().items():
                 store.set_user(key, value)
             store.set_user("notifications_enabled", new_config["notifications_enabled"])
@@ -2852,11 +2926,21 @@ class PackageTodoGUI(QMainWindow):
 
             prev_lang = i18n.get_current_lang()
             i18n.set_auto_translate(self.conf_auto_translate.isChecked())
-            if lang != prev_lang:
+            language_changed = lang != prev_lang
+            if language_changed:
                 i18n.load_translation(lang)
-            self.apply_ui_language()
-            self._apply_leviathan_and_personalization()
-            self.apply_theme()
+
+            plan = settings_reapply_plan(
+                before,
+                settings_appearance_state(store),
+                language_changed=language_changed,
+            )
+            if plan["language"]:
+                self.apply_ui_language()
+            if plan["personalization"]:
+                self._apply_leviathan_and_personalization()
+            elif plan["theme"]:
+                self.apply_theme()
 
             # Si hay ajustes que solo se aplican al reiniciar, mostrar el aviso.
             self._update_restart_banner()

@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23
+Última actualización: 2026-11-23 (vigésimo sexto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -95,10 +95,16 @@ de auditoría.
 | R-5b1d9e47 | Bug — parpadeo del hover del sidebar y ancho escaso | Media | Resuelto |
 | R-7a3e1d92 | Bug — `CONFIRM.MD` con marcadores de conflicto | Alta | Resuelto |
 | R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Pendiente de aprobación (Q-008) |
+| R-3c7a1e90 | Bug — el guardado de Configuración abortaba la app con una ruta imposible | Alta | Resuelto |
+| R-9e2b4d17 | Bug — Configuración repintaba el tema dos veces y reiniciaba el motor | Media | Resuelto |
+| R-6a1f8c23 | Bug — la titlebar arrastra la ventana maximizada | Media | Pendiente de aprobación (Q-011) |
+| R-4d8f2b61 | Bug — botón Guardar en Configuración (no reproducido) | Baja | Cerrado sin cambios de UI |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
-que depende de la aprobación Q-008 y por eso no se ha modificado. Los reportes de auditoría
+que depende de la aprobación Q-008 y por eso no se ha modificado. El vigésimo sexto ciclo registra R-3c7a1e90 y R-9e2b4d17
+(corregidos y probados), R-6a1f8c23 (pendiente de la aprobación Q-011) y
+R-4d8f2b61 (no reproducido en el código actual). Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
@@ -2223,6 +2229,71 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ---
 
+### 7. Ventana: arrastre, maximizado y ajuste a media pantalla
+
+- **Estado:** Pendiente (Q-011). Registrado como R-6a1f8c23.
+- **Actual:** `window_manager_bridge` inicia `startSystemMove()` siempre que se
+  pulsa la titlebar, incluso maximizada, así que la ventana se desplaza.
+- **Solicitado:** con la ventana maximizada, arrastrar la titlebar la restaura
+  a tamaño normal; subirla al borde superior maximiza; llevarla a un borde
+  lateral la ajusta a media pantalla, con transiciones suaves.
+- **Efectos secundarios:** gestos nativos de Windows (snap), maximizado sin
+  marco y bordes de redimensionado; fácil de romper sin probarlo en Windows.
+- **Archivos:** `lib/window_manager_bridge.py`, `lib/TitleBar.py`,
+  `lib/immersive_titlebar.py`, `packagemaker.py`.
+- **Riesgo:** medio-alto.
+
+### 8. Tareas en segundo plano y barra marquee en las barras de acción
+
+- **Estado:** Pendiente (Q-012).
+- **Actual:** el guardado automático y la descarga de fuentes corren en el hilo
+  de la interfaz; el diálogo iOS con barra de progreso sigue siendo el aviso
+  principal de acciones largas.
+- **Solicitado:** ejecutar en segundo plano, oscurecer la ventana mientras se
+  aplica un cambio y mostrar una barra marquee fina bajo todas las barras de
+  acción (siempre presente, inactiva hasta que hay trabajo). Las notificaciones
+  nativas sustituyen al diálogo iOS, elegible en «Aspecto → PushBox».
+- **Efectos secundarios:** cambia el modelo de avisos y el ciclo de guardado;
+  riesgo de carreras al escribir `pm.data` desde varios hilos.
+- **Archivos:** `lib/page_action_bar.py`, `lib/settings_panel.py`,
+  `lib/ios_progress_dialog.py`, `lib/notificationSystem.py`,
+  `lib/report.py`, `packagemaker.py`.
+- **Riesgo:** alto (concurrencia y estados visuales nuevos).
+
+### 9. Actualizaciones silenciosas de parches de seguridad (`updater.py`)
+
+- **Estado:** Pendiente (Q-013).
+- **Actual:** `updater.py` consulta releases publicadas y no aplica parches.
+- **Solicitado:** si no hay release nueva, descargar en silencio el último
+  commit, ejecutar las pruebas de BlindCube, compilar, abrir el programa con la
+  salida oculta, y si no hay errores ofrecer «Reiniciar para aplicar el
+  parche»; al reiniciar, reemplazar archivos y notificar
+  `{versión}-{commit}`. Sin estar compilado, descargar el ZIP del último commit
+  y reemplazar archivos.
+- **Efectos secundarios:** el programa se reemplaza a sí mismo; requiere
+  verificación de integridad, red y permisos de escritura. Riesgo de dejar la
+  instalación a medias.
+- **Archivos:** `updater.py`, `lib/coreUpdater/`, `lib/blindcubeEngine/`,
+  `version.res`, `details.xml`.
+- **Riesgo:** alto.
+
+### 10. Eventos en el sidebar y temas de temporada
+
+- **Estado:** Pendiente (Q-014). Aparcado por el propietario hasta que haya un
+  release estable sin reportes.
+- **Actual:** el sidebar no muestra banners de eventos y la interfaz no cambia
+  con la temporada.
+- **Solicitado:** banners de eventos/anuncios en el sidebar y adhesivos,
+  fuentes y detalles de temporada (p. ej. Halloween) en la interfaz y la
+  titlebar.
+- **Efectos secundarios:** nuevo contenido remoto (descarga y caché de
+  imágenes), cambios visuales estacionales y consumo de red.
+- **Archivos:** `lib/notificationSystem.py`, `lib/app_icons.py`,
+  `lib/design_tokens.py`, `source/qss/*`, `packagemaker.py`.
+- **Riesgo:** medio.
+
+---
+
 ## R-5b1d9e47 — El hover del sidebar parpadeaba y los iconos quedaban apretados
 
 - **Usuario:** JesusQuijada34 (respuesta a Q-010 en `CONFIRM.MD`, commit `0ac5457`)
@@ -2287,9 +2358,119 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   cerrar con `destroy()`.
 - **Riesgo:** alto sin verificación visual en Windows.
 
+## R-3c7a1e90 — El guardado de Configuración abortaba la aplicación con una ruta imposible
+
+- **Usuario:** JesusQuijada34 (reporte de congelamientos en Configuración,
+  `bugs.txt`; hallazgo de la auditoría interna al reproducirlo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta
+- **Descripción:** escribir en «Configuración → Rutas» una carpeta que no se
+  puede crear (unidad inexistente, ruta bajo un archivo, carpeta sin permisos)
+  cerraba la aplicación en el acto, sin mensaje. El guardado es automático y
+  corre dentro de un slot de PyQt6, así que el `OSError` no controlado de
+  `os.makedirs()` se convertía en `Fatal Python error: Aborted`.
+- **Pasos para reproducir:** abrir Configuración, escribir
+  `/proc/pm-no-puede/crear` (o cualquier ruta bajo un archivo) en la carpeta de
+  proyectos y esperar el guardado automático.
+- **Causa raíz:** `_save_app_config_compact()` llamaba a `os.makedirs()` sin
+  `try/except` y sin validar la ruta antes de persistirla. El arranque del
+  módulo sí protegía sus `makedirs`, pero el guardado del panel no.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `ensure_config_directories()` crea y valida las dos
+  carpetas antes de guardar; si falla, el guardado se cancela, la configuración
+  anterior queda intacta y el aviso sale por el `Reporter` (barra de estado, o
+  diálogo si el guardado fue explícito). Nunca se propaga la excepción al slot.
+- **Pruebas:** `tests/test_settings_save_guards.py`
+  (`TestEnsureConfigDirectories`, `test_uncreatable_path_reports_instead_of_aborting`).
+- **Commit:** vigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9e2b4d17 — Configuración repintaba el tema dos veces y reiniciaba el motor elegido
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`: «al maximizar o restaurar o al
+  cambiar opciones en configuración, porque se queda congelado un rato?»)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** cualquier cambio en Configuración —incluso escribir una ruta
+  o activar un aviso— congelaba la ventana un instante perceptible. Además, la
+  elección de motor (FlatCube/BlindCube) volvía sola a BlindCube después de
+  cambiar un ajuste.
+- **Pasos para reproducir:** en la pestaña Compilar elegir FlatCube v1, ir a
+  Configuración, cambiar cualquier opción y volver a Compilar.
+- **Causa raíz:** `_save_app_config_compact()` reaplicaba siempre
+  `apply_ui_language()`, `_apply_leviathan_and_personalization()` y
+  `apply_theme()`. Como `_apply_display_mode_by_name()` ya termina en
+  `apply_theme()`, el tema se repintaba dos veces por guardado (≈0,10 s cada
+  uno offscreen, más en Windows con la ventana real). `apply_ui_language()`
+  vuelve a poblar el selector de motores y lo deja en BlindCube.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `settings_appearance_state()` captura sólo los valores
+  que obligan a repintar (acento, ancho del indicador, densidad, modo de
+  presentación y fuente) antes y después de guardar, y
+  `settings_reapply_plan()` decide qué reaplicar: nada si no cambió la
+  apariencia, `apply_theme()` una sola vez si cambió un valor visual,
+  `_apply_leviathan_and_personalization()` si cambió el modo de presentación y
+  la retraducción sólo cuando cambió el idioma.
+- **Pruebas:** `tests/test_settings_save_guards.py`
+  (`TestSettingsReapplyPlan`, `TestAppearanceState`,
+  `test_path_only_save_does_not_repaint_theme`,
+  `test_engine_choice_survives_an_autosave`).
+- **Commit:** vigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-6a1f8c23 — Arrastrar la titlebar con la ventana maximizada mueve la ventana
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`: «porque al jalar la barra de titulo a
+  un lado estando maximizada, se mueve? en vez de quedar quieta y bloqueada»)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** con la ventana maximizada, arrastrar la barra de título
+  desplaza la ventana en lugar de mantenerla fija; el usuario pide además que
+  arrastrarla la devuelva a tamaño normal, que subirla al borde superior
+  maximice y que llevarla a un borde lateral la ajuste a media pantalla.
+- **Pasos para reproducir:** maximizar la ventana y arrastrar la titlebar hacia
+  un lado.
+- **Causa raíz:** `lib/window_manager_bridge._wire_titlebar()` sustituye
+  `mousePressEvent` de la titlebar y llama a `start_system_move()` sin
+  comprobar el estado de la ventana. El manejador original de
+  `lib/TitleBar.py` sí lo comprobaba (`not is_maximized()`), así que el puente
+  anuló esa guarda.
+- **Estado:** Pendiente. Cambia el ciclo de vida y el comportamiento de la
+  ventana (restaurar al arrastrar, maximizar al soltar arriba, ajuste a media
+  pantalla), así que se acumula como pregunta **Q-011** en `CONFIRM.MD` y no se
+  ha modificado.
+- **Propuesta:** ignorar `startSystemMove()` mientras la ventana esté
+  maximizada y restaurarla antes de mover; añadir las zonas de ajuste
+  (arriba = maximizar, laterales = media pantalla) con transiciones suaves.
+- **Archivos afectados:** `lib/window_manager_bridge.py`, `lib/TitleBar.py`,
+  `lib/immersive_titlebar.py`, `packagemaker.py`.
+- **Riesgo:** medio-alto (snap y maximizado nativos; difícil de verificar sin
+  Windows).
+
+## R-4d8f2b61 — Botón Guardar en Configuración con opciones automáticas
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`: «en configuracion aparece el boton
+  guardar cuando las opciones son automaticas lo cual no deberia de ser»)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Baja
+- **Descripción:** el reporte indica que Configuración muestra un botón Guardar
+  aunque el guardado es automático.
+- **Pasos para reproducir:** abrir Configuración y buscar el botón.
+- **Estado:** Cerrado sin cambios de UI: no se reproduce en el código actual.
+  La pestaña Configuración no instala barra de acciones (`init_config_tab` no
+  llama a `install_page_action_bar`) y `SettingsPanel` no contiene ningún botón
+  «Guardar»; el guardado es automático y «Restablecer» es una tarjeta. Se deja
+  una prueba de regresión para que el botón no reaparezca.
+- **Solución aplicada:** ninguna en la UI; guardia
+  `test_config_page_has_no_save_button`.
+- **Pruebas:** `tests/test_settings_save_guards.py`.
+- **Commit:** vigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-23 (verificado como no reproducido).
+
 ## Periodo de observación y release
 
-- Bugs abiertos: 1 (R-4f8a2c60, pendiente de la aprobación Q-008).
+- Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
+  Q-011). R-4d8f2b61 se cerró como no reproducido.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
@@ -2374,6 +2555,22 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Verificación del vigésimo quinto ciclo (2026-11-23):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 892 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Verificación del vigésimo sexto ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 909 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 13 pruebas
+  nuevas de `tests/test_settings_save_guards.py` fallan con el código anterior
+  (comprobado con `git stash` de `packagemaker.py`) y la ejecución termina en
+  `Fatal Python error: Aborted`, que es exactamente el cierre que sufría la
+  aplicación. Medición real offscreen con la ventana construida (348 widgets):
+  guardar sólo una ruta pasó de 0,20 s a 0,002 s; un cambio de densidad o de
+  modo de presentación repinta el tema una vez (0,10 s) en lugar de dos; un
+  cambio de idioma retraduce en 0,006 s; y la elección de FlatCube sobrevive al
+  guardado.
+- Fuera del repositorio: el propietario pidió añadir el ciclo de recolección de
+  mejoras (lunes recoger, viernes probar, sábado revisión visual, domingo
+  release) a su automatización «Updater/Update». Esa automatización no vive en
+  este repositorio, así que no se puede modificar desde aquí; queda anotado
+  para que él lo configure en la plataforma de automatizaciones.
 - Verificación del ciclo de R-4f9b2c81, R-7a3d5e62 y R-2b9e4f73 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 819 pasan, 1
   omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 6 casos nuevos

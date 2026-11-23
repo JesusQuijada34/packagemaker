@@ -1,5 +1,83 @@
 # Changelog
 
+## 2026-11-23 — vigésimo sexto ciclo
+
+### Corregido — el guardado de Configuración abortaba la aplicación y congelaba la ventana
+
+Reportado por **JesusQuijada34** en `bugs.txt` («al maximizar o restaurar o al
+cambiar opciones en configuración, porque se queda congelado un rato?»).
+Registrados como **R-3c7a1e90** y **R-9e2b4d17**.
+
+- **R-3c7a1e90 — una ruta de proyecto imposible cerraba la aplicación:** el
+  guardado automático llamaba a `os.makedirs()` sin capturar `OSError`. Como el
+  guardado corre dentro de un slot de PyQt6, escribir una carpeta que no se
+  puede crear (unidad inexistente, ruta bajo un archivo, carpeta sin permisos)
+  terminaba en `Fatal Python error: Aborted` sin mensaje. Ahora
+  `ensure_config_directories()` crea y valida las dos carpetas antes de
+  persistir; si falla, el guardado se cancela, la configuración anterior queda
+  intacta y el aviso sale por el `Reporter` (barra de estado en el guardado
+  automático, diálogo cuando el guardado es explícito).
+- **R-9e2b4d17 — cada cambio repintaba el tema dos veces y reiniciaba el
+  motor:** `_save_app_config_compact()` reaplicaba siempre
+  `apply_ui_language()`, `_apply_leviathan_and_personalization()` y
+  `apply_theme()`. Como la personalización ya termina en `apply_theme()`, el
+  tema se repintaba dos veces por guardado, y `apply_ui_language()` volvía a
+  poblar el selector de motores dejándolo en BlindCube. Ahora
+  `settings_appearance_state()` captura sólo los valores visuales antes y
+  después de guardar y `settings_reapply_plan()` decide qué reaplicar: nada si
+  el cambio fue una ruta o un aviso, `apply_theme()` una sola vez si cambió un
+  valor visual, la personalización si cambió el modo de presentación y la
+  retraducción sólo cuando cambió el idioma.
+
+### Registrado — pendientes y no reproducidos
+
+- **R-6a1f8c23 — arrastrar la titlebar con la ventana maximizada la mueve:**
+  `lib/window_manager_bridge._wire_titlebar()` llama a `startSystemMove()` sin
+  comprobar el estado de la ventana; el manejador original de `lib/TitleBar.py`
+  sí lo comprobaba. Cambia el ciclo de vida de la ventana (restaurar al
+  arrastrar, maximizar al soltar arriba, ajuste a media pantalla), así que se
+  acumula como **Q-011** y **no se ha modificado**.
+- **R-4d8f2b61 — botón Guardar en Configuración:** no se reproduce. La pestaña
+  Configuración no instala barra de acciones y `SettingsPanel` no tiene ningún
+  botón «Guardar»; el guardado es automático. Se añade una prueba de regresión
+  para que el botón no reaparezca.
+
+### Registrado — cambios de engine pendientes
+
+Se añaden a `bugs.md` y a `CONFIRM.MD` sin implementar: **Q-011** (ventana:
+arrastre, maximizado y media pantalla), **Q-012** (tareas en segundo plano y
+barra marquee en las barras de acción), **Q-013** (actualizaciones silenciosas
+de parches de seguridad) y **Q-014** (eventos en el sidebar y temas de
+temporada).
+
+### Verificación — vigésimo sexto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 909 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_settings_save_guards.py` (13). Las 13 fallan con
+  el código anterior (comprobado con `git stash` de `packagemaker.py`) y la
+  ejecución termina en `Fatal Python error: Aborted`, que es el cierre que
+  sufría la aplicación.
+- Medición real offscreen con la ventana construida (348 widgets): guardar sólo
+  una ruta pasa de 0,20 s a 0,002 s; un cambio de densidad o de modo de
+  presentación repinta el tema una vez (0,10 s) en lugar de dos; un cambio de
+  idioma retraduce en 0,006 s; y la elección de FlatCube sobrevive al guardado.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: el último commit del archivo sigue siendo `0ac5457`
+  (`JesusQuijada34 <jesusquijada34.gh@gmail.com>`, verificado con la API de
+  GitHub) y no hay respuestas nuevas. Q-004, Q-007 y Q-008 siguen pendientes;
+  se añaden Q-011, Q-012, Q-013 y Q-014. No se aplicó ninguna mejora ni cambio
+  de engine sin aprobación.
+
+### Release — no preparado
+
+- El último reporte externo es del 2026-11-23 (`bugs.txt`), así que el
+  requisito de 7 días sin reportes nuevos sigue en curso y el periodo de
+  observación no ha terminado. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23 — vigésimo quinto ciclo
 
 ### Corregido — el hover del sidebar parpadeaba y los iconos quedaban apretados

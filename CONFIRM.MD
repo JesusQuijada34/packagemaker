@@ -1,9 +1,9 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-23 (vigésimo quinto ciclo, R-5b1d9e47 / R-7a3e1d92 / R-4f8a2c60)
+- **Última revisión:** 2026-11-23 (vigésimo sexto ciclo, R-3c7a1e90 / R-9e2b4d17 / R-6a1f8c23)
 - **Último commit de `CONFIRM.MD` procesado:** `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>` (verificado con la API de GitHub). Ese commit traía marcadores de conflicto de merge sin resolver en Q-008; el archivo se reparó en este ciclo y la pregunta se repite abajo como una sola.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 3 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 7 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -71,6 +71,69 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el ciclo de vida de ventanas y el
   manejo de errores de arranque. No se puede verificar visualmente en Windows
   desde este entorno. Riesgo medio-alto.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-011 — Ventana: arrastre con la ventana maximizada y ajuste a media pantalla
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-23
+- **Qué se propone:** con la ventana maximizada, arrastrar la titlebar no debe
+  moverla: se restaura a tamaño normal y sigue el cursor. Subirla al borde
+  superior maximiza y llevarla a un borde lateral la ajusta a media pantalla,
+  con transiciones suaves.
+- **Archivos/componentes afectados:** `lib/window_manager_bridge.py`,
+  `lib/TitleBar.py`, `lib/immersive_titlebar.py`, `packagemaker.py`.
+- **Riesgo y efectos secundarios:** hoy el puente llama a `startSystemMove()`
+  aunque la ventana esté maximizada (el manejador original de `TitleBar` sí lo
+  comprobaba). Cambia el ciclo de vida de la ventana y depende de los gestos
+  nativos de Windows, que no se pueden verificar desde este entorno. Riesgo
+  medio-alto. Detalle en `bugs.md` (R-6a1f8c23).
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-012 — Tareas en segundo plano y barra marquee en las barras de acción
+- **Tipo:** mejora
+- **Fecha:** 2026-11-23
+- **Qué se propone:** que el guardado y las acciones largas trabajen en segundo
+  plano sin colgar la interfaz; mientras haya trabajo, oscurecer la ventana y
+  animar una barra marquee fina bajo todas las barras de acción (siempre
+  presente, inactiva hasta que haya una tarea). Las notificaciones nativas
+  sustituyen al diálogo iOS, elegible en «Aspecto → PushBox».
+- **Archivos/componentes afectados:** `lib/page_action_bar.py`,
+  `lib/settings_panel.py`, `lib/ios_progress_dialog.py`,
+  `lib/notificationSystem.py`, `lib/report.py`, `packagemaker.py`.
+- **Riesgo y efectos secundarios:** cambia el modelo de avisos y el ciclo de
+  guardado; escribir `pm.data` desde varios hilos puede provocar carreras.
+  Riesgo alto. (La parte de rendimiento que ya era un bug está corregida:
+  R-9e2b4d17.)
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-013 — Actualizaciones silenciosas de parches de seguridad
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-23
+- **Qué se propone:** si no hay release nueva, descargar en silencio el último
+  commit, ejecutar las pruebas de BlindCube, compilar, abrir el programa con la
+  salida oculta y, si no hay errores, ofrecer «Reiniciar para aplicar el
+  parche»; al reiniciar se reemplazan los archivos y se notifica
+  `{versión}-{commit}`. Sin estar compilado, descargar el ZIP del último commit
+  y reemplazar archivos.
+- **Archivos/componentes afectados:** `updater.py`, `lib/coreUpdater/`,
+  `lib/blindcubeEngine/`, `version.res`, `details.xml`.
+- **Riesgo y efectos secundarios:** el programa se reemplaza a sí mismo;
+  requiere red, permisos de escritura y verificación de integridad, y un fallo
+  puede dejar la instalación a medias. Riesgo alto.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-014 — Eventos en el sidebar y temas de temporada
+- **Tipo:** mejora
+- **Fecha:** 2026-11-23
+- **Qué se propone:** mostrar banners de eventos/anuncios en el sidebar y
+  cambiar adhesivos, fuentes y detalles de la interfaz y la titlebar según la
+  temporada (p. ej. Halloween).
+- **Archivos/componentes afectados:** `lib/notificationSystem.py`,
+  `lib/app_icons.py`, `lib/design_tokens.py`, `source/qss/*`,
+  `packagemaker.py`.
+- **Riesgo y efectos secundarios:** introduce contenido remoto (descarga y
+  caché de imágenes) y cambios visuales estacionales. Tú mismo lo aparcaste
+  hasta tener un release estable sin reportes. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---
