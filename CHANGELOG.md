@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-11-23
+
+### Corregido — las rutas sin permisos terminaban en traceback
+
+Hallazgo del vigésimo tercer ciclo de mantenimiento (sin reporte externo; reportado por JesusQuijada34 en la auditoría interna). Commit `743c914`.
+
+En Python 3.13 `Path.exists()`, `Path.is_file()`, `Path.is_dir()` y `Path.iterdir()` propagan `PermissionError` cuando el directorio padre no es accesible. La CLI y la GUI comprobaban rutas del usuario con esas llamadas directas, así que un archivo o carpeta sin permisos rompía comandos que debían responder con un mensaje legible.
+
+- **R-4c7a9e13 — `--inspect --inspect-extract` con un destino bloqueado:** `export_header_assets()` llamaba a `mkdir()`/`write_bytes()` fuera de todo `try`; un destino ocupado por un archivo normal lanzaba `FileExistsError` y uno sin permiso, `PermissionError`. Ahora la función traduce `OSError` a `IflappError` y el helper responde `[ERROR] …` con código 1 (en modo JSON el error va a stderr).
+- **R-8e2b5c43 — `--list-asksome` con una raíz ilegible:** `list_installed()` recorría `root.iterdir()` sin capturar `OSError`. Ahora una raíz ilegible se trata como vacía y el CLI informa «Sin artefactos .asksome instalados» con código 0.
+- **R-3d9f1a76 — `compile`/TUI con la carpeta base ilegible:** `iter_projects()`, `list_projects()`, `is_project_directory()` y `locate_project()` propagaban `PermissionError` desde `iterdir()`/`is_dir()`/`is_file()`. Ahora usan los envoltorios de `lib/file_ops.py` y el CLI responde `[ERROR] No se encontró proyecto que coincida con …`.
+- **R-6c1e8b52 — `--buildthis`/`--ide-run`/`--shell-info` con rutas ilegibles:** las comprobaciones `Path.exists()`/`is_file()`/`is_dir()` se sustituyen por `path_exists()`/`path_is_file()`/`path_is_dir()`, con mensajes que distinguen «no existe» de «no es accesible».
+- **R-7b3e9c28 — `--install-asksome` con un artefacto ilegible:** `artifact.is_file()` quedaba fuera del `try` y `_read_container()` no traducía `OSError`. Ahora la comprobación es segura y el lector lanza `AsksomeError` con la ruta y el motivo.
+- **R-5a9d2f74 — abrir una carpeta genérica o lanzar MoonFix por lotes tumbaba la GUI:** `DashboardWindow._open_as_generic_project()` y `PackageTodoGUI.mf_start_scan()` llamaban a `os.listdir()` sin capturar `OSError`; en PyQt6 una excepción no controlada en un slot aborta la aplicación. Ahora el panel abre el editor sin guion y MoonFix muestra un diálogo de error.
+- **R-2f8a4d61 — `remove_tree()` lanzaba `PermissionError` pese a prometer que no lanza:** usaba `Path.exists()` al empezar y al terminar. `_tree_exists()` emplea `os.lstat()` y distingue «no existe» de «no se puede comprobar»; `remove_tree()` devuelve `False` cuando no puede verificar el borrado.
+
+`lib/file_ops.py` gana los envoltorios `path_exists()`, `path_is_file()`, `path_is_dir()` y `list_directory()`, que degradan un `OSError` a `False`/lista vacía y son la vía recomendada para rutas que vienen del usuario.
+
+### Verificación — vigésimo tercer ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 865 pasan, 1 omitido, 55 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Las 14 pruebas nuevas de `tests/test_unreadable_paths.py` pasan; 13 de ellas fallan con el código anterior (comprobado con `git stash` de `lib/file_ops.py`, `lib/project_locator.py`, `lib/blindcubeEngine/asksome_installer.py`, `lib/blindcubeEngine/asksome_format.py`, `lib/blindcubeEngine/iflapp_format.py`, `lib/cliHandler.py`, `lib/pm_dashboard.py` y `packagemaker.py`).
+- Reproducción real (Python 3.13, permisos POSIX): `--inspect … --inspect-extract <archivo>`, `--list-asksome --install-root <dir 000>`, `compile` con `BASE_DIR` `000`, `--buildthis <proyecto 000>`, `--ide-run <dir 000>/app.py`, `--shell-info <dir 000>/demo.asksome` y `--install-asksome <dir 000>/demo.asksome` terminaban en `PermissionError` con traceback; ahora responden con `[ERROR] …` y código 1, o con «Sin artefactos .asksome instalados» y código 0. Abrir una carpeta `000` como proyecto genérico o lanzar MoonFix por lotes sobre ella tumbaba la GUI; ahora no.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- `CONFIRM.MD` revisado (último commit del archivo: `8a21a4f`, autor `openhands-agent` verificado con la API de GitHub): `Q-001`…`Q-010` siguen sin casillas marcadas, así que no hay respuestas válidas que aplicar. No se implementó ninguna mejora ni cambio de engine.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo el del propietario del 2026-11-22, de modo que el requisito de 7 días sin reportes nuevos y el periodo de observación de 3 días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-22
 
 ### Corregido — `--compile-mexf` lanzaba traceback con entradas ilegibles

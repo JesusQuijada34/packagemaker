@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-22
+Última actualización: 2026-11-23
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -76,6 +76,13 @@ de auditoría.
 | R-7c9e2a45 | Bug — `editor_config.json` con forma no válida rompe el arranque | Media | Resuelto |
 | R-4e8b2d17 | Bug — `--shell-info` lanza traceback con paquete ilegible o vista previa bloqueada | Media | Resuelto |
 | R-6d2f8a41 | Bug — `--compile-mexf` lanza traceback con entradas ilegibles | Media | Resuelto |
+| R-4c7a9e13 | Bug — `--inspect-extract` lanza traceback con destino bloqueado | Media | Resuelto |
+| R-8e2b5c43 | Bug — `--list-asksome` lanza traceback con raíz ilegible | Media | Resuelto |
+| R-3d9f1a76 | Bug — `compile`/TUI lanzan traceback con carpeta base ilegible | Alta | Resuelto |
+| R-6c1e8b52 | Bug — `--buildthis`/`--ide-run`/`--shell-info` lanzan traceback con rutas ilegibles | Alta | Resuelto |
+| R-7b3e9c28 | Bug — `--install-asksome` lanza traceback con artefacto ilegible | Media | Resuelto |
+| R-5a9d2f74 | Bug — abrir carpeta genérica o MoonFix por lotes tumba la GUI con carpeta ilegible | Media | Resuelto |
+| R-2f8a4d61 | Bug — `remove_tree` lanza `PermissionError` pese a prometer que no lanza | Baja | Resuelto |
 | R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
 | R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
 | R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
@@ -1738,6 +1745,164 @@ probado en el commit `f8ea814`; la cola sigue sin bugs abiertos.
 - **Commit:** `f8ea814`.
 - **Fecha de resolución:** 2026-11-22.
 
+## R-4c7a9e13 — `--inspect-extract` lanzaba traceback con un destino bloqueado
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `PackageInspectHelper.inspect()` exportaba los recursos de la
+  cabecera con `iflapp_format.export_header_assets()` sin capturar los fallos del
+  sistema de archivos. Un destino ocupado por un archivo normal terminaba en
+  `FileExistsError` desde `mkdir()` y uno sin permiso, en `PermissionError`.
+  Como el `try` del helper solo cubría la lectura de la cabecera, el CLI
+  mostraba un traceback incluso en modo `--inspect-json`.
+- **Pasos para reproducir:** `touch /tmp/blocker && python packagemaker.py
+  --inspect demo.iflapp --inspect-extract /tmp/blocker`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** `export_header_assets()` envuelve la lectura y la
+  escritura y traduce `OSError` a `IflappError`; el helper responde
+  `[ERROR] …` con código 1 y, en modo JSON, escribe el error en stderr para no
+  contaminar stdout.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_export_header_assets_translates_oserror` y
+  `test_inspect_extract_reports_blocked_destination`.
+- **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-8e2b5c43 — `--list-asksome` lanzaba traceback con una raíz ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `list_installed()` comprobaba `root.is_dir()` y recorría
+  `root.iterdir()` sin capturar `OSError`. Con una raíz de instalación sin
+  permiso de lectura, Python 3.13 propagaba `PermissionError` y el CLI de
+  `--list-asksome` terminaba en traceback.
+- **Pasos para reproducir:** `chmod 000 /tmp/installs && python packagemaker.py
+  --list-asksome --install-root /tmp/installs`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** `list_installed()` usa `path_is_dir()`,
+  `list_directory()`, `path_is_dir()` y `path_is_file()` de `lib/file_ops.py`,
+  que degradan un `OSError` a «no hay entradas». El CLI informa «Sin artefactos
+  .asksome instalados» con código 0.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_list_installed_ignores_unreadable_root` y
+  `test_list_installed_cli_reports_empty_root`.
+- **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-3d9f1a76 — `compile`/TUI lanzaban traceback con la carpeta base ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `lib/project_locator.py` listaba la carpeta de proyectos con
+  `sorted(base.iterdir())` y comprobaba cada entrada con `is_dir()`/`is_file()`.
+  Si `BASE_DIR` existía pero no era legible, `iter_projects()`/`list_projects()`
+  propagaban `PermissionError`; el subcomando `compile` y la TUI mostraban un
+  traceback en lugar de «no se encontró proyecto».
+- **Pasos para reproducir:** `chmod 000 "$BASE_DIR" && python packagemaker.py
+  compile --name Demo --shortname demo`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe el flujo principal de compilación headless).
+- **Solución aplicada:** `iter_projects()`, `list_projects()`,
+  `is_project_directory()` y `locate_project()` usan los envoltorios de
+  `lib/file_ops.py`; una carpeta ilegible se trata como vacía y el CLI responde
+  `[ERROR] No se encontró proyecto que coincida con …` con código 1.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_project_listing_ignores_unreadable_base_dir`.
+- **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-6c1e8b52 — `--buildthis`/`--ide-run`/`--shell-info` lanzaban traceback con rutas ilegibles
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** tres comprobaciones de ruta de la CLI usaban `Path.exists()`,
+  `Path.is_file()` e `Path.is_dir()` directamente sobre rutas del usuario. En
+  Python 3.13 esas llamadas propagan `PermissionError` cuando el directorio
+  padre no es accesible, así que `--buildthis`, `--ide-run` y `--shell-info`
+  terminaban en traceback en lugar de un mensaje legible.
+- **Pasos para reproducir:** `chmod 000 /tmp/locked && python packagemaker.py
+  --buildthis /tmp/locked/proj --output /tmp/out` (y los equivalentes con
+  `--ide-run /tmp/locked/app.py` y `--shell-info /tmp/locked/demo.asksome`).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (`--buildthis` es la vía de compilación de CI).
+- **Solución aplicada:** las comprobaciones usan `path_exists()`,
+  `path_is_file()` y `path_is_dir()` de `lib/file_ops.py` y los mensajes
+  distinguen «no existe» de «no es accesible».
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_buildthis_rejects_unreadable_project`,
+  `test_ide_run_rejects_unreadable_script` y
+  `test_shell_info_rejects_unreadable_target`.
+- **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-7b3e9c28 — `--install-asksome` lanzaba traceback con un artefacto ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `AsksomeInstallHelper.install()` comprobaba el artefacto con
+  `artifact.is_file()` fuera de cualquier `try`; con el padre sin permisos,
+  Python 3.13 propagaba `PermissionError`. Además, `_read_container()` leía el
+  archivo con `Path.read_bytes()` sin traducir `OSError`, de modo que un
+  artefacto ilegible escapaba como excepción cruda en lugar de `AsksomeError`.
+- **Pasos para reproducir:** `chmod 000 /tmp/locked && python packagemaker.py
+  --install-asksome /tmp/locked/demo.asksome --install-root /tmp/root`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** la comprobación usa `path_is_file()` y
+  `_read_container()` traduce `OSError` a `AsksomeError` con la ruta y el
+  motivo; el CLI responde `[ERROR] No existe el artefacto o no es accesible: …`
+  con código 1.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_asksome_reader_translates_oserror` y
+  `test_install_asksome_rejects_unreadable_artifact`.
+- **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-5a9d2f74 — Abrir una carpeta genérica o lanzar MoonFix por lotes tumbaba la GUI
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `DashboardWindow._open_as_generic_project()` hacía
+  `sorted(os.listdir(path))` y `PackageTodoGUI.mf_start_scan()` recorría la
+  carpeta con `os.listdir(path)` sin capturar `OSError`. Al elegir una carpeta
+  sin permiso de lectura desde «Abrir repositorio GitHub» o al lanzar MoonFix
+  en modo lote, el slot de Qt lanzaba `PermissionError`; en PyQt6 una excepción
+  no controlada en un slot aborta la aplicación.
+- **Pasos para reproducir:** con una carpeta `chmod 000`, abrirla desde el
+  panel como proyecto genérico o ejecutar MoonFix en modo lote sobre ella.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (crash de la GUI, sin pérdida de datos).
+- **Solución aplicada:** ambos puntos capturan `OSError`; el panel abre el
+  editor sin guion y MoonFix muestra un diálogo de error con el motivo.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_dashboard_generic_open_survives_unreadable_folder` y
+  `test_moonfix_batch_scan_reports_unreadable_folder`.
+- **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-2f8a4d61 — `remove_tree` lanzaba `PermissionError` pese a prometer que no lanza
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** el docstring de `lib/file_ops.remove_tree()` garantiza que no
+  lanza, pero empezaba con `target.exists()` y terminaba con `not
+  target.exists()`. En Python 3.13 `Path.exists()` propaga `PermissionError`,
+  así que la limpieza de un directorio temporal bajo un padre inaccesible
+  rompía el contrato y abortaba el flujo de build que confiaba en él.
+- **Pasos para reproducir:** llamar `remove_tree()` sobre una ruta cuyo padre
+  no es accesible.
+- **Estado:** Resuelto.
+- **Prioridad:** Baja.
+- **Solución aplicada:** `_tree_exists()` usa `os.lstat()` y distingue «no
+  existe» de «no se puede comprobar»; `remove_tree()` devuelve `True` solo si
+  el árbol desapareció y `False` cuando no pudo verificarlo.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_remove_tree_keeps_its_no_raise_contract`.
+- **Commit:** `743c914`.
+- **Fecha de resolución:** 2026-11-23.
+
 ---
 
 ## Mejoras pendientes de aprobación
@@ -1918,6 +2083,17 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
+- Verificación del ciclo de R-4c7a9e13…R-2f8a4d61 (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 865 pasan, 1
+  omitido, 55 subtests; `pyflakes` y `py_compile` limpios. 13 de las 14 pruebas
+  nuevas de `tests/test_unreadable_paths.py` fallan con el código anterior
+  (comprobado con `git stash` de los 8 archivos tocados). Reproducción real en
+  Python 3.13: `--inspect-extract <archivo>`, `--list-asksome` con raíz
+  `chmod 000`, `compile` con `BASE_DIR` `chmod 000`, `--buildthis`/`--ide-run`/
+  `--shell-info`/`--install-asksome` sobre rutas sin permiso y las dos acciones
+  de GUI sobre una carpeta ilegible terminaban en `PermissionError` con
+  traceback; ahora responden con `[ERROR] …`, diálogo o «sin artefactos», con
+  código 1 (o 0 cuando el resultado es una lista vacía).
 - Verificación del ciclo de R-6d2f8a41 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 851 pasan, 1
   omitido, 55 subtests; `pyflakes` y `py_compile` limpios. Con el código
