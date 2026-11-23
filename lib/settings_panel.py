@@ -45,6 +45,7 @@ except ImportError:  # pragma: no cover - entorno sin Qt
 from lib.design_tokens import TEXT, TEXT_DIM, uwp_button_qss
 from lib.fluent_theme import conf_field_stylesheet
 from lib.i18n import tr
+from lib.pm_data import coerce_float, coerce_int
 from lib.settings_cards import (
     ARROW_EXTERNAL,
     ARROW_FORWARD,
@@ -175,7 +176,7 @@ class SettingsPanel(QWidget):
             tr("config.sidebar_accent"),
             0,
             8,
-            int(user.get("sidebar_accent_width", 3) or 0),
+            coerce_int(user.get("sidebar_accent_width", 3), 3) or 0,
             " px",
         )
         self.widgets["conf_card_opacity_slider"] = self._slider_row(
@@ -183,7 +184,7 @@ class SettingsPanel(QWidget):
             tr("config.card_opacity"),
             0,
             40,
-            int(float(user.get("card_opacity", 0.08)) * 100),
+            int(coerce_float(user.get("card_opacity", 0.08), 0.08) * 100),
             " %",
         )
         appearance.add_widget(self._hint(tr("config.personalization_hint")))

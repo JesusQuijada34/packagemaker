@@ -169,7 +169,13 @@ class MexfEditorDialog(QDialog):
         except json.JSONDecodeError:
             from lib.mexf_editor import yaml
 
-            raw = yaml.safe_load(text) if yaml else {}
+            raw = {}
+            if yaml is not None:
+                try:
+                    raw = yaml.safe_load(text)
+                except yaml.YAMLError:
+                    # Documento a medio escribir: el lint ya señala el error.
+                    raw = {}
         if isinstance(raw, dict) and ("extensions" in raw or "shell_commands" in raw):
             raw = _legacy_to_v1(raw)
         return raw if isinstance(raw, dict) else {}

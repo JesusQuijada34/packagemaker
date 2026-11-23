@@ -773,8 +773,8 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_animation = None
         # Ancho manual (estilo VS Code): se ajusta arrastrando el borde y se
         # recuerda entre sesiones en data/pm.data.
-        self.sidebar_target_width = int(
-            get_pm_data().get_user("sidebar_width", 260) or 260
+        self.sidebar_target_width = (
+            get_pm_data().get_user_int("sidebar_width", 260) or 260
         )
         self.sidebar_target_width = max(180, min(480, self.sidebar_target_width))
         self.sidebar.setMinimumWidth(self.sidebar_target_width)
@@ -1448,7 +1448,7 @@ class PackageTodoGUI(QMainWindow):
     def apply_theme(self):
         store = get_pm_data()
         accent = str(get_accent_color())
-        border_w = int(store.get_user("sidebar_accent_width", 3) or 3)
+        border_w = store.get_user_int("sidebar_accent_width", 3) or 3
         density = str(store.get_user("ui_density", "normal"))
         sidebar_h = SIDEBAR_ITEM_HEIGHT if density != "compact" else 36
         dark = self.last_theme_mode == "dark"
@@ -2673,8 +2673,8 @@ class PackageTodoGUI(QMainWindow):
             return
         store = get_pm_data()
         pending = abs(
-            float(store.get_user("dpi_scale", 1.0))
-            - float(store.get_user("applied_dpi_scale", 1.0))
+            store.get_user_float("dpi_scale", 1.0)
+            - store.get_user_float("applied_dpi_scale", 1.0)
         ) > 1e-6
         self.conf_restart_banner.setVisible(pending)
 
@@ -2748,10 +2748,10 @@ class PackageTodoGUI(QMainWindow):
                 self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
                 self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
                 self.conf_sidebar_accent_slider.setValue(
-                    int(user.get("sidebar_accent_width", 3) or 0)
+                    store.get_user_int("sidebar_accent_width", 3) or 0
                 )
                 self.conf_card_opacity_slider.setValue(
-                    int(float(user.get("card_opacity", 0.08)) * 100)
+                    int(store.get_user_float("card_opacity", 0.08) * 100)
                 )
                 self._config_language = str(user.get("language") or "es")
                 if panel is not None:

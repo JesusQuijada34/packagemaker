@@ -437,9 +437,12 @@ def uninstall_plan(
     if platform_name.startswith("win"):
         directory = Path(base_dir) if base_dir else Path.cwd()
         reg = directory / f"{_slug(plan.identifier, 'mexf')}-shell.reg"
-        if reg.exists():
-            reg.unlink()
-            removed.append(str(reg))
+        try:
+            if reg.exists():
+                reg.unlink()
+                removed.append(str(reg))
+        except OSError as exc:
+            skipped.append(f"{reg}: {exc}")
         return {"removed": removed, "skipped": skipped}
 
     base = Path(base_dir) if base_dir else Path.home() / ".local" / "share"

@@ -73,6 +73,30 @@ def pm_data_path() -> Path:
     return _data_dir() / "pm.data"
 
 
+def coerce_int(value: Any, default: int) -> int:
+    """Convierte ``value`` a entero y cae a ``default`` si no es numérico.
+
+    ``data/pm.data`` es editable a mano: un texto, una lista o ``None`` en una
+    clave numérica no debe impedir que arranque la interfaz.
+    """
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        pass
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return int(default)
+
+
+def coerce_float(value: Any, default: float) -> float:
+    """Convierte ``value`` a flotante y cae a ``default`` si no es numérico."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(default)
+
+
 def is_compiled_build() -> bool:
     return bool(getattr(sys, "frozen", False))
 
@@ -163,6 +187,14 @@ class PMDataStore:
     def get_user(self, key: str, default: Any = None) -> Any:
         user = self._data.get("user")
         return user.get(key, default) if isinstance(user, dict) else default
+
+    def get_user_int(self, key: str, default: int) -> int:
+        """Lee una preferencia numérica entera con un valor por defecto seguro."""
+        return coerce_int(self.get_user(key, default), default)
+
+    def get_user_float(self, key: str, default: float) -> float:
+        """Lee una preferencia numérica con un valor por defecto seguro."""
+        return coerce_float(self.get_user(key, default), default)
 
     def set_user(self, key: str, value: Any) -> None:
         if not isinstance(self._data.get("user"), dict):

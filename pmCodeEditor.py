@@ -267,9 +267,17 @@ def find_flarm_project(project_name: str) -> Optional[str]:
     
     if not os.path.exists(base_dir):
         return None
-    
+    try:
+        entries = sorted(os.listdir(base_dir))
+    except OSError:
+        # Carpeta de proyectos ilegible: no hay nada que buscar.
+        return None
+
+    def config_text(config, key: str) -> str:
+        return str(config.get(key) or "")
+
     # Buscar por nombre exacto de carpeta
-    for item in os.listdir(base_dir):
+    for item in entries:
         item_path = os.path.join(base_dir, item)
         if os.path.isdir(item_path):
             # Coincidencia exacta
@@ -281,19 +289,20 @@ def find_flarm_project(project_name: str) -> Optional[str]:
                 if os.path.exists(config_path):
                     with open(config_path, 'r', encoding='utf-8') as f:
                         config = json.load(f)
-                        titulo = config.get('titulo', '')
-                        empresa = config.get('empresa', '')
-                        pkg_id = config.get('id', '')
+                    if isinstance(config, dict):
+                        titulo = config_text(config, 'titulo')
+                        empresa = config_text(config, 'empresa')
+                        pkg_id = config_text(config, 'id')
                         # Coincidir por título, empresa o ID
                         if (titulo and titulo.lower() == project_name.lower()) or \
                            (empresa and empresa.lower() == project_name.lower()) or \
                            (pkg_id and pkg_id.lower() == project_name.lower()):
                             return item_path
-            except (OSError, KeyError):
+            except (OSError, ValueError):
                 pass
-    
+
     # Búsqueda parcial
-    for item in os.listdir(base_dir):
+    for item in entries:
         item_path = os.path.join(base_dir, item)
         if os.path.isdir(item_path):
             if project_name.lower() in item.lower():
@@ -304,12 +313,17 @@ def find_flarm_project(project_name: str) -> Optional[str]:
                 if os.path.exists(config_path):
                     with open(config_path, 'r', encoding='utf-8') as f:
                         config = json.load(f)
-                        full_id = f"{config.get('empresa', '')}.{config.get('titulo', '')}.{config.get('id', '')}"
+                    if isinstance(config, dict):
+                        full_id = (
+                            f"{config_text(config, 'empresa')}."
+                            f"{config_text(config, 'titulo')}."
+                            f"{config_text(config, 'id')}"
+                        )
                         if project_name.lower() in full_id.lower():
                             return item_path
-            except (OSError, KeyError):
+            except (OSError, ValueError):
                 pass
-    
+
     return None
 
 

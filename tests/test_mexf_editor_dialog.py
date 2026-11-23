@@ -88,6 +88,17 @@ class MexfEditorDialogTests(unittest.TestCase):
         dialog.stop_debug()
         self.assertIsNone(dialog.debugger)
 
+    def test_invalid_yaml_does_not_break_debug_controls(self):
+        """R-5d8f1c36: un YAML a medio escribir no debe reventar en los slots."""
+        dialog = MexfEditorDialog(source="format: mexf\nversion: 1\nmetadata: [unclosed\n")
+        self.assertEqual(dialog._document(), {})
+        debugger = dialog._ensure_debugger()
+        self.assertEqual(debugger.commands, [])
+        dialog._debug_step(False)
+        dialog._debug_step(True)
+        self.assertIsNone(dialog.debugger)
+        self.assertGreaterEqual(dialog.debug_output.count(), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -127,6 +127,25 @@ def test_install_plan_windows_writes_utf16_reg(tmp_path):
     assert reg.read_text(encoding="utf-16").startswith("Windows Registry Editor")
 
 
+def test_uninstall_plan_windows_survives_unreadable_directory(tmp_path):
+    """R-8a2f6d51: ``uninstall_plan`` promete no lanzar; en Windows se escapaba."""
+    import os
+    import unittest
+
+    if os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0):
+        raise unittest.SkipTest("los permisos POSIX no bloquean la lectura como root")
+    plan = _plan(tmp_path)
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    os.chmod(locked, 0o000)
+    try:
+        result = uninstall_plan(plan, base_dir=locked, platform_name="win32")
+    finally:
+        os.chmod(locked, 0o755)
+    assert result["removed"] == []
+    assert result["skipped"]
+
+
 def test_shipped_example_mexf_yields_shell_plan():
     plan = load_shell_plan(ROOT / "example.mexf")
     assert plan.identifier == "com.fluthin.packagemaker"
