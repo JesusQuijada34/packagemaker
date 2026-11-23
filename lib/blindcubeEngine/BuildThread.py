@@ -137,7 +137,14 @@ class FlangCompiler:
         ``.iflapp`` en la carpeta de releases. Si el proyecto no usa ``.mexf``,
         el paso se omite sin error.
         """
-        if not (self.repo_path / ".mexf").is_dir():
+        try:
+            if not (self.repo_path / ".mexf").is_dir():
+                return None
+        except OSError as error:
+            # El paso ``.mexf`` es opcional; una carpeta ilegible no debe abortar
+            # el build del ``.iflapp``.
+            self.last_error = f"No se pudo leer .mexf/ en {self.repo_path}: {error}"
+            self.log(f"[WARN] {self.last_error}")
             return None
         compiler = MexfCompiler(
             self.repo_path, self.output_path, log_callback=self.log

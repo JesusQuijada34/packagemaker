@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (trigésimo tercer ciclo)
+Última actualización: 2026-11-23 (trigésimo cuarto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -116,6 +116,7 @@ de auditoría.
 | R-4e9c1a73 | Bug — el IDE `.iflapp` cae al compilar un proyecto ilegible | Alta | Resuelto |
 | R-7d2f8b14 | Bug — MoonFix cae con un proyecto de solo lectura | Alta | Resuelto |
 | R-6b3e9c52 | Bug — el splash del paquete no arranca con un proyecto sin permisos | Media | Resuelto |
+| R-4b9e2c71 | Bug — `.mexf` con raíz/carpeta ilegible filtra `PermissionError` crudo | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -2946,6 +2947,42 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** trigésimo tercer ciclo (2026-11-23).
 - **Fecha de resolución:** 2026-11-23.
 
+## R-4b9e2c71 — El compilador `.mexf` filtra `PermissionError` crudo con una raíz o una carpeta `app/` ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** el ciclo de R-6d2f8a41 protegió el parseo de `details.xml`
+  y de los `.mexf`, pero dejó sin traducir las comprobaciones de existencia. En
+  Python 3.13 `Path.is_file()`/`is_dir()` propagan `PermissionError` cuando el
+  directorio padre no es accesible, así que `read_project_details()`,
+  `compile_mexf_project()` y `MexfCompiler.run()` dejaban escapar
+  `PermissionError` en lugar de `MexfCompileError`. `MexfCompiler.run()` además
+  incumplía su contrato (debe devolver `None` y rellenar `last_error`) y el paso
+  opcional `.mexf` del build abortaba el `FlangCompiler` completo en vez de
+  omitirse. `_find_project_icon()` leía los iconos sin protección: una carpeta
+  `app/` ilegible abortaba el empaquetado aunque el icono es opcional.
+- **Pasos para reproducir:** crear un proyecto con `details.xml` y `.mexf/`,
+  `chmod 000` sobre la raíz y ejecutar `read_project_details(root)`,
+  `MexfCompiler(root).run()` y `compile_mexf_project(root)`; con la raíz legible
+  pero `app/` en `chmod 000`, `compile_mexf_project(root)` también fallaba.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (mensaje de error crudo y contrato roto; el CLI ya
+  envolvía `OSError`, pero el build abortaba el paso `.mexf` en vez de omitirlo).
+- **Solución aplicada:** `read_project_details()` envuelve `is_file()` y lanza
+  `MexfCompileError`; `_find_project_icon()` tolera `OSError` y devuelve `None`;
+  `MexfCompiler.run()` protege `is_dir()` y captura `(MexfCompileError, OSError)`
+  devolviendo `None`; `BuildThread._compile_mexf_if_present()` protege el
+  `is_dir()` del `.mexf/` y lo omite con un `[WARN]`.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_mexf_read_details_converts_permission_error`,
+  `test_mexf_compiler_run_skips_unreadable_root`,
+  `test_mexf_compile_project_converts_permission_error`,
+  `test_buildthread_mexf_step_skips_unreadable_dir` y
+  `test_mexf_compile_without_readable_icon_still_builds` (las 5 fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del trigésimo cuarto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -2969,6 +3006,10 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Trigésimo tercer ciclo (2026-11-23): R-4e9c1a73, R-7d2f8b14 y R-6b3e9c52
   corregidos y probados (compilación del IDE, reparación de MoonFix y splash
   con proyectos/directorios sin permisos); no se prepara release.
+- Trigésimo cuarto ciclo (2026-11-23): R-4b9e2c71 corregido y probado (el
+  compilador `.mexf` traduce `PermissionError` a `MexfCompileError`, el paso
+  `.mexf` del build se omite en vez de abortar y el icono opcional tolera una
+  carpeta `app/` ilegible); no se prepara release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario

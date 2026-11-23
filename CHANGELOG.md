@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026-11-23 — trigésimo cuarto ciclo
+
+### Corregido — el compilador `.mexf` filtraba `PermissionError` crudo
+
+Sin reportes externos nuevos. Un hallazgo de auditoría interna, continuación de
+la familia de R-6d2f8a41: aquel ciclo protegió el parseo de `details.xml` y de
+los `.mexf`, pero no las comprobaciones de existencia. En Python 3.13
+`Path.is_file()`/`is_dir()` propagan `PermissionError` cuando el directorio
+padre no es accesible. Ningún cambio de comportamiento del engine.
+
+- **R-4b9e2c71 — `.mexf` con raíz o carpeta `app/` ilegible filtraba
+  `PermissionError` crudo:** `read_project_details()`, `compile_mexf_project()`
+  y `MexfCompiler.run()` dejaban escapar `PermissionError` en lugar de
+  `MexfCompileError`, y `MexfCompiler.run()` incumplía su contrato (devolver
+  `None` y rellenar `last_error`). El paso opcional `.mexf` del build abortaba
+  el `FlangCompiler` completo en vez de omitirse, y una carpeta `app/` ilegible
+  abortaba el empaquetado aunque el icono es opcional. Ahora `is_file()`/`is_dir()`
+  se traducen a `MexfCompileError`/`[WARN]`, `_find_project_icon()` tolera
+  `OSError` y `MexfCompiler.run()` captura `(MexfCompileError, OSError)`.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 (el último comentario
+  sigue siendo el del ciclo anterior) y sin pull requests abiertos.
+- Bugs pendientes que no se tocan por depender de aprobación en `CONFIRM.MD`:
+  **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23** (arrastre con la
+  ventana maximizada, espera Q-011).
+- `CONFIRM.MD`: sin respuestas nuevas del propietario; Q-004, Q-007, Q-008 y
+  Q-011…Q-014 siguen pendientes.
+
+### Verificación — trigésimo cuarto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 975 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: 5 en `tests/test_unreadable_paths.py` (las 5 fallan con el
+  código anterior, comprobado con `git stash` de `lib/mexf_compiler.py` y
+  `lib/blindcubeEngine/BuildThread.py`).
+
 ## 2026-11-23 — trigésimo tercer ciclo
 
 ### Corregido — `PermissionError` en slots de GUI y en el splash

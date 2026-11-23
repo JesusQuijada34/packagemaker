@@ -315,3 +315,108 @@ def test_moonfix_batch_scan_reports_unreadable_folder(tmp_path, monkeypatch):
     pm.PackageTodoGUI.mf_start_scan(fake)
 
     assert shown and shown[0][1].get("mode") == "error"
+
+
+# --- .mexf: compilador y paso opcional del build con rutas ilegibles -------- #
+
+_MEXF_DETAILS = """<?xml version="1.0" encoding="utf-8"?>
+<app>
+  <publisher>Influent</publisher>
+  <app>demo</app>
+  <name>demo</name>
+  <version>1.0.0</version>
+  <platform>AlphaCube</platform>
+  <author>JesusQuijada34</author>
+</app>
+"""
+
+
+def _make_mexf_project(directory: Path) -> Path:
+    project = directory / "mexfproj"
+    (project / ".mexf").mkdir(parents=True)
+    (project / ".mexf" / "main.mexf").write_text(
+        "format: mexf\nversion: 1\nmetadata:\n  id: demo\n  name: demo\n  version: v1.0\n"
+        "runtime:\n  launcher: argv\ncommands: []\n",
+        encoding="utf-8",
+    )
+    (project / "details.xml").write_text(_MEXF_DETAILS, encoding="utf-8")
+    return project
+
+
+@_UNREADABLE_SKIP
+def test_mexf_read_details_converts_permission_error(tmp_path):
+    from lib.mexf_compiler import MexfCompileError, read_project_details
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    try:
+        with pytest.raises(MexfCompileError):
+            read_project_details(project)
+    finally:
+        project.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_mexf_compiler_run_skips_unreadable_root(tmp_path):
+    from lib.mexf_compiler import MexfCompiler
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    try:
+        compiler = MexfCompiler(project, tmp_path / "out")
+        result = compiler.run()
+    finally:
+        project.chmod(0o755)
+
+    assert result is None
+    assert "No se pudo leer" in compiler.last_error
+
+
+@_UNREADABLE_SKIP
+def test_mexf_compile_project_converts_permission_error(tmp_path):
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    try:
+        with pytest.raises(MexfCompileError):
+            compile_mexf_project(project, tmp_path / "demo.asksome")
+    finally:
+        project.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_buildthread_mexf_step_skips_unreadable_dir(tmp_path):
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    logs = []
+    fake = type("Fake", (), {})()
+    fake.repo_path = project
+    fake.output_path = tmp_path
+    fake.last_error = ""
+    fake.log = logs.append
+    try:
+        result = FlangCompiler._compile_mexf_if_present(fake)
+    finally:
+        project.chmod(0o755)
+
+    assert result is None
+    assert "No se pudo leer .mexf" in fake.last_error
+
+
+@_UNREADABLE_SKIP
+def test_mexf_compile_without_readable_icon_still_builds(tmp_path):
+    from lib.mexf_compiler import compile_mexf_project
+
+    project = _make_mexf_project(tmp_path)
+    app_dir = project / "app"
+    app_dir.mkdir()
+    app_dir.chmod(0)
+    try:
+        result = compile_mexf_project(project, tmp_path / "demo.asksome")
+    finally:
+        app_dir.chmod(0o755)
+
+    assert result.output.is_file()
