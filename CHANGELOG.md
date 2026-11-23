@@ -1,5 +1,71 @@
 # Changelog
 
+## 2026-11-23 — trigésimo segundo ciclo
+
+### Corregido — rutas de configuración ilegibles (caché de sesión y build)
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna de la misma
+familia que los ciclos 23, 29, 30 y 31: en Python 3.13 `Path.is_file()`
+propaga `PermissionError` cuando el directorio padre no es accesible. Ningún
+cambio de comportamiento del engine.
+
+- **R-7e4c1a92 — el arranque caía si `data/` impedía leer la caché de
+  sesión:** `session_cache.load_session()` comprobaba `data/session.cache` con
+  `Path.is_file()` fuera de un `try`. Se invoca en el arranque desde
+  `github_identity.restore_cached_session()`, `has_cached_session()` y
+  `load_token()` dentro de `start_session_gate()`, así que un `data/` ilegible
+  abortaba la decisión entre landing e IDE. Ahora la comprobación y la lectura
+  se envuelven en `try/except OSError` y sin caché se devuelve `None`.
+- **R-2d8b6f31 — `compile`/`--buildthis` lanzaban traceback con `config/` del
+  proyecto ilegible:** `FlangCompiler.__init__` llama a
+  `_load_scripts_to_compile()`, que comprobaba `config/settings.json` con
+  `Path.is_file()` sin protección. El CLI construye el compilador fuera de un
+  `try`, así que el fallo escapaba con `PermissionError`. Ahora se registra
+  `last_error` y se devuelve una lista vacía, como cuando el archivo existe
+  pero no se puede leer; el CLI responde `[ERROR] …` con código 1.
+- **R-9a5c3e74 — «Abrir con» caía con `config/` de la aplicación ilegible:**
+  `editorDetector.get_default_editor()` y `save_default_editor()` comprobaban
+  `config/settings.json` con `Path.is_file()` sin protección. Con `config/`
+  ilegible, abrir el diálogo o guardar la preferencia lanzaba
+  `PermissionError` dentro de un slot de Qt. Ahora `get_default_editor()`
+  devuelve `None` y `save_default_editor()` omite la lectura previa sin romper
+  el slot.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4: el último comentario
+  sigue siendo el del ciclo anterior (2026-11-23T16:17Z) y no hay pull requests
+  abiertos.
+- Bugs pendientes que no se tocan: **R-4f8a2c60** (splash, espera Q-008) y
+  **R-6a1f8c23** (arrastre con la ventana maximizada, espera Q-011).
+
+### Verificación — trigésimo segundo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 967 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_unreadable_config_paths.py` (3). Los 3 casos
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/session_cache.py`, `lib/blindcubeEngine/BuildThread.py` y
+  `lib/.walkcube/editorDetector.py`). Reproducción real: `--buildthis` sobre un
+  proyecto con `config/` `chmod 000` terminaba en `PermissionError` con
+  traceback; ahora responde `[ERROR] No se pudo leer config/settings.json: …`
+  con código 1.
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: no hay respuestas nuevas del propietario. El último commit que toca
+  el archivo es `b25d7d4` (openhands, trigésimo primer ciclo); la última
+  respuesta del propietario sigue siendo `0ac5457`. Q-004, Q-007, Q-008 y
+  Q-011…Q-014 siguen pendientes. No se aplicó ninguna mejora ni cambio de
+  engine sin aprobación.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo del 2026-11-22 (`bugs.txt`), así que
+  el requisito de 7 días sin reportes nuevos y el periodo de observación de 3
+  días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23 — trigésimo primer ciclo
 
 ### Corregido — robustez de arranque, GUI y salida en Termux

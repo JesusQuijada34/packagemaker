@@ -157,8 +157,16 @@ class FlangCompiler:
         evitar publicar pruebas, utilidades o prototipos como binarios de la app.
         """
         settings_path = self.repo_path / "config" / "settings.json"
-        if not settings_path.is_file():
-            return None
+        try:
+            if not settings_path.is_file():
+                return None
+        except OSError as error:
+            # ``config/`` ilegible (permisos): se aborta el build con un error
+            # legible en vez de dejar escapar ``PermissionError`` desde
+            # ``__init__``, que corre dentro de la QThread de la GUI.
+            self.last_error = f"No se pudo leer config/settings.json: {error}"
+            self.log(f"[ERROR] {self.last_error}")
+            return []
         try:
             settings = json.loads(settings_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:

@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (trigésimo primer ciclo)
+Última actualización: 2026-11-23 (trigésimo segundo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -110,6 +110,9 @@ de auditoría.
 | R-4d8a6c12 | Bug — el arranque cae si `data/` no se puede crear o leer | Alta | Resuelto |
 | R-9e3b7a51 | Bug — la GUI cae con rutas sin permisos | Media | Resuelto |
 | R-6a2d8f43 | Bug — Termux sin almacenamiento compartido se queda sin salida | Media | Resuelto |
+| R-7e4c1a92 | Bug — el arranque cae si `data/` impide leer la caché de sesión | Alta | Resuelto |
+| R-2d8b6f31 | Bug — el build lanza traceback con `config/` del proyecto ilegible | Alta | Resuelto |
+| R-9a5c3e74 | Bug — «Abrir con» cae con `config/` de la aplicación ilegible | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -146,6 +149,10 @@ El trigésimo primer ciclo registra R-4d8a6c12, R-9e3b7a51 y R-6a2d8f43
 tolera una carpeta `data/` que no se puede crear o leer, las acciones de GUI
 que reciben rutas del usuario ya no lanzan `PermissionError` dentro de un slot
 de Qt, y Termux sin `termux-setup-storage` conserva una carpeta de salida.
+El trigésimo segundo ciclo registra R-7e4c1a92, R-2d8b6f31 y R-9a5c3e74
+(corregidos y probados, sin cambios de comportamiento del engine): tres rutas
+de configuración más usaban `Path.is_file()` sin proteger y, con el padre
+ilegible, propagaban `PermissionError` en Python 3.13.
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -2787,6 +2794,77 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** trigésimo primer ciclo (2026-11-23).
 - **Fecha de resolución:** 2026-11-23.
 
+## R-7e4c1a92 — El arranque cae si `data/` impide leer la caché de sesión
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `session_cache.load_session()` comprobaba
+  `data/session.cache` con `Path.is_file()` fuera de cualquier `try`. En
+  Python 3.13 esa llamada propaga `PermissionError` cuando `data/` no es
+  accesible. `load_session()` se invoca en el arranque desde
+  `github_identity.restore_cached_session()`, `has_cached_session()` y
+  `load_token()`, dentro de `start_session_gate()`; el fallo dejaba el arranque
+  sin llegar a decidir entre landing o IDE.
+- **Pasos para reproducir:** `chmod 000 data/` con `data/session.cache`
+  existente y llamar `session_cache.load_session()` (o arrancar la app).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe el arranque).
+- **Solución aplicada:** la comprobación y la lectura de la caché se envuelven
+  en `try/except OSError`; sin caché legible se devuelve `None` y el arranque
+  continúa con `pm.data` o con el formulario de login.
+- **Pruebas:** `tests/test_unreadable_config_paths.py`
+  (`test_session_cache_ignores_unreadable_data_dir`).
+- **Commit:** trigésimo segundo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-2d8b6f31 — El build lanza traceback con `config/` del proyecto ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `FlangCompiler.__init__` llama a `_load_scripts_to_compile()`,
+  que comprobaba `config/settings.json` con `Path.is_file()` sin protección. Con
+  el directorio `config/` del proyecto sin permisos, `compile` y `--buildthis`
+  terminaban en `PermissionError` con traceback (el CLI construye el compilador
+  fuera de un `try`). En la GUI lo absorbía el `except` de la QThread, pero el
+  mensaje era «Error inesperado».
+- **Pasos para reproducir:** `chmod 000 PROYECTO/config && python
+  packagemaker.py --buildthis PROYECTO --compiler zipapp --no-sandbox`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe la compilación headless).
+- **Solución aplicada:** la comprobación se envuelve en `try/except OSError`; se
+  registra `last_error` («No se pudo leer config/settings.json: …») y se
+  devuelve una lista vacía, igual que cuando el archivo existe pero no se puede
+  leer. El CLI responde `[ERROR] …` con código 1.
+- **Pruebas:** `tests/test_unreadable_config_paths.py`
+  (`test_flang_compiler_reports_unreadable_project_config`).
+- **Commit:** trigésimo segundo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9a5c3e74 — «Abrir con» cae con `config/` de la aplicación ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `editorDetector.get_default_editor()` y
+  `save_default_editor()` comprobaban `config/settings.json` de la aplicación
+  con `Path.is_file()` sin protección. Con `config/` ilegible, abrir el diálogo
+  «Abrir con» o guardar la preferencia lanzaba `PermissionError` dentro de un
+  slot de Qt.
+- **Pasos para reproducir:** `chmod 000 config/` junto al ejecutable y llamar
+  `get_default_editor()`/`save_default_editor("vim")`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** ambas comprobaciones se envuelven en `try/except
+  OSError`; `get_default_editor()` devuelve `None` y `save_default_editor()`
+  omite la lectura previa y deja que el `except OSError` de la escritura avise
+  sin romper el slot.
+- **Pruebas:** `tests/test_unreadable_config_paths.py`
+  (`test_editor_detector_ignores_unreadable_config_dir`).
+- **Commit:** trigésimo segundo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -2804,6 +2882,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Trigésimo primer ciclo (2026-11-23): R-4d8a6c12, R-9e3b7a51 y R-6a2d8f43
   corregidos y probados (arranque con `data/` inaccesible, GUI con rutas sin
   permisos y salida de Termux); no se prepara release.
+- Trigésimo segundo ciclo (2026-11-23): R-7e4c1a92, R-2d8b6f31 y R-9a5c3e74
+  corregidos y probados (caché de sesión, `config/` del proyecto y `config/`
+  de la aplicación ilegibles); no se prepara release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
@@ -3061,6 +3142,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   cinco módulos tocados): arranque con `data/` o `config/` no creable/legible,
   asistente de nuevo proyecto con base `chmod 000`, guion ilegible en el IDE,
   `ProjectConfig` sobre base inaccesible y salida de Termux sin almacenamiento.
+- Verificación del trigésimo segundo ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 967 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Los 3 casos nuevos
+  de `tests/test_unreadable_config_paths.py` fallan con el código anterior
+  (comprobado con `git stash` de `lib/session_cache.py`,
+  `lib/blindcubeEngine/BuildThread.py` y `lib/.walkcube/editorDetector.py`).
+  Reproducción real: `--buildthis` sobre un proyecto con `config/` `chmod 000`
+  terminaba en `PermissionError` con traceback; ahora responde `[ERROR] No se
+  pudo leer config/settings.json: …` y código 1. Con `data/` ilegible,
+  `session_cache.load_session()` devuelve `None`; con `config/` de la
+  aplicación ilegible, `get_default_editor()` devuelve `None` y
+  `save_default_editor()` no lanza.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

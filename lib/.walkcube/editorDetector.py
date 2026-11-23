@@ -504,7 +504,13 @@ def save_default_editor(editor_name: str):
     except OSError:
         return
     data = {}
-    if cfg_path.is_file():
+    try:
+        exists = cfg_path.is_file()
+    except OSError:
+        # ``config/`` ilegible: se escribe igualmente y se avisa por el
+        # ``except OSError`` de la escritura, sin abortar el slot de Qt.
+        exists = False
+    if exists:
         try:
             loaded = json.loads(cfg_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
@@ -521,9 +527,9 @@ def get_default_editor() -> Optional[str]:
     """Obtiene el editor predeterminado de settings.json."""
     import json
     cfg_path = _config_file_path()
-    if not cfg_path.is_file():
-        return None
     try:
+        if not cfg_path.is_file():
+            return None
         data = json.loads(cfg_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return None
