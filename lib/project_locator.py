@@ -18,6 +18,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from lib.file_ops import list_directory, path_is_dir, path_is_file
 from lib.projectNameFormatter import ProjectNameFormatter
 
 
@@ -38,12 +39,12 @@ def read_metadata(details_path: Path) -> Dict[str, str]:
 def iter_projects(base_dir) -> List[Tuple[Path, Dict[str, str]]]:
     """Lista ``(carpeta, metadatos)`` de cada subcarpeta con ``details.xml``."""
     base = Path(base_dir)
-    if not base.is_dir():
+    if not path_is_dir(base):
         return []
     projects = []
-    for item in sorted(base.iterdir()):
+    for item in list_directory(base):
         details = item / "details.xml"
-        if item.is_dir() and details.is_file():
+        if path_is_dir(item) and path_is_file(details):
             projects.append((item, read_metadata(details)))
     return projects
 
@@ -61,7 +62,7 @@ BUILD_ARTIFACT_SUFFIXES = (".build", ".onefile-build", ".dist", ".build-cache")
 def is_project_directory(path) -> bool:
     """``True`` si *path* parece un proyecto fuente listable por el gestor."""
     candidate = Path(path)
-    if not candidate.is_dir():
+    if not path_is_dir(candidate):
         return False
     name = candidate.name
     if name.startswith("."):
@@ -70,15 +71,15 @@ def is_project_directory(path) -> bool:
         return False
     if name.endswith(BUILD_ARTIFACT_SUFFIXES):
         return False
-    return (candidate / "details.xml").is_file()
+    return path_is_file(candidate / "details.xml")
 
 
 def list_projects(base_dir) -> List[Path]:
     """Proyectos fuente de ``base_dir``, excluyendo artefactos de compilación."""
     base = Path(base_dir)
-    if not base.is_dir():
+    if not path_is_dir(base):
         return []
-    return [item for item in sorted(base.iterdir()) if is_project_directory(item)]
+    return [item for item in list_directory(base) if is_project_directory(item)]
 
 
 def _identity(path: Path, meta: Dict[str, str]) -> Tuple[str, str]:

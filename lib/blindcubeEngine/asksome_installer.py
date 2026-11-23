@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from lib.blindcubeEngine.asksome_format import extract_asksome, verify_asksome
+from lib.file_ops import list_directory, path_is_dir, path_is_file
 
 RECORD_NAME = "install.json"
 REMOVEME_NAME = "removeme.py"
@@ -340,12 +341,12 @@ def build_removeme(
 
 def list_installed(install_root: Path | str) -> List[InstallRecord]:
     root = Path(install_root)
-    if not root.is_dir():
+    if not path_is_dir(root):
         return []
     records = []
-    for entry in sorted(root.iterdir()):
+    for entry in list_directory(root):
         record_path = entry / RECORD_NAME
-        if entry.is_dir() and record_path.is_file():
+        if path_is_dir(entry) and path_is_file(record_path):
             try:
                 records.append(_record_from_mapping(json.loads(record_path.read_text(encoding="utf-8"))))
             except (OSError, ValueError, TypeError):

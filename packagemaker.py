@@ -2920,7 +2920,12 @@ class PackageTodoGUI(QMainWindow):
 
         potential_projects = []
         if self.mf_batch_mode.isChecked():
-            for item in os.listdir(path):
+            try:
+                entries = os.listdir(path)
+            except OSError as exc:
+                LeviathanDialog.launch(self, tr("moonfix.title"), str(exc), mode="error")
+                return
+            for item in entries:
                 full_item = os.path.join(path, item)
                 if os.path.isdir(full_item):
                     potential_projects.append(full_item)

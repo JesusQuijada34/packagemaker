@@ -76,7 +76,10 @@ def _validate_header(header: dict) -> None:
 
 def _read_container(path: Path | str) -> tuple[bytes, dict, int]:
     """Devuelve ``(archivo, cabecera, offset_del_payload)`` validando la cabecera."""
-    data = Path(path).read_bytes()
+    try:
+        data = Path(path).read_bytes()
+    except OSError as exc:
+        raise AsksomeError(f"No se pudo leer el artefacto .asksome {path}: {exc}") from exc
     header_start = len(MAGIC) + 4
     if not data.startswith(MAGIC) or len(data) < header_start:
         raise AsksomeError("cabecera .asksome inválida")

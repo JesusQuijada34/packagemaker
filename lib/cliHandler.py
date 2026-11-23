@@ -14,6 +14,7 @@ from pathlib import Path
 # Constantes
 import xml.etree.ElementTree as ET
 
+from lib.file_ops import path_exists, path_is_dir, path_is_file
 from lib.projectNameFormatter import ProjectNameFormatter
 from lib.project_locator import locate_project
 
@@ -916,13 +917,15 @@ class PackageInspectHelper:
 
         extract_dir = data.get("extract")
         if extract_dir:
-            written = iflapp_format.export_header_assets(path, extract_dir)
+            stream = sys.stderr if data.get("json") else sys.stdout
+            try:
+                written = iflapp_format.export_header_assets(path, extract_dir)
+            except (iflapp_format.IflappError, OSError) as exc:
+                print(f"[ERROR] {exc}", file=stream)
+                return False
             # En modo JSON stdout ya lleva el documento; los avisos van a stderr
             # para no invalidar la salida que consume la automatización.
-            print(
-                f"[OK] Recursos de cabecera exportados: {written}",
-                file=sys.stderr if data.get("json") else sys.stdout,
-            )
+            print(f"[OK] Recursos de cabecera exportados: {written}", file=stream)
         return True
 
 
@@ -942,8 +945,8 @@ class NativeShellHelper:
             print("[ERROR] Debes indicar un archivo con --shell-info", file=errors)
             return False
         target = Path(path).expanduser()
-        if not target.is_file():
-            print(f"[ERROR] No existe el archivo: {target}", file=errors)
+        if not path_is_file(target):
+            print(f"[ERROR] No existe el archivo o no es accesible: {target}", file=errors)
             return False
         try:
             info = native_shell.package_info(target)
@@ -1011,8 +1014,8 @@ class MexfCompileHelper:
             return False
 
         project_root = Path(path).expanduser().resolve()
-        if not project_root.is_dir():
-            print(f"[ERROR] La ruta no es una carpeta: {project_root}")
+        if not path_is_dir(project_root):
+            print(f"[ERROR] La ruta no es una carpeta o no es accesible: {project_root}")
             return False
 
         output = data.get("output")
@@ -1162,8 +1165,8 @@ class IflappIdeHelper:
             print("[ERROR] Debes indicar el guion con --ide-run o --ide-debug")
             return False
         script = Path(path).expanduser().resolve()
-        if not script.is_file():
-            print(f"[ERROR] No existe el guion: {script}")
+        if not path_is_file(script):
+            print(f"[ERROR] No existe el guion o no es accesible: {script}")
             return False
         if data.get("debug"):
             breaks = data.get("breakpoints")
@@ -1210,8 +1213,8 @@ class AsksomeInstallHelper:
             print("[ERROR] Debes indicar el artefacto .asksome con --install-asksome")
             return False
         artifact = Path(path).expanduser().resolve()
-        if not artifact.is_file():
-            print(f"[ERROR] No existe el artefacto: {artifact}")
+        if not path_is_file(artifact):
+            print(f"[ERROR] No existe el artefacto o no es accesible: {artifact}")
             return False
         root = AsksomeInstallHelper._root(data)
         try:
@@ -1612,12 +1615,12 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         project_path = Path(project_source.get('path')).resolve()
         
         # Verificar que la ruta existe y tiene details.xml
-        if not project_path.exists():
-            print(f"[ERROR] La ruta especificada no existe: {project_path}")
+        if not path_exists(project_path):
+            print(f"[ERROR] La ruta especificada no existe o no es accesible: {project_path}")
             sys.exit(1)
         
-        if not (project_path / 'details.xml').exists():
-            print(f"[ERROR] La ruta especificada no es un proyecto válido (no tiene details.xml): {project_path}")
+        if not path_is_file(project_path / 'details.xml'):
+            print(f"[ERROR] La ruta especificada no es un proyecto válido (falta details.xml o no se puede leer): {project_path}")
             sys.exit(1)
         
         # Usar la salida explícita de CI cuando se proporciona; de lo contrario,
@@ -1750,7 +1753,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         author = project_source.get('author') or 'Unknown'
         platform_value = None
 
-        if details_path.exists():
+        if path_exists(details_path):
             try:
                 tree = ET.parse(details_path)
                 root = tree.getroot()

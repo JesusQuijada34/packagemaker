@@ -28,6 +28,44 @@ _BUSY_ERRNOS = {errno.EBUSY, errno.ETXTBSY, errno.EACCES, errno.EPERM}
 _BUSY_WINERRORS = {5, 32, 33}
 
 
+def path_exists(path: PathLike) -> bool:
+    """``True`` si *path* existe; un error de permiso cuenta como "no existe".
+
+    Desde Python 3.13 ``Path.exists()`` propaga ``PermissionError`` cuando el
+    directorio padre no es accesible, así que las comprobaciones de rutas que
+    vienen del usuario (CLI, carpetas de proyectos) necesitan este envoltorio
+    para no terminar en un traceback.
+    """
+    try:
+        return Path(path).exists()
+    except OSError:
+        return False
+
+
+def path_is_file(path: PathLike) -> bool:
+    """``Path.is_file()`` sin lanzar ante un error de permiso."""
+    try:
+        return Path(path).is_file()
+    except OSError:
+        return False
+
+
+def path_is_dir(path: PathLike) -> bool:
+    """``Path.is_dir()`` sin lanzar ante un error de permiso."""
+    try:
+        return Path(path).is_dir()
+    except OSError:
+        return False
+
+
+def list_directory(path: PathLike) -> list[Path]:
+    """Hijos ordenados de *path*; ``[]`` si no es un directorio legible."""
+    try:
+        return sorted(Path(path).iterdir())
+    except OSError:
+        return []
+
+
 def is_file_lock_error(exc: BaseException) -> bool:
     """¿El error se debe a que otro proceso mantiene el fichero abierto?"""
     if not isinstance(exc, OSError):
@@ -68,6 +106,17 @@ def _clear_readonly(func, path, _exc_info) -> None:
         pass
 
 
+def _tree_exists(path: Path) -> Optional[bool]:
+    """``True``/``False``, o ``None`` si el sistema no deja comprobarlo."""
+    try:
+        os.lstat(path)
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return None
+    return True
+
+
 def remove_tree(path: PathLike, *, attempts: int = 8, delay: float = 0.15) -> bool:
     """Borra un árbol de directorios esperando a que se liberen los ficheros.
 
@@ -75,7 +124,10 @@ def remove_tree(path: PathLike, *, attempts: int = 8, delay: float = 0.15) -> bo
     llamador decide qué hacer con un directorio temporal que no se pudo borrar.
     """
     target = Path(path)
-    if not target.exists():
+    exists = _tree_exists(target)
+    if exists is None:
+        return False
+    if not exists:
         return True
 
     def _rm() -> None:
@@ -90,7 +142,7 @@ def remove_tree(path: PathLike, *, attempts: int = 8, delay: float = 0.15) -> bo
         _retry(_rm, attempts=attempts, delay=delay)
         return True
     except OSError:
-        return not target.exists()
+        return _tree_exists(target) is False
 
 
 def copy_file(source: PathLike, destination: PathLike) -> Path:
@@ -129,7 +181,11 @@ def replace_file(source: PathLike, destination: PathLike) -> Path:
 __all__ = [
     "copy_file",
     "is_file_lock_error",
+    "list_directory",
     "move_path",
+    "path_exists",
+    "path_is_dir",
+    "path_is_file",
     "remove_tree",
     "replace_file",
 ]

@@ -484,7 +484,11 @@ class DashboardWindow(QMainWindow):
 
     def _open_as_generic_project(self, path: str):
         main_script = None
-        for fname in sorted(os.listdir(path)):
+        try:
+            entries = sorted(os.listdir(path))
+        except OSError:
+            entries = []
+        for fname in entries:
             if fname.endswith(".py"):
                 main_script = os.path.join(path, fname)
                 break

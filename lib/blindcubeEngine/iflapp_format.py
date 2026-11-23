@@ -824,19 +824,22 @@ def list_iflapp(path: Path | str) -> List[Dict]:
 
 def export_header_assets(path: Path | str, out_dir: Path | str) -> Dict[str, Optional[str]]:
     """Extrae sólo el icono y los detalles leídos de la cabecera."""
-    header = read_iflapp_header(path)
     out = Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
     written: Dict[str, Optional[str]] = {"icon": None, "details": None}
-    sections = _mapping(header.raw.get("sections"))
-    icon_name = Path(str(_mapping(sections.get("icon")).get("name", "app-icon.ico"))).name
-    details_name = Path(str(_mapping(sections.get("details")).get("name", "details.xml"))).name
-    if header.icon:
-        icon_path = out / (icon_name or "app-icon.ico")
-        icon_path.write_bytes(header.icon)
-        written["icon"] = str(icon_path)
-    if header.details:
-        details_path = out / (details_name or "details.xml")
-        details_path.write_bytes(header.details)
-        written["details"] = str(details_path)
+    try:
+        header = read_iflapp_header(path)
+        sections = _mapping(header.raw.get("sections"))
+        icon_name = Path(str(_mapping(sections.get("icon")).get("name", "app-icon.ico"))).name
+        details_name = Path(str(_mapping(sections.get("details")).get("name", "details.xml"))).name
+        out.mkdir(parents=True, exist_ok=True)
+        if header.icon:
+            icon_path = out / (icon_name or "app-icon.ico")
+            icon_path.write_bytes(header.icon)
+            written["icon"] = str(icon_path)
+        if header.details:
+            details_path = out / (details_name or "details.xml")
+            details_path.write_bytes(header.details)
+            written["details"] = str(details_path)
+    except OSError as exc:
+        raise IflappError(f"No se pudieron exportar los recursos de la cabecera: {exc}") from exc
     return written
