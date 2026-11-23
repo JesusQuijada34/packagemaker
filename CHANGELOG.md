@@ -1,5 +1,52 @@
 # Changelog
 
+## 2026-11-23 — trigésimo ciclo
+
+### Corregido — la TUI caía con rutas sin permisos
+
+Sin reportes externos nuevos. Un hallazgo de auditoría interna de la misma
+familia que los ciclos 23 y 29: en Python 3.13 `Path.exists()` propaga
+`PermissionError` cuando el directorio padre no es accesible. Ningún cambio de
+comportamiento del engine.
+
+- **R-9a4c1e27 — una carpeta bloqueada cerraba la TUI con traceback:**
+  `_screen_build()`, `_screen_moonfix()`, `_project_actions()`,
+  `_show_details_xml()` y `_get_version()` comprobaban con `Path.exists()` las
+  rutas escritas por el usuario o el directorio de trabajo. Con un proyecto
+  `chmod 000` (o bajo un padre sin permiso) la excepción escapaba y terminaba
+  la sesión de terminal. Se añade `_safe_exists()` en `lib/tui.py`, que traduce
+  `OSError` a `False`, y todas esas comprobaciones lo usan. `_list_projects()`
+  ignora las entradas cuyo `stat()` falla en lugar de abortar el listado.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 desde el vigésimo noveno
+  ciclo (último comentario: 2026-11-23T12:12Z).
+- Sin pull requests abiertos. Sigue abierto solo el issue #4 (backlog).
+- Bugs pendientes que no se tocan: **R-4f8a2c60** (splash, espera Q-008) y
+  **R-6a1f8c23** (arrastre con la ventana maximizada, espera Q-011).
+
+### Verificación — trigésimo ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 955 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_tui_unreadable_paths.py` (7). Con el código
+  anterior fallan las 7 (comprobado con `git stash` de `lib/tui.py`).
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: no hay respuestas nuevas del propietario desde `0ac5457`. El último
+  commit que toca el archivo es `ffeef10` (openhands, vigésimo noveno ciclo).
+  Q-004, Q-007, Q-008 y Q-011…Q-014 siguen pendientes. No se aplicó ninguna
+  mejora ni cambio de engine sin aprobación.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo del 2026-11-22 (`bugs.txt`), así que
+  el requisito de 7 días sin reportes nuevos y el periodo de observación de 3
+  días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23 — vigésimo noveno ciclo
 
 ### Corregido — `data/pmCodeEditor` de solo lectura

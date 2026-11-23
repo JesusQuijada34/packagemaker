@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (vigésimo noveno ciclo)
+Última actualización: 2026-11-23 (trigésimo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -106,6 +106,7 @@ de auditoría.
 | R-9f4c2a71 | Bug — caché de avatares no escribible y respuestas de GitHub no-JSON | Baja | Resuelto |
 | R-4a7c2e91 | Bug — `PythonPortableManager` revienta con `data/pmCodeEditor` no escribible | Alta | Resuelto |
 | R-8f1d3b62 | Bug — guardar `editor_config.json` aborta con `data` de solo lectura | Media | Resuelto |
+| R-9a4c1e27 | Bug — la TUI cae con rutas sin permisos | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -132,6 +133,11 @@ probados, sin cambios de comportamiento del engine).
 El vigésimo noveno ciclo registra R-4a7c2e91 y R-8f1d3b62 (corregidos y
 probados, sin cambios de comportamiento del engine): completan la robustez de
 una instalación de solo lectura, ahora también en `data/pmCodeEditor`.
+El trigésimo ciclo registra R-9a4c1e27 (corregido y probado, sin cambios de
+comportamiento del engine): la TUI comprobaba las rutas escritas por el usuario
+con `Path.exists()`, que en Python 3.13 propaga `PermissionError` cuando el
+directorio padre no es accesible, y terminaba en traceback. Las pantallas ahora
+degradan a su mensaje normal («ruta no válida»/«details.xml no encontrado»).
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -2675,6 +2681,33 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** vigésimo noveno ciclo (2026-11-23).
 - **Fecha de resolución:** 2026-11-23.
 
+## R-9a4c1e27 — La TUI cae con rutas sin permisos
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** las pantallas de la TUI comprobaban las rutas escritas por
+  el usuario con `Path.exists()` (`_screen_build`, `_screen_moonfix`,
+  `_project_actions`, `_show_details_xml`, `_get_version`). En Python 3.13
+  `Path.exists()` propaga `PermissionError` cuando el directorio padre no es
+  accesible, así que una carpeta bloqueada terminaba en traceback y cerraba la
+  TUI. `_list_projects()` ordenaba además con `p.stat()` fuera de cualquier
+  `try`, de modo que una entrada que desaparecía o no se podía consultar
+  abortaba el listado.
+- **Pasos para reproducir:** `chmod 000` sobre un proyecto (o sobre su carpeta
+  padre) y abrir «Ver details.xml», «Construir paquete» o «MoonFix» con esa
+  ruta; antes, `PermissionError` con traceback. En pruebas, patchear
+  `list_projects` para devolver una entrada cuyo `stat()` falla.
+- **Estado:** Resuelto.
+- **Solución aplicada:** nuevo `_safe_exists()` en `lib/tui.py` que traduce
+  `OSError` a `False`; todas las comprobaciones de rutas del usuario lo usan.
+  `_list_projects()` ignora las entradas cuyo `stat()` falla en vez de
+  propagar el error.
+- **Pruebas:** `tests/test_tui_unreadable_paths.py` (7 casos; los 7 fallan con
+  el código anterior).
+- **Commit:** trigésimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -2687,6 +2720,8 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Vigésimo noveno ciclo (2026-11-23): R-4a7c2e91 y R-8f1d3b62 corregidos y
   probados (robustez de `data/pmCodeEditor` de solo lectura); no se prepara
   release.
+- Trigésimo ciclo (2026-11-23): R-9a4c1e27 corregido y probado (robustez de la
+  TUI con rutas sin permisos); no se prepara release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
@@ -2929,6 +2964,14 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   lanzaba `PermissionError` al crear `packages`; apuntar `EDITOR_CONFIG_PATH`
   bajo un archivo lanzaba `NotADirectoryError` en `save_config()` y en
   `_save_editor_config()`.
+- Verificación del trigésimo ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 955 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Los 7 casos de
+  `tests/test_tui_unreadable_paths.py` fallan con el código anterior
+  (comprobado con `git stash` de `lib/tui.py`). Reproducción real: con
+  `chmod 000` sobre el proyecto, `_show_details_xml()`, `_screen_build()` y
+  `_screen_moonfix()` lanzaban `PermissionError` con traceback; ahora muestran
+  «details.xml no encontrado» o «ruta no válida».
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

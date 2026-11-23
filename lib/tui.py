@@ -70,6 +70,14 @@ def _hr(char: str = "─") -> str:
     return dim(char * min(_cols(), 80))
 
 
+def _safe_exists(path: Path | str) -> bool:
+    """``Path.exists()`` que no propaga ``PermissionError`` (Python 3.13)."""
+    try:
+        return Path(path).exists()
+    except OSError:
+        return False
+
+
 def _banner() -> None:
     """Cabecera de la app."""
     print()
@@ -79,7 +87,7 @@ def _banner() -> None:
 
 def _get_version() -> str:
     details = Path(os.getcwd()) / "details.xml"
-    if details.exists():
+    if _safe_exists(details):
         try:
             root = ET.parse(details).getroot()
             v = (root.findtext("version") or "").strip().lstrip("v")
@@ -204,7 +212,7 @@ def _base_dir() -> Path:
             up = os.environ.get("USERPROFILE", "")
             for sub in ("Documentos", "Documents"):
                 d = Path(up) / sub
-                if d.exists():
+                if _safe_exists(d):
                     return d / "Packagemaker Projects"
             return Path(up) / "Documents" / "Packagemaker Projects"
         return Path.home() / "Documents" / "Packagemaker Projects"
@@ -216,7 +224,14 @@ def _list_projects(base: Path) -> List[Path]:
         projects = list_projects(base)
     except OSError:
         return []
-    return sorted(projects, key=lambda p: p.stat().st_mtime, reverse=True)
+    stamped = []
+    for project in projects:
+        try:
+            stamped.append((project.stat().st_mtime, project))
+        except OSError:
+            continue
+    stamped.sort(key=lambda item: item[0], reverse=True)
+    return [project for _, project in stamped]
 
 
 def _find_python() -> str:
@@ -388,7 +403,7 @@ def _screen_build() -> None:
         project_path_str = _prompt(tr("tui.project_path"), "")
         manual_mode = True
 
-    if not project_path_str or not Path(project_path_str).exists():
+    if not project_path_str or not _safe_exists(project_path_str):
         _err(tr("tui.invalid_project_path"))
         _pause()
         return
@@ -396,7 +411,7 @@ def _screen_build() -> None:
     # Leer details.xml para obtener metadatos
     details_xml = Path(project_path_str) / "details.xml"
     empresa, nombre, version_val = "influent", "mycoolapp", "1.0"
-    if details_xml.exists():
+    if _safe_exists(details_xml):
         try:
             root = ET.parse(details_xml).getroot()
             empresa     = root.findtext("publisher") or root.findtext("empresa") or empresa
@@ -471,7 +486,7 @@ def _screen_manager() -> None:
     print(_hr())
 
     base = _base_dir()
-    if not base.exists():
+    if not _safe_exists(base):
         _warn(tr("tui.projects_folder_missing").format(path=base))
         _pause()
         return
@@ -509,7 +524,7 @@ def _project_actions(proj: Path) -> None:
     # Leer metadatos
     meta: Dict[str, str] = {}
     details = proj / "details.xml"
-    if details.exists():
+    if _safe_exists(details):
         try:
             root = ET.parse(details).getroot()
             meta = {
@@ -632,7 +647,7 @@ def _open_folder(proj: Path) -> None:
 
 def _show_details_xml(proj: Path) -> None:
     details = proj / "details.xml"
-    if not details.exists():
+    if not _safe_exists(details):
         _err(tr("tui.details_not_found"))
         _pause()
         return
@@ -654,7 +669,7 @@ def _screen_moonfix() -> None:
 
     base = _base_dir()
     projects: List[Path] = []
-    if base.exists():
+    if _safe_exists(base):
         projects = _list_projects(base)
 
     project_path_str = ""
@@ -669,7 +684,7 @@ def _screen_moonfix() -> None:
     else:
         project_path_str = _prompt(tr("tui.project_path"), "")
 
-    if not project_path_str or not Path(project_path_str).exists():
+    if not project_path_str or not _safe_exists(project_path_str):
         _err(tr("tui.invalid_path"))
         _pause()
         return
