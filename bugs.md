@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (vigésimo octavo ciclo)
+Última actualización: 2026-11-23 (vigésimo noveno ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -104,6 +104,8 @@ de auditoría.
 | R-5c9a3e27 | Bug — metadatos `.mexf` ilegibles abortan el diálogo de instalación | Baja | Resuelto |
 | R-3b6f9d24 | Bug — caché de fuentes de solo lectura tumba el CLI y la GUI | Media | Resuelto |
 | R-9f4c2a71 | Bug — caché de avatares no escribible y respuestas de GitHub no-JSON | Baja | Resuelto |
+| R-4a7c2e91 | Bug — `PythonPortableManager` revienta con `data/pmCodeEditor` no escribible | Alta | Resuelto |
+| R-8f1d3b62 | Bug — guardar `editor_config.json` aborta con `data` de solo lectura | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -127,6 +129,9 @@ requisito de 7 días sin reportes nuevos y el periodo de observación sigue en
 curso.
 El vigésimo octavo ciclo registra R-3b6f9d24 y R-9f4c2a71 (corregidos y
 probados, sin cambios de comportamiento del engine).
+El vigésimo noveno ciclo registra R-4a7c2e91 y R-8f1d3b62 (corregidos y
+probados, sin cambios de comportamiento del engine): completan la robustez de
+una instalación de solo lectura, ahora también en `data/pmCodeEditor`.
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -2606,6 +2611,70 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** vigésimo octavo ciclo (2026-11-23).
 - **Fecha de resolución:** 2026-11-23.
 
+## R-4a7c2e91 — `PythonPortableManager` reventaba con `data/pmCodeEditor` no escribible
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta (impide arrancar el editor y sus diálogos)
+- **Descripción:** `PythonPortableManager.__init__` creaba `data/pmCodeEditor` y
+  `data/pmCodeEditor/packages` con `mkdir()` sin `try/except`. El repositorio no
+  incluye `packages`, así que en una instalación de solo lectura (Program Files,
+  AppImage, `/opt`) la construcción del gestor lanzaba `PermissionError`.
+  `get_python_manager()` se llama en `pmCodeEditor.main()` a través de
+  `resolve_python_path()`, y también desde `PythonSetupDialog`,
+  `InterpreterConfigDialog` y el desplegable de intérpretes del editor: el
+  primero sale con traceback y los demás lanzan la excepción dentro de un slot
+  de Qt. `_discover_installations()` iteraba `python_dir` sin proteger
+  `iterdir()`, `_save_config()` escribía sin capturar `OSError`, y
+  `get_installed_versions()`/`get_installation_status()` llamaban a
+  `Path.exists()` sobre una ruta potencialmente inaccesible.
+- **Pasos para reproducir:** con `data` sin permiso de escritura (o
+  `PythonPortableManager(base_dir=<carpeta no escribible>)`), abrir el editor
+  (`python pmCodeEditor.py`) o el diálogo de intérpretes: antes,
+  `PermissionError: … /packages`.
+- **Causa raíz:** rutas de datos opcionales tratadas como obligatorias y
+  ausencia de traducción de `OSError` en un componente que se construye al
+  arrancar y dentro de slots de Qt.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_ensure_directories()` captura `OSError` y sigue en
+  modo degradado; `_load_config()` usa `is_file()` dentro del `try`;
+  `_discover_installations()` protege `iterdir()`/`is_dir()`;
+  `_save_config()` devuelve `False` y avisa con `[WARN]` cuando no puede
+  escribir; `_is_file()` centraliza la comprobación de `python_exe`;
+  `_get_dir_size()` ignora entradas inaccesibles e `install_version()` informa
+  del fallo al preparar el destino en vez de lanzarlo.
+- **Pruebas:** `tests/test_readonly_data_dir_robustness.py::TestPortableManagerReadOnlyDataDir`
+  (3 casos; los 3 fallan con el código anterior).
+- **Commit:** vigésimo noveno ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-8f1d3b62 — Guardar `editor_config.json` abortaba con `data` de solo lectura
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `DashboardWindow.save_config()` y
+  `EditorWindow._save_editor_config()` hacían `mkdir()` + `open(..., "w")` sin
+  `try/except`. `save_config()` se invoca al añadir un proyecto reciente
+  (`_add_to_recent`) y al aceptar el diálogo de intérpretes; el segundo, tras
+  el mismo diálogo. Con `data/pmCodeEditor` de solo lectura, el `OSError`
+  subía desde un slot de Qt y podía cerrar el proceso. Las lecturas
+  (`load_config()` y `_load_editor_config()`) comprobaban `exists()` fuera del
+  `try`, que en Python 3.13 propaga `PermissionError` si el padre no es
+  accesible.
+- **Pasos para reproducir:** con `data` sin permiso de escritura, abrir un
+  proyecto en el panel del editor o cambiar el intérprete: antes, `OSError` en
+  el slot. En pruebas, apuntar `EDITOR_CONFIG_PATH` bajo un archivo
+  (`mkdir()` lanza `NotADirectoryError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** ambos guardados capturan `OSError`, avisan con
+  `[WARN]` y devuelven `False`; las dos lecturas usan `is_file()` dentro del
+  `try`.
+- **Pruebas:** `tests/test_readonly_data_dir_robustness.py::TestEditorConfigReadOnlyDataDir`
+  (3 casos; 2 fallan con el código anterior).
+- **Commit:** vigésimo noveno ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -2614,6 +2683,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   corregidos y probados; no se prepara release.
 - Vigésimo octavo ciclo (2026-11-23): R-3b6f9d24 y R-9f4c2a71 corregidos y
   probados (robustez de cachés con `data` de solo lectura); no se prepara
+  release.
+- Vigésimo noveno ciclo (2026-11-23): R-4a7c2e91 y R-8f1d3b62 corregidos y
+  probados (robustez de `data/pmCodeEditor` de solo lectura); no se prepara
   release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
@@ -2847,6 +2919,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   1 (antes `PermissionError` con traceback); `--shell-info-json` deja stdout
   vacío y el error en stderr; `--shell-preview` sobre un archivo normal responde
   `[ERROR] No se pudo exportar la vista previa: … File exists` sin traceback.
+- Verificación del vigésimo noveno ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 948 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 5 de las 6 pruebas nuevas de
+  `tests/test_readonly_data_dir_robustness.py` (comprobado con `git stash` de
+  `lib/python_portable_manager.py`, `lib/pm_dashboard.py` y `pmCodeEditor.py`).
+  Reproducción real: `PythonPortableManager(base_dir=<carpeta no escribible>)`
+  lanzaba `PermissionError` al crear `packages`; apuntar `EDITOR_CONFIG_PATH`
+  bajo un archivo lanzaba `NotADirectoryError` en `save_config()` y en
+  `_save_editor_config()`.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

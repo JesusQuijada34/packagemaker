@@ -1,5 +1,66 @@
 # Changelog
 
+## 2026-11-23 — vigésimo noveno ciclo
+
+### Corregido — `data/pmCodeEditor` de solo lectura
+
+Sin reportes externos nuevos. Dos hallazgos de auditoría interna que completan
+la robustez frente a una instalación de solo lectura ya tratada en el ciclo
+anterior para las cachés de fuentes y avatares. Ninguno cambia el
+comportamiento del engine.
+
+- **R-4a7c2e91 — el gestor de Python portable reventaba con `data` no
+  escribible:** `PythonPortableManager.__init__` creaba
+  `data/pmCodeEditor/packages` con `mkdir()` sin `try/except`, y esa carpeta no
+  se distribuye en el repositorio. En una instalación de solo lectura
+  (Program Files, AppImage, `/opt`), `pmCodeEditor.main()` →
+  `resolve_python_path()` → `get_python_manager()` salía con `PermissionError`
+  y los diálogos de intérprete lanzaban la excepción dentro de un slot de Qt.
+  Ahora `_ensure_directories()` degrada con `[WARN]`, `_load_config()` usa
+  `is_file()` dentro del `try`, `_discover_installations()` protege
+  `iterdir()`/`is_dir()`, `_save_config()` devuelve `False` cuando no puede
+  escribir, `_is_file()` centraliza la comprobación del intérprete,
+  `_get_dir_size()` ignora entradas inaccesibles e `install_version()` informa
+  del fallo al preparar el destino.
+- **R-8f1d3b62 — guardar `editor_config.json` abortaba con `data` de solo
+  lectura:** `DashboardWindow.save_config()` y
+  `EditorWindow._save_editor_config()` hacían `mkdir()` + `open(..., "w")` sin
+  `try/except`; se invocan al abrir un proyecto reciente y al aceptar el
+  diálogo de intérpretes, así que un `OSError` subía desde un slot de Qt.
+  Ambos guardados capturan `OSError`, avisan con `[WARN]` y devuelven `False`;
+  `load_config()` y `_load_editor_config()` comprueban `is_file()` dentro del
+  `try` (en Python 3.13 `exists()` propaga `PermissionError`).
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 desde el vigésimo octavo
+  ciclo (último comentario: 2026-11-23T10:13Z).
+- Sin pull requests abiertos. Sigue abierto solo el issue #4 (backlog).
+- Bugs pendientes que no se tocan: **R-4f8a2c60** (splash, espera Q-008) y
+  **R-6a1f8c23** (arrastre con la ventana maximizada, espera Q-011).
+
+### Verificación — vigésimo noveno ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 948 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_readonly_data_dir_robustness.py` (6). Con el
+  código anterior fallan 5 de las 6 (comprobado con `git stash` de
+  `lib/python_portable_manager.py`, `lib/pm_dashboard.py` y `pmCodeEditor.py`).
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: el último commit que toca el archivo es `38dea0b` (openhands,
+  vigésimo séptimo ciclo) y no hay respuestas nuevas del propietario desde
+  `0ac5457`. Q-004, Q-007, Q-008 y Q-011…Q-014 siguen pendientes. No se aplicó
+  ninguna mejora ni cambio de engine sin aprobación.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo del 2026-11-22 (`bugs.txt`), así que
+  el requisito de 7 días sin reportes nuevos y el periodo de observación no han
+  terminado. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23 — vigésimo octavo ciclo
 
 ### Corregido — cachés de solo lectura y respuestas de GitHub

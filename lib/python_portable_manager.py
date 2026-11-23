@@ -127,18 +127,24 @@ class PythonPortableManager(QObject):
         self.config_file = self.base_dir / "config.json"
         self.installations: Dict[str, PythonInstallation] = {}
         self.current_downloads: Dict[str, DownloadWorker] = {}
-        self.base_dir.mkdir(parents=True, exist_ok=True)
-        self.packages_dir.mkdir(parents=True, exist_ok=True)
+        self._ensure_directories()
         self._load_config()
         self._discover_installations()
+
+    def _ensure_directories(self) -> None:
+        for directory in (self.base_dir, self.packages_dir):
+            try:
+                directory.mkdir(parents=True, exist_ok=True)
+            except OSError as error:
+                print(f"[WARN] No se pudo preparar {directory}: {error}")
 
     def _version_dir_name(self, version: str) -> str:
         return f"python{version.replace('.', '')}"
 
     def _load_config(self):
-        if not self.config_file.exists():
-            return
         try:
+            if not self.config_file.is_file():
+                return
             with open(self.config_file, "r", encoding="utf-8") as f:
                 config = json.load(f)
         except (json.JSONDecodeError, OSError):
@@ -174,15 +180,29 @@ class PythonPortableManager(QObject):
                 "is_installed": install.is_installed,
                 "size_mb": install.size_mb,
             }
-        self.config_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.config_file, "w", encoding="utf-8") as f:
-            json.dump(config, f, indent=2)
+        try:
+            self.config_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=2)
+        except OSError as error:
+            print(f"[WARN] No se pudo guardar {self.config_file}: {error}")
+            return False
+        return True
 
     def _discover_installations(self):
-        if not self.python_dir.exists():
+        try:
+            if not self.python_dir.is_dir():
+                return
+            folders = sorted(self.python_dir.iterdir())
+        except OSError as error:
+            print(f"[WARN] No se pudo explorar {self.python_dir}: {error}")
             return
-        for folder in self.python_dir.iterdir():
-            if not folder.is_dir() or not folder.name.startswith("python"):
+        for folder in folders:
+            try:
+                is_dir = folder.is_dir()
+            except OSError:
+                continue
+            if not is_dir or not folder.name.startswith("python"):
                 continue
             ver_key = folder.name.replace("python", "")
             if len(ver_key) >= 2:
@@ -190,13 +210,16 @@ class PythonPortableManager(QObject):
             else:
                 continue
             python_exe = folder / "python.exe"
-            if not python_exe.exists():
-                found = list(folder.rglob("python.exe"))
+            if not self._is_file(python_exe):
+                try:
+                    found = sorted(folder.rglob("python.exe"))
+                except OSError:
+                    continue
                 if found:
                     python_exe = found[0]
-            if python_exe.exists():
+            if self._is_file(python_exe):
                 pip_exe = folder / "Scripts" / "pip.exe"
-                if not pip_exe.exists():
+                if not self._is_file(pip_exe):
                     pip_exe = folder / "pip.exe"
                 if version not in self.installations or not self.installations[version].is_installed:
                     self.installations[version] = PythonInstallation(
@@ -214,8 +237,15 @@ class PythonPortableManager(QObject):
     def get_installation_status(self, version: str) -> bool:
         if version in self.installations:
             inst = self.installations[version]
-            return inst.is_installed and inst.python_exe.exists()
+            return inst.is_installed and self._is_file(inst.python_exe)
         return False
+
+    @staticmethod
+    def _is_file(path: Path) -> bool:
+        try:
+            return path.is_file()
+        except OSError:
+            return False
 
     def get_python_exe(self, version: str) -> Optional[Path]:
         if self.get_installation_status(version):
@@ -261,7 +291,15 @@ class PythonPortableManager(QObject):
             return
 
         dest_dir = self.python_dir / self._version_dir_name(version)
-        dest_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            dest_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            msg = f"No se pudo preparar {dest_dir}: {error}"
+            self.status_message.emit(msg)
+            self.installation_finished.emit(version, False)
+            if callback:
+                callback(False, msg)
+            return
         temp_file = dest_dir / f"python-{version}-embed.zip"
 
         self.status_message.emit(f"Descargando Python {version}...")
@@ -378,9 +416,15 @@ class PythonPortableManager(QObject):
 
     def _get_dir_size(self, path: Path) -> int:
         total = 0
-        for entry in path.rglob("*"):
-            if entry.is_file():
-                total += entry.stat().st_size
+        try:
+            for entry in path.rglob("*"):
+                try:
+                    if entry.is_file():
+                        total += entry.stat().st_size
+                except OSError:
+                    continue
+        except OSError:
+            return total
         return total
 
     def uninstall_version(self, version: str) -> bool:
@@ -395,7 +439,7 @@ class PythonPortableManager(QObject):
         return True
 
     def get_installed_versions(self) -> List[str]:
-        return [v for v, i in self.installations.items() if i.is_installed and i.python_exe.exists()]
+        return [v for v, i in self.installations.items() if i.is_installed and self._is_file(i.python_exe)]
 
     def get_all_versions_info(self) -> Dict[str, dict]:
         result = {}

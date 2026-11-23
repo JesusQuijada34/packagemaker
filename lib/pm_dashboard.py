@@ -529,13 +529,13 @@ class DashboardWindow(QMainWindow):
                 self.recent_list.addItem(item)
 
     def load_config(self):
-        if EDITOR_CONFIG_PATH.exists():
-            try:
+        try:
+            if EDITOR_CONFIG_PATH.is_file():
                 with open(EDITOR_CONFIG_PATH, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
                 self.config = loaded if isinstance(loaded, dict) else {}
-            except (json.JSONDecodeError, OSError):
-                self.config = {}
+        except (json.JSONDecodeError, OSError):
+            self.config = {}
         if not self.config:
             self.config = {
                 "recent_projects": [],
@@ -552,9 +552,14 @@ class DashboardWindow(QMainWindow):
 
     def save_config(self):
         self.config["default_interpreter"] = self.python_path
-        EDITOR_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(EDITOR_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(self.config, f, indent=2)
+        try:
+            EDITOR_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(EDITOR_CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(self.config, f, indent=2)
+        except OSError as error:
+            print(f"[WARN] No se pudo guardar {EDITOR_CONFIG_PATH}: {error}")
+            return False
+        return True
 
     def show_interpreter_config(self):
         from lib.interpreter_config_dialog import InterpreterConfigDialog
