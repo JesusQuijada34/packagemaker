@@ -5,7 +5,7 @@ Notificaciones fluidas que aparecen desde el borde derecho con animaciones suave
 import os
 import sys
 from typing import Optional, List, Callable, Dict
-from lib.design_tokens import active_accent
+from lib.design_tokens import active_accent #lib
 from dataclasses import dataclass, field
 from lib.i18n import tr
 try:
@@ -147,7 +147,7 @@ class NotificationWidget(QWidget):
         
         # Container principal con bordes redondeados
         self.container = QFrame(self)
-        self.container.setGeometry(10, 10, 340, 80)
+        self.container.setGeometry(10, 10, 340, 100)
         self.container.setObjectName("notificationContainer")
         
         # Estilo con bordes redondeados y sombra suave
@@ -155,8 +155,8 @@ class NotificationWidget(QWidget):
             #notificationContainer {{
                 background-color: {colors['bg']};
                 border: 1px solid {colors['border']};
-                border-radius: 8px;
-                border-left: 4px solid {colors['accent']};
+                border-radius: 3px;
+                border-left: 3px solid {colors['accent']};
             }}
         """)
         
