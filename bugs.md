@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (trigésimo ciclo)
+Última actualización: 2026-11-23 (trigésimo primer ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -107,6 +107,9 @@ de auditoría.
 | R-4a7c2e91 | Bug — `PythonPortableManager` revienta con `data/pmCodeEditor` no escribible | Alta | Resuelto |
 | R-8f1d3b62 | Bug — guardar `editor_config.json` aborta con `data` de solo lectura | Media | Resuelto |
 | R-9a4c1e27 | Bug — la TUI cae con rutas sin permisos | Media | Resuelto |
+| R-4d8a6c12 | Bug — el arranque cae si `data/` no se puede crear o leer | Alta | Resuelto |
+| R-9e3b7a51 | Bug — la GUI cae con rutas sin permisos | Media | Resuelto |
+| R-6a2d8f43 | Bug — Termux sin almacenamiento compartido se queda sin salida | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -138,6 +141,11 @@ comportamiento del engine): la TUI comprobaba las rutas escritas por el usuario
 con `Path.exists()`, que en Python 3.13 propaga `PermissionError` cuando el
 directorio padre no es accesible, y terminaba en traceback. Las pantallas ahora
 degradan a su mensaje normal («ruta no válida»/«details.xml no encontrado»).
+El trigésimo primer ciclo registra R-4d8a6c12, R-9e3b7a51 y R-6a2d8f43
+(corregidos y probados, sin cambios de comportamiento del engine): el arranque
+tolera una carpeta `data/` que no se puede crear o leer, las acciones de GUI
+que reciben rutas del usuario ya no lanzan `PermissionError` dentro de un slot
+de Qt, y Termux sin `termux-setup-storage` conserva una carpeta de salida.
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -2708,6 +2716,77 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** trigésimo ciclo (2026-11-23).
 - **Fecha de resolución:** 2026-11-23.
 
+## R-4d8a6c12 — El arranque cae si `data/` no se puede crear o leer
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta
+- **Descripción:** `_data_dir()` creaba la carpeta con `mkdir()` sin
+  `try/except`, `PMDataStore.load()` comprobaba el archivo con
+  `Path.is_file()` y `load_merged_app_config()` hacía lo propio con
+  `config/settings.json`. En una instalación de solo lectura sin `data/`, o con
+  `data/`/`config/` ilegibles, la primera llamada a `get_pm_data()` —que ocurre
+  al resolver el acento o el idioma— lanzaba `PermissionError` y abortaba el
+  arranque.
+- **Pasos para reproducir:** `chmod 555` sobre la raíz de la app sin carpeta
+  `data/` y ejecutar `python -c "from lib import pm_data; pm_data.PMDataStore()"`;
+  o `chmod 000` sobre `data/` y repetir.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_data_dir()` degrada con `except OSError` y devuelve
+  la ruta igualmente; `load()`, `_detect_app_version()` y
+  `load_merged_app_config()` usan `path_is_file()`, que traduce `OSError` a
+  `False`. `save()` ya devolvía `False` sin lanzar.
+- **Pruebas:** `tests/test_pm_data_readonly_startup.py` (4 casos; 3 fallan con
+  el código anterior).
+- **Commit:** trigésimo primer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9e3b7a51 — Las acciones de GUI caen con rutas sin permisos
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** tres acciones de ventana comprobaban rutas con
+  `Path.exists()`/`is_file()`/`mkdir()`/`read_text()` dentro de un slot de Qt:
+  `NewProjectWizard.create_project()` (carpeta base ilegible),
+  `IflappIdePanel._on_script_selected()` (guion ilegible) y
+  `ProjectConfig.__init__()`/`get_config()` (base de solo lectura). En Python
+  3.13 esas llamadas propagan `PermissionError`, así que el usuario veía un
+  traceback en lugar del aviso.
+- **Pasos para reproducir:** `chmod 000` sobre la carpeta base del asistente o
+  sobre un guion del IDE y ejecutar la acción; antes, `PermissionError`.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `path_exists()` en el asistente (también en las
+  carpetas por defecto de los diálogos); `_on_script_selected()` lee dentro de
+  `try/except OSError` y muestra `iflapp_ide.load_failed`; `ProjectConfig`
+  protege `mkdir()` e `is_file()` y devuelve `{}` cuando la base es
+  inaccesible.
+- **Pruebas:** `tests/test_gui_unreadable_paths.py` (3 casos; los 3 fallan con
+  el código anterior).
+- **Commit:** trigésimo primer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-6a2d8f43 — Termux sin almacenamiento compartido se queda sin salida
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `compile_output_directory()` comprobaba
+  `~/storage/downloads` con `Path.is_dir()`. En Termux sin
+  `termux-setup-storage` ese camino está bajo un padre inaccesible y Python
+  3.13 propaga `PermissionError`; el CLI abortaba en lugar de usar
+  `/storage/emulated/0/Download`.
+- **Pasos para reproducir:** `chmod 000` sobre el padre de
+  `~/storage/downloads` y llamar `compile_output_directory("termux")`.
+- **Estado:** Resuelto.
+- **Solución aplicada:** la comprobación usa `os.path.isdir()`, que traduce
+  cualquier `OSError` a `False`; se mantiene `/storage/emulated/0/Download`
+  como respaldo.
+- **Pruebas:** `tests/test_platform_detect_storage.py` (2 casos; 1 falla con el
+  código anterior).
+- **Commit:** trigésimo primer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -2722,6 +2801,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   release.
 - Trigésimo ciclo (2026-11-23): R-9a4c1e27 corregido y probado (robustez de la
   TUI con rutas sin permisos); no se prepara release.
+- Trigésimo primer ciclo (2026-11-23): R-4d8a6c12, R-9e3b7a51 y R-6a2d8f43
+  corregidos y probados (arranque con `data/` inaccesible, GUI con rutas sin
+  permisos y salida de Termux); no se prepara release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
@@ -2972,6 +3054,13 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `chmod 000` sobre el proyecto, `_show_details_xml()`, `_screen_build()` y
   `_screen_moonfix()` lanzaban `PermissionError` con traceback; ahora muestran
   «details.xml no encontrado» o «ruta no válida».
+- Verificación del trigésimo primer ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 964 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 7 de los 9 casos nuevos (comprobado con `git stash` de los
+  cinco módulos tocados): arranque con `data/` o `config/` no creable/legible,
+  asistente de nuevo proyecto con base `chmod 000`, guion ilegible en el IDE,
+  `ProjectConfig` sobre base inaccesible y salida de Termux sin almacenamiento.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

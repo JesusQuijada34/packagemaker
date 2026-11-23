@@ -210,8 +210,13 @@ class IflappIdePanel(QWidget):
         if not name or self.project is None:
             return
         path = self.project.root / name
-        if path.is_file():
-            self.editor.setPlainText(path.read_text(encoding="utf-8-sig"))
+        try:
+            source = path.read_text(encoding="utf-8-sig")
+        except OSError as exc:
+            self.editor.clear()
+            self.status.setText(tr("iflapp_ide.load_failed").format(error=exc))
+            return
+        self.editor.setPlainText(source)
 
     def current_script(self) -> str | None:
         item = self.tree.currentItem()

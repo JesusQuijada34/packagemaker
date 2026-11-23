@@ -1,5 +1,68 @@
 # Changelog
 
+## 2026-11-23 — trigésimo primer ciclo
+
+### Corregido — robustez de arranque, GUI y salida en Termux
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna de la misma
+familia que los ciclos 23, 29 y 30: en Python 3.13 `Path.exists()`, `is_file()`
+e `is_dir()` propagan `PermissionError` cuando el directorio padre no es
+accesible. Ningún cambio de comportamiento del engine.
+
+- **R-4d8a6c12 — el arranque caía si `data/` no se podía crear o leer:**
+  `_data_dir()` creaba `data/` con `mkdir()` sin protección y
+  `PMDataStore.load()` usaba `Path.is_file()` y `load_merged_app_config()`
+  hacía lo propio con `config/settings.json`. En una instalación de solo
+  lectura sin `data/`, o con `data/`/`config/` ilegibles, `get_pm_data()`
+  abortaba al resolver el acento o el idioma. Ahora `_data_dir()` degrada con
+  un `except OSError`, `load()`, `_detect_app_version()` y
+  `load_merged_app_config()` usan `path_is_file()` y `save()` sigue
+  devolviendo `False` sin lanzar.
+- **R-9e3b7a51 — acciones de GUI con rutas sin permisos:** el asistente de
+  nuevo proyecto (`create_project`), la selección de guion del IDE
+  (`_on_script_selected`) y `ProjectConfig.__init__`/`get_config` comprobaban
+  rutas del usuario dentro de slots de Qt. Una carpeta base `chmod 000` o un
+  guion ilegible terminaban en traceback. Se usa `path_exists()` en el
+  asistente y en las carpetas por defecto de los diálogos, la lectura del guion
+  se protege con `try/except OSError` (aviso `iflapp_ide.load_failed`) y
+  `ProjectConfig` tolera una base no escribible.
+- **R-6a2d8f43 — Termux sin almacenamiento compartido:**
+  `compile_output_directory()` comprobaba `~/storage/downloads` con
+  `Path.is_dir()`; sin `termux-setup-storage` esa ruta está bajo un padre
+  inaccesible y el CLI abortaba. Ahora usa `os.path.isdir()` y mantiene
+  `/storage/emulated/0/Download` como respaldo.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4: el último comentario
+  sigue siendo el del ciclo anterior (2026-11-23T14:14Z) y no hay pull requests
+  abiertos.
+- Bugs pendientes que no se tocan: **R-4f8a2c60** (splash, espera Q-008) y
+  **R-6a1f8c23** (arrastre con la ventana maximizada, espera Q-011).
+
+### Verificación — trigésimo primer ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 964 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: `tests/test_pm_data_readonly_startup.py` (4),
+  `tests/test_gui_unreadable_paths.py` (3) y
+  `tests/test_platform_detect_storage.py` (2). Con el código anterior fallan 7
+  de las 9 (comprobado con `git stash` de los cinco módulos).
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: no hay respuestas nuevas del propietario. El último commit que toca
+  el archivo es `a11f6e8` (openhands, trigésimo ciclo); la última respuesta del
+  propietario sigue siendo `0ac5457`. Q-004, Q-007, Q-008 y Q-011…Q-014 siguen
+  pendientes. No se aplicó ninguna mejora ni cambio de engine sin aprobación.
+
+### Release — no preparado
+
+- El último reporte externo sigue siendo del 2026-11-22 (`bugs.txt`), así que
+  el requisito de 7 días sin reportes nuevos y el periodo de observación de 3
+  días siguen en curso. No se generaron `flat cube` ni `blind cube`.
+
 ## 2026-11-23 — trigésimo ciclo
 
 ### Corregido — la TUI caía con rutas sin permisos

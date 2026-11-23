@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Callable
 
+from lib.file_ops import path_exists
+
 try:
     from PyQt6.QtWidgets import (
         QMainWindow,
@@ -257,7 +259,7 @@ class NewProjectWizard(QDialog):
             return
         project_path = Path(base_dir) / folder_name
 
-        if project_path.exists():
+        if path_exists(project_path):
             self._notify(
                 "warning",
                 tr("common.warning"),
@@ -421,7 +423,7 @@ class DashboardWindow(QMainWindow):
 
     def open_github_repo(self):
         default = Path.home() / "Documents" / "GitHub"
-        if not default.exists():
+        if not path_exists(default):
             default = Path.home()
         repo_path = QFileDialog.getExistingDirectory(
             self, "Seleccionar repositorio GitHub", str(default)
@@ -431,7 +433,7 @@ class DashboardWindow(QMainWindow):
 
     def open_pm_project(self):
         default = Path.home() / "Documents" / "Packagemaker Projects"
-        if not default.exists():
+        if not path_exists(default):
             default = Path.home()
         project_path = QFileDialog.getExistingDirectory(
             self, "Seleccionar proyecto PackageMaker", str(default)

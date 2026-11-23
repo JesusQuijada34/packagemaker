@@ -25,11 +25,20 @@ class ProjectConfig:
     
     def _ensure_config_dir(self):
         """Asegura que el directorio de configuración exista."""
-        self.config_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.config_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            # Base de proyecto de solo lectura: se opera con la configuración
+            # vacía y ``save_config`` avisará si tampoco puede escribir.
+            print(f"[WARN] No se pudo crear {self.config_dir}: {exc}")
     
     def get_config(self) -> Dict[str, Any]:
         """Carga la configuración desde el archivo JSON."""
-        if not self.config_file.exists():
+        try:
+            if not self.config_file.is_file():
+                return {}
+        except OSError:
+            # Base inaccesible: se opera con la configuración vacía.
             return {}
         
         try:

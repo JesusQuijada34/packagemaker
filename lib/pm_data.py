@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from lib.design_tokens import ACCENT as _DEFAULT_ACCENT
+from lib.file_ops import path_is_file
 
 # Personalización visual bloqueada en ejecutable compilado (definir antes del build)
 COMPILED_LOCKED_USER_KEYS = frozenset({
@@ -69,7 +70,12 @@ def _app_root() -> Path:
 
 def _data_dir() -> Path:
     d = _app_root() / "data"
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        # Instalación de solo lectura sin carpeta ``data``: se arranca con los
+        # valores por defecto y ``save()`` devolverá ``False`` sin romper nada.
+        pass
     return d
 
 
@@ -117,7 +123,7 @@ class PMDataStore:
 
     def load(self) -> Dict[str, Any]:
         data: Any = {}
-        if self.path.is_file():
+        if path_is_file(self.path):
             try:
                 with open(self.path, "r", encoding="utf-8") as f:
                     data = json.load(f)
@@ -165,7 +171,7 @@ class PMDataStore:
 
     def _detect_app_version(self) -> str:
         details = _app_root() / "details.xml"
-        if details.is_file():
+        if path_is_file(details):
             try:
                 import xml.etree.ElementTree as ET
                 root = ET.parse(details).getroot()
@@ -327,7 +333,7 @@ def load_merged_app_config(
         store.set_user("fluthin_apps", default_fluthin)
 
     legacy_path = legacy_config_path or (_app_root() / "config" / "settings.json")
-    if legacy_path.is_file():
+    if path_is_file(legacy_path):
         try:
             with open(legacy_path, "r", encoding="utf-8") as f:
                 legacy = json.load(f)

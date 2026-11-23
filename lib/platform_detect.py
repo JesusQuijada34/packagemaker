@@ -162,7 +162,10 @@ def compile_output_directory(os_name: Optional[str] = None) -> str:
         shared = Path("/storage/emulated/0/Download")
         termux_downloads = Path(os.path.expanduser("~/storage/downloads"))
         for candidate in (termux_downloads, shared):
-            if candidate.is_dir():
+            # ``os.path.isdir`` trata un fallo de permisos como "no existe";
+            # ``Path.is_dir()`` lo propaga desde Python 3.13 y Termux sin
+            # ``termux-setup-storage`` dejaba el CLI sin carpeta de salida.
+            if os.path.isdir(candidate):
                 return str(candidate)
         return str(shared)
     return str(Path(os.path.expanduser("~")) / "Documents" / "Packagemaker Projects" / "Compiled")
