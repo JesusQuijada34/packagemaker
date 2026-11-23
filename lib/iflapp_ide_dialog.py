@@ -234,11 +234,18 @@ class IflappIdePanel(QWidget):
             self.status.setText(tr("iflapp_ide.no_project"))
             return False
         backend = self.backend_selector.currentText()
-        outcome = compile_project(
-            self.project.root,
-            backend=None if backend == "auto" else backend,
-            log=self._log,
-        )
+        try:
+            outcome = compile_project(
+                self.project.root,
+                backend=None if backend == "auto" else backend,
+                log=self._log,
+            )
+        except OSError as exc:
+            # El proyecto pudo quedar ilegible o sin permiso de escritura entre
+            # la carga y la compilación: el slot no puede dejar escapar OSError.
+            self.console.addItem(f"[ERROR] {exc}")
+            self.status.setText(tr("iflapp_ide.compile_failed").format(error=exc))
+            return False
         for line in outcome.log:
             self.console.addItem(line)
         if outcome.ok:

@@ -99,6 +99,46 @@ class GuiUnreadablePathTests(unittest.TestCase):
             _restore(script, 0o644)
 
     @_UNREADABLE_SKIP
+    def test_ide_panel_reports_unreadable_project_on_compile(self):
+        from lib.iflapp_ide_dialog import IflappIdePanel
+
+        root = Path(tempfile.mkdtemp()) / "proj"
+        root.mkdir()
+        (root / "details.xml").write_text(
+            "<app><publisher>Influent</publisher><app>demo</app>"
+            "<version>v1.0</version></app>",
+            encoding="utf-8",
+        )
+        (root / "demo.py").write_text("print('hola')\n", encoding="utf-8")
+
+        panel = IflappIdePanel()
+        self.assertTrue(panel.load_project(str(root)))
+        root.chmod(0o000)
+        try:
+            self.assertFalse(panel.run_compile())
+            self.assertTrue(panel.status.text(), "debe informar del fallo de compilación")
+        finally:
+            _restore(root)
+
+    @_UNREADABLE_SKIP
+    def test_moonfix_reports_unwritable_project(self):
+        from lib.moonFixWizard import MoonFixWizard
+
+        proj = Path(tempfile.mkdtemp()) / "moonproj"
+        proj.mkdir()
+        wizard = MoonFixWizard(
+            None,
+            [{"path": str(proj), "issues": [{"type": "missing_dir", "path": "app"}]}],
+        )
+        proj.chmod(0o500)
+        try:
+            with patch("lib.moonFixWizard.LeviathanDialog.launch") as launch:
+                self.assertFalse(wizard.apply_project_fixes(0))
+            self.assertTrue(launch.called, "el fallo debe avisarse al usuario")
+        finally:
+            _restore(proj)
+
+    @_UNREADABLE_SKIP
     def test_project_config_tolerates_unwritable_base(self):
         from lib.projectConfig import ProjectConfig
 

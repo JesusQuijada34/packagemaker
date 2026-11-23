@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (trigésimo segundo ciclo)
+Última actualización: 2026-11-23 (trigésimo tercer ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -113,6 +113,9 @@ de auditoría.
 | R-7e4c1a92 | Bug — el arranque cae si `data/` impide leer la caché de sesión | Alta | Resuelto |
 | R-2d8b6f31 | Bug — el build lanza traceback con `config/` del proyecto ilegible | Alta | Resuelto |
 | R-9a5c3e74 | Bug — «Abrir con» cae con `config/` de la aplicación ilegible | Media | Resuelto |
+| R-4e9c1a73 | Bug — el IDE `.iflapp` cae al compilar un proyecto ilegible | Alta | Resuelto |
+| R-7d2f8b14 | Bug — MoonFix cae con un proyecto de solo lectura | Alta | Resuelto |
+| R-6b3e9c52 | Bug — el splash del paquete no arranca con un proyecto sin permisos | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -153,6 +156,11 @@ El trigésimo segundo ciclo registra R-7e4c1a92, R-2d8b6f31 y R-9a5c3e74
 (corregidos y probados, sin cambios de comportamiento del engine): tres rutas
 de configuración más usaban `Path.is_file()` sin proteger y, con el padre
 ilegible, propagaban `PermissionError` en Python 3.13.
+El trigésimo tercer ciclo registra R-4e9c1a73, R-7d2f8b14 y R-6b3e9c52
+(corregidos y probados, sin cambios de comportamiento del engine): dos slots de
+Qt (compilación del IDE `.iflapp` y reparación de MoonFix) y el bootloader del
+splash dejaban escapar `PermissionError` con un proyecto o directorio de
+trabajo sin permisos.
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -2865,6 +2873,79 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** trigésimo segundo ciclo (2026-11-23).
 - **Fecha de resolución:** 2026-11-23.
 
+## R-4e9c1a73 — el IDE `.iflapp` cae al compilar un proyecto ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `IflappIdePanel.run_compile()` llamaba a
+  `iflapp_ide.compile_project()` sin proteger el `OSError` que produce
+  `scan_project()` al leer `details.xml` o al crear `build/` cuando el proyecto
+  dejó de ser legible o escribible. El método está conectado a
+  `btn_compile.clicked`; en PyQt6 una excepción no controlada en un slot
+  termina el proceso.
+- **Pasos para reproducir:** abrir un proyecto en el IDE `.iflapp`, aplicar
+  `chmod 000` a la carpeta del proyecto y pulsar «Compilar». Se obtenía
+  `PermissionError: [Errno 13] …/details.xml`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta.
+- **Solución aplicada:** la llamada a `compile_project()` se envuelve en
+  `try/except OSError`; el error se escribe en la consola y en la barra de
+  estado y el método devuelve `False` sin cerrar la aplicación.
+- **Pruebas:** `tests/test_gui_unreadable_paths.py`
+  (`test_ide_panel_reports_unreadable_project_on_compile`).
+- **Commit:** trigésimo tercer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-7d2f8b14 — MoonFix cae con un proyecto de solo lectura
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `MoonFixWizard.go_next()` llamaba a `apply_project_fixes()`
+  desde un slot; esa función delega en `repair_project_from_templates()`, que
+  crea carpetas y escribe `details.xml` y las plantillas. Con la carpeta del
+  proyecto sin permiso de escritura, `Path.mkdir()`/`write_text()` lanzaban
+  `PermissionError` y el wizard cerraba la aplicación en lugar de avisar.
+- **Pasos para reproducir:** abrir MoonFix sobre un proyecto, aplicar
+  `chmod 500` a su carpeta y pulsar «Siguiente». Se obtenía
+  `PermissionError: [Errno 13] …/app`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta.
+- **Solución aplicada:** `apply_project_fixes()` ahora devuelve `bool` y
+  envuelve la reparación en `try/except (OSError, ValueError)`, mostrando el
+  error con `LeviathanDialog`; `go_next()` no avanza de página si la reparación
+  falla.
+- **Pruebas:** `tests/test_gui_unreadable_paths.py`
+  (`test_moonfix_reports_unwritable_project`).
+- **Commit:** trigésimo tercer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-6b3e9c52 — el splash del paquete no arranca con un proyecto sin permisos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `splash_bootloader._resolve_icon()` comprobaba los iconos
+  candidatos con `Path.is_file()` y resolvía `Path.cwd()` sin protección. El
+  bootloader se ejecuta antes de construir la ventana del programa compilado,
+  así que un directorio de trabajo o un proyecto sin permisos lanzaba
+  `PermissionError` antes de mostrar el splash.
+- **Pasos para reproducir:** llamar a
+  `SplashBootloader().arm("<proyecto>/main.py")` con la carpeta del proyecto en
+  `chmod 000` (y un `cwd` sin iconos). Se obtenía
+  `PermissionError: [Errno 13] …/app/app-icon.ico`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** `_resolve_icon()` envuelve `Path.resolve()`/`Path.cwd()`
+  en `try/except OSError` y cada `is_file()` en su propio `try`; si no hay
+  icono legible devuelve `None` y el splash usa el acento del sistema. El
+  módulo sigue siendo autocontenido (solo stdlib + PyQt6).
+- **Pruebas:** `tests/test_splash_bootloader_injection.py`
+  (`test_bootloader_arm_tolerates_unreadable_project`).
+- **Commit:** trigésimo tercer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -2885,6 +2966,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Trigésimo segundo ciclo (2026-11-23): R-7e4c1a92, R-2d8b6f31 y R-9a5c3e74
   corregidos y probados (caché de sesión, `config/` del proyecto y `config/`
   de la aplicación ilegibles); no se prepara release.
+- Trigésimo tercer ciclo (2026-11-23): R-4e9c1a73, R-7d2f8b14 y R-6b3e9c52
+  corregidos y probados (compilación del IDE, reparación de MoonFix y splash
+  con proyectos/directorios sin permisos); no se prepara release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario

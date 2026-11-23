@@ -1,5 +1,56 @@
 # Changelog
 
+## 2026-11-23 — trigésimo tercer ciclo
+
+### Corregido — `PermissionError` en slots de GUI y en el splash
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna de la misma
+familia que los ciclos 23 y 29–32: en Python 3.13 las comprobaciones de rutas y
+las escrituras propagan `PermissionError` cuando el proyecto o el directorio de
+trabajo no son accesibles. Dos de los fallos ocurrían dentro de slots de Qt, que
+en PyQt6 terminan el proceso si la excepción escapa. Ningún cambio de
+comportamiento del engine.
+
+- **R-4e9c1a73 — el IDE `.iflapp` cerraba la aplicación al compilar un
+  proyecto ilegible:** `IflappIdePanel.run_compile()` llamaba a
+  `compile_project()` sin proteger el `OSError` de `scan_project()` (lectura de
+  `details.xml`) o de la creación de `build/`. Ahora el fallo se muestra en la
+  consola y en la barra de estado y el método devuelve `False`.
+- **R-7d2f8b14 — MoonFix cerraba la aplicación con un proyecto de solo
+  lectura:** `apply_project_fixes()` (invocado desde el slot `go_next()`)
+  delegaba en `repair_project_from_templates()`, que crea carpetas y escribe
+  plantillas. Ahora devuelve `bool`, captura `OSError`/`ValueError` y avisa con
+  `LeviathanDialog`; el wizard no avanza si la reparación falla.
+- **R-6b3e9c52 — el splash del paquete no arrancaba con un proyecto o `cwd` sin
+  permisos:** `splash_bootloader._resolve_icon()` comprobaba los iconos con
+  `Path.is_file()` sin protección. Ahora tolera `OSError`, devuelve `None` y el
+  splash usa el acento del sistema; el módulo sigue siendo autocontenido (solo
+  stdlib + PyQt6).
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4: el último comentario
+  sigue siendo el del ciclo anterior (2026-11-23T18:12Z) y no hay pull requests
+  abiertos.
+- Bugs pendientes que no se tocan: **R-4f8a2c60** (splash, espera Q-008) y
+  **R-6a1f8c23** (arrastre con la ventana maximizada, espera Q-011).
+
+### Verificación — trigésimo tercer ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 970 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: 3 (`tests/test_gui_unreadable_paths.py` ×2 y
+  `tests/test_splash_bootloader_injection.py` ×1). Los 3 casos fallan con el
+  código anterior (comprobado con `git stash` de `lib/iflapp_ide_dialog.py`,
+  `lib/moonFixWizard.py` y `lib/blindcubeEngine/splash_bootloader.py`).
+
+### Aprobaciones — `CONFIRM.MD`
+
+- Revisado: no hay respuestas nuevas del propietario. Q-004, Q-007, Q-008 y
+  Q-011…Q-014 siguen pendientes; no se aplicó ninguna mejora ni cambio de
+  engine.
+
 ## 2026-11-23 — trigésimo segundo ciclo
 
 ### Corregido — rutas de configuración ilegibles (caché de sesión y build)
