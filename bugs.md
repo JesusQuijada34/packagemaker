@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23 (trigésimo cuarto ciclo)
+Última actualización: 2026-11-24 (trigésimo quinto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -117,6 +117,9 @@ de auditoría.
 | R-7d2f8b14 | Bug — MoonFix cae con un proyecto de solo lectura | Alta | Resuelto |
 | R-6b3e9c52 | Bug — el splash del paquete no arranca con un proyecto sin permisos | Media | Resuelto |
 | R-4b9e2c71 | Bug — `.mexf` con raíz/carpeta ilegible filtra `PermissionError` crudo | Media | Resuelto |
+| R-3f7c1a94 | Bug — carpeta de accesos directos no escribible aborta `--install-asksome` | Media | Resuelto |
+| R-6b2e9d47 | Bug — `uninstall_asksome` filtra `PermissionError`/`OSError` crudos | Media | Resuelto |
+| R-8c4a1f62 | Bug — `remove_tree` informa de un borrado que no ocurrió | Alta | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -2983,6 +2986,96 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del trigésimo cuarto ciclo.
 - **Fecha de resolución:** 2026-11-23.
 
+## R-3f7c1a94 — Una carpeta de accesos directos no escribible aborta `--install-asksome`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `create_shortcuts()` documenta que devuelve sólo los accesos
+  directos que se pudieron crear, pero `_write_linux_desktop()` y
+  `_write_windows_shortcut()` sólo protegían `mkdir()`. Si la carpeta de
+  destinos existe y no es escribible (`~/.local/share/applications` de una
+  instalación del sistema, HOME inmutable o contenedor), `entry.write_text()`
+  lanzaba `PermissionError` y abortaba `install_asksome()` **después** de haber
+  extraído el payload: la instalación quedaba a medias y el CLI moría con un
+  traceback en vez de un `[ERROR]`.
+- **Pasos para reproducir:** instalar un `.asksome` con
+  `shortcut_dirs=[<carpeta en chmod 555>]`; con el CLI,
+  `HOME=<tmp>/home` con `<tmp>/home/.local/share/applications` en `chmod 555` y
+  `python packagemaker.py --install-asksome demo.asksome --install-root <raíz>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (instalación a medias y traceback; los accesos directos
+  son opcionales).
+- **Solución aplicada:** ambas funciones envuelven la escritura y el `chmod` del
+  acceso en `try/except OSError` y devuelven `None`, de modo que
+  `create_shortcuts()` sigue con el resto de carpetas.
+- **Pruebas:** `tests/test_mexf_asksome.py` —
+  `test_install_asksome_skips_unwritable_shortcut_dir`.
+- **Commit:** se registra en el cierre del trigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-6b2e9d47 — `uninstall_asksome` filtra `PermissionError` y `OSError` crudos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `uninstall_asksome()` usaba `target.is_dir()`,
+  `record_path.is_file()`, `shortcut_path.is_file()`/`unlink()` y
+  `shutil.rmtree()` sin protección. En Python 3.13 los `is_*()` propagan
+  `PermissionError` cuando el directorio padre no es accesible, y `rmtree`
+  falla con ficheros en uso (Windows) o directorios sin permiso de escritura.
+  El CLI sólo captura `AsksomeInstallError`, así que
+  `--uninstall-asksome` terminaba en traceback en lugar de informar.
+- **Pasos para reproducir:** instalar un `.asksome`, poner la raíz de
+  instalación en `chmod 000` (o un subdirectorio con un fichero dentro en
+  `chmod 555`) y ejecutar `uninstall_asksome("demo.app", raíz)` o
+  `python packagemaker.py --uninstall-asksome demo.app --install-root raíz`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (mensaje crudo, sin pérdida de datos: la app sigue
+  instalada).
+- **Solución aplicada:** `target.is_dir()` se traduce a `AsksomeInstallError`;
+  el registro se comprueba con `path_is_file()`; cada acceso directo se borra
+  dentro de `try/except OSError` (un acceso bloqueado no impide purgar la
+  instalación); el árbol se borra con `lib.file_ops.remove_tree()` y, si
+  sobrevive, se lanza `AsksomeInstallError` con la ruta. `build_removeme()`
+  traduce también los `OSError` de sus dos escrituras.
+- **Pruebas:** `tests/test_mexf_asksome.py` —
+  `test_uninstall_asksome_reports_unreadable_root`,
+  `test_uninstall_asksome_skips_blocked_shortcut`,
+  `test_uninstall_asksome_reports_blocked_tree` y
+  `test_install_asksome_reports_unreadable_artifact`.
+- **Commit:** se registra en el cierre del trigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8c4a1f62 — `remove_tree` informa de un borrado que no ocurrió
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `remove_tree()` promete devolver `True` sólo si el árbol ya
+  no existe, pero `shutil.rmtree()` con `onexc` **no lanza**: si el callback
+  `_clear_readonly()` consumía el error, `rmtree` continuaba y terminaba sin
+  excepción. `_retry()` nunca veía el fallo (los reintentos de `WinError 32` de
+  R-4a1e7b93 no llegaban a ejecutarse) y `remove_tree()` devolvía `True` con el
+  árbol intacto. Los llamadores del build daban la limpieza por buena y podían
+  reutilizar artefactos obsoletos.
+- **Pasos para reproducir:** crear `<tmp>/locked/f.txt`, poner `locked` en
+  `chmod 555` y llamar a `remove_tree(locked)`; devolvía `True` con el
+  directorio todavía presente.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (contrato roto en la limpieza del build; podía dejar
+  restos entre compilaciones).
+- **Solución aplicada:** `_clear_readonly()` ya no se traga el error: si el
+  reintento falla, la excepción llega a `_retry()` (que espera ante bloqueos
+  reales) y el `chmod` conserva los bits originales (`mode | S_IWRITE`) en vez
+  de fijar `0o600` sobre un directorio. `remove_tree()` confirma el resultado
+  comprobando que el árbol ya no existe antes de devolver `True`.
+- **Pruebas:** `tests/test_engine_isolation.py` —
+  `test_remove_tree_reports_a_tree_that_survived` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3010,6 +3103,10 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   compilador `.mexf` traduce `PermissionError` a `MexfCompileError`, el paso
   `.mexf` del build se omite en vez de abortar y el icono opcional tolera una
   carpeta `app/` ilegible); no se prepara release.
+- Trigésimo quinto ciclo (2026-11-24): R-3f7c1a94, R-6b2e9d47 y R-8c4a1f62
+  corregidos y probados (instalación y desinstalación `.asksome` con carpetas
+  sin permisos, y `remove_tree` que ya no informa de un borrado inexistente); no
+  se prepara release.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario

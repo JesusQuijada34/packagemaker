@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from lib.blindcubeEngine.asksome_format import extract_asksome, verify_asksome
-from lib.file_ops import list_directory, path_is_dir, path_is_file
+from lib.file_ops import list_directory, path_is_dir, path_is_file, remove_tree
 
 RECORD_NAME = "install.json"
 REMOVEME_NAME = "removeme.py"
@@ -184,8 +184,14 @@ def _write_linux_desktop(target: Path, record: InstallRecord) -> Optional[Path]:
         f"Exec={_desktop_exec_quote(sys.executable)} {_desktop_exec_quote(launcher)}\n"
         "Terminal=false\n"
     )
-    entry.write_text(body, encoding="utf-8")
-    entry.chmod(entry.stat().st_mode | stat.S_IXUSR)
+    try:
+        entry.write_text(body, encoding="utf-8")
+        entry.chmod(entry.stat().st_mode | stat.S_IXUSR)
+    except OSError:
+        # ``~/.local/share/applications`` puede existir y no ser escribible
+        # (instalación del sistema o HOME inmutable). El acceso directo es
+        # opcional: ``create_shortcuts`` sólo devuelve los que se crearon.
+        return None
     return entry
 
 
@@ -196,7 +202,10 @@ def _write_windows_shortcut(target: Path, record: InstallRecord) -> Optional[Pat
         return None
     launcher = Path(record.install_dir) / record.launcher
     entry = target / f"{record.app_id}.cmd"
-    entry.write_text(f'@echo off\r\n"{sys.executable}" "{launcher}" %*\r\n', encoding="utf-8")
+    try:
+        entry.write_text(f'@echo off\r\n"{sys.executable}" "{launcher}" %*\r\n', encoding="utf-8")
+    except OSError:
+        return None
     return entry
 
 
@@ -230,8 +239,8 @@ def install_asksome(
     hay backend disponible se conserva únicamente el script.
     """
     source = Path(artifact).resolve()
-    if not source.is_file():
-        raise AsksomeInstallError(f"No existe el artefacto: {source}")
+    if not path_is_file(source):
+        raise AsksomeInstallError(f"No existe el artefacto o no es accesible: {source}")
 
     header = verify_asksome(source)
     metadata = dict(header.get("metadata", {}))
@@ -278,7 +287,13 @@ def install_asksome(
     if create_desktop_shortcuts:
         record.shortcuts = create_shortcuts(record, shortcut_dirs)
 
-    _write_removeme(target, record)
+    try:
+        _write_removeme(target, record)
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo escribir el removedor en {target}: {exc}"
+        ) from exc
+
     record.remover = REMOVEME_NAME
     if removeme_binary:
         binary = compile_removeme_binary(
@@ -287,10 +302,15 @@ def install_asksome(
         if binary is not None:
             record.remover = binary.name
 
-    (target / RECORD_NAME).write_text(
-        json.dumps(record.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    try:
+        (target / RECORD_NAME).write_text(
+            json.dumps(record.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo registrar la instalación en {target}: {exc}"
+        ) from exc
     return record
 
 
@@ -325,17 +345,27 @@ def build_removeme(
     root = Path(install_root).resolve()
     target = root / _validated_app_id(app_id)
     record = read_record(app_id, install_root)
-    _write_removeme(target, record)
+    try:
+        _write_removeme(target, record)
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo escribir el removedor en {target}: {exc}"
+        ) from exc
     binary = compile_removeme_binary(
         target, preferred_backend=preferred_backend, log_callback=log_callback
     )
     if binary is None:
         return None
     record.remover = binary.name
-    (target / RECORD_NAME).write_text(
-        json.dumps(record.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    try:
+        (target / RECORD_NAME).write_text(
+            json.dumps(record.to_dict(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo actualizar el registro de {target}: {exc}"
+        ) from exc
     return binary
 
 
@@ -366,14 +396,18 @@ def uninstall_asksome(
     """
     root = Path(install_root).resolve()
     target = root / _validated_app_id(app_id)
-    if not target.is_dir():
+    try:
+        installed = target.is_dir()
+    except OSError as exc:
+        raise AsksomeInstallError(f"No se pudo acceder a {target}: {exc}") from exc
+    if not installed:
         if silent:
             return []
         raise AsksomeInstallError(f"No está instalado: {app_id}")
 
     removed: List[str] = []
     record_path = target / RECORD_NAME
-    if record_path.is_file():
+    if path_is_file(record_path):
         try:
             record = _record_from_mapping(json.loads(record_path.read_text(encoding="utf-8")))
         except (OSError, ValueError, TypeError):
@@ -381,11 +415,17 @@ def uninstall_asksome(
         if record:
             for shortcut in record.shortcuts:
                 shortcut_path = Path(shortcut)
-                if shortcut_path.is_file():
-                    shortcut_path.unlink()
-                    removed.append(str(shortcut_path))
+                try:
+                    if shortcut_path.is_file():
+                        shortcut_path.unlink()
+                        removed.append(str(shortcut_path))
+                except OSError:
+                    # Acceso directo bloqueado o ya inexistente: no debe impedir
+                    # purgar el resto de la instalación.
+                    continue
 
-    shutil.rmtree(target)
+    if not remove_tree(target):
+        raise AsksomeInstallError(f"No se pudo eliminar el directorio instalado: {target}")
     removed.append(str(target))
     return removed
 

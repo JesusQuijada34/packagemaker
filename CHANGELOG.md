@@ -1,5 +1,63 @@
 # Changelog
 
+## 2026-11-24 — trigésimo quinto ciclo
+
+### Corregido — instalación/desinstalación `.asksome` con carpetas sin permisos
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna sobre la ruta
+de instalación y desinstalación de `.asksome` y sobre la limpieza del build.
+Ningún cambio de comportamiento del engine.
+
+- **R-3f7c1a94 — una carpeta de accesos directos no escribible abortaba
+  `--install-asksome`:** `create_shortcuts()` documenta que devuelve sólo los
+  accesos que se pudieron crear, pero `_write_linux_desktop()` y
+  `_write_windows_shortcut()` sólo protegían `mkdir()`. Con
+  `~/.local/share/applications` existente y sin permiso de escritura (instalación
+  del sistema, HOME inmutable, contenedor), `entry.write_text()` lanzaba
+  `PermissionError` **después** de extraer el payload: instalación a medias y
+  traceback en el CLI. Ahora la escritura y el `chmod` del acceso se toleran y
+  se devuelve `None`.
+- **R-6b2e9d47 — `uninstall_asksome` filtraba `PermissionError`/`OSError`
+  crudos:** `target.is_dir()`, `record_path.is_file()`,
+  `shortcut_path.is_file()`/`unlink()` y `shutil.rmtree()` no estaban
+  protegidos, así que `--uninstall-asksome` moría con traceback cuando la raíz
+  de instalación no era accesible o un fichero estaba bloqueado. Ahora la
+  comprobación se traduce a `AsksomeInstallError`, los accesos directos
+  bloqueados se omiten sin abortar la purga, el árbol se borra con
+  `remove_tree()` y, si sobrevive, se informa de la ruta. `build_removeme()`
+  traduce también sus dos escrituras.
+- **R-8c4a1f62 — `remove_tree` informaba de un borrado que no ocurrió:**
+  `shutil.rmtree()` con `onexc` no lanza cuando el callback consume el error,
+  de modo que `_clear_readonly()` se tragaba los fallos, `_retry()` nunca veía
+  el bloqueo (los reintentos de `WinError 32` de R-4a1e7b93 no se ejecutaban) y
+  `remove_tree()` devolvía `True` con el árbol intacto. Ahora el callback
+  propaga el fallo conservando los bits del `chmod`, y `remove_tree()` confirma
+  que el árbol ya no existe antes de devolver `True`.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 (el último comentario
+  sigue siendo el del ciclo anterior) y sin pull requests abiertos.
+- Bugs pendientes que no se tocan por depender de aprobación en `CONFIRM.MD`:
+  **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23** (arrastre con la
+  ventana maximizada, espera Q-011).
+- `CONFIRM.MD`: sin respuestas nuevas del propietario (el último commit que
+  toca el archivo es de `openhands-agent`); Q-004, Q-007, Q-008 y
+  Q-011…Q-014 siguen pendientes.
+
+### Verificación — trigésimo quinto ciclo
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 981 pasan, 1 omitido,
+  64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')` y `python -m py_compile` limpios.
+- Pruebas nuevas: 6 (5 en `tests/test_mexf_asksome.py` y 1 en
+  `tests/test_engine_isolation.py`).
+- Reproducción real por CLI: `--install-asksome` con
+  `~/.local/share/applications` en `chmod 555` terminaba en `PermissionError`;
+  ahora instala y omite el acceso directo. `--uninstall-asksome` con la raíz en
+  `chmod 000` terminaba en traceback; ahora responde
+  `[ERROR] Desinstalación .asksome fallida: No se pudo acceder a …`.
+
 ## 2026-11-23 — trigésimo cuarto ciclo
 
 ### Corregido — el compilador `.mexf` filtraba `PermissionError` crudo

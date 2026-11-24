@@ -459,6 +459,89 @@ def test_uninstall_rejects_app_id_that_escapes_install_root(tmp_path, app_id):
     assert (victim / "keep.txt").is_file()
 
 
+@_UNREADABLE_SKIP
+def test_install_asksome_skips_unwritable_shortcut_dir(tmp_path):
+    """Una carpeta de accesos directos de sólo lectura no aborta la instalación."""
+    from lib.blindcubeEngine.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    shortcuts.chmod(0o555)
+    try:
+        record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    finally:
+        shortcuts.chmod(0o755)
+
+    assert record.shortcuts == []
+    assert (Path(record.install_dir) / "install.json").is_file()
+
+
+@_UNREADABLE_SKIP
+def test_install_asksome_reports_unreadable_artifact(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, install_asksome
+
+    artifact, install_root, _shortcuts = _install_fixture(tmp_path)
+    blocked = tmp_path / "privado"
+    blocked.mkdir()
+    moved = blocked / artifact.name
+    artifact.replace(moved)
+    blocked.chmod(0o000)
+    try:
+        with pytest.raises(AsksomeInstallError):
+            install_asksome(moved, install_root, create_desktop_shortcuts=False)
+    finally:
+        blocked.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_uninstall_asksome_reports_unreadable_root(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, uninstall_asksome
+
+    root = tmp_path / "installed"
+    (root / "demo.app").mkdir(parents=True)
+    root.chmod(0o000)
+    try:
+        with pytest.raises(AsksomeInstallError):
+            uninstall_asksome("demo.app", root)
+    finally:
+        root.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_uninstall_asksome_skips_blocked_shortcut(tmp_path):
+    """Un acceso directo ilegible no impide purgar la instalación."""
+    from lib.blindcubeEngine.asksome_installer import install_asksome, uninstall_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    assert record.shortcuts
+    shortcuts.chmod(0o000)
+    try:
+        removed = uninstall_asksome(record.app_id, install_root)
+    finally:
+        shortcuts.chmod(0o755)
+
+    assert not Path(record.install_dir).exists()
+    assert str(Path(record.install_dir)) in removed
+
+
+@_UNREADABLE_SKIP
+def test_uninstall_asksome_reports_blocked_tree(tmp_path):
+    """Si el árbol no se puede borrar, se informa con AsksomeInstallError."""
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, install_asksome, uninstall_asksome
+
+    artifact, install_root, _shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, create_desktop_shortcuts=False)
+    locked = Path(record.install_dir) / "locked"
+    locked.mkdir()
+    (locked / "f.txt").write_text("x", encoding="utf-8")
+    locked.chmod(0o555)
+    try:
+        with pytest.raises(AsksomeInstallError):
+            uninstall_asksome(record.app_id, install_root)
+    finally:
+        locked.chmod(0o755)
+
+
 def test_read_record_and_build_removeme_reject_unsafe_app_id(tmp_path):
     from lib.blindcubeEngine.asksome_installer import (
         AsksomeInstallError,
