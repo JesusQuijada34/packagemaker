@@ -51,6 +51,7 @@ from lib.iflapp_ide import (
     run_script,
     scan_project,
 )
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
 
 
 class IflappIdePanel(QWidget):
@@ -211,8 +212,8 @@ class IflappIdePanel(QWidget):
             return
         path = self.project.root / name
         try:
-            source = path.read_text(encoding="utf-8-sig")
-        except OSError as exc:
+            source, _ = read_python_source(path)
+        except (OSError, SourceEncodingError) as exc:
             self.editor.clear()
             self.status.setText(tr("iflapp_ide.load_failed").format(error=exc))
             return

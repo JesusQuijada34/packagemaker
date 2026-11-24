@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (trigésimo séptimo ciclo)
+Última actualización: 2026-11-24 (trigésimo octavo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -126,6 +126,9 @@ de auditoría.
 | R-6f4b8a92 | Bug — empaquetar un proyecto inaccesible aborta la GUI | Alta | Resuelto |
 | R-1e7c3d58 | Bug — «Ejecutar» del gestor cae con una carpeta ilegible | Media | Resuelto |
 | R-9b5f2a74 | Bug — la TUI cae al abrir una carpeta sin `xdg-open` | Media | Resuelto |
+| R-3f8a7c21 | Bug — el IDE aborta con proyectos de fuentes no UTF-8 | Alta | Resuelto |
+| R-9d2b6e45 | Bug — `--ide-compile` ignora la declaración PEP 263 | Alta | Resuelto |
+| R-6c4a1f83 | Bug — blindaje y build fallan con fuentes no UTF-8 | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -3250,6 +3253,95 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del trigésimo séptimo ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-3f8a7c21 — El IDE `.iflapp` aborta al abrir un proyecto con fuentes no UTF-8
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** un proyecto guardado por un editor de Windows en ANSI
+  (``cp1252``) declara su codificación como exige Python
+  (``# -*- coding: cp1252 -*-``). Al abrirlo en el IDE, `_refresh_tree()` marca
+  el primer guion y dispara `_on_script_selected()`, que leía con
+  `encoding="utf-8-sig"` y sólo capturaba `OSError`: el `UnicodeDecodeError`
+  escapaba del slot y **PyQt6 abortaba el proceso** (`Fatal Python error:
+  Aborted`). El mismo guion también rompía `_declared_scripts()` al leer
+  `config/settings.json` si este venía en ANSI.
+- **Pasos para reproducir:** crear un proyecto con `app.py` codificado en
+  cp1252 (con su *coding cookie*) y `config/settings.json` en cp1252; abrirlo
+  con el IDE (`IflappIdePanel.load_project`) → el proceso muere.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (pérdida de la sesión de GUI al abrir un proyecto real).
+- **Solución aplicada:** nuevo módulo `lib/blindcubeEngine/source_io.py`
+  (`read_python_source()` detecta la codificación como el intérprete, PEP 263,
+  y `SourceEncodingError` cuando el archivo no es fuente Python válida).
+  `_on_script_selected()` lo usa y captura `(OSError, SourceEncodingError)`
+  mostrando `iflapp_ide.load_failed`; `_declared_scripts()` lee con
+  `utf-8-sig` (acepta el BOM del Bloc de notas) y captura
+  `UnicodeDecodeError`.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestIdePanelSlots` (con el
+  código anterior el proceso aborta) y `TestIdeAnalysis` (`scan_project` con
+  `settings.json` cp1252 y con BOM).
+- **Commit:** se registra en el cierre del trigésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-9d2b6e45 — `--ide-compile` y el análisis del IDE ignoran la declaración PEP 263
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el motor leía los guiones con `encoding="utf-8"` fijo, así
+  que un fuente válido para Python por declarar `cp1252` reventaba en tres
+  puntos: `detect_hidden_imports()` (análisis del IDE), la inyección del
+  bootloader de splash (`prepare_for_build()` → `write_injected_copy()`) y el
+  preflight (`check_syntax()`), que además marcaba el guion como «sintaxis
+  rota». `compile_project()` propagaba el `UnicodeDecodeError` y el CLI
+  `--ide-compile` (que sólo captura `OSError`) lo imprimía como traceback.
+- **Pasos para reproducir:** `--ide-compile <proyecto>` con `app.py` en cp1252
+  y cookie → `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf1`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (compilación imposible para proyectos en ANSI).
+- **Solución aplicada:** `detect_hidden_imports()`, `inject_file()`,
+  `write_injected_copy()` y `check_syntax()` leen con `read_python_source()`.
+  La copia inyectada se escribe con **la misma codificación** del original, de
+  modo que la *cookie* siga siendo válida; los archivos que no son fuente
+  Python válida se degradan con un mensaje legible (imports `[]`, sin copia
+  inyectada, preflight con el error de codificación) en vez de lanzar.
+  `BuildThread._detect_hidden_imports()` usa el mismo helper.
+- **Pruebas:** `tests/test_non_utf8_sources.py` —
+  `test_hidden_imports_read_pep263_source`,
+  `test_injection_preserves_declared_encoding`,
+  `test_compile_project_handles_pep263_source`,
+  `test_preflight_accepts_pep263_source` y los casos de degradación.
+- **Commit:** se registra en el cierre del trigésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-6c4a1f83 — Blindaje y build fallan con fuentes y `settings.json` no UTF-8
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `hardening.inject_anti_debug()` y `obfuscate_strings()`
+  leían y reescribían el guion en UTF-8 fijo: con un fuente cp1252 lanzaban
+  `UnicodeDecodeError` (vía `apply_all()` se degradaba a un informe
+  «error: …» genérico; llamadas directas lanzaban) y, de haber reescrito,
+  habrían dejado la *cookie* mintiendo sobre la codificación.
+  `BuildThread._load_explicit_scripts()` y `_persist_env_payload()` leían
+  `config/settings.json` con `utf-8` fijo y no capturaban
+  `UnicodeDecodeError`.
+- **Pasos para reproducir:** `hardening.obfuscate_strings(<app.py cp1252>)` →
+  `UnicodeDecodeError`; `--buildthis` con `settings.json` en cp1252 →
+  `UnicodeDecodeError` desde `__init__` de la QThread.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el build degrada o falla, sin corrupción de datos).
+- **Solución aplicada:** ambos métodos de blindaje leen con
+  `read_python_source()` y escriben con la codificación detectada (o devuelven
+  un `HardeningReport` no aplicado y legible). Los dos puntos de lectura de
+  `settings.json` usan `utf-8-sig` y capturan `UnicodeDecodeError`.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestHardeningEncoding` y
+  `test_preflight_reports_undecodable_source`.
+- **Commit:** se registra en el cierre del trigésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3290,6 +3382,20 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   corregidos y probados (empaquetado de un proyecto inaccesible, «Ejecutar» del
   gestor y «Abrir carpeta» de la TUI dejan de abortar la app); no se prepara
   release.
+- Trigésimo octavo ciclo (2026-11-24): R-3f8a7c21, R-9d2b6e45 y R-6c4a1f83
+  corregidos y probados (el IDE, el CLI `--ide-compile`, el preflight y el
+  blindaje respetan la declaración de codificación PEP 263; un proyecto en ANSI
+  ya no aborta la GUI ni imprime tracebacks); no se prepara release.
+- Verificación del ciclo de R-3f8a7c21…R-6c4a1f83 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1009 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. De las 17 pruebas
+  nuevas de `tests/test_non_utf8_sources.py`, 11 fallan con el código anterior y
+  la prueba del panel del IDE **aborta el proceso** (`Fatal Python error:
+  Aborted`), comprobado con `git stash` de los seis módulos tocados.
+  Reproducción real: `--ide-compile` y `--ide-scan --ide-scan-json` sobre un
+  proyecto con `app.py` y `settings.json` en cp1252 responden código 0 y
+  compilan el `.pyz` (antes `UnicodeDecodeError`); la copia inyectada
+  `<guion>_pmboot.py` conserva la *cookie* cp1252 y el acento del fuente.
 - Verificación del ciclo de R-6f4b8a92…R-9b5f2a74 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 992 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 6 pruebas nuevas

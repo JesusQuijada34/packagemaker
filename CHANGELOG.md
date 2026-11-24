@@ -1,5 +1,74 @@
 # Changelog
 
+## 2026-11-24 — trigésimo octavo ciclo
+
+### Corregido — proyectos con fuentes no UTF-8 (declaración PEP 263)
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna con la misma
+causa raíz: el motor leía los guiones del proyecto con `encoding="utf-8"` fijo.
+Python acepta fuentes en otra codificación si la primera o la segunda línea lo
+declaran (`# -*- coding: cp1252 -*-`), así que un proyecto guardado por un
+editor de Windows en ANSI era válido para Python y, sin embargo, rompía
+PackageMaker: en la GUI abortaba el proceso y en el CLI imprimía un traceback.
+Ningún cambio de comportamiento del engine: un proyecto UTF-8 se comporta
+exactamente igual que antes.
+
+- **R-3f8a7c21 — el IDE abortaba al abrir un proyecto en ANSI:**
+  `IflappIdePanel._on_script_selected()` leía con `utf-8-sig` y sólo capturaba
+  `OSError`; al cargar el proyecto, `_refresh_tree()` selecciona el primer guion
+  y el `UnicodeDecodeError` escapaba del slot (PyQt6 aborta el proceso).
+  `_declared_scripts()` repetía el problema con `config/settings.json` en ANSI.
+  Ahora el editor lee con `read_python_source()` y, si el archivo no es fuente
+  Python válida, limpia el editor y muestra `iflapp_ide.load_failed`;
+  `settings.json` se lee con `utf-8-sig` (acepta el BOM del Bloc de notas).
+- **R-9d2b6e45 — `--ide-compile` ignoraba la declaración de codificación:**
+  `detect_hidden_imports()`, la inyección del bootloader
+  (`prepare_for_build()`/`write_injected_copy()`/`inject_file()`) y el preflight
+  (`check_syntax()`) leían en UTF-8 fijo, así que `compile_project()` propagaba
+  `UnicodeDecodeError` y el CLI (que sólo captura `OSError`) lo imprimía como
+  traceback. Ahora los cuatro puntos leen con `read_python_source()` y la copia
+  inyectada se escribe **con la codificación original**, de modo que la *cookie*
+  siga siendo válida; un archivo que no es fuente Python válida se degrada con
+  un mensaje legible (sin imports ocultos, sin copia inyectada, preflight con el
+  error de codificación) en vez de lanzar.
+- **R-6c4a1f83 — blindaje y build fallaban con fuentes/`settings.json` no
+  UTF-8:** `hardening.inject_anti_debug()` y `obfuscate_strings()` leían y
+  reescribían en UTF-8 fijo (habrían dejado la *cookie* mintiendo);
+  `BuildThread._load_explicit_scripts()` y `_persist_env_payload()` no
+  capturaban `UnicodeDecodeError` al leer `settings.json`. Ambos métodos de
+  blindaje usan ahora `read_python_source()` y escriben con la codificación
+  detectada (o devuelven un `HardeningReport` no aplicado), y las dos lecturas
+  de `settings.json` usan `utf-8-sig` con `UnicodeDecodeError` capturado.
+- **Nuevo módulo** `lib/blindcubeEngine/source_io.py`:
+  `read_python_source()` detecta la codificación como el propio intérprete
+  (`tokenize.detect_encoding`) y `SourceEncodingError` distingue «no es fuente
+  Python» de un `OSError`.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Q-004,
+  Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1009 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 17 en `tests/test_non_utf8_sources.py`; 11 fallan con el
+  código anterior y la prueba del panel del IDE aborta el proceso (comprobado
+  con `git stash` de los seis módulos tocados).
+- Reproducción real: `--ide-scan --ide-scan-json` y `--ide-compile
+  --ide-backend zipapp` sobre un proyecto con `app.py` y `settings.json` en
+  cp1252 terminan con código 0 y generan el `.pyz` (antes
+  `UnicodeDecodeError`); la copia `<guion>_pmboot.py` conserva la *cookie* y el
+  acento del fuente.
+- No se prepara release: el periodo de observación sigue en curso y el
+  requisito de 7 días sin reportes nuevos no se cumple.
+
 ## 2026-11-24 — trigésimo séptimo ciclo
 
 ### Corregido — la GUI y la TUI dejan de abortar ante rutas inaccesibles

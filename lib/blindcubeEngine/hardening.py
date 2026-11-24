@@ -29,6 +29,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
+
 HARDENING_VERSION = 1
 
 # Guardián de depuración mínimo, inyectable en el arranque del paquete.
@@ -196,10 +198,15 @@ def inject_anti_debug(script: Path | str) -> HardeningReport:
     script = Path(script)
     if not script.is_file():
         return HardeningReport("anti-debug", False, f"no existe el script: {script}")
-    text = script.read_text(encoding="utf-8")
+    try:
+        text, encoding = read_python_source(script)
+    except OSError as exc:
+        return HardeningReport("anti-debug", False, f"no se pudo leer el script: {exc}")
+    except SourceEncodingError as exc:
+        return HardeningReport("anti-debug", False, f"fuente no analizable: {exc}")
     if "_iflapp_guard()" in text:
         return HardeningReport("anti-debug", True, "guardián ya presente", [str(script)])
-    script.write_text(ANTI_DEBUG_GUARD + "\n" + text, encoding="utf-8")
+    script.write_text(ANTI_DEBUG_GUARD + "\n" + text, encoding=encoding)
     return HardeningReport("anti-debug", True, "guardián inyectado", [str(script)])
 
 
@@ -277,7 +284,12 @@ def obfuscate_strings(source: Path | str, *, output: Optional[Path | str] = None
     source = Path(source)
     if not source.is_file():
         return HardeningReport("obfuscate", False, f"no existe el fuente: {source}")
-    text = source.read_text(encoding="utf-8")
+    try:
+        text, encoding = read_python_source(source)
+    except OSError as exc:
+        return HardeningReport("obfuscate", False, f"no se pudo leer el fuente: {exc}")
+    except SourceEncodingError as exc:
+        return HardeningReport("obfuscate", False, f"fuente no analizable: {exc}", [str(source)])
     if "b64decode(" in text:
         return HardeningReport("obfuscate", False, "el fuente ya está ofuscado", [str(source)])
     try:
@@ -293,7 +305,7 @@ def obfuscate_strings(source: Path | str, *, output: Optional[Path | str] = None
         new_text = new_text[:start] + replacement + new_text[end:]
 
     output = Path(output) if output else source
-    output.write_text(new_text, encoding="utf-8")
+    output.write_text(new_text, encoding=encoding)
     return HardeningReport(
         "obfuscate",
         bool(spans),

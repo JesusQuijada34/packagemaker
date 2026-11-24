@@ -39,6 +39,7 @@ from lib.blindcubeEngine.compilers import (
 )
 from lib.file_ops import copy_file, remove_tree
 from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
 from lib.mexf_compiler import MexfCompiler
 from lib.project_locator import describe_available, locate_project
 
@@ -175,8 +176,8 @@ class FlangCompiler:
             self.log(f"[ERROR] {self.last_error}")
             return []
         try:
-            settings = json.loads(settings_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
+            settings = json.loads(settings_path.read_text(encoding="utf-8-sig"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
             self.last_error = f"No se pudo leer config/settings.json: {error}"
             self.log(f"[ERROR] {self.last_error}")
             return []
@@ -307,15 +308,15 @@ class FlangCompiler:
     def _detect_hidden_imports(self, script_path: Path) -> list:
         hidden_imports = []
         try:
-            content = script_path.read_text(encoding="utf-8")
-            if "PyQt6" in content:
-                hidden_imports.append("PyQt6")
-            if "leviathan_ui" in content:
-                hidden_imports.append("leviathan_ui")
-            if "requests" in content:
-                hidden_imports.append("requests")
-        except OSError:
-            pass
+            content, _ = read_python_source(script_path)
+        except (OSError, SourceEncodingError):
+            return hidden_imports
+        if "PyQt6" in content:
+            hidden_imports.append("PyQt6")
+        if "leviathan_ui" in content:
+            hidden_imports.append("leviathan_ui")
+        if "requests" in content:
+            hidden_imports.append("requests")
         return hidden_imports
 
     def find_scripts(self) -> bool:
@@ -1264,11 +1265,11 @@ class BuildThread(QThread):
             return
         try:
             settings = (
-                json.loads(settings_path.read_text(encoding="utf-8"))
+                json.loads(settings_path.read_text(encoding="utf-8-sig"))
                 if settings_path.is_file()
                 else {}
             )
-        except (OSError, json.JSONDecodeError):
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
             settings = {}
         if not isinstance(settings, dict):
             settings = {}

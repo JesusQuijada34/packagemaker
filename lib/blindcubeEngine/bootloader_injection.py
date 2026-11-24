@@ -26,6 +26,8 @@ import shutil
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
+
 SPLASH_MODULE = "lib.splash_bootloader"
 _SPLASH_FILENAME = "splash_bootloader.py"
 _SUFFIX = "_pmboot.py"
@@ -225,12 +227,12 @@ def inject_file(path: Path | str) -> bool:
     """Inyecta el bootloader en *path* (in situ). ``True`` si hubo cambios."""
     path = Path(path)
     try:
-        source = path.read_text(encoding="utf-8")
-    except OSError:
+        source, encoding = read_python_source(path)
+    except (OSError, SourceEncodingError):
         return False
     new_source, changed = inject_source(source)
     if changed:
-        path.write_text(new_source, encoding="utf-8")
+        path.write_text(new_source, encoding=encoding)
     return changed
 
 
@@ -269,14 +271,14 @@ def write_injected_copy(script_path: Path | str) -> Optional[Path]:
     """
     script_path = Path(script_path)
     try:
-        source = script_path.read_text(encoding="utf-8")
-    except OSError:
+        source, encoding = read_python_source(script_path)
+    except (OSError, SourceEncodingError):
         return None
     if not script_uses_framework(source):
         return None
     new_source, _ = inject_source(source)
     target = script_path.with_name(f"{script_path.stem}{_SUFFIX}")
-    target.write_text(new_source, encoding="utf-8")
+    target.write_text(new_source, encoding=encoding)
     return target
 
 
