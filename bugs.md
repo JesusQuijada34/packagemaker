@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (cuadragésimo segundo ciclo)
+Última actualización: 2026-11-24 (cuadragésimo tercer ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -139,6 +139,7 @@ de auditoría.
 | R-8c2f4b17 | Bug — una respuesta inesperada del traductor automático aborta la interfaz | Media | Resuelto |
 | R-3a7f2d84 | Bug — un comando `.mexf` con byte NUL lanza traceback en el depurador | Media | Resuelto |
 | R-8d4c1e67 | Bug — un `.mexf` con escalares YAML no JSON lanza `TypeError` al compilar | Alta | Resuelto |
+| R-4c9e2b71 | Bug — un `.mexf` con `.nan`/`.inf` emite JSON no válido (`NaN`/`Infinity`) | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -3639,6 +3640,37 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo segundo ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-4c9e2b71 — Un `.mexf` con `.nan`/`.inf` emite JSON no válido (`NaN`/`Infinity`)
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `yaml.safe_load()` convierte `.nan`, `.inf` y `-.inf` en
+  `float` no finitos, y el JSON legacy puede producirlos con `1e400` (decodifica
+  a `inf`). `_json_safe()` los devolvía tal cual porque son `float`, así que
+  `json.dumps()` los escribía como `NaN`/`Infinity`/`-Infinity`, que **no son
+  JSON válido** (RFC 8259). Afectaba a `--shell-plan-json` (los consumidores
+  estrictos, como `jq` o `JSON.parse` de JavaScript, rechazan la salida) y al
+  `.mexf` canónico que `--compile-mexf` incrusta en el `.asksome`.
+- **Pasos para reproducir:** crear un `.mexf` con `shortcuts: {Ctrl+N: .nan}`,
+  `environments: {A: .inf}` o un `registry` con `.nan`, y ejecutar
+  `python packagemaker.py --shell-plan-json --shell-plan <archivo>`. También con
+  el JSON legacy `{"extensions": [], "shortcuts": {"Ctrl+O": 1e400}}`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un valor no finito, pero rompe el contrato JSON
+  que consumen scripts y herramientas externas).
+- **Solución aplicada:** `_json_safe()` convierte los `float` no finitos a su
+  texto (`"nan"`, `"inf"`, `"-inf"`), igual que ya hacía `plan_from_document()`
+  con `environments`. El parseo de documentos JSON legacy aplica la misma
+  normalización que el YAML, de modo que `--shell-plan-json` y
+  `canonicalize_mexf()` emiten JSON estricto.
+- **Pruebas:** `tests/test_mexf_shell.py::test_shell_plan_json_stays_valid_with_non_finite_yaml`,
+  `::test_legacy_json_infinity_keeps_shell_plan_json_valid` y
+  `tests/test_mexf_asksome.py::test_non_finite_yaml_scalars_stay_json_safe`
+  (las tres fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3692,6 +3724,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   probados (`--build-removeme` responde con `[ERROR]` ante una raíz ilegible y
   el depurador `.mexf` trata un comando no ejecutable como fallo con código
   126 en vez de abortar); no se prepara release.
+- Cuadragésimo tercer ciclo (2026-11-24): R-4c9e2b71 corregido y probado (un
+  `.mexf` con `.nan`/`.inf` de YAML o `1e400` del JSON legacy ya no emite
+  `NaN`/`Infinity` en `--shell-plan-json` ni en el `.mexf` canónico del
+  `.asksome`); no se prepara release.
+- Verificación del ciclo de R-4c9e2b71 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1046 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/mexf_parser.py`). Reproducción real: `--shell-plan-json` con
+  `shortcuts: {Ctrl+N: .nan}` y con el JSON legacy `1e400` imprimía `NaN`/
+  `Infinity` (rechazado por un parser estricto); ahora imprime `"nan"`/`"inf"`
+  y `json.loads(..., parse_constant=...)` lo acepta.
 - Verificación del ciclo de R-9e1a4c72 y R-4c8b2e91 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1024 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas

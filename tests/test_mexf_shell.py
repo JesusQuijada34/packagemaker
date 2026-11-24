@@ -163,6 +163,36 @@ def test_shell_plan_json_cli_helper(tmp_path, capsys):
     assert payload["id"] == "influent.shell"
 
 
+def test_shell_plan_json_stays_valid_with_non_finite_yaml(tmp_path, capsys):
+    """``.nan``/``.inf`` de YAML no deben emitir ``NaN``/``Infinity``."""
+    from lib.cliHandler import MexfShellHelper
+
+    path = tmp_path / "nan.mexf"
+    path.write_text(
+        "format: mexf\nversion: 1\nmetadata:\n  id: demo.nan\n  name: NaN\n"
+        "  version: '1.0'\nshortcuts:\n  Ctrl+N: .nan\n"
+        "environments:\n  A: .inf\n"
+        "registry:\n  - path: HKCU\\Software\\Demo\n    value: .nan\n",
+        encoding="utf-8",
+    )
+    assert MexfShellHelper.plan({"path": str(path), "json": True})
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["shortcuts"]["Ctrl+N"] == "nan"
+    assert payload["environments"]["A"] == "inf"
+    json.dumps(payload, allow_nan=False)
+
+
+def test_legacy_json_infinity_keeps_shell_plan_json_valid(tmp_path):
+    """``1e400`` del JSON legacy decodifica a ``inf``: la salida sigue siendo JSON."""
+    path = tmp_path / "legacy.mexf"
+    path.write_text(
+        '{"extensions": [], "shortcuts": {"Ctrl+O": 1e400}}', encoding="utf-8"
+    )
+    plan = load_shell_plan(path)
+    assert plan.shortcuts["Ctrl+O"] == "inf"
+    json.dumps(plan.to_dict(), allow_nan=False)
+
+
 def test_parse_mexf_still_accepts_plan_document(tmp_path):
     path = tmp_path / "main.mexf"
     path.write_text(MEXF, encoding="utf-8")

@@ -1,5 +1,54 @@
 # Changelog
 
+## 2026-11-24 — cuadragésimo tercer ciclo
+
+### Corregido — un `.mexf` con `.nan`/`.inf` emitía JSON no válido
+
+Sin reportes externos nuevos. Un hallazgo de auditoría interna en la misma
+familia que R-7b3a9e58 y R-8d4c1e67: datos externos con números no finitos que
+llegan a una salida JSON. Ningún cambio de comportamiento del engine: un
+`.mexf` cuyos valores son finitos o de texto se procesa exactamente igual.
+
+- **R-4c9e2b71 — `--shell-plan-json` y el `.mexf` canónico podían emitir
+  `NaN`/`Infinity`:** `yaml.safe_load()` convierte `.nan`, `.inf` y `-.inf` en
+  `float` no finitos, y el JSON legacy puede producirlos con `1e400`
+  (decodifica a `inf`). `_json_safe()` los devolvía tal cual porque son
+  `float`, así que `json.dumps()` los escribía como `NaN`/`Infinity`, que no
+  son JSON válido (RFC 8259). Los consumidores estrictos (`jq`, `JSON.parse`)
+  rechazaban la salida de `--shell-plan-json`, y el `.mexf` canónico que
+  `--compile-mexf` incrusta en el `.asksome` quedaba con la misma marca. Ahora
+  `_json_safe()` convierte los `float` no finitos a su texto (`"nan"`, `"inf"`,
+  `"-inf"`), coherente con lo que ya hacía `plan_from_document()` con
+  `environments`; el parseo del JSON legacy aplica la misma normalización que
+  el YAML. Reportado por JesusQuijada34 (auditoría interna).
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Las
+  preguntas Q-004, Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+- Hallazgo sin cambio de código: `--engine flatcube` sobrescribe el
+  `--compiler` explícito con `pyinstaller` (`get_engine()` fuerza
+  `engine.backend`). Es el backend declarado por el motor legacy; no se
+  modifica sin aprobación y queda como observación, no como solicitud.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1046 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 3 (2 en `tests/test_mexf_shell.py` y 1 en
+  `tests/test_mexf_asksome.py`); las 3 fallan con el código anterior
+  (comprobado con `git checkout` de `lib/mexf_parser.py`).
+- Reproducción real: `--shell-plan-json` con `shortcuts: {Ctrl+N: .nan}` y con
+  el JSON legacy `{"shortcuts": {"Ctrl+O": 1e400}}` imprimía `NaN`/`Infinity`;
+  ahora imprime `"nan"`/`"inf"` y un parser estricto lo acepta.
+- No se prepara release: el periodo de observación sigue en curso y el
+  requisito de 7 días sin reportes nuevos no se cumple.
+
 ## 2026-11-24 — cuadragésimo segundo ciclo
 
 ### Corregido — comandos `.mexf` con byte NUL y escalares YAML no JSON

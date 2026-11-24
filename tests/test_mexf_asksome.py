@@ -1169,6 +1169,24 @@ def test_yaml_native_scalars_are_normalized_for_json(tmp_path):
     assert json.loads(canonicalize_mexf(document))["metadata"]["released"] == "2024-01-01"
 
 
+def test_non_finite_yaml_scalars_stay_json_safe(tmp_path):
+    """``.nan``/``.inf`` de YAML no pueden colarse en el ``.mexf`` canónico."""
+    from lib.mexf_parser import canonicalize_mexf
+
+    source = tmp_path / "nonfinite.mexf"
+    source.write_text(
+        "format: mexf\nversion: 1\nmetadata:\n  id: demo.nan\n  name: NaN\n"
+        "  version: '1.0'\nshortcuts:\n  Ctrl+N: .nan\n"
+        "environments:\n  A: -.inf\ncommands: []\n",
+        encoding="utf-8",
+    )
+    document = parse_mexf(source)
+    payload = json.loads(canonicalize_mexf(document))
+    assert payload["shortcuts"]["Ctrl+N"] == "nan"
+    assert payload["environments"]["A"] == "-inf"
+    json.dumps(payload, allow_nan=False)
+
+
 def test_compile_mexf_project_accepts_yaml_dates(tmp_path):
     """Un ``.mexf`` válido con una fecha YAML compila sin traceback (R-8d4c1e67)."""
     from lib.mexf_compiler import compile_mexf_project

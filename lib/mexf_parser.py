@@ -10,6 +10,7 @@ import base64
 import copy
 import datetime
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Literal
@@ -125,6 +126,11 @@ def _json_safe(value: Any, _active: set | None = None) -> Any:
         return value.isoformat()
     if isinstance(value, (bytes, bytearray)):
         return base64.b64encode(bytes(value)).decode("ascii")
+    if isinstance(value, float) and not math.isfinite(value):
+        # JSON no admite NaN/Infinity (YAML ``.nan``/``.inf`` o ``1e400`` en
+        # el JSON legacy): se conserva el texto del escalar para que la salida
+        # ``--shell-plan-json`` y el ``.mexf`` canónico sigan siendo JSON válido.
+        return str(value)
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     return str(value)
@@ -197,7 +203,7 @@ def parse_mexf(path: Path | str, *, project_root: Path | None = None) -> MexfDoc
             raise MexfError(f"El documento .mexf JSON no es válido: {exc}") from exc
         if not isinstance(data, dict):
             raise MexfError("El documento .mexf debe ser un objeto JSON.")
-        return MexfDocument(_legacy_to_v1(data), "legacy-json", str(source))
+        return MexfDocument(_json_safe(_legacy_to_v1(data)), "legacy-json", str(source))
     if fmt != "yaml-v1":
         if yaml is None:
             raise MexfError("PyYAML es necesario para leer .mexf YAML.")
