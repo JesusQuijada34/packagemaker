@@ -1,5 +1,63 @@
 # Changelog
 
+## 2026-11-24 — trigésimo noveno ciclo
+
+### Corregido — depurador, `pm.data` y cabeceras con valores extremos
+
+Sin reportes externos nuevos. Cuatro hallazgos de auditoría interna; dos
+completan la familia PEP 263 del ciclo anterior y dos cierran huecos de
+robustez ante JSON válido con números no finitos. Ningún cambio de
+comportamiento del engine: un proyecto UTF-8 y un `pm.data`/paquete normal se
+comportan exactamente igual que antes.
+
+- **R-2a9f4d17 — el depurador rechazaba fuentes con declaración PEP 263:**
+  `trace_script()` (base de `--ide-debug` y del depurador del IDE) leía con
+  `encoding="utf-8"` fijo, así que un `app.py` en ANSI con su *coding cookie*
+  daba `[ERROR] UnicodeDecodeError`. Ahora compila con `read_python_source()` y
+  un fuente no decodificable se reporta como `SyntaxError` legible.
+- **R-9c4d2f61 — el detector de dependencias del editor ignoraba PEP 263:**
+  `DependencyChecker._detect_imports()` (pmCodeEditor) lanzaba
+  `UnicodeDecodeError` dentro de la QThread y `_write_requirements_txt()` no
+  podía leer un `requirements.txt` no UTF-8. Ahora usa `read_python_source()`
+  (con escaneo tolerante si el fuente no es decodificable) y tolera
+  `OSError`/`UnicodeDecodeError` al leer el archivo previo.
+- **R-5e8c1b42 — `pm.data` con números no finitos impedía arrancar:**
+  `coerce_int()`/`coerce_float()` no capturaban `OverflowError`. `1e400` es
+  JSON válido y se decodifica como infinito, así que `"sidebar_accent_width":
+  1e400` mataba el arranque de la GUI y `"card_opacity": 1e400` rompía el
+  guardado de Configuración (`int(inf * 100)` en un slot). Las coerciones
+  rechazan ahora los valores no finitos con `math.isfinite()` y conservan los
+  enteros grandes legítimos.
+- **R-7b3a9e58 — cabeceras `.iflapp`/`.run` con números no finitos:**
+  `_require_int()` y `_read_section()` no capturaban `OverflowError`, así que
+  una cabecera con `"size": 1e400` mostraba «cannot convert float infinity to
+  integer» en vez de `IflappError`; `read_dropper_header()` además dejaba
+  escapar el `OSError` del `.run`. Ambos traducen ahora a `IflappError`.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Q-004,
+  Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1021 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 12 (7 en `tests/test_non_utf8_sources.py`, 2 en
+  `tests/test_local_config_robustness.py`, 2 en `tests/test_iflapp_format.py`
+  y 2 en `tests/test_iflapp_dropper_sandbox.py`); todas fallan con el código
+  anterior (comprobado con `git stash` de los cinco módulos tocados).
+- Reproducción real: `--ide-debug` sobre un `app.py` cp1252 traza el guion
+  (antes `[ERROR] UnicodeDecodeError`); `read_iflapp_header()` sobre una
+  cabecera con `1e400` devuelve `IflappError` (antes `OverflowError`).
+- No se prepara release: el periodo de observación sigue en curso y el
+  requisito de 7 días sin reportes nuevos no se cumple.
+
 ## 2026-11-24 — trigésimo octavo ciclo
 
 ### Corregido — proyectos con fuentes no UTF-8 (declaración PEP 263)

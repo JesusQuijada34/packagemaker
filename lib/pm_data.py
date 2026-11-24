@@ -7,6 +7,7 @@ Separa valores editables por el usuario y metadatos de solo lectura (build/compi
 from __future__ import annotations
 
 import json
+import math
 import sys
 import uuid
 from copy import deepcopy
@@ -87,24 +88,35 @@ def coerce_int(value: Any, default: int) -> int:
     """Convierte ``value`` a entero y cae a ``default`` si no es numérico.
 
     ``data/pm.data`` es editable a mano: un texto, una lista o ``None`` en una
-    clave numérica no debe impedir que arranque la interfaz.
+    clave numérica no debe impedir que arranque la interfaz. ``1e400`` es JSON
+    válido pero se decodifica como infinito, y ``int(inf)`` lanza
+    ``OverflowError``; por eso los valores no finitos se descartan.
     """
-    try:
+    if isinstance(value, bool):
         return int(value)
-    except (TypeError, ValueError):
-        pass
+    if isinstance(value, int):
+        return value
     try:
-        return int(float(value))
-    except (TypeError, ValueError):
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return int(default)
+    if not math.isfinite(number):
+        return int(default)
+    try:
+        return int(number)
+    except (OverflowError, ValueError):
         return int(default)
 
 
 def coerce_float(value: Any, default: float) -> float:
     """Convierte ``value`` a flotante y cae a ``default`` si no es numérico."""
     try:
-        return float(value)
-    except (TypeError, ValueError):
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
         return float(default)
+    if not math.isfinite(number):
+        return float(default)
+    return number
 
 
 def is_compiled_build() -> bool:

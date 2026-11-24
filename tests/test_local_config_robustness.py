@@ -180,6 +180,43 @@ class TestEditorConfigShapes:
                 window.deleteLater()
 
 
+class TestPMDataNumbers:
+    """``pm.data`` admite números JSON no finitos (``1e400`` → ``inf``)."""
+
+    def test_non_finite_numbers_fall_back_to_defaults(self, tmp_path):
+        from lib.pm_data import PMDataStore
+
+        path = tmp_path / "pm.data"
+        path.write_text(
+            json.dumps(
+                {
+                    "user": {
+                        "sidebar_accent_width": 1e400,
+                        "card_opacity": 1e400,
+                        "dpi_scale": float("inf"),
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+        store = PMDataStore(path)
+        assert store.get_user_int("sidebar_accent_width", 3) == 3
+        assert store.get_user_float("card_opacity", 0.08) == 0.08
+        assert store.get_user_float("dpi_scale", 1.0) == 1.0
+
+    def test_coercions_keep_valid_numbers_and_reject_non_finite(self):
+        from lib.pm_data import coerce_float, coerce_int
+
+        assert coerce_int("3.7", 9) == 3
+        assert coerce_int(True, 9) == 1
+        assert coerce_int(10**400, 9) == 10**400
+        assert coerce_int(float("inf"), 9) == 9
+        assert coerce_int(float("nan"), 9) == 9
+        assert coerce_float("2.5", 1.0) == 2.5
+        assert coerce_float(float("-inf"), 1.0) == 1.0
+        assert int(coerce_float(1e400, 0.08) * 100) == 8
+
+
 class TestProjectConfigShapes:
     def test_malformed_document_is_ignored(self, tmp_path):
         from lib.projectConfig import ProjectConfig

@@ -290,8 +290,14 @@ def trace_script(
     Con ``breakpoints`` solo se detiene en esas líneas; sin él registra cada
     línea ejecutada (limitado por ``max_stops``).
     """
+    from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
+
     source = Path(path)
-    code = compile(source.read_text(encoding="utf-8"), str(source), "exec")
+    try:
+        text, _ = read_python_source(source)
+    except SourceEncodingError as exc:
+        raise SyntaxError(f"No se pudo decodificar {source.name}: {exc}") from exc
+    code = compile(text, str(source), "exec")
     targets = set(breakpoints) if breakpoints else None
     stops: List[TraceStop] = []
     abort = {"hit": False}

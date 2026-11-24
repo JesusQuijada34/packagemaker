@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (trigésimo octavo ciclo)
+Última actualización: 2026-11-24 (trigésimo noveno ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -129,6 +129,10 @@ de auditoría.
 | R-3f8a7c21 | Bug — el IDE aborta con proyectos de fuentes no UTF-8 | Alta | Resuelto |
 | R-9d2b6e45 | Bug — `--ide-compile` ignora la declaración PEP 263 | Alta | Resuelto |
 | R-6c4a1f83 | Bug — blindaje y build fallan con fuentes no UTF-8 | Media | Resuelto |
+| R-2a9f4d17 | Bug — el depurador rechaza fuentes con declaración PEP 263 | Media | Resuelto |
+| R-5e8c1b42 | Bug — `pm.data` con números no finitos impide arrancar | Alta | Resuelto |
+| R-7b3a9e58 | Bug — cabecera `.iflapp` con números no finitos escapa como `OverflowError` | Media | Resuelto |
+| R-9c4d2f61 | Bug — el detector de dependencias del editor ignora PEP 263 | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -3342,6 +3346,100 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del trigésimo octavo ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-2a9f4d17 — El depurador rechaza fuentes con declaración PEP 263
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `trace_script()` (base de `--ide-debug` y del depurador del
+  IDE) leía el guion con `encoding="utf-8"` fijo. Un fuente válido para Python
+  que declara `cp1252` fallaba con `UnicodeDecodeError` y el depurador quedaba
+  inservible (`--ide-debug` sólo mostraba `[ERROR] UnicodeDecodeError…`).
+- **Pasos para reproducir:** `--ide-debug <proyecto>/ansi.py` con
+  `# -*- coding: cp1252 -*-` y algún acento → `[ERROR] UnicodeDecodeError`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el resto del IDE y del build ya soportaba PEP 263).
+- **Solución aplicada:** `trace_script()` compila con `read_python_source()`;
+  un fuente no decodificable se traduce a `SyntaxError` con un mensaje legible
+  que `debug_script()` ya reporta como `error`.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestDebuggerEncoding` (traza,
+  depuración y error legible).
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-5e8c1b42 — `pm.data` con números no finitos impide arrancar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `coerce_int()`/`coerce_float()` sólo capturaban
+  `TypeError`/`ValueError`. `1e400` es JSON válido y se decodifica como
+  infinito: `int(inf)` lanza `OverflowError`, que escapaba de
+  `get_user_int()`/`get_user_float()`. Con `"sidebar_accent_width": 1e400` el
+  arranque de la GUI moría (`settings_appearance_state`, `border_w`), y con
+  `"card_opacity": 1e400` el guardado de Configuración hacía
+  `int(inf * 100)` dentro de un slot.
+- **Pasos para reproducir:** escribir `data/pm.data` con
+  `{"user": {"sidebar_accent_width": 1e400}}` y arrancar → `OverflowError`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (un archivo editable a mano impide abrir la aplicación).
+- **Solución aplicada:** las coerciones rechazan valores no finitos con
+  `math.isfinite()` y capturan `OverflowError`; los enteros grandes legítimos
+  se conservan y los números válidos mantienen el comportamiento anterior.
+- **Pruebas:** `tests/test_local_config_robustness.py::TestPMDataNumbers`.
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-7b3a9e58 — Cabecera `.iflapp` con números no finitos escapa como `OverflowError`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `_require_int()` (validador de la cabecera) y
+  `_read_section()` sólo capturaban `TypeError`/`ValueError`. Una cabecera con
+  `"size": 1e400` (JSON válido → infinito) lanzaba `OverflowError` crudo desde
+  `read_iflapp_header()`, `verify_iflapp()` y `read_dropper_header()`, que
+  documentan devolver `IflappError`. El mensaje que veía el usuario era
+  «cannot convert float infinity to integer».
+- **Pasos para reproducir:** `--inspect` sobre un `.iflapp` con
+  `{"sections": {"icon": {"size": 1e400}}}` → error críptico en vez de
+  «cabecera inválida».
+- **Estado:** Resuelto.
+- **Prioridad:** Media (contenedores ajenos o dañados; sin corrupción).
+- **Solución aplicada:** `_require_int()` y `_read_section()` capturan
+  `OverflowError` y lo traducen a `IflappError`; `read_dropper_header()` además
+  traduce `OSError` al leer el `.run`.
+- **Pruebas:** `tests/test_iflapp_format.py::MalformedHeaderShapeTests`
+  (`test_non_finite_section_size_raises`,
+  `test_non_finite_payload_offset_raises`) y
+  `tests/test_iflapp_dropper_sandbox.py::DropperTests`
+  (`test_read_dropper_header_translates_non_finite_header`,
+  `test_read_dropper_header_reports_missing_file`).
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-9c4d2f61 — El detector de dependencias del editor ignora PEP 263
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `DependencyChecker._detect_imports()` (pmCodeEditor) leía el
+  guion con `encoding="utf-8"` fijo y `_write_requirements_txt()` leía el
+  `requirements.txt` existente igual. Un proyecto en ANSI lanzaba
+  `UnicodeDecodeError` dentro de la QThread al pulsar «Comprobar dependencias»
+  y un `requirements.txt` no UTF-8 impedía reescribirlo.
+- **Pasos para reproducir:** `DependencyChecker(<app.py cp1252>)._detect_imports()`
+  → `UnicodeDecodeError`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (función del editor inutilizable con proyectos ANSI).
+- **Solución aplicada:** `_detect_imports()` usa `read_python_source()` y, si el
+  fuente no es decodificable, escanea con `errors="replace"` para no perder
+  imports legibles; `_write_requirements_txt()` tolera
+  `OSError`/`UnicodeDecodeError` al leer el archivo previo.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestDependencyScanEncoding`.
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3386,6 +3484,17 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   corregidos y probados (el IDE, el CLI `--ide-compile`, el preflight y el
   blindaje respetan la declaración de codificación PEP 263; un proyecto en ANSI
   ya no aborta la GUI ni imprime tracebacks); no se prepara release.
+- Trigésimo noveno ciclo (2026-11-24): R-2a9f4d17, R-5e8c1b42, R-7b3a9e58 y
+  R-9c4d2f61 corregidos y probados (el depurador y el detector de dependencias
+  respetan PEP 263; un `pm.data` con números no finitos ya no impide arrancar;
+  las cabeceras `.iflapp`/`.run` con números no finitos dan `IflappError`); no
+  se prepara release.
+- Verificación del ciclo de R-2a9f4d17…R-9c4d2f61 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1021 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 12 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de los cinco módulos
+  tocados). Reproducción real: `--ide-debug` sobre un `app.py` cp1252 traza el
+  guion (antes `[ERROR] UnicodeDecodeError`).
 - Verificación del ciclo de R-3f8a7c21…R-6c4a1f83 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1009 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. De las 17 pruebas

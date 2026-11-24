@@ -197,8 +197,14 @@ class DependencyChecker(QThread):
             self.finished.emit(False, str(e))
 
     def _detect_imports(self):
-        with open(self.script_path, "r", encoding="utf-8") as f:
-            content = f.read()
+        from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
+
+        try:
+            content, _ = read_python_source(self.script_path)
+        except SourceEncodingError:
+            # Fuente no decodificable con su declaración: se escanea como texto
+            # en UTF-8 tolerante para no perder imports legibles.
+            content = Path(self.script_path).read_bytes().decode("utf-8", errors="replace")
         self.detected_imports = detect_imports_from_source(
             content,
             script_path=self.script_path,
@@ -212,8 +218,11 @@ class DependencyChecker(QThread):
         header = "# Generado automáticamente por pmCodeEditor\n"
         body = "\n".join(lines) + ("\n" if lines else "")
         existing = ""
-        if req_path.exists():
-            existing = req_path.read_text(encoding="utf-8")
+        try:
+            if req_path.exists():
+                existing = req_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            existing = ""
         if body.strip() and body not in existing:
             req_path.write_text(header + body, encoding="utf-8")
             self.status.emit(f"Actualizado {req_path.name}")

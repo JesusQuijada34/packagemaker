@@ -19,7 +19,14 @@ import pytest
 
 from lib.blindcubeEngine import bootloader_injection, build_preflight, hardening
 from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
-from lib.iflapp_ide import compile_project, detect_hidden_imports, scan_project
+from lib.dependency_manager import DependencyChecker
+from lib.iflapp_ide import (
+    compile_project,
+    debug_script,
+    detect_hidden_imports,
+    scan_project,
+    trace_script,
+)
 
 CP1252_SOURCE = (
     "# -*- coding: cp1252 -*-\n"
@@ -183,6 +190,62 @@ class TestIdePanelSlots:
             assert panel.hidden_imports() == []
         finally:
             panel.deleteLater()
+
+
+class TestDebuggerEncoding:
+    def test_trace_script_reads_pep263_source(self, tmp_path):
+        path = _write_cp1252(
+            tmp_path / "app.py",
+            "# -*- coding: cp1252 -*-\n# Año\nvalor = 41 + 1\n",
+        )
+        stops = trace_script(path, max_stops=20)
+        assert stops
+        assert any(stop.line == 3 for stop in stops)
+
+    def test_debug_script_accepts_pep263_source(self, tmp_path):
+        path = _write_cp1252(
+            tmp_path / "app.py",
+            "# -*- coding: cp1252 -*-\n# Año\nvalor = 7\n",
+        )
+        outcome = debug_script(path, max_stops=20)
+        assert outcome.error is None
+        assert outcome.stops
+
+    def test_trace_script_reports_undecodable_source(self, tmp_path):
+        path = tmp_path / "legacy.py"
+        path.write_bytes("# año\nimport os\n".encode("latin-1"))
+        outcome = debug_script(path)
+        assert outcome.error is not None
+        assert "legacy.py" in outcome.error
+
+
+class TestDependencyScanEncoding:
+    def test_dependency_checker_reads_pep263_source(self, tmp_path):
+        script = _write_cp1252(
+            tmp_path / "app.py",
+            "# -*- coding: cp1252 -*-\n# Año\nimport requests\n",
+        )
+        checker = DependencyChecker(str(script), project_dir=str(tmp_path))
+        checker._detect_imports()
+        assert checker.detected_imports == {"requests"}
+
+    def test_dependency_checker_tolerates_undecodable_source(self, tmp_path):
+        script = tmp_path / "legacy.py"
+        script.write_bytes("# año\nimport requests\n".encode("latin-1"))
+        checker = DependencyChecker(str(script), project_dir=str(tmp_path))
+        checker._detect_imports()
+        assert "requests" in checker.detected_imports
+
+    def test_requirements_txt_with_non_utf8_bytes_is_rewritten(self, tmp_path):
+        script = _write_cp1252(
+            tmp_path / "app.py",
+            "# -*- coding: cp1252 -*-\nimport requests\n",
+        )
+        (tmp_path / "requirements.txt").write_bytes(b"# a\xf1os\n")
+        checker = DependencyChecker(str(script), project_dir=str(tmp_path))
+        checker.detected_imports = {"requests"}
+        checker._write_requirements_txt()
+        assert "requests" in (tmp_path / "requirements.txt").read_text(encoding="utf-8")
 
 
 class TestHardeningEncoding:
