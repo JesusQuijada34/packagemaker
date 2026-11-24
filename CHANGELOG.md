@@ -1,5 +1,56 @@
 # Changelog
 
+## 2026-11-24 — trigésimo séptimo ciclo
+
+### Corregido — la GUI y la TUI dejan de abortar ante rutas inaccesibles
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna sobre puntos
+de entrada que ejecutaban comprobaciones del sistema de archivos (o el
+lanzamiento de un programa externo) fuera de cualquier `try`. PyQt6 aborta el
+proceso ante una excepción no capturada en un slot o en `QThread.run`, así que
+el fallo se veía como un cierre sin mensaje. Ningún cambio de comportamiento del
+engine: el camino feliz produce el mismo artefacto.
+
+- **R-6f4b8a92 — empaquetar un proyecto inaccesible abortaba la GUI:** al pulsar
+  BlindCube sobre una carpeta cuyo padre no es accesible, `find_env_file()`
+  (`Path.is_file()`) lanzaba `PermissionError` dentro del slot del botón y
+  `BuildThread.run()` lo hacía en `repo_path.exists()`, antes del `try` que
+  traduce errores. `app_icon_for()` repetía la comprobación sin proteger. Ahora
+  `find_env_file()`/`app_icon_for()` degradan a «sin `.env`»/«sin icono» y
+  `BuildThread.run()` envuelve la ruta personalizada y la preflight para emitir
+  la señal `error` con la causa.
+- **R-1e7c3d58 — «Ejecutar» del gestor caía con una carpeta ilegible:**
+  `ProjectDetailsDialog._run_installed_app()` listaba con `os.listdir()` y
+  lanzaba con `subprocess.Popen()` sin `try/except`; una carpeta `chmod 000` o
+  un ejecutable desaparecido escapaba del slot. El bloque completo traduce ahora
+  `OSError` a un aviso `manager.error_status`.
+- **R-9b5f2a74 — «Abrir carpeta» de la TUI caía sin `xdg-open`:** el
+  `subprocess.Popen(["xdg-open", …])` (o `open`/`os.startfile`) no estaba
+  protegido, así que un sistema mínimo terminaba en `FileNotFoundError` con
+  traceback. La resolución y el lanzamiento van dentro de `try/except OSError`
+  y muestran `manager.open_folder_failed_title` con la causa.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Q-004,
+  Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 992 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 6 en `tests/test_unreadable_build_and_launch.py`; 5 de ellas
+  fallan con el código anterior (comprobado con `git stash`).
+- Build real `create` + `--buildthis --compiler zipapp --no-sandbox`: `.iflapp`
+  de 21 archivos, `verify_iflapp() → valid: True`.
+- No se prepara release: el periodo de observación sigue en curso y el
+  requisito de 7 días sin reportes nuevos no se cumple.
+
 ## 2026-11-24 — trigésimo sexto ciclo
 
 ### Corregido — el CLI ya no muestra tracebacks ante carpetas sin permisos

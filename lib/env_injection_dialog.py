@@ -79,12 +79,16 @@ def app_icon_for(project_path: Path, app_name: str) -> Optional[Path]:
     """Icono de la aplicación: ``<app>-icon.ico`` en ``app/`` o en la raíz."""
     root = Path(project_path)
     stems = [f"{app_name}-icon", "app-icon", "icon"]
-    for directory in (root / "app", root):
-        for stem in stems:
-            for suffix in (".ico", ".png"):
-                candidate = directory / f"{stem}{suffix}"
-                if candidate.is_file():
-                    return candidate
+    try:
+        for directory in (root / "app", root):
+            for stem in stems:
+                for suffix in (".ico", ".png"):
+                    candidate = directory / f"{stem}{suffix}"
+                    if candidate.is_file():
+                        return candidate
+    except OSError:
+        # Proyecto sin permisos: el diálogo sigue abierto, sin icono.
+        return None
     return None
 
 

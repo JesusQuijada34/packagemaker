@@ -634,13 +634,20 @@ def _moonfix_project_direct(proj: Path) -> None:
 
 def _open_folder(proj: Path) -> None:
     """Abre una carpeta con el explorador nativo sin invocar un shell."""
-    target = str(proj.resolve())
-    if sys.platform.startswith("win"):
-        os.startfile(target)  # type: ignore[attr-defined]
-    elif sys.platform == "darwin":
-        subprocess.Popen(["open", target], close_fds=True)
-    else:
-        subprocess.Popen(["xdg-open", target], close_fds=True)
+    try:
+        target = str(proj.resolve())
+        if sys.platform.startswith("win"):
+            os.startfile(target)  # type: ignore[attr-defined]
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", target], close_fds=True)
+        else:
+            subprocess.Popen(["xdg-open", target], close_fds=True)
+    except OSError as exc:
+        # Sin abridor instalado (xdg-open ausente en un sistema mínimo) la
+        # acción debe avisar, no tumbar la TUI con un traceback.
+        _err(f"{tr('manager.open_folder_failed_title')}: {exc}")
+        _pause()
+        return
     _ok(tr("tui.opening").format(name=proj.name))
     _pause()
 

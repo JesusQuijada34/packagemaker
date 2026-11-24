@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (trigésimo sexto ciclo)
+Última actualización: 2026-11-24 (trigésimo séptimo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -123,6 +123,9 @@ de auditoría.
 | R-4a7e2c91 | Bug — `create` lanza traceback con una carpeta base sin permisos | Media | Resuelto |
 | R-6c9d3f52 | Bug — `moonfix`/`repair` lanzan traceback con un proyecto de solo lectura | Media | Resuelto |
 | R-8e2b7d64 | Bug — `compile`/`--buildthis` lanzan traceback con `dist/` bloqueado | Alta | Resuelto |
+| R-6f4b8a92 | Bug — empaquetar un proyecto inaccesible aborta la GUI | Alta | Resuelto |
+| R-1e7c3d58 | Bug — «Ejecutar» del gestor cae con una carpeta ilegible | Media | Resuelto |
+| R-9b5f2a74 | Bug — la TUI cae al abrir una carpeta sin `xdg-open` | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -193,6 +196,13 @@ El vigésimo segundo ciclo añadió R-6d2f8a41: `--compile-mexf` dejaba escapar
 `PermissionError`/`IsADirectoryError` con traceback cuando `details.xml`, un
 `.mexf` o el propio directorio `.mexf/` no se podían leer. Queda corregido y
 probado en el commit `f8ea814`; la cola sigue sin bugs abiertos.
+
+El trigésimo séptimo ciclo registra R-6f4b8a92, R-1e7c3d58 y R-9b5f2a74
+(corregidos y probados, sin cambios de comportamiento del engine): quedaban
+tres puntos de entrada del usuario donde `PermissionError` (o la ausencia de
+`xdg-open`) escapaba de un slot de Qt o del `run()` de una QThread y PyQt6
+abortaba el proceso. Ahora el empaquetado, el botón «Ejecutar» del gestor y
+«Abrir carpeta» de la TUI informan del problema sin tumbar la aplicación.
 
 ---
 
@@ -3157,6 +3167,89 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del trigésimo sexto ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-6f4b8a92 — Empaquetar un proyecto inaccesible aborta la GUI
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** al pulsar BlindCube sobre un proyecto cuyo directorio padre
+  no es accesible, la excepción escapaba antes del `try` del build. En el slot
+  del botón, `_ask_env_injection()` llamaba a `find_env_file()`, que comprobaba
+  `.env` con `Path.is_file()` y propagaba `PermissionError`; en la QThread,
+  `BuildThread.run()` hacía `repo_path.exists()` (y la preflight)
+  **fuera** del `try` que traduce errores. PyQt6 aborta el proceso ante una
+  excepción no capturada en un slot o en `QThread.run`, así que la aplicación
+  moría sin mensaje. `env_injection_dialog.app_icon_for()` tenía la misma
+  comprobación sin proteger.
+- **Pasos para reproducir:** crear
+  `<tmp>/locked/Influent.demo.v1.0-26.05-20.13-AlphaCube/` con `details.xml`,
+  poner `locked` en `chmod 000` y empaquetar indicando esa carpeta (o llamar a
+  `BuildThread(..., custom_path=...).run()`); se obtiene `PermissionError` en
+  `Path.exists()` dentro de `run`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (la acción principal de la app terminaba en un aborto del
+  proceso, no en un error).
+- **Solución aplicada:** `find_env_file()` y `app_icon_for()` tratan `OSError`
+  como «no hay `.env`»/«no hay icono»; `BuildThread.run()` envuelve la
+  comprobación de `custom_path` y la preflight en `try/except OSError` y emite
+  la señal `error` con la ruta o el detalle. El camino feliz no cambia.
+- **Pruebas:** `tests/test_unreadable_build_and_launch.py` —
+  `test_find_env_file_tolerates_unreadable_project`,
+  `test_app_icon_for_tolerates_unreadable_project` y
+  `test_build_thread_reports_unreadable_custom_path` (las tres fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del trigésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-1e7c3d58 — «Ejecutar» del gestor cae con una carpeta ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `ProjectDetailsDialog._run_installed_app()` listaba la
+  carpeta instalada con `os.listdir()` y lanzaba el proceso con
+  `subprocess.Popen()` sin `try/except`. Una carpeta sin permiso de lectura
+  (`PermissionError`) o un ejecutable que desaparece entre la comprobación y el
+  `Popen` (`FileNotFoundError`/`OSError`) escapaba del slot y PyQt6 abortaba
+  la aplicación.
+- **Pasos para reproducir:** instalar una app en `Fluthin Apps/demo/`, poner
+  `demo` en `chmod 000` y pulsar «Ejecutar» en el gestor (o invocar
+  `_run_installed_app()` con un objeto que apunte a esa carpeta).
+- **Estado:** Resuelto.
+- **Prioridad:** Media (acción secundaria, pero tumbaba todo el proceso).
+- **Solución aplicada:** el listado y el `Popen` van dentro de un
+  `try/except OSError` que muestra el aviso
+  `manager.error_status` con la causa; la carpeta inexistente conserva su
+  mensaje propio.
+- **Pruebas:** `tests/test_unreadable_build_and_launch.py` —
+  `test_run_installed_app_reports_unreadable_dir` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-9b5f2a74 — La TUI cae al abrir una carpeta sin `xdg-open`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** «Abrir carpeta» de la TUI resolvía la ruta y llamaba a
+  `subprocess.Popen(["xdg-open", …])` (o `open`/`os.startfile`) sin proteger el
+  lanzamiento. En un sistema mínimo sin `xdg-open`, o con una ruta cuyo
+  `resolve()` falla, la TUI terminaba con traceback en vez de avisar. Es la
+  misma familia que R-9a4c1e27, que sólo cubrió las comprobaciones de rutas.
+- **Pasos para reproducir:** ejecutar la TUI en un entorno sin `xdg-open` y
+  elegir «Abrir carpeta»; `FileNotFoundError: xdg-open` sube hasta `main`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (TUI usable, pero el flujo terminaba en traceback).
+- **Solución aplicada:** el lanzamiento y la resolución van dentro de
+  `try/except OSError`; se muestra
+  `manager.open_folder_failed_title` con la causa y se vuelve al menú.
+- **Pruebas:** `tests/test_unreadable_build_and_launch.py` —
+  `test_tui_open_folder_survives_missing_opener` (falla con el código anterior)
+  y `test_tui_open_folder_opens_accessible_folder` (regresión del camino feliz).
+- **Commit:** se registra en el cierre del trigésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3193,6 +3286,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `compile`/`--buildthis` ya no muestran tracebacks ante carpetas sin permisos;
   la QThread del build traduce el `OSError` de `dist/` a un fallo con mensaje);
   no se prepara release.
+- Trigésimo séptimo ciclo (2026-11-24): R-6f4b8a92, R-1e7c3d58 y R-9b5f2a74
+  corregidos y probados (empaquetado de un proyecto inaccesible, «Ejecutar» del
+  gestor y «Abrir carpeta» de la TUI dejan de abortar la app); no se prepara
+  release.
+- Verificación del ciclo de R-6f4b8a92…R-9b5f2a74 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 992 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 6 pruebas nuevas
+  de `tests/test_unreadable_build_and_launch.py` pasan y 5 de ellas fallan con
+  el código anterior (comprobado con `git stash` de los cinco módulos tocados).
+  Build real `create` + `--buildthis --compiler zipapp --no-sandbox`: `.iflapp`
+  de 21 archivos, `verify_iflapp() → valid: True` y `--inspect` coincide con el
+  `details.xml` interno.
 - Verificación del ciclo de R-4a7e2c91…R-8e2b7d64 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 986 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 5 pruebas nuevas

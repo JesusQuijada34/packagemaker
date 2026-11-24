@@ -1169,7 +1169,17 @@ class BuildThread(QThread):
     def run(self):
         if self.custom_path:
             repo_path = Path(self.custom_path)
-            if not repo_path.exists():
+            try:
+                exists = repo_path.exists()
+            except OSError as exc:
+                # Una carpeta inaccesible no debe matar la QThread (PyQt6 aborta
+                # el proceso ante una excepción no capturada en ``run``).
+                self.error.emit(
+                    tr("build_log.err_custom_path").format(path=self.custom_path)
+                    + f" ({exc})"
+                )
+                return
+            if not exists:
                 self.error.emit(tr("build_log.err_custom_path").format(path=self.custom_path))
                 return
         else:
@@ -1195,7 +1205,11 @@ class BuildThread(QThread):
             from lib.blindcubeEngine.build_preflight import run_preflight
 
             self.progress.emit(tr("build.preflight_title"))
-            report = run_preflight(repo_path)
+            try:
+                report = run_preflight(repo_path)
+            except OSError as exc:
+                self.error.emit(tr("build.preflight_failed").format(detail=str(exc)))
+                return
             for check in report.checks:
                 state = "OK" if check.ok else "ERROR"
                 self.progress.emit(f"[{state}] {check.name}: {check.detail}")

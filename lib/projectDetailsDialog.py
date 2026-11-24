@@ -580,8 +580,10 @@ class ProjectDetailsDialog(QDialog):
         """Ejecutar la aplicacion instalada"""
         import subprocess
         target_dir = os.path.join(self.fluthin_apps, self.pkg.get('name', ''))
-        # Buscar ejecutable o script principal
-        if os.path.exists(target_dir):
+        if not os.path.exists(target_dir):
+            warning(tr("manager.app_not_found_title"), tr("manager.app_not_found_msg"))
+            return
+        try:
             # Buscar .exe o .py
             for f in os.listdir(target_dir):
                 if f.endswith('.exe') and not f.startswith('python'):
@@ -594,8 +596,10 @@ class ProjectDetailsDialog(QDialog):
                     subprocess.Popen([python, os.path.join(target_dir, main_file)], cwd=target_dir)
                     return
             warning(tr("manager.no_executable_title"), tr("manager.no_executable_msg"))
-        else:
-            warning(tr("manager.app_not_found_title"), tr("manager.app_not_found_msg"))
+        except OSError as exc:
+            # Carpeta sin permisos o ejecutable bloqueado: el slot no puede
+            # dejar escapar la excepción porque PyQt6 aborta el proceso.
+            warning(tr("common.error"), tr("manager.error_status").format(error=exc))
             
     def _open_folder(self, folder):
         """Abrir una carpeta especificada en el explorador."""

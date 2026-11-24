@@ -152,8 +152,12 @@ def find_env_file(project_path: Path) -> Optional[Path]:
     """``.env`` del proyecto (raíz o ``config/``), si existe."""
     root = Path(project_path)
     for candidate in (root / ENV_FILENAME, root / "config" / ENV_FILENAME):
-        if candidate.is_file():
-            return candidate
+        try:
+            if candidate.is_file():
+                return candidate
+        except OSError:
+            # Proyecto sin permisos: no hay ``.env`` que ofrecer.
+            return None
     return None
 
 
