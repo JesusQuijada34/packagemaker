@@ -105,10 +105,20 @@ def _auto_translate_google(text: str, source: str, target: str) -> Optional[str]
         )
         with urllib.request.urlopen(req, timeout=8) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
-        if payload and payload[0]:
-            parts = [p[0] for p in payload[0] if p[0]]
-            return "".join(parts) if parts else None
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, IndexError, KeyError):
+        # La respuesta esperada es [[[texto, ...], ...], ...]; un portal cautivo
+        # o un proxy puede devolver 200 con un escalar o con listas de números.
+        if not isinstance(payload, list) or not payload:
+            return None
+        segments = payload[0]
+        if not isinstance(segments, list):
+            return None
+        parts = [
+            item[0]
+            for item in segments
+            if isinstance(item, (list, tuple)) and item and isinstance(item[0], str) and item[0]
+        ]
+        return "".join(parts) if parts else None
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, IndexError, KeyError, TypeError):
         return None
     return None
 

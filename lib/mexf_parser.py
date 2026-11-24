@@ -40,25 +40,39 @@ class MexfDocument:
         return self.data.get("metadata", {})
 
 
-def detect_mexf_format(path: Path | str) -> Literal["yaml-v1", "legacy-json", "unknown"]:
-    try:
-        raw = Path(path).read_text(encoding="utf-8-sig")
-    except (UnicodeDecodeError, OSError):
-        return "unknown"
+def _classify_mexf_text(raw: str) -> Literal["yaml-v1", "legacy-json", "unknown"]:
+    """Clasifica el texto de un ``.mexf`` sin volver a leer el archivo.
+
+    ``legacy-json`` exige que el texto sea JSON real: un YAML con las mismas
+    claves (``extensions``/``file_associations``/``context_menus``) no se puede
+    entregar a ``json.loads`` y debe quedarse en ``unknown``.
+    """
+    is_json = True
     try:
         value = json.loads(raw)
     except json.JSONDecodeError:
+        is_json = False
         if yaml is None:
             return "unknown"
         try:
             value = yaml.safe_load(raw)
         except Exception:
             return "unknown"
-    if isinstance(value, dict) and value.get("format") == "mexf" and value.get("version") == 1:
+    if not isinstance(value, dict):
+        return "unknown"
+    if value.get("format") == "mexf" and value.get("version") == 1:
         return "yaml-v1"
-    if isinstance(value, dict) and any(k in value for k in ("extensions", "file_associations", "context_menus")):
+    if is_json and any(k in value for k in ("extensions", "file_associations", "context_menus")):
         return "legacy-json"
     return "unknown"
+
+
+def detect_mexf_format(path: Path | str) -> Literal["yaml-v1", "legacy-json", "unknown"]:
+    try:
+        raw = Path(path).read_text(encoding="utf-8-sig")
+    except (UnicodeDecodeError, OSError):
+        return "unknown"
+    return _classify_mexf_text(raw)
 
 
 def _require_mapping(value: Any, name: str) -> Dict[str, Any]:
@@ -126,9 +140,14 @@ def parse_mexf(path: Path | str, *, project_root: Path | None = None) -> MexfDoc
         raise MexfError(f"El documento .mexf no está en UTF-8: {exc}") from exc
     except OSError as exc:
         raise MexfError(f"No se pudo leer el documento .mexf {source}: {exc}") from exc
-    fmt = detect_mexf_format(source)
+    fmt = _classify_mexf_text(raw)
     if fmt == "legacy-json":
-        data = json.loads(raw)
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise MexfError(f"El documento .mexf JSON no es válido: {exc}") from exc
+        if not isinstance(data, dict):
+            raise MexfError("El documento .mexf debe ser un objeto JSON.")
         return MexfDocument(_legacy_to_v1(data), "legacy-json", str(source))
     if fmt != "yaml-v1":
         if yaml is None:

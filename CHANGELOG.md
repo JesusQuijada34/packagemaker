@@ -1,5 +1,58 @@
 # Changelog
 
+## 2026-11-24 — cuadragésimo primer ciclo
+
+### Corregido — `.mexf` YAML con claves legacy y traductor automático
+
+Sin reportes externos nuevos. Dos hallazgos de auditoría interna: una
+excepción fuera del contrato del parser `.mexf` y un `TypeError` que escapaba
+de un slot de Qt al cambiar de idioma. Ningún cambio de comportamiento del
+engine: un `.mexf` YAML v1 válido y una traducción correcta funcionan
+exactamente igual.
+
+- **R-5d1c7a83 — un `.mexf` YAML con claves legacy lanzaba `JSONDecodeError`
+  con traceback:** `detect_mexf_format()` clasificaba como `legacy-json`
+  cualquier documento con `extensions`, `file_associations` o `context_menus`
+  en la raíz, aunque el texto fuera YAML. `parse_mexf()` volvía a leer el
+  archivo y lo pasaba a `json.loads()`, que lanzaba `JSONDecodeError`; como no
+  es `MexfError` ni `OSError`, `--compile-mexf`, `--shell-plan` y
+  `--debug-mexf` mostraban el traceback completo. Ahora la clasificación se
+  hace sobre el texto ya leído (`_classify_mexf_text`), sólo es `legacy-json`
+  el JSON real, y `parse_mexf()` traduce cualquier fallo del JSON a
+  `MexfError`. Reportado por JesusQuijada34 (auditoría interna).
+- **R-8c2f4b17 — una respuesta inesperada del traductor automático abortaba la
+  interfaz:** `_auto_translate_google()` indexaba la respuesta (`payload[0]`,
+  `p[0]`) sin validar su forma. Un portal cautivo o un proxy que contesta 200
+  con `5`, `true`, `null` o listas de números provocaba `TypeError`, no
+  capturado, dentro de `tr()`; en un slot de Qt eso cierra el proceso con
+  `Fatal Python error: Aborted`. Ahora la respuesta debe ser la lista de
+  segmentos esperada y, si no lo es, se devuelve el texto original. Reportado
+  por JesusQuijada34 (auditoría interna).
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Q-004,
+  Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1036 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 12 (3 en `tests/test_mexf_asksome.py` y 9 en
+  `tests/test_i18n_translate_robustness.py`); 8 de ellas fallan con el código
+  anterior (comprobado con `git stash` de `lib/mexf_parser.py` y
+  `lib/i18n.py`).
+- Reproducción real: `--compile-mexf`, `--shell-plan` y `--debug-mexf` sobre un
+  `.mexf` YAML con `extensions:` responden `[ERROR] … Formato .mexf
+  desconocido` y código 1 (antes `JSONDecodeError` con traceback).
+- No se prepara release: el periodo de observación sigue en curso y el
+  requisito de 7 días sin reportes nuevos no se cumple.
+
 ## 2026-11-24 — cuadragésimo ciclo
 
 ### Corregido — tracebacks en `--build-removeme` y en el depurador `.mexf`

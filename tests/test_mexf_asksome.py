@@ -1085,3 +1085,55 @@ def test_binary_mexf_is_reported_without_traceback(tmp_path):
     with pytest.raises(MexfError) as excinfo:
         parse_mexf(path)
     assert "UTF-8" in str(excinfo.value)
+
+
+def test_yaml_with_legacy_keys_is_unknown_not_json(tmp_path):
+    """R-5d1c7a83: un YAML con claves legacy no debe entregarse a ``json.loads``.
+
+    ``detect_mexf_format`` clasificaba como ``legacy-json`` cualquier documento
+    (YAML incluido) que tuviera ``extensions``/``file_associations``/
+    ``context_menus`` en la raíz. ``parse_mexf`` volvía a leer el archivo como
+    JSON y ``json.loads`` lanzaba ``JSONDecodeError`` fuera de ``MexfError``:
+    ``--compile-mexf``, ``--shell-plan`` y ``--debug-mexf`` mostraban traceback.
+    """
+    path = tmp_path / "legacy-shaped.mexf"
+    path.write_text(
+        "extensions:\n  - extension: .foo\n    open_command: demo %1\n",
+        encoding="utf-8",
+    )
+    assert detect_mexf_format(path) == "unknown"
+    with pytest.raises(MexfError) as excinfo:
+        parse_mexf(path)
+    assert "desconocido" in str(excinfo.value)
+
+
+def test_compile_mexf_wraps_legacy_shaped_yaml(tmp_path):
+    """El compilador informa del error como ``MexfCompileError``, sin traceback."""
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    project = tmp_path / "project"
+    (project / ".mexf").mkdir(parents=True)
+    (project / ".mexf" / "main.mexf").write_text(
+        "file_associations:\n  - extension: .foo\n", encoding="utf-8"
+    )
+    (project / "details.xml").write_text(
+        "<app><publisher>P</publisher><app>a</app><version>v1.0</version>"
+        "<platform>AlphaCube</platform></app>",
+        encoding="utf-8",
+    )
+    with pytest.raises(MexfCompileError) as excinfo:
+        compile_mexf_project(project, tmp_path / "out.asksome")
+    assert "desconocido" in str(excinfo.value)
+
+
+def test_legacy_json_document_still_migrates_after_classification(tmp_path):
+    """Un JSON legacy real sigue detectándose y migrando igual que antes."""
+    source = tmp_path / "legacy.mexf"
+    source.write_text(
+        json.dumps({"app_id": "demo.app", "app_name": "Demo", "context_menus": []}),
+        encoding="utf-8",
+    )
+    assert detect_mexf_format(source) == "legacy-json"
+    document = parse_mexf(source)
+    assert document.source_format == "legacy-json"
+    assert document.metadata["id"] == "demo.app"

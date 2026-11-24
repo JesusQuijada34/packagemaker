@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (cuadragésimo ciclo)
+Última actualización: 2026-11-24 (cuadragésimo primer ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -135,6 +135,8 @@ de auditoría.
 | R-9c4d2f61 | Bug — el detector de dependencias del editor ignora PEP 263 | Media | Resuelto |
 | R-9e1a4c72 | Bug — `--build-removeme` lanza traceback con una raíz de instalación ilegible | Media | Resuelto |
 | R-4c8b2e91 | Bug — un comando `.mexf` no ejecutable lanza traceback en `--debug-mexf --debug-run` | Media | Resuelto |
+| R-5d1c7a83 | Bug — un `.mexf` YAML con claves legacy lanza `JSONDecodeError` con traceback | Alta | Resuelto |
+| R-8c2f4b17 | Bug — una respuesta inesperada del traductor automático aborta la interfaz | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -212,6 +214,14 @@ tres puntos de entrada del usuario donde `PermissionError` (o la ausencia de
 `xdg-open`) escapaba de un slot de Qt o del `run()` de una QThread y PyQt6
 abortaba el proceso. Ahora el empaquetado, el botón «Ejecutar» del gestor y
 «Abrir carpeta» de la TUI informan del problema sin tumbar la aplicación.
+
+El cuadragésimo primer ciclo registra R-5d1c7a83 y R-8c2f4b17 (corregidos y
+probados, sin cambios de comportamiento del engine): un `.mexf` YAML con las
+claves legacy (`extensions`, `file_associations`, `context_menus`) se entregaba
+a `json.loads` y los tres comandos de shell del formato terminaban en
+`JSONDecodeError` con traceback, y una respuesta anómala del traductor
+automático (`5`, `true`, listas de números) lanzaba `TypeError` dentro de `tr()`
+y cerraba la interfaz.
 
 ---
 
@@ -3493,6 +3503,71 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-5d1c7a83 — Un `.mexf` YAML con claves legacy lanza `JSONDecodeError` con traceback
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `detect_mexf_format()` clasificaba como `legacy-json`
+  cualquier documento que tuviera `extensions`, `file_associations` o
+  `context_menus` en la raíz, sin importar si el texto era JSON o YAML. Con un
+  `.mexf` YAML que usa esas claves (por ejemplo, un documento al que le falta
+  `format: mexf`), `parse_mexf()` volvía a leer el archivo y lo entregaba a
+  `json.loads()`, que lanzaba `JSONDecodeError`. Esa excepción no es
+  `MexfError` ni `OSError`, así que `compile_mexf_project()` no la traducía y
+  `--compile-mexf`, `--shell-plan` y `--debug-mexf` mostraban el traceback
+  completo en lugar de `[ERROR]`.
+- **Pasos para reproducir:** crear `.mexf/main.mexf` con
+  `extensions:\n  - extension: .foo\n` (YAML, sin `format: mexf`) y ejecutar
+  `python packagemaker.py --compile-mexf <proyecto>` → `JSONDecodeError:
+  Expecting value: line 1 column 1 (char 0)` con traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (los tres comandos de shell del formato `.mexf` fallaban
+  con un documento que un usuario puede escribir a mano; el editor gráfico no
+  se veía afectado porque valida con su propio lint).
+- **Solución aplicada:** nueva `_classify_mexf_text()` que decide el formato
+  sobre el texto ya leído y sólo devuelve `legacy-json` cuando `json.loads()`
+  tuvo éxito; `detect_mexf_format()` y `parse_mexf()` la comparten, de modo que
+  ya no hay una segunda lectura (y desaparece la carrera entre ambas).
+  `parse_mexf()` además traduce un `JSONDecodeError` o un JSON no-objeto a
+  `MexfError`, y un YAML con claves legacy se informa como «Formato .mexf
+  desconocido» como cualquier documento no reconocido.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_yaml_with_legacy_keys_is_unknown_not_json`,
+  `::test_compile_mexf_wraps_legacy_shaped_yaml` y
+  `::test_legacy_json_document_still_migrates_after_classification` (las dos
+  primeras fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo primer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8c2f4b17 — Una respuesta inesperada del traductor automático aborta la interfaz
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `_auto_translate_google()` indexaba la respuesta del
+  traductor (`payload[0]`, `p[0]`) sin comprobar su forma. El formato esperado
+  es `[[[texto, …], …], …]`, pero un portal cautivo o un proxy puede responder
+  200 con `5`, `true`, `null` o una lista de números: entonces el indexado
+  lanzaba `TypeError`, que no estaba entre las excepciones capturadas. Como
+  `tr()` se evalúa en los slots de Qt (por ejemplo al cambiar de idioma en
+  Configuración), la excepción abortaba el proceso con
+  `Fatal Python error: Aborted`.
+- **Pasos para reproducir:** con `auto_translate` activo y un idioma distinto
+  de `es`, servir `5` desde el endpoint del traductor y llamar a `tr()` →
+  `TypeError: 'int' object is not subscriptable`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere una respuesta anómala del servicio externo,
+  pero el fallo es duro: cierra la aplicación).
+- **Solución aplicada:** `_auto_translate_google()` valida que la respuesta sea
+  una lista de segmentos con el primer elemento de texto y devuelve `None` en
+  cualquier otra forma; `TypeError` se añade a la captura defensiva. Sin
+  respuesta válida, `translate()` devuelve el texto original como ya hacía
+  cuando no había red.
+- **Pruebas:** `tests/test_i18n_translate_robustness.py` (9 casos; 6 fallan con
+  el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo primer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3860,6 +3935,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `session_cache.load_session()` devuelve `None`; con `config/` de la
   aplicación ilegible, `get_default_editor()` devuelve `None` y
   `save_default_editor()` no lanza.
+- Verificación del cuadragésimo primer ciclo (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1036 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 2 de las 3 pruebas nuevas de `tests/test_mexf_asksome.py` y 6
+  de las 9 de `tests/test_i18n_translate_robustness.py` (comprobado con
+  `git stash` de `lib/mexf_parser.py` y `lib/i18n.py`). Reproducción real:
+  `--compile-mexf`, `--shell-plan` y `--debug-mexf` sobre un `.mexf` YAML con
+  `extensions:` mostraban `JSONDecodeError` con traceback; ahora responden
+  `[ERROR] … Formato .mexf desconocido` y código 1.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
