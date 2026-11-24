@@ -471,7 +471,9 @@ class DashboardWindow(QMainWindow):
                         if os.path.isfile(candidate):
                             main_script = candidate
                             break
-            except ET.ParseError:
+            except (ET.ParseError, OSError):
+                # Un details.xml bloqueado (Windows) o sin permiso de lectura no
+                # debe abortar el slot: se cae al escaneo de guiones.
                 pass
 
         if not main_script:

@@ -152,6 +152,46 @@ class GuiUnreadablePathTests(unittest.TestCase):
         finally:
             _restore(base)
 
+    @_UNREADABLE_SKIP
+    def test_moonfix_tolerates_unreadable_details_xml(self):
+        """Un details.xml bloqueado no debe abortar la construcción del asistente."""
+        from lib.moonFixWizard import MoonFixWizard
+
+        proj = Path(tempfile.mkdtemp()) / "moonproj_xml"
+        proj.mkdir()
+        details = proj / "details.xml"
+        details.write_text("<app><app>demo</app></app>", encoding="utf-8")
+        details.chmod(0o000)
+        try:
+            wizard = MoonFixWizard(
+                None,
+                [{"path": str(proj), "issues": [{"type": "missing_dir", "path": "app"}]}],
+            )
+            self.assertIsNotNone(wizard)
+        finally:
+            _restore(details)
+
+    @_UNREADABLE_SKIP
+    def test_dashboard_tolerates_unreadable_details_xml(self):
+        """Abrir un proyecto con details.xml ilegible no debe abortar el slot."""
+        from lib.pm_dashboard import DashboardWindow
+
+        proj = Path(tempfile.mkdtemp()) / "dash_proj"
+        proj.mkdir()
+        details = proj / "details.xml"
+        details.write_text("<app><app>demo</app></app>", encoding="utf-8")
+        (proj / "demo.py").write_text("print('hola')\n", encoding="utf-8")
+        details.chmod(0o000)
+        launched = []
+        try:
+            window = DashboardWindow(
+                launch_editor=lambda *args, **kwargs: launched.append(args)
+            )
+            window._open_as_pm_project(str(proj))
+            self.assertTrue(launched, "debe abrir el editor pese al details.xml ilegible")
+        finally:
+            _restore(details)
+
 
 if __name__ == "__main__":
     unittest.main()

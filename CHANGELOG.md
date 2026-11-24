@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-11-24 — cuadragésimo cuarto ciclo
+
+### Corregido — un `details.xml` ilegible ya no aborta MoonFix ni el dashboard
+
+Sin reportes externos nuevos. Dos hallazgos de la auditoría interna, en la
+familia de R-9e3b7a51 y R-6f4b8a92: `ET.parse()` protegido sólo contra
+`ET.ParseError` cuando el archivo existe pero no se puede leer. En POSIX
+permisos, en Windows un bloqueo exclusivo; en ambos casos el `PermissionError`
+escapaba de un slot de Qt y PyQt6 abortaba el proceso. Ningún cambio de
+comportamiento del engine: un `details.xml` legible se procesa exactamente
+igual.
+
+- **R-7a2c9e14 — el asistente MoonFix cae con `details.xml` ilegible:**
+  `MoonFixWizard.create_project_page()` construye la página del proyecto dentro
+  del `__init__` del diálogo. Si `details.xml` no se podía leer, la excepción
+  subía desde la construcción y mataba la aplicación. Ahora captura también
+  `OSError` y la página se crea con los valores por defecto; MoonFix puede
+  regenerar el archivo desde las plantillas. Reportado por JesusQuijada34
+  (auditoría interna).
+- **R-8f3d1b62 — «Abrir proyecto» del dashboard cae con `details.xml`
+  ilegible:** `DashboardWindow._open_as_pm_project()` hacía lo mismo en el slot
+  del botón «Proyecto PackageMaker». Ahora captura `(ET.ParseError, OSError)` y,
+  sin metadatos, cae al escaneo de guiones `.py`, que ya toleraba `OSError`.
+  Reportado por JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_gui_unreadable_paths.py` (2 nuevas; fallan con el código
+anterior). Suite completa: 1079 pasan, 1 omitido, 64 subtests.
+
 ## 2026-11-24 — cuadragésimo tercer ciclo
 
 ### Corregido — un `.mexf` con `.nan`/`.inf` emitía JSON no válido

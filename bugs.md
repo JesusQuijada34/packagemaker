@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (cuadragésimo tercer ciclo)
+Última actualización: 2026-11-24 (cuadragésimo cuarto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -143,6 +143,8 @@ de auditoría.
 | R-4a7f2c93 | Bug — `base_dir`/`fluthin_apps` no textuales en `pm.data` tumban el arranque | Alta | Resuelto |
 | R-8d3e6b15 | Bug — un `language` no textual en `pm.data` aborta el arranque | Alta | Resuelto |
 | R-2f5c9a71 | Bug — un acento no hexadecimal aborta las notificaciones | Media | Resuelto |
+| R-7a2c9e14 | Bug — el asistente MoonFix cae con `details.xml` ilegible | Media | Resuelto |
+| R-8f3d1b62 | Bug — «Abrir proyecto» del dashboard cae con `details.xml` ilegible | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -3767,6 +3769,55 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-7a2c9e14 — El asistente MoonFix cae con un `details.xml` ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `MoonFixWizard.create_project_page()` leía `details.xml`
+  con `ET.parse()` protegido sólo contra `ET.ParseError`. Si el archivo existe
+  pero no se puede leer —permisos POSIX o un bloqueo exclusivo en Windows—,
+  `ET.parse()` lanza `PermissionError` (un `OSError`) que escapaba de la
+  construcción del asistente. Como la página se crea en el `__init__` del
+  diálogo, invocado desde un slot de Qt, PyQt6 abortaba el proceso.
+- **Pasos para reproducir:** crear un proyecto con `details.xml` y aplicar
+  `chmod 000` a ese archivo; abrir MoonFix con el proyecto en la lista. Antes:
+  `PermissionError: [Errno 13] Permission denied: .../details.xml`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un `details.xml` ilegible, pero mata la app).
+- **Solución aplicada:** `except (ET.ParseError, OSError)` en
+  `create_project_page()`; la página se construye con los valores por defecto y
+  MoonFix puede regenerar el archivo desde las plantillas.
+- **Pruebas:**
+  `tests/test_gui_unreadable_paths.py::GuiUnreadablePathTests::test_moonfix_tolerates_unreadable_details_xml`
+  (falla con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo cuarto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8f3d1b62 — «Abrir proyecto» del dashboard cae con un `details.xml` ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `DashboardWindow._open_as_pm_project()` leía `details.xml`
+  con `ET.parse()` y sólo capturaba `ET.ParseError`. Con el archivo presente
+  pero sin permiso de lectura (o bloqueado en Windows), `ET.parse()` lanza
+  `PermissionError`; como el método se ejecuta en el slot de «Abrir proyecto»,
+  la excepción escapaba y PyQt6 abortaba la aplicación.
+- **Pasos para reproducir:** crear un proyecto con `details.xml` y `chmod 000`
+  sobre ese archivo; pulsar «Proyecto PackageMaker» y elegir la carpeta. Antes:
+  `PermissionError: [Errno 13] Permission denied: .../details.xml`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un `details.xml` ilegible, pero mata la app).
+- **Solución aplicada:** `except (ET.ParseError, OSError)` en
+  `_open_as_pm_project()`; sin metadatos se cae al escaneo de guiones `.py`, que
+  ya toleraba `OSError`.
+- **Pruebas:**
+  `tests/test_gui_unreadable_paths.py::GuiUnreadablePathTests::test_dashboard_tolerates_unreadable_details_xml`
+  (falla con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo cuarto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3825,6 +3876,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `NaN`/`Infinity`; un `pm.data` con rutas o idioma no textuales ya no impide
   arrancar; un acento no hexadecimal ya no aborta las notificaciones con acción
   primaria); no se prepara release.
+- Cuadragésimo cuarto ciclo (2026-11-24): R-7a2c9e14 y R-8f3d1b62 corregidos y
+  probados (el asistente MoonFix y «Abrir proyecto» del dashboard dejan de
+  abortar la app cuando `details.xml` existe pero no se puede leer); no se
+  prepara release.
+- Verificación del ciclo de R-7a2c9e14 y R-8f3d1b62 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1079 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 2 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/pm_dashboard.py` y `lib/moonFixWizard.py`), con
+  `PermissionError: [Errno 13] Permission denied: .../details.xml`.
 - Verificación del ciclo de R-4c9e2b71 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1046 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas

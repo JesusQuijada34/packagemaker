@@ -491,7 +491,9 @@ class MoonFixWizard(QDialog):
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
                 xml_data = {child.tag: child.text for child in root if child.text}
-            except ET.ParseError:
+            except (ET.ParseError, OSError):
+                # details.xml ilegible o bloqueado: la página se construye con
+                # los valores por defecto en lugar de abortar el asistente.
                 pass
 
         self.results[index] = {"inputs": {}, "is_invalid": any(i["type"] == "invalid_package" for i in proj_data["issues"])}
