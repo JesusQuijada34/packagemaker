@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-23
+Última actualización: 2026-11-24 (cuadragésimo cuarto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -87,13 +87,70 @@ de auditoría.
 | R-2b7d4a90 | Bug — `find_flarm_project` revienta con carpeta o config ilegible | Alta | Resuelto |
 | R-5d8f1c36 | Bug — depuración `.mexf` lanza `yaml.YAMLError` en un slot | Media | Resuelto |
 | R-8a2f6d51 | Bug — `uninstall_plan` (Windows) deja escapar `OSError` | Baja | Resuelto |
-| R-d23039c0 | Mejora — telemetría | Media | Pendiente de aprobación |
-| R-5d8e2a41 | Mejora — nombres con acentos | Media | Pendiente de aprobación |
-| R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Pendiente de aprobación |
-| R-3e7d1c58 | Mejora — `compile-only` deja el fuente en el paquete | Baja | Pendiente de aprobación |
-| — | Cambios de engine (`bugs.txt`) | — | Pendiente de aprobación |
+| R-d23039c0 | Mejora — telemetría | Media | Resuelto (Q-001) |
+| R-5d8e2a41 | Mejora — nombres con acentos | Media | Resuelto (Q-002) |
+| R-4c8e1f27 | Mejora — capitalización del publisher | Baja | Resuelto (Q-003) |
+| R-3e7d1c58 | Mejora — `compile-only` deja el fuente en el paquete | Baja | Pendiente de aclaración (Q-004) |
+| — | Cambios de engine (`bugs.txt`) | — | Q-005/Q-006/Q-009/Q-010 aplicados; Q-007/Q-008 pendientes |
+| R-5b1d9e47 | Bug — parpadeo del hover del sidebar y ancho escaso | Media | Resuelto |
+| R-7a3e1d92 | Bug — `CONFIRM.MD` con marcadores de conflicto | Alta | Resuelto |
+| R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Pendiente de aprobación (Q-008) |
+| R-3c7a1e90 | Bug — el guardado de Configuración abortaba la app con una ruta imposible | Alta | Resuelto |
+| R-9e2b4d17 | Bug — Configuración repintaba el tema dos veces y reiniciaba el motor | Media | Resuelto |
+| R-6a1f8c23 | Bug — la titlebar arrastra la ventana maximizada | Media | Pendiente de aprobación (Q-011) |
+| R-4d8f2b61 | Bug — botón Guardar en Configuración (no reproducido) | Baja | Cerrado sin cambios de UI |
+| R-2e7c4a91 | Bug — editor predeterminado guardado en `lib/config` y JSON no-objeto | Media | Resuelto |
+| R-8b4d1f62 | Bug — el removedor generado revienta con `install.json` corrupto | Media | Resuelto |
+| R-5c9a3e27 | Bug — metadatos `.mexf` ilegibles abortan el diálogo de instalación | Baja | Resuelto |
+| R-3b6f9d24 | Bug — caché de fuentes de solo lectura tumba el CLI y la GUI | Media | Resuelto |
+| R-9f4c2a71 | Bug — caché de avatares no escribible y respuestas de GitHub no-JSON | Baja | Resuelto |
+| R-4a7c2e91 | Bug — `PythonPortableManager` revienta con `data/pmCodeEditor` no escribible | Alta | Resuelto |
+| R-8f1d3b62 | Bug — guardar `editor_config.json` aborta con `data` de solo lectura | Media | Resuelto |
+| R-9a4c1e27 | Bug — la TUI cae con rutas sin permisos | Media | Resuelto |
+| R-4d8a6c12 | Bug — el arranque cae si `data/` no se puede crear o leer | Alta | Resuelto |
+| R-9e3b7a51 | Bug — la GUI cae con rutas sin permisos | Media | Resuelto |
+| R-6a2d8f43 | Bug — Termux sin almacenamiento compartido se queda sin salida | Media | Resuelto |
+| R-7e4c1a92 | Bug — el arranque cae si `data/` impide leer la caché de sesión | Alta | Resuelto |
+| R-2d8b6f31 | Bug — el build lanza traceback con `config/` del proyecto ilegible | Alta | Resuelto |
+| R-9a5c3e74 | Bug — «Abrir con» cae con `config/` de la aplicación ilegible | Media | Resuelto |
+| R-4e9c1a73 | Bug — el IDE `.iflapp` cae al compilar un proyecto ilegible | Alta | Resuelto |
+| R-7d2f8b14 | Bug — MoonFix cae con un proyecto de solo lectura | Alta | Resuelto |
+| R-6b3e9c52 | Bug — el splash del paquete no arranca con un proyecto sin permisos | Media | Resuelto |
+| R-4b9e2c71 | Bug — `.mexf` con raíz/carpeta ilegible filtra `PermissionError` crudo | Media | Resuelto |
+| R-3f7c1a94 | Bug — carpeta de accesos directos no escribible aborta `--install-asksome` | Media | Resuelto |
+| R-6b2e9d47 | Bug — `uninstall_asksome` filtra `PermissionError`/`OSError` crudos | Media | Resuelto |
+| R-8c4a1f62 | Bug — `remove_tree` informa de un borrado que no ocurrió | Alta | Resuelto |
+| R-4a7e2c91 | Bug — `create` lanza traceback con una carpeta base sin permisos | Media | Resuelto |
+| R-6c9d3f52 | Bug — `moonfix`/`repair` lanzan traceback con un proyecto de solo lectura | Media | Resuelto |
+| R-8e2b7d64 | Bug — `compile`/`--buildthis` lanzan traceback con `dist/` bloqueado | Alta | Resuelto |
+| R-6f4b8a92 | Bug — empaquetar un proyecto inaccesible aborta la GUI | Alta | Resuelto |
+| R-1e7c3d58 | Bug — «Ejecutar» del gestor cae con una carpeta ilegible | Media | Resuelto |
+| R-9b5f2a74 | Bug — la TUI cae al abrir una carpeta sin `xdg-open` | Media | Resuelto |
+| R-3f8a7c21 | Bug — el IDE aborta con proyectos de fuentes no UTF-8 | Alta | Resuelto |
+| R-9d2b6e45 | Bug — `--ide-compile` ignora la declaración PEP 263 | Alta | Resuelto |
+| R-6c4a1f83 | Bug — blindaje y build fallan con fuentes no UTF-8 | Media | Resuelto |
+| R-2a9f4d17 | Bug — el depurador rechaza fuentes con declaración PEP 263 | Media | Resuelto |
+| R-5e8c1b42 | Bug — `pm.data` con números no finitos impide arrancar | Alta | Resuelto |
+| R-7b3a9e58 | Bug — cabecera `.iflapp` con números no finitos escapa como `OverflowError` | Media | Resuelto |
+| R-9c4d2f61 | Bug — el detector de dependencias del editor ignora PEP 263 | Media | Resuelto |
+| R-9e1a4c72 | Bug — `--build-removeme` lanza traceback con una raíz de instalación ilegible | Media | Resuelto |
+| R-4c8b2e91 | Bug — un comando `.mexf` no ejecutable lanza traceback en `--debug-mexf --debug-run` | Media | Resuelto |
+| R-5d1c7a83 | Bug — un `.mexf` YAML con claves legacy lanza `JSONDecodeError` con traceback | Alta | Resuelto |
+| R-8c2f4b17 | Bug — una respuesta inesperada del traductor automático aborta la interfaz | Media | Resuelto |
+| R-3a7f2d84 | Bug — un comando `.mexf` con byte NUL lanza traceback en el depurador | Media | Resuelto |
+| R-8d4c1e67 | Bug — un `.mexf` con escalares YAML no JSON lanza `TypeError` al compilar | Alta | Resuelto |
+| R-4c9e2b71 | Bug — un `.mexf` con `.nan`/`.inf` emite JSON no válido (`NaN`/`Infinity`) | Media | Resuelto |
+| R-4a7f2c93 | Bug — `base_dir`/`fluthin_apps` no textuales en `pm.data` tumban el arranque | Alta | Resuelto |
+| R-8d3e6b15 | Bug — un `language` no textual en `pm.data` aborta el arranque | Alta | Resuelto |
+| R-2f5c9a71 | Bug — un acento no hexadecimal aborta las notificaciones | Media | Resuelto |
+| R-7a2c9e14 | Bug — el asistente MoonFix cae con `details.xml` ilegible | Media | Resuelto |
+| R-8f3d1b62 | Bug — «Abrir proyecto» del dashboard cae con `details.xml` ilegible | Media | Resuelto |
 
-No hay bugs críticos ni de alta prioridad abiertos. Los reportes de auditoría
+Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
+registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
+que depende de la aprobación Q-008 y por eso no se ha modificado. El vigésimo sexto ciclo registra R-3c7a1e90 y R-9e2b4d17
+(corregidos y probados), R-6a1f8c23 (pendiente de la aprobación Q-011) y
+R-4d8f2b61 (no reproducido en el código actual). Los reportes de auditoría
 interna de los ciclos de mantenimiento (R-8f2c41d9, R-c47a9e12 y los cinco del
 ciclo CLI, más R-b3f71a6c, R-7c1e4a90, R-91b6d2f4, R-3a7c5e18, R-9f2b64d1,
 R-6e04c8ab, R-7d5b91c4, R-3f9a2c71, R-7b1d4e92, R-8a4f1c6d, R-1c93e4b7,
@@ -104,9 +161,35 @@ R-8e5b2f17, R-4e7c2b91, R-9a3d6f20, R-7f3a9c21, R-2c8e5d14, R-5a1f8e63,
 R-3b8e5c71, R-7c4d2a96, R-1d9f6b34, R-4f9b2c81, R-7a3d5e62, R-2b9e4f73 y
 R-9d4c2f18) quedaron corregidos y probados. El 2026-11-22 el propietario
 reportó en `bugs.txt` (commit `bed2e83`) el bloqueo por versión canónica; se
-corrigió el mismo día como R-9d4c2f18. No se prepara release: ese reporte
-reinicia el requisito de 7 días sin reportes nuevos y el periodo de
-observación sigue en curso.
+corrigió el mismo día como R-9d4c2f18. El vigésimo séptimo ciclo registra
+R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27 (corregidos y probados, sin cambios de
+comportamiento del engine). No se prepara release: ese reporte reinicia el
+requisito de 7 días sin reportes nuevos y el periodo de observación sigue en
+curso.
+El vigésimo octavo ciclo registra R-3b6f9d24 y R-9f4c2a71 (corregidos y
+probados, sin cambios de comportamiento del engine).
+El vigésimo noveno ciclo registra R-4a7c2e91 y R-8f1d3b62 (corregidos y
+probados, sin cambios de comportamiento del engine): completan la robustez de
+una instalación de solo lectura, ahora también en `data/pmCodeEditor`.
+El trigésimo ciclo registra R-9a4c1e27 (corregido y probado, sin cambios de
+comportamiento del engine): la TUI comprobaba las rutas escritas por el usuario
+con `Path.exists()`, que en Python 3.13 propaga `PermissionError` cuando el
+directorio padre no es accesible, y terminaba en traceback. Las pantallas ahora
+degradan a su mensaje normal («ruta no válida»/«details.xml no encontrado»).
+El trigésimo primer ciclo registra R-4d8a6c12, R-9e3b7a51 y R-6a2d8f43
+(corregidos y probados, sin cambios de comportamiento del engine): el arranque
+tolera una carpeta `data/` que no se puede crear o leer, las acciones de GUI
+que reciben rutas del usuario ya no lanzan `PermissionError` dentro de un slot
+de Qt, y Termux sin `termux-setup-storage` conserva una carpeta de salida.
+El trigésimo segundo ciclo registra R-7e4c1a92, R-2d8b6f31 y R-9a5c3e74
+(corregidos y probados, sin cambios de comportamiento del engine): tres rutas
+de configuración más usaban `Path.is_file()` sin proteger y, con el padre
+ilegible, propagaban `PermissionError` en Python 3.13.
+El trigésimo tercer ciclo registra R-4e9c1a73, R-7d2f8b14 y R-6b3e9c52
+(corregidos y probados, sin cambios de comportamiento del engine): dos slots de
+Qt (compilación del IDE `.iflapp` y reparación de MoonFix) y el bootloader del
+splash dejaban escapar `PermissionError` con un proyecto o directorio de
+trabajo sin permisos.
 
 En el ciclo de mantenimiento del 2026-11-22 se añadieron dos hallazgos de
 auditoría interna: R-6c2a8f14 (un `config/settings.json` válido pero no-objeto
@@ -132,6 +215,40 @@ El vigésimo segundo ciclo añadió R-6d2f8a41: `--compile-mexf` dejaba escapar
 `PermissionError`/`IsADirectoryError` con traceback cuando `details.xml`, un
 `.mexf` o el propio directorio `.mexf/` no se podían leer. Queda corregido y
 probado en el commit `f8ea814`; la cola sigue sin bugs abiertos.
+
+El trigésimo séptimo ciclo registra R-6f4b8a92, R-1e7c3d58 y R-9b5f2a74
+(corregidos y probados, sin cambios de comportamiento del engine): quedaban
+tres puntos de entrada del usuario donde `PermissionError` (o la ausencia de
+`xdg-open`) escapaba de un slot de Qt o del `run()` de una QThread y PyQt6
+abortaba el proceso. Ahora el empaquetado, el botón «Ejecutar» del gestor y
+«Abrir carpeta» de la TUI informan del problema sin tumbar la aplicación.
+
+El cuadragésimo primer ciclo registra R-5d1c7a83 y R-8c2f4b17 (corregidos y
+probados, sin cambios de comportamiento del engine): un `.mexf` YAML con las
+claves legacy (`extensions`, `file_associations`, `context_menus`) se entregaba
+a `json.loads` y los tres comandos de shell del formato terminaban en
+`JSONDecodeError` con traceback, y una respuesta anómala del traductor
+automático (`5`, `true`, listas de números) lanzaba `TypeError` dentro de `tr()`
+y cerraba la interfaz.
+
+El cuadragésimo segundo ciclo registra R-3a7f2d84 y R-8d4c1e67 (corregidos y
+probados, sin cambios de comportamiento del engine): dos documentos `.mexf`
+válidos para YAML pero imposibles de serializar a JSON tumbaban el depurador y
+la compilación. Un comando con byte NUL lanzaba `ValueError` desde `subprocess`
+(no capturado por `default_runner`) y un escalar YAML nativo (fecha, `set`,
+`bytes`) o un alias recursivo hacía fallar `json.dumps` con `TypeError` dentro
+de `canonicalize_mexf`. Ahora el depurador informa del comando no lanzable con
+código 126 y el parser normaliza esos escalares o rechaza la recursión con
+`MexfError`.
+
+El cuadragésimo tercer ciclo registra R-4a7f2c93, R-8d3e6b15 y R-2f5c9a71
+(corregidos y probados, sin cambios de comportamiento del engine): tres valores
+de `data/pm.data` editados a mano con el tipo equivocado tumbaban la aplicación
+antes de pintar la ventana. Una ruta guardada como objeto/lista/número reventaba
+en `os.makedirs` (`TypeError`) al importar `packagemaker`, un `language` no
+textual abortaba en `i18n.load_translation` (`AttributeError`) y un
+`custom_accent_color` que no era `#RRGGBB` lanzaba `ValueError` al construir una
+notificación con acción primaria, lo que en PyQt6 aborta el proceso.
 
 ---
 
@@ -2004,47 +2121,62 @@ probado en el commit `f8ea814`; la cola sigue sin bugs abiertos.
 
 ---
 
-## Mejoras pendientes de aprobación
+## Mejoras: estado de aprobación
 
 Las cuatro propuestas de esta sección y los seis cambios de engine están
 recogidos como preguntas `Q-001`…`Q-010` en `CONFIRM.MD`, el único canal de
-aprobación válido (solo JesusQuijada34). Ninguna se implementa sin una casilla
-`[x] SÍ` verificada por autoría.
+aprobación válido (solo JesusQuijada34). El 2026-11-23 el propietario marcó
+`[x] SÍ` en Q-001, Q-002, Q-003, Q-005, Q-006, Q-009 y Q-010 (commit `0ac5457`,
+autoría verificada con la API de GitHub). Q-001, Q-002 y Q-003 se aplicaron en
+el vigésimo quinto ciclo; Q-005, Q-006, Q-009 y Q-010 ya estaban implementados
+y quedan verificados por la suite. Q-004 necesita aclaración y Q-007/Q-008
+siguen pendientes.
 
 ### R-d23039c0 — Telemetría centralizada de errores
 
 - **Usuario:** JesusQuijada34 (issue #4)
 - **Fecha del reporte:** 2026-07-05
-- **Estado:** Pendiente de aprobación explícita. No implementado.
-- **Motivo:** envía tracebacks y datos de entorno a un servidor externo. Es una
-  funcionalidad nueva con implicaciones de privacidad y red; no debe mezclarse
-  con correcciones de bugs ni activarse por defecto sin decisión del
-  responsable.
-- **Propuesta mínima si se aprueba:** módulo `lib/errorReporter.py` con envío
-  asíncrono opcional, consentimiento explícito, sin rutas de usuario ni
-  credenciales, y URL configurable.
+- **Estado:** Resuelto (Q-001 aprobada el 2026-11-23, commit `0ac5457`).
+- **Solución aplicada:** `lib/errorReporter.py` con envío asíncrono en un hilo
+  daemon (límite de 5 s), consentimiento explícito (`telemetry_enabled` +
+  `telemetry_endpoint`) y `sanitize()`, que sustituye la carpeta personal por
+  `~`, cualquier ruta absoluta por `<path>` y los valores con pinta de
+  credencial por `<redacted>`. Desactivado por defecto; `install_excepthook()`
+  se encadena al hook original y nunca altera su comportamiento. Documentado en
+  `docs/privacy.md`.
+- **Pruebas:** `tests/test_error_reporter.py`.
+- **Fecha de resolución:** 2026-11-23.
 
 ### R-5d8e2a41 — Acentos en publisher e identificador de aplicación
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
 - **Fecha del reporte:** 2026-11-21
-- **Estado:** Pendiente de aprobación explícita. No implementado.
-- **Situación actual:** la ley de nombres solo admite `A-Za-z0-9` y guiones en
-  publisher y appname. Un publisher como `Jesús` se rechaza (R-b3f71a6c ya
-  evita el traceback y muestra un error legible, pero el proyecto no se puede
-  crear ni compilar).
-- **Solicitado:** admitir acentos transliterándolos (`Jesús` → `Jesus`) o
-  permitiéndolos en el nombre canónico.
-- **Motivo de la espera:** cambia la ley de nombres y los nombres de carpeta,
-  paquete y artefacto; afecta a `_PROJECT_PATTERN`, a la compatibilidad con
-  proyectos existentes y a los tests de la ley canónica.
+- **Estado:** Resuelto (Q-002 aprobada el 2026-11-23, commit `0ac5457`).
+- **Solución aplicada:** `ProjectNameFormatter.transliterate()` (NFKD sin
+  marcas diacríticas) se aplica en `normalize_publisher()` y
+  `normalize_app_id()`. `Jesús` → `Jesus`, `Ñandú Labs` → `Nandu-Labs`. El
+  nombre canónico sigue siendo ASCII, así que `_PROJECT_PATTERN` y la lectura
+  de proyectos existentes no cambian.
+- **Pruebas:** `AccentTransliterationTests` en
+  `tests/test_project_name_formatter.py` y
+  `AccentedPublisherCreateTests` en `tests/test_maintenance_cli_regressions.py`.
+- **Fecha de resolución:** 2026-11-23.
 
 ### R-4c8e1f27 — El publisher pierde su capitalización al crear proyectos
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
 - **Fecha del reporte:** 2026-11-21
-- **Estado:** Pendiente de aprobación explícita. No implementado.
-- **Situación actual:** la ley de nombres exige que el publisher conserve la
+- **Estado:** Resuelto (Q-003 aprobada el 2026-11-23, commit `0ac5457`).
+- **Solución aplicada:** `handle_cli_action('create_project')`,
+  `_ejecutarCreacionProyecto()`, `DashboardWindow`, la TUI y las acciones
+  `compile`/`repair` pasan el publisher por
+  `ProjectNameFormatter.normalize_publisher()` en vez de forzar `.lower()`. La
+  búsqueda de proyectos sigue sin distinguir mayúsculas, así que los proyectos
+  existentes se localizan igual.
+- **Pruebas:** `test_create_copies_icon_from_any_working_directory` (ahora
+  espera `Influent.cwd-test.*`) y `AccentTransliterationTests`.
+- **Fecha de resolución:** 2026-11-23.
+- **Situación histórica:** la ley de nombres exige que el publisher conserve la
   capitalización declarada (`Influent.packagemaker.v3.2.7-…`), y
   `ProjectNameFormatter` lo cumple. Sin embargo, los dos puntos de creación
   pasan el publisher ya en minúsculas: `handle_cli_action('create_project')` y
@@ -2069,7 +2201,11 @@ aprobación válido (solo JesusQuijada34). Ninguna se implementa sin una casilla
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
 - **Fecha del reporte:** 2026-11-21
-- **Estado:** Pendiente de aprobación explícita. No implementado.
+- **Estado:** Pendiente de aclaración (Q-004). La respuesta del propietario
+  («decide tú, un zip app no debe contener archivos python, solamente el
+  ejecutable compilado con pyinstaller y ya») mezcla una decisión delegada con
+  una condición que contradice el propio backend zipapp, que por definición
+  empaqueta código Python. No se aplica hasta desambiguar.
 - **Situación actual:** `hardening.compile_to_bytecode()` escribe el `.pyc`
   optimizado (O2) junto al `.py`, pero no retira el fuente. El paquete sigue
   conteniendo el `.py` legible, así que el método no cumple lo que promete su
@@ -2094,6 +2230,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 1. Aislamiento estricto BlindCube / FlatCube y formato `.blindkpkg`
 
+- **Estado:** Aprobado (Q-005) e implementado en `main`
+  (`lib/engines.py`, `lib/blindcubeEngine/container.py` con `.blindkpkg`,
+  `lib/engine_isolation.py`, `lib/flatcubeEngine/pyinstaller_embedded.py`).
+  Verificado por `tests/test_engines_and_platform.py`,
+  `tests/test_engine_isolation.py` y `tests/test_engine_packages_layout.py`.
+
 - **Actual:** `lib/compilers.py` resuelve backend con fallback Nuitka →
   PyInstaller → zipapp; `.iflapp` es el contenedor de salida.
 - **Solicitado:** BlindCube compila siempre con Nuitka en entorno aislado y
@@ -2106,6 +2248,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Riesgo:** alto (compatibilidad de artefactos y CI).
 
 ### 2. Pruebas previas y diálogo `.env` en BlindCube
+
+- **Estado:** Aprobado (Q-006) e implementado en `main`
+  (`lib/blindcubeEngine/build_preflight.py`, `lib/env_injection_dialog.py`,
+  cableado en `BuildThread` y `packagemaker.py`). Verificado por
+  `tests/test_build_preflight.py`.
 
 - **Actual:** el build no ejecuta pruebas de sintaxis/offscreen ni pregunta por
   la inyección de `.env`.
@@ -2129,6 +2276,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 4. Coreografía de splash y ventanas
 
+- **Estado:** Pendiente. La respuesta de Q-008 quedó partida por un conflicto
+  de merge (`[ ] SÍ` en un lado, `[x] SÍ` en el otro), así que se trata como no
+  respondida y se ha vuelto a preguntar. El defecto se registra como
+  R-4f8a2c60. No se ha tocado el ciclo de vida de ventanas.
+
 - **Actual:** splash y titlebar existentes, sin la secuencia completa
   splash → login → verificación interna → ventana principal.
 - **Solicitado:** fade tipo cortina, splash convertido en ventana de error,
@@ -2148,6 +2300,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 5. Rediseño de UI (acento naranja, tarjetas iOS, configuración)
 
+- **Estado:** Aprobado (Q-009) e implementado en `main`: acento naranja
+  `#FF6B00`, tarjetas de configuración (`lib/settings_cards.py`,
+  `lib/settings_panel.py`), guardado automático, sin editor de código ni
+  selector de modo de ventana, notificaciones (`lib/notificationSystem.py`) y
+  selección de fuentes (`lib/font_manager.py`).
+
 - **Actual:** acento azul `#0078D4`, configuración con botones Guardar/Restaurar,
   opción de editor de código y selector de modo de ventana.
 - **Solicitado:** acento naranja corporativo, tarjetas con navegación en
@@ -2162,6 +2320,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 6. Sidebar: hover y modo contraído
 
+- **Estado:** Aprobado (Q-010) y aplicado. El parpadeo se corrigió pintando el
+  resalte en `paintEvent` (sin re-polish) y el ancho por defecto pasó a 270 px;
+  el modo contraído ya ocultaba texto, tarjeta de contexto y login. Detalle en
+  R-5b1d9e47.
+
 - **Actual:** el hover se anima con `hover_animation.py`; el login permanece en
   la barra lateral contraída.
 - **Solicitado:** corregir el parpadeo azul/gris y ocultar el bloque de login al
@@ -2172,9 +2335,1619 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ---
 
+### 7. Ventana: arrastre, maximizado y ajuste a media pantalla
+
+- **Estado:** Pendiente (Q-011). Registrado como R-6a1f8c23.
+- **Actual:** `window_manager_bridge` inicia `startSystemMove()` siempre que se
+  pulsa la titlebar, incluso maximizada, así que la ventana se desplaza.
+- **Solicitado:** con la ventana maximizada, arrastrar la titlebar la restaura
+  a tamaño normal; subirla al borde superior maximiza; llevarla a un borde
+  lateral la ajusta a media pantalla, con transiciones suaves.
+- **Efectos secundarios:** gestos nativos de Windows (snap), maximizado sin
+  marco y bordes de redimensionado; fácil de romper sin probarlo en Windows.
+- **Archivos:** `lib/window_manager_bridge.py`, `lib/TitleBar.py`,
+  `lib/immersive_titlebar.py`, `packagemaker.py`.
+- **Riesgo:** medio-alto.
+
+### 8. Tareas en segundo plano y barra marquee en las barras de acción
+
+- **Estado:** Pendiente (Q-012).
+- **Actual:** el guardado automático y la descarga de fuentes corren en el hilo
+  de la interfaz; el diálogo iOS con barra de progreso sigue siendo el aviso
+  principal de acciones largas.
+- **Solicitado:** ejecutar en segundo plano, oscurecer la ventana mientras se
+  aplica un cambio y mostrar una barra marquee fina bajo todas las barras de
+  acción (siempre presente, inactiva hasta que hay trabajo). Las notificaciones
+  nativas sustituyen al diálogo iOS, elegible en «Aspecto → PushBox».
+- **Efectos secundarios:** cambia el modelo de avisos y el ciclo de guardado;
+  riesgo de carreras al escribir `pm.data` desde varios hilos.
+- **Archivos:** `lib/page_action_bar.py`, `lib/settings_panel.py`,
+  `lib/ios_progress_dialog.py`, `lib/notificationSystem.py`,
+  `lib/report.py`, `packagemaker.py`.
+- **Riesgo:** alto (concurrencia y estados visuales nuevos).
+
+### 9. Actualizaciones silenciosas de parches de seguridad (`updater.py`)
+
+- **Estado:** Pendiente (Q-013).
+- **Actual:** `updater.py` consulta releases publicadas y no aplica parches.
+- **Solicitado:** si no hay release nueva, descargar en silencio el último
+  commit, ejecutar las pruebas de BlindCube, compilar, abrir el programa con la
+  salida oculta, y si no hay errores ofrecer «Reiniciar para aplicar el
+  parche»; al reiniciar, reemplazar archivos y notificar
+  `{versión}-{commit}`. Sin estar compilado, descargar el ZIP del último commit
+  y reemplazar archivos.
+- **Efectos secundarios:** el programa se reemplaza a sí mismo; requiere
+  verificación de integridad, red y permisos de escritura. Riesgo de dejar la
+  instalación a medias.
+- **Archivos:** `updater.py`, `lib/coreUpdater/`, `lib/blindcubeEngine/`,
+  `version.res`, `details.xml`.
+- **Riesgo:** alto.
+
+### 10. Eventos en el sidebar y temas de temporada
+
+- **Estado:** Pendiente (Q-014). Aparcado por el propietario hasta que haya un
+  release estable sin reportes.
+- **Actual:** el sidebar no muestra banners de eventos y la interfaz no cambia
+  con la temporada.
+- **Solicitado:** banners de eventos/anuncios en el sidebar y adhesivos,
+  fuentes y detalles de temporada (p. ej. Halloween) en la interfaz y la
+  titlebar.
+- **Efectos secundarios:** nuevo contenido remoto (descarga y caché de
+  imágenes), cambios visuales estacionales y consumo de red.
+- **Archivos:** `lib/notificationSystem.py`, `lib/app_icons.py`,
+  `lib/design_tokens.py`, `source/qss/*`, `packagemaker.py`.
+- **Riesgo:** medio.
+
+---
+
+## R-5b1d9e47 — El hover del sidebar parpadeaba y los iconos quedaban apretados
+
+- **Usuario:** JesusQuijada34 (respuesta a Q-010 en `CONFIRM.MD`, commit `0ac5457`)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** al pasar el ratón, el ítem alternaba entre el azul/gris
+  heredado y el gris de reposo («el parpadeo sigue»), y los iconos quedaban muy
+  apretados: faltaban unos 10 px de ancho.
+- **Pasos para reproducirlo:** abrir la aplicación, pasar el ratón por los
+  ítems del sidebar y hacer clic en uno mientras el puntero sigue encima.
+- **Causa raíz:** `_HoverFade` reescribía la hoja de estilo del ítem en cada
+  fotograma; cada `setStyleSheet()` fuerza un re-polish y, en ese intervalo, se
+  reevaluaba la regla heredada `QWidget#NavigationSidebar QPushButton:hover` (y
+  `:checked` con borde de acento). Además, el fondo de selección del tema claro
+  era un azul fijo `rgba(0, 120, 212, 0.18)` ajeno al token de acento.
+- **Solución aplicada:** el resalte se pinta en `paintEvent` con la propiedad
+  animada `hoverProgress` (una sola `QPropertyAnimation` reutilizada) y sin
+  tocar el QSS; el selector propio
+  `QPushButton#SidebarNavItem[pmNavItem="true"]` se impone a la regla heredada;
+  el fondo de selección se deriva del acento con `with_alpha()`; el ancho por
+  defecto pasa a 270 px (migración única desde 260) y el padding derecho a
+  14 px. Al seleccionar un ítem se retira el tinte de hover.
+- **Pruebas:** `tests/test_hover_and_tokens.py` (hover sin re-polish, ítem
+  seleccionado sin tinte, fondo derivado del acento, ancho por defecto).
+- **Commit:** vigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-7a3e1d92 — `CONFIRM.MD` quedó commiteado con marcadores de conflicto
+
+- **Usuario:** JesusQuijada34 (commit `0ac5457`)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta (rompe el único canal de aprobación)
+- **Descripción:** el bloque Q-008 contenía `<<<<<<< HEAD`, `=======` y
+  `>>>>>>> 418c3e3`, con `[ ] SÍ` en un lado y `[x] SÍ` en el otro. Las demás
+  respuestas convivían con ese texto ilegible.
+- **Solución aplicada:** se repara el archivo, se registran las decisiones
+  verificadas en `Historial` y Q-008 vuelve a `Pendientes` como pregunta única.
+  La autoría del commit se verificó con la API de GitHub
+  (`author.login == "JesusQuijada34"`).
+- **Pruebas:** `tests/test_confirm_channel.py` (sin marcadores de conflicto y
+  sin preguntas duplicadas).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-4f8a2c60 — Splash simultáneo y avisos de ventana en Windows
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`, commit `bed2e83`; evidencia en Q-008)
+- **Fecha del reporte:** 2026-11-22
+- **Prioridad:** Alta
+- **Descripción:** al abrir la aplicación aparecen varias ventanas vacías que
+  se abren y cierran, el splash se dibuja a la vez que la ventana principal en
+  lugar de primero, y en Windows la consola muestra
+  `QWidgetWindow(...) must be a top level window` y
+  `UpdateLayeredWindowIndirect failed for ptDst=...`.
+- **Causa probable:** `IntegratedSplash` se crea con `parent=main_window` y
+  `WA_TranslucentBackground`, y el efecto `WipeWindow` (ventana por capas) se
+  aplica sobre un widget hijo. `UpdateLayeredWindowIndirect` y el gestor de
+  ventanas de Qt exigen una ventana de nivel superior.
+- **Estado:** Pendiente. Depende del cambio de engine Q-008, cuya respuesta
+  quedó ambigua; no se ha modificado el ciclo de vida de ventanas.
+- **Propuesta:** splash de nivel superior (sin padre) mostrado antes de
+  `main_window.show()`, aplicar `WipeWindow` solo a ventanas top-level y
+  cerrar con `destroy()`.
+- **Riesgo:** alto sin verificación visual en Windows.
+
+## R-3c7a1e90 — El guardado de Configuración abortaba la aplicación con una ruta imposible
+
+- **Usuario:** JesusQuijada34 (reporte de congelamientos en Configuración,
+  `bugs.txt`; hallazgo de la auditoría interna al reproducirlo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta
+- **Descripción:** escribir en «Configuración → Rutas» una carpeta que no se
+  puede crear (unidad inexistente, ruta bajo un archivo, carpeta sin permisos)
+  cerraba la aplicación en el acto, sin mensaje. El guardado es automático y
+  corre dentro de un slot de PyQt6, así que el `OSError` no controlado de
+  `os.makedirs()` se convertía en `Fatal Python error: Aborted`.
+- **Pasos para reproducir:** abrir Configuración, escribir
+  `/proc/pm-no-puede/crear` (o cualquier ruta bajo un archivo) en la carpeta de
+  proyectos y esperar el guardado automático.
+- **Causa raíz:** `_save_app_config_compact()` llamaba a `os.makedirs()` sin
+  `try/except` y sin validar la ruta antes de persistirla. El arranque del
+  módulo sí protegía sus `makedirs`, pero el guardado del panel no.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `ensure_config_directories()` crea y valida las dos
+  carpetas antes de guardar; si falla, el guardado se cancela, la configuración
+  anterior queda intacta y el aviso sale por el `Reporter` (barra de estado, o
+  diálogo si el guardado fue explícito). Nunca se propaga la excepción al slot.
+- **Pruebas:** `tests/test_settings_save_guards.py`
+  (`TestEnsureConfigDirectories`, `test_uncreatable_path_reports_instead_of_aborting`).
+- **Commit:** vigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9e2b4d17 — Configuración repintaba el tema dos veces y reiniciaba el motor elegido
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`: «al maximizar o restaurar o al
+  cambiar opciones en configuración, porque se queda congelado un rato?»)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** cualquier cambio en Configuración —incluso escribir una ruta
+  o activar un aviso— congelaba la ventana un instante perceptible. Además, la
+  elección de motor (FlatCube/BlindCube) volvía sola a BlindCube después de
+  cambiar un ajuste.
+- **Pasos para reproducir:** en la pestaña Compilar elegir FlatCube v1, ir a
+  Configuración, cambiar cualquier opción y volver a Compilar.
+- **Causa raíz:** `_save_app_config_compact()` reaplicaba siempre
+  `apply_ui_language()`, `_apply_leviathan_and_personalization()` y
+  `apply_theme()`. Como `_apply_display_mode_by_name()` ya termina en
+  `apply_theme()`, el tema se repintaba dos veces por guardado (≈0,10 s cada
+  uno offscreen, más en Windows con la ventana real). `apply_ui_language()`
+  vuelve a poblar el selector de motores y lo deja en BlindCube.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `settings_appearance_state()` captura sólo los valores
+  que obligan a repintar (acento, ancho del indicador, densidad, modo de
+  presentación y fuente) antes y después de guardar, y
+  `settings_reapply_plan()` decide qué reaplicar: nada si no cambió la
+  apariencia, `apply_theme()` una sola vez si cambió un valor visual,
+  `_apply_leviathan_and_personalization()` si cambió el modo de presentación y
+  la retraducción sólo cuando cambió el idioma.
+- **Pruebas:** `tests/test_settings_save_guards.py`
+  (`TestSettingsReapplyPlan`, `TestAppearanceState`,
+  `test_path_only_save_does_not_repaint_theme`,
+  `test_engine_choice_survives_an_autosave`).
+- **Commit:** vigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-6a1f8c23 — Arrastrar la titlebar con la ventana maximizada mueve la ventana
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`: «porque al jalar la barra de titulo a
+  un lado estando maximizada, se mueve? en vez de quedar quieta y bloqueada»)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** con la ventana maximizada, arrastrar la barra de título
+  desplaza la ventana en lugar de mantenerla fija; el usuario pide además que
+  arrastrarla la devuelva a tamaño normal, que subirla al borde superior
+  maximice y que llevarla a un borde lateral la ajuste a media pantalla.
+- **Pasos para reproducir:** maximizar la ventana y arrastrar la titlebar hacia
+  un lado.
+- **Causa raíz:** `lib/window_manager_bridge._wire_titlebar()` sustituye
+  `mousePressEvent` de la titlebar y llama a `start_system_move()` sin
+  comprobar el estado de la ventana. El manejador original de
+  `lib/TitleBar.py` sí lo comprobaba (`not is_maximized()`), así que el puente
+  anuló esa guarda.
+- **Estado:** Pendiente. Cambia el ciclo de vida y el comportamiento de la
+  ventana (restaurar al arrastrar, maximizar al soltar arriba, ajuste a media
+  pantalla), así que se acumula como pregunta **Q-011** en `CONFIRM.MD` y no se
+  ha modificado.
+- **Propuesta:** ignorar `startSystemMove()` mientras la ventana esté
+  maximizada y restaurarla antes de mover; añadir las zonas de ajuste
+  (arriba = maximizar, laterales = media pantalla) con transiciones suaves.
+- **Archivos afectados:** `lib/window_manager_bridge.py`, `lib/TitleBar.py`,
+  `lib/immersive_titlebar.py`, `packagemaker.py`.
+- **Riesgo:** medio-alto (snap y maximizado nativos; difícil de verificar sin
+  Windows).
+
+## R-4d8f2b61 — Botón Guardar en Configuración con opciones automáticas
+
+- **Usuario:** JesusQuijada34 (`bugs.txt`: «en configuracion aparece el boton
+  guardar cuando las opciones son automaticas lo cual no deberia de ser»)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Baja
+- **Descripción:** el reporte indica que Configuración muestra un botón Guardar
+  aunque el guardado es automático.
+- **Pasos para reproducir:** abrir Configuración y buscar el botón.
+- **Estado:** Cerrado sin cambios de UI: no se reproduce en el código actual.
+  La pestaña Configuración no instala barra de acciones (`init_config_tab` no
+  llama a `install_page_action_bar`) y `SettingsPanel` no contiene ningún botón
+  «Guardar»; el guardado es automático y «Restablecer» es una tarjeta. Se deja
+  una prueba de regresión para que el botón no reaparezca.
+- **Solución aplicada:** ninguna en la UI; guardia
+  `test_config_page_has_no_save_button`.
+- **Pruebas:** `tests/test_settings_save_guards.py`.
+- **Commit:** vigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-23 (verificado como no reproducido).
+
+## R-2e7c4a91 — La preferencia de editor se guardaba dentro de `lib/` y un JSON no-objeto rompía «Abrir con»
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `lib/.walkcube/editorDetector.py` resolvía `settings.json`
+  con `Path(__file__).resolve().parent.parent`, que desde `lib/.walkcube/`
+  apunta a `lib/config/settings.json`. La opción «Siempre» de «Abrir con»
+  escribía allí, fuera de la configuración canónica, y en un ejecutable
+  congelado el archivo caía en el bundle temporal y se perdía al cerrar.
+  Además, `get_default_editor()` hacía `.get()` sobre el JSON sin comprobar el
+  tipo (un archivo con `[]` lanzaba `AttributeError`) y
+  `save_default_editor()` asignaba una clave sobre una lista (`TypeError`).
+- **Pasos para reproducir:** elegir «Siempre» en «Abrir con» y comprobar que
+  aparece `lib/config/settings.json`; después escribir `[]` en ese archivo y
+  abrir de nuevo «Abrir con» (traceback `AttributeError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** la ruta pasa a `<raíz de la app>/config/settings.json`
+  (o junto a `sys.executable` si está congelado). Las dos funciones exigen un
+  objeto JSON, degradan a `{}` o `None` y tratan `OSError` al crear o escribir
+  como preferencia no guardada, sin romper el diálogo.
+- **Pruebas:** `tests/test_config_and_removeme_robustness.py` (ruta normal,
+  ruta congelada, cinco formas no-objeto, reescritura y conservación de claves).
+- **Commit:** vigésimo séptimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-8b4d1f62 — El removedor generado revienta si `install.json` no es un objeto
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** el stub `removeme.py` generado por `build_removeme()` leía
+  `install.json` y hacía `data.get("shortcuts")` sin validar el tipo. Un
+  registro corrupto (`[]`, `"texto"`, `5` o `{"shortcuts": 5}`) lanzaba
+  `AttributeError`/`TypeError` y la desinstalación se detenía con traceback,
+  dejando la aplicación instalada.
+- **Pasos para reproducir:** generar el removedor, escribir `[]` en
+  `install.json` y ejecutar `removeme.py --silent` (código 1 y rastro de
+  `AttributeError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_shortcuts()` sólo acepta un objeto JSON con una
+  lista en `shortcuts`; cualquier otra forma cae a los accesos directos
+  incrustados y la desinstalación continúa.
+- **Pruebas:** `tests/test_config_and_removeme_robustness.py` (seis formas
+  corruptas y un acceso directo real que sigue borrándose).
+- **Commit:** vigésimo séptimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-5c9a3e27 — Metadatos `.mexf` ilegibles abortaban el diálogo de instalación
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Baja
+- **Descripción:** la vista previa de `showInstallMexfDialog()` envolvía la
+  lectura en `except (OSError, KeyError, ET.ParseError)`, que no incluye
+  `json.JSONDecodeError` ni `AttributeError`. Un `.mexf` que no fuera JSON u
+  objeto escapaba al `except` exterior y cerraba el diálogo entero con
+  «Error showing install-MEXF dialog», en vez de abrirlo sin detalles.
+- **Pasos para reproducir:** elegir «Instalar extensiones MEXF» y seleccionar
+  un archivo con texto no JSON.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_mexf_preview_metadata()` lee y valida el objeto una
+  sola vez y devuelve `None` cuando no se puede; el diálogo se abre igual y
+  omite el bloque de detalles.
+- **Pruebas:** `tests/test_config_and_removeme_robustness.py` (texto no JSON,
+  lista, cadena, número, archivo ausente y objeto válido).
+- **Commit:** vigésimo séptimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-3b6f9d24 — Una caché de fuentes de solo lectura tumbaba el CLI y la interfaz
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `cached_path()` llamaba a `font_cache_dir()`, que creaba
+  `data/fonts` con `mkdir()`. En una instalación de solo lectura (Program Files
+  en Windows, `/usr` en Linux, `data` sin permisos) `--list-fonts` y
+  `--download-fonts` terminaban en `PermissionError` con traceback, y el botón
+  de descarga de Configuración abortaba la aplicación: el `OSError` subía desde
+  un slot de Qt y Python cerraba el proceso.
+- **Pasos para reproducir:** con `data/fonts` inexistente y `data` sin permiso
+  de escritura, ejecutar `python packagemaker.py --list-fonts` (antes:
+  traceback, código 1) o pulsar «Descargar fuentes» en Configuración.
+- **Causa raíz:** las rutas de **lectura** del estado de la caché creaban el
+  directorio como efecto secundario y no traducían `OSError`; la escritura del
+  aviso de licencias tampoco.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `font_cache_dir(create=False)` y
+  `cached_path(..., create=False)` permiten consultar sin tocar el disco;
+  `is_cached()`, `verify_file()`, `available_fonts_report()`,
+  `load_cached_fonts()` y `ensure_fonts()` degradan a «ausente» con `OSError`;
+  `download_font()` comprueba la escritura antes de descargar y devuelve
+  `None`; `write_license_notice()` devuelve `None`; el CLI avisa
+  `[WARN] No se pudo escribir el aviso de licencias` y el slot
+  `_download_ui_fonts()` captura `OSError` y lo muestra en la etiqueta de
+  estado en vez de abortar.
+- **Pruebas:** `tests/test_font_cache_robustness.py` (9 casos, incluido el slot
+  de Configuración y el CLI con la caché bloqueada).
+- **Commit:** vigésimo octavo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9f4c2a71 — Caché de avatares no escribible y respuestas de GitHub no-JSON
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Baja
+- **Descripción:** dos caminos del inicio de sesión de GitHub escapaban con
+  excepciones crudas: (1) `cache_avatar()` escribía en `data/avatars` sin
+  `try/except`, así que un `data` de solo lectura lanzaba `OSError` dentro del
+  slot de login y podía cerrar la aplicación; `load_cached_avatar()` tampoco
+  protegía la creación del directorio, y se llama al refrescar la tarjeta del
+  sidebar al arrancar. (2) `_request()` devolvía `json.loads(...)` sin validar
+  la forma: un portal cautivo que responde HTML con código 200 producía el
+  mensaje engañoso «el token contiene caracteres no válidos», y un JSON que no
+  fuera objeto lanzaba `AttributeError` en `_profile_from_payload()`.
+- **Pasos para reproducir:** con `data` sin permiso de escritura, iniciar
+  sesión de GitHub (antes: aborto del proceso al cachear el avatar). Con un
+  proxy que responde `200 <html>…</html>`, llamar a `_request()` (antes:
+  mensaje erróneo) o devolver `["octocat"]` desde `/user` (antes:
+  `AttributeError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** `cache_avatar()` y `load_cached_avatar()` capturan
+  `OSError` y devuelven `None` (el avatar es opcional); `_request()` separa la
+  lectura del cuerpo del parseo y traduce el fallo a «GitHub devolvió una
+  respuesta que no es JSON»; `_profile_from_payload()` exige un objeto.
+- **Pruebas:** `tests/test_github_identity.py` (3 casos nuevos: cuerpo no-JSON,
+  carga no-objeto y caché de avatares bloqueada).
+- **Commit:** vigésimo octavo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-4a7c2e91 — `PythonPortableManager` reventaba con `data/pmCodeEditor` no escribible
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta (impide arrancar el editor y sus diálogos)
+- **Descripción:** `PythonPortableManager.__init__` creaba `data/pmCodeEditor` y
+  `data/pmCodeEditor/packages` con `mkdir()` sin `try/except`. El repositorio no
+  incluye `packages`, así que en una instalación de solo lectura (Program Files,
+  AppImage, `/opt`) la construcción del gestor lanzaba `PermissionError`.
+  `get_python_manager()` se llama en `pmCodeEditor.main()` a través de
+  `resolve_python_path()`, y también desde `PythonSetupDialog`,
+  `InterpreterConfigDialog` y el desplegable de intérpretes del editor: el
+  primero sale con traceback y los demás lanzan la excepción dentro de un slot
+  de Qt. `_discover_installations()` iteraba `python_dir` sin proteger
+  `iterdir()`, `_save_config()` escribía sin capturar `OSError`, y
+  `get_installed_versions()`/`get_installation_status()` llamaban a
+  `Path.exists()` sobre una ruta potencialmente inaccesible.
+- **Pasos para reproducir:** con `data` sin permiso de escritura (o
+  `PythonPortableManager(base_dir=<carpeta no escribible>)`), abrir el editor
+  (`python pmCodeEditor.py`) o el diálogo de intérpretes: antes,
+  `PermissionError: … /packages`.
+- **Causa raíz:** rutas de datos opcionales tratadas como obligatorias y
+  ausencia de traducción de `OSError` en un componente que se construye al
+  arrancar y dentro de slots de Qt.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_ensure_directories()` captura `OSError` y sigue en
+  modo degradado; `_load_config()` usa `is_file()` dentro del `try`;
+  `_discover_installations()` protege `iterdir()`/`is_dir()`;
+  `_save_config()` devuelve `False` y avisa con `[WARN]` cuando no puede
+  escribir; `_is_file()` centraliza la comprobación de `python_exe`;
+  `_get_dir_size()` ignora entradas inaccesibles e `install_version()` informa
+  del fallo al preparar el destino en vez de lanzarlo.
+- **Pruebas:** `tests/test_readonly_data_dir_robustness.py::TestPortableManagerReadOnlyDataDir`
+  (3 casos; los 3 fallan con el código anterior).
+- **Commit:** vigésimo noveno ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-8f1d3b62 — Guardar `editor_config.json` abortaba con `data` de solo lectura
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `DashboardWindow.save_config()` y
+  `EditorWindow._save_editor_config()` hacían `mkdir()` + `open(..., "w")` sin
+  `try/except`. `save_config()` se invoca al añadir un proyecto reciente
+  (`_add_to_recent`) y al aceptar el diálogo de intérpretes; el segundo, tras
+  el mismo diálogo. Con `data/pmCodeEditor` de solo lectura, el `OSError`
+  subía desde un slot de Qt y podía cerrar el proceso. Las lecturas
+  (`load_config()` y `_load_editor_config()`) comprobaban `exists()` fuera del
+  `try`, que en Python 3.13 propaga `PermissionError` si el padre no es
+  accesible.
+- **Pasos para reproducir:** con `data` sin permiso de escritura, abrir un
+  proyecto en el panel del editor o cambiar el intérprete: antes, `OSError` en
+  el slot. En pruebas, apuntar `EDITOR_CONFIG_PATH` bajo un archivo
+  (`mkdir()` lanza `NotADirectoryError`).
+- **Estado:** Resuelto.
+- **Solución aplicada:** ambos guardados capturan `OSError`, avisan con
+  `[WARN]` y devuelven `False`; las dos lecturas usan `is_file()` dentro del
+  `try`.
+- **Pruebas:** `tests/test_readonly_data_dir_robustness.py::TestEditorConfigReadOnlyDataDir`
+  (3 casos; 2 fallan con el código anterior).
+- **Commit:** vigésimo noveno ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9a4c1e27 — La TUI cae con rutas sin permisos
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** las pantallas de la TUI comprobaban las rutas escritas por
+  el usuario con `Path.exists()` (`_screen_build`, `_screen_moonfix`,
+  `_project_actions`, `_show_details_xml`, `_get_version`). En Python 3.13
+  `Path.exists()` propaga `PermissionError` cuando el directorio padre no es
+  accesible, así que una carpeta bloqueada terminaba en traceback y cerraba la
+  TUI. `_list_projects()` ordenaba además con `p.stat()` fuera de cualquier
+  `try`, de modo que una entrada que desaparecía o no se podía consultar
+  abortaba el listado.
+- **Pasos para reproducir:** `chmod 000` sobre un proyecto (o sobre su carpeta
+  padre) y abrir «Ver details.xml», «Construir paquete» o «MoonFix» con esa
+  ruta; antes, `PermissionError` con traceback. En pruebas, patchear
+  `list_projects` para devolver una entrada cuyo `stat()` falla.
+- **Estado:** Resuelto.
+- **Solución aplicada:** nuevo `_safe_exists()` en `lib/tui.py` que traduce
+  `OSError` a `False`; todas las comprobaciones de rutas del usuario lo usan.
+  `_list_projects()` ignora las entradas cuyo `stat()` falla en vez de
+  propagar el error.
+- **Pruebas:** `tests/test_tui_unreadable_paths.py` (7 casos; los 7 fallan con
+  el código anterior).
+- **Commit:** trigésimo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-4d8a6c12 — El arranque cae si `data/` no se puede crear o leer
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Alta
+- **Descripción:** `_data_dir()` creaba la carpeta con `mkdir()` sin
+  `try/except`, `PMDataStore.load()` comprobaba el archivo con
+  `Path.is_file()` y `load_merged_app_config()` hacía lo propio con
+  `config/settings.json`. En una instalación de solo lectura sin `data/`, o con
+  `data/`/`config/` ilegibles, la primera llamada a `get_pm_data()` —que ocurre
+  al resolver el acento o el idioma— lanzaba `PermissionError` y abortaba el
+  arranque.
+- **Pasos para reproducir:** `chmod 555` sobre la raíz de la app sin carpeta
+  `data/` y ejecutar `python -c "from lib import pm_data; pm_data.PMDataStore()"`;
+  o `chmod 000` sobre `data/` y repetir.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `_data_dir()` degrada con `except OSError` y devuelve
+  la ruta igualmente; `load()`, `_detect_app_version()` y
+  `load_merged_app_config()` usan `path_is_file()`, que traduce `OSError` a
+  `False`. `save()` ya devolvía `False` sin lanzar.
+- **Pruebas:** `tests/test_pm_data_readonly_startup.py` (4 casos; 3 fallan con
+  el código anterior).
+- **Commit:** trigésimo primer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9e3b7a51 — Las acciones de GUI caen con rutas sin permisos
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** tres acciones de ventana comprobaban rutas con
+  `Path.exists()`/`is_file()`/`mkdir()`/`read_text()` dentro de un slot de Qt:
+  `NewProjectWizard.create_project()` (carpeta base ilegible),
+  `IflappIdePanel._on_script_selected()` (guion ilegible) y
+  `ProjectConfig.__init__()`/`get_config()` (base de solo lectura). En Python
+  3.13 esas llamadas propagan `PermissionError`, así que el usuario veía un
+  traceback en lugar del aviso.
+- **Pasos para reproducir:** `chmod 000` sobre la carpeta base del asistente o
+  sobre un guion del IDE y ejecutar la acción; antes, `PermissionError`.
+- **Estado:** Resuelto.
+- **Solución aplicada:** `path_exists()` en el asistente (también en las
+  carpetas por defecto de los diálogos); `_on_script_selected()` lee dentro de
+  `try/except OSError` y muestra `iflapp_ide.load_failed`; `ProjectConfig`
+  protege `mkdir()` e `is_file()` y devuelve `{}` cuando la base es
+  inaccesible.
+- **Pruebas:** `tests/test_gui_unreadable_paths.py` (3 casos; los 3 fallan con
+  el código anterior).
+- **Commit:** trigésimo primer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-6a2d8f43 — Termux sin almacenamiento compartido se queda sin salida
+
+- **Usuario:** auditoría interna del ciclo de mantenimiento (sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Prioridad:** Media
+- **Descripción:** `compile_output_directory()` comprobaba
+  `~/storage/downloads` con `Path.is_dir()`. En Termux sin
+  `termux-setup-storage` ese camino está bajo un padre inaccesible y Python
+  3.13 propaga `PermissionError`; el CLI abortaba en lugar de usar
+  `/storage/emulated/0/Download`.
+- **Pasos para reproducir:** `chmod 000` sobre el padre de
+  `~/storage/downloads` y llamar `compile_output_directory("termux")`.
+- **Estado:** Resuelto.
+- **Solución aplicada:** la comprobación usa `os.path.isdir()`, que traduce
+  cualquier `OSError` a `False`; se mantiene `/storage/emulated/0/Download`
+  como respaldo.
+- **Pruebas:** `tests/test_platform_detect_storage.py` (2 casos; 1 falla con el
+  código anterior).
+- **Commit:** trigésimo primer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-7e4c1a92 — El arranque cae si `data/` impide leer la caché de sesión
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `session_cache.load_session()` comprobaba
+  `data/session.cache` con `Path.is_file()` fuera de cualquier `try`. En
+  Python 3.13 esa llamada propaga `PermissionError` cuando `data/` no es
+  accesible. `load_session()` se invoca en el arranque desde
+  `github_identity.restore_cached_session()`, `has_cached_session()` y
+  `load_token()`, dentro de `start_session_gate()`; el fallo dejaba el arranque
+  sin llegar a decidir entre landing o IDE.
+- **Pasos para reproducir:** `chmod 000 data/` con `data/session.cache`
+  existente y llamar `session_cache.load_session()` (o arrancar la app).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe el arranque).
+- **Solución aplicada:** la comprobación y la lectura de la caché se envuelven
+  en `try/except OSError`; sin caché legible se devuelve `None` y el arranque
+  continúa con `pm.data` o con el formulario de login.
+- **Pruebas:** `tests/test_unreadable_config_paths.py`
+  (`test_session_cache_ignores_unreadable_data_dir`).
+- **Commit:** trigésimo segundo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-2d8b6f31 — El build lanza traceback con `config/` del proyecto ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `FlangCompiler.__init__` llama a `_load_scripts_to_compile()`,
+  que comprobaba `config/settings.json` con `Path.is_file()` sin protección. Con
+  el directorio `config/` del proyecto sin permisos, `compile` y `--buildthis`
+  terminaban en `PermissionError` con traceback (el CLI construye el compilador
+  fuera de un `try`). En la GUI lo absorbía el `except` de la QThread, pero el
+  mensaje era «Error inesperado».
+- **Pasos para reproducir:** `chmod 000 PROYECTO/config && python
+  packagemaker.py --buildthis PROYECTO --compiler zipapp --no-sandbox`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe la compilación headless).
+- **Solución aplicada:** la comprobación se envuelve en `try/except OSError`; se
+  registra `last_error` («No se pudo leer config/settings.json: …») y se
+  devuelve una lista vacía, igual que cuando el archivo existe pero no se puede
+  leer. El CLI responde `[ERROR] …` con código 1.
+- **Pruebas:** `tests/test_unreadable_config_paths.py`
+  (`test_flang_compiler_reports_unreadable_project_config`).
+- **Commit:** trigésimo segundo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-9a5c3e74 — «Abrir con» cae con `config/` de la aplicación ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `editorDetector.get_default_editor()` y
+  `save_default_editor()` comprobaban `config/settings.json` de la aplicación
+  con `Path.is_file()` sin protección. Con `config/` ilegible, abrir el diálogo
+  «Abrir con» o guardar la preferencia lanzaba `PermissionError` dentro de un
+  slot de Qt.
+- **Pasos para reproducir:** `chmod 000 config/` junto al ejecutable y llamar
+  `get_default_editor()`/`save_default_editor("vim")`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** ambas comprobaciones se envuelven en `try/except
+  OSError`; `get_default_editor()` devuelve `None` y `save_default_editor()`
+  omite la lectura previa y deja que el `except OSError` de la escritura avise
+  sin romper el slot.
+- **Pruebas:** `tests/test_unreadable_config_paths.py`
+  (`test_editor_detector_ignores_unreadable_config_dir`).
+- **Commit:** trigésimo segundo ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-4e9c1a73 — el IDE `.iflapp` cae al compilar un proyecto ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `IflappIdePanel.run_compile()` llamaba a
+  `iflapp_ide.compile_project()` sin proteger el `OSError` que produce
+  `scan_project()` al leer `details.xml` o al crear `build/` cuando el proyecto
+  dejó de ser legible o escribible. El método está conectado a
+  `btn_compile.clicked`; en PyQt6 una excepción no controlada en un slot
+  termina el proceso.
+- **Pasos para reproducir:** abrir un proyecto en el IDE `.iflapp`, aplicar
+  `chmod 000` a la carpeta del proyecto y pulsar «Compilar». Se obtenía
+  `PermissionError: [Errno 13] …/details.xml`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta.
+- **Solución aplicada:** la llamada a `compile_project()` se envuelve en
+  `try/except OSError`; el error se escribe en la consola y en la barra de
+  estado y el método devuelve `False` sin cerrar la aplicación.
+- **Pruebas:** `tests/test_gui_unreadable_paths.py`
+  (`test_ide_panel_reports_unreadable_project_on_compile`).
+- **Commit:** trigésimo tercer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-7d2f8b14 — MoonFix cae con un proyecto de solo lectura
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `MoonFixWizard.go_next()` llamaba a `apply_project_fixes()`
+  desde un slot; esa función delega en `repair_project_from_templates()`, que
+  crea carpetas y escribe `details.xml` y las plantillas. Con la carpeta del
+  proyecto sin permiso de escritura, `Path.mkdir()`/`write_text()` lanzaban
+  `PermissionError` y el wizard cerraba la aplicación en lugar de avisar.
+- **Pasos para reproducir:** abrir MoonFix sobre un proyecto, aplicar
+  `chmod 500` a su carpeta y pulsar «Siguiente». Se obtenía
+  `PermissionError: [Errno 13] …/app`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta.
+- **Solución aplicada:** `apply_project_fixes()` ahora devuelve `bool` y
+  envuelve la reparación en `try/except (OSError, ValueError)`, mostrando el
+  error con `LeviathanDialog`; `go_next()` no avanza de página si la reparación
+  falla.
+- **Pruebas:** `tests/test_gui_unreadable_paths.py`
+  (`test_moonfix_reports_unwritable_project`).
+- **Commit:** trigésimo tercer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-6b3e9c52 — el splash del paquete no arranca con un proyecto sin permisos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** `splash_bootloader._resolve_icon()` comprobaba los iconos
+  candidatos con `Path.is_file()` y resolvía `Path.cwd()` sin protección. El
+  bootloader se ejecuta antes de construir la ventana del programa compilado,
+  así que un directorio de trabajo o un proyecto sin permisos lanzaba
+  `PermissionError` antes de mostrar el splash.
+- **Pasos para reproducir:** llamar a
+  `SplashBootloader().arm("<proyecto>/main.py")` con la carpeta del proyecto en
+  `chmod 000` (y un `cwd` sin iconos). Se obtenía
+  `PermissionError: [Errno 13] …/app/app-icon.ico`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media.
+- **Solución aplicada:** `_resolve_icon()` envuelve `Path.resolve()`/`Path.cwd()`
+  en `try/except OSError` y cada `is_file()` en su propio `try`; si no hay
+  icono legible devuelve `None` y el splash usa el acento del sistema. El
+  módulo sigue siendo autocontenido (solo stdlib + PyQt6).
+- **Pruebas:** `tests/test_splash_bootloader_injection.py`
+  (`test_bootloader_arm_tolerates_unreadable_project`).
+- **Commit:** trigésimo tercer ciclo (2026-11-23).
+- **Fecha de resolución:** 2026-11-23.
+
+## R-4b9e2c71 — El compilador `.mexf` filtra `PermissionError` crudo con una raíz o una carpeta `app/` ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte externo)
+- **Fecha del reporte:** 2026-11-23
+- **Descripción:** el ciclo de R-6d2f8a41 protegió el parseo de `details.xml`
+  y de los `.mexf`, pero dejó sin traducir las comprobaciones de existencia. En
+  Python 3.13 `Path.is_file()`/`is_dir()` propagan `PermissionError` cuando el
+  directorio padre no es accesible, así que `read_project_details()`,
+  `compile_mexf_project()` y `MexfCompiler.run()` dejaban escapar
+  `PermissionError` en lugar de `MexfCompileError`. `MexfCompiler.run()` además
+  incumplía su contrato (debe devolver `None` y rellenar `last_error`) y el paso
+  opcional `.mexf` del build abortaba el `FlangCompiler` completo en vez de
+  omitirse. `_find_project_icon()` leía los iconos sin protección: una carpeta
+  `app/` ilegible abortaba el empaquetado aunque el icono es opcional.
+- **Pasos para reproducir:** crear un proyecto con `details.xml` y `.mexf/`,
+  `chmod 000` sobre la raíz y ejecutar `read_project_details(root)`,
+  `MexfCompiler(root).run()` y `compile_mexf_project(root)`; con la raíz legible
+  pero `app/` en `chmod 000`, `compile_mexf_project(root)` también fallaba.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (mensaje de error crudo y contrato roto; el CLI ya
+  envolvía `OSError`, pero el build abortaba el paso `.mexf` en vez de omitirlo).
+- **Solución aplicada:** `read_project_details()` envuelve `is_file()` y lanza
+  `MexfCompileError`; `_find_project_icon()` tolera `OSError` y devuelve `None`;
+  `MexfCompiler.run()` protege `is_dir()` y captura `(MexfCompileError, OSError)`
+  devolviendo `None`; `BuildThread._compile_mexf_if_present()` protege el
+  `is_dir()` del `.mexf/` y lo omite con un `[WARN]`.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_mexf_read_details_converts_permission_error`,
+  `test_mexf_compiler_run_skips_unreadable_root`,
+  `test_mexf_compile_project_converts_permission_error`,
+  `test_buildthread_mexf_step_skips_unreadable_dir` y
+  `test_mexf_compile_without_readable_icon_still_builds` (las 5 fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del trigésimo cuarto ciclo.
+- **Fecha de resolución:** 2026-11-23.
+
+## R-3f7c1a94 — Una carpeta de accesos directos no escribible aborta `--install-asksome`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `create_shortcuts()` documenta que devuelve sólo los accesos
+  directos que se pudieron crear, pero `_write_linux_desktop()` y
+  `_write_windows_shortcut()` sólo protegían `mkdir()`. Si la carpeta de
+  destinos existe y no es escribible (`~/.local/share/applications` de una
+  instalación del sistema, HOME inmutable o contenedor), `entry.write_text()`
+  lanzaba `PermissionError` y abortaba `install_asksome()` **después** de haber
+  extraído el payload: la instalación quedaba a medias y el CLI moría con un
+  traceback en vez de un `[ERROR]`.
+- **Pasos para reproducir:** instalar un `.asksome` con
+  `shortcut_dirs=[<carpeta en chmod 555>]`; con el CLI,
+  `HOME=<tmp>/home` con `<tmp>/home/.local/share/applications` en `chmod 555` y
+  `python packagemaker.py --install-asksome demo.asksome --install-root <raíz>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (instalación a medias y traceback; los accesos directos
+  son opcionales).
+- **Solución aplicada:** ambas funciones envuelven la escritura y el `chmod` del
+  acceso en `try/except OSError` y devuelven `None`, de modo que
+  `create_shortcuts()` sigue con el resto de carpetas.
+- **Pruebas:** `tests/test_mexf_asksome.py` —
+  `test_install_asksome_skips_unwritable_shortcut_dir`.
+- **Commit:** se registra en el cierre del trigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-6b2e9d47 — `uninstall_asksome` filtra `PermissionError` y `OSError` crudos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `uninstall_asksome()` usaba `target.is_dir()`,
+  `record_path.is_file()`, `shortcut_path.is_file()`/`unlink()` y
+  `shutil.rmtree()` sin protección. En Python 3.13 los `is_*()` propagan
+  `PermissionError` cuando el directorio padre no es accesible, y `rmtree`
+  falla con ficheros en uso (Windows) o directorios sin permiso de escritura.
+  El CLI sólo captura `AsksomeInstallError`, así que
+  `--uninstall-asksome` terminaba en traceback en lugar de informar.
+- **Pasos para reproducir:** instalar un `.asksome`, poner la raíz de
+  instalación en `chmod 000` (o un subdirectorio con un fichero dentro en
+  `chmod 555`) y ejecutar `uninstall_asksome("demo.app", raíz)` o
+  `python packagemaker.py --uninstall-asksome demo.app --install-root raíz`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (mensaje crudo, sin pérdida de datos: la app sigue
+  instalada).
+- **Solución aplicada:** `target.is_dir()` se traduce a `AsksomeInstallError`;
+  el registro se comprueba con `path_is_file()`; cada acceso directo se borra
+  dentro de `try/except OSError` (un acceso bloqueado no impide purgar la
+  instalación); el árbol se borra con `lib.file_ops.remove_tree()` y, si
+  sobrevive, se lanza `AsksomeInstallError` con la ruta. `build_removeme()`
+  traduce también los `OSError` de sus dos escrituras.
+- **Pruebas:** `tests/test_mexf_asksome.py` —
+  `test_uninstall_asksome_reports_unreadable_root`,
+  `test_uninstall_asksome_skips_blocked_shortcut`,
+  `test_uninstall_asksome_reports_blocked_tree` y
+  `test_install_asksome_reports_unreadable_artifact`.
+- **Commit:** se registra en el cierre del trigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8c4a1f62 — `remove_tree` informa de un borrado que no ocurrió
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `remove_tree()` promete devolver `True` sólo si el árbol ya
+  no existe, pero `shutil.rmtree()` con `onexc` **no lanza**: si el callback
+  `_clear_readonly()` consumía el error, `rmtree` continuaba y terminaba sin
+  excepción. `_retry()` nunca veía el fallo (los reintentos de `WinError 32` de
+  R-4a1e7b93 no llegaban a ejecutarse) y `remove_tree()` devolvía `True` con el
+  árbol intacto. Los llamadores del build daban la limpieza por buena y podían
+  reutilizar artefactos obsoletos.
+- **Pasos para reproducir:** crear `<tmp>/locked/f.txt`, poner `locked` en
+  `chmod 555` y llamar a `remove_tree(locked)`; devolvía `True` con el
+  directorio todavía presente.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (contrato roto en la limpieza del build; podía dejar
+  restos entre compilaciones).
+- **Solución aplicada:** `_clear_readonly()` ya no se traga el error: si el
+  reintento falla, la excepción llega a `_retry()` (que espera ante bloqueos
+  reales) y el `chmod` conserva los bits originales (`mode | S_IWRITE`) en vez
+  de fijar `0o600` sobre un directorio. `remove_tree()` confirma el resultado
+  comprobando que el árbol ya no existe antes de devolver `True`.
+- **Pruebas:** `tests/test_engine_isolation.py` —
+  `test_remove_tree_reports_a_tree_that_survived` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-4a7e2c91 — `create` lanza traceback con una carpeta base sin permisos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el subcomando headless `create` llamaba a
+  `create_project_from_templates()` sin proteger el sistema de archivos. Con
+  `BASE_DIR` en una carpeta sin permiso de escritura (HOME inmutable,
+  almacenamiento desmontado, ruta bajo un archivo), `project_path.mkdir()`
+  lanzaba `PermissionError` y el CLI terminaba con traceback en vez de un
+  mensaje. La GUI ya lo trataba, pero el CLI quedaba fuera.
+- **Pasos para reproducir:** fijar `base_dir` en `data/pm.data` a una carpeta
+  `chmod 555` y ejecutar
+  `python packagemaker.py create --name Demo --shortname demo --publisher Influent --headless`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (robustez del CLI; no había pérdida de datos).
+- **Solución aplicada:** la creación y la copia del icono por defecto van dentro
+  de un `try/except OSError` que imprime
+  `[ERROR] No se pudo crear el proyecto en …` y sale con código 1.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_create_project_reports_unwritable_base_dir` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-6c9d3f52 — `moonfix`/`repair` lanzan traceback con un proyecto de solo lectura
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el manejador headless de `repair_project` sólo traducía
+  `ValueError`. `repair_project_from_templates()` crea las subcarpetas del
+  contrato (`docs/`, marcadores `.container`, etc.); si al proyecto le faltaba
+  una carpeta y la raíz era de solo lectura, `folder_path.mkdir()` lanzaba
+  `PermissionError` y `moonfix` moría con traceback. El asistente MoonFix de la
+  GUI ya se había corregido (R-7d2f8b14); el CLI no.
+- **Pasos para reproducir:** crear un proyecto canónico, borrar `docs/`, poner la
+  carpeta del proyecto en `chmod 555` y ejecutar
+  `python packagemaker.py moonfix --name Demo --shortname demo --publisher Influent`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (robustez del CLI; la GUI ya estaba protegida).
+- **Solución aplicada:** se añade `except OSError` junto al de `ValueError`, con
+  el mensaje `[ERROR] No se pudo reparar el proyecto …` y salida 1.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_repair_project_reports_unreadable_project` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8e2b7d64 — `compile`/`--buildthis` lanzan traceback con `dist/` bloqueado
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** los bloques headless de `compile_project` y `buildthis` sólo
+  tenían `try/finally`, sin `except`. Un proyecto de solo lectura hacía que
+  `FlangCompiler._compile_binary()` fallara en `dist_dir.mkdir()` con
+  `PermissionError`, que escapaba del CLI como traceback. En la GUI la QThread
+  lo capturaba con un mensaje genérico («Error inesperado»), sin indicar el
+  directorio ni la causa.
+- **Pasos para reproducir:** poner el proyecto en `chmod -R a-w` y ejecutar
+  `python packagemaker.py --buildthis <proyecto> --compiler zipapp --no-sandbox`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (la compilación es la acción principal; el fallo llegaba
+  sin mensaje útil).
+- **Solución aplicada:** `_compile_binary()` protege la preparación del árbol
+  (`_prepare_pyinstaller_data_dirs()`), la lectura de `details.xml`, `lib/` y la
+  creación de `dist/`/temporales; devuelve `False` con `last_error` legible. Los
+  dos bloques del CLI añaden `except OSError` que imprime
+  `[ERROR] La compilación falló por un problema del sistema de archivos: …` y
+  sale con código 1. El camino feliz no cambia.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_compile_reports_filesystem_error_without_traceback[buildthis]`,
+  `[compile_project]` y `test_compile_binary_translates_unwritable_build_dir`
+  (las tres fallan con el código anterior).
+- **Commit:** se registra en el cierre del trigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-6f4b8a92 — Empaquetar un proyecto inaccesible aborta la GUI
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** al pulsar BlindCube sobre un proyecto cuyo directorio padre
+  no es accesible, la excepción escapaba antes del `try` del build. En el slot
+  del botón, `_ask_env_injection()` llamaba a `find_env_file()`, que comprobaba
+  `.env` con `Path.is_file()` y propagaba `PermissionError`; en la QThread,
+  `BuildThread.run()` hacía `repo_path.exists()` (y la preflight)
+  **fuera** del `try` que traduce errores. PyQt6 aborta el proceso ante una
+  excepción no capturada en un slot o en `QThread.run`, así que la aplicación
+  moría sin mensaje. `env_injection_dialog.app_icon_for()` tenía la misma
+  comprobación sin proteger.
+- **Pasos para reproducir:** crear
+  `<tmp>/locked/Influent.demo.v1.0-26.05-20.13-AlphaCube/` con `details.xml`,
+  poner `locked` en `chmod 000` y empaquetar indicando esa carpeta (o llamar a
+  `BuildThread(..., custom_path=...).run()`); se obtiene `PermissionError` en
+  `Path.exists()` dentro de `run`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (la acción principal de la app terminaba en un aborto del
+  proceso, no en un error).
+- **Solución aplicada:** `find_env_file()` y `app_icon_for()` tratan `OSError`
+  como «no hay `.env`»/«no hay icono»; `BuildThread.run()` envuelve la
+  comprobación de `custom_path` y la preflight en `try/except OSError` y emite
+  la señal `error` con la ruta o el detalle. El camino feliz no cambia.
+- **Pruebas:** `tests/test_unreadable_build_and_launch.py` —
+  `test_find_env_file_tolerates_unreadable_project`,
+  `test_app_icon_for_tolerates_unreadable_project` y
+  `test_build_thread_reports_unreadable_custom_path` (las tres fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del trigésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-1e7c3d58 — «Ejecutar» del gestor cae con una carpeta ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `ProjectDetailsDialog._run_installed_app()` listaba la
+  carpeta instalada con `os.listdir()` y lanzaba el proceso con
+  `subprocess.Popen()` sin `try/except`. Una carpeta sin permiso de lectura
+  (`PermissionError`) o un ejecutable que desaparece entre la comprobación y el
+  `Popen` (`FileNotFoundError`/`OSError`) escapaba del slot y PyQt6 abortaba
+  la aplicación.
+- **Pasos para reproducir:** instalar una app en `Fluthin Apps/demo/`, poner
+  `demo` en `chmod 000` y pulsar «Ejecutar» en el gestor (o invocar
+  `_run_installed_app()` con un objeto que apunte a esa carpeta).
+- **Estado:** Resuelto.
+- **Prioridad:** Media (acción secundaria, pero tumbaba todo el proceso).
+- **Solución aplicada:** el listado y el `Popen` van dentro de un
+  `try/except OSError` que muestra el aviso
+  `manager.error_status` con la causa; la carpeta inexistente conserva su
+  mensaje propio.
+- **Pruebas:** `tests/test_unreadable_build_and_launch.py` —
+  `test_run_installed_app_reports_unreadable_dir` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-9b5f2a74 — La TUI cae al abrir una carpeta sin `xdg-open`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** «Abrir carpeta» de la TUI resolvía la ruta y llamaba a
+  `subprocess.Popen(["xdg-open", …])` (o `open`/`os.startfile`) sin proteger el
+  lanzamiento. En un sistema mínimo sin `xdg-open`, o con una ruta cuyo
+  `resolve()` falla, la TUI terminaba con traceback en vez de avisar. Es la
+  misma familia que R-9a4c1e27, que sólo cubrió las comprobaciones de rutas.
+- **Pasos para reproducir:** ejecutar la TUI en un entorno sin `xdg-open` y
+  elegir «Abrir carpeta»; `FileNotFoundError: xdg-open` sube hasta `main`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (TUI usable, pero el flujo terminaba en traceback).
+- **Solución aplicada:** el lanzamiento y la resolución van dentro de
+  `try/except OSError`; se muestra
+  `manager.open_folder_failed_title` con la causa y se vuelve al menú.
+- **Pruebas:** `tests/test_unreadable_build_and_launch.py` —
+  `test_tui_open_folder_survives_missing_opener` (falla con el código anterior)
+  y `test_tui_open_folder_opens_accessible_folder` (regresión del camino feliz).
+- **Commit:** se registra en el cierre del trigésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-3f8a7c21 — El IDE `.iflapp` aborta al abrir un proyecto con fuentes no UTF-8
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** un proyecto guardado por un editor de Windows en ANSI
+  (``cp1252``) declara su codificación como exige Python
+  (``# -*- coding: cp1252 -*-``). Al abrirlo en el IDE, `_refresh_tree()` marca
+  el primer guion y dispara `_on_script_selected()`, que leía con
+  `encoding="utf-8-sig"` y sólo capturaba `OSError`: el `UnicodeDecodeError`
+  escapaba del slot y **PyQt6 abortaba el proceso** (`Fatal Python error:
+  Aborted`). El mismo guion también rompía `_declared_scripts()` al leer
+  `config/settings.json` si este venía en ANSI.
+- **Pasos para reproducir:** crear un proyecto con `app.py` codificado en
+  cp1252 (con su *coding cookie*) y `config/settings.json` en cp1252; abrirlo
+  con el IDE (`IflappIdePanel.load_project`) → el proceso muere.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (pérdida de la sesión de GUI al abrir un proyecto real).
+- **Solución aplicada:** nuevo módulo `lib/blindcubeEngine/source_io.py`
+  (`read_python_source()` detecta la codificación como el intérprete, PEP 263,
+  y `SourceEncodingError` cuando el archivo no es fuente Python válida).
+  `_on_script_selected()` lo usa y captura `(OSError, SourceEncodingError)`
+  mostrando `iflapp_ide.load_failed`; `_declared_scripts()` lee con
+  `utf-8-sig` (acepta el BOM del Bloc de notas) y captura
+  `UnicodeDecodeError`.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestIdePanelSlots` (con el
+  código anterior el proceso aborta) y `TestIdeAnalysis` (`scan_project` con
+  `settings.json` cp1252 y con BOM).
+- **Commit:** se registra en el cierre del trigésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-9d2b6e45 — `--ide-compile` y el análisis del IDE ignoran la declaración PEP 263
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el motor leía los guiones con `encoding="utf-8"` fijo, así
+  que un fuente válido para Python por declarar `cp1252` reventaba en tres
+  puntos: `detect_hidden_imports()` (análisis del IDE), la inyección del
+  bootloader de splash (`prepare_for_build()` → `write_injected_copy()`) y el
+  preflight (`check_syntax()`), que además marcaba el guion como «sintaxis
+  rota». `compile_project()` propagaba el `UnicodeDecodeError` y el CLI
+  `--ide-compile` (que sólo captura `OSError`) lo imprimía como traceback.
+- **Pasos para reproducir:** `--ide-compile <proyecto>` con `app.py` en cp1252
+  y cookie → `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf1`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (compilación imposible para proyectos en ANSI).
+- **Solución aplicada:** `detect_hidden_imports()`, `inject_file()`,
+  `write_injected_copy()` y `check_syntax()` leen con `read_python_source()`.
+  La copia inyectada se escribe con **la misma codificación** del original, de
+  modo que la *cookie* siga siendo válida; los archivos que no son fuente
+  Python válida se degradan con un mensaje legible (imports `[]`, sin copia
+  inyectada, preflight con el error de codificación) en vez de lanzar.
+  `BuildThread._detect_hidden_imports()` usa el mismo helper.
+- **Pruebas:** `tests/test_non_utf8_sources.py` —
+  `test_hidden_imports_read_pep263_source`,
+  `test_injection_preserves_declared_encoding`,
+  `test_compile_project_handles_pep263_source`,
+  `test_preflight_accepts_pep263_source` y los casos de degradación.
+- **Commit:** se registra en el cierre del trigésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-6c4a1f83 — Blindaje y build fallan con fuentes y `settings.json` no UTF-8
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `hardening.inject_anti_debug()` y `obfuscate_strings()`
+  leían y reescribían el guion en UTF-8 fijo: con un fuente cp1252 lanzaban
+  `UnicodeDecodeError` (vía `apply_all()` se degradaba a un informe
+  «error: …» genérico; llamadas directas lanzaban) y, de haber reescrito,
+  habrían dejado la *cookie* mintiendo sobre la codificación.
+  `BuildThread._load_explicit_scripts()` y `_persist_env_payload()` leían
+  `config/settings.json` con `utf-8` fijo y no capturaban
+  `UnicodeDecodeError`.
+- **Pasos para reproducir:** `hardening.obfuscate_strings(<app.py cp1252>)` →
+  `UnicodeDecodeError`; `--buildthis` con `settings.json` en cp1252 →
+  `UnicodeDecodeError` desde `__init__` de la QThread.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el build degrada o falla, sin corrupción de datos).
+- **Solución aplicada:** ambos métodos de blindaje leen con
+  `read_python_source()` y escriben con la codificación detectada (o devuelven
+  un `HardeningReport` no aplicado y legible). Los dos puntos de lectura de
+  `settings.json` usan `utf-8-sig` y capturan `UnicodeDecodeError`.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestHardeningEncoding` y
+  `test_preflight_reports_undecodable_source`.
+- **Commit:** se registra en el cierre del trigésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-2a9f4d17 — El depurador rechaza fuentes con declaración PEP 263
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `trace_script()` (base de `--ide-debug` y del depurador del
+  IDE) leía el guion con `encoding="utf-8"` fijo. Un fuente válido para Python
+  que declara `cp1252` fallaba con `UnicodeDecodeError` y el depurador quedaba
+  inservible (`--ide-debug` sólo mostraba `[ERROR] UnicodeDecodeError…`).
+- **Pasos para reproducir:** `--ide-debug <proyecto>/ansi.py` con
+  `# -*- coding: cp1252 -*-` y algún acento → `[ERROR] UnicodeDecodeError`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el resto del IDE y del build ya soportaba PEP 263).
+- **Solución aplicada:** `trace_script()` compila con `read_python_source()`;
+  un fuente no decodificable se traduce a `SyntaxError` con un mensaje legible
+  que `debug_script()` ya reporta como `error`.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestDebuggerEncoding` (traza,
+  depuración y error legible).
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-5e8c1b42 — `pm.data` con números no finitos impide arrancar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `coerce_int()`/`coerce_float()` sólo capturaban
+  `TypeError`/`ValueError`. `1e400` es JSON válido y se decodifica como
+  infinito: `int(inf)` lanza `OverflowError`, que escapaba de
+  `get_user_int()`/`get_user_float()`. Con `"sidebar_accent_width": 1e400` el
+  arranque de la GUI moría (`settings_appearance_state`, `border_w`), y con
+  `"card_opacity": 1e400` el guardado de Configuración hacía
+  `int(inf * 100)` dentro de un slot.
+- **Pasos para reproducir:** escribir `data/pm.data` con
+  `{"user": {"sidebar_accent_width": 1e400}}` y arrancar → `OverflowError`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (un archivo editable a mano impide abrir la aplicación).
+- **Solución aplicada:** las coerciones rechazan valores no finitos con
+  `math.isfinite()` y capturan `OverflowError`; los enteros grandes legítimos
+  se conservan y los números válidos mantienen el comportamiento anterior.
+- **Pruebas:** `tests/test_local_config_robustness.py::TestPMDataNumbers`.
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-7b3a9e58 — Cabecera `.iflapp` con números no finitos escapa como `OverflowError`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `_require_int()` (validador de la cabecera) y
+  `_read_section()` sólo capturaban `TypeError`/`ValueError`. Una cabecera con
+  `"size": 1e400` (JSON válido → infinito) lanzaba `OverflowError` crudo desde
+  `read_iflapp_header()`, `verify_iflapp()` y `read_dropper_header()`, que
+  documentan devolver `IflappError`. El mensaje que veía el usuario era
+  «cannot convert float infinity to integer».
+- **Pasos para reproducir:** `--inspect` sobre un `.iflapp` con
+  `{"sections": {"icon": {"size": 1e400}}}` → error críptico en vez de
+  «cabecera inválida».
+- **Estado:** Resuelto.
+- **Prioridad:** Media (contenedores ajenos o dañados; sin corrupción).
+- **Solución aplicada:** `_require_int()` y `_read_section()` capturan
+  `OverflowError` y lo traducen a `IflappError`; `read_dropper_header()` además
+  traduce `OSError` al leer el `.run`.
+- **Pruebas:** `tests/test_iflapp_format.py::MalformedHeaderShapeTests`
+  (`test_non_finite_section_size_raises`,
+  `test_non_finite_payload_offset_raises`) y
+  `tests/test_iflapp_dropper_sandbox.py::DropperTests`
+  (`test_read_dropper_header_translates_non_finite_header`,
+  `test_read_dropper_header_reports_missing_file`).
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-9c4d2f61 — El detector de dependencias del editor ignora PEP 263
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `DependencyChecker._detect_imports()` (pmCodeEditor) leía el
+  guion con `encoding="utf-8"` fijo y `_write_requirements_txt()` leía el
+  `requirements.txt` existente igual. Un proyecto en ANSI lanzaba
+  `UnicodeDecodeError` dentro de la QThread al pulsar «Comprobar dependencias»
+  y un `requirements.txt` no UTF-8 impedía reescribirlo.
+- **Pasos para reproducir:** `DependencyChecker(<app.py cp1252>)._detect_imports()`
+  → `UnicodeDecodeError`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (función del editor inutilizable con proyectos ANSI).
+- **Solución aplicada:** `_detect_imports()` usa `read_python_source()` y, si el
+  fuente no es decodificable, escanea con `errors="replace"` para no perder
+  imports legibles; `_write_requirements_txt()` tolera
+  `OSError`/`UnicodeDecodeError` al leer el archivo previo.
+- **Pruebas:** `tests/test_non_utf8_sources.py::TestDependencyScanEncoding`.
+- **Commit:** se registra en el cierre del trigésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-9e1a4c72 — `--build-removeme` lanza traceback con una raíz de instalación ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `read_record()` comprobaba `path.is_file()` sin protección.
+  Con una raíz de instalación sin permiso de lectura, `pathlib` lanza
+  `PermissionError`; el CLI `--build-removeme` sólo captura
+  `AsksomeInstallError`, así que el usuario recibía un traceback completo en
+  lugar de un mensaje. `compile_removeme_binary()` tenía la misma comprobación
+  sin proteger sobre `removeme.py`.
+- **Pasos para reproducir:** `chmod 000 <raíz>` y
+  `python packagemaker.py --build-removeme myapp --install-root <raíz>` →
+  `PermissionError: [Errno 13] … install.json` con traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (acción de shell concreta; `--uninstall-asksome` y
+  `--list-asksome` ya eran robustos).
+- **Solución aplicada:** `read_record()` traduce el `OSError` de `is_file()` a
+  `AsksomeInstallError` («No se pudo acceder al registro de instalación…»),
+  que el CLI ya muestra como `[ERROR]`; `compile_removeme_binary()` usa
+  `path_is_file()` y conserva su contrato de devolver `None` cuando no puede
+  compilar.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_read_record_reports_unreadable_install_root`.
+- **Commit:** se registra en el cierre del cuadragésimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-4c8b2e91 — Un comando `.mexf` no ejecutable lanza traceback en `--debug-mexf --debug-run`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `default_runner()` sólo capturaba `FileNotFoundError` y
+  `TimeoutExpired`. Un `commands[].executable` sin permiso de ejecución (o un
+  `cwd` inaccesible) hacía que `subprocess.run()` lanzara `PermissionError`
+  fuera del motor: el CLI `--debug-mexf --debug-run` mostraba un traceback y el
+  botón de ejecución real del editor `.mexf` abortaba la app.
+- **Pasos para reproducir:** `.mexf` con `executable: /ruta/tool.sh` en modo
+  `0644` y `python packagemaker.py --debug-mexf main.mexf --debug-run` →
+  `PermissionError` con traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (depurador del editor y CLI; requiere un comando
+  declarado no ejecutable o una carpeta de trabajo sin permisos).
+- **Solución aplicada:** `default_runner()` captura el resto de `OSError` y
+  devuelve `126` con el mensaje, igual que la convención que ya usa el motor
+  para un comando sin ejecutable; el paso queda `failed` y el CLI informa
+  «el comando … falló con código 126».
+- **Pruebas:** `tests/test_mexf_debugger.py::RunnerTests::test_default_runner_reports_non_executable_file`
+  y `::test_debugger_step_survives_unlaunchable_command`.
+- **Commit:** se registra en el cierre del cuadragésimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-5d1c7a83 — Un `.mexf` YAML con claves legacy lanza `JSONDecodeError` con traceback
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `detect_mexf_format()` clasificaba como `legacy-json`
+  cualquier documento que tuviera `extensions`, `file_associations` o
+  `context_menus` en la raíz, sin importar si el texto era JSON o YAML. Con un
+  `.mexf` YAML que usa esas claves (por ejemplo, un documento al que le falta
+  `format: mexf`), `parse_mexf()` volvía a leer el archivo y lo entregaba a
+  `json.loads()`, que lanzaba `JSONDecodeError`. Esa excepción no es
+  `MexfError` ni `OSError`, así que `compile_mexf_project()` no la traducía y
+  `--compile-mexf`, `--shell-plan` y `--debug-mexf` mostraban el traceback
+  completo en lugar de `[ERROR]`.
+- **Pasos para reproducir:** crear `.mexf/main.mexf` con
+  `extensions:\n  - extension: .foo\n` (YAML, sin `format: mexf`) y ejecutar
+  `python packagemaker.py --compile-mexf <proyecto>` → `JSONDecodeError:
+  Expecting value: line 1 column 1 (char 0)` con traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (los tres comandos de shell del formato `.mexf` fallaban
+  con un documento que un usuario puede escribir a mano; el editor gráfico no
+  se veía afectado porque valida con su propio lint).
+- **Solución aplicada:** nueva `_classify_mexf_text()` que decide el formato
+  sobre el texto ya leído y sólo devuelve `legacy-json` cuando `json.loads()`
+  tuvo éxito; `detect_mexf_format()` y `parse_mexf()` la comparten, de modo que
+  ya no hay una segunda lectura (y desaparece la carrera entre ambas).
+  `parse_mexf()` además traduce un `JSONDecodeError` o un JSON no-objeto a
+  `MexfError`, y un YAML con claves legacy se informa como «Formato .mexf
+  desconocido» como cualquier documento no reconocido.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_yaml_with_legacy_keys_is_unknown_not_json`,
+  `::test_compile_mexf_wraps_legacy_shaped_yaml` y
+  `::test_legacy_json_document_still_migrates_after_classification` (las dos
+  primeras fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo primer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8c2f4b17 — Una respuesta inesperada del traductor automático aborta la interfaz
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `_auto_translate_google()` indexaba la respuesta del
+  traductor (`payload[0]`, `p[0]`) sin comprobar su forma. El formato esperado
+  es `[[[texto, …], …], …]`, pero un portal cautivo o un proxy puede responder
+  200 con `5`, `true`, `null` o una lista de números: entonces el indexado
+  lanzaba `TypeError`, que no estaba entre las excepciones capturadas. Como
+  `tr()` se evalúa en los slots de Qt (por ejemplo al cambiar de idioma en
+  Configuración), la excepción abortaba el proceso con
+  `Fatal Python error: Aborted`.
+- **Pasos para reproducir:** con `auto_translate` activo y un idioma distinto
+  de `es`, servir `5` desde el endpoint del traductor y llamar a `tr()` →
+  `TypeError: 'int' object is not subscriptable`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere una respuesta anómala del servicio externo,
+  pero el fallo es duro: cierra la aplicación).
+- **Solución aplicada:** `_auto_translate_google()` valida que la respuesta sea
+  una lista de segmentos con el primer elemento de texto y devuelve `None` en
+  cualquier otra forma; `TypeError` se añade a la captura defensiva. Sin
+  respuesta válida, `translate()` devuelve el texto original como ya hacía
+  cuando no había red.
+- **Pruebas:** `tests/test_i18n_translate_robustness.py` (9 casos; 6 fallan con
+  el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo primer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-3a7f2d84 — Un comando `.mexf` con byte NUL lanza traceback en el depurador
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `default_runner()` capturaba `FileNotFoundError` (127),
+  `TimeoutExpired` (124) y `OSError` (126), pero `subprocess` señala con
+  `ValueError: embedded null byte` un `executable`, un argumento, un valor de
+  entorno o un `cwd` que contenga un byte NUL. Un `.mexf` puede declarar ese
+  texto (`executable: "python\u0000x"`), así que `--debug-mexf --debug-run`
+  mostraba el traceback completo y, desde el diálogo del editor (slot de Qt),
+  PyQt6 abortaba el proceso.
+- **Pasos para reproducir:** crear un `.mexf` con
+  `executable: "python\u0000x"` y ejecutar
+  `python packagemaker.py --debug-mexf <archivo> --debug-run`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un `.mexf` malformado, pero cierra la GUI).
+- **Solución aplicada:** `default_runner()` captura también `ValueError` y
+  devuelve `126` con el mensaje, igual que con un binario no ejecutable. El
+  depurador marca el paso como `failed` y continúa.
+- **Pruebas:** `tests/test_mexf_debugger.py::RunnerTests::test_default_runner_reports_embedded_null_byte`,
+  `::test_default_runner_reports_null_byte_in_environment` y
+  `::test_debugger_step_survives_null_byte_command` (las tres fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo segundo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8d4c1e67 — Un `.mexf` con escalares YAML no JSON lanza `TypeError` al compilar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `yaml.safe_load()` produce objetos que `json.dumps()` no
+  sabe escribir (fechas, `set`, `bytes`, tuplas) y permite alias recursivos.
+  `parse_mexf()` los aceptaba y `canonicalize_mexf()` fallaba después con
+  `TypeError: Object of type date is not JSON serializable` (o
+  `ValueError: Circular reference detected`). `--compile-mexf` mostraba el
+  traceback porque sólo captura `MexfCompileError`/`OSError`; en la GUI el
+  error se mostraba pero el artefacto no se generaba.
+- **Pasos para reproducir:** añadir `released: 2024-01-01` a `metadata` en
+  `.mexf/main.mexf` y ejecutar `--compile-mexf <proyecto>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (una fecha YAML es un dato corriente y el fallo afecta a
+  la compilación de artefactos).
+- **Solución aplicada:** `_json_safe()` normaliza el documento al leerlo y
+  antes de serializarlo: fechas/horas a ISO 8601, `set`/`frozenset` a lista
+  ordenada, `bytes` a base64, tuplas a listas, claves a texto y tipos
+  desconocidos a texto. Un alias recursivo se rechaza con `MexfError`
+  («referencia circular»), que el CLI ya traduce a un mensaje sin traceback.
+  `canonicalize_mexf()` aplica la misma normalización como garantía para
+  cualquier llamador.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_yaml_native_scalars_are_normalized_for_json`,
+  `::test_compile_mexf_project_accepts_yaml_dates`,
+  `::test_recursive_yaml_alias_is_reported_as_mexf_error` y
+  `::test_canonicalize_rejects_recursive_document` (las cuatro fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo segundo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-4c9e2b71 — Un `.mexf` con `.nan`/`.inf` emite JSON no válido (`NaN`/`Infinity`)
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `yaml.safe_load()` convierte `.nan`, `.inf` y `-.inf` en
+  `float` no finitos, y el JSON legacy puede producirlos con `1e400` (decodifica
+  a `inf`). `_json_safe()` los devolvía tal cual porque son `float`, así que
+  `json.dumps()` los escribía como `NaN`/`Infinity`/`-Infinity`, que **no son
+  JSON válido** (RFC 8259). Afectaba a `--shell-plan-json` (los consumidores
+  estrictos, como `jq` o `JSON.parse` de JavaScript, rechazan la salida) y al
+  `.mexf` canónico que `--compile-mexf` incrusta en el `.asksome`.
+- **Pasos para reproducir:** crear un `.mexf` con `shortcuts: {Ctrl+N: .nan}`,
+  `environments: {A: .inf}` o un `registry` con `.nan`, y ejecutar
+  `python packagemaker.py --shell-plan-json --shell-plan <archivo>`. También con
+  el JSON legacy `{"extensions": [], "shortcuts": {"Ctrl+O": 1e400}}`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un valor no finito, pero rompe el contrato JSON
+  que consumen scripts y herramientas externas).
+- **Solución aplicada:** `_json_safe()` convierte los `float` no finitos a su
+  texto (`"nan"`, `"inf"`, `"-inf"`), igual que ya hacía `plan_from_document()`
+  con `environments`. El parseo de documentos JSON legacy aplica la misma
+  normalización que el YAML, de modo que `--shell-plan-json` y
+  `canonicalize_mexf()` emiten JSON estricto.
+- **Pruebas:** `tests/test_mexf_shell.py::test_shell_plan_json_stays_valid_with_non_finite_yaml`,
+  `::test_legacy_json_infinity_keeps_shell_plan_json_valid` y
+  `tests/test_mexf_asksome.py::test_non_finite_yaml_scalars_stay_json_safe`
+  (las tres fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-4a7f2c93 — Una ruta no textual en `pm.data` tumba el arranque
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `to_legacy_app_config()` devolvía `base_dir`/`fluthin_apps`
+  tal cual estaban en `data/pm.data`. Si el archivo se editaba a mano y guardaba
+  un objeto, una lista o un número, `packagemaker.py` los pasaba a
+  `os.makedirs()` al importarse y el proceso moría con `TypeError: expected
+  str, bytes or os.PathLike object, not dict` antes de cualquier acción (GUI y
+  CLI). Una cadena con byte NUL lanzaba `ValueError: embedded null byte`, que
+  tampoco capturaba el `except OSError` de arranque. El mismo valor podía llegar
+  desde el `config/settings.json` legacy durante la migración.
+- **Pasos para reproducir:** escribir `{"user": {"base_dir": {"x": 1}}}` en
+  `data/pm.data` y ejecutar `python packagemaker.py --app-version` (antes:
+  traceback en `packagemaker.py`, línea de `os.makedirs`; ahora: arranca y usa
+  la carpeta por defecto de la plataforma).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (impide arrancar la aplicación, GUI y CLI).
+- **Solución aplicada:** `pm_data.coerce_text()` filtra los valores no
+  textuales en `to_legacy_app_config()`; `load_merged_app_config()` reemplaza
+  rutas no textuales, vacías o con NUL por el valor por defecto y
+  `migrate_from_legacy_config()` ignora rutas e idioma no textuales del
+  `settings.json` legacy. El `os.makedirs` de arranque captura también
+  `TypeError`/`ValueError` como red final.
+- **Pruebas:** `tests/test_corrupt_user_config_startup.py::TestTextCoercion`
+  (5 casos parametrizados de rutas corruptas, rutas válidas preservadas y
+  migración legacy).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8d3e6b15 — Un `language` no textual en `pm.data` aborta el arranque
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el arranque de la GUI pasa `config.get("LANGUAGE")` a
+  `i18n.initialize()` → `load_translation()`, que hacía `lang.lower()`. Un
+  `language` guardado como objeto, lista o número en `pm.data` lanzaba
+  `AttributeError: 'dict' object has no attribute 'lower'` y cerraba la
+  aplicación antes de pintar la ventana.
+- **Pasos para reproducir:** escribir `{"user": {"language": {"a": 1}}}` en
+  `data/pm.data` y arrancar la GUI; o llamar a
+  `i18n.initialize(app, {"a": 1})` (antes: `AttributeError`).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (impide arrancar la GUI).
+- **Solución aplicada:** `to_legacy_app_config()` devuelve `"es"` cuando el
+  idioma no es texto; `I18nManager.load_translation()` normaliza con `str()` y
+  cae a `"es"` cuando el código no está en `SUPPORTED_LANGUAGES`, de modo que un
+  valor corrupto nunca llega a `.lower()` ni genera un idioma inexistente.
+- **Pruebas:** `tests/test_corrupt_user_config_startup.py::TestLanguageCoercion`
+  (idioma no textual, código desconocido y `load_translation` con objeto).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-2f5c9a71 — Un acento no hexadecimal aborta las notificaciones
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `NotificationWidget._darken_color()` parseaba el acento con
+  `int(valor[i:i+2], 16)` sin validar. Con un `custom_accent_color` que no es
+  `#RRGGBB` (texto libre, lista, cadena de 3/8 dígitos), crear una notificación
+  con una acción `primary` —por ejemplo el botón «Copiar error» del reporte o
+  «Ver detalles» de un fallo de compilación— lanzaba `ValueError` dentro de un
+  slot de Qt, y PyQt6 abortaba el proceso. El acento corrupto también se
+  interpolaba en todos los QSS.
+- **Pasos para reproducir:** escribir
+  `{"user": {"custom_accent_color": "azul"}}` en `data/pm.data` y mostrar una
+  notificación con `NotificationAction(..., "primary")` (antes:
+  `ValueError: invalid literal for int() with base 16: 'az'`).
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un acento corrupto, pero mata la aplicación).
+- **Solución aplicada:** `design_tokens.normalize_accent()` valida `#RRGGBB`;
+  `active_accent()` y `packagemaker.get_accent_color()` lo usan para caer al
+  acento corporativo cuando el valor guardado o el del sistema no es válido.
+  `_darken_color()` devuelve la entrada sin cambios si no es hexadecimal, como
+  red defensiva en el propio widget.
+- **Pruebas:** `tests/test_corrupt_user_config_startup.py::TestAccentRobustness`
+  (normalización, acento corrupto en `pm.data`, `_darken_color` con entradas
+  inválidas y notificación con acción primaria).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-7a2c9e14 — El asistente MoonFix cae con un `details.xml` ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `MoonFixWizard.create_project_page()` leía `details.xml`
+  con `ET.parse()` protegido sólo contra `ET.ParseError`. Si el archivo existe
+  pero no se puede leer —permisos POSIX o un bloqueo exclusivo en Windows—,
+  `ET.parse()` lanza `PermissionError` (un `OSError`) que escapaba de la
+  construcción del asistente. Como la página se crea en el `__init__` del
+  diálogo, invocado desde un slot de Qt, PyQt6 abortaba el proceso.
+- **Pasos para reproducir:** crear un proyecto con `details.xml` y aplicar
+  `chmod 000` a ese archivo; abrir MoonFix con el proyecto en la lista. Antes:
+  `PermissionError: [Errno 13] Permission denied: .../details.xml`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un `details.xml` ilegible, pero mata la app).
+- **Solución aplicada:** `except (ET.ParseError, OSError)` en
+  `create_project_page()`; la página se construye con los valores por defecto y
+  MoonFix puede regenerar el archivo desde las plantillas.
+- **Pruebas:**
+  `tests/test_gui_unreadable_paths.py::GuiUnreadablePathTests::test_moonfix_tolerates_unreadable_details_xml`
+  (falla con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo cuarto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8f3d1b62 — «Abrir proyecto» del dashboard cae con un `details.xml` ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `DashboardWindow._open_as_pm_project()` leía `details.xml`
+  con `ET.parse()` y sólo capturaba `ET.ParseError`. Con el archivo presente
+  pero sin permiso de lectura (o bloqueado en Windows), `ET.parse()` lanza
+  `PermissionError`; como el método se ejecuta en el slot de «Abrir proyecto»,
+  la excepción escapaba y PyQt6 abortaba la aplicación.
+- **Pasos para reproducir:** crear un proyecto con `details.xml` y `chmod 000`
+  sobre ese archivo; pulsar «Proyecto PackageMaker» y elegir la carpeta. Antes:
+  `PermissionError: [Errno 13] Permission denied: .../details.xml`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un `details.xml` ilegible, pero mata la app).
+- **Solución aplicada:** `except (ET.ParseError, OSError)` en
+  `_open_as_pm_project()`; sin metadatos se cae al escaneo de guiones `.py`, que
+  ya toleraba `OSError`.
+- **Pruebas:**
+  `tests/test_gui_unreadable_paths.py::GuiUnreadablePathTests::test_dashboard_tolerates_unreadable_details_xml`
+  (falla con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo cuarto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
-- Bugs abiertos: 0.
+- Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
+  Q-011). R-4d8f2b61 se cerró como no reproducido.
+- Vigésimo séptimo ciclo (2026-11-23): R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27
+  corregidos y probados; no se prepara release.
+- Vigésimo octavo ciclo (2026-11-23): R-3b6f9d24 y R-9f4c2a71 corregidos y
+  probados (robustez de cachés con `data` de solo lectura); no se prepara
+  release.
+- Vigésimo noveno ciclo (2026-11-23): R-4a7c2e91 y R-8f1d3b62 corregidos y
+  probados (robustez de `data/pmCodeEditor` de solo lectura); no se prepara
+  release.
+- Trigésimo ciclo (2026-11-23): R-9a4c1e27 corregido y probado (robustez de la
+  TUI con rutas sin permisos); no se prepara release.
+- Trigésimo primer ciclo (2026-11-23): R-4d8a6c12, R-9e3b7a51 y R-6a2d8f43
+  corregidos y probados (arranque con `data/` inaccesible, GUI con rutas sin
+  permisos y salida de Termux); no se prepara release.
+- Trigésimo segundo ciclo (2026-11-23): R-7e4c1a92, R-2d8b6f31 y R-9a5c3e74
+  corregidos y probados (caché de sesión, `config/` del proyecto y `config/`
+  de la aplicación ilegibles); no se prepara release.
+- Trigésimo tercer ciclo (2026-11-23): R-4e9c1a73, R-7d2f8b14 y R-6b3e9c52
+  corregidos y probados (compilación del IDE, reparación de MoonFix y splash
+  con proyectos/directorios sin permisos); no se prepara release.
+- Trigésimo cuarto ciclo (2026-11-23): R-4b9e2c71 corregido y probado (el
+  compilador `.mexf` traduce `PermissionError` a `MexfCompileError`, el paso
+  `.mexf` del build se omite en vez de abortar y el icono opcional tolera una
+  carpeta `app/` ilegible); no se prepara release.
+- Trigésimo quinto ciclo (2026-11-24): R-3f7c1a94, R-6b2e9d47 y R-8c4a1f62
+  corregidos y probados (instalación y desinstalación `.asksome` con carpetas
+  sin permisos, y `remove_tree` que ya no informa de un borrado inexistente); no
+  se prepara release.
+- Trigésimo sexto ciclo (2026-11-24): R-4a7e2c91, R-6c9d3f52 y R-8e2b7d64
+  corregidos y probados (el CLI `create`, `moonfix`/`repair` y
+  `compile`/`--buildthis` ya no muestran tracebacks ante carpetas sin permisos;
+  la QThread del build traduce el `OSError` de `dist/` a un fallo con mensaje);
+  no se prepara release.
+- Trigésimo séptimo ciclo (2026-11-24): R-6f4b8a92, R-1e7c3d58 y R-9b5f2a74
+  corregidos y probados (empaquetado de un proyecto inaccesible, «Ejecutar» del
+  gestor y «Abrir carpeta» de la TUI dejan de abortar la app); no se prepara
+  release.
+- Trigésimo octavo ciclo (2026-11-24): R-3f8a7c21, R-9d2b6e45 y R-6c4a1f83
+  corregidos y probados (el IDE, el CLI `--ide-compile`, el preflight y el
+  blindaje respetan la declaración de codificación PEP 263; un proyecto en ANSI
+  ya no aborta la GUI ni imprime tracebacks); no se prepara release.
+- Trigésimo noveno ciclo (2026-11-24): R-2a9f4d17, R-5e8c1b42, R-7b3a9e58 y
+  R-9c4d2f61 corregidos y probados (el depurador y el detector de dependencias
+  respetan PEP 263; un `pm.data` con números no finitos ya no impide arrancar;
+  las cabeceras `.iflapp`/`.run` con números no finitos dan `IflappError`); no
+  se prepara release.
+- Cuadragésimo ciclo (2026-11-24): R-9e1a4c72 y R-4c8b2e91 corregidos y
+  probados (`--build-removeme` responde con `[ERROR]` ante una raíz ilegible y
+  el depurador `.mexf` trata un comando no ejecutable como fallo con código
+  126 en vez de abortar); no se prepara release.
+- Cuadragésimo tercer ciclo (2026-11-24): R-4c9e2b71, R-4a7f2c93, R-8d3e6b15 y
+  R-2f5c9a71 corregidos y probados (un `.mexf` con `.nan`/`.inf` ya no emite
+  `NaN`/`Infinity`; un `pm.data` con rutas o idioma no textuales ya no impide
+  arrancar; un acento no hexadecimal ya no aborta las notificaciones con acción
+  primaria); no se prepara release.
+- Cuadragésimo cuarto ciclo (2026-11-24): R-7a2c9e14 y R-8f3d1b62 corregidos y
+  probados (el asistente MoonFix y «Abrir proyecto» del dashboard dejan de
+  abortar la app cuando `details.xml` existe pero no se puede leer); no se
+  prepara release.
+- Verificación del ciclo de R-7a2c9e14 y R-8f3d1b62 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1079 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 2 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/pm_dashboard.py` y `lib/moonFixWizard.py`), con
+  `PermissionError: [Errno 13] Permission denied: .../details.xml`.
+- Verificación del ciclo de R-4c9e2b71 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1046 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/mexf_parser.py`). Reproducción real: `--shell-plan-json` con
+  `shortcuts: {Ctrl+N: .nan}` y con el JSON legacy `1e400` imprimía `NaN`/
+  `Infinity` (rechazado por un parser estricto); ahora imprime `"nan"`/`"inf"`
+  y `json.loads(..., parse_constant=...)` lo acepta.
+- Verificación del ciclo de R-4a7f2c93…R-2f5c9a71 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1077 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 31 pruebas nuevas
+  de `tests/test_corrupt_user_config_startup.py` pasan; la reproducción previa a
+  la corrección dio `TypeError` en `os.makedirs` al importar `packagemaker`,
+  `AttributeError` en `i18n.load_translation` y `ValueError` en
+  `NotificationWidget` con acento `azul` y acción `primary`. Tras el arreglo,
+  `--app-version` arranca con la carpeta por defecto, el idioma cae a `es` y la
+  notificación se construye sin error.
+- Verificación del ciclo de R-9e1a4c72 y R-4c8b2e91 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1024 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/blindcubeEngine/asksome_installer.py` y `lib/mexf_debugger.py`).
+  Reproducción real: `--build-removeme myapp --install-root <raíz 000>` muestra
+  «No se pudo acceder al registro de instalación…» (antes `PermissionError` con
+  traceback); `--debug-mexf … --debug-run` con un `executable` `0644` informa
+  «falló con código 126» (antes `PermissionError` con traceback).
+- Verificación del ciclo de R-2a9f4d17…R-9c4d2f61 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1021 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 12 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de los cinco módulos
+  tocados). Reproducción real: `--ide-debug` sobre un `app.py` cp1252 traza el
+  guion (antes `[ERROR] UnicodeDecodeError`).
+- Verificación del ciclo de R-3f8a7c21…R-6c4a1f83 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1009 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. De las 17 pruebas
+  nuevas de `tests/test_non_utf8_sources.py`, 11 fallan con el código anterior y
+  la prueba del panel del IDE **aborta el proceso** (`Fatal Python error:
+  Aborted`), comprobado con `git stash` de los seis módulos tocados.
+  Reproducción real: `--ide-compile` y `--ide-scan --ide-scan-json` sobre un
+  proyecto con `app.py` y `settings.json` en cp1252 responden código 0 y
+  compilan el `.pyz` (antes `UnicodeDecodeError`); la copia inyectada
+  `<guion>_pmboot.py` conserva la *cookie* cp1252 y el acento del fuente.
+- Verificación del ciclo de R-6f4b8a92…R-9b5f2a74 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 992 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 6 pruebas nuevas
+  de `tests/test_unreadable_build_and_launch.py` pasan y 5 de ellas fallan con
+  el código anterior (comprobado con `git stash` de los cinco módulos tocados).
+  Build real `create` + `--buildthis --compiler zipapp --no-sandbox`: `.iflapp`
+  de 21 archivos, `verify_iflapp() → valid: True` y `--inspect` coincide con el
+  `details.xml` interno.
+- Verificación del ciclo de R-4a7e2c91…R-8e2b7d64 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 986 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 5 pruebas nuevas
+  de `tests/test_unreadable_paths.py` fallan con el código anterior (comprobado
+  con `git stash` de `lib/cliHandler.py` y
+  `lib/blindcubeEngine/BuildThread.py`). Reproducción real por CLI: `create` con
+  `BASE_DIR` en `chmod 555`, `moonfix` sobre un proyecto `chmod 555` al que le
+  falta `docs/` y `--buildthis` sobre un proyecto `chmod -R a-w` terminaban en
+  `PermissionError` con traceback; ahora salen con `[ERROR]` y código 1. Build
+  real `create` + `--buildthis --compiler zipapp --no-sandbox`: `.iflapp` de 20
+  archivos, `verify_iflapp() → valid: True` y `--inspect` coincide con el
+  `details.xml` interno.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario
@@ -2182,6 +3955,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   R-9d4c2f18) y coreografía del splash (registrada como cambio de engine
   pendiente nº 4, sin implementar). El contador de 7 días sin reportes se
   reinicia el 2026-11-22.
+- Verificación del ciclo de R-2e7c4a91…R-5c9a3e27 (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 930 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 17 de las 21 pruebas nuevas de
+  `tests/test_config_and_removeme_robustness.py` (comprobado con `git stash` de
+  los tres archivos tocados). Reproducción real: `_config_file_path()` devolvía
+  `lib/config/settings.json`; un `settings.json` con `[]` daba
+  `AttributeError` al leer y `TypeError` al guardar; el `removeme.py` generado
+  salía con código 1 y dejaba la app instalada ante un `install.json` con `[]`;
+  y la vista previa `.mexf` sólo toleraba `OSError`/`KeyError`.
 - Verificación del ciclo de R-4c7a9e13…R-2f8a4d61 (2026-11-23):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 865 pasan, 1
   omitido, 55 subtests; `pyflakes` y `py_compile` limpios. 13 de las 14 pruebas
@@ -2249,9 +4032,32 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `id: "../../evil/demo"` mantienen todas las rutas dentro de `base_dir` y no
   borran archivos externos; `python -m lib.native_shell --info` sin argumento
   devuelve uso (código 2) y con archivo desconocido `[ERROR]` (código 1).
-- Aprobaciones (2026-11-22): se creó `CONFIRM.MD` con 10 preguntas pendientes
-  (`Q-001`…`Q-010`: las 4 mejoras y los 6 cambios de engine). Ninguna está
-  aprobada; no se aplicó ningún cambio de engine.
+- Aprobaciones (2026-11-23, vigésimo quinto ciclo): el propietario marcó
+  `[x] SÍ` en Q-001, Q-002, Q-003, Q-005, Q-006, Q-009 y Q-010 (commit
+  `0ac5457`, autoría verificada con la API de GitHub). Se aplicaron Q-001
+  (telemetría opcional), Q-002 (acentos) y Q-003 (capitalización del
+  publisher). Q-005/Q-006/Q-009/Q-010 ya estaban implementados y quedan
+  verificados. Q-004 se reenvía para aclaración; Q-007 sigue sin aprobar y
+  Q-008 se repite porque su respuesta estaba partida por un conflicto de merge.
+- Verificación del vigésimo quinto ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 892 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Verificación del vigésimo sexto ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 909 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 13 pruebas
+  nuevas de `tests/test_settings_save_guards.py` fallan con el código anterior
+  (comprobado con `git stash` de `packagemaker.py`) y la ejecución termina en
+  `Fatal Python error: Aborted`, que es exactamente el cierre que sufría la
+  aplicación. Medición real offscreen con la ventana construida (348 widgets):
+  guardar sólo una ruta pasó de 0,20 s a 0,002 s; un cambio de densidad o de
+  modo de presentación repinta el tema una vez (0,10 s) en lugar de dos; un
+  cambio de idioma retraduce en 0,006 s; y la elección de FlatCube sobrevive al
+  guardado.
+- Fuera del repositorio: el propietario pidió añadir el ciclo de recolección de
+  mejoras (lunes recoger, viernes probar, sábado revisión visual, domingo
+  release) a su automatización «Updater/Update». Esa automatización no vive en
+  este repositorio, así que no se puede modificar desde aquí; queda anotado
+  para que él lo configure en la plataforma de automatizaciones.
 - Verificación del ciclo de R-4f9b2c81, R-7a3d5e62 y R-2b9e4f73 (2026-11-22):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 819 pasan, 1
   omitido, 51 subtests; `pyflakes` y `py_compile` limpios; los 6 casos nuevos
@@ -2374,6 +4180,63 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   1 (antes `PermissionError` con traceback); `--shell-info-json` deja stdout
   vacío y el error en stderr; `--shell-preview` sobre un archivo normal responde
   `[ERROR] No se pudo exportar la vista previa: … File exists` sin traceback.
+- Verificación del vigésimo noveno ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 948 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 5 de las 6 pruebas nuevas de
+  `tests/test_readonly_data_dir_robustness.py` (comprobado con `git stash` de
+  `lib/python_portable_manager.py`, `lib/pm_dashboard.py` y `pmCodeEditor.py`).
+  Reproducción real: `PythonPortableManager(base_dir=<carpeta no escribible>)`
+  lanzaba `PermissionError` al crear `packages`; apuntar `EDITOR_CONFIG_PATH`
+  bajo un archivo lanzaba `NotADirectoryError` en `save_config()` y en
+  `_save_editor_config()`.
+- Verificación del trigésimo ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 955 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Los 7 casos de
+  `tests/test_tui_unreadable_paths.py` fallan con el código anterior
+  (comprobado con `git stash` de `lib/tui.py`). Reproducción real: con
+  `chmod 000` sobre el proyecto, `_show_details_xml()`, `_screen_build()` y
+  `_screen_moonfix()` lanzaban `PermissionError` con traceback; ahora muestran
+  «details.xml no encontrado» o «ruta no válida».
+- Verificación del trigésimo primer ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 964 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 7 de los 9 casos nuevos (comprobado con `git stash` de los
+  cinco módulos tocados): arranque con `data/` o `config/` no creable/legible,
+  asistente de nuevo proyecto con base `chmod 000`, guion ilegible en el IDE,
+  `ProjectConfig` sobre base inaccesible y salida de Termux sin almacenamiento.
+- Verificación del trigésimo segundo ciclo (2026-11-23):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 967 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Los 3 casos nuevos
+  de `tests/test_unreadable_config_paths.py` fallan con el código anterior
+  (comprobado con `git stash` de `lib/session_cache.py`,
+  `lib/blindcubeEngine/BuildThread.py` y `lib/.walkcube/editorDetector.py`).
+  Reproducción real: `--buildthis` sobre un proyecto con `config/` `chmod 000`
+  terminaba en `PermissionError` con traceback; ahora responde `[ERROR] No se
+  pudo leer config/settings.json: …` y código 1. Con `data/` ilegible,
+  `session_cache.load_session()` devuelve `None`; con `config/` de la
+  aplicación ilegible, `get_default_editor()` devuelve `None` y
+  `save_default_editor()` no lanza.
+- Verificación del cuadragésimo primer ciclo (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1036 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Con el código
+  anterior fallan 2 de las 3 pruebas nuevas de `tests/test_mexf_asksome.py` y 6
+  de las 9 de `tests/test_i18n_translate_robustness.py` (comprobado con
+  `git stash` de `lib/mexf_parser.py` y `lib/i18n.py`). Reproducción real:
+  `--compile-mexf`, `--shell-plan` y `--debug-mexf` sobre un `.mexf` YAML con
+  `extensions:` mostraban `JSONDecodeError` con traceback; ahora responden
+  `[ERROR] … Formato .mexf desconocido` y código 1.
+- Verificación del cuadragésimo segundo ciclo (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1043 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 7 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/mexf_parser.py` y `lib/mexf_debugger.py`). Reproducción real:
+  `--debug-mexf --debug-run` con un `executable` que contiene `\u0000` mostraba
+  `ValueError: embedded null byte`; ahora informa `[ failed] … 126`. Un
+  `.mexf` con `released: 2024-01-01` abortaba `--compile-mexf` con
+  `TypeError: Object of type date is not JSON serializable`; ahora genera el
+  `.asksome` y un alias recursivo responde
+  `[ERROR] … referencia circular`.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

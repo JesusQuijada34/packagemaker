@@ -4,8 +4,10 @@
 El indicador es una barra corta y redondeada pegada al borde izquierdo y
 centrada verticalmente, en vez del ``border-left`` de altura completa. El texto
 y el icono usan el **mismo gris oscuro** en ambos temas; la selección se
-distingue por el fondo y por el indicador azul, que crece y aparece con una
-transición al cambiar de página.
+distingue por el fondo y por el indicador de acento, que crece y aparece con
+una transición al cambiar de página. El resalte del ratón se pinta directamente
+en ``paintEvent``: reescribir la hoja de estilo en cada fotograma producía un
+re-polish que hacía parpadear el ítem.
 """
 
 from __future__ import annotations
@@ -67,22 +69,31 @@ from lib.design_tokens import (
     SIDEBAR_TEXT_LIGHT,
     SIDEBAR_TEXT_SELECTED_DARK,
     SIDEBAR_TEXT_SELECTED_LIGHT,
+    with_alpha,
 )
-from lib.hover_animation import enable_hover_fade
 
 # Paletas por tema para el texto del ítem (normal, seleccionado). El texto y el
 # icono usan el **mismo gris oscuro** en ambos temas; la selección se distingue
-# por el fondo y por el indicador azul.
+# por el fondo y por el indicador de acento.
 TEXT_COLORS = {
     True: {"normal": SIDEBAR_TEXT_DARK, "selected": SIDEBAR_TEXT_SELECTED_DARK},
     False: {"normal": SIDEBAR_TEXT_LIGHT, "selected": SIDEBAR_TEXT_SELECTED_LIGHT},
 }
-HOVER_COLORS = {
-    True: {"bg": "rgba(255, 255, 255, 0.07)", "selected_bg": "rgba(255, 255, 255, 0.12)"},
-    False: {"bg": "rgba(15, 23, 42, 0.07)", "selected_bg": "rgba(0, 120, 212, 0.18)"},
+# Tinte del resalte al pasar el ratón: (rojo, verde, azul, alfa 0-255). Se pinta
+# en ``paintEvent`` en vez de reescribir la hoja de estilo en cada fotograma:
+# cada ``setStyleSheet`` fuerza un re-polish y el ítem parpadeaba entre el color
+# de la regla heredada de la barra y el gris de reposo.
+HOVER_TINTS = {
+    True: (255, 255, 255, 18),
+    False: (15, 23, 42, 18),
 }
-# Duración del crecimiento/desvanecido del indicador azul al cambiar de página.
+# Duración del crecimiento/desvanecido del indicador de selección.
 INDICATOR_FADE_MS = 180
+HOVER_FADE_MS = 140
+# Selector propio: incluye id y atributo dinámico para superar en especificidad
+# a la regla ``QWidget#NavigationSidebar QPushButton:hover`` heredada.
+_ITEM_SELECTOR = 'QPushButton#SidebarNavItem[pmNavItem="true"]'
+
 
 
 class SidebarItem(QPushButton):
@@ -101,6 +112,10 @@ class SidebarItem(QPushButton):
         # cambio de página tenga una transición en vez de aparecer de golpe.
         self._indicator_progress = 1.0 if self.isChecked() else 0.0
         self._indicator_animation = None
+        self._hover_progress = 0.0
+        self._hover_animation = None
+        self.setObjectName("SidebarNavItem")
+        self.setProperty("pmNavItem", "true")
         self.setFixedHeight(SIDEBAR_ITEM_HEIGHT)
         self.setIconSize(QSize(24, 24))
         self._set_icon(icon)
@@ -109,12 +124,6 @@ class SidebarItem(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._apply_style()
         self.toggled.connect(self._on_toggled)
-        # El ítem seleccionado ya tiene su propio color; no se anima su fondo.
-        self._hover_fade = enable_hover_fade(
-            self,
-            HOVER_COLORS[self._dark]["bg"],
-            only_when=lambda: not self.isChecked(),
-        )
 
     # -- indicador animado --------------------------------------------
     def _get_indicator_progress(self) -> float:
@@ -128,8 +137,51 @@ class SidebarItem(QPushButton):
         float, _get_indicator_progress, _set_indicator_progress
     )
 
+    # -- resalte del ratón (pintado, sin re-polish) --------------------
+    def _get_hover_progress(self) -> float:
+        return self._hover_progress
+
+    def _set_hover_progress(self, value: float) -> None:
+        self._hover_progress = max(0.0, min(1.0, float(value)))
+        self.update()
+
+    hoverProgress = pyqtProperty(float, _get_hover_progress, _set_hover_progress)
+
+    def _animate_hover(self, target: float) -> None:
+        # El ítem seleccionado ya se distingue por el fondo y el indicador: no
+        # se le añade otro tinte al pasar el ratón.
+        if target > 0.0 and self.isChecked():
+            return
+        if not PYQT6_AVAILABLE or QPropertyAnimation is None:
+            self._set_hover_progress(target)
+            return
+        if self._hover_animation is None:
+            self._hover_animation = QPropertyAnimation(self, b"hoverProgress", self)
+            self._hover_animation.setDuration(HOVER_FADE_MS)
+            self._hover_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        animation = self._hover_animation
+        animation.stop()
+        animation.setStartValue(self._hover_progress)
+        animation.setEndValue(float(target))
+        animation.start()
+
+    def enterEvent(self, event):  # noqa: N802 (API Qt)
+        self._animate_hover(1.0)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):  # noqa: N802 (API Qt)
+        self._animate_hover(0.0)
+        super().leaveEvent(event)
+
     def _on_toggled(self, checked: bool) -> None:
         self._animate_indicator(1.0 if checked else 0.0)
+        if checked:
+            # Al seleccionar el ítem se retira el tinte de hover: si no, el
+            # fondo de selección y el de hover se sumaban mientras el puntero
+            # seguía encima.
+            if self._hover_animation is not None:
+                self._hover_animation.stop()
+            self._set_hover_progress(0.0)
 
     def _animate_indicator(self, target: float) -> None:
         """Lleva el indicador a *target* con una transición corta."""
@@ -172,18 +224,16 @@ class SidebarItem(QPushButton):
         self.setToolTip(text if self._compact else "")
 
     def set_accent(self, accent: str) -> None:
-        """Fija el color del indicador de selección."""
-        if accent:
+        """Fija el color del indicador y del fondo de selección."""
+        if accent and str(accent) != self._accent:
             self._accent = str(accent)
+            self._apply_style()
             self.update()
 
     def set_compact(self, compact):
         self._compact = bool(compact)
         self.set_label_text(self._label_text)
         self._apply_style()
-        fade = getattr(self, "_hover_fade", None)
-        if fade is not None:
-            fade.refresh()
 
     def set_dark(self, dark):
         """Ajusta los colores al tema activo (claro u oscuro)."""
@@ -193,48 +243,63 @@ class SidebarItem(QPushButton):
         self._dark = dark
         self._set_icon()
         self._apply_style()
-        fade = getattr(self, "_hover_fade", None)
-        if fade is not None:
-            fade.set_hover_color(HOVER_COLORS[dark]["bg"])
+        self.update()
 
     def _apply_style(self):
         palette = TEXT_COLORS[self._dark]
-        hover = HOVER_COLORS[self._dark]
-        # El indicador lo pinta ``paintEvent``; el QSS deja el borde libre.
+        # El indicador y el resalte del ratón los pinta ``paintEvent``; el QSS
+        # sólo fija texto, relleno de selección y tipografía. El selector lleva
+        # id y atributo para imponerse a la regla heredada de la barra lateral.
         self.setStyleSheet(f"""
-            QPushButton {{
+            {_ITEM_SELECTOR} {{
                 background-color: transparent;
                 color: {palette['normal']};
                 text-align: left;
-                padding: 0 10px 0 {SIDEBAR_ICON_INSET}px;
+                padding: 0 14px 0 {SIDEBAR_ICON_INSET}px;
                 border: none;
                 border-radius: {CONTROL_RADIUS}px;
                 font-family: {FONT_STACK};
                 font-size: 14px;
                 font-weight: 500;
             }}
-            QPushButton:hover {{
-                background-color: {hover['bg']};
+            {_ITEM_SELECTOR}:hover {{
+                background-color: transparent;
+                border: none;
                 color: {palette['selected']};
             }}
-            QPushButton:checked {{
-                background-color: {hover['selected_bg']};
+            {_ITEM_SELECTOR}:checked {{
+                background-color: {with_alpha(self._accent, 0.18)};
+                border: none;
                 color: {palette['selected']};
             }}
-            QPushButton:focus {{
+            {_ITEM_SELECTOR}:focus {{
                 outline: none;
             }}
         """)
         if self._compact:
-            self.setStyleSheet(self.styleSheet() + """
-                QPushButton {
+            self.setStyleSheet(self.styleSheet() + f"""
+                {_ITEM_SELECTOR} {{
                     text-align: center;
                     padding: 0;
-                }
+                }}
             """)
+
+    def _paint_hover_background(self) -> None:
+        if self._hover_progress <= 0.0 or not PYQT6_AVAILABLE:
+            return
+        red, green, blue, alpha = HOVER_TINTS[self._dark]
+        color = QColor(red, green, blue)
+        color.setAlphaF((alpha / 255.0) * self._hover_progress)
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(color)
+        painter.drawRoundedRect(self.rect(), CONTROL_RADIUS, CONTROL_RADIUS)
+        painter.end()
 
     # -- indicador de selección ---------------------------------------
     def paintEvent(self, event):  # noqa: N802 (API Qt)
+        self._paint_hover_background()
         super().paintEvent(event)
         progress = self._indicator_progress
         if progress <= 0.0 or not PYQT6_AVAILABLE:

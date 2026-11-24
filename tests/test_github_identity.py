@@ -203,3 +203,44 @@ def test_buildthread_injects_github_signer(store, tmp_path, monkeypatch):
     compiler = FlangCompiler(project, tmp_path / "out", log_callback=lambda _m: None, sandbox=False)
     assert compiler.parse_details_xml() is True
     assert compiler.metadata["signer"] == "JesusQuijada34"
+
+
+def test_request_non_json_body_reports_friendly_error(monkeypatch):
+    """Un portal cautivo responde HTML con código 200: no debe romper el parseo."""
+    import urllib.request
+
+    from lib import github_identity
+
+    class _Response:
+        def read(self):
+            return b"<html>inicia sesion en el wifi</html>"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_exc):
+            return False
+
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *_a, **_k: _Response())
+    with pytest.raises(github_identity.GitHubIdentityError) as exc:
+        github_identity._request("https://api.github.com/user", "ghp_token")
+    assert "JSON" in str(exc.value)
+
+
+def test_fetch_profile_rejects_non_object_payload(store, monkeypatch):
+    from lib import github_identity
+
+    monkeypatch.setattr(github_identity, "_request", lambda *_a, **_k: ["octocat"])
+    with pytest.raises(github_identity.GitHubIdentityError):
+        github_identity.fetch_profile("ghp_token")
+
+
+def test_avatar_cache_degrades_when_data_dir_is_read_only(tmp_path, monkeypatch):
+    from lib import github_identity, pm_data
+
+    blocker = tmp_path / "data"
+    blocker.write_text("no es una carpeta", encoding="utf-8")
+    monkeypatch.setattr(pm_data, "_data_dir", lambda: blocker)
+
+    assert github_identity.cache_avatar("octocat", b"\x89PNGdata") is None
+    assert github_identity.load_cached_avatar("octocat") is None

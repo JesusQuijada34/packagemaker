@@ -140,14 +140,21 @@ _loaded: Dict[str, str] = {}
 _registered_paths: set = set()
 
 
-def font_cache_dir() -> Path:
-    """Directorio de caché de fuentes (``data/fonts``)."""
+def _cache_root() -> Path:
     if getattr(sys, "frozen", False):
-        root = Path(sys.executable).resolve().parent
-    else:
-        root = Path(__file__).resolve().parent.parent
-    directory = root / "data" / "fonts"
-    directory.mkdir(parents=True, exist_ok=True)
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+
+def font_cache_dir(*, create: bool = True) -> Path:
+    """Directorio de caché de fuentes (``data/fonts``).
+
+    Con ``create=False`` no se toca el disco, para poder consultar el estado en
+    instalaciones de solo lectura sin lanzar ``OSError``.
+    """
+    directory = _cache_root() / "data" / "fonts"
+    if create:
+        directory.mkdir(parents=True, exist_ok=True)
     return directory
 
 
@@ -158,16 +165,16 @@ def spec_for(key: str) -> FontSpec:
         raise KeyError(f"Fuente desconocida: {key!r}") from exc
 
 
-def cached_path(key: str) -> Path:
-    return font_cache_dir() / spec_for(key).filename
+def cached_path(key: str, *, create: bool = True) -> Path:
+    return font_cache_dir(create=create) / spec_for(key).filename
 
 
 def verify_file(path: Path, expected_sha256: str) -> bool:
     """Comprueba la huella SHA-256 de un archivo."""
-    if not path.is_file():
-        return False
     digest = hashlib.sha256()
     try:
+        if not path.is_file():
+            return False
         with open(path, "rb") as handle:
             for chunk in iter(lambda: handle.read(1 << 20), b""):
                 digest.update(chunk)
@@ -179,7 +186,10 @@ def verify_file(path: Path, expected_sha256: str) -> bool:
 def is_cached(key: str) -> bool:
     """True si la fuente está en caché y su integridad es correcta."""
     spec = spec_for(key)
-    return verify_file(cached_path(key), spec.sha256)
+    try:
+        return verify_file(cached_path(key, create=False), spec.sha256)
+    except OSError:
+        return False
 
 
 def cached_keys() -> List[str]:
@@ -214,10 +224,16 @@ def download_font(
         if log_callback:
             log_callback(message)
 
-    destination = cached_path(key)
+    destination = cached_path(key, create=False)
     if not force and is_cached(key):
         log(f"[FONT] {spec.family}: ya en caché ({destination.name})")
         return destination
+
+    try:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        log(f"[FONT] {spec.family}: caché no escribible ({exc})")
+        return None
 
     for url in spec.urls():
         payload = _fetch(url, timeout)
@@ -229,10 +245,13 @@ def download_font(
             log(f"[FONT] {spec.family}: huella inválida desde {url}, se descarta")
             continue
 
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        handle, tmp_name = tempfile.mkstemp(
-            dir=str(destination.parent), prefix=f".{spec.key}.", suffix=".part"
-        )
+        try:
+            handle, tmp_name = tempfile.mkstemp(
+                dir=str(destination.parent), prefix=f".{spec.key}.", suffix=".part"
+            )
+        except OSError as exc:
+            log(f"[FONT] {spec.family}: no se pudo escribir en caché ({exc})")
+            return None
         try:
             with os.fdopen(handle, "wb") as tmp_file:
                 tmp_file.write(payload)
@@ -268,15 +287,18 @@ def ensure_fonts(
     result: Dict[str, Optional[Path]] = {}
     for key in selected:
         spec_for(key)  # valida que la clave exista
-        if is_cached(key):
-            result[key] = cached_path(key)
-            continue
-        if not download:
+        try:
+            if is_cached(key):
+                result[key] = cached_path(key, create=False)
+                continue
+            if not download:
+                result[key] = None
+                continue
+            result[key] = download_font(
+                key, timeout=timeout, force=force, log_callback=log_callback
+            )
+        except OSError:
             result[key] = None
-            continue
-        result[key] = download_font(
-            key, timeout=timeout, force=force, log_callback=log_callback
-        )
     return result
 
 
@@ -308,10 +330,13 @@ def load_cached_fonts(log_callback=None) -> Dict[str, str]:
     ``key -> familia Qt`` de las fuentes registradas.
     """
     for key, spec in FONT_REGISTRY.items():
-        path = cached_path(key)
-        if not verify_file(path, spec.sha256):
+        try:
+            path = cached_path(key, create=False)
+            if not verify_file(path, spec.sha256):
+                continue
+            family = register_font_file(path)
+        except OSError:
             continue
-        family = register_font_file(path)
         if family:
             _loaded[key] = family
             if log_callback:
@@ -355,8 +380,11 @@ def available_fonts_report() -> Dict[str, Dict[str, object]]:
     """Estado de cada fuente: caché, integridad y registro en Qt."""
     report: Dict[str, Dict[str, object]] = {}
     for key, spec in FONT_REGISTRY.items():
-        path = cached_path(key)
-        cached = verify_file(path, spec.sha256)
+        try:
+            path = cached_path(key, create=False)
+            cached = verify_file(path, spec.sha256)
+        except OSError:
+            path, cached = None, False
         report[key] = {
             "family": spec.family,
             "kind": spec.kind,
@@ -369,20 +397,27 @@ def available_fonts_report() -> Dict[str, Dict[str, object]]:
     return report
 
 
-def write_license_notice(directory: Optional[Path] = None) -> Path:
-    """Escribe el aviso de licencias de las fuentes descargadas."""
-    target_dir = directory or font_cache_dir()
-    target_dir.mkdir(parents=True, exist_ok=True)
-    notice = target_dir / "FONT-LICENSES.txt"
-    lines = [
-        "Fuentes descargadas por PackageMaker (Google Fonts)",
-        "=" * 60,
-        "",
-    ]
-    for spec in FONT_REGISTRY.values():
-        lines.append(f"{spec.family} ({spec.filename})")
-        lines.append(f"  Licencia: {spec.license}")
-        lines.append(f"  Texto:    {spec.license_url}")
-        lines.append("")
-    notice.write_text("\n".join(lines), encoding="utf-8")
-    return notice
+def write_license_notice(directory: Optional[Path] = None) -> Optional[Path]:
+    """Escribe el aviso de licencias de las fuentes descargadas.
+
+    Devuelve ``None`` si la caché no se puede escribir (instalación de solo
+    lectura): un aviso ausente no debe tumbar la descarga ni la interfaz.
+    """
+    try:
+        target_dir = Path(directory) if directory else font_cache_dir()
+        target_dir.mkdir(parents=True, exist_ok=True)
+        notice = target_dir / "FONT-LICENSES.txt"
+        lines = [
+            "Fuentes descargadas por PackageMaker (Google Fonts)",
+            "=" * 60,
+            "",
+        ]
+        for spec in FONT_REGISTRY.values():
+            lines.append(f"{spec.family} ({spec.filename})")
+            lines.append(f"  Licencia: {spec.license}")
+            lines.append(f"  Texto:    {spec.license_url}")
+            lines.append("")
+        notice.write_text("\n".join(lines), encoding="utf-8")
+        return notice
+    except OSError:
+        return None

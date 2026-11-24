@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 import time
+import unicodedata
 from typing import Dict, Optional, Tuple
 
 
@@ -43,9 +44,20 @@ class ProjectNameFormatter:
         return time.strftime("%y.%m-%H.%M")
 
     @staticmethod
+    def transliterate(value: str) -> str:
+        """Reduce los acentos a ASCII: ``Jesús`` → ``Jesus``, ``Ñandú`` → ``Nandu``.
+
+        El nombre canónico sólo admite ``[A-Za-z0-9-]``; antes un publisher con
+        acentos se rechazaba y el usuario no podía crear el proyecto. La
+        descomposición NFKD separa la letra de su tilde y se descarta la marca.
+        """
+        decomposed = unicodedata.normalize("NFKD", str(value or ""))
+        return "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+
+    @staticmethod
     def normalize_publisher(publisher: str) -> str:
         """Normaliza el publisher sin perder la capitalización declarada."""
-        value = str(publisher or "").strip().replace(" ", "-")
+        value = ProjectNameFormatter.transliterate(publisher).strip().replace(" ", "-")
         if not value:
             return "Influent"
         if not ProjectNameFormatter._SAFE_SEGMENT_PATTERN.fullmatch(value):
@@ -57,7 +69,9 @@ class ProjectNameFormatter:
     @staticmethod
     def normalize_app_id(app_id: str) -> str:
         """Normaliza el identificador de aplicación en un segmento válido."""
-        value = str(app_id or "").strip().lower().replace(" ", "-")
+        value = (
+            ProjectNameFormatter.transliterate(app_id).strip().lower().replace(" ", "-")
+        )
         if not value:
             return "myapp"
         if not ProjectNameFormatter._SAFE_SEGMENT_PATTERN.fullmatch(value):

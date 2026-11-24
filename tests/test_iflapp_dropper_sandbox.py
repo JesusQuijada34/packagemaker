@@ -177,6 +177,31 @@ class DropperTests(unittest.TestCase):
             with self.assertRaises(IflappError):
                 read_dropper_header(broken)
 
+    def test_read_dropper_header_translates_non_finite_header(self):
+        """Un payload con ``1e400`` no debe escapar como OverflowError."""
+        import json
+        import struct
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = _make_package(root)
+            dropper = create_dropper(package, root / "demo.run")
+            header = {
+                "format_version": 2,
+                "payload": {"offset": 0, "size": 0},
+                "sections": {"icon": {"offset": 0, "size": 1e400}},
+                "manifest": [],
+            }
+            blob = json.dumps(header).encode("utf-8")
+            payload = b"IFLAPP2\x00" + struct.pack("<I", len(blob)) + blob
+            corrupted = self._replace_embedded_payload(dropper, payload)
+            with self.assertRaises(IflappError):
+                read_dropper_header(corrupted)
+
+    def test_read_dropper_header_reports_missing_file(self):
+        with self.assertRaises(IflappError):
+            read_dropper_header(Path(tempfile.gettempdir()) / "no-existe-jamas.run")
+
 
 class CompilerBackendTests(unittest.TestCase):
     def test_available_backends_reports_expected_names(self):

@@ -153,3 +153,32 @@ class VersionNormalizationTests(unittest.TestCase):
             "influent", "myapp", "My App", "octocat", "Danenone", "not-a-version"
         )
         self.assertEqual(variables["VERSION_BASE"], "1.0")
+
+
+class AccentTransliterationTests(unittest.TestCase):
+    """Mejora aprobada Q-002: los acentos se transliteran, no se rechazan."""
+
+    def test_publisher_keeps_case_and_loses_accents(self):
+        self.assertEqual(ProjectNameFormatter.normalize_publisher("Jesús"), "Jesus")
+        self.assertEqual(ProjectNameFormatter.normalize_publisher("Ñandú Labs"), "Nandu-Labs")
+
+    def test_app_id_is_ascii_lowercase(self):
+        self.assertEqual(ProjectNameFormatter.normalize_app_id("Aplicación"), "aplicacion")
+
+    def test_canonical_folder_with_accented_publisher(self):
+        folder = ProjectNameFormatter.format_project_folder(
+            "Jesús", "Mi Aplicación", "1.0", "Linux", "26.11-22.00"
+        )
+        self.assertEqual(folder, "Jesus.mi-aplicacion.v1.0-26.11-22.00-Danenone")
+        self.assertEqual(ProjectNameFormatter.parse_project_folder(folder)["publisher"], "Jesus")
+
+    def test_publisher_capitalization_is_preserved(self):
+        self.assertEqual(ProjectNameFormatter.normalize_publisher("Influent"), "Influent")
+        folder = ProjectNameFormatter.format_project_folder(
+            "Influent", "demo", "1.0", "Knosthalij", "26.11-22.00"
+        )
+        self.assertTrue(folder.startswith("Influent.demo."))
+
+    def test_unsafe_characters_still_rejected(self):
+        with self.assertRaises(ValueError):
+            ProjectNameFormatter.normalize_publisher("bad/name")

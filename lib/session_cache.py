@@ -114,12 +114,14 @@ def save_session(token: str, profile: Dict[str, Any]) -> bool:
 
 def load_session() -> Optional[Tuple[str, Dict[str, Any]]]:
     """Devuelve ``(token, profile)`` de la caché, o ``None`` si no hay."""
-    path = _cache_path()
-    if not path.is_file():
-        return None
     try:
+        path = _cache_path()
+        if not path.is_file():
+            return None
         plaintext = _decrypt(path.read_bytes())
     except OSError:
+        # ``data/`` ilegible (permisos): sin caché, el arranque sigue con
+        # ``pm.data`` o con el formulario de login en lugar de abortar.
         return None
     if not plaintext:
         return None

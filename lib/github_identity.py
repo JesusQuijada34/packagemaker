@@ -190,7 +190,7 @@ def _request(url: str, token: str = "", *, timeout: float = 10.0) -> Any:
     request = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            return json.loads(response.read().decode("utf-8"))
+            raw = response.read()
     except urllib.error.HTTPError as exc:
         if exc.code == 401:
             raise GitHubIdentityError("Token de GitHub inválido o caducado") from exc
@@ -209,9 +209,16 @@ def _request(url: str, token: str = "", *, timeout: float = 10.0) -> Any:
         raise GitHubIdentityError(
             "El token contiene caracteres no válidos; vuelve a copiarlo sin espacios"
         ) from exc
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except ValueError as exc:
+        # Un portal cautivo o un proxy devuelve HTML con código 200.
+        raise GitHubIdentityError("GitHub devolvió una respuesta que no es JSON") from exc
 
 
 def _profile_from_payload(payload: Dict[str, Any], *, authenticated: bool) -> GitHubProfile:
+    if not isinstance(payload, dict):
+        raise GitHubIdentityError("GitHub devolvió una respuesta inesperada")
     return GitHubProfile(
         login=str(payload.get("login", "") or ""),
         name=str(payload.get("name", "") or ""),
@@ -274,17 +281,21 @@ def cache_avatar(login: str, data: bytes) -> Optional[Path]:
     """Guarda el avatar en caché local para no volver a descargarlo."""
     if not login or not data:
         return None
-    path = _avatar_cache_path(login)
-    path.write_bytes(data)
-    return path
+    try:
+        path = _avatar_cache_path(login)
+        path.write_bytes(data)
+        return path
+    except OSError:
+        # ``data`` puede ser de solo lectura: el avatar es opcional.
+        return None
 
 
 def load_cached_avatar(login: str) -> Optional[bytes]:
     """Devuelve los bytes del avatar en caché, o ``None`` si no existe."""
     if not login:
         return None
-    path = _avatar_cache_path(login)
     try:
+        path = _avatar_cache_path(login)
         return path.read_bytes() if path.is_file() else None
     except OSError:
         return None

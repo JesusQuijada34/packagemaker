@@ -2,6 +2,7 @@
 """Debugger integrado del editor ``.mexf`` (motor + CLI)."""
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -134,6 +135,50 @@ class RunnerTests(unittest.TestCase):
         code, output = default_runner(sys.executable, ["-c", "print('hola')"])
         self.assertEqual(code, 0)
         self.assertIn("hola", output)
+
+    def test_default_runner_reports_non_executable_file(self):
+        """Un comando sin permiso de ejecución es un fallo, no una excepción (R-4c8b2e91)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "tool.sh"
+            script.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            script.chmod(0o644)
+            code, output = default_runner(str(script), [])
+        self.assertEqual(code, 126)
+        self.assertTrue(output)
+
+    def test_debugger_step_survives_unlaunchable_command(self):
+        """El paso real de un comando no lanzable queda ``failed`` sin propagar ``OSError``."""
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "tool.sh"
+            script.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            script.chmod(0o644)
+            document = {
+                "commands": [{"id": "demo.noexec", "executable": str(script), "args": []}]
+            }
+            frame = MexfDebugger(document).step()
+        self.assertEqual(frame.status, "failed")
+        self.assertEqual(frame.returncode, 126)
+
+    def test_default_runner_reports_embedded_null_byte(self):
+        """Un byte NUL en el argv hace que ``subprocess`` lance ``ValueError`` (R-3a7f2d84)."""
+        code, output = default_runner("python\x00falso", [])
+        self.assertEqual(code, 126)
+        self.assertIn("null", output.lower())
+
+    def test_default_runner_reports_null_byte_in_environment(self):
+        """El entorno también se valida: un valor con NUL no debe tumbar el motor."""
+        code, output = default_runner(
+            sys.executable, ["-c", "print(1)"], env={"DEMO": "a\x00b"}
+        )
+        self.assertEqual(code, 126)
+        self.assertIn("null", output.lower())
+
+    def test_debugger_step_survives_null_byte_command(self):
+        """El editor no debe abortar si un comando declara un argv imposible."""
+        document = {"commands": [{"id": "demo.nul", "executable": "python\x00x", "args": []}]}
+        frame = MexfDebugger(document).step()
+        self.assertEqual(frame.status, "failed")
+        self.assertEqual(frame.returncode, 126)
 
 
 class DebugFrameTests(unittest.TestCase):

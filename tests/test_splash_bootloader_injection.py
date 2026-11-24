@@ -7,9 +7,16 @@ Ejercita el código real de :mod:`lib.bootloader_injection` (AST) y de
 from __future__ import annotations
 
 import ast
+import os
+import unittest
 from pathlib import Path
 
 from lib.blindcubeEngine import bootloader_injection, splash_bootloader
+
+_UNREADABLE_SKIP = unittest.skipIf(
+    os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+    "los permisos POSIX no bloquean la lectura en Windows ni como root",
+)
 
 _SAMPLE = '''"""Demo app."""
 from __future__ import annotations
@@ -131,3 +138,20 @@ def test_bootloader_start_without_qt_returns_bool(tmp_path: Path):
     loader = splash_bootloader.SplashBootloader().arm(str(tmp_path / "main.py"))
     assert loader.start() in (True, False)
     loader.finish()  # nunca debe lanzar
+
+
+@_UNREADABLE_SKIP
+def test_bootloader_arm_tolerates_unreadable_project(tmp_path: Path, monkeypatch):
+    """Un proyecto o cwd sin permisos no impide armar el splash."""
+    monkeypatch.chdir(tmp_path)
+    locked = tmp_path / "locked"
+    (locked / "app").mkdir(parents=True)
+    script = locked / "main.py"
+    script.write_text("print('hola')\n", encoding="utf-8")
+    locked.chmod(0o000)
+    try:
+        loader = splash_bootloader.SplashBootloader().arm(str(script))
+    finally:
+        locked.chmod(0o755)
+    assert loader._icon_path is None
+    assert loader._accent.startswith("#")

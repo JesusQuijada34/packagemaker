@@ -106,8 +106,8 @@ CONTROL_RADIUS = 6
 CARD_RADIUS = 8
 PILL_RADIUS = 18
 
-SIDEBAR_MIN_WIDTH = 240
-SIDEBAR_MAX_WIDTH = 260
+SIDEBAR_MIN_WIDTH = 250
+SIDEBAR_MAX_WIDTH = 270
 SIDEBAR_TOP_MARGIN = 48
 SIDEBAR_PADDING = 16
 SIDEBAR_ITEM_HEIGHT = 40
@@ -208,6 +208,23 @@ def accent_states(accent: str = ACCENT) -> tuple[str, str, str]:
     return value, shade_color(value, 1.12), shade_color(value, 0.82)
 
 
+def normalize_accent(value: object, default: str = ACCENT) -> str:
+    """Devuelve *value* si es un color ``#RRGGBB``; si no, *default*.
+
+    El acento se guarda en ``pm.data`` y se interpola en QSS y en el cálculo
+    del hover de los botones: un valor corrupto (texto libre, lista, ``""``)
+    reventaba al parsear el hexadecimal dentro de un slot de Qt.
+    """
+    text = str(value or "").strip()
+    if (
+        len(text) == 7
+        and text.startswith("#")
+        and all(ch in "0123456789abcdefABCDEF" for ch in text[1:])
+    ):
+        return text
+    return default
+
+
 def active_accent(default: str = ACCENT) -> str:
     """Acento activo según la preferencia del usuario y, si no, *default*.
 
@@ -221,7 +238,7 @@ def active_accent(default: str = ACCENT) -> str:
 
         value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
         if value:
-            return value
+            return normalize_accent(value, default)
     except Exception:
         pass
     return default

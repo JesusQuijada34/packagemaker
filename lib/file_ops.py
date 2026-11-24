@@ -97,13 +97,14 @@ def _clear_readonly(func, path, _exc_info) -> None:
     """``onexc``/``onerror`` de ``rmtree``: quita el bit de sólo lectura y reintenta.
 
     En Windows los binarios copiados pueden quedar marcados como sólo lectura;
-    sin este paso ``rmtree`` falla con ``PermissionError``.
+    sin este paso ``rmtree`` falla con ``PermissionError``. Si el reintento
+    vuelve a fallar, el error se propaga: ``rmtree`` lo interpreta como un
+    fallo real y ``_retry`` puede esperar a que se libere el fichero. Tragarse
+    ese error hacía que ``remove_tree`` informara de un borrado que no ocurrió.
     """
-    try:
-        os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
-        func(path)
-    except OSError:
-        pass
+    mode = os.stat(path).st_mode
+    os.chmod(path, mode | stat.S_IWRITE)
+    func(path)
 
 
 def _tree_exists(path: Path) -> Optional[bool]:
@@ -140,9 +141,11 @@ def remove_tree(path: PathLike, *, attempts: int = 8, delay: float = 0.15) -> bo
 
     try:
         _retry(_rm, attempts=attempts, delay=delay)
-        return True
     except OSError:
         return _tree_exists(target) is False
+    # ``shutil.rmtree`` no lanza si el ``onexc`` consumió el fallo, así que el
+    # éxito sólo se confirma comprobando que el árbol ya no está.
+    return _tree_exists(target) is False
 
 
 def copy_file(source: PathLike, destination: PathLike) -> Path:

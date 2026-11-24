@@ -79,7 +79,7 @@ def _int_or_default(value, default: int = 0) -> int:
 def _require_int(value, what: str) -> int:
     try:
         return int(value)
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise IflappError(f"Cabecera .iflapp inválida: {what} debe ser numérico.") from exc
 
 
@@ -647,7 +647,7 @@ def _read_section(handle, header: Dict, key: str) -> bytes:
     try:
         size = int(section.get("size", 0))
         offset = int(section.get("offset", 0))
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise IflappError(f"Sección {key!r} inválida.") from exc
     if offset < 0 or size < 0:
         raise IflappError(f"Sección {key!r} inválida: desplazamiento o tamaño negativo.")

@@ -2385,9 +2385,9 @@ class EditorWindow(QMainWindow):
             self.python_label.setText(f"Python: {Path(py).name}")
 
     def _load_editor_config(self):
-        if not EDITOR_CONFIG_PATH.exists():
-            return
         try:
+            if not EDITOR_CONFIG_PATH.is_file():
+                return
             with open(EDITOR_CONFIG_PATH, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
             if not isinstance(cfg, dict):
@@ -2404,9 +2404,14 @@ class EditorWindow(QMainWindow):
             pass
 
     def _save_editor_config(self, settings: dict):
-        EDITOR_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(EDITOR_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(settings, f, indent=2)
+        try:
+            EDITOR_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(EDITOR_CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=2)
+        except OSError as error:
+            print(f"[WARN] No se pudo guardar {EDITOR_CONFIG_PATH}: {error}")
+            return False
+        return True
 
     def show_interpreter_config(self):
         from lib.interpreter_config_dialog import InterpreterConfigDialog

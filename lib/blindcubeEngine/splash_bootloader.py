@@ -100,16 +100,26 @@ def system_accent_color() -> str:
 
 
 def _resolve_icon(script_file: str | None) -> str | None:
-    """Primer icono disponible del proyecto, relativo a la raíz del guion."""
+    """Primer icono disponible del proyecto, relativo a la raíz del guion.
+
+    El bootloader arranca antes que la aplicación: un directorio de trabajo o
+    un proyecto sin permisos no puede impedir que el splash se muestre.
+    """
     roots = []
-    if script_file:
-        roots.append(Path(script_file).resolve().parent)
-    roots.append(Path.cwd())
+    try:
+        if script_file:
+            roots.append(Path(script_file).resolve().parent)
+        roots.append(Path.cwd())
+    except OSError:
+        return None
     for root in roots:
         for candidate in _ICON_CANDIDATES:
             path = root / candidate
-            if path.is_file():
-                return str(path)
+            try:
+                if path.is_file():
+                    return str(path)
+            except OSError:
+                continue
     return None
 
 

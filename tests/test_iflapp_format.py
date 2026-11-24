@@ -185,6 +185,25 @@ class MalformedHeaderShapeTests(unittest.TestCase):
             with self.assertRaises(iflapp_format.IflappError):
                 iflapp_format.read_iflapp_header(path)
 
+    def test_non_finite_section_size_raises(self):
+        # ``1e400`` es JSON válido y se decodifica como infinito: ``int(inf)``
+        # lanzaba OverflowError en vez de IflappError.
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                {"format_version": 2, "sections": {"icon": {"offset": 0, "size": 1e400}}},
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
+    def test_non_finite_payload_offset_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp), {"format_version": 2, "payload": {"offset": 1e400, "size": 0}}
+            )
+            with self.assertRaises(iflapp_format.IflappError):
+                iflapp_format.read_iflapp_header(path)
+
     def test_export_header_assets_does_not_crash_on_odd_sections(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

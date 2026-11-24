@@ -491,7 +491,9 @@ class MoonFixWizard(QDialog):
                 tree = ET.parse(xml_path)
                 root = tree.getroot()
                 xml_data = {child.tag: child.text for child in root if child.text}
-            except ET.ParseError:
+            except (ET.ParseError, OSError):
+                # details.xml ilegible o bloqueado: la página se construye con
+                # los valores por defecto en lugar de abortar el asistente.
                 pass
 
         self.results[index] = {"inputs": {}, "is_invalid": any(i["type"] == "invalid_package" for i in proj_data["issues"])}
@@ -706,7 +708,8 @@ class MoonFixWizard(QDialog):
                     return
             
             # Apply fixes for this project
-            self.apply_project_fixes(idx)
+            if not self.apply_project_fixes(idx):
+                return
 
         if curr < self.stack.count() - 1:
             self.fade_to_page(curr + 1)
@@ -769,7 +772,17 @@ class MoonFixWizard(QDialog):
         else:
             self.btn_next.setText(tr("wizard.next"))
 
-    def apply_project_fixes(self, idx):
+    def apply_project_fixes(self, idx) -> bool:
+        """Aplica la reparación; avisa si el proyecto no se puede escribir."""
+        try:
+            self._apply_project_fixes(idx)
+        except (OSError, ValueError) as exc:
+            # Carpetas de solo lectura o metadatos inválidos no deben tumbar el slot.
+            LeviathanDialog.launch(self, tr("common.error"), str(exc), mode="error")
+            return False
+        return True
+
+    def _apply_project_fixes(self, idx):
         proj = self.projects[idx]
         path = proj["path"]
         inputs = self.results[idx]["inputs"]

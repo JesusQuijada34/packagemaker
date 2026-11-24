@@ -77,18 +77,53 @@ class HoverWidgetTests(unittest.TestCase):
             self.assertIsNotNone(getattr(btn, "_hover_fade", None))
         self.assertIsNotNone(getattr(make_icon_button(None), "_hover_fade", None))
 
-    def test_sidebar_item_fade_skips_selected_item(self):
+    def test_sidebar_item_hover_does_not_repolish(self):
+        """Regresión del parpadeo azul/gris: el resalte se pinta, no se
+        reescribe la hoja de estilo en cada fotograma (cada ``setStyleSheet``
+        fuerza un re-polish y el ítem cambiaba de color a destiempo)."""
         if importlib.util.find_spec("PyQt6.QtWidgets") is None:
             self.skipTest("PyQt6 no disponible")
         _ensure_app()
         from lib.SidebarItem import SidebarItem
 
         item = SidebarItem("Config")
-        fade = getattr(item, "_hover_fade", None)
-        self.assertIsNotNone(fade)
+        calls = []
+        item.setStyleSheet = calls.append  # type: ignore[method-assign]
+        item._animate_hover(1.0)
+        for value in (0.0, 0.25, 0.5, 0.75, 1.0):
+            item.hoverProgress = value
+        self.assertEqual(calls, [], "el hover no debe reaplicar el QSS")
+
+    def test_sidebar_item_skips_hover_when_selected(self):
+        if importlib.util.find_spec("PyQt6.QtWidgets") is None:
+            self.skipTest("PyQt6 no disponible")
+        _ensure_app()
+        from lib.SidebarItem import SidebarItem
+
+        item = SidebarItem("Config")
         item.setChecked(True)
-        fade._animate(1.0)
-        self.assertFalse(fade._hovered)
+        item._animate_hover(1.0)
+        self.assertEqual(item.hoverProgress, 0.0)
+
+    def test_sidebar_selection_uses_accent_not_hardcoded_blue(self):
+        if importlib.util.find_spec("PyQt6.QtWidgets") is None:
+            self.skipTest("PyQt6 no disponible")
+        _ensure_app()
+        from lib.SidebarItem import SidebarItem
+        from lib.design_tokens import with_alpha
+
+        item = SidebarItem("Config")
+        item.set_accent("#E81123")
+        qss = item.styleSheet()
+        self.assertIn(with_alpha("#E81123", 0.18), qss)
+        self.assertNotIn("0, 120, 212", qss)
+
+    def test_sidebar_default_width_is_wider(self):
+        from lib.design_tokens import SIDEBAR_MAX_WIDTH
+        from lib.pm_data import DEFAULT_USER
+
+        self.assertGreaterEqual(SIDEBAR_MAX_WIDTH, 270)
+        self.assertEqual(DEFAULT_USER["sidebar_width"], SIDEBAR_MAX_WIDTH)
 
     def test_animation_object_survives_repeated_hover(self):
         """Regresión: ``DeleteWhenStopped`` destruía el objeto C++ y el

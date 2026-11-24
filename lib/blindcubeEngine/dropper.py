@@ -359,7 +359,10 @@ def read_dropper_header(path: Path | str):
     Un dropper truncado o con el payload alterado se traduce a ``IflappError``;
     antes ``base64``/``struct`` escapaban como errores crípticos.
     """
-    data = Path(path).read_bytes()
+    try:
+        data = Path(path).read_bytes()
+    except OSError as exc:
+        raise IflappError(f"No se pudo leer el dropper {path}: {exc}") from exc
     index = data.rfind(DROPPER_MARKER)
     if index < 0:
         raise IflappError("El archivo no contiene un payload de dropper.")

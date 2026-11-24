@@ -39,6 +39,7 @@ from lib.blindcubeEngine.compilers import (
 )
 from lib.file_ops import copy_file, remove_tree
 from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
 from lib.mexf_compiler import MexfCompiler
 from lib.project_locator import describe_available, locate_project
 
@@ -137,7 +138,14 @@ class FlangCompiler:
         ``.iflapp`` en la carpeta de releases. Si el proyecto no usa ``.mexf``,
         el paso se omite sin error.
         """
-        if not (self.repo_path / ".mexf").is_dir():
+        try:
+            if not (self.repo_path / ".mexf").is_dir():
+                return None
+        except OSError as error:
+            # El paso ``.mexf`` es opcional; una carpeta ilegible no debe abortar
+            # el build del ``.iflapp``.
+            self.last_error = f"No se pudo leer .mexf/ en {self.repo_path}: {error}"
+            self.log(f"[WARN] {self.last_error}")
             return None
         compiler = MexfCompiler(
             self.repo_path, self.output_path, log_callback=self.log
@@ -157,11 +165,19 @@ class FlangCompiler:
         evitar publicar pruebas, utilidades o prototipos como binarios de la app.
         """
         settings_path = self.repo_path / "config" / "settings.json"
-        if not settings_path.is_file():
-            return None
         try:
-            settings = json.loads(settings_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as error:
+            if not settings_path.is_file():
+                return None
+        except OSError as error:
+            # ``config/`` ilegible (permisos): se aborta el build con un error
+            # legible en vez de dejar escapar ``PermissionError`` desde
+            # ``__init__``, que corre dentro de la QThread de la GUI.
+            self.last_error = f"No se pudo leer config/settings.json: {error}"
+            self.log(f"[ERROR] {self.last_error}")
+            return []
+        try:
+            settings = json.loads(settings_path.read_text(encoding="utf-8-sig"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
             self.last_error = f"No se pudo leer config/settings.json: {error}"
             self.log(f"[ERROR] {self.last_error}")
             return []
@@ -292,15 +308,15 @@ class FlangCompiler:
     def _detect_hidden_imports(self, script_path: Path) -> list:
         hidden_imports = []
         try:
-            content = script_path.read_text(encoding="utf-8")
-            if "PyQt6" in content:
-                hidden_imports.append("PyQt6")
-            if "leviathan_ui" in content:
-                hidden_imports.append("leviathan_ui")
-            if "requests" in content:
-                hidden_imports.append("requests")
-        except OSError:
-            pass
+            content, _ = read_python_source(script_path)
+        except (OSError, SourceEncodingError):
+            return hidden_imports
+        if "PyQt6" in content:
+            hidden_imports.append("PyQt6")
+        if "leviathan_ui" in content:
+            hidden_imports.append("leviathan_ui")
+        if "requests" in content:
+            hidden_imports.append("requests")
         return hidden_imports
 
     def find_scripts(self) -> bool:
@@ -430,12 +446,20 @@ class FlangCompiler:
     def _compile_binary(self, script: Dict, windowed: bool) -> bool:
         script_path = script["path"]
         script_name = script["name"]
-        assets_dir, app_dir = self._prepare_pyinstaller_data_dirs()
+        try:
+            assets_dir, app_dir = self._prepare_pyinstaller_data_dirs()
+        except OSError as exc:
+            self.last_error = f"No se pudo preparar el árbol del proyecto: {exc}"
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         add_data = [(str(assets_dir), "assets"), (str(app_dir), "app")]
         # cliHandler y otros módulos cargan details.xml relativo a la raíz del bundle.
         # Incluirlo explícitamente es necesario para ejecutables onefile/frozen.
-        if self.details_xml_path.is_file():
-            add_data.append((str(self.details_xml_path), "."))
+        try:
+            if self.details_xml_path.is_file():
+                add_data.append((str(self.details_xml_path), "."))
+        except OSError:
+            pass
         hidden_imports = self._detect_hidden_imports(script_path)
 
         # Fase 3: bootloader de splash. Se compila una copia inyectada del guion
@@ -449,8 +473,11 @@ class FlangCompiler:
             compile_path = injected
             hidden_imports = sorted(set(hidden_imports) | {"lib.splash_bootloader"})
             lib_dir = self.repo_path / "lib"
-            if lib_dir.is_dir():
-                add_data.append((str(lib_dir), "lib"))
+            try:
+                if lib_dir.is_dir():
+                    add_data.append((str(lib_dir), "lib"))
+            except OSError:
+                pass
             self.log("[INFO] " + tr("build_log.splash_injected").format(name=injected.name))
 
         backend = self._ensure_compiler()
@@ -459,13 +486,24 @@ class FlangCompiler:
             return False
 
         dist_dir = self.repo_path / "dist"
-        dist_dir.mkdir(exist_ok=True)
-        build_dir = tempfile.mkdtemp(prefix=f"{backend.name}_build_")
-        # Cada compilador puede limpiar su salida entre ejecuciones; compilar en
-        # un directorio aislado y acumular el binario en `dist` que consume
-        # create_package().
-        script_dist_dir = Path(build_dir) / "dist"
-        script_dist_dir.mkdir(parents=True, exist_ok=True)
+        build_dir = None
+        try:
+            dist_dir.mkdir(exist_ok=True)
+            build_dir = tempfile.mkdtemp(prefix=f"{backend.name}_build_")
+            # Cada compilador puede limpiar su salida entre ejecuciones; compilar en
+            # un directorio aislado y acumular el binario en `dist` que consume
+            # create_package().
+            script_dist_dir = Path(build_dir) / "dist"
+            script_dist_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            # Proyecto de solo lectura o ruta bloqueada: la GUI debe recibir un
+            # mensaje y el CLI un fallo limpio, no un traceback de la QThread.
+            self.last_error = f"No se pudo preparar el directorio de compilación: {exc}"
+            self.log(f"[ERROR] {self.last_error}")
+            if build_dir:
+                remove_tree(build_dir)
+            bootloader_injection.cleanup_injected_copy(script_path)
+            return False
 
         try:
             self.log(f"[DEBUG] Compilando {script_name} con {backend.display_name}...")
@@ -1132,7 +1170,17 @@ class BuildThread(QThread):
     def run(self):
         if self.custom_path:
             repo_path = Path(self.custom_path)
-            if not repo_path.exists():
+            try:
+                exists = repo_path.exists()
+            except OSError as exc:
+                # Una carpeta inaccesible no debe matar la QThread (PyQt6 aborta
+                # el proceso ante una excepción no capturada en ``run``).
+                self.error.emit(
+                    tr("build_log.err_custom_path").format(path=self.custom_path)
+                    + f" ({exc})"
+                )
+                return
+            if not exists:
                 self.error.emit(tr("build_log.err_custom_path").format(path=self.custom_path))
                 return
         else:
@@ -1158,7 +1206,11 @@ class BuildThread(QThread):
             from lib.blindcubeEngine.build_preflight import run_preflight
 
             self.progress.emit(tr("build.preflight_title"))
-            report = run_preflight(repo_path)
+            try:
+                report = run_preflight(repo_path)
+            except OSError as exc:
+                self.error.emit(tr("build.preflight_failed").format(detail=str(exc)))
+                return
             for check in report.checks:
                 state = "OK" if check.ok else "ERROR"
                 self.progress.emit(f"[{state}] {check.name}: {check.detail}")
@@ -1213,11 +1265,11 @@ class BuildThread(QThread):
             return
         try:
             settings = (
-                json.loads(settings_path.read_text(encoding="utf-8"))
+                json.loads(settings_path.read_text(encoding="utf-8-sig"))
                 if settings_path.is_file()
                 else {}
             )
-        except (OSError, json.JSONDecodeError):
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
             settings = {}
         if not isinstance(settings, dict):
             settings = {}

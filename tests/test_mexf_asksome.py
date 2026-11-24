@@ -459,6 +459,89 @@ def test_uninstall_rejects_app_id_that_escapes_install_root(tmp_path, app_id):
     assert (victim / "keep.txt").is_file()
 
 
+@_UNREADABLE_SKIP
+def test_install_asksome_skips_unwritable_shortcut_dir(tmp_path):
+    """Una carpeta de accesos directos de sólo lectura no aborta la instalación."""
+    from lib.blindcubeEngine.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    shortcuts.chmod(0o555)
+    try:
+        record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    finally:
+        shortcuts.chmod(0o755)
+
+    assert record.shortcuts == []
+    assert (Path(record.install_dir) / "install.json").is_file()
+
+
+@_UNREADABLE_SKIP
+def test_install_asksome_reports_unreadable_artifact(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, install_asksome
+
+    artifact, install_root, _shortcuts = _install_fixture(tmp_path)
+    blocked = tmp_path / "privado"
+    blocked.mkdir()
+    moved = blocked / artifact.name
+    artifact.replace(moved)
+    blocked.chmod(0o000)
+    try:
+        with pytest.raises(AsksomeInstallError):
+            install_asksome(moved, install_root, create_desktop_shortcuts=False)
+    finally:
+        blocked.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_uninstall_asksome_reports_unreadable_root(tmp_path):
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, uninstall_asksome
+
+    root = tmp_path / "installed"
+    (root / "demo.app").mkdir(parents=True)
+    root.chmod(0o000)
+    try:
+        with pytest.raises(AsksomeInstallError):
+            uninstall_asksome("demo.app", root)
+    finally:
+        root.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_uninstall_asksome_skips_blocked_shortcut(tmp_path):
+    """Un acceso directo ilegible no impide purgar la instalación."""
+    from lib.blindcubeEngine.asksome_installer import install_asksome, uninstall_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    assert record.shortcuts
+    shortcuts.chmod(0o000)
+    try:
+        removed = uninstall_asksome(record.app_id, install_root)
+    finally:
+        shortcuts.chmod(0o755)
+
+    assert not Path(record.install_dir).exists()
+    assert str(Path(record.install_dir)) in removed
+
+
+@_UNREADABLE_SKIP
+def test_uninstall_asksome_reports_blocked_tree(tmp_path):
+    """Si el árbol no se puede borrar, se informa con AsksomeInstallError."""
+    from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, install_asksome, uninstall_asksome
+
+    artifact, install_root, _shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, create_desktop_shortcuts=False)
+    locked = Path(record.install_dir) / "locked"
+    locked.mkdir()
+    (locked / "f.txt").write_text("x", encoding="utf-8")
+    locked.chmod(0o555)
+    try:
+        with pytest.raises(AsksomeInstallError):
+            uninstall_asksome(record.app_id, install_root)
+    finally:
+        locked.chmod(0o755)
+
+
 def test_read_record_and_build_removeme_reject_unsafe_app_id(tmp_path):
     from lib.blindcubeEngine.asksome_installer import (
         AsksomeInstallError,
@@ -475,6 +558,30 @@ def test_read_record_and_build_removeme_reject_unsafe_app_id(tmp_path):
         read_record("../outside", install_root)
     with pytest.raises(AsksomeInstallError):
         build_removeme("../outside", install_root)
+
+
+@_UNREADABLE_SKIP
+def test_read_record_reports_unreadable_install_root(tmp_path):
+    """``--build-removeme`` no debe lanzar ``PermissionError`` crudo (R-9e1a4c72)."""
+    from lib.blindcubeEngine.asksome_installer import (
+        AsksomeInstallError,
+        build_removeme,
+        read_record,
+    )
+
+    install_root = tmp_path / "installed"
+    app_dir = install_root / "influent.demo"
+    app_dir.mkdir(parents=True)
+    (app_dir / "install.json").write_text("{}", encoding="utf-8")
+    install_root.chmod(0o000)
+    try:
+        with pytest.raises(AsksomeInstallError) as read_error:
+            read_record("influent.demo", install_root)
+        assert "No se pudo acceder" in str(read_error.value)
+        with pytest.raises(AsksomeInstallError):
+            build_removeme("influent.demo", install_root)
+    finally:
+        install_root.chmod(0o755)
 
 
 def test_install_reports_unusable_install_root(tmp_path):
@@ -978,3 +1085,135 @@ def test_binary_mexf_is_reported_without_traceback(tmp_path):
     with pytest.raises(MexfError) as excinfo:
         parse_mexf(path)
     assert "UTF-8" in str(excinfo.value)
+
+
+def test_yaml_with_legacy_keys_is_unknown_not_json(tmp_path):
+    """R-5d1c7a83: un YAML con claves legacy no debe entregarse a ``json.loads``.
+
+    ``detect_mexf_format`` clasificaba como ``legacy-json`` cualquier documento
+    (YAML incluido) que tuviera ``extensions``/``file_associations``/
+    ``context_menus`` en la raíz. ``parse_mexf`` volvía a leer el archivo como
+    JSON y ``json.loads`` lanzaba ``JSONDecodeError`` fuera de ``MexfError``:
+    ``--compile-mexf``, ``--shell-plan`` y ``--debug-mexf`` mostraban traceback.
+    """
+    path = tmp_path / "legacy-shaped.mexf"
+    path.write_text(
+        "extensions:\n  - extension: .foo\n    open_command: demo %1\n",
+        encoding="utf-8",
+    )
+    assert detect_mexf_format(path) == "unknown"
+    with pytest.raises(MexfError) as excinfo:
+        parse_mexf(path)
+    assert "desconocido" in str(excinfo.value)
+
+
+def test_compile_mexf_wraps_legacy_shaped_yaml(tmp_path):
+    """El compilador informa del error como ``MexfCompileError``, sin traceback."""
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    project = tmp_path / "project"
+    (project / ".mexf").mkdir(parents=True)
+    (project / ".mexf" / "main.mexf").write_text(
+        "file_associations:\n  - extension: .foo\n", encoding="utf-8"
+    )
+    (project / "details.xml").write_text(
+        "<app><publisher>P</publisher><app>a</app><version>v1.0</version>"
+        "<platform>AlphaCube</platform></app>",
+        encoding="utf-8",
+    )
+    with pytest.raises(MexfCompileError) as excinfo:
+        compile_mexf_project(project, tmp_path / "out.asksome")
+    assert "desconocido" in str(excinfo.value)
+
+
+def test_legacy_json_document_still_migrates_after_classification(tmp_path):
+    """Un JSON legacy real sigue detectándose y migrando igual que antes."""
+    source = tmp_path / "legacy.mexf"
+    source.write_text(
+        json.dumps({"app_id": "demo.app", "app_name": "Demo", "context_menus": []}),
+        encoding="utf-8",
+    )
+    assert detect_mexf_format(source) == "legacy-json"
+    document = parse_mexf(source)
+    assert document.source_format == "legacy-json"
+    assert document.metadata["id"] == "demo.app"
+
+
+YAML_NATIVE_SCALARS = """format: mexf
+version: 1
+metadata:
+  id: influent.demo
+  name: Demo App
+  version: v1.0
+  released: 2024-01-01
+  labels: !!set
+    alpha:
+    beta:
+  blob: !!binary |
+    aGVsbG8=
+commands: []
+"""
+
+
+def test_yaml_native_scalars_are_normalized_for_json(tmp_path):
+    """Fechas, sets y bytes de YAML no deben romper ``canonicalize_mexf``."""
+    from lib.mexf_parser import canonicalize_mexf
+
+    source = tmp_path / "scalars.mexf"
+    source.write_text(YAML_NATIVE_SCALARS, encoding="utf-8")
+    document = parse_mexf(source)
+    metadata = document.metadata
+    assert metadata["released"] == "2024-01-01"
+    assert metadata["labels"] == ["alpha", "beta"]
+    assert metadata["blob"] == "aGVsbG8="
+    assert json.loads(canonicalize_mexf(document))["metadata"]["released"] == "2024-01-01"
+
+
+def test_non_finite_yaml_scalars_stay_json_safe(tmp_path):
+    """``.nan``/``.inf`` de YAML no pueden colarse en el ``.mexf`` canónico."""
+    from lib.mexf_parser import canonicalize_mexf
+
+    source = tmp_path / "nonfinite.mexf"
+    source.write_text(
+        "format: mexf\nversion: 1\nmetadata:\n  id: demo.nan\n  name: NaN\n"
+        "  version: '1.0'\nshortcuts:\n  Ctrl+N: .nan\n"
+        "environments:\n  A: -.inf\ncommands: []\n",
+        encoding="utf-8",
+    )
+    document = parse_mexf(source)
+    payload = json.loads(canonicalize_mexf(document))
+    assert payload["shortcuts"]["Ctrl+N"] == "nan"
+    assert payload["environments"]["A"] == "-inf"
+    json.dumps(payload, allow_nan=False)
+
+
+def test_compile_mexf_project_accepts_yaml_dates(tmp_path):
+    """Un ``.mexf`` válido con una fecha YAML compila sin traceback (R-8d4c1e67)."""
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    (root / ".mexf" / "main.mexf").write_text(YAML_NATIVE_SCALARS, encoding="utf-8")
+    result = compile_mexf_project(root, tmp_path / "scalars.asksome")
+    assert result.output.is_file()
+    assert verify_asksome(result.output)["metadata"]["id"] == "influent.demo"
+
+
+def test_recursive_yaml_alias_is_reported_as_mexf_error(tmp_path):
+    """Un alias recursivo no puede serializarse a JSON: se informa, no se revienta."""
+    source = tmp_path / "recursive.mexf"
+    source.write_text(
+        "format: mexf\nversion: 1\nmetadata: &meta\n  id: demo.loop\n"
+        "  name: Loop\n  version: v1.0\n  self: *meta\ncommands: []\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(MexfError, match="circular"):
+        parse_mexf(source)
+
+
+def test_canonicalize_rejects_recursive_document():
+    from lib.mexf_parser import canonicalize_mexf
+
+    recursive: dict = {"format": "mexf", "version": 1}
+    recursive["self"] = recursive
+    with pytest.raises(MexfError, match="circular"):
+        canonicalize_mexf(recursive)

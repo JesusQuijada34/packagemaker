@@ -81,8 +81,9 @@ def _declared_scripts(root: Path) -> List[str]:
     if not settings.is_file():
         return []
     try:
-        data = json.loads(settings.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
+        # ``utf-8-sig`` acepta el BOM que añade el Bloc de notas de Windows.
+        data = json.loads(settings.read_text(encoding="utf-8-sig"))
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
         return []
     build = data.get("build") if isinstance(data, dict) else None
     scripts = build.get("scripts") if isinstance(build, dict) else None
@@ -139,9 +140,12 @@ def scan_project(root: Path | str) -> IfappProject:
 
 def detect_hidden_imports(script: Path | str) -> List[str]:
     """Extrae los módulos importados de un guion para el backend de compilación."""
+    from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
+
     try:
-        tree = ast.parse(Path(script).read_text(encoding="utf-8"))
-    except (OSError, SyntaxError):
+        source, _ = read_python_source(script)
+        tree = ast.parse(source)
+    except (OSError, SourceEncodingError, SyntaxError):
         return []
     modules = set()
     for node in ast.walk(tree):
@@ -286,8 +290,14 @@ def trace_script(
     Con ``breakpoints`` solo se detiene en esas líneas; sin él registra cada
     línea ejecutada (limitado por ``max_stops``).
     """
+    from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
+
     source = Path(path)
-    code = compile(source.read_text(encoding="utf-8"), str(source), "exec")
+    try:
+        text, _ = read_python_source(source)
+    except SourceEncodingError as exc:
+        raise SyntaxError(f"No se pudo decodificar {source.name}: {exc}") from exc
+    code = compile(text, str(source), "exec")
     targets = set(breakpoints) if breakpoints else None
     stops: List[TraceStop] = []
     abort = {"hit": False}

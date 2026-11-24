@@ -79,8 +79,12 @@ class CreateIconOutsideRepoRootTests(unittest.TestCase):
             finally:
                 os.chdir(original)
 
-            projects = list(base.glob("influent.cwd-test.*"))
+            projects = list(base.glob("Influent.cwd-test.*"))
             self.assertEqual(len(projects), 1, "no se creó el proyecto")
+            self.assertIn(
+                "<publisher>Influent</publisher>",
+                (projects[0] / "details.xml").read_text(encoding="utf-8"),
+            )
             icon = projects[0] / "app" / "app-icon.ico"
             self.assertTrue(icon.is_file(), "el icono por defecto no se copió")
             self.assertGreater(icon.stat().st_size, 0)
@@ -203,7 +207,7 @@ class InvalidCanonicalMetadataTests(unittest.TestCase):
                             "shortname": "demo",
                             "version": "1.0.0",
                             "author": "JesusQuijada34",
-                            "publisher": "Jesús",
+                            "publisher": "bad/name",
                             "platform": "Danenone",
                         },
                         None,
@@ -221,7 +225,7 @@ class InvalidCanonicalMetadataTests(unittest.TestCase):
 
             def __init__(self, project_path, output_path, **kwargs):
                 self.metadata = {
-                    "publisher": "Jesús",
+                    "publisher": "bad/name",
                     "app": "demo",
                     "version": "v1.0.0-26.11-06.07",
                     "platform": "Danenone",
@@ -273,7 +277,7 @@ class InvalidCanonicalMetadataTests(unittest.TestCase):
             project = Path(tmp) / "influent.demo.v1.0.0-26.11-06.07-Danenone"
             project.mkdir()
             (project / "details.xml").write_text(
-                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>Jesús</publisher>"),
+                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>bad/name</publisher>"),
                 encoding="utf-8",
             )
             buffer = io.StringIO()
@@ -806,7 +810,7 @@ class BuildThreadMetadataGuardTests(unittest.TestCase):
             project = Path(tmp) / "proyecto"
             project.mkdir()
             (project / "details.xml").write_text(
-                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>Jesús</publisher>"),
+                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>bad/name</publisher>"),
                 encoding="utf-8",
             )
             (project / "demo.py").write_text("print(1)\n", encoding="utf-8")
@@ -894,7 +898,7 @@ class BuildThreadMetadataGuardTests(unittest.TestCase):
             project = Path(tmp) / "proyecto"
             project.mkdir()
             (project / "details.xml").write_text(
-                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>Jesús</publisher>"),
+                DETAILS.replace("<publisher>Influent</publisher>", "<publisher>bad/name</publisher>"),
                 encoding="utf-8",
             )
             (project / "demo.py").write_text("print(1)\n", encoding="utf-8")
@@ -906,3 +910,34 @@ class BuildThreadMetadataGuardTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AccentedPublisherCreateTests(unittest.TestCase):
+    """Mejora aprobada Q-002: ``Jesús`` crea ``Jesus.*`` en vez de abortar."""
+
+    def test_create_transliterates_accented_publisher(self):
+        from lib.cliHandler import handle_cli_action
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            base.mkdir()
+            with redirect_stdout(io.StringIO()):
+                handle_cli_action(
+                    "create_project",
+                    {
+                        "path": str(base),
+                        "name": "Aplicación Demo",
+                        "shortname": "aplicación demo",
+                        "version": "1.0.0",
+                        "author": "JesusQuijada34",
+                        "publisher": "Jesús",
+                        "platform": "Danenone",
+                    },
+                    None,
+                    headless=True,
+                )
+
+            projects = list(base.glob("Jesus.aplicacion-demo.*-Danenone"))
+            self.assertEqual(len(projects), 1, "no se creó el proyecto transliterado")
+            details = (projects[0] / "details.xml").read_text(encoding="utf-8")
+            self.assertIn("<publisher>Jesus</publisher>", details)

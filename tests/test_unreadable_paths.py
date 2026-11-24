@@ -315,3 +315,243 @@ def test_moonfix_batch_scan_reports_unreadable_folder(tmp_path, monkeypatch):
     pm.PackageTodoGUI.mf_start_scan(fake)
 
     assert shown and shown[0][1].get("mode") == "error"
+
+
+# --- .mexf: compilador y paso opcional del build con rutas ilegibles -------- #
+
+_MEXF_DETAILS = """<?xml version="1.0" encoding="utf-8"?>
+<app>
+  <publisher>Influent</publisher>
+  <app>demo</app>
+  <name>demo</name>
+  <version>1.0.0</version>
+  <platform>AlphaCube</platform>
+  <author>JesusQuijada34</author>
+</app>
+"""
+
+
+def _make_mexf_project(directory: Path) -> Path:
+    project = directory / "mexfproj"
+    (project / ".mexf").mkdir(parents=True)
+    (project / ".mexf" / "main.mexf").write_text(
+        "format: mexf\nversion: 1\nmetadata:\n  id: demo\n  name: demo\n  version: v1.0\n"
+        "runtime:\n  launcher: argv\ncommands: []\n",
+        encoding="utf-8",
+    )
+    (project / "details.xml").write_text(_MEXF_DETAILS, encoding="utf-8")
+    return project
+
+
+@_UNREADABLE_SKIP
+def test_mexf_read_details_converts_permission_error(tmp_path):
+    from lib.mexf_compiler import MexfCompileError, read_project_details
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    try:
+        with pytest.raises(MexfCompileError):
+            read_project_details(project)
+    finally:
+        project.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_mexf_compiler_run_skips_unreadable_root(tmp_path):
+    from lib.mexf_compiler import MexfCompiler
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    try:
+        compiler = MexfCompiler(project, tmp_path / "out")
+        result = compiler.run()
+    finally:
+        project.chmod(0o755)
+
+    assert result is None
+    assert "No se pudo leer" in compiler.last_error
+
+
+@_UNREADABLE_SKIP
+def test_mexf_compile_project_converts_permission_error(tmp_path):
+    from lib.mexf_compiler import MexfCompileError, compile_mexf_project
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    try:
+        with pytest.raises(MexfCompileError):
+            compile_mexf_project(project, tmp_path / "demo.asksome")
+    finally:
+        project.chmod(0o755)
+
+
+@_UNREADABLE_SKIP
+def test_buildthread_mexf_step_skips_unreadable_dir(tmp_path):
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+    project = _make_mexf_project(tmp_path)
+    project.chmod(0)
+    logs = []
+    fake = type("Fake", (), {})()
+    fake.repo_path = project
+    fake.output_path = tmp_path
+    fake.last_error = ""
+    fake.log = logs.append
+    try:
+        result = FlangCompiler._compile_mexf_if_present(fake)
+    finally:
+        project.chmod(0o755)
+
+    assert result is None
+    assert "No se pudo leer .mexf" in fake.last_error
+
+
+@_UNREADABLE_SKIP
+def test_mexf_compile_without_readable_icon_still_builds(tmp_path):
+    from lib.mexf_compiler import compile_mexf_project
+
+    project = _make_mexf_project(tmp_path)
+    app_dir = project / "app"
+    app_dir.mkdir()
+    app_dir.chmod(0)
+    try:
+        result = compile_mexf_project(project, tmp_path / "demo.asksome")
+    finally:
+        app_dir.chmod(0o755)
+
+    assert result.output.is_file()
+
+
+# --- CLI: creación, reparación y compilación sin permisos ------------------- #
+#
+# ``R-4a7e2c91``: ``create`` terminaba con ``PermissionError`` y traceback cuando
+# la carpeta base no era escribible.
+# ``R-6c9d3f52``: ``moonfix``/``repair`` hacían lo mismo con un proyecto de solo
+# lectura al que le faltaba una subcarpeta.
+# ``R-8e2b7d64``: ``compile``/``--buildthis`` dejaban escapar el ``OSError`` de
+# ``dist/`` (la QThread del build también lo filtraba).
+
+def _make_cli_project(base: Path) -> Path:
+    project = base / "Influent.demo.v1.0.0-26.11-00.00-Danenone"
+    project.mkdir(parents=True)
+    (project / "details.xml").write_text(DETAILS, encoding="utf-8")
+    (project / "demo.py").write_text("print('hi')\n", encoding="utf-8")
+    return project
+
+
+def test_create_project_reports_unwritable_base_dir(tmp_path, capsys):
+    from lib.cliHandler import handle_cli_action
+
+    base = tmp_path / "projects"
+    base.mkdir()
+    denied = PermissionError(13, "denegado", str(base))
+    with patch(
+        "lib.makeselfEngine.template_engine.create_project_from_templates",
+        side_effect=denied,
+    ):
+        with pytest.raises(SystemExit) as excinfo:
+            handle_cli_action(
+                "create_project",
+                {
+                    "path": str(base),
+                    "name": "Demo",
+                    "shortname": "demo",
+                    "publisher": "Influent",
+                    "author": "Tester",
+                },
+                None,
+                headless=True,
+            )
+
+    assert excinfo.value.code == 1
+    captured = capsys.readouterr()
+    assert "[ERROR] No se pudo crear el proyecto" in captured.out
+    assert "Traceback" not in captured.out + captured.err
+
+
+def test_repair_project_reports_unreadable_project(tmp_path, capsys):
+    from lib.cliHandler import handle_cli_action
+
+    project = _make_cli_project(tmp_path / "projects")
+    denied = PermissionError(13, "denegado", str(project / "docs"))
+    with patch(
+        "lib.makeselfEngine.template_engine.repair_project_from_templates",
+        side_effect=denied,
+    ):
+        with pytest.raises(SystemExit) as excinfo:
+            handle_cli_action(
+                "repair_project",
+                {
+                    "path": str(project.parent),
+                    "name": "Demo",
+                    "shortname": "demo",
+                    "publisher": "Influent",
+                },
+                None,
+                headless=True,
+            )
+
+    assert excinfo.value.code == 1
+    captured = capsys.readouterr()
+    assert "[ERROR] No se pudo reparar el proyecto" in captured.out
+    assert "Traceback" not in captured.out + captured.err
+
+
+@pytest.mark.parametrize("action", ["buildthis", "compile_project"])
+def test_compile_reports_filesystem_error_without_traceback(tmp_path, capsys, action):
+    from lib.cliHandler import handle_cli_action
+
+    project = _make_cli_project(tmp_path / "projects")
+    output = tmp_path / "out"
+    denied = PermissionError(13, "denegado", str(project / "dist"))
+    data = {"path": str(project)}
+    if action == "compile_project":
+        data = {
+            "path": str(project.parent),
+            "name": "Demo",
+            "shortname": "demo",
+            "publisher": "Influent",
+        }
+
+    with patch(
+        "lib.blindcubeEngine.BuildThread.FlangCompiler.compile_binaries",
+        side_effect=denied,
+    ), patch(
+        "lib.platform_detect.compile_output_directory",
+        return_value=str(output),
+    ):
+        with pytest.raises(SystemExit) as excinfo:
+            handle_cli_action(
+                action,
+                data,
+                None,
+                headless=True,
+                output=str(output),
+                sandbox=False,
+            )
+
+    assert excinfo.value.code == 1
+    captured = capsys.readouterr()
+    assert "[ERROR] La compilación falló por un problema del sistema de archivos" in captured.out
+    assert "Traceback" not in captured.out + captured.err
+
+
+def test_compile_binary_translates_unwritable_build_dir(tmp_path):
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+    project = _make_cli_project(tmp_path / "projects")
+    compiler = FlangCompiler(
+        project,
+        tmp_path / "out",
+        log_callback=lambda _msg: None,
+        compiler_name="zipapp",
+        sandbox=False,
+    )
+    script = {"path": project / "demo.py", "name": "demo", "icon": None}
+    with patch(
+        "lib.blindcubeEngine.BuildThread.tempfile.mkdtemp",
+        side_effect=PermissionError(13, "denegado"),
+    ):
+        assert compiler._compile_binary(script, windowed=False) is False
+
+    assert "No se pudo preparar el directorio de compilación" in compiler.last_error

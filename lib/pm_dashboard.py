@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Callable
 
+from lib.file_ops import path_exists
+
 try:
     from PyQt6.QtWidgets import (
         QMainWindow,
@@ -241,22 +243,23 @@ class NewProjectWizard(QDialog):
         base_dir = self.input_location.text().strip() or str(
             Path.home() / "Documents" / "Packagemaker Projects"
         )
-        pub_slug = publisher.strip().lower().replace(" ", "-")
         # Nombre canónico completo (con versión y sufijo de plataforma), no
         # ``publisher.app`` a secas: la carpeta debe cumplir la ley de nombres.
         from lib.projectNameFormatter import ProjectNameFormatter
 
         try:
+            # El publisher conserva su capitalización también en la carpeta.
+            publisher = ProjectNameFormatter.normalize_publisher(publisher)
             timestamp = ProjectNameFormatter.get_timestamp()
             folder_name = ProjectNameFormatter.format_project_folder(
-                pub_slug, app_id, version, plat, timestamp
+                publisher, app_id, version, plat, timestamp
             )
         except ValueError as exc:
             self._notify("error", tr("common.error"), str(exc))
             return
         project_path = Path(base_dir) / folder_name
 
-        if project_path.exists():
+        if path_exists(project_path):
             self._notify(
                 "warning",
                 tr("common.warning"),
@@ -420,7 +423,7 @@ class DashboardWindow(QMainWindow):
 
     def open_github_repo(self):
         default = Path.home() / "Documents" / "GitHub"
-        if not default.exists():
+        if not path_exists(default):
             default = Path.home()
         repo_path = QFileDialog.getExistingDirectory(
             self, "Seleccionar repositorio GitHub", str(default)
@@ -430,7 +433,7 @@ class DashboardWindow(QMainWindow):
 
     def open_pm_project(self):
         default = Path.home() / "Documents" / "Packagemaker Projects"
-        if not default.exists():
+        if not path_exists(default):
             default = Path.home()
         project_path = QFileDialog.getExistingDirectory(
             self, "Seleccionar proyecto PackageMaker", str(default)
@@ -468,7 +471,9 @@ class DashboardWindow(QMainWindow):
                         if os.path.isfile(candidate):
                             main_script = candidate
                             break
-            except ET.ParseError:
+            except (ET.ParseError, OSError):
+                # Un details.xml bloqueado (Windows) o sin permiso de lectura no
+                # debe abortar el slot: se cae al escaneo de guiones.
                 pass
 
         if not main_script:
@@ -528,13 +533,13 @@ class DashboardWindow(QMainWindow):
                 self.recent_list.addItem(item)
 
     def load_config(self):
-        if EDITOR_CONFIG_PATH.exists():
-            try:
+        try:
+            if EDITOR_CONFIG_PATH.is_file():
                 with open(EDITOR_CONFIG_PATH, "r", encoding="utf-8") as f:
                     loaded = json.load(f)
                 self.config = loaded if isinstance(loaded, dict) else {}
-            except (json.JSONDecodeError, OSError):
-                self.config = {}
+        except (json.JSONDecodeError, OSError):
+            self.config = {}
         if not self.config:
             self.config = {
                 "recent_projects": [],
@@ -551,9 +556,14 @@ class DashboardWindow(QMainWindow):
 
     def save_config(self):
         self.config["default_interpreter"] = self.python_path
-        EDITOR_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(EDITOR_CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(self.config, f, indent=2)
+        try:
+            EDITOR_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(EDITOR_CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(self.config, f, indent=2)
+        except OSError as error:
+            print(f"[WARN] No se pudo guardar {EDITOR_CONFIG_PATH}: {error}")
+            return False
+        return True
 
     def show_interpreter_config(self):
         from lib.interpreter_config_dialog import InterpreterConfigDialog

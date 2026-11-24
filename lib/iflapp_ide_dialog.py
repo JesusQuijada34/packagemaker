@@ -51,6 +51,7 @@ from lib.iflapp_ide import (
     run_script,
     scan_project,
 )
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
 
 
 class IflappIdePanel(QWidget):
@@ -210,8 +211,13 @@ class IflappIdePanel(QWidget):
         if not name or self.project is None:
             return
         path = self.project.root / name
-        if path.is_file():
-            self.editor.setPlainText(path.read_text(encoding="utf-8-sig"))
+        try:
+            source, _ = read_python_source(path)
+        except (OSError, SourceEncodingError) as exc:
+            self.editor.clear()
+            self.status.setText(tr("iflapp_ide.load_failed").format(error=exc))
+            return
+        self.editor.setPlainText(source)
 
     def current_script(self) -> str | None:
         item = self.tree.currentItem()
@@ -229,11 +235,18 @@ class IflappIdePanel(QWidget):
             self.status.setText(tr("iflapp_ide.no_project"))
             return False
         backend = self.backend_selector.currentText()
-        outcome = compile_project(
-            self.project.root,
-            backend=None if backend == "auto" else backend,
-            log=self._log,
-        )
+        try:
+            outcome = compile_project(
+                self.project.root,
+                backend=None if backend == "auto" else backend,
+                log=self._log,
+            )
+        except OSError as exc:
+            # El proyecto pudo quedar ilegible o sin permiso de escritura entre
+            # la carga y la compilación: el slot no puede dejar escapar OSError.
+            self.console.addItem(f"[ERROR] {exc}")
+            self.status.setText(tr("iflapp_ide.compile_failed").format(error=exc))
+            return False
         for line in outcome.log:
             self.console.addItem(line)
         if outcome.ok:

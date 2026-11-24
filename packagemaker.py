@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 import json
 import tempfile
 from pathlib import Path
+from typing import Optional
 import importlib
 
 
@@ -231,15 +232,74 @@ def get_accent_color():
 
         value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
         if value:
-            return value
+            return normalize_accent(value)
     except Exception:
         pass
     if _leviathan_accent is not None:
         try:
-            return str(_leviathan_accent())
+            return normalize_accent(_leviathan_accent())
         except Exception:
             pass
     return ACCENT
+
+
+def settings_appearance_state(store) -> dict:
+    """Valores de apariencia que obligan a repintar la ventana completa.
+
+    Guardar una ruta o un aviso no cambia el tema. Comparar este estado antes y
+    después de guardar evita reaplicar la hoja de estilos global en cada
+    pulsación del panel: cada reaplicación re-polish todos los widgets y la
+    interfaz se quedaba congelada un instante perceptible.
+    """
+    return {
+        "accent": str(get_accent_color()),
+        "accent_width": store.get_user_int("sidebar_accent_width", 3) or 3,
+        "density": str(store.get_user("ui_density", "normal")),
+        "display_mode": str(
+            store.get_user("display_mode") or APP_CONFIG.get("DISPLAY_MODE", "")
+        ),
+        "font_family": str(store.get_user("ui_font_family") or ""),
+    }
+
+
+def settings_reapply_plan(before: dict, after: dict, *, language_changed: bool) -> dict:
+    """Qué hay que reaplicar tras guardar ajustes.
+
+    ``_apply_leviathan_and_personalization`` ya repinta el tema, así que pedir
+    además ``theme`` duplicaba el trabajo. Sólo se retraducen los textos cuando
+    cambió el idioma: ``apply_ui_language`` vuelve a poblar el selector de
+    motores y perdía la elección del usuario.
+    """
+    plan = {
+        "language": bool(language_changed),
+        "theme": False,
+        "personalization": False,
+    }
+    if before != after:
+        if before.get("display_mode") != after.get("display_mode"):
+            plan["personalization"] = True
+        else:
+            plan["theme"] = True
+    return plan
+
+
+def ensure_config_directories(*paths) -> Optional[str]:
+    """Crea las carpetas de configuración; devuelve el error o ``None``.
+
+    Una ruta que no se puede crear (unidad inexistente, carpeta de sólo
+    lectura, un archivo con ese nombre) escapaba como ``OSError`` desde el
+    guardado automático, que corre dentro de un slot de PyQt6: la excepción no
+    controlada abortaba la aplicación mientras el usuario escribía la ruta.
+    """
+    for path in paths:
+        text = str(path or "").strip()
+        if not text:
+            continue
+        try:
+            os.makedirs(text, exist_ok=True)
+        except OSError as exc:
+            return f"{text}: {exc}"
+    return None
 
 
 from lib.blindcubeEngine.BuildThread import BuildThread
@@ -259,11 +319,13 @@ from lib.design_tokens import (
     CONTENT_PADDING,
     INPUT_HEIGHT,
     SIDEBAR_ITEM_HEIGHT,
+    SIDEBAR_MAX_WIDTH,
     SIDEBAR_PADDING,
     SIDEBAR_TOP_MARGIN,
     TEXT,
     WINDOW_BG,
     WINDOW_RADIUS,
+    normalize_accent,
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
@@ -478,7 +540,7 @@ try:
     print(f"[PackageMaker] Platform detected: {linkedsys}", file=sys.stderr)
     print(f"[PackageMaker] BASE_DIR: {BASE_DIR}", file=sys.stderr)
     print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}", file=sys.stderr)
-except OSError as e:
+except (OSError, TypeError, ValueError) as e:
     print(f"[PackageMaker] WARNING: could not create directory {BASE_DIR}: {e}", file=sys.stderr)
     # Intentar con directorio alternativo
     alt_dir = os.path.expanduser("~")
@@ -507,6 +569,26 @@ def save_app_config(config):
         if key in config:
             store.set_user(key, config[key])
     return store.save()
+
+
+def _mexf_preview_metadata(file_path):
+    """Metadatos legibles de un ``.mexf`` para la vista previa del instalador.
+
+    Devuelve ``None`` si el archivo no se puede leer o no es un objeto JSON;
+    un ``.mexf`` mal formado no debe impedir abrir el diálogo de instalación.
+    """
+    try:
+        with open(file_path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    return {
+        "name": data.get("name", "N/A"),
+        "version": data.get("version", "N/A"),
+        "description": data.get("description", "N/A"),
+    }
 
 
 AGE_RATINGS = {
@@ -718,7 +800,7 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_animation = None
         self._page_fade = None
         self._page_fade_widget = None
-        self.sidebar_target_width = 260
+        self.sidebar_target_width = SIDEBAR_MAX_WIDTH
 
         # Layout principal vertical (TitleBar + ContentArea)
         self.v_layout = QVBoxLayout(self.central)
@@ -757,8 +839,8 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar = QWidget()
         self.sidebar.setObjectName("NavigationSidebar")
         self.sidebar.setMinimumWidth(60)
-        self.sidebar.setMaximumWidth(260)
-        self.sidebar.resize(260, 480)
+        self.sidebar.setMaximumWidth(SIDEBAR_MAX_WIDTH)
+        self.sidebar.resize(SIDEBAR_MAX_WIDTH, 480)
         self.sidebar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.sidebar.setMouseTracking(True)
         set_qss(self.sidebar, 'packagemaker_003', append=False)
@@ -774,8 +856,18 @@ class PackageTodoGUI(QMainWindow):
         # Ancho manual (estilo VS Code): se ajusta arrastrando el borde y se
         # recuerda entre sesiones en data/pm.data.
         self.sidebar_target_width = (
-            get_pm_data().get_user_int("sidebar_width", 260) or 260
+            get_pm_data().get_user_int("sidebar_width", SIDEBAR_MAX_WIDTH)
+            or SIDEBAR_MAX_WIDTH
         )
+        # Migración: el ancho por defecto anterior (260) dejaba los iconos
+        # apretados. Sólo se ensancha ese valor heredado, no una elección del
+        # usuario, y se marca para no repetir la migración.
+        if self.sidebar_target_width == 260 and not get_pm_data().get_user(
+            "sidebar_width_migrated"
+        ):
+            self.sidebar_target_width = SIDEBAR_MAX_WIDTH
+            get_pm_data().set_user("sidebar_width", SIDEBAR_MAX_WIDTH)
+            get_pm_data().set_user("sidebar_width_migrated", True)
         self.sidebar_target_width = max(180, min(480, self.sidebar_target_width))
         self.sidebar.setMinimumWidth(self.sidebar_target_width)
         self.sidebar.setMaximumWidth(self.sidebar_target_width)
@@ -2650,9 +2742,17 @@ class PackageTodoGUI(QMainWindow):
 
         self.conf_fonts_status.setText(tr("config.fonts_downloading"))
         QApplication.processEvents()
-        results = ensure_fonts(list(FONT_REGISTRY), download=True, log_callback=print)
-        load_cached_fonts()
-        write_license_notice()
+        try:
+            results = ensure_fonts(list(FONT_REGISTRY), download=True, log_callback=print)
+            load_cached_fonts()
+            notice = write_license_notice()
+        except OSError as exc:
+            # La caché puede ser de solo lectura (instalación en Program Files).
+            # Un fallo aquí no debe abortar la interfaz desde un slot de Qt.
+            self.conf_fonts_status.setText(f"[FONT] Caché no disponible: {exc}")
+            return
+        if notice is None:
+            print("[FONT] Aviso de licencias no escrito (caché de solo lectura)", file=sys.stderr)
 
         for key, label in getattr(self, "conf_fonts_labels", {}).items():
             label.setText(
@@ -2819,21 +2919,35 @@ class PackageTodoGUI(QMainWindow):
 
         El guardado es automático (bugs.txt Fase 3.2): un modal por cada
         cambio de ajuste sería inaceptable, así que el aviso sólo aparece
-        cuando la acción viene de un botón explícito.
+        cuando la acción viene de un botón explícito. Sólo se repinta lo que
+        cambió de verdad: reaplicar el tema y retraducir la interfaz en cada
+        pulsación congelaba la ventana un instante perceptible.
         """
         global APP_CONFIG, BASE_DIR, Fluthin_APPS
         new_config = self._collect_config_from_form()
         lang = new_config["LANGUAGE"]
 
+        dirs_error = ensure_config_directories(
+            new_config["BASE_DIR"], new_config["Fluthin_APPS"]
+        )
+        if dirs_error:
+            # Este slot corre dentro de Qt: un OSError sin capturar abortaba la
+            # aplicación mientras el usuario escribía una ruta.
+            self.reporter.warning(
+                tr("config.title"),
+                f"{tr('config.saved_error')} {dirs_error}",
+                dialog=not quiet,
+            )
+            return
+
+        store = get_pm_data()
+        before = settings_appearance_state(store)
         if save_app_config(new_config):
             APP_CONFIG = load_app_config()
             BASE_DIR = APP_CONFIG["BASE_DIR"]
             Fluthin_APPS = APP_CONFIG["Fluthin_APPS"]
-            os.makedirs(BASE_DIR, exist_ok=True)
-            os.makedirs(Fluthin_APPS, exist_ok=True)
 
             # Ajustes de usuario (apariencia, editor, notificaciones).
-            store = get_pm_data()
             for key, value in self._collect_user_settings_from_form().items():
                 store.set_user(key, value)
             store.set_user("notifications_enabled", new_config["notifications_enabled"])
@@ -2841,11 +2955,21 @@ class PackageTodoGUI(QMainWindow):
 
             prev_lang = i18n.get_current_lang()
             i18n.set_auto_translate(self.conf_auto_translate.isChecked())
-            if lang != prev_lang:
+            language_changed = lang != prev_lang
+            if language_changed:
                 i18n.load_translation(lang)
-            self.apply_ui_language()
-            self._apply_leviathan_and_personalization()
-            self.apply_theme()
+
+            plan = settings_reapply_plan(
+                before,
+                settings_appearance_state(store),
+                language_changed=language_changed,
+            )
+            if plan["language"]:
+                self.apply_ui_language()
+            if plan["personalization"]:
+                self._apply_leviathan_and_personalization()
+            elif plan["theme"]:
+                self.apply_theme()
 
             # Si hay ajustes que solo se aplican al reiniciar, mostrar el aviso.
             self._update_restart_banner()
@@ -3286,7 +3410,6 @@ class PackageTodoGUI(QMainWindow):
             from lib.makeselfEngine.template_engine import create_project_from_templates
 
             app_id = nombreProyecto.strip().lower().replace(" ", "-")
-            pub = (publisher or autor or "influent").strip().lower().replace(" ", "-")
 
             # El nombre de la carpeta debe ser el canónico (con versión y
             # plataforma), no ``publisher.app`` a secas.
@@ -3297,6 +3420,12 @@ class PackageTodoGUI(QMainWindow):
             )
 
             try:
+                # El publisher conserva su capitalización (``Influent``, no
+                # ``influent``) y los acentos se transliteran al nombre canónico.
+                pub = ProjectNameFormatter.normalize_publisher(
+                    publisher or autor or "influent"
+                )
+                app_id = ProjectNameFormatter.normalize_app_id(app_id)
                 timestamp = ProjectNameFormatter.get_timestamp()
                 folder_name = ProjectNameFormatter.format_project_folder(
                     pub, app_id, version_base, "Knosthalij", timestamp
@@ -4056,22 +4185,14 @@ class PackageTodoGUI(QMainWindow):
             contentLayout.addWidget(lblInfo)
 
             # Información del archivo MEXF
-            try:
-                with open(filePath, 'r', encoding='utf-8') as f:
-                    mexfData = json.load(f)
-
-                infoText = tr("dialog.mexf_details").format(
-                    name=mexfData.get("name", "N/A"),
-                    version=mexfData.get("version", "N/A"),
-                    description=mexfData.get("description", "N/A"),
-                )
+            info = _mexf_preview_metadata(filePath)
+            if info is not None:
+                infoText = tr("dialog.mexf_details").format(**info)
 
                 lblDetalles = QLabel(infoText)
                 set_qss(lblDetalles, 'packagemaker_157', append=False)
                 lblDetalles.setWordWrap(True)
                 contentLayout.addWidget(lblDetalles)
-            except (OSError, KeyError, ET.ParseError):
-                pass
 
             # Barra de progreso
             progressBar = LeviathanProgressBar(self)
@@ -4381,6 +4502,15 @@ main_window = None
 
 def main():
     global main_window
+
+    # Reporte de errores opcional (Q-001). Con la telemetría apagada —el valor
+    # por defecto— sólo se encadena el hook y no se envía nada.
+    try:
+        from lib.errorReporter import install_excepthook
+
+        install_excepthook()
+    except Exception:
+        pass
 
     from lib.cliHandler import CLIHandler, handle_cli_action
 

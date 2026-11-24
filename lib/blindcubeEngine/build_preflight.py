@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
 from lib.i18n import tr
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
 
 # Los guiones del proyecto viven en la raíz y en ``source/``; se ignoran los
 # entornos virtuales y los artefactos de compilación.
@@ -78,10 +79,11 @@ def check_syntax(scripts: Sequence[Path]) -> CheckResult:
     broken: List[str] = []
     for script in scripts:
         try:
-            compile(script.read_text(encoding="utf-8"), str(script), "exec")
+            source, _ = read_python_source(script)
+            compile(source, str(script), "exec")
         except SyntaxError as exc:
             broken.append(f"{script.name}:{exc.lineno}: {exc.msg}")
-        except (OSError, UnicodeDecodeError) as exc:
+        except (OSError, SourceEncodingError) as exc:
             broken.append(f"{script.name}: {exc}")
     if broken:
         return CheckResult(
@@ -152,8 +154,12 @@ def find_env_file(project_path: Path) -> Optional[Path]:
     """``.env`` del proyecto (raíz o ``config/``), si existe."""
     root = Path(project_path)
     for candidate in (root / ENV_FILENAME, root / "config" / ENV_FILENAME):
-        if candidate.is_file():
-            return candidate
+        try:
+            if candidate.is_file():
+                return candidate
+        except OSError:
+            # Proyecto sin permisos: no hay ``.env`` que ofrecer.
+            return None
     return None
 
 

@@ -74,7 +74,11 @@ def read_project_details(project_root: Path | str) -> Dict[str, Any]:
     """Extrae los metadatos de ``details.xml`` con los mismos alias que el build."""
     root = Path(project_root)
     details = root / "details.xml"
-    if not details.is_file():
+    try:
+        present = details.is_file()
+    except OSError as exc:
+        raise MexfCompileError(f"No se pudo leer details.xml en {root}: {exc}") from exc
+    if not present:
         raise MexfCompileError(f"No se encontró details.xml en {root}")
     try:
         node = ET.parse(details).getroot()
@@ -242,12 +246,17 @@ def _find_project_icon(project_root: Path, app: str) -> Optional[bytes]:
     ``.png``, igual que hace el resto del build.
     """
     stems = [f"{app}-icon", "app-icon", "icon"]
-    for directory in (project_root / "app", project_root):
-        for stem in stems:
-            for ext in (".ico", ".png"):
-                candidate = directory / f"{stem}{ext}"
-                if candidate.is_file():
-                    return candidate.read_bytes()
+    try:
+        for directory in (project_root / "app", project_root):
+            for stem in stems:
+                for ext in (".ico", ".png"):
+                    candidate = directory / f"{stem}{ext}"
+                    if candidate.is_file():
+                        return candidate.read_bytes()
+    except OSError:
+        # El icono es opcional: una carpeta ``app/`` ilegible no debe abortar
+        # el empaquetado, que puede continuar sin icono incrustado.
+        return None
     return None
 
 
@@ -374,7 +383,14 @@ class MexfCompiler:
         self.procedure.append(step)
 
     def run(self) -> Optional[Path]:
-        if not (self.project_root / MEXF_DIRNAME).is_dir():
+        try:
+            if not (self.project_root / MEXF_DIRNAME).is_dir():
+                return None
+        except OSError as error:
+            # Raíz ilegible: el paso ``.mexf`` es opcional, así que se informa y
+            # se omite en lugar de dejar escapar ``PermissionError``.
+            self.last_error = f"No se pudo leer {MEXF_DIRNAME}/ en {self.project_root}: {error}"
+            self.log(f"[ERROR] {self.last_error}")
             return None
         try:
             details = read_project_details(self.project_root)
@@ -392,7 +408,7 @@ class MexfCompiler:
                 password=self.password,
                 wrappers=self.wrappers,
             )
-        except MexfCompileError as exc:
+        except (MexfCompileError, OSError) as exc:
             self.last_error = str(exc)
             self.log(f"[ERROR] Compilación .mexf fallida: {exc}")
             return None

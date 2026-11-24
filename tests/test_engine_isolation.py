@@ -2,6 +2,7 @@
 """Regresiones del aislamiento de motores y del manejo de bloqueos (Fase 1.2)."""
 
 import errno
+import os
 import sys
 from pathlib import Path
 
@@ -9,6 +10,11 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+
+_POSIX_PERMISSIONS = pytest.mark.skipif(
+    os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+    reason="los permisos POSIX no bloquean el borrado en Windows ni como root",
+)
 
 
 def test_busy_errnos_are_detected_as_locks():
@@ -96,6 +102,22 @@ def test_remove_tree_gives_up_without_raising(tmp_path, monkeypatch):
     monkeypatch.setattr(file_ops.time, "sleep", lambda _s: None)
 
     assert file_ops.remove_tree(target, attempts=3) is False
+
+
+@_POSIX_PERMISSIONS
+def test_remove_tree_reports_a_tree_that_survived(tmp_path):
+    """``rmtree`` con ``onexc`` no lanza: el resultado no puede darse por bueno."""
+    from lib.file_ops import remove_tree
+
+    target = tmp_path / "solo_lectura"
+    target.mkdir()
+    (target / "f.txt").write_text("x", encoding="utf-8")
+    target.chmod(0o555)
+    try:
+        assert remove_tree(target, attempts=1) is False
+        assert target.is_dir()
+    finally:
+        target.chmod(0o755)
 
 
 def test_copy_file_creates_parent_and_preserves_content(tmp_path):
