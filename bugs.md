@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (trigésimo quinto ciclo)
+Última actualización: 2026-11-24 (trigésimo sexto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -120,6 +120,9 @@ de auditoría.
 | R-3f7c1a94 | Bug — carpeta de accesos directos no escribible aborta `--install-asksome` | Media | Resuelto |
 | R-6b2e9d47 | Bug — `uninstall_asksome` filtra `PermissionError`/`OSError` crudos | Media | Resuelto |
 | R-8c4a1f62 | Bug — `remove_tree` informa de un borrado que no ocurrió | Alta | Resuelto |
+| R-4a7e2c91 | Bug — `create` lanza traceback con una carpeta base sin permisos | Media | Resuelto |
+| R-6c9d3f52 | Bug — `moonfix`/`repair` lanzan traceback con un proyecto de solo lectura | Media | Resuelto |
+| R-8e2b7d64 | Bug — `compile`/`--buildthis` lanzan traceback con `dist/` bloqueado | Alta | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -3076,6 +3079,84 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del trigésimo quinto ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-4a7e2c91 — `create` lanza traceback con una carpeta base sin permisos
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el subcomando headless `create` llamaba a
+  `create_project_from_templates()` sin proteger el sistema de archivos. Con
+  `BASE_DIR` en una carpeta sin permiso de escritura (HOME inmutable,
+  almacenamiento desmontado, ruta bajo un archivo), `project_path.mkdir()`
+  lanzaba `PermissionError` y el CLI terminaba con traceback en vez de un
+  mensaje. La GUI ya lo trataba, pero el CLI quedaba fuera.
+- **Pasos para reproducir:** fijar `base_dir` en `data/pm.data` a una carpeta
+  `chmod 555` y ejecutar
+  `python packagemaker.py create --name Demo --shortname demo --publisher Influent --headless`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (robustez del CLI; no había pérdida de datos).
+- **Solución aplicada:** la creación y la copia del icono por defecto van dentro
+  de un `try/except OSError` que imprime
+  `[ERROR] No se pudo crear el proyecto en …` y sale con código 1.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_create_project_reports_unwritable_base_dir` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-6c9d3f52 — `moonfix`/`repair` lanzan traceback con un proyecto de solo lectura
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el manejador headless de `repair_project` sólo traducía
+  `ValueError`. `repair_project_from_templates()` crea las subcarpetas del
+  contrato (`docs/`, marcadores `.container`, etc.); si al proyecto le faltaba
+  una carpeta y la raíz era de solo lectura, `folder_path.mkdir()` lanzaba
+  `PermissionError` y `moonfix` moría con traceback. El asistente MoonFix de la
+  GUI ya se había corregido (R-7d2f8b14); el CLI no.
+- **Pasos para reproducir:** crear un proyecto canónico, borrar `docs/`, poner la
+  carpeta del proyecto en `chmod 555` y ejecutar
+  `python packagemaker.py moonfix --name Demo --shortname demo --publisher Influent`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (robustez del CLI; la GUI ya estaba protegida).
+- **Solución aplicada:** se añade `except OSError` junto al de `ValueError`, con
+  el mensaje `[ERROR] No se pudo reparar el proyecto …` y salida 1.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_repair_project_reports_unreadable_project` (falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del trigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8e2b7d64 — `compile`/`--buildthis` lanzan traceback con `dist/` bloqueado
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** los bloques headless de `compile_project` y `buildthis` sólo
+  tenían `try/finally`, sin `except`. Un proyecto de solo lectura hacía que
+  `FlangCompiler._compile_binary()` fallara en `dist_dir.mkdir()` con
+  `PermissionError`, que escapaba del CLI como traceback. En la GUI la QThread
+  lo capturaba con un mensaje genérico («Error inesperado»), sin indicar el
+  directorio ni la causa.
+- **Pasos para reproducir:** poner el proyecto en `chmod -R a-w` y ejecutar
+  `python packagemaker.py --buildthis <proyecto> --compiler zipapp --no-sandbox`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (la compilación es la acción principal; el fallo llegaba
+  sin mensaje útil).
+- **Solución aplicada:** `_compile_binary()` protege la preparación del árbol
+  (`_prepare_pyinstaller_data_dirs()`), la lectura de `details.xml`, `lib/` y la
+  creación de `dist/`/temporales; devuelve `False` con `last_error` legible. Los
+  dos bloques del CLI añaden `except OSError` que imprime
+  `[ERROR] La compilación falló por un problema del sistema de archivos: …` y
+  sale con código 1. El camino feliz no cambia.
+- **Pruebas:** `tests/test_unreadable_paths.py` —
+  `test_compile_reports_filesystem_error_without_traceback[buildthis]`,
+  `[compile_project]` y `test_compile_binary_translates_unwritable_build_dir`
+  (las tres fallan con el código anterior).
+- **Commit:** se registra en el cierre del trigésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3107,6 +3188,23 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   corregidos y probados (instalación y desinstalación `.asksome` con carpetas
   sin permisos, y `remove_tree` que ya no informa de un borrado inexistente); no
   se prepara release.
+- Trigésimo sexto ciclo (2026-11-24): R-4a7e2c91, R-6c9d3f52 y R-8e2b7d64
+  corregidos y probados (el CLI `create`, `moonfix`/`repair` y
+  `compile`/`--buildthis` ya no muestran tracebacks ante carpetas sin permisos;
+  la QThread del build traduce el `OSError` de `dist/` a un fallo con mensaje);
+  no se prepara release.
+- Verificación del ciclo de R-4a7e2c91…R-8e2b7d64 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 986 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 5 pruebas nuevas
+  de `tests/test_unreadable_paths.py` fallan con el código anterior (comprobado
+  con `git stash` de `lib/cliHandler.py` y
+  `lib/blindcubeEngine/BuildThread.py`). Reproducción real por CLI: `create` con
+  `BASE_DIR` en `chmod 555`, `moonfix` sobre un proyecto `chmod 555` al que le
+  falta `docs/` y `--buildthis` sobre un proyecto `chmod -R a-w` terminaban en
+  `PermissionError` con traceback; ahora salen con `[ERROR]` y código 1. Build
+  real `create` + `--buildthis --compiler zipapp --no-sandbox`: `.iflapp` de 20
+  archivos, `verify_iflapp() → valid: True` y `--inspect` coincide con el
+  `details.xml` interno.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario

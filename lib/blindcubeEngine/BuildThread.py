@@ -445,12 +445,20 @@ class FlangCompiler:
     def _compile_binary(self, script: Dict, windowed: bool) -> bool:
         script_path = script["path"]
         script_name = script["name"]
-        assets_dir, app_dir = self._prepare_pyinstaller_data_dirs()
+        try:
+            assets_dir, app_dir = self._prepare_pyinstaller_data_dirs()
+        except OSError as exc:
+            self.last_error = f"No se pudo preparar el árbol del proyecto: {exc}"
+            self.log(f"[ERROR] {self.last_error}")
+            return False
         add_data = [(str(assets_dir), "assets"), (str(app_dir), "app")]
         # cliHandler y otros módulos cargan details.xml relativo a la raíz del bundle.
         # Incluirlo explícitamente es necesario para ejecutables onefile/frozen.
-        if self.details_xml_path.is_file():
-            add_data.append((str(self.details_xml_path), "."))
+        try:
+            if self.details_xml_path.is_file():
+                add_data.append((str(self.details_xml_path), "."))
+        except OSError:
+            pass
         hidden_imports = self._detect_hidden_imports(script_path)
 
         # Fase 3: bootloader de splash. Se compila una copia inyectada del guion
@@ -464,8 +472,11 @@ class FlangCompiler:
             compile_path = injected
             hidden_imports = sorted(set(hidden_imports) | {"lib.splash_bootloader"})
             lib_dir = self.repo_path / "lib"
-            if lib_dir.is_dir():
-                add_data.append((str(lib_dir), "lib"))
+            try:
+                if lib_dir.is_dir():
+                    add_data.append((str(lib_dir), "lib"))
+            except OSError:
+                pass
             self.log("[INFO] " + tr("build_log.splash_injected").format(name=injected.name))
 
         backend = self._ensure_compiler()
@@ -474,13 +485,24 @@ class FlangCompiler:
             return False
 
         dist_dir = self.repo_path / "dist"
-        dist_dir.mkdir(exist_ok=True)
-        build_dir = tempfile.mkdtemp(prefix=f"{backend.name}_build_")
-        # Cada compilador puede limpiar su salida entre ejecuciones; compilar en
-        # un directorio aislado y acumular el binario en `dist` que consume
-        # create_package().
-        script_dist_dir = Path(build_dir) / "dist"
-        script_dist_dir.mkdir(parents=True, exist_ok=True)
+        build_dir = None
+        try:
+            dist_dir.mkdir(exist_ok=True)
+            build_dir = tempfile.mkdtemp(prefix=f"{backend.name}_build_")
+            # Cada compilador puede limpiar su salida entre ejecuciones; compilar en
+            # un directorio aislado y acumular el binario en `dist` que consume
+            # create_package().
+            script_dist_dir = Path(build_dir) / "dist"
+            script_dist_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            # Proyecto de solo lectura o ruta bloqueada: la GUI debe recibir un
+            # mensaje y el CLI un fallo limpio, no un traceback de la QThread.
+            self.last_error = f"No se pudo preparar el directorio de compilación: {exc}"
+            self.log(f"[ERROR] {self.last_error}")
+            if build_dir:
+                remove_tree(build_dir)
+            bootloader_injection.cleanup_injected_copy(script_path)
+            return False
 
         try:
             self.log(f"[DEBUG] Compilando {script_name} con {backend.display_name}...")

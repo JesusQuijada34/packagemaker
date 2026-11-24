@@ -1507,29 +1507,35 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
         project_path = base_path / folder_name
         
         print(f"[INFO] Creando proyecto en: {project_path}")
-        create_project_from_templates(
-            project_path,
-            publisher,
-            app_id,
-            app_id,
-            author_val,
-            platform_value,
-            version_base=version_base,
-            description=description,
-            timestamp=timestamp,
-        )
+        try:
+            create_project_from_templates(
+                project_path,
+                publisher,
+                app_id,
+                app_id,
+                author_val,
+                platform_value,
+                version_base=version_base,
+                description=description,
+                timestamp=timestamp,
+            )
         
-        # Copiar icono por defecto. La ruta se resuelve contra la raíz del
-        # repositorio y el ejecutable: `create` debe funcionar desde cualquier
-        # directorio de trabajo, no solo desde la raíz del proyecto.
-        icon_dest = project_path / "app" / "app-icon.ico"
-        icon_source = _bundled_app_icon()
-        if icon_source is not None:
-            import shutil
-            shutil.copy(str(icon_source), str(icon_dest))
-            print(f"[OK] Icono copiado a: {icon_dest}")
-        else:
-            print("[WARN] No se encontró app/app-icon.ico; el proyecto queda sin icono.")
+            # Copiar icono por defecto. La ruta se resuelve contra la raíz del
+            # repositorio y el ejecutable: `create` debe funcionar desde cualquier
+            # directorio de trabajo, no solo desde la raíz del proyecto.
+            icon_dest = project_path / "app" / "app-icon.ico"
+            icon_source = _bundled_app_icon()
+            if icon_source is not None:
+                import shutil
+                shutil.copy(str(icon_source), str(icon_dest))
+                print(f"[OK] Icono copiado a: {icon_dest}")
+            else:
+                print("[WARN] No se encontró app/app-icon.ico; el proyecto queda sin icono.")
+        except OSError as exc:
+            # Carpeta base sin permisos, ruta bajo un archivo o unidad ausente:
+            # sin este límite el CLI moría con traceback tras crear a medias.
+            print(f"[ERROR] No se pudo crear el proyecto en {project_path}: {exc}")
+            sys.exit(1)
         
         _safe_print(f"\n  ✔ Proyecto creado en: {project_path}\n")
         return None
@@ -1632,6 +1638,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             # El artefacto ya existe; limpiar paquete temporal y proyecto fuente.
             compiler._cleanup_package_folder(package_path, iflapp_file)
             compiler.cleanup_processed_project(iflapp_file)
+        except OSError as exc:
+            # Proyecto de solo lectura, `dist/` bloqueado o ruta bajo un archivo:
+            # el CLI informa y sale con código 1 en lugar de mostrar un traceback.
+            print(f"[ERROR] La compilación falló por un problema del sistema de archivos: {exc}")
+            sys.exit(1)
         finally:
             if hasattr(compiler, '_cleanup_build_artifacts'):
                 compiler._cleanup_build_artifacts()
@@ -1737,6 +1748,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             # El artefacto ya existe; limpiar paquete temporal y proyecto fuente.
             compiler._cleanup_package_folder(package_path, iflapp_file)
             compiler.cleanup_processed_project(iflapp_file)
+        except OSError as exc:
+            # Proyecto de solo lectura, `dist/` bloqueado o ruta bajo un archivo:
+            # el CLI informa y sale con código 1 en lugar de mostrar un traceback.
+            print(f"[ERROR] La compilación falló por un problema del sistema de archivos: {exc}")
+            sys.exit(1)
         finally:
             if hasattr(compiler, '_cleanup_build_artifacts'):
                 compiler._cleanup_build_artifacts()
@@ -1845,6 +1861,11 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             )
         except ValueError as exc:
             print(f"[ERROR] Metadatos de proyecto no válidos: {exc}")
+            sys.exit(1)
+        except OSError as exc:
+            # Proyecto de solo lectura, carpeta borrada a mitad o ruta bajo un
+            # archivo: el CLI no debe terminar con traceback.
+            print(f"[ERROR] No se pudo reparar el proyecto {project_path}: {exc}")
             sys.exit(1)
         repaired_files = result.get('files', [])
         print(f"[OK] MoonFix completado. Archivos reparados/restaurados: {len(repaired_files)}")

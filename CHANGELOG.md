@@ -1,5 +1,58 @@
 # Changelog
 
+## 2026-11-24 — trigésimo sexto ciclo
+
+### Corregido — el CLI ya no muestra tracebacks ante carpetas sin permisos
+
+Sin reportes externos nuevos. Tres hallazgos de auditoría interna sobre las
+acciones headless de creación, reparación y compilación. Ningún cambio de
+comportamiento del engine: el camino feliz produce el mismo artefacto.
+
+- **R-4a7e2c91 — `create` lanzaba traceback con una carpeta base sin permisos:**
+  el subcomando headless llamaba a `create_project_from_templates()` sin
+  proteger el sistema de archivos. Con `BASE_DIR` en una carpeta sin permiso de
+  escritura, `project_path.mkdir()` propagaba `PermissionError` y el CLI moría
+  con traceback. Ahora la creación y la copia del icono por defecto van dentro
+  de un `try/except OSError` que imprime
+  `[ERROR] No se pudo crear el proyecto en …` y sale con código 1.
+- **R-6c9d3f52 — `moonfix`/`repair` lanzaban traceback con un proyecto de solo
+  lectura:** el manejador sólo traducía `ValueError`. Si al proyecto le faltaba
+  una subcarpeta del contrato (`docs/`, marcadores `.container`) y la raíz era
+  de solo lectura, `folder_path.mkdir()` lanzaba `PermissionError` sin
+  traducción. El asistente MoonFix de la GUI ya estaba protegido (R-7d2f8b14);
+  el CLI no. Se añade `except OSError` con
+  `[ERROR] No se pudo reparar el proyecto …` y salida 1.
+- **R-8e2b7d64 — `compile`/`--buildthis` lanzaban traceback con `dist/`
+  bloqueado:** los dos bloques headless sólo tenían `try/finally`, sin
+  `except`. Un proyecto de solo lectura hacía fallar `dist_dir.mkdir()` dentro
+  de `FlangCompiler._compile_binary()` y el `PermissionError` escapaba como
+  traceback; en la GUI la QThread lo reducía a un «Error inesperado» sin
+  indicar el directorio. `_compile_binary()` protege ahora la preparación del
+  árbol, la lectura de `details.xml`/`lib/` y la creación de `dist/` y
+  temporales, devolviendo `False` con `last_error` legible. Los dos bloques del
+  CLI añaden `except OSError` con
+  `[ERROR] La compilación falló por un problema del sistema de archivos: …` y
+  código 1.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Q-004,
+  Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 986 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 5 en `tests/test_unreadable_paths.py`; las 5 fallan con el
+  código anterior (comprobado con `git stash`).
+- Build real `create` + `--buildthis --compiler zipapp --no-sandbox`: `.iflapp`
+  de 20 archivos, `verify_iflapp() → valid: True`.
+
 ## 2026-11-24 — trigésimo quinto ciclo
 
 ### Corregido — instalación/desinstalación `.asksome` con carpetas sin permisos
