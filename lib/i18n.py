@@ -148,7 +148,9 @@ class I18nManager:
     def load_translation(self, lang: str) -> bool:
         if not self._app:
             return False
-        lang = (lang or "es").lower()[:2]
+        lang = str(lang or "es").strip().lower()[:2] or "es"
+        if lang not in SUPPORTED_LANGUAGES:
+            lang = "es"
         if self._translator:
             self._app.removeTranslator(self._translator)
             self._translator = None

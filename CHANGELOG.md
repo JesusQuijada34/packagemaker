@@ -22,6 +22,46 @@ llegan a una salida JSON. Ningún cambio de comportamiento del engine: un
   `environments`; el parseo del JSON legacy aplica la misma normalización que
   el YAML. Reportado por JesusQuijada34 (auditoría interna).
 
+### Corregido — una ruta no textual en `pm.data` tumbaba el arranque
+
+Otro hallazgo de la auditoría interna, en la misma familia que R-1f4a7c92 y
+R-9c1e5b74: valores de `data/pm.data` con el tipo equivocado que llegaban a una
+API del sistema antes de pintar la ventana. Sin cambios de comportamiento del
+engine: una configuración válida se lee exactamente igual.
+
+- **R-4a7f2c93 — `base_dir`/`fluthin_apps` como objeto, lista o número:** el
+  `os.makedirs()` que `packagemaker.py` ejecuta al importarse recibía el valor
+  tal cual y moría con `TypeError: expected str, bytes or os.PathLike object`.
+  Una cadena con byte NUL lanzaba `ValueError: embedded null byte`, que el
+  `except OSError` tampoco capturaba. Afectaba a la GUI y a cualquier acción del
+  CLI. Ahora `pm_data.coerce_text()` filtra los valores no textuales,
+  `load_merged_app_config()` repara las rutas corruptas con el valor por defecto
+  y la migración desde `config/settings.json` ignora rutas no textuales; el
+  `makedirs` de arranque captura también `TypeError`/`ValueError` como red
+  final. Reportado por JesusQuijada34 (auditoría interna).
+
+### Corregido — un `language` no textual abortaba el arranque
+
+- **R-8d3e6b15 — `AttributeError: 'dict' object has no attribute 'lower'`:**
+  el arranque pasaba `config["LANGUAGE"]` a `i18n.initialize()`, que hacía
+  `lang.lower()`. Un idioma guardado como objeto, lista o número cerraba la
+  aplicación antes de mostrar la ventana. `to_legacy_app_config()` devuelve
+  ahora `"es"` para valores no textuales y `I18nManager.load_translation()`
+  normaliza con `str()` y cae a `"es"` si el código no está en
+  `SUPPORTED_LANGUAGES`. Reportado por JesusQuijada34 (auditoría interna).
+
+### Corregido — un acento no hexadecimal abortaba las notificaciones
+
+- **R-2f5c9a71 — `ValueError` al construir una notificación con acción
+  `primary`:** `NotificationWidget._darken_color()` parseaba el acento con
+  `int(valor[i:i+2], 16)` sin validar. Con un `custom_accent_color` que no era
+  `#RRGGBB`, el botón «Copiar error» del reporte o «Ver detalles» de un fallo
+  de compilación lanzaba `ValueError` dentro de un slot y PyQt6 abortaba el
+  proceso. `design_tokens.normalize_accent()` valida el formato y lo aplican
+  `active_accent()` y `packagemaker.get_accent_color()`; `_darken_color()`
+  devuelve la entrada sin cambios si no es hexadecimal. Reportado por
+  JesusQuijada34 (auditoría interna).
+
 ### Revisión de reportes e issues
 
 - Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
@@ -38,14 +78,23 @@ llegan a una salida JSON. Ningún cambio de comportamiento del engine: un
 
 ### Verificación
 
-- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1046 pasan, 1
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1077 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
-- Pruebas nuevas: 3 (2 en `tests/test_mexf_shell.py` y 1 en
+- Pruebas nuevas del primer bloque: 3 (2 en `tests/test_mexf_shell.py` y 1 en
   `tests/test_mexf_asksome.py`); las 3 fallan con el código anterior
   (comprobado con `git checkout` de `lib/mexf_parser.py`).
-- Reproducción real: `--shell-plan-json` con `shortcuts: {Ctrl+N: .nan}` y con
-  el JSON legacy `{"shortcuts": {"Ctrl+O": 1e400}}` imprimía `NaN`/`Infinity`;
-  ahora imprime `"nan"`/`"inf"` y un parser estricto lo acepta.
+- Reproducción real del primer bloque: `--shell-plan-json` con
+  `shortcuts: {Ctrl+N: .nan}` y con el JSON legacy
+  `{"shortcuts": {"Ctrl+O": 1e400}}` imprimía `NaN`/`Infinity`; ahora imprime
+  `"nan"`/`"inf"` y un parser estricto lo acepta.
+- Pruebas nuevas del segundo bloque: 31 en
+  `tests/test_corrupt_user_config_startup.py`. Reproducción previa: un
+  `data/pm.data` con `base_dir` como objeto daba `TypeError` en `os.makedirs`
+  al importar `packagemaker`; `language` como objeto daba `AttributeError` en
+  `i18n.load_translation`; `custom_accent_color: "azul"` daba `ValueError` al
+  construir una notificación con acción `primary`. Tras el arreglo,
+  `--app-version` arranca con la carpeta por defecto, el idioma cae a `es` y la
+  notificación se construye sin error.
 - No se prepara release: el periodo de observación sigue en curso y el
   requisito de 7 días sin reportes nuevos no se cumple.
 

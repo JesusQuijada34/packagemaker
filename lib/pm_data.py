@@ -119,6 +119,16 @@ def coerce_float(value: Any, default: float) -> float:
     return number
 
 
+def coerce_text(value: Any, default: str = "") -> str:
+    """Devuelve ``value`` si es texto; si no, ``default``.
+
+    ``data/pm.data`` es editable a mano: una ruta o un idioma guardado como
+    número, lista u objeto reventaba en ``os.makedirs`` (``TypeError``) o en
+    ``str.lower`` (``AttributeError``) antes de pintar la interfaz.
+    """
+    return value if isinstance(value, str) else default
+
+
 def is_compiled_build() -> bool:
     return bool(getattr(sys, "frozen", False))
 
@@ -289,11 +299,17 @@ class PMDataStore:
             "auto_color": "auto_color",
             "auto_translate": "auto_translate",
         }
+        text_keys = {"base_dir", "fluthin_apps", "display_mode", "language", "interface_color"}
         for old, new in mapping.items():
-            if old in legacy and legacy[old] is not None:
-                self.set_user(new, legacy[old])
-        if legacy.get("LANGUAGE"):
-            self.set_user("language", str(legacy["LANGUAGE"]).lower()[:2])
+            if old not in legacy or legacy[old] is None:
+                continue
+            if new in text_keys and not isinstance(legacy[old], str):
+                # Un settings.json corrupto no debe importar una ruta o un
+                # idioma que después rompa el arranque.
+                continue
+            self.set_user(new, legacy[old])
+        if isinstance(legacy.get("LANGUAGE"), str) and legacy["LANGUAGE"]:
+            self.set_user("language", legacy["LANGUAGE"].lower()[:2])
 
     def to_legacy_app_config(self) -> Dict[str, Any]:
         """Compatibilidad con código que espera BASE_DIR en mayúsculas."""
@@ -301,23 +317,23 @@ class PMDataStore:
         if not isinstance(u, dict):
             u = {}
         return {
-            "BASE_DIR": u.get("base_dir", ""),
-            "Fluthin_APPS": u.get("fluthin_apps", ""),
-            "DISPLAY_MODE": u.get("display_mode", DEFAULT_USER["display_mode"]),
-            "LANGUAGE": u.get("language", "es"),
+            "BASE_DIR": coerce_text(u.get("base_dir"), ""),
+            "Fluthin_APPS": coerce_text(u.get("fluthin_apps"), ""),
+            "DISPLAY_MODE": coerce_text(u.get("display_mode"), DEFAULT_USER["display_mode"]),
+            "LANGUAGE": coerce_text(u.get("language"), "es") or "es",
             "device_simulation": u.get("device_simulation", "laptop"),
             "dpi_scale": u.get("dpi_scale", 1.0),
             "touch_mode": u.get("touch_mode", False),
-            "interface_color": u.get("interface_color", "#0d1117"),
+            "interface_color": coerce_text(u.get("interface_color"), "#0d1117"),
             "auto_color": u.get("auto_color", True),
             "auto_translate": u.get("auto_translate", True),
             "notifications_enabled": u.get("notifications_enabled", False),
-            "custom_accent_color": u.get("custom_accent_color", _DEFAULT_ACCENT),
+            "custom_accent_color": coerce_text(u.get("custom_accent_color"), _DEFAULT_ACCENT),
             "blur_intensity": u.get("blur_intensity", 14),
             "window_radius": u.get("window_radius", 12),
             "sidebar_accent_width": u.get("sidebar_accent_width", 3),
             "card_opacity": u.get("card_opacity", 0.08),
-            "ui_density": u.get("ui_density", "normal"),
+            "ui_density": coerce_text(u.get("ui_density"), "normal"),
             "applied_dpi_scale": u.get("applied_dpi_scale", 1.0),
         }
 
@@ -339,10 +355,11 @@ def load_merged_app_config(
     u = store._data.get("user")
     if not isinstance(u, dict):
         u = store._data["user"] = {}
-    if not u.get("base_dir") and default_base_dir:
-        store.set_user("base_dir", default_base_dir)
-    if not u.get("fluthin_apps") and default_fluthin:
-        store.set_user("fluthin_apps", default_fluthin)
+    for key, default in (("base_dir", default_base_dir), ("fluthin_apps", default_fluthin)):
+        value = u.get(key)
+        if not isinstance(value, str) or not value.strip() or "\x00" in value:
+            if default:
+                store.set_user(key, default)
 
     legacy_path = legacy_config_path or (_app_root() / "config" / "settings.json")
     if path_is_file(legacy_path):

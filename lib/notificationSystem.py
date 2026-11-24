@@ -323,10 +323,24 @@ class NotificationWidget(QWidget):
         return btn
         
     def _darken_color(self, hex_color: str, factor: float) -> str:
-        """Oscurecer un color hex"""
-        hex_color = hex_color.lstrip('#')
-        rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-        darkened = tuple(int(c * factor) for c in rgb)
+        """Oscurecer un color hex.
+
+        Devuelve la entrada sin cambios si no es un ``#RRGGBB`` reconocible,
+        para que un acento corrupto no aborte la notificación (y con ella la
+        aplicación) dentro de un slot de Qt.
+        """
+        value = str(hex_color or "").strip().lstrip('#')
+        if len(value) == 3:
+            value = "".join(ch * 2 for ch in value)
+        elif len(value) > 6:
+            value = value[:6]
+        if len(value) != 6:
+            return hex_color
+        try:
+            rgb = tuple(int(value[i:i+2], 16) for i in (0, 2, 4))
+        except ValueError:
+            return hex_color
+        darkened = tuple(max(0, min(255, int(c * factor))) for c in rgb)
         return f"#{darkened[0]:02x}{darkened[1]:02x}{darkened[2]:02x}"
         
     def _handle_action(self, action: NotificationAction):

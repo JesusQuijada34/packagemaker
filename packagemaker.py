@@ -232,12 +232,12 @@ def get_accent_color():
 
         value = str(get_pm_data().get_user("custom_accent_color", "") or "").strip()
         if value:
-            return value
+            return normalize_accent(value)
     except Exception:
         pass
     if _leviathan_accent is not None:
         try:
-            return str(_leviathan_accent())
+            return normalize_accent(_leviathan_accent())
         except Exception:
             pass
     return ACCENT
@@ -325,6 +325,7 @@ from lib.design_tokens import (
     TEXT,
     WINDOW_BG,
     WINDOW_RADIUS,
+    normalize_accent,
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
@@ -539,7 +540,7 @@ try:
     print(f"[PackageMaker] Platform detected: {linkedsys}", file=sys.stderr)
     print(f"[PackageMaker] BASE_DIR: {BASE_DIR}", file=sys.stderr)
     print(f"[PackageMaker] Fluthin_APPS: {Fluthin_APPS}", file=sys.stderr)
-except OSError as e:
+except (OSError, TypeError, ValueError) as e:
     print(f"[PackageMaker] WARNING: could not create directory {BASE_DIR}: {e}", file=sys.stderr)
     # Intentar con directorio alternativo
     alt_dir = os.path.expanduser("~")

@@ -140,6 +140,9 @@ de auditoría.
 | R-3a7f2d84 | Bug — un comando `.mexf` con byte NUL lanza traceback en el depurador | Media | Resuelto |
 | R-8d4c1e67 | Bug — un `.mexf` con escalares YAML no JSON lanza `TypeError` al compilar | Alta | Resuelto |
 | R-4c9e2b71 | Bug — un `.mexf` con `.nan`/`.inf` emite JSON no válido (`NaN`/`Infinity`) | Media | Resuelto |
+| R-4a7f2c93 | Bug — `base_dir`/`fluthin_apps` no textuales en `pm.data` tumban el arranque | Alta | Resuelto |
+| R-8d3e6b15 | Bug — un `language` no textual en `pm.data` aborta el arranque | Alta | Resuelto |
+| R-2f5c9a71 | Bug — un acento no hexadecimal aborta las notificaciones | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -235,6 +238,15 @@ la compilación. Un comando con byte NUL lanzaba `ValueError` desde `subprocess`
 de `canonicalize_mexf`. Ahora el depurador informa del comando no lanzable con
 código 126 y el parser normaliza esos escalares o rechaza la recursión con
 `MexfError`.
+
+El cuadragésimo tercer ciclo registra R-4a7f2c93, R-8d3e6b15 y R-2f5c9a71
+(corregidos y probados, sin cambios de comportamiento del engine): tres valores
+de `data/pm.data` editados a mano con el tipo equivocado tumbaban la aplicación
+antes de pintar la ventana. Una ruta guardada como objeto/lista/número reventaba
+en `os.makedirs` (`TypeError`) al importar `packagemaker`, un `language` no
+textual abortaba en `i18n.load_translation` (`AttributeError`) y un
+`custom_accent_color` que no era `#RRGGBB` lanzaba `ValueError` al construir una
+notificación con acción primaria, lo que en PyQt6 aborta el proceso.
 
 ---
 
@@ -3671,6 +3683,90 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-4a7f2c93 — Una ruta no textual en `pm.data` tumba el arranque
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `to_legacy_app_config()` devolvía `base_dir`/`fluthin_apps`
+  tal cual estaban en `data/pm.data`. Si el archivo se editaba a mano y guardaba
+  un objeto, una lista o un número, `packagemaker.py` los pasaba a
+  `os.makedirs()` al importarse y el proceso moría con `TypeError: expected
+  str, bytes or os.PathLike object, not dict` antes de cualquier acción (GUI y
+  CLI). Una cadena con byte NUL lanzaba `ValueError: embedded null byte`, que
+  tampoco capturaba el `except OSError` de arranque. El mismo valor podía llegar
+  desde el `config/settings.json` legacy durante la migración.
+- **Pasos para reproducir:** escribir `{"user": {"base_dir": {"x": 1}}}` en
+  `data/pm.data` y ejecutar `python packagemaker.py --app-version` (antes:
+  traceback en `packagemaker.py`, línea de `os.makedirs`; ahora: arranca y usa
+  la carpeta por defecto de la plataforma).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (impide arrancar la aplicación, GUI y CLI).
+- **Solución aplicada:** `pm_data.coerce_text()` filtra los valores no
+  textuales en `to_legacy_app_config()`; `load_merged_app_config()` reemplaza
+  rutas no textuales, vacías o con NUL por el valor por defecto y
+  `migrate_from_legacy_config()` ignora rutas e idioma no textuales del
+  `settings.json` legacy. El `os.makedirs` de arranque captura también
+  `TypeError`/`ValueError` como red final.
+- **Pruebas:** `tests/test_corrupt_user_config_startup.py::TestTextCoercion`
+  (5 casos parametrizados de rutas corruptas, rutas válidas preservadas y
+  migración legacy).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8d3e6b15 — Un `language` no textual en `pm.data` aborta el arranque
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el arranque de la GUI pasa `config.get("LANGUAGE")` a
+  `i18n.initialize()` → `load_translation()`, que hacía `lang.lower()`. Un
+  `language` guardado como objeto, lista o número en `pm.data` lanzaba
+  `AttributeError: 'dict' object has no attribute 'lower'` y cerraba la
+  aplicación antes de pintar la ventana.
+- **Pasos para reproducir:** escribir `{"user": {"language": {"a": 1}}}` en
+  `data/pm.data` y arrancar la GUI; o llamar a
+  `i18n.initialize(app, {"a": 1})` (antes: `AttributeError`).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (impide arrancar la GUI).
+- **Solución aplicada:** `to_legacy_app_config()` devuelve `"es"` cuando el
+  idioma no es texto; `I18nManager.load_translation()` normaliza con `str()` y
+  cae a `"es"` cuando el código no está en `SUPPORTED_LANGUAGES`, de modo que un
+  valor corrupto nunca llega a `.lower()` ni genera un idioma inexistente.
+- **Pruebas:** `tests/test_corrupt_user_config_startup.py::TestLanguageCoercion`
+  (idioma no textual, código desconocido y `load_translation` con objeto).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-2f5c9a71 — Un acento no hexadecimal aborta las notificaciones
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `NotificationWidget._darken_color()` parseaba el acento con
+  `int(valor[i:i+2], 16)` sin validar. Con un `custom_accent_color` que no es
+  `#RRGGBB` (texto libre, lista, cadena de 3/8 dígitos), crear una notificación
+  con una acción `primary` —por ejemplo el botón «Copiar error» del reporte o
+  «Ver detalles» de un fallo de compilación— lanzaba `ValueError` dentro de un
+  slot de Qt, y PyQt6 abortaba el proceso. El acento corrupto también se
+  interpolaba en todos los QSS.
+- **Pasos para reproducir:** escribir
+  `{"user": {"custom_accent_color": "azul"}}` en `data/pm.data` y mostrar una
+  notificación con `NotificationAction(..., "primary")` (antes:
+  `ValueError: invalid literal for int() with base 16: 'az'`).
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un acento corrupto, pero mata la aplicación).
+- **Solución aplicada:** `design_tokens.normalize_accent()` valida `#RRGGBB`;
+  `active_accent()` y `packagemaker.get_accent_color()` lo usan para caer al
+  acento corporativo cuando el valor guardado o el del sistema no es válido.
+  `_darken_color()` devuelve la entrada sin cambios si no es hexadecimal, como
+  red defensiva en el propio widget.
+- **Pruebas:** `tests/test_corrupt_user_config_startup.py::TestAccentRobustness`
+  (normalización, acento corrupto en `pm.data`, `_darken_color` con entradas
+  inválidas y notificación con acción primaria).
+- **Commit:** se registra en el cierre del cuadragésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3724,10 +3820,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   probados (`--build-removeme` responde con `[ERROR]` ante una raíz ilegible y
   el depurador `.mexf` trata un comando no ejecutable como fallo con código
   126 en vez de abortar); no se prepara release.
-- Cuadragésimo tercer ciclo (2026-11-24): R-4c9e2b71 corregido y probado (un
-  `.mexf` con `.nan`/`.inf` de YAML o `1e400` del JSON legacy ya no emite
-  `NaN`/`Infinity` en `--shell-plan-json` ni en el `.mexf` canónico del
-  `.asksome`); no se prepara release.
+- Cuadragésimo tercer ciclo (2026-11-24): R-4c9e2b71, R-4a7f2c93, R-8d3e6b15 y
+  R-2f5c9a71 corregidos y probados (un `.mexf` con `.nan`/`.inf` ya no emite
+  `NaN`/`Infinity`; un `pm.data` con rutas o idioma no textuales ya no impide
+  arrancar; un acento no hexadecimal ya no aborta las notificaciones con acción
+  primaria); no se prepara release.
 - Verificación del ciclo de R-4c9e2b71 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1046 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas
@@ -3736,6 +3833,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `shortcuts: {Ctrl+N: .nan}` y con el JSON legacy `1e400` imprimía `NaN`/
   `Infinity` (rechazado por un parser estricto); ahora imprime `"nan"`/`"inf"`
   y `json.loads(..., parse_constant=...)` lo acepta.
+- Verificación del ciclo de R-4a7f2c93…R-2f5c9a71 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1077 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 31 pruebas nuevas
+  de `tests/test_corrupt_user_config_startup.py` pasan; la reproducción previa a
+  la corrección dio `TypeError` en `os.makedirs` al importar `packagemaker`,
+  `AttributeError` en `i18n.load_translation` y `ValueError` en
+  `NotificationWidget` con acento `azul` y acción `primary`. Tras el arreglo,
+  `--app-version` arranca con la carpeta por defecto, el idioma cae a `es` y la
+  notificación se construye sin error.
 - Verificación del ciclo de R-9e1a4c72 y R-4c8b2e91 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1024 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas
