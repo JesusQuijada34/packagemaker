@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Motor del IDE de proyectos ``iflapp``: escaneo, compilación y depurador."""
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -191,6 +192,63 @@ class IdeDebugTests(unittest.TestCase):
         outcome = debug_script(self.script, run=True)
         self.assertTrue(outcome.ok)
         self.assertIn("hola mundo", outcome.output)
+
+
+_UNREADABLE_SKIP = unittest.skipIf(
+    os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+    "los permisos POSIX no bloquean la lectura en Windows ni como root",
+)
+
+
+class IdeUnreadablePathTests(unittest.TestCase):
+    """Un proyecto con rutas bloqueadas debe poder escanearse igual (R-7b4e2c19)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name) / "proyecto"
+        (self.root / "config").mkdir(parents=True)
+        (self.root / "app").mkdir()
+        (self.root / "details.xml").write_text(DETAILS, encoding="utf-8")
+        (self.root / "config" / "settings.json").write_text(
+            json.dumps(SETTINGS), encoding="utf-8"
+        )
+        (self.root / "demo.py").write_text(MAIN, encoding="utf-8")
+        (self.root / "app" / "demo-icon.ico").write_bytes(b"ico")
+
+    def tearDown(self):
+        for path in (
+            self.root / "app",
+            self.root / "config",
+            self.root / "details.xml",
+            self.root,
+        ):
+            try:
+                path.chmod(0o755)
+            except OSError:
+                pass
+        self._tmp.cleanup()
+
+    @_UNREADABLE_SKIP
+    def test_scan_tolerates_unreadable_details_xml(self):
+        (self.root / "details.xml").chmod(0o000)
+        project = scan_project(self.root)
+        self.assertEqual(project.metadata, {})
+        self.assertIn("demo.py", project.scripts)
+        self.assertEqual(project.entry, "demo.py")
+
+    @_UNREADABLE_SKIP
+    def test_scan_tolerates_unreadable_config_directory(self):
+        (self.root / "config").chmod(0o000)
+        project = scan_project(self.root)
+        self.assertIn("demo.py", project.scripts)
+        self.assertIn("config/settings.json", project.missing)
+
+    @_UNREADABLE_SKIP
+    def test_scan_tolerates_unreadable_app_directory(self):
+        (self.root / "app").chmod(0o000)
+        project = scan_project(self.root)
+        self.assertIsNone(project.icon)
+        self.assertEqual(project.metadata["app"], "demo")
 
 
 if __name__ == "__main__":

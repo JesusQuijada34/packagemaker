@@ -470,12 +470,18 @@ def _self_file():
             candidate = Path(argv0).resolve()
         except OSError:
             candidate = None
-        if candidate is not None and candidate.is_file():
-            return candidate
+        try:
+            if candidate is not None and candidate.is_file():
+                return candidate
+        except OSError:
+            pass
     here = Path(__file__).resolve()
     # Dentro de un zipapp ``__file__`` vive en el archivo; su padre es el archivo.
-    if here.parent.is_file():
-        return here.parent
+    try:
+        if here.parent.is_file():
+            return here.parent
+    except OSError:
+        pass
     return here
 
 
@@ -488,7 +494,11 @@ def _install_dir():
 
 def _shortcuts(target):
     record = target / {record_name!r}
-    if record.is_file():
+    try:
+        present = record.is_file()
+    except OSError:
+        present = False
+    if present:
         try:
             data = json.loads(record.read_text(encoding="utf-8"))
         except (OSError, ValueError):
@@ -573,13 +583,23 @@ def _remove(target, keep_shortcuts, reporter):
     for item in items:
         path = Path(item)
         done += 1
-        if path.is_file():
-            path.unlink()
-            removed.append(str(path))
-            reporter.step(done, total, "eliminado: " + str(path))
-        else:
-            reporter.step(done, total, "")
-    if target.is_dir():
+        try:
+            if path.is_file():
+                path.unlink()
+                removed.append(str(path))
+                reporter.step(done, total, "eliminado: " + str(path))
+            else:
+                reporter.step(done, total, "")
+        except OSError as exc:
+            # Acceso directo bloqueado o ilegible: no impide purgar el resto
+            # de la instalación.
+            reporter.step(done, total, "omitido: " + str(path) + " (" + str(exc) + ")")
+    try:
+        presente = target.is_dir()
+    except OSError as exc:
+        reporter.step(total, total, "error: " + str(target) + " (" + str(exc) + ")")
+        presente = False
+    if presente:
         shutil.rmtree(target)
         removed.append(str(target))
         reporter.step(total, total, "eliminado: " + str(target))
@@ -595,14 +615,27 @@ def main(argv=None):
     parser.add_argument("--keep-shortcuts", action="store_true", help="No retirar accesos directos")
     args = parser.parse_args(argv)
 
-    target = _install_dir()
-    if not target.is_dir():
+    try:
+        target = _install_dir()
+        presente = target.is_dir()
+    except OSError as exc:
+        if not args.silent:
+            print("no accesible: " + str(exc), file=sys.stderr)
+        return 1
+    if not presente:
         if args.silent:
             return 0
         print("no existe: " + str(target), file=sys.stderr)
         return 1
 
-    _remove(target, args.keep_shortcuts, _make_reporter(args))
+    try:
+        _remove(target, args.keep_shortcuts, _make_reporter(args))
+    except OSError as exc:
+        # Sin este cierre, un árbol bloqueado dejaba escapar ``PermissionError``
+        # con traceback (y abortaba la GUI del removedor).
+        if not args.silent:
+            print("error al desinstalar: " + str(exc), file=sys.stderr)
+        return 1
     return 0
 
 

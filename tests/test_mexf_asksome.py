@@ -646,6 +646,69 @@ def test_generated_removeme_runs_silently(tmp_path):
     assert not Path(record.install_dir).exists()
 
 
+@_UNREADABLE_SKIP
+def test_generated_removeme_tolerates_blocked_shortcut(tmp_path):
+    """Un acceso directo ilegible no rompe el removedor (R-8e1f6a24)."""
+    import subprocess
+    import sys as _sys
+
+    from lib.blindcubeEngine.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    script = Path(record.install_dir) / "removeme.py"
+
+    blocked = tmp_path / "blocked"
+    blocked.mkdir()
+    (blocked / "demo.desktop").write_text("x", encoding="utf-8")
+    record_path = Path(record.install_dir) / "install.json"
+    data = json.loads(record_path.read_text(encoding="utf-8"))
+    data["shortcuts"] = list(data.get("shortcuts") or []) + [str(blocked / "demo.desktop")]
+    record_path.write_text(json.dumps(data), encoding="utf-8")
+
+    blocked.chmod(0o000)
+    try:
+        result = subprocess.run(
+            [_sys.executable, str(script), "--console"],
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        blocked.chmod(0o755)
+
+    assert result.returncode == 0, result.stderr
+    assert "Traceback" not in result.stderr
+    assert "omitido" in result.stdout
+    assert not Path(record.install_dir).exists()
+
+
+@_UNREADABLE_SKIP
+def test_generated_removeme_reports_blocked_tree_without_traceback(tmp_path):
+    """Si el árbol no se puede borrar, el removedor informa y sale con 1."""
+    import subprocess
+    import sys as _sys
+
+    from lib.blindcubeEngine.asksome_installer import install_asksome
+
+    artifact, install_root, shortcuts = _install_fixture(tmp_path)
+    record = install_asksome(artifact, install_root, shortcut_dirs=[shortcuts])
+    script = Path(record.install_dir) / "removeme.py"
+
+    install_root.chmod(0o555)
+    try:
+        result = subprocess.run(
+            [_sys.executable, str(script), "--console"],
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        install_root.chmod(0o755)
+
+    assert result.returncode == 1
+    assert "Traceback" not in result.stderr
+    assert "error al desinstalar" in result.stderr
+
+
 def test_install_rejects_tampered_artifact(tmp_path):
     from lib.blindcubeEngine.asksome_format import AsksomeError
     from lib.blindcubeEngine.asksome_installer import install_asksome

@@ -373,6 +373,17 @@ class HardwareSandbox:
                 backend=self.backend,
                 command=command,
             )
+        except OSError as exc:
+            # ``cwd`` inaccesible o binario sin permiso de ejecución: el
+            # contrato de ``run`` es devolver un resultado, nunca propagar el
+            # error (el build corre en un hilo y una excepción lo aborta).
+            return SandboxResult(
+                returncode=126,
+                stdout="",
+                stderr=str(exc),
+                backend=self.backend,
+                command=command,
+            )
         return SandboxResult(
             returncode=process.returncode,
             stdout=process.stdout,
@@ -401,7 +412,11 @@ class HardwareSandbox:
     ) -> SandboxResult:
         """Ejecuta un binario generado para comprobar que arranca sin fallos."""
         binary = Path(binary)
-        if not binary.is_file():
+        try:
+            present = binary.is_file()
+        except OSError as exc:
+            return SandboxResult(-1, "", f"Binario no accesible: {binary}: {exc}", self.backend, [])
+        if not present:
             return SandboxResult(-1, "", f"Binario no encontrado: {binary}", self.backend, [])
         try:
             binary.chmod(binary.stat().st_mode | 0o111)

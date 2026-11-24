@@ -24,6 +24,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
+from lib.file_ops import path_exists, path_is_dir, path_is_file
+
 STRUCTURE_REQUIRED = ("details.xml", "config/settings.json")
 SKIP_SCRIPTS = {"updater.py", "removeme.py"}
 
@@ -59,11 +61,13 @@ class IfappProject:
 def read_details(root: Path) -> Dict[str, str]:
     """Lee ``details.xml`` y normaliza las claves de metadatos."""
     path = Path(root) / "details.xml"
-    if not path.is_file():
+    if not path_is_file(path):
         return {}
     try:
         node = ET.parse(path).getroot()
-    except ET.ParseError:
+    except (ET.ParseError, OSError):
+        # Un details.xml bloqueado (Windows) o sin permiso de lectura no debe
+        # impedir escanear el proyecto: se usan los valores por defecto.
         return {}
     return {
         "publisher": node.findtext("publisher") or node.findtext("empresa") or "Unknown",
@@ -78,7 +82,7 @@ def read_details(root: Path) -> Dict[str, str]:
 def _declared_scripts(root: Path) -> List[str]:
     """Guiones declarados en ``config/settings.json`` (``build.scripts``)."""
     settings = Path(root) / "config" / "settings.json"
-    if not settings.is_file():
+    if not path_is_file(settings):
         return []
     try:
         # ``utf-8-sig`` acepta el BOM que añade el Bloc de notas de Windows.
@@ -113,7 +117,7 @@ def find_icon(root: Path, app: str) -> Optional[str]:
         for stem in stems:
             for ext in (".ico", ".png"):
                 candidate = directory / f"{stem}{ext}"
-                if candidate.is_file():
+                if path_is_file(candidate):
                     return str(candidate)
     return None
 
@@ -121,18 +125,18 @@ def find_icon(root: Path, app: str) -> Optional[str]:
 def scan_project(root: Path | str) -> IfappProject:
     """Inspecciona un proyecto y devuelve su vista normalizada."""
     root = Path(root).expanduser().resolve()
-    if not root.is_dir():
+    if not path_is_dir(root):
         raise FileNotFoundError(f"No es una carpeta de proyecto: {root}")
     metadata = read_details(root)
     scripts = find_scripts(root)
     entry = scripts[0] if scripts else (f"{metadata.get('app', 'app')}.py")
-    missing = [item for item in STRUCTURE_REQUIRED if not (root / item).exists()]
+    missing = [item for item in STRUCTURE_REQUIRED if not path_exists(root / item)]
     return IfappProject(
         root=root,
         metadata=metadata,
         scripts=scripts,
-        entry=entry if (root / entry).is_file() else None,
-        has_mexf=(root / ".mexf").is_dir(),
+        entry=entry if path_is_file(root / entry) else None,
+        has_mexf=path_is_dir(root / ".mexf"),
         icon=find_icon(root, metadata.get("app", "app")),
         missing=missing,
     )

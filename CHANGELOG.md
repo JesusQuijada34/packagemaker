@@ -1,5 +1,49 @@
 # Changelog
 
+## 2026-11-24 — cuadragésimo quinto ciclo
+
+### Corregido — rutas bloqueadas que aún escapaban de `pathlib`
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna en la
+familia de R-9e3b7a51, R-6f4b8a92 y R-8c4a1f62: comprobaciones con
+`Path.is_file()`/`exists()`/`is_dir()` heredadas de antes del endurecimiento, y
+un `OSError` sin traducir en el sandbox y en el removedor generado. En Python
+3.13 esas llamadas propagan `PermissionError` cuando el directorio padre no es
+accesible. Ningún cambio de comportamiento del engine: un proyecto legible, un
+workspace accesible y una instalación normal se tratan exactamente igual.
+
+- **R-7b4e2c19 — `--ide-scan`/IDE se negaba a escanear un proyecto con rutas
+  ilegibles:** `lib/iflapp_ide.py` comprobaba `details.xml`,
+  `config/settings.json`, el icono y la estructura con `pathlib` sin protección,
+  y `read_details()` sólo capturaba `ET.ParseError`. Con `details.xml` sin
+  permiso de lectura, el CLI respondía `[ERROR] [Errno 13] Permission denied`
+  sin listar guiones y el panel del IDE no abría el proyecto. Ahora
+  `read_details()` captura `(ET.ParseError, OSError)` y el escaneo usa
+  `lib.file_ops` (`path_exists`, `path_is_file`, `path_is_dir`), que degradan a
+  «no existe»: se listan los guiones y se usan metadatos por defecto. Reportado
+  por JesusQuijada34 (auditoría interna).
+- **R-3c9d5e21 — el sandbox dejaba escapar `PermissionError`:** `run()` sólo
+  traducía `FileNotFoundError` y `TimeoutExpired`. Con un *workspace* que
+  existe pero no es accesible, `subprocess.run(cwd=...)` lanzaba
+  `PermissionError`, rompiendo el contrato de devolver siempre un
+  `SandboxResult` y pudiendo abortar la `QThread` del build. Ahora
+  `except OSError` devuelve código 126 (no ejecutable), igual que
+  `mexf_debugger`; `run_and_verify_binary()` informa de un binario no accesible
+  con `-1` en vez de lanzar. Reportado por JesusQuijada34 (auditoría interna).
+- **R-8e1f6a24 — el removedor generado abortaba con un acceso directo o árbol
+  bloqueado:** el `removeme.py` autónomo comprobaba los accesos directos con
+  `Path.is_file()` y borraba con `unlink()`/`rmtree()` sin protección. Un
+  acceso directo en una carpeta sin permisos o un árbol de instalación
+  bloqueado lanzaba `PermissionError` con traceback (y en modo GUI podía
+  abortar el removedor). Ahora los accesos directos ilegibles se omiten con
+  aviso, el árbol se trata de forma defensiva y `main()` traduce `OSError` a
+  código 1 sin traceback; `--silent` sigue sin ruido. Reportado por
+  JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_iflapp_ide.py` (3 nuevas), `tests/test_iflapp_dropper_sandbox.py`
+(2 nuevas) y `tests/test_mexf_asksome.py` (2 nuevas); todas fallan con el código
+anterior. Suite completa: 1086 pasan, 1 omitido, 64 subtests.
+
 ## 2026-11-24 — cuadragésimo cuarto ciclo
 
 ### Corregido — un `details.xml` ilegible ya no aborta MoonFix ni el dashboard

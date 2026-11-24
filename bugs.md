@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (cuadragésimo cuarto ciclo)
+Última actualización: 2026-11-24 (cuadragésimo quinto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -145,6 +145,9 @@ de auditoría.
 | R-2f5c9a71 | Bug — un acento no hexadecimal aborta las notificaciones | Media | Resuelto |
 | R-7a2c9e14 | Bug — el asistente MoonFix cae con `details.xml` ilegible | Media | Resuelto |
 | R-8f3d1b62 | Bug — «Abrir proyecto» del dashboard cae con `details.xml` ilegible | Media | Resuelto |
+| R-7b4e2c19 | Bug — `--ide-scan`/IDE aborta si `details.xml`, `config/` o `app/` no se puede leer | Media | Resuelto |
+| R-3c9d5e21 | Bug — el sandbox deja escapar `PermissionError` con un workspace inaccesible | Alta | Resuelto |
+| R-8e1f6a24 | Bug — el removedor generado aborta con un acceso directo o árbol bloqueado | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -249,6 +252,15 @@ en `os.makedirs` (`TypeError`) al importar `packagemaker`, un `language` no
 textual abortaba en `i18n.load_translation` (`AttributeError`) y un
 `custom_accent_color` que no era `#RRGGBB` lanzaba `ValueError` al construir una
 notificación con acción primaria, lo que en PyQt6 aborta el proceso.
+
+El cuadragésimo quinto ciclo registra R-7b4e2c19, R-3c9d5e21 y R-8e1f6a24
+(corregidos y probados, sin cambios de comportamiento del engine): tres rutas
+más comprobadas con `pathlib` sin protección. El escaneo del IDE se negaba a
+abrir un proyecto con `details.xml`, `config/` o `app/` ilegibles; el sandbox
+dejaba escapar `PermissionError` con un *workspace* inaccesible, rompiendo su
+contrato de resultado; y el `removeme.py` autónomo abortaba con traceback (y
+podía tumbar su GUI) ante un acceso directo o un árbol de instalación
+bloqueado.
 
 ---
 
@@ -3818,6 +3830,96 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo cuarto ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-7b4e2c19 — `--ide-scan`/IDE se niega a escanear un proyecto con rutas ilegibles
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `lib/iflapp_ide.py` comprobaba `details.xml`,
+  `config/settings.json`, el icono y la estructura con `Path.is_file()`,
+  `Path.exists()` y `Path.is_dir()` dentro de `scan_project()`. En Python 3.13
+  esas llamadas propagan `PermissionError` cuando el directorio padre no es
+  accesible, y `read_details()` sólo capturaba `ET.ParseError`, así que un
+  `details.xml` sin permiso de lectura tumbaba el escaneo completo. El CLI
+  respondía `[ERROR] [Errno 13] Permission denied` sin listar guiones y el
+  panel del IDE no podía abrir el proyecto.
+- **Pasos para reproducir:** crear un proyecto con `details.xml` y `demo.py`,
+  aplicar `chmod 000` a `details.xml` y ejecutar `python packagemaker.py
+  --ide-scan <proyecto>`. Antes: error de permisos y ningún dato del proyecto.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (proyecto parcialmente ilegible, pero el escaneo es la
+  puerta de entrada del IDE).
+- **Solución aplicada:** `read_details()` captura `(ET.ParseError, OSError)` y
+  comprueba el archivo con `path_is_file`; `_declared_scripts()`, `find_icon()`
+  y `scan_project()` usan `lib.file_ops` (`path_exists`, `path_is_file`,
+  `path_is_dir`), que degradan a «no existe» en vez de lanzar. El escaneo
+  continúa con los metadatos por defecto y los guiones encontrados.
+- **Pruebas:** `tests/test_iflapp_ide.py::IdeUnreadablePathTests` (3 casos;
+  fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-3c9d5e21 — El sandbox deja escapar `PermissionError` con un workspace inaccesible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `HardwareSandbox.run()` sólo traducía `FileNotFoundError` y
+  `TimeoutExpired`; cualquier otro `OSError` de `subprocess.run` escapaba. Con
+  un *workspace* que existe pero no es accesible (permisos POSIX o carpeta
+  bloqueada en Windows), `subprocess.run(..., cwd=...)` lanza
+  `PermissionError`. Como la verificación corre en el hilo de compilación y en
+  el `finally` del build, la excepción rompía el contrato de `run()` (devolver
+  siempre un `SandboxResult`) y podía abortar la `QThread`.
+- **Pasos para reproducir:** crear un directorio, aplicar `chmod 000` y llamar
+  a `HardwareSandbox(backend="local").run(["/bin/echo", "hi"], <directorio>)`.
+  Antes: `PermissionError: [Errno 13]`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe el contrato del sandbox y puede matar el build).
+- **Solución aplicada:** `except OSError` en `run()` devuelve
+  `SandboxResult(returncode=126, stderr=...)`, coherente con
+  `mexf_debugger` (126 = no ejecutable). `run_and_verify_binary()` comprueba el
+  binario dentro de `try/except OSError` y devuelve `-1` con un mensaje
+  legible.
+- **Pruebas:**
+  `tests/test_iflapp_dropper_sandbox.py::HardwareSandboxTests::test_run_returns_result_when_workspace_is_unreadable`
+  y `::test_run_and_verify_binary_reports_unreadable_binary` (fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8e1f6a24 — El removedor generado aborta con un acceso directo o árbol bloqueado
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** el `removeme.py` autónomo que genera `asksome_installer`
+  comprobaba los accesos directos con `Path.is_file()` y borraba con
+  `Path.unlink()`/`shutil.rmtree()` sin protección. Un acceso directo en una
+  carpeta sin permisos o un árbol de instalación bloqueado (antivirus,
+  `chmod`, Windows) lanzaba `PermissionError` con traceback; en modo GUI la
+  excepción escapaba del bucle de eventos y abortaba el removedor. `main()`
+  tampoco traducía `OSError` de `_install_dir()`/`target.is_dir()`.
+- **Pasos para reproducir:** instalar un `.asksome`, añadir a `install.json` un
+  acceso directo bajo una carpeta con `chmod 000` y ejecutar `removeme.py
+  --console`. Antes: `Traceback ... PermissionError` al comprobar el acceso
+  directo. Si la carpeta que contiene la instalación es de solo lectura, el
+  `shutil.rmtree()` final también escapaba.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (la desinstalación falla con traceback y puede abortar
+  la GUI del removedor).
+- **Solución aplicada:** `_shortcuts()` y `_self_file()` capturan `OSError`;
+  `_remove()` omite los accesos directos ilegibles (informa «omitido») y trata
+  el árbol de instalación de forma defensiva; `main()` envuelve
+  `_install_dir()`/`is_dir()`/`_remove()` y responde con código 1 y un mensaje
+  (`--silent` sigue devolviendo 0/1 sin ruido). Se mantiene la autonomía del
+  stub (sólo biblioteca estándar).
+- **Pruebas:** `tests/test_mexf_asksome.py::test_generated_removeme_tolerates_blocked_shortcut`
+  y `::test_generated_removeme_reports_blocked_tree_without_traceback` (fallan
+  con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo quinto ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -4237,6 +4339,19 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `TypeError: Object of type date is not JSON serializable`; ahora genera el
   `.asksome` y un alias recursivo responde
   `[ERROR] … referencia circular`.
+- Verificación del cuadragésimo quinto ciclo (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1086 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 7 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/iflapp_ide.py`, `lib/blindcubeEngine/hardware_sandbox.py` y
+  `lib/blindcubeEngine/asksome_installer.py`). Reproducción real: con
+  `chmod 000` sobre `details.xml`, `--ide-scan` respondía
+  `[ERROR] [Errno 13] Permission denied` sin datos (ahora lista `demo.py`);
+  `HardwareSandbox().run()` con un *workspace* `chmod 000` propagaba
+  `PermissionError` (ahora devuelve 126); el `removeme.py` generado con un
+  acceso directo bloqueado mostraba `Traceback ... PermissionError` (ahora
+  imprime `omitido: …` y purga la instalación), y con la carpeta de instalación
+  de solo lectura responde `error al desinstalar: …` con código 1.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

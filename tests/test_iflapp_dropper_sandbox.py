@@ -1,4 +1,5 @@
 import base64
+import os
 import subprocess
 import sys
 import tempfile
@@ -17,6 +18,11 @@ from lib.blindcubeEngine.dropper import (
 from lib.blindcubeEngine.iflapp_format import IflappError
 from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
 from lib.blindcubeEngine import compilers
+
+_UNREADABLE_SKIP = unittest.skipIf(
+    os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+    "los permisos POSIX no bloquean la lectura en Windows ni como root",
+)
 
 
 def _make_package(root: Path, *, password=None) -> Path:
@@ -261,6 +267,38 @@ class HardwareSandboxTests(unittest.TestCase):
             result = sandbox.run([sys.executable, "-c", "print(1)"], Path("/tmp"))
         self.assertEqual(result.returncode, 127)
         self.assertIn("kernel/initrd", result.stderr)
+
+    @_UNREADABLE_SKIP
+    def test_run_returns_result_when_workspace_is_unreadable(self):
+        """``run`` nunca propaga ``PermissionError``: contrato de resultado."""
+        sandbox = HardwareSandbox(backend="local")
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "ws"
+            workspace.mkdir()
+            workspace.chmod(0o000)
+            try:
+                result = sandbox.run(["/bin/echo", "hi"], workspace)
+            finally:
+                workspace.chmod(0o755)
+        self.assertEqual(result.returncode, 126)
+        self.assertFalse(result.ok)
+        self.assertTrue(result.stderr)
+
+    @_UNREADABLE_SKIP
+    def test_run_and_verify_binary_reports_unreadable_binary(self):
+        sandbox = HardwareSandbox(backend="local")
+        with tempfile.TemporaryDirectory() as tmp:
+            blocked = Path(tmp) / "blocked"
+            blocked.mkdir()
+            binary = blocked / "app"
+            binary.write_bytes(b"\x7fELF")
+            blocked.chmod(0o000)
+            try:
+                result = sandbox.run_and_verify_binary(binary, tmp)
+            finally:
+                blocked.chmod(0o755)
+        self.assertEqual(result.returncode, -1)
+        self.assertIn("no accesible", result.stderr)
 
 
 class SandboxVerificationTests(unittest.TestCase):
