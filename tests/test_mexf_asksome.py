@@ -560,6 +560,30 @@ def test_read_record_and_build_removeme_reject_unsafe_app_id(tmp_path):
         build_removeme("../outside", install_root)
 
 
+@_UNREADABLE_SKIP
+def test_read_record_reports_unreadable_install_root(tmp_path):
+    """``--build-removeme`` no debe lanzar ``PermissionError`` crudo (R-9e1a4c72)."""
+    from lib.blindcubeEngine.asksome_installer import (
+        AsksomeInstallError,
+        build_removeme,
+        read_record,
+    )
+
+    install_root = tmp_path / "installed"
+    app_dir = install_root / "influent.demo"
+    app_dir.mkdir(parents=True)
+    (app_dir / "install.json").write_text("{}", encoding="utf-8")
+    install_root.chmod(0o000)
+    try:
+        with pytest.raises(AsksomeInstallError) as read_error:
+            read_record("influent.demo", install_root)
+        assert "No se pudo acceder" in str(read_error.value)
+        with pytest.raises(AsksomeInstallError):
+            build_removeme("influent.demo", install_root)
+    finally:
+        install_root.chmod(0o755)
+
+
 def test_install_reports_unusable_install_root(tmp_path):
     from lib.blindcubeEngine.asksome_installer import AsksomeInstallError, install_asksome
 

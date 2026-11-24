@@ -1,5 +1,55 @@
 # Changelog
 
+## 2026-11-24 — cuadragésimo ciclo
+
+### Corregido — tracebacks en `--build-removeme` y en el depurador `.mexf`
+
+Sin reportes externos nuevos. Dos hallazgos de auditoría interna en la misma
+familia que los ciclos anteriores: una comprobación de ruta sin proteger y un
+`OSError` que escapaba del lanzador de comandos. Ningún cambio de comportamiento
+del engine: con una instalación normal y un `.mexf` con comandos ejecutables
+todo funciona exactamente igual.
+
+- **R-9e1a4c72 — `--build-removeme` lanzaba traceback con una raíz de
+  instalación ilegible:** `read_record()` llamaba a `Path.is_file()` sin
+  protección y `pathlib` propaga `PermissionError` cuando el directorio padre no
+  es accesible; el CLI sólo captura `AsksomeInstallError`, así que mostraba el
+  traceback completo. Ahora el fallo se traduce a `AsksomeInstallError` con un
+  mensaje legible y `compile_removeme_binary()` usa `path_is_file()` para
+  conservar su contrato de devolver `None` cuando no puede compilar.
+- **R-4c8b2e91 — un comando `.mexf` no ejecutable abortaba el depurador:**
+  `default_runner()` sólo capturaba `FileNotFoundError` y `TimeoutExpired`.
+  Un `executable` sin permiso de ejecución (o un `cwd` inaccesible) hacía que
+  `subprocess.run()` lanzara `PermissionError` fuera del motor: el CLI
+  `--debug-mexf --debug-run` mostraba un traceback y el botón de ejecución real
+  del editor `.mexf` abortaba la app. Ahora devuelve `126` con el mensaje, el
+  paso queda `failed` y el resto de la sesión de depuración continúa.
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Q-004,
+  Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1024 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 3 (`tests/test_mexf_asksome.py` y
+  `tests/test_mexf_debugger.py`); las 3 fallan con el código anterior
+  (comprobado con `git stash` de los dos módulos tocados).
+- Reproducción real: `--build-removeme myapp --install-root <raíz 000>` muestra
+  «No se pudo acceder al registro de instalación…» y código 1 (antes
+  `PermissionError` con traceback); `--debug-mexf … --debug-run` con un
+  `executable` `0644` informa «el comando … falló con código 126» (antes
+  `PermissionError` con traceback).
+- No se prepara release: el periodo de observación sigue en curso y el
+  requisito de 7 días sin reportes nuevos no se cumple.
+
 ## 2026-11-24 — trigésimo noveno ciclo
 
 ### Corregido — depurador, `pm.data` y cabeceras con valores extremos

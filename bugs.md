@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (trigésimo noveno ciclo)
+Última actualización: 2026-11-24 (cuadragésimo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -133,6 +133,8 @@ de auditoría.
 | R-5e8c1b42 | Bug — `pm.data` con números no finitos impide arrancar | Alta | Resuelto |
 | R-7b3a9e58 | Bug — cabecera `.iflapp` con números no finitos escapa como `OverflowError` | Media | Resuelto |
 | R-9c4d2f61 | Bug — el detector de dependencias del editor ignora PEP 263 | Media | Resuelto |
+| R-9e1a4c72 | Bug — `--build-removeme` lanza traceback con una raíz de instalación ilegible | Media | Resuelto |
+| R-4c8b2e91 | Bug — un comando `.mexf` no ejecutable lanza traceback en `--debug-mexf --debug-run` | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -3440,6 +3442,57 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del trigésimo noveno ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-9e1a4c72 — `--build-removeme` lanza traceback con una raíz de instalación ilegible
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `read_record()` comprobaba `path.is_file()` sin protección.
+  Con una raíz de instalación sin permiso de lectura, `pathlib` lanza
+  `PermissionError`; el CLI `--build-removeme` sólo captura
+  `AsksomeInstallError`, así que el usuario recibía un traceback completo en
+  lugar de un mensaje. `compile_removeme_binary()` tenía la misma comprobación
+  sin proteger sobre `removeme.py`.
+- **Pasos para reproducir:** `chmod 000 <raíz>` y
+  `python packagemaker.py --build-removeme myapp --install-root <raíz>` →
+  `PermissionError: [Errno 13] … install.json` con traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (acción de shell concreta; `--uninstall-asksome` y
+  `--list-asksome` ya eran robustos).
+- **Solución aplicada:** `read_record()` traduce el `OSError` de `is_file()` a
+  `AsksomeInstallError` («No se pudo acceder al registro de instalación…»),
+  que el CLI ya muestra como `[ERROR]`; `compile_removeme_binary()` usa
+  `path_is_file()` y conserva su contrato de devolver `None` cuando no puede
+  compilar.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_read_record_reports_unreadable_install_root`.
+- **Commit:** se registra en el cierre del cuadragésimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-4c8b2e91 — Un comando `.mexf` no ejecutable lanza traceback en `--debug-mexf --debug-run`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `default_runner()` sólo capturaba `FileNotFoundError` y
+  `TimeoutExpired`. Un `commands[].executable` sin permiso de ejecución (o un
+  `cwd` inaccesible) hacía que `subprocess.run()` lanzara `PermissionError`
+  fuera del motor: el CLI `--debug-mexf --debug-run` mostraba un traceback y el
+  botón de ejecución real del editor `.mexf` abortaba la app.
+- **Pasos para reproducir:** `.mexf` con `executable: /ruta/tool.sh` en modo
+  `0644` y `python packagemaker.py --debug-mexf main.mexf --debug-run` →
+  `PermissionError` con traceback.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (depurador del editor y CLI; requiere un comando
+  declarado no ejecutable o una carpeta de trabajo sin permisos).
+- **Solución aplicada:** `default_runner()` captura el resto de `OSError` y
+  devuelve `126` con el mensaje, igual que la convención que ya usa el motor
+  para un comando sin ejecutable; el paso queda `failed` y el CLI informa
+  «el comando … falló con código 126».
+- **Pruebas:** `tests/test_mexf_debugger.py::RunnerTests::test_default_runner_reports_non_executable_file`
+  y `::test_debugger_step_survives_unlaunchable_command`.
+- **Commit:** se registra en el cierre del cuadragésimo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3489,6 +3542,19 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   respetan PEP 263; un `pm.data` con números no finitos ya no impide arrancar;
   las cabeceras `.iflapp`/`.run` con números no finitos dan `IflappError`); no
   se prepara release.
+- Cuadragésimo ciclo (2026-11-24): R-9e1a4c72 y R-4c8b2e91 corregidos y
+  probados (`--build-removeme` responde con `[ERROR]` ante una raíz ilegible y
+  el depurador `.mexf` trata un comando no ejecutable como fallo con código
+  126 en vez de abortar); no se prepara release.
+- Verificación del ciclo de R-9e1a4c72 y R-4c8b2e91 (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1024 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 3 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/blindcubeEngine/asksome_installer.py` y `lib/mexf_debugger.py`).
+  Reproducción real: `--build-removeme myapp --install-root <raíz 000>` muestra
+  «No se pudo acceder al registro de instalación…» (antes `PermissionError` con
+  traceback); `--debug-mexf … --debug-run` con un `executable` `0644` informa
+  «falló con código 126» (antes `PermissionError` con traceback).
 - Verificación del ciclo de R-2a9f4d17…R-9c4d2f61 (2026-11-24):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1021 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 12 pruebas nuevas

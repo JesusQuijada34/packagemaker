@@ -73,6 +73,10 @@ def default_runner(
         return 127, str(exc)
     except subprocess.TimeoutExpired:
         return 124, "tiempo de ejecución agotado"
+    except OSError as exc:
+        # Permiso de ejecución ausente, formato no ejecutable o ``cwd``
+        # inaccesible: el comando no llegó a lanzarse.
+        return 126, str(exc)
     output = (completed.stdout or "") + (completed.stderr or "")
     return completed.returncode, output
 

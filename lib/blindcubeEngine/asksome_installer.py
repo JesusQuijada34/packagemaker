@@ -317,7 +317,13 @@ def install_asksome(
 def read_record(app_id: str, install_root: Path | str) -> InstallRecord:
     name = _validated_app_id(app_id)
     path = Path(install_root).resolve() / name / RECORD_NAME
-    if not path.is_file():
+    try:
+        present = path.is_file()
+    except OSError as exc:
+        raise AsksomeInstallError(
+            f"No se pudo acceder al registro de instalación de {app_id}: {exc}"
+        ) from exc
+    if not present:
         raise AsksomeInstallError(f"No hay registro de instalación para {app_id}")
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -645,7 +651,7 @@ def compile_removeme_binary(
 
     target = Path(target)
     script = target / REMOVEME_NAME
-    if not script.is_file():
+    if not path_is_file(script):
         return None
 
     def _log(message: str) -> None:
