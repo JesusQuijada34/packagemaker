@@ -1137,3 +1137,65 @@ def test_legacy_json_document_still_migrates_after_classification(tmp_path):
     document = parse_mexf(source)
     assert document.source_format == "legacy-json"
     assert document.metadata["id"] == "demo.app"
+
+
+YAML_NATIVE_SCALARS = """format: mexf
+version: 1
+metadata:
+  id: influent.demo
+  name: Demo App
+  version: v1.0
+  released: 2024-01-01
+  labels: !!set
+    alpha:
+    beta:
+  blob: !!binary |
+    aGVsbG8=
+commands: []
+"""
+
+
+def test_yaml_native_scalars_are_normalized_for_json(tmp_path):
+    """Fechas, sets y bytes de YAML no deben romper ``canonicalize_mexf``."""
+    from lib.mexf_parser import canonicalize_mexf
+
+    source = tmp_path / "scalars.mexf"
+    source.write_text(YAML_NATIVE_SCALARS, encoding="utf-8")
+    document = parse_mexf(source)
+    metadata = document.metadata
+    assert metadata["released"] == "2024-01-01"
+    assert metadata["labels"] == ["alpha", "beta"]
+    assert metadata["blob"] == "aGVsbG8="
+    assert json.loads(canonicalize_mexf(document))["metadata"]["released"] == "2024-01-01"
+
+
+def test_compile_mexf_project_accepts_yaml_dates(tmp_path):
+    """Un ``.mexf`` válido con una fecha YAML compila sin traceback (R-8d4c1e67)."""
+    from lib.mexf_compiler import compile_mexf_project
+
+    root = _make_project(tmp_path)
+    (root / ".mexf" / "main.mexf").write_text(YAML_NATIVE_SCALARS, encoding="utf-8")
+    result = compile_mexf_project(root, tmp_path / "scalars.asksome")
+    assert result.output.is_file()
+    assert verify_asksome(result.output)["metadata"]["id"] == "influent.demo"
+
+
+def test_recursive_yaml_alias_is_reported_as_mexf_error(tmp_path):
+    """Un alias recursivo no puede serializarse a JSON: se informa, no se revienta."""
+    source = tmp_path / "recursive.mexf"
+    source.write_text(
+        "format: mexf\nversion: 1\nmetadata: &meta\n  id: demo.loop\n"
+        "  name: Loop\n  version: v1.0\n  self: *meta\ncommands: []\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(MexfError, match="circular"):
+        parse_mexf(source)
+
+
+def test_canonicalize_rejects_recursive_document():
+    from lib.mexf_parser import canonicalize_mexf
+
+    recursive: dict = {"format": "mexf", "version": 1}
+    recursive["self"] = recursive
+    with pytest.raises(MexfError, match="circular"):
+        canonicalize_mexf(recursive)

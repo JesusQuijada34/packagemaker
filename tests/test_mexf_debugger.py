@@ -159,6 +159,27 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(frame.status, "failed")
         self.assertEqual(frame.returncode, 126)
 
+    def test_default_runner_reports_embedded_null_byte(self):
+        """Un byte NUL en el argv hace que ``subprocess`` lance ``ValueError`` (R-3a7f2d84)."""
+        code, output = default_runner("python\x00falso", [])
+        self.assertEqual(code, 126)
+        self.assertIn("null", output.lower())
+
+    def test_default_runner_reports_null_byte_in_environment(self):
+        """El entorno también se valida: un valor con NUL no debe tumbar el motor."""
+        code, output = default_runner(
+            sys.executable, ["-c", "print(1)"], env={"DEMO": "a\x00b"}
+        )
+        self.assertEqual(code, 126)
+        self.assertIn("null", output.lower())
+
+    def test_debugger_step_survives_null_byte_command(self):
+        """El editor no debe abortar si un comando declara un argv imposible."""
+        document = {"commands": [{"id": "demo.nul", "executable": "python\x00x", "args": []}]}
+        frame = MexfDebugger(document).step()
+        self.assertEqual(frame.status, "failed")
+        self.assertEqual(frame.returncode, 126)
+
 
 class DebugFrameTests(unittest.TestCase):
     def test_as_dict_round_trip(self):

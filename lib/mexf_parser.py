@@ -6,7 +6,9 @@ pueden migrar explícitamente, sin cambiar su significado silenciosamente.
 """
 from __future__ import annotations
 
+import base64
 import copy
+import datetime
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -79,6 +81,53 @@ def _require_mapping(value: Any, name: str) -> Dict[str, Any]:
     if not isinstance(value, dict):
         raise MexfError(f"{name} debe ser un objeto YAML.")
     return value
+
+
+def _json_safe(value: Any, _active: set | None = None) -> Any:
+    """Normaliza un valor YAML a tipos serializables como JSON.
+
+    ``yaml.safe_load`` produce objetos que ``json.dumps`` no sabe escribir
+    (fechas, ``set``, ``bytes``, tuplas) y admite alias recursivos que JSON no
+    puede representar. El contenedor ``.mexf`` es JSON canónico, así que el
+    documento se normaliza al leerlo en vez de fallar al empaquetarlo.
+    """
+    if _active is None:
+        _active = set()
+    if isinstance(value, dict):
+        marker = id(value)
+        if marker in _active:
+            raise MexfError("El documento .mexf contiene una referencia circular.")
+        _active.add(marker)
+        try:
+            return {str(key): _json_safe(item, _active) for key, item in value.items()}
+        finally:
+            _active.discard(marker)
+    if isinstance(value, (list, tuple)):
+        marker = id(value)
+        if marker in _active:
+            raise MexfError("El documento .mexf contiene una referencia circular.")
+        _active.add(marker)
+        try:
+            return [_json_safe(item, _active) for item in value]
+        finally:
+            _active.discard(marker)
+    if isinstance(value, (set, frozenset)):
+        marker = id(value)
+        if marker in _active:
+            raise MexfError("El documento .mexf contiene una referencia circular.")
+        _active.add(marker)
+        try:
+            items = [_json_safe(item, _active) for item in value]
+        finally:
+            _active.discard(marker)
+        return sorted(items, key=repr)
+    if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+        return value.isoformat()
+    if isinstance(value, (bytes, bytearray)):
+        return base64.b64encode(bytes(value)).decode("ascii")
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
 
 
 def validate_mexf(data: Dict[str, Any], *, project_root: Path | None = None) -> List[Diagnostic]:
@@ -156,6 +205,7 @@ def parse_mexf(path: Path | str, *, project_root: Path | None = None) -> MexfDoc
     data = yaml.safe_load(raw)
     if not isinstance(data, dict):
         raise MexfError("El documento .mexf debe ser un objeto YAML.")
+    data = _json_safe(data)
     # Los assets se resuelven por defecto contra el directorio del propio
     # documento; el compilador pasa la raíz real del proyecto.
     errors = validate_mexf(data, project_root=project_root or source.parent)
@@ -185,7 +235,7 @@ def _legacy_to_v1(data: Dict[str, Any]) -> Dict[str, Any]:
 
 def canonicalize_mexf(document: MexfDocument | Dict[str, Any]) -> bytes:
     data = document.data if isinstance(document, MexfDocument) else document
-    return json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return json.dumps(_json_safe(data), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
 def migrate_legacy_mexf(path: Path | str, output_path: Path | str) -> Path:

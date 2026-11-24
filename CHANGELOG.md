@@ -1,5 +1,63 @@
 # Changelog
 
+## 2026-11-24 — cuadragésimo segundo ciclo
+
+### Corregido — comandos `.mexf` con byte NUL y escalares YAML no JSON
+
+Sin reportes externos nuevos. Dos hallazgos de auditoría interna en la misma
+familia que el ciclo anterior: un `ValueError` de `subprocess` que escapaba del
+depurador y un `TypeError` de `json.dumps` que escapaba de la compilación.
+Ningún cambio de comportamiento del engine: un `.mexf` con comandos lanzables y
+escalares JSON funciona exactamente igual.
+
+- **R-3a7f2d84 — un comando `.mexf` con byte NUL lanzaba traceback en el
+  depurador:** `default_runner()` traducía `FileNotFoundError` a 127,
+  `TimeoutExpired` a 124 y `OSError` a 126, pero `subprocess` señala con
+  `ValueError: embedded null byte` un `executable`, un argumento, un valor de
+  entorno o un `cwd` con un byte NUL. Un `.mexf` puede declarar ese texto, así
+  que `--debug-mexf --debug-run` mostraba el traceback completo y, desde el
+  diálogo del editor (slot de Qt), PyQt6 abortaba el proceso. Ahora
+  `default_runner()` captura también `ValueError` y devuelve 126 con el
+  mensaje; el paso queda `failed` y el depurador continúa. Reportado por
+  JesusQuijada34 (auditoría interna).
+- **R-8d4c1e67 — un `.mexf` con escalares YAML no JSON lanzaba `TypeError` al
+  compilar:** `yaml.safe_load()` produce fechas, `set`, `bytes` y tuplas, y
+  permite alias recursivos; `parse_mexf()` los aceptaba y
+  `canonicalize_mexf()` fallaba después con `TypeError: Object of type date is
+  not JSON serializable` o `ValueError: Circular reference detected`.
+  `--compile-mexf` mostraba el traceback porque sólo captura
+  `MexfCompileError`/`OSError`, y en la GUI no se generaba el artefacto.
+  Ahora `_json_safe()` normaliza el documento al leerlo y antes de
+  serializarlo (fechas a ISO 8601, `set` a lista ordenada, `bytes` a base64,
+  tuplas a listas, claves y tipos desconocidos a texto) y rechaza la recursión
+  con `MexfError`. Reportado por JesusQuijada34 (auditoría interna).
+
+### Revisión de reportes e issues
+
+- Sin reportes nuevos en `bugs.txt` ni en el issue #4 y sin pull requests
+  abiertos.
+- Bugs abiertos: **R-4f8a2c60** (splash, espera Q-008) y **R-6a1f8c23**
+  (arrastre con la ventana maximizada, espera Q-011). No se han tocado: ambos
+  son cambios de engine pendientes de aprobación.
+- `CONFIRM.MD`: sin respuestas nuevas del propietario desde `0ac5457`. Q-004,
+  Q-007, Q-008 y Q-011…Q-014 siguen pendientes.
+
+### Verificación
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: 1043 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios.
+- Pruebas nuevas: 7 (4 en `tests/test_mexf_asksome.py` y 3 en
+  `tests/test_mexf_debugger.py`); las 7 fallan con el código anterior
+  (comprobado con `git stash` de `lib/mexf_parser.py` y
+  `lib/mexf_debugger.py`).
+- Reproducción real: `--debug-mexf --debug-run` con `executable:
+  "python\u0000x"` respondía `ValueError: embedded null byte`; ahora informa
+  `[ failed] … 126`. Un `.mexf` con `released: 2024-01-01` abortaba
+  `--compile-mexf` con `TypeError`; ahora genera el `.asksome`, y un alias
+  recursivo responde `[ERROR] … referencia circular`.
+- No se prepara release: el periodo de observación sigue en curso y el
+  requisito de 7 días sin reportes nuevos no se cumple.
+
 ## 2026-11-24 — cuadragésimo primer ciclo
 
 ### Corregido — `.mexf` YAML con claves legacy y traductor automático

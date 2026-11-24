@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (cuadragésimo primer ciclo)
+Última actualización: 2026-11-24 (cuadragésimo segundo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -137,6 +137,8 @@ de auditoría.
 | R-4c8b2e91 | Bug — un comando `.mexf` no ejecutable lanza traceback en `--debug-mexf --debug-run` | Media | Resuelto |
 | R-5d1c7a83 | Bug — un `.mexf` YAML con claves legacy lanza `JSONDecodeError` con traceback | Alta | Resuelto |
 | R-8c2f4b17 | Bug — una respuesta inesperada del traductor automático aborta la interfaz | Media | Resuelto |
+| R-3a7f2d84 | Bug — un comando `.mexf` con byte NUL lanza traceback en el depurador | Media | Resuelto |
+| R-8d4c1e67 | Bug — un `.mexf` con escalares YAML no JSON lanza `TypeError` al compilar | Alta | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -222,6 +224,16 @@ a `json.loads` y los tres comandos de shell del formato terminaban en
 `JSONDecodeError` con traceback, y una respuesta anómala del traductor
 automático (`5`, `true`, listas de números) lanzaba `TypeError` dentro de `tr()`
 y cerraba la interfaz.
+
+El cuadragésimo segundo ciclo registra R-3a7f2d84 y R-8d4c1e67 (corregidos y
+probados, sin cambios de comportamiento del engine): dos documentos `.mexf`
+válidos para YAML pero imposibles de serializar a JSON tumbaban el depurador y
+la compilación. Un comando con byte NUL lanzaba `ValueError` desde `subprocess`
+(no capturado por `default_runner`) y un escalar YAML nativo (fecha, `set`,
+`bytes`) o un alias recursivo hacía fallar `json.dumps` con `TypeError` dentro
+de `canonicalize_mexf`. Ahora el depurador informa del comando no lanzable con
+código 126 y el parser normaliza esos escalares o rechaza la recursión con
+`MexfError`.
 
 ---
 
@@ -3568,6 +3580,65 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo primer ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-3a7f2d84 — Un comando `.mexf` con byte NUL lanza traceback en el depurador
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `default_runner()` capturaba `FileNotFoundError` (127),
+  `TimeoutExpired` (124) y `OSError` (126), pero `subprocess` señala con
+  `ValueError: embedded null byte` un `executable`, un argumento, un valor de
+  entorno o un `cwd` que contenga un byte NUL. Un `.mexf` puede declarar ese
+  texto (`executable: "python\u0000x"`), así que `--debug-mexf --debug-run`
+  mostraba el traceback completo y, desde el diálogo del editor (slot de Qt),
+  PyQt6 abortaba el proceso.
+- **Pasos para reproducir:** crear un `.mexf` con
+  `executable: "python\u0000x"` y ejecutar
+  `python packagemaker.py --debug-mexf <archivo> --debug-run`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (requiere un `.mexf` malformado, pero cierra la GUI).
+- **Solución aplicada:** `default_runner()` captura también `ValueError` y
+  devuelve `126` con el mensaje, igual que con un binario no ejecutable. El
+  depurador marca el paso como `failed` y continúa.
+- **Pruebas:** `tests/test_mexf_debugger.py::RunnerTests::test_default_runner_reports_embedded_null_byte`,
+  `::test_default_runner_reports_null_byte_in_environment` y
+  `::test_debugger_step_survives_null_byte_command` (las tres fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo segundo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
+## R-8d4c1e67 — Un `.mexf` con escalares YAML no JSON lanza `TypeError` al compilar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-24
+- **Descripción:** `yaml.safe_load()` produce objetos que `json.dumps()` no
+  sabe escribir (fechas, `set`, `bytes`, tuplas) y permite alias recursivos.
+  `parse_mexf()` los aceptaba y `canonicalize_mexf()` fallaba después con
+  `TypeError: Object of type date is not JSON serializable` (o
+  `ValueError: Circular reference detected`). `--compile-mexf` mostraba el
+  traceback porque sólo captura `MexfCompileError`/`OSError`; en la GUI el
+  error se mostraba pero el artefacto no se generaba.
+- **Pasos para reproducir:** añadir `released: 2024-01-01` a `metadata` en
+  `.mexf/main.mexf` y ejecutar `--compile-mexf <proyecto>`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (una fecha YAML es un dato corriente y el fallo afecta a
+  la compilación de artefactos).
+- **Solución aplicada:** `_json_safe()` normaliza el documento al leerlo y
+  antes de serializarlo: fechas/horas a ISO 8601, `set`/`frozenset` a lista
+  ordenada, `bytes` a base64, tuplas a listas, claves a texto y tipos
+  desconocidos a texto. Un alias recursivo se rechaza con `MexfError`
+  («referencia circular»), que el CLI ya traduce a un mensaje sin traceback.
+  `canonicalize_mexf()` aplica la misma normalización como garantía para
+  cualquier llamador.
+- **Pruebas:** `tests/test_mexf_asksome.py::test_yaml_native_scalars_are_normalized_for_json`,
+  `::test_compile_mexf_project_accepts_yaml_dates`,
+  `::test_recursive_yaml_alias_is_reported_as_mexf_error` y
+  `::test_canonicalize_rejects_recursive_document` (las cuatro fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo segundo ciclo.
+- **Fecha de resolución:** 2026-11-24.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -3944,6 +4015,17 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `--compile-mexf`, `--shell-plan` y `--debug-mexf` sobre un `.mexf` YAML con
   `extensions:` mostraban `JSONDecodeError` con traceback; ahora responden
   `[ERROR] … Formato .mexf desconocido` y código 1.
+- Verificación del cuadragésimo segundo ciclo (2026-11-24):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1043 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 7 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de
+  `lib/mexf_parser.py` y `lib/mexf_debugger.py`). Reproducción real:
+  `--debug-mexf --debug-run` con un `executable` que contiene `\u0000` mostraba
+  `ValueError: embedded null byte`; ahora informa `[ failed] … 126`. Un
+  `.mexf` con `released: 2024-01-01` abortaba `--compile-mexf` con
+  `TypeError: Object of type date is not JSON serializable`; ahora genera el
+  `.asksome` y un alias recursivo responde
+  `[ERROR] … referencia circular`.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
