@@ -2,9 +2,11 @@
 
 ### Corregido — traducción cruda en el registro de compilación, interfaz sin Pillow y notificación de error sin `pyperclip`
 
-Sin reportes externos nuevos. Tres hallazgos de la auditoría interna; ningún
-cambio de comportamiento del engine: la ley de nombres, el formato `.iflapp`,
-las plantillas y los paquetes siguen exactamente igual.
+Al cierre del ciclo se integró el commit del propietario `bba72d6`, que aportó
+7 aprobaciones con instrucciones y 8 reportes nuevos. De los tres bugs
+corregidos en este ciclo, ninguno cambia el comportamiento del engine: la ley
+de nombres, el formato `.iflapp`, las plantillas y los paquetes siguen
+exactamente igual.
 
 - **R-9c7e4a21 — el aviso de carpeta bloqueada mostraba la clave cruda:** en
   español (idioma por defecto) e inglés, `tr("build_log.folder_locked")`
@@ -38,9 +40,23 @@ y recorrido recursivo), `tests/test_engine_packages_layout.py` (framework sin
 Pillow) y `tests/test_notification_error_handler.py` (2 casos). Suite completa:
 1172 pasan, 1 omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
 
+### Integración del commit del propietario `bba72d6`
+
+- Los cambios de este ciclo se rebasaron sobre `bba72d6` sin reescribir el
+  commit del propietario (sin force push).
+- Se registraron sus 7 respuestas afirmativas: Q-004 (opción A), Q-007, Q-008,
+  Q-011, Q-012, Q-013 y Q-014. **Ninguna se aplicó en este ciclo**: la regla de
+  mantenimiento exige una confirmación final antes de tocar el engine, y se
+  añadieron los bloques `F-001`…`F-006` en `CONFIRM.MD`.
+- Se registraron sus 8 reportes nuevos en `bugs.md` (R-8a3f1c72, R-4d9e2b61,
+  R-6b2f8d43, R-7c4a1e95, R-2f8b6a31, R-9e5c3d84, R-5a7d2f16 y R-3c8e4b72).
+  Quedan pendientes; ninguno se marca como resuelto.
+- Se añadieron Q-019 (entorno aislado de compilación) y Q-020 (traducción
+  completa al cambiar de idioma) a `CONFIRM.MD`.
+
 No se prepara release: siguen abiertos R-4f8a2c60 (pendiente de Q-008) y
-R-6a1f8c23 (pendiente de Q-011), y el requisito de 7 días sin reportes nuevos
-continúa en curso desde el 2026-11-22.
+R-6a1f8c23 (pendiente de Q-011); además, el commit `bba72d6` reinició el
+periodo de observación con 8 reportes nuevos el 2026-11-25.
 
 ## 2026-11-25 — quincuagésimo segundo ciclo
 

@@ -1,9 +1,9 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-25 (quincuagésimo segundo ciclo: R-7a5d2c94 y R-2f6c8a13; ningún cambio de engine aplicado)
-- **Último commit de `CONFIRM.MD` procesado:** `84cec05` (2026-11-25), autor `openhands <openhands@all-hands.dev>`. No aportó respuestas nuevas del propietario: sólo la cabecera y las 11 preguntas pendientes. La última respuesta del propietario sigue siendo `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`; el clon es superficial (*graft*) y `git log -- CONFIRM.MD` sólo muestra ese commit, así que no hay ninguna respuesta nueva que aplicar. Las 11 preguntas siguen sin marcar.
+- **Última revisión:** 2026-11-25 (quincuagésimo tercer ciclo)
+- **Último commit de `CONFIRM.MD` procesado:** `bba72d6` (2026-11-25), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>` (autoría verificada con la API de GitHub). Aportó 7 respuestas afirmativas con instrucciones adicionales: Q-004 (opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014. Q-015, Q-016, Q-017 y Q-018 siguen sin responder.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 11 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020), 7 aprobadas pendientes de confirmación final e implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014), 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -34,7 +34,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `tests/test_hardening.py`.
 - **Riesgo y efectos secundarios:** borrado destructivo dentro del paquete; un
   zipapp sin `.py` deja de arrancar. Por eso la opción A excluye ese backend.
-- **Respuesta del propietario (JesusQuijada34):** `[A] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `bba72d6`):** «opción A (el corchete original indicaba la opción elegida)»
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-001** e implementación.
 
 ### Q-007 — Reorganización de `lib/` y renombrado a GlassCube
 - **Tipo:** cambio de engine
@@ -46,11 +48,13 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `requirements.txt`, imports y tests.
 - **Riesgo y efectos secundarios:** rotura masiva de imports y del empaquetado.
   Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[Si, pero hazlo cuidadosamente, dejando lib/ sin engines revueltos por todo eso, por lo menos encierras a cada oveja en su corral, asi que procede] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `bba72d6`):** «Si, pero hazlo cuidadosamente, dejando lib/ sin engines revueltos por todo eso, por lo menos encierras a cada oveja en su corral, asi que procede»
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-002** e implementación.
 
 ### Q-008 — Coreografía de splash y ciclo de vida de ventanas (repetida)
 - **Tipo:** cambio de engine
-- **Fecha:** 2026-11-23 (repetida: la respuesta anterior quedó partida por el conflicto de merge del commit `0ac5457`, con `[ ] SÍ` en un lado y `[x] SÍ` en el otro)
+- **Fecha:** 2026-11-23 (repetida: la respuesta anterior quedó partida por el conflicto de merge del commit `0ac5457`, con una casilla vacía en un lado y una marcada en el otro)
 - **Qué se propone:** completar la secuencia splash → login → verificación
   interna → ventana principal, con desvanecido tipo cortina, splash convertido
   en ventana de error, `destroy()` tras los códigos de salida y triple clic en
@@ -71,7 +75,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el ciclo de vida de ventanas y el
   manejo de errores de arranque. No se puede verificar visualmente en Windows
   desde este entorno. Riesgo medio-alto.
-- **Respuesta del propietario (JesusQuijada34):** `[Si, y quita el arranque de multiples ventanas python antes de correr la interfaz, ya que al abrir el programa lo primero que se ejecuta varias veces es como 5 ventanas python vacias, pequeñas y sin titulo] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `bba72d6`):** «Si, y quita el arranque de multiples ventanas python antes de correr la interfaz, ya que al abrir el programa lo primero que se ejecuta varias veces es como 5 ventanas python vacias, pequeñas y sin titulo»
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-003** e implementación.
 
 ### Q-011 — Ventana: arrastre con la ventana maximizada y ajuste a media pantalla
 - **Tipo:** cambio de engine
@@ -87,7 +93,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   comprobaba). Cambia el ciclo de vida de la ventana y depende de los gestos
   nativos de Windows, que no se pueden verificar desde este entorno. Riesgo
   medio-alto. Detalle en `bugs.md` (R-6a1f8c23).
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-004** e implementación.
 
 ### Q-012 — Tareas en segundo plano y barra marquee en las barras de acción
 - **Tipo:** mejora
@@ -105,6 +112,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   Riesgo alto. (La parte de rendimiento que ya era un bug está corregida:
   R-9e2b4d17.)
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-005** e implementación.
 
 ### Q-013 — Actualizaciones silenciosas de parches de seguridad
 - **Tipo:** cambio de engine
@@ -120,7 +128,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** el programa se reemplaza a sí mismo;
   requiere red, permisos de escritura y verificación de integridad, y un fallo
   puede dejar la instalación a medias. Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[si y con registros y diff de archivos que no fueron actualizados, para lo mejor, dejar el actualizador de ultimo, eso si, se debe de comprobar si esta compilado o no, si no esta compilado, ofrecer el ultimo commit y un metodo para saber en que commit se encuentra usando regresiones y adelantamientos y al mismo tiempo un diff para ver, si todos los diff pasan a 1, saber que hay que actualizar la app y dejar una marca del commit para saber el estado, pero si esta compilado guiarse del release o del commit del release y compararlo con el ultimo commit en el repo para saber como actualizar, pero se usara blindcube en si mismo para instalar el paquete y reemplazar los archivos] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `bba72d6`):** «si y con registros y diff de archivos que no fueron actualizados, para lo mejor, dejar el actualizador de ultimo, eso si, se debe de comprobar si esta compilado o no, si no esta compilado, ofrecer el ultimo commit y un metodo para saber en que commit se encuentra usando regresiones y adelantamientos y al mismo tiempo un diff para ver, si todos los diff pasan a 1, saber que hay que actualizar la app y dejar una marca del commit para saber el estado, pero si esta compilado guiarse del release o del commit del release y compararlo con el ultimo commit en el repo para saber como actualizar, pero se usara blindcube en si mismo para instalar el paquete y reemplazar los archivos»
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-006** e implementación.
 
 ### Q-014 — Eventos en el sidebar y temas de temporada
 - **Tipo:** mejora
@@ -134,7 +144,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** introduce contenido remoto (descarga y
   caché de imágenes) y cambios visuales estacionales. Tú mismo lo aparcaste
   hasta tener un release estable sin reportes. Riesgo medio.
-- **Respuesta del propietario (JesusQuijada34):** `[si, reemplazando por completo el recuadro del sidebar"Contexto"] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `bba72d6`):** «si, reemplazando por completo el recuadro del sidebar"Contexto"»
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de planificación (mejora de UI, no cambia el engine y no requiere confirmación final).
 
 ### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
 - **Tipo:** mejora
@@ -213,6 +225,139 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   los scripts que compilan proyectos con metadatos incompletos dejarían de
   funcionar (opción dura) o seguirían funcionando con un aviso (opción blanda).
   No toca el nombre canónico ni las plantillas. Riesgo medio.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-019 — Entorno aislado de compilación (reporte del propietario)
+
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-25
+- **Qué se propone:** que el build descargue en la carpeta del proyecto la
+  versión de Python correspondiente a la plataforma, cree un entorno aislado,
+  instale las dependencias, ejecute las pruebas, compile y mueva el resultado
+  fuera del entorno. Hoy Nuitka y PyInstaller se ejecutan «embebidos» en el
+  intérprete actual y el reporte del propietario indica errores al compilar con
+  Nuitka. El propietario pide conservar el formato de compilación actual.
+- **Archivos/componentes afectados:** `lib/blindcubeEngine/BuildThread.py`,
+  `lib/blindcubeEngine/compilers.py`,
+  `lib/blindcubeEngine/nuitka_embedded.py`,
+  `lib/flatcubeEngine/pyinstaller_embedded.py`,
+  `lib/blindcubeEngine/build_preflight.py`, `packagemaker.py` y pruebas.
+- **Riesgo y efectos secundarios:** descargas de red, más tiempo y espacio de
+  build, dependencia de la disponibilidad de los binarios de Python y posible
+  divergencia entre lo probado y lo empaquetado. Riesgo alto.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-020 — Traducir toda la interfaz al cambiar de idioma
+
+- **Tipo:** cambio de engine (UI)
+- **Fecha:** 2026-11-25
+- **Qué se propone:** el reporte del propietario confirma que al cambiar de
+  idioma la mayor parte de la interfaz sigue en español. `apply_ui_language()`
+  sólo actualiza el sidebar, la descripción, el interruptor de sandbox y el
+  selector de motor; las páginas de creación, compilación y configuración, las
+  tarjetas, «Acerca de» y el botón de cerrar sesión de GitHub se construyen una
+  sola vez con `tr()` o con texto fijo. Opciones: **A)** reconstruir las páginas
+  en caliente conservando la página activa y los datos del formulario (mejor
+  UX, más riesgo); **B)** reiniciar la aplicación automáticamente tras guardar
+  el idioma (simple y fiable, pero cierra la ventana); **C)** mantener la
+  actualización instantánea actual y mostrar el banner de reinicio para el
+  resto (menor riesgo, no cumple del todo el reporte). Recomendación: A, con B
+  como respaldo si la reconstrucción falla.
+- **Archivos/componentes afectados:** `packagemaker.py`
+  (`apply_ui_language` y construcción de páginas), `lib/pm_dashboard.py`,
+  `lib/settings_panel.py`, `lib/settings_cards.py`,
+  `lib/github_profile_card.py`, `lib/alert_dialog.py`, `lang/*.json`.
+- **Riesgo y efectos secundarios:** pérdida del estado de los formularios,
+  widgets duplicados o referencias colgantes si la reconstrucción no es
+  completa. Riesgo medio-alto.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+  (indica A, B o C junto a la casilla)
+
+---
+
+## Confirmación final de cambios de engine aprobados
+
+La regla de mantenimiento exige una confirmación final, indicando exactamente
+qué comportamiento cambiará, antes de tocar el engine. Estos seis puntos ya
+tienen tu `SÍ` del commit `bba72d6`; marca `SÍ` sólo si quieres que se
+implementen tal como se describen. Sin esta marca no se modifica el engine.
+
+### F-001 — Q-004: `compile-only` retira el `.py` del paquete salvo en zipapp
+
+- **Qué cambiará:** `hardening.compile_to_bytecode()` seguirá generando el
+  `.pyc` O2 y, además, retirará el `.py` del árbol del paquete (nunca del
+  proyecto fuente). En builds `zipapp` el `.py` se conserva porque es el punto
+  de entrada del artefacto, y el motivo se registra en el log.
+- **Archivos/componentes:** `lib/hardening.py`, `lib/BuildThread.py`,
+  `tests/test_hardening.py`.
+- **Riesgo:** medio; borrado destructivo dentro del paquete.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### F-002 — Q-007: reorganizar `lib/` por motores y renombrar a GlassCube
+
+- **Qué cambiará:** los módulos se agruparán en `lib/blindcubeEngine/`,
+  `lib/flatcubeEngine/` y `lib/makeselfEngine/`, cada motor en su carpeta, y la
+  copia vendorizada de `leviathan_ui` pasará a llamarse **GlassCube**. Se
+  actualizarán imports, `requirements.txt` y pruebas.
+- **Archivos/componentes:** todo `lib/`, `packagemaker.py`, `updater.py`,
+  `tests/`.
+- **Riesgo:** alto; rotura masiva de imports y del empaquetado.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### F-003 — Q-008: splash de nivel superior y ciclo de vida de ventanas
+
+- **Qué cambiará:** el splash se mostrará antes de la ventana principal como
+  ventana de nivel superior (no como hijo), `WipeWindow` se aplicará sólo a
+  ventanas top-level, se cerrará con `destroy()` y se eliminarán las ventanas
+  Python vacías que aparecen al arrancar. Se conserva la secuencia splash →
+  login → verificación → ventana principal.
+- **Archivos/componentes:** `lib/splash_bootloader.py`, `lib/splash_window.py`,
+  `lib/window_chrome.py`, `lib/window_manager_bridge.py`, `packagemaker.py`.
+- **Riesgo:** medio-alto; no se puede verificar visualmente en Windows desde
+  este entorno.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### F-004 — Q-011: arrastre y ajuste de la ventana maximizada
+
+- **Qué cambiará:** arrastrar la titlebar con la ventana maximizada la
+  restaurará a tamaño normal y la moverá con el cursor; subirla al borde
+  superior la maximizará y llevarla a un borde lateral la ajustará a media
+  pantalla, con transiciones suaves. Se añade el gesto de triple clic para
+  pantalla completa. Como máximo se atenderán tres gestos: dos
+  maximizar/restaurar y el máximo para pantalla completa.
+- **Archivos/componentes:** `lib/window_manager_bridge.py`, `lib/TitleBar.py`,
+  `lib/immersive_titlebar.py`, `packagemaker.py`.
+- **Riesgo:** medio-alto; depende de gestos nativos que no se pueden verificar
+  en Linux.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### F-005 — Q-012: tareas en segundo plano y barra marquee
+
+- **Qué cambiará:** el guardado y las acciones largas dejarán de bloquear la
+  interfaz; mientras haya trabajo se oscurecerá la ventana y se animará una
+  barra marquee fina bajo todas las barras de acción. Las notificaciones
+  nativas sustituirán al diálogo iOS, elegible en «Aspecto → PushBox».
+- **Archivos/componentes:** `lib/page_action_bar.py`, `lib/settings_panel.py`,
+  `lib/ios_progress_dialog.py`, `lib/notificationSystem.py`, `lib/report.py`,
+  `packagemaker.py`.
+- **Riesgo:** alto; escritura concurrente de `pm.data` y cambio del modelo de
+  avisos.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### F-006 — Q-013: actualizaciones silenciosas de parches de seguridad
+
+- **Qué cambiará:** si no hay release nueva, el updater descargará el último
+  commit, ejecutará las pruebas de BlindCube, compilará, abrirá el programa con
+  salida oculta y, si no hay errores, ofrecerá «Reiniciar para aplicar el
+  parche»; al reiniciar se reemplazan los archivos y se notifica
+  `{versión}-{commit}`. Sin estar compilado, descargará el ZIP del último
+  commit y reemplazará archivos, con registro y diff de lo no actualizado y una
+  marca del commit aplicado. Se comprobará si el programa está compilado antes
+  de elegir la ruta.
+- **Archivos/componentes:** `updater.py`, `lib/coreUpdater/`,
+  `lib/blindcubeEngine/`, `version.res`, `details.xml`.
+- **Riesgo:** alto; el programa se reemplaza a sí mismo y un fallo puede dejar
+  la instalación a medias.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---

@@ -171,6 +171,14 @@ de auditoría.
 | R-9c7e4a21 | Bug — `build_log.folder_locked` sin entrada en `es.json`/`en.json` | Baja | Resuelto |
 | R-4b8f2d63 | Bug — el framework vendorizado no carga sin Pillow | Media | Resuelto |
 | R-2e6d9b14 | Bug — `error_handler` importa `pyperclip` sin proteger | Media | Resuelto |
+| R-8a3f1c72 | Bug — al cambiar de idioma la mayor parte de la interfaz sigue en español | Alta | Pendiente (Q-020) |
+| R-4d9e2b61 | Bug — la compilación con Nuitka falla y el build no usa entorno aislado | Alta | Pendiente (Q-019) |
+| R-6b2f8d43 | Bug — el build falla con «archivo en uso por otro proceso» | Alta | Pendiente |
+| R-7c4a1e95 | Bug — la interfaz se congela y renderiza mal al maximizar/restaurar | Media | Pendiente (Q-012) |
+| R-2f8b6a31 | Bug/engine — la titlebar no limita los gestos a tres (max/restore/fullscreen) | Media | Pendiente (Q-011/F-004) |
+| R-9e5c3d84 | Bug — los radios no siguen los estados QSS normal/hover/pressed | Baja | Pendiente |
+| R-5a7d2f16 | Mejora — fondo blanco/negro translúcido sobre el blur | Baja | Pendiente |
+| R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -2179,13 +2187,21 @@ importaban PyQt6 sin respaldo, así que `--version`, `--check` y `--install
 ## Mejoras: estado de aprobación
 
 Las propuestas de esta sección y los cambios de engine están recogidos como
-preguntas `Q-001`…`Q-015` en `CONFIRM.MD`, el único canal de aprobación válido
+preguntas `Q-001`…`Q-020` en `CONFIRM.MD`, el único canal de aprobación válido
 (solo JesusQuijada34). El 2026-11-23 el propietario marcó
 `[x] SÍ` en Q-001, Q-002, Q-003, Q-005, Q-006, Q-009 y Q-010 (commit `0ac5457`,
 autoría verificada con la API de GitHub). Q-001, Q-002 y Q-003 se aplicaron en
 el vigésimo quinto ciclo; Q-005, Q-006, Q-009 y Q-010 ya estaban implementados
-y quedan verificados por la suite. Q-004 necesita aclaración y Q-007/Q-008
-siguen pendientes.
+y quedan verificados por la suite.
+
+El 2026-11-25 el propietario aprobó con instrucciones adicionales Q-004
+(opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014 en el commit `bba72d6`
+(autoría verificada con la API de GitHub). Ninguna de esas siete se ha
+implementado todavía: la regla de mantenimiento exige una confirmación final
+antes de tocar el engine, y esas confirmaciones viven en la sección
+«Confirmación final» de `CONFIRM.MD` (`F-001`…`F-006`). Q-014 es una mejora de
+UI y queda pendiente de planificación. Q-015…Q-018 siguen sin responder y
+Q-019/Q-020 son nuevas.
 
 ### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
 
@@ -2271,11 +2287,9 @@ siguen pendientes.
 
 - **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin issue externo)
 - **Fecha del reporte:** 2026-11-21
-- **Estado:** Pendiente de aclaración (Q-004). La respuesta del propietario
-  («decide tú, un zip app no debe contener archivos python, solamente el
-  ejecutable compilado con pyinstaller y ya») mezcla una decisión delegada con
-  una condición que contradice el propio backend zipapp, que por definición
-  empaqueta código Python. No se aplica hasta desambiguar.
+- **Estado:** Aprobada la opción A (Q-004) el 2026-11-25 (commit `bba72d6`);
+  pendiente de confirmación final **F-001** e implementación. El propietario
+  eligió retirar el `.py` tras generar el `.pyc`, conservándolo en zipapp.
 - **Situación actual:** `hardening.compile_to_bytecode()` escribe el `.pyc`
   optimizado (O2) junto al `.py`, pero no retira el fuente. El paquete sigue
   conteniendo el `.py` legible, así que el método no cumple lo que promete su
@@ -2336,6 +2350,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 3. Reorganización de `lib/` y GlassCube
 
+- **Estado:** Aprobado (Q-007) el 2026-11-25 (commit `bba72d6`) con la nota
+  «cada oveja en su corral»; pendiente de confirmación final **F-002** e
+  implementación. No se ha movido ningún módulo.
 - **Actual:** módulos en `lib/` y dependencia opcional `leviathan_ui`.
 - **Solicitado:** mover a `blindcubesEngine/`, `flatcubeEngine/`,
   `makeselfEngine/`, integrar la librería y renombrar `leviathan-ui` a
@@ -2346,10 +2363,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 4. Coreografía de splash y ventanas
 
-- **Estado:** Pendiente. La respuesta de Q-008 quedó partida por un conflicto
-  de merge (`[ ] SÍ` en un lado, `[x] SÍ` en el otro), así que se trata como no
-  respondida y se ha vuelto a preguntar. El defecto se registra como
-  R-4f8a2c60. No se ha tocado el ciclo de vida de ventanas.
+- **Estado:** Aprobado (Q-008) el 2026-11-25 (commit `bba72d6`), con la
+  petición adicional de eliminar las ventanas Python vacías que aparecen al
+  arrancar; pendiente de confirmación final **F-003** e implementación. El
+  defecto se registra como R-4f8a2c60. No se ha tocado el ciclo de vida de
+  ventanas.
 
 - **Actual:** splash y titlebar existentes, sin la secuencia completa
   splash → login → verificación interna → ventana principal.
@@ -2407,7 +2425,10 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 7. Ventana: arrastre, maximizado y ajuste a media pantalla
 
-- **Estado:** Pendiente (Q-011). Registrado como R-6a1f8c23.
+- **Estado:** Aprobado (Q-011) el 2026-11-25 (commit `bba72d6`);
+  pendiente de confirmación final **F-004** e implementación. Registrado
+  como R-6a1f8c23. El propietario añadió el límite de tres gestos: dos
+  maximizar/restaurar y el máximo para pantalla completa.
 - **Actual:** `window_manager_bridge` inicia `startSystemMove()` siempre que se
   pulsa la titlebar, incluso maximizada, así que la ventana se desplaza.
 - **Solicitado:** con la ventana maximizada, arrastrar la titlebar la restaura
@@ -2421,7 +2442,8 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 8. Tareas en segundo plano y barra marquee en las barras de acción
 
-- **Estado:** Pendiente (Q-012).
+- **Estado:** Aprobado (Q-012) el 2026-11-25 (commit `bba72d6`);
+  pendiente de confirmación final **F-005** e implementación.
 - **Actual:** el guardado automático y la descarga de fuentes corren en el hilo
   de la interfaz; el diálogo iOS con barra de progreso sigue siendo el aviso
   principal de acciones largas.
@@ -2438,7 +2460,10 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 9. Actualizaciones silenciosas de parches de seguridad (`updater.py`)
 
-- **Estado:** Pendiente (Q-013).
+- **Estado:** Aprobado (Q-013) el 2026-11-25 (commit `bba72d6`) con las
+  condiciones de registro, diff de archivos no actualizados y detección de
+  si el programa está compilado; pendiente de confirmación final **F-006**
+  e implementación.
 - **Actual:** `updater.py` consulta releases publicadas y no aplica parches.
 - **Solicitado:** si no hay release nueva, descargar en silencio el último
   commit, ejecutar las pruebas de BlindCube, compilar, abrir el programa con la
@@ -2455,8 +2480,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ### 10. Eventos en el sidebar y temas de temporada
 
-- **Estado:** Pendiente (Q-014). Aparcado por el propietario hasta que haya un
-  release estable sin reportes.
+- **Estado:** Aprobado (Q-014) el 2026-11-25 (commit `bba72d6`) con la nota
+  «reemplazando por completo el recuadro del sidebar "Contexto"»; pendiente de
+  planificación (mejora de UI, sin confirmación final de engine).
 - **Actual:** el sidebar no muestra banners de eventos y la interfaz no cambia
   con la temporada.
 - **Solicitado:** banners de eventos/anuncios en el sidebar y adhesivos,
@@ -2521,6 +2547,45 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `lib/blindcubeEngine/build_validation.py`, `tests/test_build_validation.py`.
 - **Riesgo:** medio (comportamiento visible de un comando existente).
 
+### 14. Entorno aislado de compilación (Q-019)
+
+- **Estado:** Pendiente (Q-019). Proviene del reporte del propietario en
+  `bugs.txt` (commit `bba72d6`): «la compilación quedó corrupta, todo dice
+  embebido, hay errores al compilar con nuitka, nada tiene el entorno aislado».
+- **Actual:** Nuitka y PyInstaller se ejecutan «embebidos» en el intérprete
+  actual; no se descarga un Python por proyecto ni se crea un entorno aislado.
+- **Solicitado:** descargar en la carpeta del proyecto la versión de Python
+  correspondiente, crear un entorno aislado, instalar dependencias, ejecutar
+  pruebas, compilar, sacar el resultado del entorno y moverlo fuera, sin
+  cambiar el formato de compilación.
+- **Efectos secundarios:** red, tiempo y espacio de build, dependencia de los
+  binarios oficiales de Python y posible divergencia entre lo probado y lo
+  empaquetado.
+- **Archivos:** `lib/blindcubeEngine/BuildThread.py`,
+  `lib/blindcubeEngine/compilers.py`,
+  `lib/blindcubeEngine/nuitka_embedded.py`,
+  `lib/flatcubeEngine/pyinstaller_embedded.py`,
+  `lib/blindcubeEngine/build_preflight.py`, `packagemaker.py`, pruebas.
+- **Riesgo:** alto.
+
+### 15. Traducción completa de la interfaz al cambiar de idioma (Q-020)
+
+- **Estado:** Pendiente (Q-020). Proviene del reporte del propietario en
+  `bugs.txt` (commit `bba72d6`): «las traducciones están incompletas y la
+  mayoría de la interfaz está en español al cambiar de idioma».
+- **Actual:** `apply_ui_language()` sólo actualiza sidebar, descripción,
+  sandbox y selector de motor; el resto de páginas se construye una sola vez
+  con `tr()` o con texto fijo.
+- **Solicitado:** elegir entre reconstruir las páginas en caliente (A),
+  reiniciar la aplicación al guardar el idioma (B) o mantener el banner de
+  reinicio (C). Recomendación: A con B como respaldo.
+- **Efectos secundarios:** pérdida del estado de los formularios, widgets
+  duplicados o referencias colgantes.
+- **Archivos:** `packagemaker.py`, `lib/pm_dashboard.py`,
+  `lib/settings_panel.py`, `lib/settings_cards.py`,
+  `lib/github_profile_card.py`, `lib/alert_dialog.py`, `lang/*.json`.
+- **Riesgo:** medio-alto.
+
 ---
 
 ## R-5b1d9e47 — El hover del sidebar parpadeaba y los iconos quedaban apretados
@@ -2580,8 +2645,10 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `WA_TranslucentBackground`, y el efecto `WipeWindow` (ventana por capas) se
   aplica sobre un widget hijo. `UpdateLayeredWindowIndirect` y el gestor de
   ventanas de Qt exigen una ventana de nivel superior.
-- **Estado:** Pendiente. Depende del cambio de engine Q-008, cuya respuesta
-  quedó ambigua; no se ha modificado el ciclo de vida de ventanas.
+- **Estado:** Aprobado Q-008 el 2026-11-25 (commit `bba72d6`), incluida la
+  petición de eliminar las ventanas vacías del arranque; pendiente de
+  confirmación final **F-003** e implementación. No se ha modificado el ciclo
+  de vida de ventanas.
 - **Propuesta:** splash de nivel superior (sin padre) mostrado antes de
   `main_window.show()`, aplicar `WipeWindow` solo a ventanas top-level y
   cerrar con `destroy()`.
@@ -2664,10 +2731,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   comprobar el estado de la ventana. El manejador original de
   `lib/TitleBar.py` sí lo comprobaba (`not is_maximized()`), así que el puente
   anuló esa guarda.
-- **Estado:** Pendiente. Cambia el ciclo de vida y el comportamiento de la
-  ventana (restaurar al arrastrar, maximizar al soltar arriba, ajuste a media
-  pantalla), así que se acumula como pregunta **Q-011** en `CONFIRM.MD` y no se
-  ha modificado.
+- **Estado:** Aprobado Q-011 el 2026-11-25 (commit `bba72d6`); pendiente de
+  confirmación final **F-004** e implementación. No se ha modificado el
+  comportamiento de la ventana.
 - **Propuesta:** ignorar `startSystemMove()` mientras la ventana esté
   maximizada y restaurarla antes de mover; añadir las zonas de ajuste
   (arriba = maximizar, laterales = media pantalla) con transiciones suaves.
@@ -4690,10 +4756,170 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del quincuagésimo tercer ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
+## R-8a3f1c72 — Al cambiar de idioma la mayor parte de la interfaz sigue en español
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta.
+- **Descripción:** al cambiar el idioma, sólo se actualizan el sidebar, su
+  descripción, el interruptor de sandbox y el selector de motor. Las pestañas
+  de creación, compilación y configuración, las descripciones de las tarjetas,
+  «Acerca de» y el botón de cerrar sesión de GitHub siguen en español. Además,
+  una parte de los textos está escrita directamente en español y no pasa por
+  `tr()`.
+- **Pasos para reproducirlo:** abrir Configuración → Idioma, elegir English y
+  recorrer las cinco páginas: la mayor parte de los textos sigue en español.
+- **Causa raíz:** `apply_ui_language()` sólo retraduce un puñado de widgets;
+  las páginas se construyen una sola vez al arrancar y no tienen un método de
+  retraducción. Hay cadenas fijas en varios módulos de UI.
+- **Estado:** Pendiente. La estrategia (reconstruir páginas, reiniciar o
+  mantener el banner) cambia el comportamiento de la UI y está en Q-020.
+- **Solución aplicada:** Ninguna todavía; no se modifica la UI sin la
+  confirmación de Q-020.
+- **Commit:** —
+- **Fecha de resolución:** —
+
+## R-4d9e2b61 — La compilación con Nuitka falla y el build no usa un entorno aislado
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta.
+- **Descripción:** el propietario reporta que «la compilación quedó corrupta,
+  todo dice embebido, hay errores al compilar con Nuitka, nada tiene el entorno
+  aislado». Pide que el build descargue en la carpeta del proyecto la versión
+  de Python correspondiente, cree un entorno aislado, instale dependencias,
+  ejecute pruebas, compile y saque el resultado fuera del entorno, sin cambiar
+  el formato de compilación.
+- **Pasos para reproducirlo:** compilar un proyecto con el backend Nuitka y
+  revisar el log: los backends se anuncian como «embebidos» y no se crea un
+  entorno virtual por proyecto. Se necesita el log completo del fallo de Nuitka
+  para confirmar la causa concreta.
+- **Causa raíz:** el aislamiento por proyecto es una funcionalidad que aún no
+  existe (Q-019); el fallo concreto de Nuitka está pendiente de reproducción en
+  un entorno con ese backend instalado.
+- **Estado:** Pendiente. La parte de entorno aislado es un cambio de engine
+  (Q-019); el error de Nuitka requiere más datos del reporte.
+- **Solución aplicada:** Ninguna todavía.
+- **Commit:** —
+- **Fecha de resolución:** —
+
+## R-6b2f8d43 — El build falla con «archivo en uso por otro proceso»
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta.
+- **Descripción:** durante la compilación aparecen errores de que un archivo
+  está siendo usado por otro proceso. El propietario sospecha que el flujo
+  intenta mover el artefacto en vez de copiarlo.
+- **Pasos para reproducirlo:** compilar en Windows con el ejecutable o un
+  archivo del paquete abierto por otro proceso y revisar el punto exacto del
+  fallo. El reporte no incluye la traza completa.
+- **Causa raíz:** bajo investigación. `_copy_package_files()` usa
+  `shutil.rmtree(dest)` y `copytree`/`copy2` sin reintentos, y la limpieza usa
+  `remove_tree`; en Windows un archivo bloqueado puede hacer fallar cualquiera
+  de esas operaciones. No se ha confirmado si el fallo está en la copia, en la
+  limpieza o en el movimiento final del artefacto.
+- **Estado:** Pendiente. No se aplica una corrección especulativa sin la traza
+  o una reproducción fiable.
+- **Solución aplicada:** Ninguna todavía. Se revisarán los puntos de copia,
+  limpieza y movimiento con una prueba que bloquee un archivo.
+- **Commit:** —
+- **Fecha de resolución:** —
+
+## R-7c4a1e95 — La interfaz se congela y renderiza mal al maximizar/restaurar
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media.
+- **Descripción:** al maximizar, restaurar o cambiar opciones de configuración,
+  la interfaz se queda congelada un momento y el renderizado se ve mal. El
+  propietario sugiere animar la interfaz completa, posicionando y estirando o
+  contrayendo los controles según el evento.
+- **Pasos para reproducirlo:** maximizar y restaurar la ventana varias veces, y
+  cambiar opciones de Configuración; se observa el congelamiento.
+- **Causa raíz:** la reubicación de widgets y el guardado se ejecutan en el
+  hilo de la interfaz; forma parte del cambio de tareas en segundo plano y de
+  las transiciones de ventana (Q-012 y Q-011).
+- **Estado:** Pendiente (Q-012/Q-011). Depende de las confirmaciones F-005 y
+  F-004.
+- **Solución aplicada:** Ninguna todavía.
+- **Commit:** —
+- **Fecha de resolución:** —
+
+## R-2f8b6a31 — La titlebar no limita los gestos a tres (max/restore/fullscreen)
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media.
+- **Descripción:** el propietario pide preparar bien el engine de la titlebar:
+  debe esperar como máximo tres gestos; dos entradas maximizan o restauran y,
+  al llegar al máximo, se pasa a pantalla completa.
+- **Pasos para reproducirlo:** hacer doble clic y clics repetidos en la
+  titlebar; no hay un límite explícito de gestos ni el paso a pantalla completa.
+- **Causa raíz:** el manejador actual no cuenta los gestos ni distingue el
+  tercero; está relacionado con R-6a1f8c23 y Q-011/F-004.
+- **Estado:** Pendiente (Q-011/F-004). Se implementará junto con el arrastre y
+  el ajuste a media pantalla, tras la confirmación final.
+- **Solución aplicada:** Ninguna todavía.
+- **Commit:** —
+- **Fecha de resolución:** —
+
+## R-9e5c3d84 — Los radios no siguen los estados QSS normal/hover/pressed
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Baja.
+- **Descripción:** los radios deben definirse en QSS: normal, un círculo con
+  borde gris; hover, relleno con el acento del sistema o del programa; pressed,
+  el borde crece hacia dentro y se hace más grueso conservando el color del
+  hover.
+- **Pasos para reproducirlo:** abrir Configuración y pasar el ratón o pulsar
+  los radios; los estados no coinciden con la especificación.
+- **Causa raíz:** el bloque de `qradiobutton.qss` y/o los tokens no definen los
+  tres estados con el crecimiento interior del borde.
+- **Estado:** Pendiente. Es un cambio visual acotado; se abordará después de
+  los bugs de prioridad alta.
+- **Solución aplicada:** Ninguna todavía.
+- **Commit:** —
+- **Fecha de resolución:** —
+
+## R-5a7d2f16 — Fondo blanco/negro translúcido sobre el blur
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Baja.
+- **Descripción:** el propietario propone un fondo blanco o negro según el modo
+  del sistema, con transparencia (0,3–0,5), combinado suavemente con el blur
+  para dar el toque macOS, y texto gris en claro y blanco en oscuro.
+- **Pasos para reproducirlo:** no es un fallo reproducible; es una mejora
+  visual solicitada.
+- **Causa raíz:** el material actual no superpone una capa translúcida al blur.
+- **Estado:** Pendiente (mejora). Se planificará cuando bajen los bugs.
+- **Solución aplicada:** Ninguna todavía.
+- **Commit:** —
+- **Fecha de resolución:** —
+
+## R-3c8e4b72 — Faltan ajustes en Configuración
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Baja.
+- **Descripción:** el propietario pide agregar más ajustes para que
+  Configuración no quede vacía, pero sólo cuando los bugs hayan bajado.
+- **Pasos para reproducirlo:** no es un fallo; es una mejora de producto.
+- **Causa raíz:** la página de Configuración tiene pocas opciones.
+- **Estado:** Pendiente (mejora). El propio propietario la condiciona a que
+  bajen los bugs; no se implementa en este ciclo.
+- **Solución aplicada:** Ninguna todavía.
+- **Commit:** —
+- **Fecha de resolución:** —
+
 ## Periodo de observación y release
 
-- Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
-  Q-011). R-4d8f2b61 se cerró como no reproducido.
+- Casos abiertos: 10 — R-4f8a2c60 (Q-008/F-003), R-6a1f8c23 (Q-011/F-004) y
+  los 8 reportes del commit `bba72d6` (R-8a3f1c72, R-4d9e2b61, R-6b2f8d43,
+  R-7c4a1e95, R-2f8b6a31, R-9e5c3d84, R-5a7d2f16 y R-3c8e4b72). R-4d8f2b61 se
+  cerró como no reproducido.
 - Vigésimo séptimo ciclo (2026-11-23): R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27
   corregidos y probados; no se prepara release.
 - Vigésimo octavo ciclo (2026-11-23): R-3b6f9d24 y R-9f4c2a71 corregidos y
@@ -5228,3 +5454,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   en `ModuleNotFoundError`; sin `pyperclip`, `error_handler()` lanzaba
   `ModuleNotFoundError`.
 
+- Quincuagésimo tercer ciclo — reportes nuevos (2026-11-25): el commit del
+  propietario `bba72d6` añadió 8 reportes (R-8a3f1c72…R-3c8e4b72) y aprobó
+  Q-004 (opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014. Los 8 reportes
+  quedan en la cola (5 bugs y 3 mejoras/UI) y **ninguno se marca como resuelto**.
+  El periodo de observación de 7 días sin reportes se reinicia en esta fecha;
+  no se prepara release.
