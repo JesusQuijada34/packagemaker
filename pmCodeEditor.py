@@ -996,7 +996,11 @@ class ConsolePanel(QWidget):
         self.append_output(f">>> {command}", is_error=False)
 
         if self._is_shell_command(command):
-            cmd_list = self._normalize_shell_command_list(command)
+            try:
+                cmd_list = self._normalize_shell_command_list(command)
+            except ValueError as exc:
+                self.append_output(f"[ERROR] Comando no válido: {exc}", is_error=True)
+                return
             self.run_command_list(cmd_list, working_dir=self._get_working_dir())
         else:
             self._execute_python_code(command)
@@ -1054,12 +1058,18 @@ class ConsolePanel(QWidget):
 
     def run_command(self, command: str, working_dir: str = None) -> bool:
         """Ejecuta un comando string (se convierte a lista)."""
-        if self._is_shell_command(command):
-            parts = self._normalize_shell_command_list(command)
-        elif sys.platform == "win32":
-            parts = shlex.split(command, posix=False)
-        else:
-            parts = shlex.split(command)
+        try:
+            if self._is_shell_command(command):
+                parts = self._normalize_shell_command_list(command)
+            elif sys.platform == "win32":
+                parts = shlex.split(command, posix=False)
+            else:
+                parts = shlex.split(command)
+        except ValueError as exc:
+            # ``shlex`` lanza ValueError con comillas sin cerrar; la consola es
+            # un slot de Qt y una excepción sin capturar abortaba el editor.
+            self.append_output(f"[ERROR] Comando no válido: {exc}", is_error=True)
+            return False
         return self.run_command_list(parts, working_dir) if parts else False
     
     def _read_output(self):

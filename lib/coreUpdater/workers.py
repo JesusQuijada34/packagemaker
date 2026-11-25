@@ -9,7 +9,26 @@ import shutil
 import zipfile
 import time
 import traceback
-from PyQt6.QtCore import QObject, pyqtSignal
+
+try:
+    from PyQt6.QtCore import QObject, pyqtSignal
+except ImportError:
+    # Los workers se ejecutan también sin PyQt6 (``updater.py --install
+    # --silent``): las señales sólo sirven para la interfaz.
+    class QObject:
+        def __init__(self, *args, **kwargs):
+            pass
+
+    class pyqtSignal:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def connect(self, *args, **kwargs):
+            pass
+
+        def emit(self, *args, **kwargs):
+            pass
+
 from .core import log, KillerLogic, cache_get, cache_set
 from lib.safe_zip import safe_extract_zip
 from lib.i18n import tr

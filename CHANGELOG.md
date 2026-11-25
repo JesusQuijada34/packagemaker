@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-11-25 — quincuagésimo ciclo
+
+### Corregido — tres dependencias opcionales dejan de ser obligatorias
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna, todos de
+la misma familia: un `import` de una dependencia opcional en el nivel superior
+(o dentro de un slot de Qt) impedía arrancar el programa antes de leer los
+argumentos. Ningún cambio de comportamiento del engine: el formato de los
+paquetes, la ley de nombres y las plantillas siguen exactamente igual.
+
+- **R-7e2d9c14 — el CLI no arrancaba sin `requests`:** `packagemaker.py` hacía
+  `import requests` en el nivel superior, aunque sólo se usa para descargar un
+  icono por URL. En una máquina sin esa biblioteca, hasta `--app-version`
+  terminaba en `ImportError`. Ahora el import está protegido
+  (`requests = None`) y la descarga de iconos avisa con
+  «requests no está instalado: no se puede descargar el icono» en vez de fallar
+  con `AttributeError`. Reportado por JesusQuijada34 (auditoría interna).
+- **R-3a8f6b25 — la consola del editor abortaba el proceso con comillas sin
+  cerrar:** el campo de entrada de `pmCodeEditor` llama a `shlex.split`, que
+  lanza `ValueError` con `pip install "paquete`. La excepción escapaba del slot
+  `returnPressed` y PyQt6 abortaba el editor, perdiendo el trabajo sin guardar.
+  `_execute_input` y `run_command` capturan el error y escriben
+  «[ERROR] Comando no válido: …» en la consola; `run_command` devuelve `False`.
+  Reportado por JesusQuijada34 (auditoría interna).
+- **R-9d5c1e73 — el updater headless no arrancaba sin PyQt6:** `updater.py` y
+  `lib/coreUpdater/workers.py` importaban PyQt6 sin respaldo, así que
+  `--version`, `--check` y `--install --silent` fallaban en un servidor sin
+  interfaz. Ahora el updater usa sustitutos inertes cuando falta Qt, el worker
+  de instalación silenciosa se ejecuta de verdad y las rutas que exigen ventana
+  responden «esta operación necesita PyQt6 … usa --silent» con código 1. Con
+  PyQt6 instalado el comportamiento es idéntico. Reportado por
+  JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_cli_without_requests.py` (2 nuevas),
+`tests/test_editor_console_command_parsing.py` (4 nuevas) y 6 casos nuevos en
+`tests/test_updater_optional_dependencies.py`. Suite completa: 1150 pasan, 1
+omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
+
+No se prepara release: siguen abiertos R-4f8a2c60 (pendiente de Q-008) y
+R-6a1f8c23 (pendiente de Q-011), y el requisito de 7 días sin reportes nuevos
+continúa en curso desde el 2026-11-22.
+
 ## 2026-11-25 — cuadragésimo noveno ciclo
 
 ### Corregido — los acentos vuelven a pasar la puerta estricta y el updater deja de lanzar tracebacks con metadatos no canónicos

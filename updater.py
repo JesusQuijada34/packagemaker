@@ -10,9 +10,35 @@ import sys
 import argparse
 import importlib
 import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
-from PyQt6.QtGui import QGuiApplication, QPixmap
-from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QTimer, QPropertyAnimation
+
+try:
+    from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
+    from PyQt6.QtGui import QGuiApplication, QPixmap
+    from PyQt6.QtCore import Qt, QEasingCurve, pyqtSignal, QTimer, QPropertyAnimation
+    PYQT6_AVAILABLE = True
+except ImportError:
+    # El updater también se ejecuta en modo headless (--check/--install
+    # --silent) en máquinas sin PyQt6: sin estos sustitutos inertes el import
+    # de nivel superior abortaba antes de leer los argumentos.
+    PYQT6_AVAILABLE = False
+
+    class _QtStubMeta(type):
+        def __getattr__(cls, name):
+            return _QtStub
+
+    class _QtStub(metaclass=_QtStubMeta):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __getattr__(self, name):
+            return _QtStub()
+
+        def __call__(self, *args, **kwargs):
+            return _QtStub()
+
+    QApplication = QMainWindow = QWidget = QHBoxLayout = QLabel = QPushButton = _QtStub
+    QVBoxLayout = QGuiApplication = QPixmap = Qt = QEasingCurve = _QtStub
+    QTimer = QPropertyAnimation = pyqtSignal = _QtStub
 
 from lib import leviathan_bridge
 from lib.app_icons import icon_button
@@ -321,6 +347,18 @@ class IntegratedSplash(QWidget):
         self.finished.emit()
         self.deleteLater()
 
+def _require_gui() -> None:
+    """Aborta con un mensaje claro cuando la operación necesita interfaz."""
+    if PYQT6_AVAILABLE:
+        return
+    print(
+        "ERROR: esta operación necesita PyQt6 (interfaz gráfica); "
+        "usa --silent para ejecutar sin interfaz",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
 def get_accent_color():
     if LEVIATHAN_AVAILABLE:
         try:
@@ -383,6 +421,8 @@ Modos de actualización:
         return
     
     if args.install:
+        if not args.silent:
+            _require_gui()
         success, msg = install_iflapp(args.install, args.target, args.silent)
         if args.silent:
             print(f"{'OK' if success else 'ERROR'}: {msg}")
@@ -434,6 +474,7 @@ Modos de actualización:
         sys.exit(0 if success else 1)
     else:
         # Si no hay argumentos específicos, mostrar GUI con información
+        _require_gui()
         if len(sys.argv) == 1:
             show_info_gui()
             

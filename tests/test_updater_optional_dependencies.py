@@ -4,6 +4,9 @@
 modo headless (``--version``, ``--check``, ``--install``). Importaba
 ``leviathan_ui`` de forma incondicional, así que en una máquina sin esa
 dependencia opcional abortaba con ``ImportError`` antes de leer los argumentos.
+
+Cubre además R-9d5c1e73: el mismo problema con ``PyQt6``, que se importaba en el
+nivel superior del updater y de ``lib/coreUpdater/workers.py``.
 """
 
 from __future__ import annotations
@@ -29,14 +32,14 @@ def blocked_leviathan(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _run(args, pythonpath: Path) -> subprocess.CompletedProcess:
+def _run(args, pythonpath: Path, cwd: Path = REPO_ROOT) -> subprocess.CompletedProcess:
     env = dict(os.environ)
     env["PYTHONPATH"] = os.pathsep.join(
         [str(pythonpath), str(REPO_ROOT), env.get("PYTHONPATH", "")]
     ).strip(os.pathsep)
     return subprocess.run(
         [sys.executable, str(UPDATER), *args],
-        cwd=str(REPO_ROOT),
+        cwd=str(cwd),
         env=env,
         capture_output=True,
         text=True,
@@ -81,3 +84,56 @@ def test_accent_and_wipe_window_fallbacks(blocked_leviathan: Path):
     assert lines[0] == "False"
     assert lines[1] == "#0078D4"
     assert lines[2] == "True"
+
+
+@pytest.fixture()
+def blocked_pyqt6(tmp_path: Path) -> Path:
+    """Directorio con un paquete ``PyQt6`` que simula la dependencia ausente."""
+    package = tmp_path / "PyQt6"
+    package.mkdir()
+    (package / "__init__.py").write_text(
+        'raise ImportError("PyQt6 no instalado")\n', encoding="utf-8"
+    )
+    return tmp_path
+
+
+def test_version_works_without_pyqt6(blocked_pyqt6: Path):
+    result = _run(["--version"], blocked_pyqt6)
+    assert result.returncode == 0, result.stderr
+    assert "Influent FireCube Updater v2.1" in result.stdout
+
+
+def test_argument_validation_works_without_pyqt6(blocked_pyqt6: Path):
+    result = _run(["--accept-license"], blocked_pyqt6)
+    assert result.returncode == 1
+    assert "--accept-license requiere --silent" in result.stdout
+
+
+def test_headless_check_without_pyqt6(blocked_pyqt6: Path, tmp_path: Path):
+    result = _run(["--check"], blocked_pyqt6, cwd=tmp_path)
+    assert result.returncode == 1
+    assert "ERROR: No se pudo leer details.xml" in result.stdout
+    assert "Traceback" not in result.stderr
+
+
+def test_silent_install_without_pyqt6(blocked_pyqt6: Path, tmp_path: Path):
+    bad = tmp_path / "roto.iflapp"
+    bad.write_bytes(b"no es un paquete")
+    result = _run(["--install", str(bad), "--silent"], blocked_pyqt6, cwd=tmp_path)
+    assert result.returncode == 1
+    assert "ERROR:" in result.stdout
+    assert "Traceback" not in result.stderr
+
+
+def test_gui_request_explains_missing_pyqt6(blocked_pyqt6: Path):
+    result = _run([], blocked_pyqt6)
+    assert result.returncode == 1
+    assert "necesita PyQt6" in result.stderr
+
+
+def test_gui_install_explains_missing_pyqt6(blocked_pyqt6: Path, tmp_path: Path):
+    bad = tmp_path / "roto.iflapp"
+    bad.write_bytes(b"no es un paquete")
+    result = _run(["--install", str(bad)], blocked_pyqt6, cwd=tmp_path)
+    assert result.returncode == 1
+    assert "necesita PyQt6" in result.stderr

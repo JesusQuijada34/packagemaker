@@ -92,7 +92,10 @@ except ImportError:
         class Key: pass
         class Modifier: pass
         class MouseButton: pass
-import requests
+try:
+    import requests
+except ImportError:  # dependencia opcional: sólo la descarga de iconos por URL la usa
+    requests = None
 
 from lib import leviathan_bridge
 
@@ -2184,6 +2187,10 @@ class PackageTodoGUI(QMainWindow):
                        QApplication.processEvents()
                        # AÑADIR USER-AGENT (Importante para evitar bloqueos)
                        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+                       if requests is None:
+                           raise RuntimeError(
+                               "requests no está instalado: no se puede descargar el icono"
+                           )
                        r_icon = requests.get(selected_icon, timeout=10, headers=headers)
                        if r_icon.status_code == 200:
                            # Guardar en temp

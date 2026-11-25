@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (cuadragésimo noveno ciclo)
+Última actualización: 2026-11-25 (quincuagésimo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -160,6 +160,9 @@ de auditoría.
 | R-6f3a9d21 | Bug — los acentos bloqueaban «Crear proyecto» y «Compilar» | Alta | Resuelto |
 | R-9b4c7e52 | Bug — el updater lanza `ValueError` con metadatos remotos no canónicos | Media | Resuelto |
 | R-2e8f4a17 | Bug — `_check_url_exists` deja escapar URL imposibles sin `requests` | Baja | Resuelto |
+| R-7e2d9c14 | Bug — el CLI no arranca sin `requests` | Alta | Resuelto |
+| R-3a8f6b25 | Bug — la consola del editor aborta con comillas sin cerrar | Media | Resuelto |
+| R-9d5c1e73 | Bug — el updater headless no arranca sin PyQt6 | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -273,6 +276,22 @@ dejaba escapar `PermissionError` con un *workspace* inaccesible, rompiendo su
 contrato de resultado; y el `removeme.py` autónomo abortaba con traceback (y
 podía tumbar su GUI) ante un acceso directo o un árbol de instalación
 bloqueado.
+
+El cuadragésimo noveno ciclo registra R-6f3a9d21, R-9b4c7e52 y R-2e8f4a17
+(corregidos y probados, sin cambios de comportamiento del engine): la puerta
+estricta de creación/compilación juzgaba el texto sin transliterar y rechazaba
+fabricantes con acentos; el updater lanzaba `ValueError` con metadatos remotos
+no canónicos; y la sonda de URL dejaba escapar errores de validación sin
+`requests`.
+
+El quincuagésimo ciclo registra R-7e2d9c14, R-3a8f6b25 y R-9d5c1e73 (corregidos
+y probados, sin cambios de comportamiento del engine): tres dependencias
+opcionales se importaban como obligatorias. `packagemaker.py` importaba
+`requests` en el nivel superior y el CLI no arrancaba sin ella; la consola del
+editor dejaba escapar el `ValueError` de `shlex` con comillas sin cerrar y
+PyQt6 abortaba el proceso; y `updater.py`/`lib/coreUpdater/workers.py`
+importaban PyQt6 sin respaldo, así que `--version`, `--check` y `--install
+--silent` fallaban en una máquina sin interfaz.
 
 ---
 
@@ -4364,6 +4383,78 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo noveno ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
+## R-7e2d9c14 — El CLI no arranca si falta `requests`
+
+- **Usuario:** JesusQuijada34 (auditoría interna)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta.
+- **Descripción:** `packagemaker.py` hacía `import requests` en el nivel
+  superior aunque esa biblioteca sólo se usa para descargar un icono por URL.
+  En una máquina sin `requests` el programa abortaba con `ImportError` antes de
+  leer los argumentos, así que ni `--app-version` ni ninguna acción headless
+  funcionaban.
+- **Pasos para reproducirlo:** con un `requests.py` en `PYTHONPATH` que lanza
+  `ImportError`, ejecutar `python packagemaker.py --app-version` → traceback y
+  código 1.
+- **Causa raíz:** dependencia opcional importada de forma incondicional en el
+  punto de entrada; el resto de módulos (`lib/coreUpdater/core.py`,
+  `lib/blindcubeEngine/BuildThread.py`, `lib/python_portable_manager.py`) ya la
+  trataban como opcional.
+- **Solución aplicada:** `try/except ImportError` con `requests = None`. La
+  descarga de iconos comprueba el valor y lo informa como aviso
+  («requests no está instalado: no se puede descargar el icono») en vez de
+  fallar con `AttributeError`; el resto del programa sigue igual.
+- **Pruebas:** `tests/test_cli_without_requests.py` (2 casos).
+- **Commit:** se registra en el cierre del quincuagésimo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-3a8f6b25 — La consola del editor abortaba el proceso con comillas sin cerrar
+
+- **Usuario:** JesusQuijada34 (auditoría interna)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media (pérdida del trabajo sin guardar al abortar el editor).
+- **Descripción:** el campo de entrada de la consola de `pmCodeEditor` es el
+  slot `returnPressed` → `_execute_input`. Para comandos `pip`/`python` se llama
+  a `shlex.split`, que lanza `ValueError: No closing quotation` con una comilla
+  sin cerrar; la excepción escapaba del slot y PyQt6 abortaba el proceso.
+- **Pasos para reproducirlo:** abrir el editor, escribir en la consola
+  `pip install "paquete` y pulsar Intro.
+- **Causa raíz:** la división de argumentos no contemplaba el error de sintaxis
+  de `shlex` en un punto de entrada de la interfaz.
+- **Solución aplicada:** `_execute_input` y `run_command` capturan `ValueError`
+  y escriben «[ERROR] Comando no válido: …» en la consola en vez de lanzar;
+  `run_command` devuelve `False`. `_normalize_shell_command_list` conserva su
+  contrato (sigue lanzando) para quien valide antes de ejecutar.
+- **Pruebas:** `tests/test_editor_console_command_parsing.py` (4 casos).
+- **Commit:** se registra en el cierre del quincuagésimo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-9d5c1e73 — El updater headless no arranca sin PyQt6
+
+- **Usuario:** JesusQuijada34 (auditoría interna)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media.
+- **Descripción:** `updater.py` importaba PyQt6 en el nivel superior y
+  `lib/coreUpdater/workers.py` lo hacía con `QObject`/`pyqtSignal`, pese a que
+  el updater se usa en modo headless (`--version`, `--check`, `--install
+  --silent`) y en servidores sin interfaz. Sin PyQt6 abortaba con `ImportError`
+  antes de leer los argumentos.
+- **Pasos para reproducirlo:** con un paquete `PyQt6` en `PYTHONPATH` que lanza
+  `ImportError`, ejecutar `python updater.py --version` → traceback.
+- **Causa raíz:** la misma que ya se corrigió para `leviathan_ui`
+  (R-4d7b2e91), pero el respaldo no cubría Qt.
+- **Solución aplicada:** en `updater.py` el import de Qt va en `try/except` con
+  sustitutos inertes y la marca `PYQT6_AVAILABLE`; las rutas que exigen ventana
+  (`--install` sin `--silent` y la GUI sin argumentos) llaman a `_require_gui()`,
+  que informa «esta operación necesita PyQt6 … usa --silent» y sale con 1.
+  `lib/coreUpdater/workers.py` define `QObject`/`pyqtSignal` inertes cuando no
+  hay Qt, de modo que `--install --silent` ejecuta el worker de verdad. El
+  comportamiento con PyQt6 instalado es idéntico.
+- **Pruebas:** `tests/test_updater_optional_dependencies.py` (6 casos nuevos
+  con PyQt6 bloqueado).
+- **Commit:** se registra en el cierre del quincuagésimo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -4512,6 +4603,21 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   None`, `_check_url_exists("https://example.invalid/Jesús.iflapp")` lanzaba
   `UnicodeEncodeError` y con un espacio o `\x00` `http.client.InvalidURL` (ahora
   `False`).
+- Quincuagésimo ciclo (2026-11-25): R-7e2d9c14, R-3a8f6b25 y R-9d5c1e73
+  corregidos y probados (el CLI arranca sin `requests`; la consola del editor
+  informa de las comillas sin cerrar en vez de abortar el proceso; y el updater
+  headless funciona sin PyQt6, avisando cuando la operación necesita ventana);
+  no se prepara release.
+- Verificación del quincuagésimo ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1150 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Reproducción real:
+  con un `requests` que lanza `ImportError`, `--app-version` terminaba en
+  `ImportError` (ahora código 0); `ConsolePanel._normalize_shell_command_list`
+  con `python "sin cerrar` lanzaba `ValueError` dentro del slot (ahora
+  `[ERROR] Comando no válido`); y con un paquete `PyQt6` que lanza
+  `ImportError`, `updater.py --version`/`--check`/`--install --silent`
+  terminaban en traceback (ahora código 0/1 con mensaje, y las rutas de GUI
+  explican que necesitan PyQt6).
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
