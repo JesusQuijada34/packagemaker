@@ -322,7 +322,13 @@ from lib.window_chrome import (
     is_frameless_maximized,
 )
 from lib.uwp_animations import play_bounce_down_close
-from lib.page_action_bar import install_page_action_bar, make_action_button, make_icon_button
+from lib.page_action_bar import (
+    install_page_action_bar,
+    make_action_button,
+    make_icon_button,
+    set_action_bar_busy,
+    set_action_bar_subtitle,
+)
 from lib.design_tokens import (
     ACCENT,
     CONTENT_PADDING,
@@ -929,32 +935,9 @@ class PackageTodoGUI(QMainWindow):
             if addon.section == "main":
                 self.sidebar_layout.addWidget(button)
 
-        # Area de Contexto/Descripcion (Estilo Nota UWP)
+        # La descripción de cada página se muestra bajo el título de su barra
+        # de acciones (ver ``update_sidebar_description``), no en el sidebar.
         self.sidebar_layout.addStretch()
-
-        self.desc_card = QWidget()
-        self.desc_card.setObjectName("SidebarContextCard")
-        set_qss(self.desc_card, 'packagemaker_005', append=False)
-        desc_vbox = QVBoxLayout(self.desc_card)
-        desc_vbox.setContentsMargins(12, 12, 12, 12)
-
-        desc_header = QHBoxLayout()
-
-        self.lbl_sidebar_context = QLabel(tr("app.context"))
-        set_qss(self.lbl_sidebar_context, 'packagemaker_006', append=False)
-        desc_header.addWidget(self.lbl_sidebar_context)
-        desc_header.addStretch()
-        desc_vbox.addLayout(desc_header)
-
-        self.sidebar_desc_text = QTextEdit()
-        self.sidebar_desc_text.setReadOnly(True)
-        self.sidebar_desc_text.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        set_qss(self.sidebar_desc_text, 'packagemaker_007', append=False)
-        self.sidebar_desc_text.setMaximumHeight(120)
-        desc_vbox.addWidget(self.sidebar_desc_text)
-
-        self.sidebar_layout.addWidget(self.desc_card)
-        self.sidebar_layout.addSpacing(10)
 
         self.github_card = self._build_github_card(dark_now)
         self.sidebar_layout.addWidget(self.github_card)
@@ -997,6 +980,12 @@ class PackageTodoGUI(QMainWindow):
                 page = self._addon_error_page(addon, exc)
             setattr(self, f"page_{addon.id}", page)
             self.stack.addWidget(page)
+
+        # Cada página lleva su descripción desde el principio: si sólo se
+        # rellenara al cambiar de página, la primera visita mostraría la barra
+        # sin subtítulo hasta el siguiente cambio.
+        for index, (addon, _button) in enumerate(self._sidebar_items):
+            self._apply_page_description(addon, index)
 
         self.page_report = getattr(self, "page_report", None)
         self.report_page = self.page_report
@@ -1060,11 +1049,13 @@ class PackageTodoGUI(QMainWindow):
     def apply_ui_language(self):
         """Actualiza textos de la interfaz al idioma activo."""
         self.lbl_menu_main.setText(tr("app.main_menu"))
-        self.lbl_sidebar_context.setText(tr("app.context"))
         for btn, key in self._sidebar_btn_keys.items():
             btn.setText(tr(key))
-        idx = self.stack.currentIndex()
-        self.update_sidebar_description(idx)
+        # El subtítulo vive en cada página, no en la activa: retraducir sólo la
+        # visible dejaba las demás en el idioma anterior hasta cambiar de
+        # pestaña (issue #12, «sólo se traduce al reiniciar»).
+        for addon, _button in getattr(self, "_sidebar_items", []):
+            self._apply_page_description(addon)
         if hasattr(self, "input_autor"):
             self._refresh_author_field()
         if hasattr(self, "conf_header"):
@@ -1089,15 +1080,30 @@ class PackageTodoGUI(QMainWindow):
         if page is not None and hasattr(page, "retranslate"):
             page.retranslate()
 
+    def _apply_page_description(self, addon, index: int = 0) -> None:
+        page = getattr(self, f"page_{addon.id}", None)
+        bar = getattr(page, "_pm_action_bar", None)
+        if bar is None:
+            return
+        text = tr(addon.description) if addon.description else ""
+        # El manifiesto guarda "### Título\nDetalle"; bajo el título de la
+        # página ese encabezado sobra, así que se muestra sólo el detalle.
+        if text.startswith("###"):
+            text = text.split("\n", 1)[1] if "\n" in text else ""
+        set_action_bar_subtitle(bar, text.strip())
+
     def update_sidebar_description(self, index):
+        """Coloca la descripción de la página bajo el título de su barra.
+
+        Antes vivía en un recuadro del sidebar; ahora acompaña al título de la
+        página, fuera de la píldora, para dar detalle de la opción elegida.
+        """
         # El índice del botón corresponde a ``_sidebar_items`` (que se filtra
         # por sección al pintar), no directamente a ``_addons``.
         items = getattr(self, "_sidebar_items", [])
-        key = items[index][0].description if 0 <= index < len(items) else ""
-        if key:
-            text = tr(key)
-            html = text.replace("### ", "<b style='color:white; font-size:14px;'>").replace("\n", "</b><br>")
-            self.sidebar_desc_text.setHtml(html)
+        if not (0 <= index < len(items)):
+            return
+        self._apply_page_description(items[index][0], index)
 
     def _persist_sidebar_width(self, width):
         """Guarda el ancho elegido a mano para la próxima sesión."""
@@ -1140,15 +1146,13 @@ class PackageTodoGUI(QMainWindow):
             self.sidebar_resize_handle.setVisible(not collapsed)
 
         # Colapsado se siguen viendo los iconos, ajustados al lateral; lo que
-        # desaparece es el texto, la tarjeta de contexto y el bloque de login.
+        # desaparece es el texto y el bloque de login.
         for btn in self._sidebar_btn_keys:
             btn.setVisible(True)
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             if hasattr(btn, "set_compact"):
                 btn.set_compact(collapsed)
         self.lbl_menu_main.setVisible(not collapsed)
-        if hasattr(self.desc_card, "setVisible"):
-            self.desc_card.setVisible(not collapsed)
         if hasattr(self, "github_card") and self.github_card is not None:
             self.github_card.setVisible(not collapsed)
         if hasattr(self, "sidebar_collapse_toggle"):
@@ -1612,9 +1616,6 @@ class PackageTodoGUI(QMainWindow):
 
         if hasattr(self, "sidebar_collapse_toggle"):
             set_qss(self.sidebar_collapse_toggle, 'packagemaker_067', append=False)
-
-        if hasattr(self, "desc_card"):
-            set_qss(self.desc_card, 'packagemaker_068', append=False)
 
         # ``applyget`` ya está aplicado a ``self.central`` (ancestro de todas las
         # páginas) y baja en cascada a sus hijos. Volver a aplicarlo sólo a
@@ -2664,6 +2665,10 @@ class PackageTodoGUI(QMainWindow):
         outer.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
         outer.setSpacing(8)
 
+        self.config_action_bar, self.config_bar_title = install_page_action_bar(
+            outer, tr("sidebar.config")
+        )
+
         store = get_pm_data()
         user = {k: store.get_user(k) for k in (
             "language", "auto_translate", "base_dir", "fluthin_apps",
@@ -2765,11 +2770,22 @@ class PackageTodoGUI(QMainWindow):
         except Exception as exc:
             print(f"[i18n] {exc}")
 
+    def _set_page_busy(self, busy: bool) -> None:
+        """Enciende el marquee de la barra de la página visible."""
+        bar = getattr(self.stack.currentWidget(), "_pm_action_bar", None)
+        set_action_bar_busy(bar, busy)
+
     def _on_settings_changed(self) -> None:
         """Guardado automático disparado por cualquier cambio en el panel."""
         if getattr(self, "_closing", False):
             return
-        self._save_app_config_compact(quiet=True)
+        # El guardado se nota en la barra: un marquee fino avisa de que hay
+        # trabajo en curso sin bloquear la interfaz ni abrir un diálogo.
+        self._set_page_busy(True)
+        try:
+            self._save_app_config_compact(quiet=True)
+        finally:
+            self._set_page_busy(False)
 
     def _download_ui_fonts(self) -> None:
         """Descarga las fuentes de la interfaz y refresca su estado."""

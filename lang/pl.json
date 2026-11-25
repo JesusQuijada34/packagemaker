@@ -844,5 +844,16 @@
     "state_no_endpoint": "Podaj adres punktu końcowego zgodnego z OpenAI w ustawieniach.",
     "state_no_key": "Podaj swój klucz API w ustawieniach.",
     "api_key_placeholder": "Klucz API (przechowywany lokalnie, nigdy niepokazywany)"
+  },
+  "env": {
+    "field": "Dana",
+    "value": "Wartość",
+    "implementation": "Implementacja",
+    "os": "System operacyjny",
+    "os_version": "Wersja systemu",
+    "architecture": "Architektura",
+    "distribution": "Dystrybucja",
+    "cpu_count": "Rdzenie procesora",
+    "language": "Język"
   }
 }

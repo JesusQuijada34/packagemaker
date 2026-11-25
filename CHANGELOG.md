@@ -1,3 +1,41 @@
+## 2026-11-18 — quincuagésimo sexto ciclo
+
+### Corregido — tabla del entorno traducida (issue #12) y descripción de página fuera del sidebar (issue #11)
+
+Dos reportes nuevos de JesusQuijada34. **Ningún cambio de comportamiento del
+engine**: la ley de nombres, el formato `.iflapp`, las plantillas y el contenido
+de los paquetes siguen igual.
+
+- **Issue #12 — «problema de idioma»:** la tabla de entorno que se adjunta a los
+  reportes salía siempre en español (`Dato`/`Valor`) aunque la interfaz
+  estuviera en otro idioma. `lib/report_telemetry.py` ahora resuelve las
+  etiquetas con `_env_label()` contra las claves `env.*` de los 14 catálogos de
+  `lang/` y publica el campo `language` en el snapshot, de modo que el issue
+  indica en qué idioma se estaba usando la aplicación. Verificado en vivo:
+  es `Dato/Valor`, en `Field/Value`, ja `項目/値`, ar `البيان/القيمة`.
+- **Issue #11 — «Orden» (primera parte):** el cuadro de contexto del sidebar
+  desaparece (`desc_card`, `sidebar_desc_text` y las reglas
+  `QWidget#SidebarContextCard`). La descripción de la página se dibuja ahora
+  **bajo el título de su barra de acciones y fuera de la píldora**, con
+  `install_page_action_bar()` exponiendo `subtitle_label` y
+  `set_action_bar_subtitle()`. El manifiesto guarda `### Título\nDetalle`; bajo
+  el título de la página ese encabezado sobraba, así que sólo se muestra el
+  detalle. AIDE y Configuración, que no tenían barra, la reciben.
+- **Barra de actividad (bugs.txt):** `lib/activity_bar.py` añade un marquee fino
+  bajo cada barra de acciones, siempre presente pero inactivo, que se anima
+  cuando hay trabajo en segundo plano. Sustituye al diálogo con barra de
+  progreso; el guardado automático de Configuración ya lo enciende.
+- **Sin PyYAML la ventana no abría:** `load_addons()` devolvía una lista vacía
+  en vez de los addons integrados, así que el sidebar quedaba sin botones y
+  `__init__` reventaba en `self.btn_create.setChecked(True)`. Ahora recurre a
+  `fallback_addons()`.
+
+Commit: `pendiente`. Pruebas nuevas en `tests/test_activity_bar_and_subtitle.py`
+(estado del marquee, subtítulo fuera de la píldora, pintura en ambos estados) y
+dos más en `tests/test_report_extension.py` (idioma de la tabla) y
+`tests/test_privacy_switch_and_addons_ui.py` (la descripción vive en la barra y
+el sidebar ya no tiene cuadro de contexto).
+
 ## 2026-11-25 — quincuagésimo quinto ciclo
 
 ### Corregido — la página de Reportes no respetaba el fondo, el scrollbar ni la tabla del entorno

@@ -844,5 +844,16 @@
     "state_no_endpoint": "Укажите URL совместимой с OpenAI конечной точки в настройках.",
     "state_no_key": "Укажите свой ключ API в настройках.",
     "api_key_placeholder": "Ключ API (хранится локально, не отображается)"
+  },
+  "env": {
+    "field": "Данные",
+    "value": "Значение",
+    "implementation": "Реализация",
+    "os": "Операционная система",
+    "os_version": "Версия системы",
+    "architecture": "Архитектура",
+    "distribution": "Сборка",
+    "cpu_count": "Ядра процессора",
+    "language": "Язык"
   }
 }

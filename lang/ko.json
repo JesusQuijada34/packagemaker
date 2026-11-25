@@ -844,5 +844,16 @@
     "state_no_endpoint": "설정에서 OpenAI 호환 엔드포인트 URL을 지정하세요.",
     "state_no_key": "설정에서 API 키를 지정하세요.",
     "api_key_placeholder": "API 키(로컬에 저장되며 표시되지 않음)"
+  },
+  "env": {
+    "field": "항목",
+    "value": "값",
+    "implementation": "구현",
+    "os": "운영 체제",
+    "os_version": "OS 버전",
+    "architecture": "아키텍처",
+    "distribution": "배포 방식",
+    "cpu_count": "CPU 코어 수",
+    "language": "언어"
   }
 }

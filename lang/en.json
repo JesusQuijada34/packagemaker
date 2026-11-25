@@ -842,5 +842,16 @@
     "state_no_endpoint": "Set the OpenAI-compatible endpoint URL in Settings.",
     "state_no_key": "Set your API key in Settings.",
     "api_key_placeholder": "API key (stored locally, never shown)"
+  },
+  "env": {
+    "field": "Field",
+    "value": "Value",
+    "implementation": "Implementation",
+    "os": "Operating system",
+    "os_version": "OS version",
+    "architecture": "Architecture",
+    "distribution": "Distribution",
+    "cpu_count": "CPU cores",
+    "language": "Language"
   }
 }

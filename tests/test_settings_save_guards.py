@@ -146,7 +146,6 @@ class TestSettingsAutosave:
         """Configuración guarda sola: no debe reaparecer un botón Guardar."""
         import packagemaker as pm
 
-        assert not hasattr(window, "config_action_bar")
         save_label = pm.tr("save")
         buttons = [
             button.text()

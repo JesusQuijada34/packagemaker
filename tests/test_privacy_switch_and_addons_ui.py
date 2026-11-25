@@ -111,8 +111,23 @@ def test_buttons_exist_per_addon(window):
 
 
 def test_description_comes_from_manifest(window):
+    """La descripción vive bajo el título de la página, no en el sidebar."""
     window.update_sidebar_description(window._addon_index["aide"])
-    assert "AIDE" in window.sidebar_desc_text.toPlainText()
+    page = window.page_aide
+    subtitle = page._pm_action_bar.subtitle_label
+
+    # ``isVisible`` es falso porque la página no se muestra en la ventana;
+    # ``isHidden`` refleja el estado propio del widget.
+    assert not subtitle.isHidden()
+    # Se muestra el detalle, sin el encabezado "### Título" del manifiesto.
+    assert "Pide ayuda" in subtitle.text()
+    assert "###" not in subtitle.text()
+
+
+def test_sidebar_no_longer_has_a_context_card(window):
+    """Issue #11: se elimina el cuadro de contexto del sidebar."""
+    assert not hasattr(window, "desc_card")
+    assert not hasattr(window, "sidebar_desc_text")
 
 
 def test_switching_to_aide_shows_its_page(window):
@@ -391,3 +406,25 @@ def test_pending_change_is_saved_on_close(qt_app, tmp_path):
         assert store.get_user("base_dir") == str(tmp_path / "nuevo")
     finally:
         pm_data._store = original
+
+
+def test_page_description_follows_live_language_switch(window):
+    """Issue #12: el subtítulo se retraduce sin reiniciar, en todas las páginas."""
+    from lib import i18n as i18n_mod
+
+    original = i18n_mod.i18n.get_current_lang()
+    try:
+        i18n_mod.i18n.load_translation("en")
+        window.apply_ui_language()
+        english = window.page_aide._pm_action_bar.subtitle_label.text()
+
+        i18n_mod.i18n.load_translation("es")
+        window.apply_ui_language()
+        spanish = window.page_aide._pm_action_bar.subtitle_label.text()
+
+        assert english != spanish
+        assert "Ask for help" in english
+        assert "Pide ayuda" in spanish
+    finally:
+        i18n_mod.i18n.load_translation(original)
+        window.apply_ui_language()

@@ -359,3 +359,147 @@ EXTENSION_CURATED["ar"] = {
     "sidebar.aide": "AIDE",
     "sidebar_desc.7": "### AIDE\nاطلب المساعدة أو أنشئ مشروعاً أو جهّز عملية بناء. لا يُرسل إلا ما تحدده: لا بيانات اعتماد ولا مسارات أبداً.",
 }
+
+EXTENSION_CURATED["fr"]["env"] = {
+        "field": "Donnée",
+        "value": "Valeur",
+        "implementation": "Implémentation",
+        "os": "Système d'exploitation",
+        "os_version": "Version du système",
+        "architecture": "Architecture",
+        "distribution": "Distribution",
+        "cpu_count": "Cœurs de processeur",
+        "language": "Langue",
+    }
+
+EXTENSION_CURATED["de"]["env"] = {
+        "field": "Angabe",
+        "value": "Wert",
+        "implementation": "Implementierung",
+        "os": "Betriebssystem",
+        "os_version": "Betriebssystemversion",
+        "architecture": "Architektur",
+        "distribution": "Verteilung",
+        "cpu_count": "CPU-Kerne",
+        "language": "Sprache",
+    }
+
+EXTENSION_CURATED["it"]["env"] = {
+        "field": "Dato",
+        "value": "Valore",
+        "implementation": "Implementazione",
+        "os": "Sistema operativo",
+        "os_version": "Versione del sistema",
+        "architecture": "Architettura",
+        "distribution": "Distribuzione",
+        "cpu_count": "Nuclei della CPU",
+        "language": "Lingua",
+    }
+
+EXTENSION_CURATED["pt"]["env"] = {
+        "field": "Dado",
+        "value": "Valor",
+        "implementation": "Implementação",
+        "os": "Sistema operativo",
+        "os_version": "Versão do sistema",
+        "architecture": "Arquitetura",
+        "distribution": "Distribuição",
+        "cpu_count": "Núcleos de CPU",
+        "language": "Idioma",
+    }
+
+EXTENSION_CURATED["nl"]["env"] = {
+        "field": "Gegeven",
+        "value": "Waarde",
+        "implementation": "Implementatie",
+        "os": "Besturingssysteem",
+        "os_version": "Versie van het systeem",
+        "architecture": "Architectuur",
+        "distribution": "Distributie",
+        "cpu_count": "CPU-kernen",
+        "language": "Taal",
+    }
+
+EXTENSION_CURATED["pl"]["env"] = {
+        "field": "Dana",
+        "value": "Wartość",
+        "implementation": "Implementacja",
+        "os": "System operacyjny",
+        "os_version": "Wersja systemu",
+        "architecture": "Architektura",
+        "distribution": "Dystrybucja",
+        "cpu_count": "Rdzenie procesora",
+        "language": "Język",
+    }
+
+EXTENSION_CURATED["tr"]["env"] = {
+        "field": "Veri",
+        "value": "Değer",
+        "implementation": "Uygulama",
+        "os": "İşletim sistemi",
+        "os_version": "İşletim sistemi sürümü",
+        "architecture": "Mimari",
+        "distribution": "Dağıtım",
+        "cpu_count": "İşlemci çekirdeği",
+        "language": "Dil",
+    }
+
+EXTENSION_CURATED["ru"]["env"] = {
+        "field": "Данные",
+        "value": "Значение",
+        "implementation": "Реализация",
+        "os": "Операционная система",
+        "os_version": "Версия системы",
+        "architecture": "Архитектура",
+        "distribution": "Сборка",
+        "cpu_count": "Ядра процессора",
+        "language": "Язык",
+    }
+
+EXTENSION_CURATED["ja"]["env"] = {
+        "field": "項目",
+        "value": "値",
+        "implementation": "実装",
+        "os": "オペレーティングシステム",
+        "os_version": "OS バージョン",
+        "architecture": "アーキテクチャ",
+        "distribution": "配布形態",
+        "cpu_count": "CPU コア数",
+        "language": "言語",
+    }
+
+EXTENSION_CURATED["ko"]["env"] = {
+        "field": "항목",
+        "value": "값",
+        "implementation": "구현",
+        "os": "운영 체제",
+        "os_version": "OS 버전",
+        "architecture": "아키텍처",
+        "distribution": "배포 방식",
+        "cpu_count": "CPU 코어 수",
+        "language": "언어",
+    }
+
+EXTENSION_CURATED["zh"]["env"] = {
+        "field": "项目",
+        "value": "值",
+        "implementation": "实现",
+        "os": "操作系统",
+        "os_version": "系统版本",
+        "architecture": "架构",
+        "distribution": "分发方式",
+        "cpu_count": "CPU 核心数",
+        "language": "语言",
+    }
+
+EXTENSION_CURATED["ar"]["env"] = {
+        "field": "البيان",
+        "value": "القيمة",
+        "implementation": "التنفيذ",
+        "os": "نظام التشغيل",
+        "os_version": "إصدار النظام",
+        "architecture": "المعمارية",
+        "distribution": "طريقة التوزيع",
+        "cpu_count": "أنوية المعالج",
+        "language": "اللغة",
+    }

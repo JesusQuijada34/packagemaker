@@ -844,5 +844,16 @@
     "state_no_endpoint": "Geben Sie die URL des OpenAI-kompatiblen Endpunkts in den Einstellungen an.",
     "state_no_key": "Geben Sie Ihren API-Schlüssel in den Einstellungen an.",
     "api_key_placeholder": "API-Schlüssel (lokal gespeichert, nie angezeigt)"
+  },
+  "env": {
+    "field": "Angabe",
+    "value": "Wert",
+    "implementation": "Implementierung",
+    "os": "Betriebssystem",
+    "os_version": "Betriebssystemversion",
+    "architecture": "Architektur",
+    "distribution": "Verteilung",
+    "cpu_count": "CPU-Kerne",
+    "language": "Sprache"
   }
 }

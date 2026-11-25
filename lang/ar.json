@@ -844,5 +844,16 @@
     "state_no_endpoint": "حدّد عنوان نقطة النهاية المتوافقة مع OpenAI في الإعدادات.",
     "state_no_key": "حدّد مفتاح API في الإعدادات.",
     "api_key_placeholder": "مفتاح API (يُحفظ محلياً ولا يُعرض)"
+  },
+  "env": {
+    "field": "البيان",
+    "value": "القيمة",
+    "implementation": "التنفيذ",
+    "os": "نظام التشغيل",
+    "os_version": "إصدار النظام",
+    "architecture": "المعمارية",
+    "distribution": "طريقة التوزيع",
+    "cpu_count": "أنوية المعالج",
+    "language": "اللغة"
   }
 }

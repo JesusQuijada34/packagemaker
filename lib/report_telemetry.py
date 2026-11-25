@@ -108,6 +108,16 @@ def _qt_version() -> str:
         return ""
 
 
+def _ui_language() -> str:
+    """Idioma con el que el usuario está viendo la aplicación."""
+    try:
+        from lib.i18n import i18n
+
+        return str(i18n.get_current_lang() or "")
+    except Exception:
+        return ""
+
+
 def collect_environment() -> Dict[str, Any]:
     """Instantánea del entorno para adjuntar al reporte.
 
@@ -129,29 +139,47 @@ def collect_environment() -> Dict[str, Any]:
         "qt_version": _qt_version(),
         "distribution": "congelada" if _is_frozen() else "código fuente",
         "cpu_count": cpu_count,
+        "language": _ui_language(),
     }
 
 
+def _env_label(key: str, fallback: str) -> str:
+    """Traduce una etiqueta del entorno; sin i18n usa el español."""
+    try:
+        from lib.i18n import tr
+
+        translated = tr(f"env.{key}")
+        return fallback if translated == f"env.{key}" else translated
+    except Exception:
+        return fallback
+
+
 def environment_markdown(environment: Dict[str, Any]) -> str:
-    """Tabla markdown con el entorno, lista para pegar en un issue."""
+    """Tabla markdown con el entorno, lista para pegar en un issue.
+
+    Las etiquetas salen en el idioma con el que el usuario ve la aplicación: la
+    tabla se mostraba en español aunque la interfaz estuviera en otro idioma.
+    """
     labels = (
         ("app_version", "PackageMaker"),
         ("commit", "Commit"),
         ("python_version", "Python"),
-        ("python_implementation", "Implementación"),
-        ("os", "Sistema operativo"),
-        ("os_version", "Versión del SO"),
-        ("architecture", "Arquitectura"),
+        ("python_implementation", _env_label("implementation", "Implementación")),
+        ("os", _env_label("os", "Sistema operativo")),
+        ("os_version", _env_label("os_version", "Versión del SO")),
+        ("architecture", _env_label("architecture", "Arquitectura")),
         ("qt_version", "Qt"),
-        ("distribution", "Distribución"),
-        ("cpu_count", "Núcleos de CPU"),
+        ("distribution", _env_label("distribution", "Distribución")),
+        ("cpu_count", _env_label("cpu_count", "Núcleos de CPU")),
+        ("language", _env_label("language", "Idioma")),
     )
     rows = [
         f"| {label} | {environment.get(key) or '—'} |"
         for key, label in labels
         if environment.get(key) not in (None, "")
     ]
-    return "\n".join(["| Dato | Valor |", "|---|---|"] + rows)
+    header = f"| {_env_label('field', 'Dato')} | {_env_label('value', 'Valor')} |"
+    return "\n".join([header, "|---|---|"] + rows)
 
 
 def fingerprint(kind: str, message: str) -> str:

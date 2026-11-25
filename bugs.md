@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (quincuagésimo quinto ciclo, issue #10)
+Última actualización: 2026-11-18 (quincuagésimo sexto ciclo, issues #11 y #12)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -21,9 +21,13 @@ histórico.
 | R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Pendiente (Q-011/F-004) |
 | R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | Corregido; verificación visual en Windows pendiente (issue #10) |
 | R-5a7d2f16 | Mejora — fondo blanco/negro translúcido sobre el blur | Media | Pendiente (mejora) |
+| R-9b3e7a41 | Bug — tabla del entorno siempre en español (issue #12) | Media | Corregido |
+| R-1f6c9d38 | Mejora — descripción de página fuera del sidebar (issue #11) | Media | Corregido |
+| R-7d2a5b84 | Mejora — barra de actividad marquee bajo el action bar | Media | Corregido |
+| R-4b8f1e27 | Bug — sin PyYAML la ventana no abría | Alta | Corregido |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora) |
 
-**8 entradas abiertas.** 156 resueltas archivadas en `docs/bugs_resueltos.md`.
+**4 entradas abiertas** (las cuatro cerradas este ciclo se listan arriba como `Corregido`). 156 resueltas archivadas en `docs/bugs_resueltos.md`.
 
 ---
 

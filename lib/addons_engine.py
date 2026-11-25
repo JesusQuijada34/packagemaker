@@ -229,7 +229,10 @@ def load_addons(directory: Path, *, strict: bool = False) -> List[Addon]:
     if yaml is None:
         if strict:
             raise AddonError("PyYAML no está instalado: no se pueden leer los addons")
-        return addons
+        # Sin PyYAML no se pueden leer los manifiestos, pero la ventana debe
+        # abrir: se usan los addons integrados en vez de dejar el sidebar vacío.
+        Addon.skipped = ["PyYAML no está instalado: se usan los addons por defecto"]
+        return fallback_addons()
 
     if not directory.is_dir():
         if strict:

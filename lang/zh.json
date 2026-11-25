@@ -844,5 +844,16 @@
     "state_no_endpoint": "请在设置中填写兼容 OpenAI 的端点 URL。",
     "state_no_key": "请在设置中填写你的 API 密钥。",
     "api_key_placeholder": "API 密钥（本地保存，不会显示）"
+  },
+  "env": {
+    "field": "项目",
+    "value": "值",
+    "implementation": "实现",
+    "os": "操作系统",
+    "os_version": "系统版本",
+    "architecture": "架构",
+    "distribution": "分发方式",
+    "cpu_count": "CPU 核心数",
+    "language": "语言"
   }
 }

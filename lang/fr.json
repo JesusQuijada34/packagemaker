@@ -844,5 +844,16 @@
     "state_no_endpoint": "Indiquez l'URL du point de terminaison compatible OpenAI dans les paramètres.",
     "state_no_key": "Indiquez votre clé d'API dans les paramètres.",
     "api_key_placeholder": "Clé d'API (stockée en local, jamais affichée)"
+  },
+  "env": {
+    "field": "Donnée",
+    "value": "Valeur",
+    "implementation": "Implémentation",
+    "os": "Système d'exploitation",
+    "os_version": "Version du système",
+    "architecture": "Architecture",
+    "distribution": "Distribution",
+    "cpu_count": "Cœurs de processeur",
+    "language": "Langue"
   }
 }

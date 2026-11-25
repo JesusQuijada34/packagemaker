@@ -70,9 +70,11 @@ class AidePage(QWidget):
             CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING
         )
 
-        title = QLabel(_t("aide.title"))
-        title.setWordWrap(True)
-        layout.addWidget(title)
+        from lib.page_action_bar import install_page_action_bar
+
+        self.action_bar, self.bar_title = install_page_action_bar(
+            layout, _t("sidebar.aide")
+        )
 
         self.provider_combo = QComboBox()
         self.provider_combo.addItem(_t("aide.provider_copilot"), "copilot")

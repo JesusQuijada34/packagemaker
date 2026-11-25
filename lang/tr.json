@@ -844,5 +844,16 @@
     "state_no_endpoint": "Ayarlarda OpenAI uyumlu uç nokta adresini belirtin.",
     "state_no_key": "Ayarlarda API anahtarınızı belirtin.",
     "api_key_placeholder": "API anahtarı (yerelde saklanır, asla gösterilmez)"
+  },
+  "env": {
+    "field": "Veri",
+    "value": "Değer",
+    "implementation": "Uygulama",
+    "os": "İşletim sistemi",
+    "os_version": "İşletim sistemi sürümü",
+    "architecture": "Mimari",
+    "distribution": "Dağıtım",
+    "cpu_count": "İşlemci çekirdeği",
+    "language": "Dil"
   }
 }

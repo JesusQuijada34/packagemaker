@@ -306,3 +306,41 @@ class HookTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_environment_table_follows_the_interface_language(_qt_app):
+    """Issue #12: la tabla del entorno salía siempre en español."""
+    import lib.i18n as i18n_mod
+    from lib import report_telemetry
+
+    if i18n_mod.i18n._app is None:
+        i18n_mod.i18n.initialize(_qt_app, "es")
+    original = i18n_mod.i18n.get_current_lang()
+    try:
+        i18n_mod.i18n.load_translation("en")
+        env = report_telemetry.collect_environment()
+        table = report_telemetry.environment_markdown(env)
+
+        assert env["language"] == "en"
+        assert "Operating system" in table
+        assert "Sistema operativo" not in table
+        assert "CPU cores" in table
+    finally:
+        i18n_mod.i18n.load_translation(original)
+
+
+def test_environment_table_reports_the_active_language(_qt_app):
+    """El propio entorno debe decir en qué idioma ve la app el usuario."""
+    import lib.i18n as i18n_mod
+    from lib import report_telemetry
+
+    if i18n_mod.i18n._app is None:
+        i18n_mod.i18n.initialize(_qt_app, "es")
+    original = i18n_mod.i18n.get_current_lang()
+    try:
+        i18n_mod.i18n.load_translation("ja")
+        env = report_telemetry.collect_environment()
+        assert env["language"] == "ja"
+        assert "言語" in report_telemetry.environment_markdown(env)
+    finally:
+        i18n_mod.i18n.load_translation(original)

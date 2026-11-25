@@ -844,5 +844,16 @@
     "state_no_endpoint": "設定で OpenAI 互換エンドポイントの URL を指定してください。",
     "state_no_key": "設定で API キーを指定してください。",
     "api_key_placeholder": "API キー（ローカルに保存され、表示されません）"
+  },
+  "env": {
+    "field": "項目",
+    "value": "値",
+    "implementation": "実装",
+    "os": "オペレーティングシステム",
+    "os_version": "OS バージョン",
+    "architecture": "アーキテクチャ",
+    "distribution": "配布形態",
+    "cpu_count": "CPU コア数",
+    "language": "言語"
   }
 }

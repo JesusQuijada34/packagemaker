@@ -844,5 +844,16 @@
     "state_no_endpoint": "Geef de URL van het OpenAI-compatibele eindpunt op in de instellingen.",
     "state_no_key": "Geef je API-sleutel op in de instellingen.",
     "api_key_placeholder": "API-sleutel (lokaal opgeslagen, nooit getoond)"
+  },
+  "env": {
+    "field": "Gegeven",
+    "value": "Waarde",
+    "implementation": "Implementatie",
+    "os": "Besturingssysteem",
+    "os_version": "Versie van het systeem",
+    "architecture": "Architectuur",
+    "distribution": "Distributie",
+    "cpu_count": "CPU-kernen",
+    "language": "Taal"
   }
 }

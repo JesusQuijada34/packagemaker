@@ -29,6 +29,7 @@ except ImportError:  # pragma: no cover - entorno sin Qt
 
 from lib.design_tokens import (
     BORDER,
+    TEXT_DIM,
     BUTTON_HEIGHT,
     FONT_STACK,
     SURFACE,
@@ -42,6 +43,7 @@ from lib.design_tokens import (
     primary_button_qss,
     secondary_button_qss,
 )
+from lib.activity_bar import ActivityBar
 from lib.hover_animation import enable_hover_fade
 
 
@@ -132,6 +134,25 @@ def _apply_bar_shadow(bar) -> None:
         pass
 
 
+SUBTITLE_STYLE = (
+    f"color:{TEXT_DIM};font-size:12px;background:transparent;"
+    f"font-family:{FONT_STACK};padding:0 2px;"
+)
+
+
+def set_action_bar_subtitle(bar, text: str) -> None:
+    """Pone la descripción de la página bajo su título, fuera de la píldora.
+
+    El texto vive en un ``QLabel`` propio colocado **después** de la barra, de
+    modo que no comparte el fondo translúcido ni el borde de la misma.
+    """
+    label = getattr(bar, "subtitle_label", None)
+    if label is None:
+        return
+    label.setText(text or "")
+    label.setVisible(bool(text))
+
+
 def install_page_action_bar(
     parent_layout,
     title: str,
@@ -140,7 +161,9 @@ def install_page_action_bar(
     """Inserta una barra de acciones al principio de ``parent_layout``.
 
     Devuelve ``(bar, title_label)`` para que la página pueda actualizar el
-    texto (traducciones en tiempo real) o reparentar sus botones.
+    texto (traducciones en tiempo real) o reparentar sus botones. La barra
+    expone además ``subtitle_label`` para la descripción de la página, que se
+    dibuja debajo del título y fuera del recuadro de la barra.
     """
     bar = QWidget()
     bar.setObjectName("PageActionBar")
@@ -164,5 +187,33 @@ def install_page_action_bar(
     for btn in buttons:
         row.addWidget(btn)
 
+    subtitle = QLabel("")
+    subtitle.setObjectName("PageActionSubtitle")
+    subtitle.setWordWrap(True)
+    subtitle.setStyleSheet(SUBTITLE_STYLE)
+    subtitle.setVisible(False)
+    bar.subtitle_label = subtitle
+
+    activity = ActivityBar(bar)
+    activity.setObjectName("PageActivityBar")
+    bar.activity_bar = activity
+
+    owner = parent_layout.parentWidget()
+    if owner is not None:
+        owner._pm_action_bar = bar
+
     parent_layout.insertWidget(0, bar)
+    parent_layout.insertWidget(1, activity)
+    parent_layout.insertWidget(2, subtitle)
     return bar, title_lbl
+
+
+def set_action_bar_busy(bar, busy: bool) -> None:
+    """Despierta o apacigua el marquee de la barra (trabajo en segundo plano)."""
+    activity = getattr(bar, "activity_bar", None)
+    if activity is None:
+        return
+    if busy:
+        activity.start()
+    else:
+        activity.stop()

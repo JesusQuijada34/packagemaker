@@ -844,5 +844,16 @@
     "state_no_endpoint": "Indica l'URL dell'endpoint compatibile con OpenAI nelle impostazioni.",
     "state_no_key": "Indica la tua chiave API nelle impostazioni.",
     "api_key_placeholder": "Chiave API (salvata in locale, mai mostrata)"
+  },
+  "env": {
+    "field": "Dato",
+    "value": "Valore",
+    "implementation": "Implementazione",
+    "os": "Sistema operativo",
+    "os_version": "Versione del sistema",
+    "architecture": "Architettura",
+    "distribution": "Distribuzione",
+    "cpu_count": "Nuclei della CPU",
+    "language": "Lingua"
   }
 }
