@@ -425,3 +425,15 @@ def sidebar_qss(dark: bool = True, accent: str = ACCENT) -> str:
 def card_qss() -> str:
     """Tarjeta/panel con radio de macOS."""
     return qss_loader.qss("qframe", role="card", WINDOW_RADIUS=WINDOW_RADIUS)
+
+
+def scrollbar_qss(dark: bool = True) -> str:
+    """Barra de desplazamiento de alto contraste para páginas con scroll."""
+    return qss_loader.qss(
+        "qscrollbar",
+        role="prominent",
+        SCROLL_HANDLE=with_alpha(TEXT if dark else TEXT_LIGHT, 0.42 if dark else 0.34),
+        SCROLL_HANDLE_HOVER=with_alpha(
+            TEXT if dark else TEXT_LIGHT, 0.62 if dark else 0.52
+        ),
+    )

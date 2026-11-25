@@ -16,3 +16,27 @@ QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::su
     background: transparent;
     border: none;
 }
+
+/* @role: prominent */
+/* Variante de alto contraste para páginas largas (Reportes): mango más ancho
+   y opaco, sin flechas, para que se vea sobre el fondo translúcido. */
+QScrollBar:vertical {
+    width: 12px;
+    margin: 2px 0 2px 0;
+    background: transparent;
+}
+QScrollBar::handle:vertical {
+    background: __SCROLL_HANDLE__;
+    border-radius: 5px;
+    min-height: 36px;
+}
+QScrollBar::handle:vertical:hover { background: __SCROLL_HANDLE_HOVER__; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+    background: transparent;
+    border: none;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+    border: none;
+}

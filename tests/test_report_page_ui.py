@@ -13,10 +13,11 @@ if str(ROOT) not in sys.path:
 
 pytest.importorskip("PyQt6.QtWidgets")
 
+from PyQt6.QtCore import Qt  # noqa: E402
 from PyQt6.QtWidgets import QApplication  # noqa: E402
 
 from lib import github_issue_reporter, report_queue  # noqa: E402
-from lib.report_page import ReportPage  # noqa: E402
+from lib.report_page import ReportPage, _environment_html  # noqa: E402
 
 _APP = None
 
@@ -141,6 +142,41 @@ def test_retranslate_keeps_state(page):
     page.title_input.setText("texto escrito")
     page.retranslate()
     assert page.title_input.text() == "texto escrito"
+
+
+def test_page_uses_two_columns_with_grouped_cards(page):
+    """Issue #10: dos columnas para no tener que bajar hasta el formulario."""
+    assert page.left_column.indexOf(page.session_card) >= 0
+    assert page.left_column.indexOf(page.form_card) >= 0
+    assert page.right_column.indexOf(page.queue_card) >= 0
+    assert page.right_column.indexOf(page.environment_card) >= 0
+    assert page.left_column.count() == 3  # dos tarjetas + stretch
+    assert page.right_column.count() == 3
+
+
+def test_environment_is_rendered_as_rich_table(page):
+    """Issue #10: la tabla markdown del entorno se muestra enriquecida."""
+    text = page.env_label.text()
+    assert page.env_label.textFormat() == Qt.TextFormat.RichText
+    assert "<table" in text
+    assert "PackageMaker" in text
+    assert "|---|" not in text
+
+
+def test_scroll_area_is_transparent_with_visible_scrollbar(page):
+    """Issue #10: sin banda de fondo distinta y con scrollbar legible."""
+    assert page.scroll.viewport().autoFillBackground() is False
+    sheet = page.scroll.styleSheet()
+    assert "QScrollBar::handle:vertical" in sheet
+    assert "QScrollArea{background:transparent" in sheet
+
+
+def test_environment_html_escapes_values():
+    rendered = _environment_html(
+        "| Dato | Valor |\n|---|---|\n| App | <b>inyectado</b> |"
+    )
+    assert "<table" in rendered
+    assert "&lt;b&gt;inyectado&lt;/b&gt;" in rendered
 
 
 if __name__ == "__main__":

@@ -104,6 +104,8 @@ def test_every_builder_resolves_all_markers():
         tokens.title_qss(),
         tokens.mono_value_qss(),
         tokens.card_qss(),
+        tokens.scrollbar_qss(),
+        tokens.scrollbar_qss(dark=False),
         tokens.sidebar_qss(True, tokens.ACCENT),
         tokens.sidebar_qss(False, tokens.ACCENT),
         theme.applyget("#0078D4", True),

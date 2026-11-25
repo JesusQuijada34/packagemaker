@@ -15,6 +15,7 @@ Todo el color sale de ``lib/design_tokens`` y todo el texto de ``tr()``.
 
 from __future__ import annotations
 
+import html
 from typing import List, Optional, Tuple
 
 try:
@@ -46,10 +47,17 @@ except ImportError:  # pragma: no cover - entorno sin Qt (CLI headless)
 from lib import crash_capture, github_issue_reporter, report_queue, report_telemetry
 from lib.design_tokens import (
     ACCENT,
+    BORDER,
     CONTENT_PADDING,
+    DANGER_TEXT,
+    DIVIDER,
     TEXT,
+    TEXT_DIM,
+    TEXT_SOFT,
+    WARNING,
     card_qss,
     input_qss,
+    scrollbar_qss,
     secondary_button_qss,
 )
 from lib.page_action_bar import install_page_action_bar, make_action_button
@@ -62,6 +70,51 @@ def _t(key: str, **kwargs) -> str:
     text = tr(key)
     return text.format(**kwargs) if kwargs else text
 
+
+def _environment_html(markdown: str) -> str:
+    """Convierte la tabla markdown del entorno en una tabla HTML para ``QLabel``.
+
+    ``environment_markdown()`` sirve para pegar el entorno en un issue, pero en
+    la página se mostraba con los pipes en crudo. Qt renderiza un subconjunto de
+    HTML: se construye una tabla de dos columnas con la misma información.
+    """
+    rows: List[List[str]] = []
+    for raw in markdown.splitlines():
+        line = raw.strip()
+        if not (line.startswith("|") and line.endswith("|")):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if cells and all(set(cell) <= {"-", ":", " "} for cell in cells):
+            continue
+        if cells:
+            rows.append(cells)
+    if not rows:
+        return ""
+
+    width = max(len(row) for row in rows)
+    parts = ["<table width='100%' cellspacing='0' cellpadding='6'>"]
+    for index, row in enumerate(rows):
+        cells = row + [""] * (width - len(row))
+        parts.append("<tr>")
+        for cell_index, cell in enumerate(cells):
+            if index == 0:
+                style = (
+                    f"color:{TEXT_DIM};font-size:11px;font-weight:600;"
+                    f"border-bottom:1px solid {BORDER};text-align:left;"
+                )
+            else:
+                color = TEXT if cell_index == 0 else TEXT_SOFT
+                weight = "600" if cell_index == 0 else "400"
+                style = (
+                    f"color:{color};font-size:12px;font-weight:{weight};"
+                    f"border-bottom:1px solid {DIVIDER};text-align:left;"
+                )
+            parts.append(f"<td style=\"{style}\">{html.escape(cell)}</td>")
+        parts.append("</tr>")
+    parts.append("</table>")
+    return "".join(parts)
+
+
 KIND_KEYS = ("bug", "crash", "suggestion")
 
 MAX_DESCRIPTION_CHARS = 8000
@@ -73,12 +126,17 @@ class ReportPage(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.setObjectName("ReportPage")
+        # Mismo tratamiento que el resto de páginas: el fondo lo pinta el
+        # contenedor de la pila y esta página no añade una capa propia.
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self._attachment_text = ""
         self._attachment_name = ""
 
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
-        outer.setSpacing(0)
+        outer.setContentsMargins(
+            CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING
+        )
+        outer.setSpacing(10)
 
         # Barra de acciones superior, igual que el resto de páginas.
         self.send_btn = make_action_button(tr("report.send"), kind="primary")
@@ -86,39 +144,59 @@ class ReportPage(QWidget):
         self.refresh_btn = make_action_button(tr("report.refresh"), kind="secondary")
         self.refresh_btn.clicked.connect(self.refresh_status)
 
-        header_host = QWidget()
-        header_layout = QVBoxLayout(header_host)
-        header_layout.setContentsMargins(
-            CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, 0
-        )
         self.action_bar, self.bar_title = install_page_action_bar(
-            header_layout,
+            outer,
             tr("sidebar.report"),
             [self.refresh_btn, self.send_btn],
         )
-        outer.addWidget(header_host)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("QScrollArea{background:transparent;border:none;}")
-        outer.addWidget(scroll, 1)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scroll.setStyleSheet(
+            "QScrollArea{background:transparent;border:none;}" + scrollbar_qss()
+        )
+        # El viewport de un QScrollArea pinta el color base de la paleta si no
+        # se hace transparente; esa banda no coincidía con el resto de la
+        # página (issue #10).
+        self.scroll.viewport().setAutoFillBackground(False)
+        self.scroll.viewport().setStyleSheet("background:transparent;")
+        outer.addWidget(self.scroll, 1)
 
         body = QWidget()
+        body.setObjectName("ReportBody")
         body.setStyleSheet("background:transparent;")
-        scroll.setWidget(body)
+        self.scroll.setWidget(body)
 
-        column = QVBoxLayout(body)
-        column.setContentsMargins(
-            CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING
-        )
-        column.setSpacing(16)
+        # Dos columnas: a la izquierda se escribe el reporte y a la derecha se
+        # consulta el estado, así no hay que bajar para enviar.
+        columns = QHBoxLayout(body)
+        columns.setContentsMargins(0, 0, 0, 0)
+        columns.setSpacing(16)
 
-        column.addWidget(self._build_session_card())
-        column.addWidget(self._build_form_card())
-        column.addWidget(self._build_queue_card())
-        column.addWidget(self._build_environment_card())
-        column.addStretch(1)
+        self.left_column = QVBoxLayout()
+        self.left_column.setSpacing(16)
+        self.right_column = QVBoxLayout()
+        self.right_column.setSpacing(16)
+
+        self.session_card = self._build_session_card()
+        self.form_card = self._build_form_card()
+        self.queue_card = self._build_queue_card()
+        self.environment_card = self._build_environment_card()
+
+        self.left_column.addWidget(self.session_card)
+        self.left_column.addWidget(self.form_card)
+        self.left_column.addStretch(1)
+
+        self.right_column.addWidget(self.queue_card)
+        self.right_column.addWidget(self.environment_card)
+        self.right_column.addStretch(1)
+
+        columns.addLayout(self.left_column, 3)
+        columns.addLayout(self.right_column, 2)
 
         self.refresh_status()
 
@@ -139,7 +217,7 @@ class ReportPage(QWidget):
         if hint_key:
             hint = QLabel(tr(hint_key))
             hint.setWordWrap(True)
-            hint.setStyleSheet("color:rgba(255,255,255,0.55);font-size:12px;")
+            hint.setStyleSheet(f"color:{TEXT_DIM};font-size:12px;")
             layout.addWidget(hint)
 
         card._title_label = title  # type: ignore[attr-defined]
@@ -159,7 +237,7 @@ class ReportPage(QWidget):
 
         auto_hint = QLabel(tr("report.auto_send_hint"))
         auto_hint.setWordWrap(True)
-        auto_hint.setStyleSheet("color:rgba(255,255,255,0.45);font-size:12px;")
+        auto_hint.setStyleSheet(f"color:{TEXT_DIM};font-size:12px;")
         layout.addWidget(auto_hint)
         self._auto_hint = auto_hint
         return card
@@ -195,7 +273,7 @@ class ReportPage(QWidget):
 
         self.attach_label = QLabel("")
         self.attach_label.setWordWrap(True)
-        self.attach_label.setStyleSheet("color:rgba(255,255,255,0.45);font-size:12px;")
+        self.attach_label.setStyleSheet(f"color:{TEXT_DIM};font-size:12px;")
         layout.addWidget(self.attach_label)
 
         row = QHBoxLayout()
@@ -241,12 +319,11 @@ class ReportPage(QWidget):
         card, layout = self._card("report.env_title", "report.env_hint")
         self.env_label = QLabel("")
         self.env_label.setWordWrap(True)
+        self.env_label.setTextFormat(Qt.TextFormat.RichText)
         self.env_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
         )
-        self.env_label.setStyleSheet(
-            "font-family:monospace;font-size:12px;color:rgba(255,255,255,0.7);"
-        )
+        self.env_label.setStyleSheet(f"font-size:12px;color:{TEXT_SOFT};")
         layout.addWidget(self.env_label)
         return card
 
@@ -264,7 +341,7 @@ class ReportPage(QWidget):
             self.session_label.setStyleSheet(f"color:{ACCENT};font-size:12px;")
         else:
             self.session_label.setText(tr("report.session_missing"))
-            self.session_label.setStyleSheet("color:#E0A030;font-size:12px;")
+            self.session_label.setStyleSheet(f"color:{WARNING};font-size:12px;")
 
         pending = report_queue.count()
         self.queue_label.setText(
@@ -275,7 +352,8 @@ class ReportPage(QWidget):
 
         try:
             environment = report_telemetry.collect_environment()
-            self.env_label.setText(report_telemetry.environment_markdown(environment))
+            markdown = report_telemetry.environment_markdown(environment)
+            self.env_label.setText(_environment_html(markdown) or markdown)
         except Exception:
             self.env_label.setText("—")
 
@@ -337,7 +415,7 @@ class ReportPage(QWidget):
     def _set_feedback(self, text: str, *, error: bool) -> None:
         self.feedback.setText(text)
         self.feedback.setStyleSheet(
-            f"color:{'#E05C5C' if error else ACCENT};font-size:12px;"
+            f"color:{DANGER_TEXT if error else ACCENT};font-size:12px;"
         )
 
     def build_report(self) -> Optional[github_issue_reporter.Report]:

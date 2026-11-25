@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-18 (quincuagésimo quinto ciclo, extensión de reportes)
+Última actualización: 2026-11-25 (quincuagésimo quinto ciclo, issue #10)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -19,10 +19,11 @@ histórico.
 | R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Pendiente (Q-019) |
 | R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Pendiente (Q-012/Q-011) |
 | R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Pendiente (Q-011/F-004) |
+| R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | Corregido; verificación visual en Windows pendiente (issue #10) |
 | R-5a7d2f16 | Mejora — fondo blanco/negro translúcido sobre el blur | Media | Pendiente (mejora) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora) |
 
-**7 entradas abiertas.** 156 resueltas archivadas en `docs/bugs_resueltos.md`.
+**8 entradas abiertas.** 156 resueltas archivadas en `docs/bugs_resueltos.md`.
 
 ---
 
@@ -53,8 +54,41 @@ histórico.
   casilla en la página; apagado, los fallos sólo se guardan en local.
 - **Privacidad:** documentado en `docs/privacy.md`.
 - **Pruebas:** `tests/test_report_extension.py` (23) y
-  `tests/test_report_page_ui.py` (10), incluidos el saneado de rutas y
+  `tests/test_report_page_ui.py` (14), incluidos el saneado de rutas y
   credenciales, la no publicación sin sesión, la deduplicación y la cola.
+
+### R-8c4f1a72 — La página de Reportes rompe el fondo y el scrollbar no se lee
+
+- **Usuario:** JesusQuijada34 (issue #10, reporte enviado desde la aplicación)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media
+- **Estado:** Corregido y probado en Linux/offscreen; **pendiente de
+  verificación visual en Windows** (el issue #10 sigue abierto).
+- **Descripción:** la pestaña Reportes no coincidía con el resto en el fondo:
+  desde la línea superior de la barra de acciones hasta el borde superior se
+  veía una banda más oscura. El scrollbar apenas se distinguía y el formulario
+  quedaba muy abajo, obligando a desplazarse. La tabla markdown del entorno se
+  mostraba con los pipes en crudo.
+- **Pasos para reproducirlo:** abrir la pestaña «Reportes» en Windows y
+  comparar la franja situada por encima de la barra de acciones con el fondo de
+  las demás pestañas; reducir la altura de la ventana para ver el scrollbar.
+- **Causa raíz:** la página no tenía `WA_StyledBackground`, usaba un contenedor
+  de cabecera con relleno propio y el viewport del `QScrollArea` conservaba el
+  color base de la paleta, así que pintaba una capa distinta a la del resto de
+  la pila. Todo el contenido iba en una sola columna y el entorno se volcaba
+  como markdown en un `QLabel` de texto plano.
+- **Solución aplicada:** la página usa el mismo fondo que las demás
+  (`WA_StyledBackground`), el viewport del scroll es transparente, el
+  contenido se reparte en dos columnas (izquierda: sesión y formulario;
+  derecha: cola y entorno) y el scrollbar usa la nueva variante `prominent` de
+  `source/qss/qscrollbar.qss` (mango de 12 px y más opaco). La tabla del
+  entorno se convierte a HTML con `_environment_html()` y se muestra como tabla
+  enriquecida, escapando los valores.
+- **Pruebas:** `tests/test_report_page_ui.py` (dos columnas, tabla enriquecida,
+  viewport transparente y scrollbar visible) y `tests/test_qss_loader.py`
+  (variante `prominent` sin marcadores).
+- **Commit:** pendiente de registrar en el resumen del ciclo.
+- **Fecha de resolución:** pendiente de confirmación visual en Windows.
 
 ---
 

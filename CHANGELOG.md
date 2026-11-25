@@ -1,3 +1,42 @@
+## 2026-11-25 — quincuagésimo quinto ciclo
+
+### Corregido — la página de Reportes no respetaba el fondo, el scrollbar ni la tabla del entorno
+
+Primer reporte externo recibido a través de la propia extensión de reportes: el
+issue #10 llegó enviado desde la aplicación con la cuenta de JesusQuijada34.
+**Ningún cambio de comportamiento del engine**: la ley de nombres, el formato
+`.iflapp`, las plantillas y el contenido de los paquetes siguen igual.
+
+- **R-8c4f1a72 — la pestaña Reportes rompía el fondo y no se leía el scrollbar
+  (Media, issue #10):** la franja situada por encima de la barra de acciones
+  pintaba una capa distinta al resto de la pestaña porque el viewport del
+  `QScrollArea` conservaba el color base de la paleta y la página no usaba
+  `WA_StyledBackground`. El scrollbar global (10 px, mango al 24 % de opacidad)
+  apenas se distinguía y todo el contenido iba en una sola columna, con el
+  formulario muy abajo. Ahora la página usa el mismo fondo que las demás, el
+  viewport es transparente, el contenido se reparte en dos columnas (izquierda:
+  sesión y formulario; derecha: cola y entorno) y el scrollbar usa la nueva
+  variante `prominent` de `source/qss/qscrollbar.qss` (mango de 12 px y más
+  opaco) expuesta por `design_tokens.scrollbar_qss()`. La tabla markdown del
+  entorno se convierte a HTML con `_environment_html()` y se muestra como tabla
+  enriquecida, con los valores escapados. Reportado por JesusQuijada34
+  (issue #10, reporte enviado desde la aplicación). Queda **pendiente de
+  verificación visual en Windows**, así que no se marca como resuelto del todo.
+
+Pruebas nuevas en `tests/test_report_page_ui.py` (dos columnas, tabla
+enriquecida, viewport transparente, scrollbar visible y escapado de valores) y
+en `tests/test_qss_loader.py` (la variante `prominent` resuelve todos sus
+marcadores). Suite completa: 1219 pasan, 1 omitido, 64 subtests. `pyflakes` y
+`py_compile` limpios. Además se verificó con una captura offscreen que la franja
+superior y el contenido comparten ahora el mismo color (`rgb(28,28,30)`) y que
+el scrollbar aparece al reducir la altura de la ventana.
+
+No se prepara release: siguen abiertos R-4f8a2c60 (Q-008/F-003), R-6a1f8c23
+(Q-011/F-004), R-4d9e2b61 (Q-019), R-7c4a1e95 (Q-012), R-2f8b6a31
+(Q-011/F-004), R-8c4f1a72 (a la espera de la comprobación visual en Windows),
+R-5a7d2f16 y R-3c8e4b72. Los seis cambios de engine aprobados siguen sin
+confirmación final (`F-001`…`F-006`).
+
 ## 2026-11-25 — quincuagésimo cuarto ciclo
 
 ### Corregido — copia del paquete ante bloqueos y estados de los radios
