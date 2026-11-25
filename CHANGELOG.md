@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026-11-25 — cuadragésimo sexto ciclo
+
+### Corregido — traductor automático sin caídas ni congelaciones, y zipapp con la codificación declarada
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna sobre la
+ruta de traducción automática y sobre la detección del punto de entrada del
+backend `zipapp`. Ningún cambio de comportamiento del engine: un guion UTF-8 se
+lee igual que antes, las traducciones locales no cambian y la compilación sólo
+recupera la clasificación correcta de los guiones con cookie de codificación.
+
+- **R-7b2e9c41 — una respuesta no UTF-8 del traductor abortaba `tr()`:**
+  `_auto_translate_google` no capturaba `UnicodeDecodeError` (cuerpo en
+  latin-1 desde un portal cautivo o un proxy) ni `http.client.HTTPException`
+  (cuerpo truncado), así que la excepción escapaba de `tr()` hasta el
+  constructor de la ventana: con la interfaz en un idioma distinto de español,
+  la aplicación no llegaba a abrirse. Ahora la captura es
+  `(OSError, ValueError, TypeError, KeyError, IndexError,
+  http.client.HTTPException)` y se devuelve el texto original. Reportado por
+  JesusQuijada34 (auditoría interna).
+- **R-4e8a1d63 — el traductor automático repetía el timeout en cada cadena:**
+  cada `tr()` sin traducción local lanzaba una petición nueva y, sin red,
+  pagaba hasta 8 s de timeout en el hilo de la interfaz (páginas con decenas de
+  etiquetas quedaban congeladas y volvían a pagarlo al repintar). Ahora un
+  fallo de transporte deja el par de idiomas en enfriamiento durante 60 s
+  (`_AUTO_TRANSLATE_COOLDOWN_SECONDS`); cambiar de idioma lo borra y reintenta
+  al momento, y una respuesta 200 con formato inesperado no activa el
+  enfriamiento. Reportado por JesusQuijada34 (auditoría interna).
+- **R-9c3f6a25 — un guion con codificación declarada perdía el `main` en
+  zipapp:** `compilers._defines_main()` leía el guion con
+  `read_text(encoding="utf-8")`, así que un proyecto guardado en ANSI (cookie
+  `# -*- coding: cp1252 -*-`) no se podía decodificar y el backend concluía que
+  no había `main()`: el `.pyz` se generaba con el punto de entrada de reserva.
+  Ahora usa `read_python_source` (PEP 263), como el resto del motor. Reportado
+  por JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_i18n_translate_robustness.py` (8 nuevas) y
+`tests/test_page_action_bar_and_compilers.py` (2 nuevas); 7 de ellas fallan con
+el código anterior. Suite completa: 1096 pasan, 1 omitido, 64 subtests.
+
 ## 2026-11-24 — cuadragésimo quinto ciclo
 
 ### Corregido — rutas bloqueadas que aún escapaban de `pathlib`

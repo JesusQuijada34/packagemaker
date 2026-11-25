@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-24 (cuadragésimo quinto ciclo)
+Última actualización: 2026-11-25 (cuadragésimo sexto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -118,6 +118,9 @@ de auditoría.
 | R-6b3e9c52 | Bug — el splash del paquete no arranca con un proyecto sin permisos | Media | Resuelto |
 | R-4b9e2c71 | Bug — `.mexf` con raíz/carpeta ilegible filtra `PermissionError` crudo | Media | Resuelto |
 | R-3f7c1a94 | Bug — carpeta de accesos directos no escribible aborta `--install-asksome` | Media | Resuelto |
+| R-7b2e9c41 | Bug — respuesta no UTF-8 del traductor aborta `tr()` | Alta | Resuelto |
+| R-4e8a1d63 | Bug — el traductor automático repite el timeout en cada cadena | Media | Resuelto |
+| R-9c3f6a25 | Bug — guion con codificación declarada pierde el `main` en zipapp | Media | Resuelto |
 | R-6b2e9d47 | Bug — `uninstall_asksome` filtra `PermissionError`/`OSError` crudos | Media | Resuelto |
 | R-8c4a1f62 | Bug — `remove_tree` informa de un borrado que no ocurrió | Alta | Resuelto |
 | R-4a7e2c91 | Bug — `create` lanza traceback con una carpeta base sin permisos | Media | Resuelto |
@@ -3920,6 +3923,98 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo quinto ciclo.
 - **Fecha de resolución:** 2026-11-24.
 
+## R-7b2e9c41 — Una respuesta no UTF-8 del traductor automático aborta `tr()`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** `_auto_translate_google` capturaba `urllib.error.URLError`,
+  `TimeoutError`, `JSONDecodeError`, `IndexError`, `KeyError` y `TypeError`,
+  pero no `UnicodeDecodeError` ni las excepciones de `http.client`. Un portal
+  cautivo, un proxy corporativo o un antivirus que responde 200 con un cuerpo
+  en latin-1 (o cortado) hacía que el `decode("utf-8")` lanzara dentro de
+  `tr()`, y la excepción escapaba hasta el constructor de la ventana: con la
+  interfaz en cualquier idioma distinto de español, la app no llegaba a
+  abrirse.
+- **Pasos para reproducir:** con `i18n.i18n._current_lang = "en"` y
+  `_auto_translate = True`, sustituir `urlopen` por una respuesta cuyo `read()`
+  devuelva `b"\xff\xfe<html>Proxy</html>"` y llamar a `tr("clave.inexistente")`.
+  Antes: `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff …`. Lo mismo
+  con `http.client.IncompleteRead` (cuerpo truncado).
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (impide arrancar la interfaz sin red “sana”).
+- **Solución aplicada:** la captura de `_auto_translate_google` pasa a
+  `(OSError, ValueError, TypeError, KeyError, IndexError,
+  http.client.HTTPException)`; `ValueError` cubre el cuerpo no UTF-8 y el JSON
+  inválido, y `HTTPException` la respuesta truncada. El resultado sigue siendo
+  `None` (el texto original), sin cambio en el comportamiento del motor.
+- **Pruebas:** `tests/test_i18n_translate_robustness.py::test_non_utf8_response_returns_none`,
+  `::test_truncated_response_returns_none` y `::test_translate_survives_offline`
+  (fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-4e8a1d63 — El traductor automático repite el timeout en cada cadena
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** cuando el idioma activo no es español y una cadena no tiene
+  traducción local, `translate()` llama a `_auto_translate_google` en cada
+  `tr()` **sin memorizar el fallo**. Con la red caída, un proxy que traga
+  paquetes o sin conexión, cada etiqueta sin traducir pagaba hasta 8 s de
+  timeout, en el hilo de la interfaz: abrir una página con 40 cadenas podía
+  congelar la ventana durante minutos y volvía a pagarlo al repintar.
+- **Pasos para reproducir:** con `_current_lang = "en"`, sustituir `urlopen`
+  por una función que lance `urllib.error.URLError` y llamar cuatro veces a
+  `_auto_translate_google("hola", "es", "en")`. Antes: 4 intentos de red.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (congelación perceptible, sin pérdida de datos).
+- **Solución aplicada:** `lib/i18n.py` mantiene `_auto_translate_cooldowns`
+  (par `(origen, destino)` → instante de fin) con
+  `_AUTO_TRANSLATE_COOLDOWN_SECONDS = 60`: tras un fallo **de transporte** no
+  se reintenta ese par durante un minuto, así que el resto de cadenas se
+  resuelven al instante. Un cambio de idioma explícito
+  (`load_translation`) borra los enfriamientos y reintenta de inmediato.
+  Una respuesta 200 con formato inesperado no activa el enfriamiento: se sigue
+  reintentando en la siguiente cadena. No afecta al motor ni a las
+  traducciones locales.
+- **Pruebas:** `tests/test_i18n_translate_robustness.py::test_repeated_transport_failures_are_cooldown_limited`,
+  `::test_cooldown_expires_and_retries`, `::test_cooldown_is_per_language`,
+  `::test_parse_failure_keeps_retrying` y
+  `::test_explicit_language_change_resets_cooldown`.
+- **Commit:** se registra en el cierre del cuadragésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-9c3f6a25 — Un guion con codificación declarada pierde el `main` en zipapp
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** `compilers._defines_main()` leía el guion con
+  `read_text(encoding="utf-8")`. Un proyecto guardado por un editor de Windows
+  en ANSI (cookie `# -*- coding: cp1252 -*-`) no se podía decodificar, la
+  lectura fallaba y el backend zipapp concluía que el guion **no** define
+  `main()`: el `.pyz` se generaba con el punto de entrada de reserva
+  (`__main__.py` + `runpy`) en vez de `modulo:main`. El resto del motor ya lee
+  con `read_python_source` (PEP 263); ésta era la única lectura que quedaba
+  fijada a UTF-8.
+- **Pasos para reproducir:** escribir `main.py` con
+  `"# -*- coding: cp1252 -*-\n# ñ á é\ndef main():\n    print('ok')\n"`
+  codificado en cp1252 y llamar `_defines_main()` (antes `False`) o compilarlo
+  con `--compiler zipapp`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (el paquete arranca, pero con otro punto de entrada y sin
+  clasificar el guion como con `main`).
+- **Solución aplicada:** `_defines_main()` usa
+  `lib.blindcubeEngine.source_io.read_python_source` (importado en la cabecera
+  del módulo) y captura `(OSError, SourceEncodingError, SyntaxError,
+  ValueError)`. Un guion UTF-8 se lee exactamente igual que antes.
+- **Pruebas:** `tests/test_page_action_bar_and_compilers.py::EncodedScriptEntryPointTests::test_defines_main_reads_declared_encoding`
+  y `::test_zipapp_runs_main_from_encoded_script`.
+- **Commit:** se registra en el cierre del cuadragésimo sexto ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -4355,3 +4450,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
+- Verificación del cuadragésimo sexto ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1096 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 7 pruebas nuevas
+  fallan con el código anterior (comprobado con `git stash` de `lib/i18n.py` y
+  `lib/blindcubeEngine/compilers.py`). Reproducción real: con un cuerpo de
+  respuesta en latin-1, `tr()` lanzaba `UnicodeDecodeError` (ahora devuelve el
+  texto original); sin red, cuatro cadenas sin traducir hacían cuatro intentos
+  de red (ahora uno por minuto y por idioma); un `main.py` en cp1252 no
+  detectaba `main` (ahora el `.pyz` ejecuta `main`).

@@ -253,3 +253,48 @@ class ZipappBackendTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("guion-con-guion-ok", result.stdout)
+
+class EncodedScriptEntryPointTests(unittest.TestCase):
+    """Un guion con cookie de codificación no UTF-8 sigue teniendo ``main``."""
+
+    @staticmethod
+    def _write_cp1252_main(path: Path) -> None:
+        path.write_bytes(
+            "# -*- coding: cp1252 -*-\n"
+            "# Comentario con acentuación: ñ á é í ó ú\n"
+            "\n"
+            "def main():\n"
+            "    print('cp1252-ok')\n"
+            "\n"
+            "if __name__ == '__main__':\n"
+            "    main()\n".encode("cp1252")
+        )
+
+    def test_defines_main_reads_declared_encoding(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "main.py"
+            self._write_cp1252_main(script)
+            self.assertTrue(compilers._defines_main(script))
+
+    def test_zipapp_runs_main_from_encoded_script(self):
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / "main.py"
+            self._write_cp1252_main(script)
+            backend = compilers.get_backend("zipapp")
+            out = backend.compile(
+                script_path=str(script),
+                output_name="cp1252",
+                output_dir=str(root / "dist"),
+            )
+            self.assertIsNotNone(out, backend.last_error)
+            result = subprocess.run(
+                [sys.executable, out], capture_output=True, text=True
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("cp1252-ok", result.stdout)

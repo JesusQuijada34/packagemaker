@@ -23,6 +23,7 @@ instalado, cayendo a Nuitka y después a PyInstaller.
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import os
 import shutil
@@ -30,6 +31,8 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
+
+from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
 
 DEFAULT_COMPILER = "nuitka"
 
@@ -297,10 +300,12 @@ class ZipappBackend(CompilerBackend):
 def _defines_main(script_path: Path) -> bool:
     """Indica si el script define una función ``main`` invocable."""
     try:
-        import ast
-
-        tree = ast.parse(script_path.read_text(encoding="utf-8"))
-    except Exception:
+        # ``read_text(encoding="utf-8")`` fallaba con un guion cuya cookie de
+        # codificación declara otra (p. ej. cp1252): se creía que no había
+        # ``main`` y el .pyz cambiaba de punto de entrada.
+        source, _ = read_python_source(script_path)
+        tree = ast.parse(source)
+    except (OSError, SourceEncodingError, SyntaxError, ValueError):
         return False
     return any(
         isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "main"

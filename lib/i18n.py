@@ -7,9 +7,11 @@ Internacionalización para PackageMaker.
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -43,6 +45,17 @@ SUPPORTED_LANGUAGES = {
 
 _translation_cache: Dict[str, Dict[str, str]] = {}
 _ui_refresh_callbacks = []
+
+#: Ventana durante la que no se reintenta la traducción automática tras un fallo
+#: de transporte. Sin ella cada ``tr()`` sin traducir pagaba el timeout completo
+#: (8 s) y la interfaz se congelaba con la red caída o tras un portal cautivo.
+_AUTO_TRANSLATE_COOLDOWN_SECONDS = 60.0
+_auto_translate_cooldowns: Dict[tuple[str, str], float] = {}
+
+
+def _reset_auto_translate_cooldowns() -> None:
+    """Olvida los enfriamientos (cambio de idioma explícito o pruebas)."""
+    _auto_translate_cooldowns.clear()
 
 
 def _app_root() -> str:
@@ -91,8 +104,16 @@ def _flatten_translations(data: Dict[str, Any], prefix: str = "") -> Dict[str, s
 
 
 def _auto_translate_google(text: str, source: str, target: str) -> Optional[str]:
+    """Traduce con el endpoint público de Google, o ``None`` si no es posible.
+
+    Un fallo de transporte deja el par de idiomas en enfriamiento: reintentar en
+    cada cadena sin traducir multiplicaba el timeout por el número de etiquetas.
+    """
     if not text or source == target:
         return text
+    cooling_key = (source, target)
+    if time.monotonic() < _auto_translate_cooldowns.get(cooling_key, 0.0):
+        return None
     q = urllib.parse.quote(text)
     url = (
         "https://translate.googleapis.com/translate_a/single"
@@ -118,7 +139,13 @@ def _auto_translate_google(text: str, source: str, target: str) -> Optional[str]
             if isinstance(item, (list, tuple)) and item and isinstance(item[0], str) and item[0]
         ]
         return "".join(parts) if parts else None
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, IndexError, KeyError, TypeError):
+    except (OSError, ValueError, TypeError, KeyError, IndexError, http.client.HTTPException):
+        # ``ValueError`` cubre un cuerpo que no es UTF-8 (``UnicodeDecodeError``)
+        # o que no es JSON; ``HTTPException``, una respuesta truncada. Antes
+        # escapaban hasta ``tr()`` y abortaban la construcción de la interfaz.
+        _auto_translate_cooldowns[cooling_key] = (
+            time.monotonic() + _AUTO_TRANSLATE_COOLDOWN_SECONDS
+        )
         return None
     return None
 
@@ -154,6 +181,11 @@ class I18nManager:
         if self._translator:
             self._app.removeTranslator(self._translator)
             self._translator = None
+        if lang != self._current_lang:
+            # Cambiar de idioma es una petición explícita: se reintenta ya la
+            # traducción automática aunque el idioma anterior estuviera en
+            # enfriamiento por falta de red.
+            _reset_auto_translate_cooldowns()
         self._current_lang = lang
         _load_lang_file(lang)
         if lang == "es":
