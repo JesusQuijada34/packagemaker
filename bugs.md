@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (quincuagésimo ciclo)
+Última actualización: 2026-11-25 (quincuagésimo primer ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -163,6 +163,9 @@ de auditoría.
 | R-7e2d9c14 | Bug — el CLI no arranca sin `requests` | Alta | Resuelto |
 | R-3a8f6b25 | Bug — la consola del editor aborta con comillas sin cerrar | Media | Resuelto |
 | R-9d5c1e73 | Bug — el updater headless no arranca sin PyQt6 | Media | Resuelto |
+| R-2c7e5a91 | Bug — `version.res` declara una versión fija en todos los proyectos | Media | Resuelto |
+| R-8d4b1f63 | Bug — `create` descarta el nombre visible (`--name`) | Alta | Resuelto |
+| R-5a3e9d72 | Bug — `autorun`/`autorun.bat` generados no lanzan la app | Alta | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -277,6 +280,10 @@ contrato de resultado; y el `removeme.py` autónomo abortaba con traceback (y
 podía tumbar su GUI) ante un acceso directo o un árbol de instalación
 bloqueado.
 
+El quincuagésimo primer ciclo registra R-2c7e5a91, R-8d4b1f63 y R-5a3e9d72
+(corregidos y probados, sin cambios de comportamiento del engine): la versión
+de Windows de cada proyecto generado, el nombre visible del proyecto y el
+lanzador `autorun`.
 El cuadragésimo noveno ciclo registra R-6f3a9d21, R-9b4c7e52 y R-2e8f4a17
 (corregidos y probados, sin cambios de comportamiento del engine): la puerta
 estricta de creación/compilación juzgaba el texto sin transliterar y rechazaba
@@ -4452,7 +4459,90 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   comportamiento con PyQt6 instalado es idéntico.
 - **Pruebas:** `tests/test_updater_optional_dependencies.py` (6 casos nuevos
   con PyQt6 bloqueado).
-- **Commit:** se registra en el cierre del quincuagésimo ciclo.
+- **Commit:** se registra en el cierre del quincuagésimo primer ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-2c7e5a91 — `version.res` declaraba `5,15,3,0` en todos los proyectos
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo primer ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media.
+- **Descripción:** `src/templates/project/version.res.template` traía
+  `FILEVERSION 5,15,3,0` y `PRODUCTVERSION 5,15,3,0` escritos a mano, así que
+  todo proyecto creado declaraba la versión de Windows del propio PackageMaker
+  en lugar de la suya. `version.res` viaja dentro del paquete y es el recurso
+  que se compila con `windres`/`rc`, por lo que el ejecutable resultante
+  mostraba «Versión de archivo 5.15.3.0» para cualquier aplicación.
+- **Pasos para reproducirlo:** crear un proyecto con versión `2.4.1` y abrir
+  `version.res` → `FILEVERSION 5,15,3,0` y `PRODUCTVERSION 5,15,3,0`, mientras
+  `StringFileInfo` sí decía `2.4.1`.
+- **Causa raíz:** la plantilla nunca recibió marcadores para los campos
+  numéricos; `build_variables()` sólo calculaba las cadenas `FILE_VERSION` y
+  `PRODUCT_VERSION`.
+- **Solución aplicada:** nuevo `numeric_version()` en
+  `lib/makeselfEngine/templates.py` (``1.0.0`` → ``1,0,0,0``, relleno a cuatro
+  campos y límite de `WORD` a 65535) expuesto por
+  `lib/makeselfEngine/template_engine.py`; `build_variables()` publica
+  `FILE_VERSION_NUMERIC` y `PRODUCT_VERSION_NUMERIC`, y la plantilla los usa.
+  `lib/projectFactory.create_version_res()` (ruta heredada) rellena las mismas
+  variables con su argumento `version`. La cadena `ProductVersion` no cambia.
+- **Pruebas:** `tests/test_project_template_metadata.py`
+  (`NumericVersionTests`, `VersionResourceTests`).
+- **Commit:** se registra en el cierre del quincuagésimo primer ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-8d4b1f63 — `create` descartaba el nombre visible del proyecto
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo primer ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta.
+- **Descripción:** la acción `create` del CLI (y la pantalla de creación del
+  TUI, que la invoca) pasaba el *shortname* también como nombre visible a
+  `create_project_from_templates()`. El nombre escrito en `--name` /
+  «nombre visible» se perdía: `details.xml` quedaba con `<name>demo</name>`,
+  el README se titulaba `# demo`, el `ProductName` de `version.res` era
+  «Influent demo …» y la cabecera `.iflapp` mostraba «App: demo (demo)».
+- **Pasos para reproducirlo:** `python packagemaker.py create --name "Demo App"
+  --shortname demo --author Jesus --publisher Influent --version 2.4.1
+  --platform linux --headless` → `details.xml` con `<name>demo</name>`.
+- **Causa raíz:** en `lib/cliHandler.py` la llamada usaba `app_id` en el cuarto
+  argumento (`name`) en lugar del nombre visible; nadie leía
+  `project_source['name']` para ese campo.
+- **Solución aplicada:** `display_name` se calcula desde `--name` (con
+  `app_id` como respaldo si viene vacío) y se pasa a
+  `create_project_from_templates()`. El nombre de carpeta y el ejecutable
+  siguen saliendo del *shortname*, así que la ley canónica no cambia.
+- **Pruebas:** `tests/test_project_template_metadata.py`
+  (`CliVisibleNameTests`).
+- **Commit:** se registra en el cierre del quincuagésimo primer ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-5a3e9d72 — Los `autorun` generados no lanzaban la aplicación
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo primer ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta.
+- **Descripción:** `autorun` (y `autorun.bat`) ejecutaban
+  `/usr/bin/python3 ./<app>.py`. Esa ruta absoluta no existe en Termux, en
+  macOS ni en contenedores con el intérprete en otro prefijo, y el `.py` no
+  viaja en el paquete: el artefacto compilado es `<app>` (nativo) o
+  `<app>.pyz` (zipapp), porque `_copy_package_files()` excluye `*.py`. Además
+  el guion se creaba con permisos `0644`, así que `./autorun` respondía
+  «Permission denied». Resultado: el lanzador de todos los paquetes fallaba.
+- **Pasos para reproducirlo:** empaquetar un proyecto, extraer el `.iflapp` y
+  ejecutar `sh autorun` → `/usr/bin/python3: not found` (código 127); con
+  `./autorun` → permiso denegado.
+- **Causa raíz:** plantillas escritas para el árbol de fuentes, sin contemplar
+  el artefacto compilado ni el intérprete del sistema, y sin `chmod`.
+- **Solución aplicada:** las plantillas `autorun`/`autorun.bat` se colocan en
+  su propio directorio y eligen el artefacto disponible en este orden:
+  binario nativo (`<app>` / `<app>.exe`), `<app>.pyz` y, por último, el guion
+  `<app>.py` con `python3` (o `python` si no hay `python3`). Nuevo
+  `_make_executable()` en `lib/makeselfEngine/templates.py` que marca el
+  `autorun` como ejecutable al crear y al reparar el proyecto (`OSError` se
+  ignora: en Windows no aplica).
+- **Pruebas:** `tests/test_project_template_metadata.py` (`AutorunTests`).
+- **Commit:** se registra en el cierre del quincuagésimo primer ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
 ## Periodo de observación y release
@@ -4618,6 +4708,19 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `ImportError`, `updater.py --version`/`--check`/`--install --silent`
   terminaban en traceback (ahora código 0/1 con mensaje, y las rutas de GUI
   explican que necesitan PyQt6).
+- Quincuagésimo primer ciclo (2026-11-25): R-2c7e5a91, R-8d4b1f63 y R-5a3e9d72
+  corregidos y probados (la versión de Windows de los proyectos generados, el
+  nombre visible del CLI/TUI y el lanzador `autorun`); no se prepara release.
+- Verificación del quincuagésimo primer ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1161 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 11 pruebas nuevas
+  de `tests/test_project_template_metadata.py` fallan con el código anterior
+  (comprobado con `git stash` de los siete archivos tocados). Reproducción real:
+  un proyecto `2.4.1` declaraba `FILEVERSION 5,15,3,0` (ahora `2,4,1,0`);
+  `create --name "Demo App" --shortname demo` escribía `<name>demo</name>`
+  (ahora `Demo App` en `details.xml`, README y `ProductName`); `sh autorun`
+  dentro del paquete extraído respondía `/usr/bin/python3: not found` y
+  `./autorun` «Permission denied» (ahora ejecuta el artefacto compilado).
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.

@@ -1,4 +1,47 @@
-# Changelog
+## 2026-11-25 — quincuagésimo primer ciclo
+
+### Corregido — los proyectos generados ya declaran su propia versión, su nombre visible y un lanzador que funciona
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna sobre los
+artefactos que producen `create` y las plantillas de proyecto. Ningún cambio de
+comportamiento del engine: la ley canónica de nombres, el formato `.iflapp` y el
+contenido de los paquetes siguen exactamente igual.
+
+- **R-2c7e5a91 — `version.res` declaraba la versión de PackageMaker en todos
+  los proyectos:** la plantilla traía `FILEVERSION 5,15,3,0` y
+  `PRODUCTVERSION 5,15,3,0` fijos, así que cualquier aplicación creada —por
+  ejemplo con versión `2.4.1`— mostraba «Versión de archivo 5.15.3.0» en
+  Windows, mientras `StringFileInfo` sí decía `2.4.1`. Ahora
+  `build_variables()` publica `FILE_VERSION_NUMERIC`/`PRODUCT_VERSION_NUMERIC`
+  mediante el nuevo `numeric_version()` (`1.0.0` → `1,0,0,0`, relleno a cuatro
+  campos y límite de `WORD` a 65535) y `lib/projectFactory.create_version_res()`
+  rellena las mismas variables en la ruta heredada. Reportado por
+  JesusQuijada34 (auditoría interna).
+- **R-8d4b1f63 — `create` descartaba el nombre visible (`--name`):** el CLI (y
+  la pantalla de creación del TUI, que lo invoca) pasaba el *shortname* también
+  como nombre visible, de modo que `details.xml` quedaba con
+  `<name>demo</name>`, el README se titulaba `# demo`, el `ProductName` era
+  «Influent demo …» y la cabecera `.iflapp` mostraba «App: demo (demo)». Ahora
+  se usa el nombre indicado en `--name` (con el *shortname* como respaldo si
+  viene vacío); la carpeta y el ejecutable siguen saliendo del *shortname*.
+  Reportado por JesusQuijada34 (auditoría interna).
+- **R-5a3e9d72 — los `autorun`/`autorun.bat` generados no lanzaban la
+  aplicación:** ejecutaban `/usr/bin/python3 ./<app>.py`, una ruta que no
+  existe en Termux, macOS o contenedores con otro prefijo, y un `.py` que el
+  paquete no incluye (el artefacto es `<app>` o `<app>.pyz`). Además el guion se
+  creaba con permisos `0644`, así que `./autorun` respondía «Permission
+  denied». Las plantillas ahora se sitúan en su propio directorio y eligen, por
+  orden, el binario nativo, el `.pyz` y el guion fuente (con `python3` o
+  `python`); `_make_executable()` marca el `autorun` como ejecutable al crear y
+  al reparar el proyecto. Reportado por JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_project_template_metadata.py` (11 casos nuevos; los 11
+fallan con el código anterior). Suite completa: 1161 pasan, 1 omitido, 64
+subtests. `pyflakes` y `py_compile` limpios.
+
+No se prepara release: siguen abiertos R-4f8a2c60 (pendiente de Q-008) y
+R-6a1f8c23 (pendiente de Q-011), y el requisito de 7 días sin reportes nuevos
+continúa en curso desde el 2026-11-22.
 
 ## 2026-11-25 — quincuagésimo ciclo
 

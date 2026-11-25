@@ -1494,6 +1494,10 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             project_source.get('publisher') or project_source.get('author') or 'influent'
         )
         app_id = project_source.get('shortname') or (project_source.get('name') or base_path.name).strip().lower().replace(' ', '-')
+        # ``--name`` es el nombre visible; ``--shortname`` sólo identifica la
+        # carpeta y el ejecutable. Antes se pasaba el slug como nombre visible y
+        # details.xml, el README y el ProductName perdían el nombre del usuario.
+        display_name = (project_source.get('name') or '').strip() or app_id
         version_base = ProjectNameFormatter.normalize_version_base(project_source.get('version') or '1.0.0')
         platform_value = normalize_platform(project_source.get('platform')) if project_source.get('platform') else normalize_platform('Knosthalij')
         description = project_source.get('description') or 'Proyecto creado con Influent Package Maker'
@@ -1512,7 +1516,7 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
                 project_path,
                 publisher,
                 app_id,
-                app_id,
+                display_name,
                 author_val,
                 platform_value,
                 version_base=version_base,

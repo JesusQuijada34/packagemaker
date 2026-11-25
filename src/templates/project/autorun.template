@@ -1,3 +1,14 @@
 #!/usr/bin/env sh
 # Autorun script for __APP__
-/usr/bin/python3 ./__APP__.py
+# Prefiere el artefacto compilado del paquete y, si no existe, ejecuta el guion.
+cd "$(dirname "$0")" || exit 1
+if [ -f "./__APP__" ] && [ -x "./__APP__" ]; then
+    exec "./__APP__" "$@"
+fi
+if [ -f "./__APP__.pyz" ]; then
+    exec python3 "./__APP__.pyz" "$@"
+fi
+if ! command -v python3 >/dev/null 2>&1; then
+    exec python "./__APP__.py" "$@"
+fi
+exec python3 "./__APP__.py" "$@"

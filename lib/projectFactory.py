@@ -13,6 +13,7 @@ from lib.makeselfEngine.template_engine import (
     create_project_from_templates,
     get_templates_root,
     load_template,
+    numeric_version,
     render_template,
     write_details_xml,
     write_template,
@@ -144,6 +145,8 @@ def create_version_res(path, empresa, nombre_completo, nombre_logico, version, a
             "COMPANY": empresa.capitalize(),
             "FILE_DESCRIPTION": f"{empresa.capitalize()} {nombre_completo} by {autor}",
             "PRODUCT_VERSION": version.split("-")[0] if "-" in version else version,
+            "FILE_VERSION_NUMERIC": numeric_version(version),
+            "PRODUCT_VERSION_NUMERIC": numeric_version(version),
         }
     )
     out = Path(path) / "version.res"

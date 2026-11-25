@@ -1,3 +1,12 @@
 REM Autorun script for __APP__
 @echo off
-python __APP__.py
+cd /d "%~dp0"
+if exist "__APP__.exe" (
+    start "" "__APP__.exe" %*
+    exit /b 0
+)
+if exist "__APP__.pyz" (
+    python "__APP__.pyz" %*
+    exit /b
+)
+python "__APP__.py" %*

@@ -7,6 +7,7 @@ queda como fachada de compatibilidad que reexporta desde aquí.
 """
 
 import hashlib
+import re
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -103,6 +104,29 @@ def save_pretty_xml_from_string(xml_content: str, filepath: Path) -> bool:
         return False
 
 
+def _make_executable(path: Path) -> None:
+    """Marca un guion generado como ejecutable; en Windows es inocuo."""
+    try:
+        path.chmod(path.stat().st_mode | 0o111)
+    except OSError:
+        pass
+
+
+def numeric_version(value: str) -> str:
+    """Convierte una versión en los cuatro campos de ``VERSIONINFO``.
+
+    ``1.0.0`` → ``1,0,0,0``. Los campos de ``FILEVERSION``/``PRODUCTVERSION``
+    son ``WORD`` (16 bits), así que cada componente se limita a 65535 y los que
+    falten se rellenan con cero. Antes la plantilla traía ``5,15,3,0`` fijo y
+    todos los proyectos generados declaraban esa versión en Windows.
+    """
+    numbers = []
+    for part in re.findall(r"\d+", str(value or ""))[:4]:
+        numbers.append(65535 if len(part) > 5 else min(int(part), 65535))
+    numbers.extend([0] * (4 - len(numbers)))
+    return ",".join(str(number) for number in numbers)
+
+
 def detect_rating(app_id: str, name: str) -> str:
     text = f"{app_id} {name}".lower()
     for keyword, rate in AGE_RATINGS.items():
@@ -186,11 +210,13 @@ def build_variables(
         "COMPANY": company,
         "FILE_DESCRIPTION": f"{company} {display_name} by {author_val}",
         "FILE_VERSION": version_full,
+        "FILE_VERSION_NUMERIC": numeric_version(version_clean),
         "INTERNAL_NAME": app_slug,
         "LEGAL_COPYRIGHT": f"(c) {company}. All rights reserved.",
         "ORIGINAL_FILENAME": f"{app_slug}.{xte}",
         "PRODUCT_NAME": f"{company} {display_name} {version_full}",
         "PRODUCT_VERSION": product_version,
+        "PRODUCT_VERSION_NUMERIC": numeric_version(version_clean),
         "XTE": xte,
         # Nombre canónico completo, para que ninguna capa lo recomponga a mano.
         "FOLDER_NAME": folder_key,
@@ -282,6 +308,7 @@ def create_project_from_templates(
 
     (project_path / "assets" / ".assets-container").touch(exist_ok=True)
     (project_path / "app" / ".app-container").touch(exist_ok=True)
+    _make_executable(project_path / "autorun")
 
     write_details_xml(project_path, variables)
     created.append("details.xml")
@@ -388,6 +415,10 @@ def repair_project_from_templates(
         if not out_path.exists():
             write_template(out_path, rel_template, variables)
             repaired.append(str(out_path.relative_to(project_path)))
+
+    autorun_path = project_path / "autorun"
+    if autorun_path.is_file():
+        _make_executable(autorun_path)
 
     docs_path = project_path / "docs" / "index.html"
     docs_path.parent.mkdir(parents=True, exist_ok=True)
