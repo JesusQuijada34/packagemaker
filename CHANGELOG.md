@@ -1,5 +1,60 @@
 # Changelog
 
+## 2026-11-25 — cuadragésimo noveno ciclo
+
+### Corregido — los acentos vuelven a pasar la puerta estricta y el updater deja de lanzar tracebacks con metadatos no canónicos
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna sobre la
+validación previa a crear/compilar y sobre el actualizador. Ningún cambio de
+comportamiento del engine: el nombre canónico, las plantillas y el contenido de
+los paquetes siguen exactamente igual.
+
+- **R-6f3a9d21 — un fabricante o nombre interno con acentos bloqueaba la
+  creación y la compilación:** `lib/blindcubeEngine/build_validation.py`
+  comparaba el texto tal cual con `^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`, así que
+  `Jesús`, `Ñandú` o `café` se rechazaban con «usa solo letras, números o
+  guiones» aunque la ley de nombres los translitera a ASCII desde Q-002
+  (`Jesús` → `Jesus`, `Ñandú` → `Nandu`). La puerta estricta juzgaba un valor
+  distinto del que produce el formatter. Ahora valida
+  `ProjectNameFormatter.transliterate(value)`: los segmentos realmente
+  inválidos (`My Company.`, `a_b`, `in fluent`, `a/b`) siguen bloqueados y un
+  valor compuesto sólo por marcas combinantes sigue contando como vacío.
+  Reportado por JesusQuijada34 (auditoría interna).
+- **R-9b4c7e52 — `updater.py --check`/`--silent` lanzaba `ValueError` con
+  metadatos remotos no canónicos:** `_fR()` (`lib/coreUpdater/core.py`) pasaba
+  la versión, el publisher y el app remotos a
+  `ProjectNameFormatter.format_iflapp_filename()`, que lanza `ValueError` con
+  una etiqueta como `1.0 beta` o un publisher como `My Company.`. La excepción
+  escapaba del CLI y del `update_app()` silencioso. Ahora se registra
+  `[WARN] Metadatos remotos no canónicos; se omite el .iflapp` y se devuelve
+  `None`, que los llamadores ya interpretaban como «no hay paquete»; un nombre
+  canónico produce exactamente la misma URL que antes. Reportado por
+  JesusQuijada34 (auditoría interna).
+- **R-2e8f4a17 — la sonda de URL del updater dejaba escapar errores de
+  validación sin `requests`:** `_check_url_exists()` sólo capturaba
+  `OSError`/`URLError` en el respaldo `urllib`. Una URL con acentos
+  (`Jesús.iflapp`) lanzaba `UnicodeEncodeError` y una con espacios o un byte
+  NUL `http.client.InvalidURL`. Ahora el respaldo captura
+  `(OSError, ValueError, urllib.error.URLError, http.client.HTTPException)` y
+  la rama de `requests` añade `ValueError`: una URL imposible se trata como
+  «no existe», igual que un 404. Reportado por JesusQuijada34 (auditoría
+  interna).
+
+Registrado sin implementar (pendiente de aprobación en `CONFIRM.MD`):
+
+- **Q-018 — el build del CLI no valida `details.xml`:** con
+  `<version></version>`, `packagemaker.py --buildthis` termina con éxito,
+  empaqueta `…v1.0-…` cayendo a `v1.0` en silencio y deja dentro del paquete un
+  `details.xml` con la versión vacía. Es un cambio de comportamiento del
+  comando, así que se pregunta si debe rechazar (`[ERROR]`, código 1) o sólo
+  avisar.
+
+Pruebas: `tests/test_build_validation_accents.py` (11 nuevas) y
+`tests/test_updater_noncanonical_metadata.py` (9 nuevas); 16 de las 20 fallan
+con el código anterior (comprobado con `git stash` de
+`lib/blindcubeEngine/build_validation.py` y `lib/coreUpdater/core.py`). Suite
+completa: 1138 pasan, 1 omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
+
 ## 2026-11-25 — cuadragésimo octavo ciclo
 
 ### Corregido — el asistente ya avisa antes de sobrescribir un proyecto, los iconos SVG vuelven a dibujarse y la suite deja de tocar la configuración del usuario

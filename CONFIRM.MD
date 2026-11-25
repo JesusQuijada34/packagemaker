@@ -1,9 +1,9 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-25 (cuadragésimo octavo ciclo: R-4f7a2c91, R-8b2d4e17 y R-5a9c3e72; ningún cambio de engine)
-- **Último commit de `CONFIRM.MD` procesado:** `b89ff64c` (2026-11-25), autor `openhands-agent` (cuadragésimo sexto ciclo). No aportó respuestas nuevas del propietario. La última respuesta del propietario sigue siendo `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`; la API de GitHub lista `b89ff64c`, `bd4d2d60`, `db667936`, `c26f12d2` y `c0c1d7a1` como últimos commits que tocan este archivo, todos de `openhands-agent`, ninguno de `JesusQuijada34`. Las 8 preguntas anteriores siguen sin marcar y este ciclo añade Q-016 y Q-017 (10 pendientes). Este commit sólo actualiza la cabecera y las nuevas preguntas; no contiene respuestas.
+- **Última revisión:** 2026-11-25 (cuadragésimo noveno ciclo: R-6f3a9d21, R-9b4c7e52 y R-2e8f4a17; se añade Q-018, ningún cambio de engine aplicado)
+- **Último commit de `CONFIRM.MD` procesado:** `b89ff64c` (2026-11-25), autor `openhands-agent` (cuadragésimo sexto ciclo). No aportó respuestas nuevas del propietario. La última respuesta del propietario sigue siendo `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`; la API de GitHub lista `b89ff64c`, `bd4d2d60`, `db667936`, `c26f12d2` y `c0c1d7a1` como últimos commits que tocan este archivo, todos de `openhands-agent`, ninguno de `JesusQuijada34`. Las 9 preguntas anteriores siguen sin marcar y este ciclo añade Q-018 (11 pendientes). Este commit sólo actualiza la cabecera y la nueva pregunta; no contiene respuestas.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 10 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 11 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -191,6 +191,28 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el contenido de las plantillas y,
   por tanto, el de los proyectos nuevos; hay que mantener sincronizadas la
   plantilla y el actualizador del repositorio. Riesgo medio.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-018 — El build del CLI no valida `details.xml` y adivina la versión
+- **Tipo:** cambio de engine (comportamiento del build headless)
+- **Fecha:** 2026-11-25
+- **Qué se propone:** la interfaz bloquea la creación y la compilación con
+  `validate_build_fields`, pero `packagemaker.py --buildthis` no valida
+  `details.xml`. Auditado en el cuadragésimo noveno ciclo: con
+  `<version></version>` el build **termina con éxito**, empaqueta
+  `Influent.demo.v1.0-…` (el motor cae a `v1.0` en silencio) y deja dentro del
+  paquete un `details.xml` con la versión vacía, con lo que el `updater.py` del
+  paquete compara contra una versión vacía. Se propone aplicar la misma puerta
+  estricta en el build headless: `[ERROR]` + código 1, o —si se prefiere no
+  romper scripts— un aviso `[WARN]` y seguir compilando con la versión
+  normalizada. Indica en la respuesta cuál de las dos opciones quieres.
+- **Archivos/componentes afectados:** `lib/cliHandler.py` (rama de build),
+  `packagemaker.py` (`--buildthis`), `lib/blindcubeEngine/BuildThread.py`,
+  `lib/blindcubeEngine/build_validation.py`, `tests/test_build_validation.py`.
+- **Riesgo y efectos secundarios:** cambia el resultado de un comando existente;
+  los scripts que compilan proyectos con metadatos incompletos dejarían de
+  funcionar (opción dura) o seguirían funcionando con un aviso (opción blanda).
+  No toca el nombre canónico ni las plantillas. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---

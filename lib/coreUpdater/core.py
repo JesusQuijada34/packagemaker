@@ -5,6 +5,7 @@ Core utilities and logic for the updater system.
 """
 import sys
 import os
+import http.client
 import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -67,27 +68,41 @@ def _rXml_r(author, app):
     return ""
 
 def _check_url_exists(url):
-    """Verifica si una URL existe (HEAD request)."""
+    """Verifica si una URL existe (HEAD request).
+
+    Es una comprobación *best-effort*: los metadatos del proyecto pueden
+    producir una URL imposible (acentos sin ``requests`` → ``UnicodeEncodeError``,
+    espacios o byte NUL → ``InvalidURL``). Ninguno de esos casos debe tumbar al
+    updater: se tratan como «no existe».
+    """
     if requests:
         try:
             r = requests.head(url, timeout=15, allow_redirects=True)
             return r.status_code == 200
-        except requests.RequestException:
+        except (requests.RequestException, ValueError):
             pass
     else:
         # Fallback usando urllib
         try:
+            import urllib.error
             import urllib.request
             req = urllib.request.Request(url, method='HEAD')
             with urllib.request.urlopen(req, timeout=15) as response:
                 return response.status == 200
-        except (OSError, urllib.error.URLError):
+        except (OSError, ValueError, urllib.error.URLError, http.client.HTTPException):
             pass
     return False
 
 def _fR(author, app, version, platform, publisher):
     from lib.projectNameFormatter import ProjectNameFormatter
-    filename = ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform)
+    try:
+        filename = ProjectNameFormatter.format_iflapp_filename(publisher, app, version, platform)
+    except ValueError as exc:
+        # La versión, el publisher o el app remotos pueden no ser canónicos
+        # (etiquetas como "1.0 beta"). Sin nombre canónico no hay asset que
+        # descargar; antes la excepción escapaba y dejaba un traceback.
+        log(f"[WARN] Metadatos remotos no canónicos; se omite el .iflapp: {exc}")
+        return None
     url = f"https://github.com/{author}/{app}/releases/download/{version}/{filename}"
     if _check_url_exists(url):
         return url

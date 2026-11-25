@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (cuadragésimo octavo ciclo)
+Última actualización: 2026-11-25 (cuadragésimo noveno ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -157,6 +157,9 @@ de auditoría.
 | R-4f7a2c91 | Bug — el asistente de creación sobrescribía un proyecto existente sin avisar | Alta | Resuelto |
 | R-8b2d4e17 | Bug — los iconos SVG nunca se dibujaban y una carpeta de solo lectura abortaba el gestor | Media | Resuelto |
 | R-5a9c3e72 | Bug — la suite escribía en el `data/pm.data` real y desviaba `BASE_DIR` a `/tmp` | Media | Resuelto |
+| R-6f3a9d21 | Bug — los acentos bloqueaban «Crear proyecto» y «Compilar» | Alta | Resuelto |
+| R-9b4c7e52 | Bug — el updater lanza `ValueError` con metadatos remotos no canónicos | Media | Resuelto |
+| R-2e8f4a17 | Bug — `_check_url_exists` deja escapar URL imposibles sin `requests` | Baja | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -2464,6 +2467,29 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `tests/test_lifecycle_end_to_end.py`.
 - **Riesgo:** medio.
 
+### 13. El build del CLI no valida `details.xml` (versión vacía se adivina)
+
+- **Estado:** Pendiente (Q-018). Detectado en la auditoría del cuadragésimo
+  noveno ciclo; no se ha tocado porque rechazar builds que hoy funcionan es un
+  cambio de comportamiento.
+- **Actual:** la interfaz bloquea la creación y la compilación con
+  `validate_build_fields`, pero `packagemaker.py --buildthis` no valida
+  `details.xml`. Con `<version></version>` el build **termina con éxito** y
+  empaqueta `Influent.demo.v1.0-…` (el motor cae a `v1.0` en silencio) dejando
+  dentro del paquete un `details.xml` con la versión vacía; el `updater.py` del
+  paquete compara entonces contra una versión vacía. Igual ocurre con un
+  publisher o un app no canónicos, que fallan más tarde con otro mensaje.
+- **Solicitado:** validar los metadatos de `details.xml` en el build headless
+  con la misma puerta que la GUI y responder `[ERROR]` + código 1 (o, si se
+  prefiere, sólo avisar y seguir compilando con la versión normalizada).
+- **Efectos secundarios:** los scripts que compilan proyectos con metadatos
+  incompletos dejarían de funcionar; hay que decidir si el rechazo es duro o
+  un aviso. No toca el nombre canónico ni las plantillas.
+- **Archivos:** `lib/cliHandler.py` (rama de build), `packagemaker.py`
+  (`--buildthis`), `lib/blindcubeEngine/BuildThread.py`,
+  `lib/blindcubeEngine/build_validation.py`, `tests/test_build_validation.py`.
+- **Riesgo:** medio (comportamiento visible de un comando existente).
+
 ---
 
 ## R-5b1d9e47 — El hover del sidebar parpadeaba y los iconos quedaban apretados
@@ -4253,6 +4279,91 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo octavo ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
+## R-6f3a9d21 — Los acentos bloqueaban «Crear proyecto» y «Compilar»
+
+- **Usuario:** JesusQuijada34 (auditoría interna; regresión de Q-002/R-5d8e2a41)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta (bloquea la creación de proyectos a usuarios que escriben
+  su nombre o su marca con acentos; no hay pérdida de datos).
+- **Descripción:** al crear un proyecto con un fabricante o un nombre interno
+  acentuado (`Jesús`, `Ñandú`, `café`), el asistente respondía «Fabricante: usa
+  solo letras, números o guiones» y no creaba nada, aunque la ley de nombres
+  admite esos valores: `ProjectNameFormatter.transliterate()` los convierte a
+  ASCII (`Jesús` → `Jesus`, `Ñandú` → `Nandu`) desde la aprobación de Q-002.
+- **Pasos para reproducirlo:**
+  1. Abrir «Crear proyecto», rellenar fabricante `Jesús` y nombre `ñandú`.
+  2. Pulsar el botón de creación: el formulario se bloquea con el error de
+     fabricante y no se crea la carpeta.
+  3. Equivalente por código:
+     `validate_build_fields("jesús", "ñandú", "1.0", "AlphaCube")` devolvía dos
+     errores (`empresa` y `nombre`).
+- **Causa raíz:** `lib/blindcubeEngine/build_validation.py` (`_segment_error`)
+  validaba el texto tal cual contra `^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$`, sin la
+  transliteración que aplica el formatter. La puerta estricta juzgaba un valor
+  distinto del que después se usa para el nombre canónico.
+- **Solución aplicada:** `_segment_error` valida
+  `ProjectNameFormatter.transliterate(value).strip()`. Los segmentos realmente
+  inválidos (`My Company.`, `a_b`, `in fluent`, `a/b`) siguen bloqueados y un
+  valor compuesto solo por marcas combinantes sigue contando como vacío. Sin
+  cambios en el nombre canónico ni en las plantillas.
+- **Pruebas:** `tests/test_build_validation_accents.py` (11 casos; 8 fallan con
+  el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-9b4c7e52 — El updater lanzaba `ValueError` con metadatos remotos no canónicos
+
+- **Usuario:** JesusQuijada34 (auditoría interna)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media (traceback en `updater.py --check`/`--silent`; en la GUI
+  el diálogo lo capturaba y sólo mostraba «Exception error»).
+- **Descripción:** si el `<version>`, el publisher o el app del proyecto remoto
+  no son canónicos (una etiqueta `1.0 beta`, un publisher `My Company.`), la
+  búsqueda del `.iflapp` de actualización terminaba con
+  `ValueError: Versión inválida…` en lugar de informar de que no hay paquete.
+- **Pasos para reproducirlo:**
+  1. `_fR("Influent", "demo", "1.0 beta", "Danenone", "Influent")` →
+     `ValueError`.
+  2. `updater.py --check` con `_rXml_r()` devolviendo `1.0 beta` imprimía el
+     traceback completo (la ruta `--silent` también, porque `update_app()` no
+     está envuelta).
+- **Causa raíz:** `lib/coreUpdater/core.py::_fR` llamaba a
+  `ProjectNameFormatter.format_iflapp_filename()` sin proteger el `ValueError`
+  que lanza la ley de nombres con metadatos no canónicos.
+- **Solución aplicada:** `_fR` captura `ValueError`, registra
+  `[WARN] Metadatos remotos no canónicos; se omite el .iflapp: …` y devuelve
+  `None`. Los llamadores ya trataban `None` como «no hay paquete», así que el
+  updater informa «no hay actualización» en vez de romperse. Un nombre canónico
+  produce exactamente la misma URL que antes.
+- **Pruebas:** `tests/test_updater_noncanonical_metadata.py` (9 casos; 5 fallan
+  con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-2e8f4a17 — `_check_url_exists` dejaba escapar URL imposibles sin `requests`
+
+- **Usuario:** JesusQuijada34 (auditoría interna)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Baja (sólo afecta a instalaciones sin `requests`, que no es una
+  dependencia declarada; el `updater.py` empaquetado puede correr así).
+- **Descripción:** el respaldo `urllib` de `_check_url_exists` sólo capturaba
+  `OSError`/`URLError`. Una URL con caracteres no ASCII (`Jesús`) lanzaba
+  `UnicodeEncodeError` y una con espacios o un byte NUL lanzaba
+  `http.client.InvalidURL`; ambas escapaban hasta `updater.py --check`.
+- **Pasos para reproducirlo:** con `requests = None`,
+  `_check_url_exists("https://example.invalid/Jesús.iflapp")` →
+  `UnicodeEncodeError`; con un espacio o `\x00` → `InvalidURL`.
+- **Causa raíz:** la sonda es *best-effort* pero no contemplaba los errores de
+  validación de URL (`ValueError`/`HTTPException`) que no son `OSError`.
+- **Solución aplicada:** el respaldo captura
+  `(OSError, ValueError, urllib.error.URLError, http.client.HTTPException)` y
+  la rama de `requests` añade `ValueError`; cualquier URL imposible se trata
+  como «no existe», igual que un 404.
+- **Pruebas:** `tests/test_updater_noncanonical_metadata.py` (9 casos; 3 de las 9
+  pruebas de la sonda fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo noveno ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -4383,6 +4494,27 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   real `create` + `--buildthis --compiler zipapp --no-sandbox`: `.iflapp` de 20
   archivos, `verify_iflapp() → valid: True` y `--inspect` coincide con el
   `details.xml` interno.
+- Cuadragésimo noveno ciclo (2026-11-25): R-6f3a9d21, R-9b4c7e52 y R-2e8f4a17
+  corregidos y probados (los acentos vuelven a pasar la puerta estricta y el
+  updater deja de lanzar tracebacks con metadatos remotos no canónicos o URL
+  imposibles); se registra además el hallazgo Q-018 (el build del CLI no valida
+  `details.xml`) como cambio de comportamiento pendiente de aprobación; no se
+  prepara release.
+- Verificación del cuadragésimo noveno ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1138 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. 16 de las 20 pruebas
+  nuevas fallan con el código anterior (comprobado con `git stash` de
+  `lib/blindcubeEngine/build_validation.py` y `lib/coreUpdater/core.py`).
+  Reproducción real: `validate_build_fields("jesús", "ñandú", "1.0",
+  "AlphaCube")` devolvía los errores `empresa` y `nombre` (ahora `[]`);
+  `_fR("Influent", "demo", "1.0 beta", "Danenone", "Influent")` lanzaba
+  `ValueError: Versión inválida…` (ahora `None` + `[WARN]`); con `requests =
+  None`, `_check_url_exists("https://example.invalid/Jesús.iflapp")` lanzaba
+  `UnicodeEncodeError` y con un espacio o `\x00` `http.client.InvalidURL` (ahora
+  `False`).
+- Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
+  ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
+  reportes nuevos siguen en curso.
 - Inicio del periodo de observación (3 días): 2026-11-21.
 - Requisito de release sin reportes nuevos: 7 días consecutivos.
 - Último reporte externo conocido: 2026-11-22, reporte manual del propietario

@@ -43,9 +43,13 @@ class FieldError:
 
 def _segment_error(field: str, value: str, *, label_key: str) -> Optional[FieldError]:
     label = tr(label_key)
-    if not value:
+    # La ley de nombres translitera los acentos (``Jesús`` → ``Jesus``); la
+    # puerta estricta debe juzgar el mismo valor que producirá el formatter, o
+    # rechazará fabricantes y nombres internos que sí son válidos.
+    candidate = ProjectNameFormatter.transliterate(value).strip()
+    if not candidate:
         return FieldError(field, tr("build.validation_empty").format(field=label))
-    if not _SEGMENT.fullmatch(value):
+    if not _SEGMENT.fullmatch(candidate):
         return FieldError(field, tr("build.validation_segment").format(field=label))
     return None
 
