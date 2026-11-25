@@ -46,18 +46,29 @@ try:
 
     PYQT6_AVAILABLE = True
 except ImportError:  # pragma: no cover - entorno sin Qt
+    # Sin PyQt6 el CLI headless debe seguir arrancando: los sustitutos inertes
+    # evitan el ``NameError`` que abortaba el import de nivel superior.
     PYQT6_AVAILABLE = False
 
-    QFrame = QWidget = object  # type: ignore[assignment,misc]
+    class _QtStubMeta(type):
+        def __getattr__(cls, name):
+            return _QtStub
 
-    def pyqtSignal(*args, **kwargs):  # type: ignore[no-redef]
-        return None
+    class _QtStub(metaclass=_QtStubMeta):
+        def __init__(self, *args, **kwargs):
+            pass
 
-    def pyqtProperty(*args, **kwargs):  # type: ignore[no-redef]
-        return property(*args, **kwargs)
+        def __getattr__(self, name):
+            return _QtStub()
 
-    QPropertyAnimation = None  # type: ignore[assignment]
-    QEasingCurve = None  # type: ignore[assignment]
+        def __call__(self, *args, **kwargs):
+            return _QtStub()
+
+    QFrame = QWidget = QLabel = QPushButton = QScrollArea = _QtStub
+    QHBoxLayout = QVBoxLayout = QSizePolicy = QGraphicsDropShadowEffect = _QtStub
+    QPropertyAnimation = QEasingCurve = QPoint = QRect = _QtStub
+    QColor = QPainter = QPen = Qt = _QtStub
+    pyqtSignal = pyqtProperty = _QtStub
 
 from lib.design_tokens import (
     ACCENT,

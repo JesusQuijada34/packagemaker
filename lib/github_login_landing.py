@@ -31,7 +31,25 @@ try:
         QWidget,
     )
 except ImportError:  # pragma: no cover
-    QWidget = object
+    # Sin PyQt6 el CLI headless debe poder importar el módulo: los sustitutos
+    # inertes evitan el ``NameError`` del cuerpo de la clase.
+    class _QtStubMeta(type):
+        def __getattr__(cls, name):
+            return _QtStub
+
+    class _QtStub(metaclass=_QtStubMeta):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __getattr__(self, name):
+            return _QtStub()
+
+        def __call__(self, *args, **kwargs):
+            return _QtStub()
+
+    QEasingCurve = QPropertyAnimation = QTimer = Qt = pyqtSignal = _QtStub
+    QColor = QPainter = QPixmap = QFrame = QGraphicsOpacityEffect = _QtStub
+    QHBoxLayout = QLabel = QLineEdit = QPushButton = QVBoxLayout = QWidget = _QtStub
 
 from lib.app_icons import ICONS_SVG, circular_pixmap, svg_to_pixmap
 from lib.design_tokens import (

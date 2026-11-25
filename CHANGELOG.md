@@ -1,3 +1,39 @@
+## 2026-11-25 — quincuagésimo segundo ciclo
+
+### Corregido — el programa vuelve a arrancar en máquinas sin PyQt6
+
+Sin reportes externos nuevos. Dos hallazgos de la auditoría interna sobre el
+arranque sin la dependencia gráfica. Ningún cambio de comportamiento del
+engine: la GUI usa PyQt6 como siempre y sólo cambia la rama de respaldo.
+
+- **R-7a5d2c94 — el programa no arrancaba sin PyQt6:** `packagemaker.py`
+  abortaba con `NameError: name 'QPushButton' is not defined` (o `pyqtSignal`,
+  `QGroupBox`, `QGridLayout`, `Qt`…) al importarse, antes de leer los
+  argumentos, así que `--app-version`, `--list-compilers`, `--inspect` y la
+  propia TUI no llegaban a ejecutarse; `main()` tiene una rama explícita para
+  `not PYQT6_AVAILABLE` que nunca se alcanzaba. Los respaldos de
+  `except ImportError` de `packagemaker.py`, `lib/settings_cards.py`,
+  `lib/github_login_landing.py`, `lib/github_profile_card.py`,
+  `lib/iflapp_ide_dialog.py` y `lib/pm_dashboard.py` estaban incompletos.
+  Ahora todos ellos declaran un sustituto inerte `_QtStub` para cada nombre
+  importado en el `try`. Esto también cubre el caso real de una máquina con
+  PyQt6 instalado pero con `libEGL.so.1` ausente, donde el import falla igual.
+  Reportado por JesusQuijada34 (auditoría interna).
+- **R-2f6c8a13 — ruido de depuración en cada arranque sin Qt:** la rama sin
+  PyQt6 ejecutaba `print("font: none", file=sys.stderr)` al importarse el
+  módulo. Se eliminó; `app_font()`/`code_font()` ya devuelven `None`.
+  Reportado por JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_cli_without_pyqt6.py` (7 casos nuevos; 6 fallan con el
+código anterior). Suite completa: 1168 pasan, 1 omitido, 64 subtests.
+`pyflakes` y `py_compile` limpios. Verificado además sin Qt en ejecución real:
+`--app-version`, `--list-compilers`, `--list-engines`, `--list-hardening`,
+`--list-fonts`, `--ide-scan`, `create --headless` y el menú de la TUI.
+
+No se prepara release: siguen abiertos R-4f8a2c60 (pendiente de Q-008) y
+R-6a1f8c23 (pendiente de Q-011), y el requisito de 7 días sin reportes nuevos
+continúa en curso desde el 2026-11-22.
+
 ## 2026-11-25 — quincuagésimo primer ciclo
 
 ### Corregido — los proyectos generados ya declaran su propia versión, su nombre visible y un lanzador que funciona

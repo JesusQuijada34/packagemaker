@@ -36,16 +36,20 @@ try:
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
-    class QMainWindow:
+
+    class _QtStubMeta(type):
+        def __getattr__(cls, name):
+            return _QtStub
+
+    class _QtStub(metaclass=_QtStubMeta):
         def __init__(self, *args, **kwargs): pass
-    class QWidget:
-        def __init__(self, *args, **kwargs): pass
-    class QDialog:
-        def __init__(self, *args, **kwargs): pass
-    class pyqtSignal:
-        def __init__(self, *args): pass
-        def connect(self, func): pass
-        def emit(self, *args): pass
+        def __getattr__(self, name): return _QtStub()
+        def __call__(self, *args, **kwargs): return _QtStub()
+
+    QMainWindow = QWidget = QVBoxLayout = QHBoxLayout = QLabel = QPushButton = _QtStub
+    QFileDialog = QMessageBox = QDialog = QLineEdit = QGroupBox = _QtStub
+    QListWidget = QListWidgetItem = QComboBox = QFormLayout = _QtStub
+    QGraphicsDropShadowEffect = QColor = Qt = pyqtSignal = _QtStub
 
 EDITOR_CONFIG_PATH = Path(__file__).resolve().parent.parent / "data" / "pmCodeEditor" / "editor_config.json"
 

@@ -14,9 +14,22 @@ try:
 except ImportError:  # pragma: no cover - entorno sin GUI
     PYQT6_AVAILABLE = False
 
-    class QWidget:  # type: ignore
+    class _QtStubMeta(type):
+        def __getattr__(cls, name):
+            return _QtStub
+
+    class _QtStub(metaclass=_QtStubMeta):
         def __init__(self, *args, **kwargs):
             pass
+
+        def __getattr__(self, name):
+            return _QtStub()
+
+        def __call__(self, *args, **kwargs):
+            return _QtStub()
+
+    Qt = pyqtSignal = QPixmap = _QtStub
+    QHBoxLayout = QLabel = QPushButton = QSizePolicy = QVBoxLayout = QWidget = _QtStub
 
 _AVATAR_SIZE = 34
 

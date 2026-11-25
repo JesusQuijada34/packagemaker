@@ -80,18 +80,24 @@ except ImportError:
         def __init__(self, *args, **kwargs): pass
     class QPoint:
         def __init__(self, *args, **kwargs): pass
-    class Qt:
-        class WindowType: pass
-        class WidgetAttribute: pass
-        class AlignmentFlag: pass
-        class CursorShape: pass
-        class SizePolicy: pass
-        class Orientation: pass
-        class ScrollBarPolicy: pass
-        class FocusPolicy: pass
-        class Key: pass
-        class Modifier: pass
-        class MouseButton: pass
+
+    # Sustituto permisivo para los nombres que sólo se usan en anotaciones o
+    # en rutas de GUI: sin él, el import de nivel superior abortaba con
+    # ``NameError`` y ni el CLI headless ni la TUI llegaban a arrancar.
+    class _QtStubMeta(type):
+        def __getattr__(cls, name):
+            return _QtStub
+
+    class _QtStub(metaclass=_QtStubMeta):
+        def __init__(self, *args, **kwargs): pass
+        def __getattr__(self, name): return _QtStub()
+        def __call__(self, *args, **kwargs): return _QtStub()
+
+    QtWidgets = QtGui = QtCore = _QtStub
+    QApplication = QVBoxLayout = QHBoxLayout = QLabel = QLineEdit = _QtStub
+    QPushButton = QComboBox = QFileDialog = QSizePolicy = QGroupBox = _QtStub
+    QRadioButton = QButtonGroup = QGridLayout = QTextEdit = QStackedWidget = _QtStub
+    QFontDatabase = QTimer = QEvent = QEasingCurve = Qt = _QtStub
 try:
     import requests
 except ImportError:  # dependencia opcional: sólo la descarga de iconos por URL la usa
@@ -429,8 +435,6 @@ else:
 
     def code_font():
         return None
-
-    print("font: none", file=sys.stderr)
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
 TAB_ICON_KEYS = {

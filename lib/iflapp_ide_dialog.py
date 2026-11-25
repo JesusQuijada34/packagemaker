@@ -34,6 +34,20 @@ try:
 except ImportError:  # pragma: no cover - entorno sin GUI
     PYQT6_AVAILABLE = False
 
+    class _QtStubMeta(type):
+        def __getattr__(cls, name):
+            return _QtStub
+
+    class _QtStub(metaclass=_QtStubMeta):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __getattr__(self, name):
+            return _QtStub()
+
+        def __call__(self, *args, **kwargs):
+            return _QtStub()
+
     class QWidget:  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError("El IDE de proyectos iflapp requiere PyQt6.")
@@ -41,6 +55,8 @@ except ImportError:  # pragma: no cover - entorno sin GUI
     class QDialog:  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError("El IDE de proyectos iflapp requiere PyQt6.")
+
+    pyqtSignal = _QtStub
 
 from lib.i18n import tr
 from lib.iflapp_ide import (

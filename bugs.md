@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (quincuagésimo primer ciclo)
+Última actualización: 2026-11-25 (quincuagésimo segundo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -166,6 +166,8 @@ de auditoría.
 | R-2c7e5a91 | Bug — `version.res` declara una versión fija en todos los proyectos | Media | Resuelto |
 | R-8d4b1f63 | Bug — `create` descarta el nombre visible (`--name`) | Alta | Resuelto |
 | R-5a3e9d72 | Bug — `autorun`/`autorun.bat` generados no lanzan la app | Alta | Resuelto |
+| R-7a5d2c94 | Bug — el programa no arranca sin PyQt6 (`NameError` en el import) | Alta | Resuelto |
+| R-2f6c8a13 | Bug — `print("font: none")` de depuración en cada arranque sin Qt | Baja | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -4545,6 +4547,63 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del quincuagésimo primer ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
+## R-7a5d2c94 — El programa no arranca sin PyQt6
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo segundo ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta.
+- **Descripción:** sin PyQt6 —o cuando su import falla por una biblioteca de
+  sistema ausente, como `libEGL.so.1`— `packagemaker.py` abortaba con
+  `NameError: name 'QPushButton' is not defined` (o `pyqtSignal`,
+  `QGroupBox`, `QGridLayout`, `Qt`…) antes de leer los argumentos. Ni
+  `--app-version`, ni `--list-compilers`, ni `--inspect`, ni la TUI llegaban a
+  ejecutarse, aunque `main()` tiene una rama explícita para `not
+  PYQT6_AVAILABLE` que debería caer en la TUI.
+- **Pasos para reproducirlo:** en una máquina sin PyQt6 (o con
+  `PYTHONPATH` apuntando a un `PyQt6/__init__.py` que lanza `ImportError`):
+  `python packagemaker.py --app-version` → traceback con `NameError` y código
+  de salida 1.
+- **Causa raíz:** los respaldos de `except ImportError` eran incompletos.
+  `lib/settings_cards.py` sólo definía `QFrame = QWidget = object` pero usa
+  `QPushButton`, `QLabel`, `QHBoxLayout`, `QScrollArea`, `Qt`… en el cuerpo de
+  las clases; `lib/github_login_landing.py` sólo definía `QWidget`;
+  `lib/github_profile_card.py` no definía `pyqtSignal`; `lib/iflapp_ide_dialog.py`
+  tampoco; `lib/pm_dashboard.py` no definía `QGroupBox`; y el bloque de
+  `packagemaker.py` no cubría los nombres usados en anotaciones
+  (`QGridLayout`, `QTextEdit`, `QStackedWidget`, `QApplication`…).
+- **Solución aplicada:** se añadió a cada respaldo el mismo sustituto inerte
+  `_QtStub` (metaclase que devuelve el propio sustituto para cualquier
+  atributo) y se asignaron a él todos los nombres importados en el `try`, de
+  modo que el módulo se puede importar sin Qt y la GUI sigue usando las clases
+  reales cuando PyQt6 está disponible. `lib/iflapp_ide_dialog.py` conserva sus
+  `QWidget`/`QDialog` que lanzan `ImportError` al instanciarse, porque el
+  panel del IDE no puede funcionar sin Qt; sólo se completó `pyqtSignal`.
+- **Pruebas:** `tests/test_cli_without_pyqt6.py` (7 casos: `--app-version`,
+  `--list-compilers`, `--list-engines`, `--list-hardening`, `--list-fonts`,
+  importación de los seis módulos de UI y ausencia de ruido de depuración).
+  Con el código anterior fallan 6 de los 7.
+- **Commit:** se registra en el cierre del quincuagésimo segundo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-2f6c8a13 — `print("font: none")` de depuración en cada arranque sin Qt
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo segundo ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Baja.
+- **Descripción:** la rama sin PyQt6 de `packagemaker.py` ejecutaba
+  `print("font: none", file=sys.stderr)` al importarse el módulo. Cada
+  invocación headless (o la TUI) sin Qt escribía esa línea de depuración en
+  stderr, ruido que los scripts que tratan stderr como fallo pueden
+  interpretar como error.
+- **Pasos para reproducirlo:** `PYTHONPATH=<PyQt6 roto> python
+  packagemaker.py --app-version 2>&1` → `font: none` antes de la versión.
+- **Causa raíz:** resto de depuración del respaldo de fuentes sin Qt.
+- **Solución aplicada:** se eliminó la línea; `app_font()`/`code_font()` ya
+  devuelven `None` en ese caso.
+- **Pruebas:** `tests/test_cli_without_pyqt6.py::test_no_stray_font_debug_output`.
+- **Commit:** se registra en el cierre del quincuagésimo segundo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -4721,6 +4780,20 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   (ahora `Demo App` en `details.xml`, README y `ProductName`); `sh autorun`
   dentro del paquete extraído respondía `/usr/bin/python3: not found` y
   `./autorun` «Permission denied» (ahora ejecuta el artefacto compilado).
+- Quincuagésimo segundo ciclo (2026-11-25): R-7a5d2c94 y R-2f6c8a13 corregidos y
+  probados (arranque sin PyQt6 y ruido de depuración en stderr); no se prepara
+  release.
+- Verificación del quincuagésimo segundo ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1168 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. 6 de las 7 pruebas
+  nuevas de `tests/test_cli_without_pyqt6.py` fallan con el código anterior
+  (comprobado con `git stash` de los seis archivos tocados). Reproducción real:
+  con un paquete `PyQt6` que lanza `ImportError`, `--app-version` abortaba con
+  `NameError: name 'QPushButton' is not defined` (ahora imprime la versión y
+  sale con 0); `--list-compilers`, `--list-engines`, `--list-hardening`,
+  `--list-fonts`, `--ide-scan` y `create --headless` funcionan sin Qt, y la TUI
+  arranca en su menú principal. `lib/application_frame_host.py` sigue
+  requiriendo PyQt6, pero no lo importa ningún módulo del programa.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
