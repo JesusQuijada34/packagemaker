@@ -87,7 +87,7 @@ histórico.
 - **Pruebas:** `tests/test_report_page_ui.py` (dos columnas, tabla enriquecida,
   viewport transparente y scrollbar visible) y `tests/test_qss_loader.py`
   (variante `prominent` sin marcadores).
-- **Commit:** pendiente de registrar en el resumen del ciclo.
+- **Commit:** `b5378ad` (2026-11-25).
 - **Fecha de resolución:** pendiente de confirmación visual en Windows.
 
 ---

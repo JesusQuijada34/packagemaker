@@ -23,13 +23,14 @@ issue #10 llegó enviado desde la aplicación con la cuenta de JesusQuijada34.
   (issue #10, reporte enviado desde la aplicación). Queda **pendiente de
   verificación visual en Windows**, así que no se marca como resuelto del todo.
 
-Pruebas nuevas en `tests/test_report_page_ui.py` (dos columnas, tabla
-enriquecida, viewport transparente, scrollbar visible y escapado de valores) y
-en `tests/test_qss_loader.py` (la variante `prominent` resuelve todos sus
-marcadores). Suite completa: 1219 pasan, 1 omitido, 64 subtests. `pyflakes` y
-`py_compile` limpios. Además se verificó con una captura offscreen que la franja
-superior y el contenido comparten ahora el mismo color (`rgb(28,28,30)`) y que
-el scrollbar aparece al reducir la altura de la ventana.
+Commit: `b5378ad`. Pruebas nuevas en `tests/test_report_page_ui.py` (dos
+columnas, tabla enriquecida, viewport transparente, scrollbar visible y
+escapado de valores) y en `tests/test_qss_loader.py` (la variante `prominent`
+resuelve todos sus marcadores). Suite completa: 1219 pasan, 1 omitido, 64
+subtests. `pyflakes` y `py_compile` limpios. Además se verificó con una captura
+offscreen que la franja superior y el contenido comparten ahora el mismo color
+(`rgb(28,28,30)`) y que el scrollbar aparece al reducir la altura de la
+ventana.
 
 No se prepara release: siguen abiertos R-4f8a2c60 (Q-008/F-003), R-6a1f8c23
 (Q-011/F-004), R-4d9e2b61 (Q-019), R-7c4a1e95 (Q-012), R-2f8b6a31
