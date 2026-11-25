@@ -3,7 +3,7 @@
 - **Última revisión:** 2026-11-25 (quincuagésimo tercer ciclo)
 - **Último commit de `CONFIRM.MD` procesado:** `bba72d6` (2026-11-25), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>` (autoría verificada con la API de GitHub). Aportó 7 respuestas afirmativas con instrucciones adicionales: Q-004 (opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014. Q-015, Q-016, Q-017 y Q-018 siguen sin responder.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020), 7 aprobadas pendientes de confirmación final e implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014), 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020), 7 aprobadas pendientes de implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014; las seis de engine con confirmación final `F-001`…`F-006`), 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
