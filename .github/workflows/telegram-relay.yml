@@ -1,0 +1,127 @@
+name: Telegram relay
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: telegram-relay
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Forward new Telegram messages to GitHub issues
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          import urllib.request
+
+          token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+          repo = os.environ["REPO"]
+          if not token:
+              print("TELEGRAM_BOT_TOKEN is not configured; skipping.")
+              sys.exit(0)
+
+          def gh(*args, check=True):
+              return subprocess.run(
+                  ["gh", *args, "--repo", repo],
+                  check=check, text=True, capture_output=True,
+              )
+
+          gh("label", "create", "telegram-state", "--color", "ededed",
+             "--description", "Estado del relay de Telegram", check=False)
+          gh("label", "create", "telegram", "--color", "1d76db",
+             "--description", "Reportes de Telegram", check=False)
+
+          state_label = "telegram-state"
+          r = gh("issue", "list", "--label", state_label, "--state", "all",
+                 "--json", "number,body", "--limit", "1")
+          items = json.loads(r.stdout or "[]")
+          if items:
+              state_number = items[0]["number"]
+              state_body = items[0].get("body") or ""
+          else:
+              r = gh("issue", "create", "--title", "[telegram] relay state",
+                     "--body", "last_update_id=0", "--label", state_label)
+              state_number = int(r.stdout.strip().split("/")[-1])
+              state_body = "last_update_id=0"
+
+          last = 0
+          for line in state_body.splitlines():
+              if line.strip().startswith("last_update_id="):
+                  try:
+                      last = int(line.strip().split("=", 1)[1])
+                  except ValueError:
+                      last = 0
+
+          api = (
+              f"https://api.telegram.org/bot{token}/getUpdates"
+              f"?offset={last + 1}&timeout=0&allowed_updates=%5B%22message%22%5D"
+          )
+          with urllib.request.urlopen(api, timeout=30) as resp:
+              data = json.load(resp)
+          if not data.get("ok"):
+              print("getUpdates failed:", data)
+              sys.exit(1)
+
+          updates = data.get("result", [])
+          print(f"{len(updates)} update(s); last={last}")
+          new_last = last
+          for update in updates:
+              update_id = int(update.get("update_id", new_last))
+              message = update.get("message") or {}
+              chat = message.get("chat") or {}
+              sender = message.get("from") or {}
+              chat_id = chat.get("id")
+              text = message.get("text")
+              if not chat_id or not text or sender.get("is_bot"):
+                  new_last = max(new_last, update_id)
+                  continue
+
+              title = f"[telegram] chat {chat_id}"
+              r = gh("issue", "list", "--label", "telegram", "--state", "all",
+                     "--json", "number,title", "--limit", "100")
+              issue_number = None
+              for issue in json.loads(r.stdout or "[]"):
+                  if issue.get("title") == title:
+                      issue_number = issue["number"]
+                      break
+              if issue_number is None:
+                  r = gh("issue", "create", "--title", title,
+                         "--body", f"Reportes de Telegram para el chat `{chat_id}`.\n\n"
+                                   "Este issue es la conversación del bot y la bandeja de revisión.",
+                         "--label", "telegram")
+                  issue_number = int(r.stdout.strip().split("/")[-1])
+
+              who = " ".join(
+                  part for part in [sender.get("first_name"), sender.get("last_name")]
+                  if part
+              ) or sender.get("username") or "usuario"
+              username = f" (@{sender['username']})" if sender.get("username") else ""
+              comment = (
+                  f"**Telegram** · chat_id: `{chat_id}` · {who}{username} · "
+                  f"{message.get('date', '')}\n\n{text}\n\n<!-- telegram-relay -->"
+              )
+              gh("issue", "comment", str(issue_number), "--body", comment)
+              print(f"forwarded update {update_id} -> issue #{issue_number}")
+              new_last = max(new_last, update_id)
+
+          if new_last > last:
+              gh("issue", "edit", str(state_number),
+                 "--body", f"last_update_id={new_last}")
+              print(f"saved last_update_id={new_last}")
+          PY
