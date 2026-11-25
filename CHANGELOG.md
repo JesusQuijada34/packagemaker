@@ -1,3 +1,48 @@
+## 2026-11-25 — quincuagésimo cuarto ciclo
+
+### Corregido — copia del paquete ante bloqueos y estados de los radios
+
+Sin reportes externos nuevos. Se atienden dos de los ocho reportes que el
+propietario dejó en el commit `bba72d6`. **Ningún cambio de comportamiento del
+engine**: la ley de nombres, el formato `.iflapp`, las plantillas y el contenido
+de los paquetes siguen igual.
+
+- **R-6b2f8d43 — el build fallaba con «archivo en uso por otro proceso»
+  (Alta):** `create_package()` y `_copy_package_files()` copiaban el paquete con
+  `shutil` crudo (`shutil.rmtree(dest)` sin reintentos, `shutil.copytree` y
+  `shutil.copy2`), y al fallar la verificación limpiaban con
+  `shutil.rmtree(..., ignore_errors=True)`. En Windows, un archivo del paquete
+  anterior abierto por otro proceso (antivirus, ejecutable todavía en marcha)
+  hacía que la copia lanzara `WinError 32`; la excepción escapaba de `run()`,
+  que sólo tiene `finally`, y mataba la QThread del build. Ahora hay un
+  `copy_tree()` en `lib/file_ops.py` que reintenta incluso cuando `copytree`
+  agrupa los fallos en `shutil.Error` y refresca un paquete existente con
+  `dirs_exist_ok=True`; `_copy_package_files()` usa `remove_tree`, `copy_tree` y
+  `copy_file` para el proyecto, los archivos obligatorios y los binarios de
+  `dist`, y `create_package()` limpia con `remove_tree` y lista con
+  `list_directory`. Un fichero que no se libera se registra con `[WARN]` y el
+  build termina con un error legible. Queda pendiente de verificación en Windows
+  con la traza original, así que **no se marca como resuelto del todo**.
+  Reportado por JesusQuijada34 (commit `bba72d6`; caso #4).
+- **R-9e5c3d84 — los radios no seguían los estados normal/hover/pressed
+  (Baja):** `source/qss/qradiobutton.qss` sólo definía reposo, un hover que
+  cambiaba el borde a blanco y checked. Ahora el indicador tiene borde gris en
+  reposo, hover con borde y relleno del acento, pressed con borde de 3px del
+  mismo acento (crecimiento hacia dentro) y relleno de acento, checked con
+  anillo de 5px, `checked:hover`/`checked:pressed` con `ACCENT_HOVER` y
+  `disabled` atenuado. `radio_qss()` pasa `TEXT_DIM`, `TEXT_FAINT` y
+  `ACCENT_HOVER`. Reportado por JesusQuijada34 (commit `bba72d6`; caso #4).
+
+Pruebas nuevas: `tests/test_engine_isolation.py` (5 casos de copia con bloqueos
+simulados `WinError 32`, todos fallan con el código anterior) y
+`tests/test_qss_loader.py` (estados del indicador). Suite completa:
+1178 pasan, 1 omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
+
+No se prepara release: siguen abiertos R-4f8a2c60 (Q-008/F-003), R-6a1f8c23
+(Q-011/F-004), R-8a3f1c72 (Q-020), R-4d9e2b61 (Q-019), R-7c4a1e95 (Q-012),
+R-2f8b6a31 (Q-011/F-004), R-5a7d2f16 y R-3c8e4b72. Los seis cambios de engine
+aprobados siguen sin confirmación final (`F-001`…`F-006`).
+
 ## 2026-11-25 — quincuagésimo tercer ciclo
 
 ### Corregido — traducción cruda en el registro de compilación, interfaz sin Pillow y notificación de error sin `pyperclip`

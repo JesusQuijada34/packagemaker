@@ -154,6 +154,153 @@ def test_copy_file_retries_on_lock(tmp_path, monkeypatch):
     assert calls["n"] == 2
 
 
+def test_copy_tree_refreshes_an_existing_destination(tmp_path):
+    from lib.file_ops import copy_tree
+
+    source = tmp_path / "src"
+    (source / "nested").mkdir(parents=True)
+    (source / "nested" / "nuevo.txt").write_text("nuevo", encoding="utf-8")
+    destination = tmp_path / "dst"
+    destination.mkdir()
+    (destination / "viejo.txt").write_text("viejo", encoding="utf-8")
+
+    copy_tree(source, destination)
+
+    assert (destination / "nested" / "nuevo.txt").read_text(encoding="utf-8") == "nuevo"
+    assert (destination / "viejo.txt").exists()
+
+
+def test_copy_tree_retries_when_copytree_groups_a_lock(tmp_path, monkeypatch):
+    """``copytree`` agrupa los fallos en ``shutil.Error``; un bloqueo se reintenta."""
+    import shutil
+
+    import lib.file_ops as file_ops
+
+    source = tmp_path / "src"
+    source.mkdir()
+    (source / "a.txt").write_text("x", encoding="utf-8")
+    destination = tmp_path / "dst"
+
+    real_copytree = file_ops.shutil.copytree
+    calls = {"n": 0}
+
+    def flaky(src, dst, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            error = OSError(errno.EACCES, "sharing violation")
+            error.winerror = 32
+            raise shutil.Error([(str(src), str(dst), error)])
+        return real_copytree(src, dst, **kwargs)
+
+    monkeypatch.setattr(file_ops.shutil, "copytree", flaky)
+    monkeypatch.setattr(file_ops.time, "sleep", lambda _s: None)
+
+    file_ops.copy_tree(source, destination)
+
+    assert calls["n"] == 2
+    assert (destination / "a.txt").read_text(encoding="utf-8") == "x"
+
+
+def _make_package_project(tmp_path: Path) -> Path:
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "details.xml").write_text("<app />", encoding="utf-8")
+    (project / "app").mkdir()
+    (project / "app" / "main.py").write_text("print('hola')\n", encoding="utf-8")
+    (project / "app" / "data.txt").write_text("datos", encoding="utf-8")
+    (project / "version.res").write_text("x", encoding="utf-8")
+    (project / "autorun").write_text("#!/bin/sh\n", encoding="utf-8")
+    (project / "autorun.bat").write_text("@echo off\n", encoding="utf-8")
+    (project / "updater.py").write_text("# updater\n", encoding="utf-8")
+    (project / ".storedetail").write_text("{}", encoding="utf-8")
+    (project / "config").mkdir()
+    (project / "config" / "settings.json").write_text("{}", encoding="utf-8")
+    (project / "dist").mkdir()
+    (project / "dist" / "demo").write_bytes(b"bin")
+    return project
+
+
+def test_copy_package_files_tolerates_a_locked_destination(tmp_path, monkeypatch):
+    """R-6b2f8d43: un paquete anterior bloqueado ya no aborta la copia."""
+    import lib.file_ops as file_ops
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+    project = _make_package_project(tmp_path)
+    compiler = FlangCompiler(project, tmp_path / "releases", sandbox=False)
+    package = tmp_path / "package"
+    package.mkdir()
+    (package / "app").mkdir()
+    (package / "app" / "viejo.txt").write_text("viejo", encoding="utf-8")
+
+    real_rmtree = file_ops.shutil.rmtree
+    calls = {"n": 0}
+
+    def flaky(path, **kwargs):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            error = OSError(errno.EACCES, "sharing violation")
+            error.winerror = 32
+            raise error
+        return real_rmtree(path, **kwargs)
+
+    monkeypatch.setattr(file_ops.shutil, "rmtree", flaky)
+    monkeypatch.setattr(file_ops.time, "sleep", lambda _s: None)
+
+    compiler._copy_package_files(package, "Linux")
+
+    assert calls["n"] == 3
+    assert (package / "app" / "data.txt").read_text(encoding="utf-8") == "datos"
+    assert not (package / "app" / "viejo.txt").exists()
+    assert (package / "demo").read_bytes() == b"bin"
+
+
+def test_copy_package_files_logs_and_continues_when_a_file_stays_locked(
+    tmp_path, monkeypatch
+):
+    """Un fichero que nunca se libera se registra y no mata el hilo del build."""
+    import lib.file_ops as file_ops
+    from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+    project = _make_package_project(tmp_path)
+    logs = []
+    compiler = FlangCompiler(
+        project, tmp_path / "releases", log_callback=logs.append, sandbox=False
+    )
+    package = tmp_path / "package"
+    package.mkdir()
+
+    real_copy2 = file_ops.shutil.copy2
+
+    def locked(src, dst, **kwargs):
+        if Path(dst).name == "autorun":
+            error = OSError(errno.EACCES, "sharing violation")
+            error.winerror = 32
+            raise error
+        return real_copy2(src, dst, **kwargs)
+
+    monkeypatch.setattr(file_ops.shutil, "copy2", locked)
+    monkeypatch.setattr(file_ops.time, "sleep", lambda _s: None)
+
+    compiler._copy_package_files(package, "Linux")
+
+    assert any(line.startswith("[WARN]") for line in logs)
+    assert (package / "demo").read_bytes() == b"bin"
+
+
+def test_package_copy_uses_the_retrying_helpers():
+    """Ni la copia ni la limpieza del paquete usan ``shutil`` crudo."""
+    source = (ROOT / "lib" / "blindcubeEngine" / "BuildThread.py").read_text(
+        encoding="utf-8"
+    )
+    for method in ("def create_package", "def _copy_package_files"):
+        start = source.index(method)
+        end = source.find("\n    def ", start + 1)
+        body = source[start : end if end != -1 else len(source)]
+        assert "shutil.rmtree(" not in body, method
+        assert "shutil.copytree(" not in body, method
+        assert "shutil.copy2(" not in body, method
+
+
 def test_move_path_moves_between_directories(tmp_path):
     from lib.file_ops import move_path
 

@@ -1,7 +1,6 @@
 import os
 import json
 import sys
-import shutil
 import platform
 import fnmatch
 import tempfile
@@ -37,7 +36,7 @@ from lib.blindcubeEngine.compilers import (
     ensure_backend,
     resolve_backend,
 )
-from lib.file_ops import copy_file, remove_tree
+from lib.file_ops import copy_file, copy_tree, list_directory, remove_tree
 from lib.blindcubeEngine.hardware_sandbox import HardwareSandbox
 from lib.blindcubeEngine.source_io import SourceEncodingError, read_python_source
 from lib.mexf_compiler import MexfCompiler
@@ -582,8 +581,8 @@ class FlangCompiler:
         self._update_and_copy_details_xml(package_path, platform_suffix)
 
         expected_suffix = ".exe" if target_platform == "Windows" else ""
-        compiled_names = sorted(item.name for item in (self.repo_path / "dist").iterdir()) if (self.repo_path / "dist").is_dir() else []
-        packaged_names = sorted(item.name for item in package_path.iterdir())
+        compiled_names = [item.name for item in list_directory(self.repo_path / "dist")]
+        packaged_names = [item.name for item in list_directory(package_path)]
         self.log(f"[DEBUG] Binarios acumulados en dist: {compiled_names}")
         self.log(f"[DEBUG] Entradas copiadas al paquete: {packaged_names}")
         expected_binaries = []
@@ -610,7 +609,7 @@ class FlangCompiler:
                 target=target_platform
             )
             self.log(f"[ERROR] {self.last_error}")
-            shutil.rmtree(package_path, ignore_errors=True)
+            remove_tree(package_path)
             return False
         return True
 
@@ -667,17 +666,22 @@ class FlangCompiler:
                 
             dest = package_path / item.name
             if item.is_dir():
-                if dest.exists():
-                    shutil.rmtree(dest)
+                if dest.exists() and not remove_tree(dest):
+                    self.log(
+                        "[WARN] "
+                        + tr("build_log.folder_remove_failed").format(
+                            name=item.name, error=tr("build_log.folder_locked")
+                        )
+                    )
                 try:
-                    shutil.copytree(item, dest, ignore=ignore_func)
-                except Exception as e:
+                    copy_tree(item, dest, ignore=ignore_func)
+                except OSError as e:
                     self.log("[WARN] " + tr("build_log.copy_error").format(name=item.name, error=e))
             elif item.is_file():
                 try:
-                    shutil.copy2(item, dest)
-                except OSError:
-                    pass
+                    copy_file(item, dest)
+                except OSError as e:
+                    self.log("[WARN] " + tr("build_log.copy_error").format(name=item.name, error=e))
         # Los archivos estructurales de PackageMaker son parte del contrato del paquete.
         # Se copian explícitamente después de aplicar .gitignore para evitar que un
         # proyecto excluya accidentalmente sus propios metadatos MoonFix.
@@ -693,11 +697,16 @@ class FlangCompiler:
         for relative in mandatory_paths:
             source = self.repo_path / relative
             destination = package_path / relative
-            if source.is_file():
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(source, destination)
-            elif source.is_dir():
-                destination.mkdir(parents=True, exist_ok=True)
+            try:
+                if source.is_file():
+                    copy_file(source, destination)
+                elif source.is_dir():
+                    destination.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                self.log(
+                    "[WARN] "
+                    + tr("build_log.copy_error").format(name=str(relative), error=e)
+                )
 
         dist_dir = self.repo_path / "dist"
         if dist_dir.exists():
@@ -716,8 +725,16 @@ class FlangCompiler:
                     # carpetas obligatorias del contrato Fluthin.
                     if destination.exists() and destination.is_dir():
                         destination = package_path / "bin" / binary.name
-                    destination.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(binary, destination)
+                    try:
+                        copy_file(binary, destination)
+                    except OSError as e:
+                        self.log(
+                            "[WARN] "
+                            + tr("build_log.copy_error").format(
+                                name=binary.name, error=e
+                            )
+                        )
+                        continue
                     try:
                         destination.chmod(0o755)
                     except OSError:

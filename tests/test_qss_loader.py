@@ -58,6 +58,23 @@ def test_unknown_control_raises():
         raise AssertionError("un control inexistente debía lanzar FileNotFoundError")
 
 
+def test_radio_indicator_defines_normal_hover_and_pressed_states():
+    """R-9e5c3d84: reposo gris, hover relleno de acento y pressed interior."""
+    from lib import design_tokens as tokens
+
+    qss = tokens.radio_qss("#123456")
+    assert "QRadioButton::indicator {" in qss
+    assert "QRadioButton::indicator:hover" in qss
+    assert "QRadioButton::indicator:pressed" in qss
+
+    hover = qss.split("QRadioButton::indicator:hover", 1)[1].split("}", 1)[0]
+    assert "background: #123456" in hover
+    pressed = qss.split("QRadioButton::indicator:pressed", 1)[1].split("}", 1)[0]
+    assert "border: 3px solid #123456" in pressed
+    assert "background: #123456" in pressed
+    assert "__" not in qss
+
+
 def test_render_resolves_markers_without_touching_css_braces():
     from lib import qss_loader
 

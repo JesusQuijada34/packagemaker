@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (quincuagésimo tercer ciclo)
+Última actualización: 2026-11-25 (quincuagésimo cuarto ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -173,10 +173,10 @@ de auditoría.
 | R-2e6d9b14 | Bug — `error_handler` importa `pyperclip` sin proteger | Media | Resuelto |
 | R-8a3f1c72 | Bug — al cambiar de idioma la mayor parte de la interfaz sigue en español | Alta | Pendiente (Q-020) |
 | R-4d9e2b61 | Bug — la compilación con Nuitka falla y el build no usa entorno aislado | Alta | Pendiente (Q-019) |
-| R-6b2f8d43 | Bug — el build falla con «archivo en uso por otro proceso» | Alta | Pendiente |
+| R-6b2f8d43 | Bug — el build falla con «archivo en uso por otro proceso» | Alta | Corregido (pendiente de verificación en Windows) |
 | R-7c4a1e95 | Bug — la interfaz se congela y renderiza mal al maximizar/restaurar | Media | Pendiente (Q-012) |
 | R-2f8b6a31 | Bug/engine — la titlebar no limita los gestos a tres (max/restore/fullscreen) | Media | Pendiente (Q-011/F-004) |
-| R-9e5c3d84 | Bug — los radios no siguen los estados QSS normal/hover/pressed | Baja | Pendiente |
+| R-9e5c3d84 | Bug — los radios no siguen los estados QSS normal/hover/pressed | Baja | Resuelto |
 | R-5a7d2f16 | Mejora — fondo blanco/negro translúcido sobre el blur | Baja | Pendiente |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente |
 
@@ -4814,17 +4814,34 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Pasos para reproducirlo:** compilar en Windows con el ejecutable o un
   archivo del paquete abierto por otro proceso y revisar el punto exacto del
   fallo. El reporte no incluye la traza completa.
-- **Causa raíz:** bajo investigación. `_copy_package_files()` usa
-  `shutil.rmtree(dest)` y `copytree`/`copy2` sin reintentos, y la limpieza usa
-  `remove_tree`; en Windows un archivo bloqueado puede hacer fallar cualquiera
-  de esas operaciones. No se ha confirmado si el fallo está en la copia, en la
-  limpieza o en el movimiento final del artefacto.
-- **Estado:** Pendiente. No se aplica una corrección especulativa sin la traza
-  o una reproducción fiable.
-- **Solución aplicada:** Ninguna todavía. Se revisarán los puntos de copia,
-  limpieza y movimiento con una prueba que bloquee un archivo.
-- **Commit:** —
-- **Fecha de resolución:** —
+- **Causa raíz:** `create_package()` y `_copy_package_files()` usaban `shutil`
+  crudo: `shutil.rmtree(dest)` sin reintentos, `shutil.copytree`/`copy2` y un
+  `shutil.rmtree(package_path, ignore_errors=True)` al fallar el paquete. En
+  Windows un archivo del paquete anterior abierto por otro proceso (antivirus,
+  ejecutable todavía en marcha) hacía que la copia lanzara `WinError 32`; la
+  excepción escapaba de `run()`, que sólo tiene `finally`, y mataba la QThread.
+  La limpieza y el movimiento final ya usaban `remove_tree`/`copy_file`, pero la
+  copia del paquete no.
+- **Estado:** Corregido y probado con bloqueos simulados (`WinError 32`);
+  pendiente de verificación en Windows con la traza original. No se marca como
+  resuelto del todo hasta esa comprobación.
+- **Solución aplicada:** nuevo `copy_tree()` en `lib/file_ops.py`, que reintenta
+  ante bloqueos incluso cuando `copytree` los agrupa en `shutil.Error`, y
+  `dirs_exist_ok=True` para refrescar un paquete existente sin borrarlo antes.
+  `_copy_package_files()` usa `remove_tree`, `copy_tree` y `copy_file` para la
+  copia del proyecto, los archivos obligatorios y los binarios de `dist`;
+  `create_package()` limpia con `remove_tree` y lista con `list_directory`. Un
+  fichero que no se libera se registra con `[WARN]` y la compilación termina con
+  un error legible en vez de matar el hilo.
+- **Pruebas:** `tests/test_engine_isolation.py`
+  (`test_copy_tree_refreshes_an_existing_destination`,
+  `test_copy_tree_retries_when_copytree_groups_a_lock`,
+  `test_copy_package_files_tolerates_a_locked_destination`,
+  `test_copy_package_files_logs_and_continues_when_a_file_stays_locked` y
+  `test_package_copy_uses_the_retrying_helpers`). Las cinco fallan con el
+  código anterior.
+- **Commit:** `main` (quincuagésimo cuarto ciclo, 2026-11-25).
+- **Fecha de resolución:** pendiente de verificación en Windows.
 
 ## R-7c4a1e95 — La interfaz se congela y renderiza mal al maximizar/restaurar
 
@@ -4875,13 +4892,21 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   hover.
 - **Pasos para reproducirlo:** abrir Configuración y pasar el ratón o pulsar
   los radios; los estados no coinciden con la especificación.
-- **Causa raíz:** el bloque de `qradiobutton.qss` y/o los tokens no definen los
-  tres estados con el crecimiento interior del borde.
-- **Estado:** Pendiente. Es un cambio visual acotado; se abordará después de
-  los bugs de prioridad alta.
-- **Solución aplicada:** Ninguna todavía.
-- **Commit:** —
-- **Fecha de resolución:** —
+- **Causa raíz:** `qradiobutton.qss` sólo definía reposo, hover (cambiaba el
+  borde a blanco) y checked; no había relleno de acento en hover, ni estado
+  `pressed` con el borde creciendo hacia dentro, ni variantes `checked:hover`,
+  `checked:pressed` y `disabled`.
+- **Estado:** Resuelto el 2026-11-25 (quincuagésimo cuarto ciclo).
+- **Solución aplicada:** `source/qss/qradiobutton.qss` define el indicador en
+  reposo con borde gris (`TEXT_DIM`), hover con borde y relleno de acento,
+  pressed con borde de 3px del mismo acento (crecimiento hacia dentro) y relleno
+  de acento, checked con anillo de 5px, `checked:hover`/`checked:pressed` con
+  `ACCENT_HOVER` y `disabled` atenuado. `radio_qss()` pasa `TEXT_DIM`,
+  `TEXT_FAINT` y `ACCENT_HOVER`.
+- **Pruebas:** `tests/test_qss_loader.py`
+  (`test_radio_indicator_defines_normal_hover_and_pressed_states`).
+- **Commit:** `main` (quincuagésimo cuarto ciclo, 2026-11-25).
+- **Fecha de resolución:** 2026-11-25.
 
 ## R-5a7d2f16 — Fondo blanco/negro translúcido sobre el blur
 
@@ -5460,3 +5485,16 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   quedan en la cola (5 bugs y 3 mejoras/UI) y **ninguno se marca como resuelto**.
   El periodo de observación de 7 días sin reportes se reinicia en esta fecha;
   no se prepara release.
+- Quincuagésimo cuarto ciclo (2026-11-25): R-6b2f8d43 corregido (la copia y la
+  limpieza del paquete reintentan ante bloqueos; pendiente de verificación en
+  Windows) y R-9e5c3d84 resuelto (estados de los radios). De los 8 reportes del
+  commit `bba72d6` siguen abiertos 6 (R-8a3f1c72, R-4d9e2b61, R-7c4a1e95,
+  R-2f8b6a31, R-5a7d2f16 y R-3c8e4b72), además de R-4f8a2c60 y R-6a1f8c23. No
+  se prepara release.
+- Verificación del quincuagésimo cuarto ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1178 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 5 pruebas nuevas
+  de bloqueo de `tests/test_engine_isolation.py` fallan con el código anterior
+  (comprobado con `git stash` de `lib/file_ops.py` y
+  `lib/blindcubeEngine/BuildThread.py`), y la prueba de los radios falla con el
+  `qradiobutton.qss` anterior.

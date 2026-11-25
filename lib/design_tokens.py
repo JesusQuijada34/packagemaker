@@ -364,14 +364,16 @@ def checkbox_qss(accent: str = ACCENT, color: str = TEXT_MUTED, size: int = 13) 
 
 
 def radio_qss(accent: str = ACCENT) -> str:
-    """Radio UWP: círculo gris con punto interior de acento."""
+    """Radio UWP: círculo gris, hover con relleno de acento y pressed interior."""
     return qss_loader.qss(
         "qradiobutton",
         TEXT_MUTED=TEXT_MUTED,
+        TEXT_DIM=TEXT_DIM,
+        TEXT_FAINT=TEXT_FAINT,
         FONT_STACK=FONT_STACK,
-        TEXT=TEXT,
         SURFACE=SURFACE,
         ACCENT=accent,
+        ACCENT_HOVER=ACCENT_HOVER,
     )
 
 

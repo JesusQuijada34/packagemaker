@@ -156,6 +156,52 @@ def copy_file(source: PathLike, destination: PathLike) -> Path:
     return dst
 
 
+def _copytree(source: Path, destination: Path, ignore, dirs_exist_ok: bool) -> None:
+    """``shutil.copytree`` que convierte un bloqueo agrupado en reintentable.
+
+    ``copytree`` acumula los fallos por entrada y lanza ``shutil.Error`` (que no
+    lleva ``errno``); si alguno de esos fallos es un fichero en uso hay que
+    volver a intentarlo en vez de rendirse en la primera pasada.
+    """
+    try:
+        shutil.copytree(
+            source, destination, ignore=ignore, dirs_exist_ok=dirs_exist_ok
+        )
+    except shutil.Error as exc:
+        for _src, _dst, why in exc.args[0]:
+            if is_file_lock_error(why):
+                raise why
+        raise
+
+
+def copy_tree(
+    source: PathLike,
+    destination: PathLike,
+    *,
+    ignore=None,
+    dirs_exist_ok: bool = True,
+    attempts: int = 8,
+    delay: float = 0.15,
+) -> Path:
+    """Copia un árbol reintentando mientras el destino siga bloqueado.
+
+    ``dirs_exist_ok`` por defecto permite refrescar una carpeta que ya existe
+    (el paquete de una compilación anterior) sin borrarla antes.
+    """
+    src, dst = Path(source), Path(destination)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    _retry(
+        _copytree,
+        src,
+        dst,
+        ignore,
+        dirs_exist_ok,
+        attempts=attempts,
+        delay=delay,
+    )
+    return dst
+
+
 def move_path(source: PathLike, destination: PathLike) -> Path:
     """Mueve (renombra o copia+borra) tolerando bloqueos transitorios."""
     src, dst = Path(source), Path(destination)
@@ -183,6 +229,7 @@ def replace_file(source: PathLike, destination: PathLike) -> Path:
 
 __all__ = [
     "copy_file",
+    "copy_tree",
     "is_file_lock_error",
     "list_directory",
     "move_path",

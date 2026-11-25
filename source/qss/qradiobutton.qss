@@ -1,4 +1,5 @@
-/* Radio UWP: círculo gris con punto interior de acento. */
+/* Radio UWP: círculo gris en reposo, hover relleno de acento y pressed con el
+   borde más grueso creciendo hacia dentro (conserva el color del hover). */
 
 QRadioButton {
     color: __TEXT_MUTED__;
@@ -10,12 +11,29 @@ QRadioButton {
 QRadioButton::indicator {
     width: 18px; height: 18px;
     border-radius: 10px;
-    border: 2px solid #8E8E93;
+    border: 2px solid __TEXT_DIM__;
     background: transparent;
 }
-QRadioButton::indicator:hover { border-color: __TEXT__; }
+QRadioButton::indicator:hover {
+    border-color: __ACCENT__;
+    background: __ACCENT__;
+}
+QRadioButton::indicator:pressed {
+    border: 3px solid __ACCENT__;
+    background: __ACCENT__;
+}
 QRadioButton::indicator:checked {
     border: 5px solid __ACCENT__;
     background: __SURFACE__;
 }
-QRadioButton:disabled { color: #777; }
+QRadioButton::indicator:checked:hover {
+    border-color: __ACCENT_HOVER__;
+}
+QRadioButton::indicator:checked:pressed {
+    border: 6px solid __ACCENT_HOVER__;
+}
+QRadioButton::indicator:disabled {
+    border-color: __TEXT_FAINT__;
+    background: transparent;
+}
+QRadioButton:disabled { color: __TEXT_FAINT__; }
