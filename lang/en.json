@@ -699,6 +699,7 @@
     "cleanup_start": "Cleaning build files...",
     "folder_removed": "Folder removed: {name}",
     "folder_remove_failed": "Could not remove {name}: {error}",
+    "folder_locked": "still in use by another process",
     "file_removed": "File removed: {name}",
     "file_remove_failed": "Could not remove {name}: {error}",
     "package_folder_removed": "Package folder removed: {name}",

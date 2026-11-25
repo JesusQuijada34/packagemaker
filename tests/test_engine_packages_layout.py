@@ -2,6 +2,8 @@
 """Estructura de ``lib/`` por motores y puente de leviathan-ui (Fase 2.1)."""
 
 import importlib
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -100,6 +102,37 @@ def test_bridge_reports_missing_framework(monkeypatch):
     assert not leviathan_bridge.is_available()
     with pytest.raises(ImportError):
         leviathan_bridge.attribute("WipeWindow")
+
+
+def test_vendored_framework_imports_without_pillow(tmp_path):
+    """Pillow es opcional: sólo se necesita para generar iconos.
+
+    ``inmojiTrx`` importaba ``PIL`` en el nivel del módulo, así que sin Pillow
+    fallaba el ``import`` de todo el framework vendorizado y la aplicación
+    perdía la barra de título, el splash y los efectos sin avisar.
+    """
+    fake_pil = tmp_path / "PIL"
+    fake_pil.mkdir()
+    (fake_pil / "__init__.py").write_text(
+        "raise ImportError('Pillow no disponible')\n", encoding="utf-8"
+    )
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join([str(tmp_path), str(ROOT)])
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from lib.leviathan_ui import InmojiTrx, WipeWindow; "
+            "assert hasattr(WipeWindow, 'create'); "
+            "assert InmojiTrx.generate_ico('emoji', 'salida.ico') is None",
+        ],
+        cwd=str(ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_no_module_imports_leviathan_directly():

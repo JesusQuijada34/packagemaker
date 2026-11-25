@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (quincuagésimo segundo ciclo)
+Última actualización: 2026-11-25 (quincuagésimo tercer ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -168,6 +168,9 @@ de auditoría.
 | R-5a3e9d72 | Bug — `autorun`/`autorun.bat` generados no lanzan la app | Alta | Resuelto |
 | R-7a5d2c94 | Bug — el programa no arranca sin PyQt6 (`NameError` en el import) | Alta | Resuelto |
 | R-2f6c8a13 | Bug — `print("font: none")` de depuración en cada arranque sin Qt | Baja | Resuelto |
+| R-9c7e4a21 | Bug — `build_log.folder_locked` sin entrada en `es.json`/`en.json` | Baja | Resuelto |
+| R-4b8f2d63 | Bug — el framework vendorizado no carga sin Pillow | Media | Resuelto |
+| R-2e6d9b14 | Bug — `error_handler` importa `pyperclip` sin proteger | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -4604,6 +4607,89 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del quincuagésimo segundo ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
+## R-9c7e4a21 — La clave `build_log.folder_locked` faltaba en español e inglés
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo tercer ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Baja.
+- **Descripción:** `BuildThread` compone los avisos de limpieza con
+  `tr("build_log.folder_locked")` dentro de `folder_remove_failed`,
+  `package_folder_remove_failed` y `source_remove_failed`. La clave existía en
+  los 12 idiomas traducidos, pero no en `lang/es.json` ni en `lang/en.json`, así
+  que en español (idioma por defecto) y en inglés el aviso mostraba el
+  identificador crudo: «No se pudo eliminar build: build_log.folder_locked».
+- **Pasos para reproducirlo:** `python -c "from lib.i18n import tr;
+  print(tr('build_log.folder_locked'))"` → imprimía `build_log.folder_locked`.
+  En un build real basta con que una carpeta temporal siga bloqueada por un
+  proceso hijo para que aparezca el aviso.
+- **Causa raíz:** la clave se añadió sólo a `tools/translations_curated.py` para
+  los idiomas no ingleses, y `tests/test_i18n_curated.py::_used_keys()` sólo
+  recorría `lib/*.py`, no los subpaquetes de motor (`lib/blindcubeEngine/`).
+  Ninguna prueba exigía que una clave usada por `tr()` existiera en `es.json` o
+  `en.json`, sólo que los demás idiomas tuvieran las claves de `es.json`.
+- **Solución aplicada:** se añadió `folder_locked` a `lang/es.json` («todavía en
+  uso por otro proceso») y a `lang/en.json` («still in use by another
+  process»). La auditoría de i18n recorre ahora `lib/**/*.py` y una prueba nueva
+  comprueba que toda clave usada por `tr()` existe en los dos catálogos de
+  origen.
+- **Pruebas:** `tests/test_i18n_curated.py::test_every_used_key_exists_in_the_source_catalogs`
+  (con el catálogo anterior informa de `build_log.folder_locked`) y
+  `test_every_used_key_has_a_real_translation` con el recorrido recursivo.
+- **Commit:** se registra en el cierre del quincuagésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-4b8f2d63 — El framework vendorizado no carga si falta Pillow
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo tercer ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media.
+- **Descripción:** `lib/leviathan_ui/inmojiTrx.py` importaba `PIL` en el nivel
+  del módulo y `lib/leviathan_ui/__init__.py` importa `InmojiTrx`, así que sin
+  Pillow fallaba el `import` de todo el framework vendorizado. El puente
+  devolvía `None` y la aplicación caía en los respaldos no-op: se perdían la
+  barra de título personalizada, el splash y los efectos de ventana sin ningún
+  aviso. Pillow sólo hace falta para generar iconos.
+- **Pasos para reproducirlo:** con `PYTHONPATH` apuntando a un `PIL` falso que
+  lanza `ImportError`, `python -c "from lib.leviathan_ui import WipeWindow"`
+  terminaba en `ModuleNotFoundError: No module named 'PIL'`.
+- **Causa raíz:** una dependencia opcional (generación de iconos) se importaba
+  al cargar el paquete, de modo que su ausencia deshabilitaba el framework
+  completo.
+- **Solución aplicada:** el import de Pillow está protegido (`Image =
+  ImageDraw = ImageFont = None` si falta); `generate_ico()` devuelve `None` con
+  un mensaje claro y `apply_to_app()` usa un `QIcon()` vacío. Se declara
+  `Pillow` en `lib/requirements.txt`, porque los iconos de la barra de tareas y
+  de los accesos `.desktop` sí lo necesitan.
+- **Pruebas:** `tests/test_engine_packages_layout.py::test_vendored_framework_imports_without_pillow`
+  (subproceso con un `PIL` que lanza `ImportError`; falla con el código
+  anterior).
+- **Commit:** se registra en el cierre del quincuagésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-2e6d9b14 — La notificación de error revienta si falta `pyperclip`
+
+- **Usuario:** JesusQuijada34 (auditoría interna del quincuagésimo tercer ciclo)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media.
+- **Descripción:** `lib/notificationSystem.error_handler()` ejecutaba
+  `import pyperclip` antes de construir la notificación. `pyperclip` no es una
+  dependencia del proyecto, así que en una instalación sin él la propia
+  notificación de error lanzaba `ModuleNotFoundError` y el usuario no veía el
+  error. Al llamarse desde un slot de Qt, PyQt6 habría abortado el proceso.
+- **Pasos para reproducirlo:** sin `pyperclip` instalado,
+  `python -c "import lib.notificationSystem as n; n.error_handler('Error',
+  'fallo')"` → `ModuleNotFoundError: No module named 'pyperclip'`.
+- **Causa raíz:** dependencia opcional del portapapeles importada en la ruta
+  principal de la notificación, no dentro del botón «Copiar».
+- **Solución aplicada:** el import vive ahora dentro de `copy_error()`; si falta
+  `pyperclip` se usa `QApplication.clipboard().setText(...)`, y si tampoco hay
+  portapapeles se escribe el log traducido sin propagar la excepción.
+- **Pruebas:** `tests/test_notification_error_handler.py` (dos casos: copia con
+  el portapapeles de Qt sin `pyperclip`, y ausencia total de portapapeles sin
+  excepción).
+- **Commit:** se registra en el cierre del quincuagésimo tercer ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -5126,3 +5212,19 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   devolvía `None` (ahora `QPixmap` 40×40 no nulo); un `data/pm.data` centinela
   se conservaba intacto tras la suite completa; la GUI construye sus 5 páginas
   y el diálogo «Abrir con» sin errores.
+- Quincuagésimo tercer ciclo (2026-11-25): R-9c7e4a21, R-4b8f2d63 y
+  R-2e6d9b14 corregidos y probados (la clave `build_log.folder_locked` vuelve a
+  existir en español e inglés; el framework vendorizado carga sin Pillow y los
+  iconos avisan en vez de deshabilitar la interfaz; la notificación de error ya
+  no depende de `pyperclip`); no se prepara release.
+- Verificación del quincuagésimo tercer ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1172 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 4 pruebas nuevas
+  (i18n de origen, framework sin Pillow y dos del portapapeles) fallan con el
+  código anterior; además, la auditoría de i18n ampliada al recorrer los
+  subpaquetes del motor detecta la clave ausente. Reproducción real:
+  `tr('build_log.folder_locked')` devolvía el identificador crudo; con un `PIL`
+  que lanza `ImportError`, `from lib.leviathan_ui import WipeWindow` terminaba
+  en `ModuleNotFoundError`; sin `pyperclip`, `error_handler()` lanzaba
+  `ModuleNotFoundError`.
+

@@ -698,6 +698,7 @@
     "cleanup_start": "Limpiando archivos de compilación...",
     "folder_removed": "Carpeta eliminada: {name}",
     "folder_remove_failed": "No se pudo eliminar {name}: {error}",
+    "folder_locked": "todavía en uso por otro proceso",
     "file_removed": "Archivo eliminado: {name}",
     "file_remove_failed": "No se pudo eliminar {name}: {error}",
     "package_folder_removed": "Carpeta del paquete eliminada: {name}",

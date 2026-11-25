@@ -1,3 +1,47 @@
+## 2026-11-25 — quincuagésimo tercer ciclo
+
+### Corregido — traducción cruda en el registro de compilación, interfaz sin Pillow y notificación de error sin `pyperclip`
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna; ningún
+cambio de comportamiento del engine: la ley de nombres, el formato `.iflapp`,
+las plantillas y los paquetes siguen exactamente igual.
+
+- **R-9c7e4a21 — el aviso de carpeta bloqueada mostraba la clave cruda:** en
+  español (idioma por defecto) e inglés, `tr("build_log.folder_locked")`
+  devolvía el identificador porque la clave existía en los 12 idiomas
+  traducidos pero faltaba en `lang/es.json` y `lang/en.json`. El aviso real era
+  «No se pudo eliminar build: build_log.folder_locked». Se añadió la clave a
+  ambos catálogos («todavía en uso por otro proceso» / «still in use by another
+  process»). La auditoría de i18n ahora recorre también los subpaquetes del
+  motor (`lib/blindcubeEngine/`, etc.) y una prueba nueva exige que toda clave
+  usada por `tr()` exista en `es.json` y `en.json`. Reportado por
+  JesusQuijada34 (auditoría interna; caso #4).
+- **R-4b8f2d63 — el framework vendorizado se desactivaba sin Pillow:**
+  `lib/leviathan_ui/inmojiTrx.py` importaba `PIL` al cargarse y
+  `lib/leviathan_ui/__init__.py` importa ese módulo, así que sin Pillow fallaba
+  el `import` de todo el framework: `leviathan_bridge` devolvía `None` y la
+  aplicación perdía la barra de título, el splash y los efectos de ventana sin
+  avisar. Pillow sólo hace falta para generar iconos. El import quedó protegido,
+  `generate_ico()` devuelve `None` con un mensaje claro y `apply_to_app()` usa
+  un `QIcon()` vacío; además, `Pillow` se declara en `lib/requirements.txt`.
+  Reportado por JesusQuijada34 (auditoría interna; caso #4).
+- **R-2e6d9b14 — la notificación de error revienta sin `pyperclip`:**
+  `error_handler()` importaba `pyperclip` antes de crear la notificación, y esa
+  biblioteca no es una dependencia del proyecto. Sin ella, el propio aviso de
+  error lanzaba `ModuleNotFoundError` (y desde un slot de Qt habría abortado el
+  proceso). El import vive ahora dentro del botón «Copiar», con el portapapeles
+  de Qt como respaldo y un mensaje de log si tampoco está disponible. Reportado
+  por JesusQuijada34 (auditoría interna; caso #4).
+
+Pruebas: `tests/test_i18n_curated.py` (nueva comprobación de catálogos de origen
+y recorrido recursivo), `tests/test_engine_packages_layout.py` (framework sin
+Pillow) y `tests/test_notification_error_handler.py` (2 casos). Suite completa:
+1172 pasan, 1 omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
+
+No se prepara release: siguen abiertos R-4f8a2c60 (pendiente de Q-008) y
+R-6a1f8c23 (pendiente de Q-011), y el requisito de 7 días sin reportes nuevos
+continúa en curso desde el 2026-11-22.
+
 ## 2026-11-25 — quincuagésimo segundo ciclo
 
 ### Corregido — el programa vuelve a arrancar en máquinas sin PyQt6

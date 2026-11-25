@@ -1,6 +1,9 @@
 PyQt6
 Requests==2.32.5
 leviathan-ui
+# Pillow genera y convierte los iconos (barra de tareas, .desktop y .ico);
+# sin él la interfaz arranca, pero los iconos no se generan.
+Pillow
 # Los dos backends de compilación soportados, ambos embebidos (sin subproceso).
 # Nuitka traduce a C/C++ (recomendado); PyInstaller empaqueta bytecode.
 nuitka

@@ -715,17 +715,25 @@ def loading(title: str, message: str, **kwargs) -> NotificationWidget:
 
 def error_handler(title: str, error_message: str, error_details: str = "", duration: int = 0, **kwargs) -> NotificationWidget:
     """Notificacion de error con boton para copiar al portapapeles"""
-    import pyperclip
-    
     full_error = f"{error_message}\n{error_details}" if error_details else error_message
     
     def copy_error():
         try:
-            pyperclip.copy(full_error)
-            # Mostrar mini confirmacion
-            success("Copiado", "Error copiado al portapapeles", duration=2000)
+            try:
+                import pyperclip
+            except ImportError:
+                # pyperclip no viaja en requirements: el portapapeles de Qt
+                # siempre está disponible dentro de la interfaz.
+                clipboard = QApplication.clipboard()
+                if clipboard is None:
+                    raise RuntimeError("sin portapapeles")
+                clipboard.setText(full_error)
+            else:
+                pyperclip.copy(full_error)
         except Exception as e:
             print(tr("notifications.copy_error_log").format(error=e))
+            return
+        success("Copiado", "Error copiado al portapapeles", duration=2000)
     
     actions = kwargs.pop('actions', [])
     actions.insert(0, NotificationAction(tr("notifications.copy_error"), copy_error, "primary"))

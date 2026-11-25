@@ -105,7 +105,13 @@ def _load(code):
 
 def _used_keys():
     used = set()
-    for path in list(ROOT.glob("*.py")) + list(ROOT.glob("lib/*.py")):
+    # Los motores viven en subpaquetes (``lib/blindcubeEngine``...): recorrer
+    # sólo ``lib/*.py`` dejaba sus claves fuera de la auditoría y una clave sin
+    # traducir llegaba a la interfaz como texto crudo.
+    paths = list(ROOT.glob("*.py")) + [
+        path for path in (ROOT / "lib").rglob("*.py") if "__pycache__" not in path.parts
+    ]
+    for path in paths:
         text = path.read_text(encoding="utf-8")
         # Ambas comillas: media interfaz llama tr('clave') y el regex anterior
         # sólo veía las de comilla doble, dejando pasar claves sin traducir.
@@ -115,7 +121,27 @@ def _used_keys():
     return used
 
 
+#: Clave de traducción (``build_log.folder_locked``), no texto de interfaz.
+_KEY_RE = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$")
+
+
 class CuratedTranslationTests(unittest.TestCase):
+    def test_every_used_key_exists_in_the_source_catalogs(self):
+        """``tr()`` no debe recibir una clave que falte en español o inglés.
+
+        Sin esta comprobación una clave podía existir sólo en los idiomas
+        traducidos: en español (idioma por defecto) la interfaz mostraba el
+        identificador crudo, como ocurrió con ``build_log.folder_locked``.
+        """
+        catalogs = {code: _load(code) for code in ("es", "en")}
+        missing = {
+            code: sorted(
+                key for key in _used_keys() if _KEY_RE.match(key) and key not in catalog
+            )
+            for code, catalog in catalogs.items()
+        }
+        self.assertEqual(missing, {"es": [], "en": []}, f"claves sin entrada: {missing}")
+
     def test_every_used_key_has_a_real_translation(self):
         en = _load("en")
         used = _used_keys()

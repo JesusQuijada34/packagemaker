@@ -1,7 +1,11 @@
 import os
 import sys
 import ctypes
-from PIL import Image, ImageDraw, ImageFont
+
+try:
+    from PIL import Image, ImageDraw, ImageFont
+except ImportError:  # Pillow es opcional: sólo hace falta para generar iconos
+    Image = ImageDraw = ImageFont = None
 
 import difflib
 
@@ -64,6 +68,9 @@ class InmojiTrx:
     @staticmethod
     def generate_ico(source, output_path="icon.ico", size=256):
         """Genera un ICO de alta calidad con centrado matemático perfecto."""
+        if Image is None:
+            print("❌ Pillow no está instalado: no se pueden generar iconos (pip install Pillow)")
+            return None
         # Lienzo transparente 256x256 por defecto para Windows
         canvas = Image.new("RGBA", (size, size), (255, 255, 255, 0))
         
@@ -130,7 +137,7 @@ class InmojiTrx:
             temp_ico = os.path.join(base_dir, "app_icon_res.ico")
             icon_path = InmojiTrx.generate_ico(source, temp_ico)
             
-        icon = QIcon(icon_path)
+        icon = QIcon(icon_path) if icon_path else QIcon()
         
         # 3. Aplicación dual: a la App y al Widget (indispensable para frameless)
         if isinstance(obj, QApplication):
