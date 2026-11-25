@@ -34,7 +34,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `tests/test_hardening.py`.
 - **Riesgo y efectos secundarios:** borrado destructivo dentro del paquete; un
   zipapp sin `.py` deja de arrancar. Por eso la opción A excluye ese backend.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[A] SÍ`  `[ ] NO`
 
 ### Q-007 — Reorganización de `lib/` y renombrado a GlassCube
 - **Tipo:** cambio de engine
@@ -46,7 +46,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `requirements.txt`, imports y tests.
 - **Riesgo y efectos secundarios:** rotura masiva de imports y del empaquetado.
   Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[Si, pero hazlo cuidadosamente, dejando lib/ sin engines revueltos por todo eso, por lo menos encierras a cada oveja en su corral, asi que procede] SÍ`  `[ ] NO`
 
 ### Q-008 — Coreografía de splash y ciclo de vida de ventanas (repetida)
 - **Tipo:** cambio de engine
@@ -71,7 +71,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el ciclo de vida de ventanas y el
   manejo de errores de arranque. No se puede verificar visualmente en Windows
   desde este entorno. Riesgo medio-alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[Si, y quita el arranque de multiples ventanas python antes de correr la interfaz, ya que al abrir el programa lo primero que se ejecuta varias veces es como 5 ventanas python vacias, pequeñas y sin titulo] SÍ`  `[ ] NO`
 
 ### Q-011 — Ventana: arrastre con la ventana maximizada y ajuste a media pantalla
 - **Tipo:** cambio de engine
@@ -87,7 +87,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   comprobaba). Cambia el ciclo de vida de la ventana y depende de los gestos
   nativos de Windows, que no se pueden verificar desde este entorno. Riesgo
   medio-alto. Detalle en `bugs.md` (R-6a1f8c23).
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-012 — Tareas en segundo plano y barra marquee en las barras de acción
 - **Tipo:** mejora
@@ -104,7 +104,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   guardado; escribir `pm.data` desde varios hilos puede provocar carreras.
   Riesgo alto. (La parte de rendimiento que ya era un bug está corregida:
   R-9e2b4d17.)
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-013 — Actualizaciones silenciosas de parches de seguridad
 - **Tipo:** cambio de engine
@@ -120,7 +120,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** el programa se reemplaza a sí mismo;
   requiere red, permisos de escritura y verificación de integridad, y un fallo
   puede dejar la instalación a medias. Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[si y con registros y diff de archivos que no fueron actualizados, para lo mejor, dejar el actualizador de ultimo, eso si, se debe de comprobar si esta compilado o no, si no esta compilado, ofrecer el ultimo commit y un metodo para saber en que commit se encuentra usando regresiones y adelantamientos y al mismo tiempo un diff para ver, si todos los diff pasan a 1, saber que hay que actualizar la app y dejar una marca del commit para saber el estado, pero si esta compilado guiarse del release o del commit del release y compararlo con el ultimo commit en el repo para saber como actualizar, pero se usara blindcube en si mismo para instalar el paquete y reemplazar los archivos] SÍ`  `[ ] NO`
 
 ### Q-014 — Eventos en el sidebar y temas de temporada
 - **Tipo:** mejora
@@ -134,7 +134,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** introduce contenido remoto (descarga y
   caché de imágenes) y cambios visuales estacionales. Tú mismo lo aparcaste
   hasta tener un release estable sin reportes. Riesgo medio.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[si, reemplazando por completo el recuadro del sidebar"Contexto"] SÍ`  `[ ] NO`
 
 ### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
 - **Tipo:** mejora
