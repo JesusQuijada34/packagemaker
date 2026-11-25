@@ -130,12 +130,15 @@ def install_iflapp(iflapp_path, target_dir=None, silent=False):
         # Modo silencioso: sin interfaz
         worker = IFLAPPInstallerWorker(iflapp_path, target_dir or os.path.join(os.getcwd(), "installed_app"))
         
-        # Ejecutar síncronamente
+        # Ejecutar síncronamente: el worker devuelve el resultado real, porque
+        # antes un paquete corrupto se reportaba como "Instalación completada".
         try:
-            worker.run()
-            return True, "Instalación completada"
+            installed = worker.run()
         except Exception as e:
             return False, str(e)
+        if installed is False:
+            return False, worker.error or "No se pudo instalar el paquete"
+        return True, "Instalación completada"
     else:
         # Modo GUI: mostrar ventana
         app = QApplication.instance() or QApplication(sys.argv)
@@ -235,11 +238,14 @@ def _update_from_exe(app_data, exe_url, exe_filename, silent=False, accept_licen
         # Modo silencioso sin GUI
         worker = EXEInstallerWorker(exe_url, exe_filename, cache_in_memory)
         try:
-            worker.run()
-            return True
+            installed = worker.run()
         except Exception as e:
             log(f"[EXE ERROR] {e}")
             return False
+        if installed is False:
+            log(f"[EXE ERROR] {worker.error or 'la instalación no terminó correctamente'}")
+            return False
+        return True
     
     # Modo GUI: Mostrar splash -> Términos de licencia -> Instalador
     app = QApplication(sys.argv)

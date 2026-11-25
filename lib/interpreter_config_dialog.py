@@ -318,6 +318,13 @@ class InterpreterConfigDialog(QDialog):
                 self.load_interpreters()
                 self._load_available_versions()
                 QMessageBox.information(self, "Desinstalado", f"{data['name']} eliminado.")
+            else:
+                QMessageBox.warning(
+                    self,
+                    "No se pudo desinstalar",
+                    f"{data['name']} sigue en disco.\n\n{data['path']}\n\n"
+                    "Cierra los procesos que lo estén usando e inténtalo de nuevo.",
+                )
 
     def download_interpreter(self):
         version = self.version_combo.currentData()

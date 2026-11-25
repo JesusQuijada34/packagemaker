@@ -355,22 +355,24 @@ def _screen_create() -> None:
     print()
     rc = _run_live(cmd)
     if rc == 0:
-        # Calcular nombre de carpeta correcto igual que cliHandler.py
-        pass
-        
         # Mapear de código técnico a nombre real para la visualización
         real_platform_map = {"win": "Knosthalij", "linux": "Danenone", "all": "AlphaCube"}
         real_platform = real_platform_map.get(plataforma, plataforma)
         
-        publisher_slug = empresa.strip().lower().replace(" ", "-")
-        app_slug = slug.strip().lower().replace(" ", "-")
-        version_base = version.strip().split("-")[0] if version else "1.0.0"
-        
-        # Usar ProjectNameFormatter para formato consistente
-        folder_name = ProjectNameFormatter.format_project_folder(
-            publisher_slug, app_slug, version_base, real_platform
-        )
-        _ok(tr("tui.project_created").format(path=_base_dir() / folder_name))
+        # El formatter es la única autoridad del nombre: recibe los mismos
+        # valores que la CLI (sin reescribir mayúsculas) y la versión se
+        # completa con ``normalize_version_base``, porque un ``2`` suelto
+        # hacía que ``format_project_folder`` lanzara ValueError y mataba
+        # el TUI después de haber creado el proyecto.
+        version_base = ProjectNameFormatter.normalize_version_base(version)
+        try:
+            folder_name = ProjectNameFormatter.format_project_folder(
+                empresa, slug, version_base, real_platform
+            )
+        except ValueError as exc:
+            _warn(str(exc))
+        else:
+            _ok(tr("tui.project_created").format(path=_base_dir() / folder_name))
     else:
         _err(tr("tui.failed_code").format(rc=rc))
     _pause()

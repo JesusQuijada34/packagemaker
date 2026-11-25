@@ -5,13 +5,13 @@ Descarga e instala builds embed de python.org (Windows).
 
 import json
 import platform
-import shutil
 import subprocess
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
+from lib.file_ops import remove_tree
 from lib.safe_zip import safe_extract_zip
 
 # requests con fallback a urllib
@@ -431,8 +431,13 @@ class PythonPortableManager(QObject):
         if version not in self.installations:
             return False
         install = self.installations[version]
-        if install.path.exists():
-            shutil.rmtree(install.path, ignore_errors=True)
+        # ``shutil.rmtree(ignore_errors=True)`` informaba de una desinstalación
+        # aunque el árbol sobreviviera; ``remove_tree`` confirma el borrado.
+        if not remove_tree(install.path):
+            self.status_message.emit(
+                f"No se pudo eliminar {install.path}; cierre los procesos que lo usan"
+            )
+            return False
         del self.installations[version]
         self._save_config()
         self.status_message.emit(f"Python {version} desinstalado")

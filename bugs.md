@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (cuadragésimo sexto ciclo)
+Última actualización: 2026-11-25 (cuadragésimo séptimo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -151,6 +151,9 @@ de auditoría.
 | R-7b4e2c19 | Bug — `--ide-scan`/IDE aborta si `details.xml`, `config/` o `app/` no se puede leer | Media | Resuelto |
 | R-3c9d5e21 | Bug — el sandbox deja escapar `PermissionError` con un workspace inaccesible | Alta | Resuelto |
 | R-8e1f6a24 | Bug — el removedor generado aborta con un acceso directo o árbol bloqueado | Media | Resuelto |
+| R-2d5b8f41 | Bug — `updater.py --install --silent` informaba «Instalación completada» con un paquete corrupto | Alta | Resuelto |
+| R-9f3c1a72 | Bug — desinstalar un Python portable decía «desinstalado» sin borrar la carpeta | Media | Resuelto |
+| R-6b8e4d25 | Bug — el TUI moría al crear un proyecto con versión de un solo componente | Alta | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -2138,14 +2141,29 @@ bloqueado.
 
 ## Mejoras: estado de aprobación
 
-Las cuatro propuestas de esta sección y los seis cambios de engine están
-recogidos como preguntas `Q-001`…`Q-010` en `CONFIRM.MD`, el único canal de
-aprobación válido (solo JesusQuijada34). El 2026-11-23 el propietario marcó
+Las propuestas de esta sección y los cambios de engine están recogidos como
+preguntas `Q-001`…`Q-015` en `CONFIRM.MD`, el único canal de aprobación válido
+(solo JesusQuijada34). El 2026-11-23 el propietario marcó
 `[x] SÍ` en Q-001, Q-002, Q-003, Q-005, Q-006, Q-009 y Q-010 (commit `0ac5457`,
 autoría verificada con la API de GitHub). Q-001, Q-002 y Q-003 se aplicaron en
 el vigésimo quinto ciclo; Q-005, Q-006, Q-009 y Q-010 ya estaban implementados
 y quedan verificados por la suite. Q-004 necesita aclaración y Q-007/Q-008
 siguen pendientes.
+
+### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Estado:** Pendiente de aprobación (`Q-015` en `CONFIRM.MD`). **No
+  implementado**: cambiaría el comportamiento visible de `--update --silent`.
+- **Descripción:** `_update_from_iflapp` ignora el parámetro `silent` y siempre
+  construye `IFLAPPInstallerWindow` (o el splash). Sin pantalla, la
+  actualización desatendida no instala nada o aborta al crear la ventana.
+- **Solución propuesta:** en modo silencioso llamar a
+  `install_iflapp(..., silent=True)`, que ya devuelve el resultado real desde
+  R-2d5b8f41, y no crear ninguna ventana.
+- **Archivos afectados:** `lib/coreUpdater/installer.py`, `updater.py`.
 
 ### R-d23039c0 — Telemetría centralizada de errores
 
@@ -4015,6 +4033,102 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo sexto ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
+## R-2d5b8f41 — `updater.py --install --silent` daba por instalado un paquete corrupto
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** `install_iflapp(..., silent=True)` ejecutaba el worker y
+  devolvía `(True, "Instalación completada")` sin mirar su resultado.
+  `IFLAPPInstallerWorker.run()` captura la excepción, la registra en el log y
+  emite `finished(False, …)`, pero en modo silencioso nadie escucha esa señal.
+  Un `.iflapp` truncado, un ZIP que no es un contenedor válido o un destino sin
+  permisos terminaban con `OK: Instalación completada` y código de salida `0`.
+  El mismo patrón existía en `_update_from_exe(..., silent=True)`: un setup
+  `.exe` que devolvía un código distinto de cero se reportaba como éxito.
+- **Pasos para reproducir:** `printf 'NOTAZIP' > bad.iflapp` y ejecutar
+  `python updater.py --install bad.iflapp --target ./destino --silent`.
+  Antes: `Traceback … BadZipFile` en el log, `OK: Instalación completada` en
+  pantalla y `EXIT=0`.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (una instalación fallida se reportaba como correcta y el
+  código de salida ocultaba el fallo a scripts y al dropper).
+- **Solución aplicada:** `IFLAPPInstallerWorker.run()`, `EXEInstallerWorker.run()`
+  e `InstallerWorker.run()` devuelven `True`/`False` y guardan el mensaje en
+  `self.error` (las señales se siguen emitiendo igual para la GUI). La
+  cancelación devuelve `False` y el setup `.exe` limpia el temporal antes de
+  informar. `install_iflapp` y `_update_from_exe` en modo silencioso usan ese
+  valor y devuelven el error real. No cambia el comportamiento del engine ni
+  el de las ventanas de actualización.
+- **Pruebas:** `tests/test_updater_silent_status.py` (4 nuevas; 2 fallan con el
+  código anterior). Reproducción real: el paquete corrupto responde
+  `ERROR: File is not a zip file` con código 1, y un `.iflapp` válido sigue
+  instalándose con código 0.
+- **Commit:** se registra en el cierre del cuadragésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-9f3c1a72 — Desinstalar un Python portable informaba de un borrado que no ocurrió
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** `PythonPortableManager.uninstall_version()` borraba con
+  `shutil.rmtree(..., ignore_errors=True)`: los errores se descartaban y la
+  función devolvía `True` aunque la carpeta siguiera en disco (un `python.exe`
+  en uso en Windows, un árbol de solo lectura). Además eliminaba el registro de
+  `config.json`, así que la interfaz mostraba «eliminado» mientras el
+  directorio seguía ocupando espacio y volvía a aparecer en el siguiente
+  descubrimiento. La comprobación previa `install.path.exists()` tampoco estaba
+  protegida: con el directorio padre inaccesible, `Path.exists()` propaga
+  `PermissionError` desde el slot del botón «Desinstalar», y PyQt6 aborta el
+  proceso.
+- **Pasos para reproducir:** crear `data/pmCodeEditor/python/python312/python.exe`,
+  llamar a `_discover_installations()` y a `uninstall_version("3.12")` con el
+  directorio `python/` en `chmod 500` (antes: `True` con la carpeta intacta) o
+  en `chmod 000` (antes: `PermissionError`).
+- **Estado:** Resuelto.
+- **Prioridad:** Media (no corrompe datos, pero engaña al usuario y puede
+  tumbar la GUI).
+- **Solución aplicada:** se usa `lib.file_ops.remove_tree`, que reintenta ante
+  bloqueos y confirma el borrado; si el árbol sobrevive, se informa por
+  `status_message` y se devuelve `False` **sin** borrar el registro; el
+  diálogo de intérpretes añade un `QMessageBox.warning` con la ruta que sigue en
+  disco. Con la ruta inaccesible tampoco lanza. `shutil` deja de importarse en
+  el módulo.
+- **Pruebas:** `tests/test_python_portable_uninstall.py` (4 nuevas; 2 fallan con
+  el código anterior, omitidas en Windows/root).
+- **Commit:** se registra en el cierre del cuadragésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-6b8e4d25 — El TUI moría al crear un proyecto con versión de un solo componente
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** tras un `create` correcto, `_screen_create` recalculaba el
+  nombre de la carpeta con `version.strip().split("-")[0]` y los slugs en
+  minúsculas. La CLI acepta `--version 2` (`normalize_version_base` lo completa
+  a `2.0`), pero `format_project_folder(..., "2", ...)` lanza
+  `ValueError: Versión inválida` y la excepción escapaba de `run_tui()`, que
+  sólo captura `KeyboardInterrupt`: el TUI terminaba con traceback justo
+  después de crear el proyecto. Además, al pasar el publisher en minúsculas el
+  nombre mostrado no coincidía con la carpeta real (`Influent` → `influent`) en
+  sistemas de archivos sensibles a mayúsculas.
+- **Pasos para reproducir:** en la TUI, «Crear proyecto» con versión `2`;
+  antes, traceback `ValueError` al final del flujo.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (rompe el flujo interactivo y muestra una ruta
+  inexistente).
+- **Solución aplicada:** la versión se completa con
+  `ProjectNameFormatter.normalize_version_base` y se pasan a
+  `format_project_folder` los mismos valores que recibió la CLI (sin reescribir
+  mayúsculas ni slugs), tal como exige la ley de nombres. Un `ValueError`
+  residual se avisa con `_warn` en lugar de tumbar el TUI.
+- **Pruebas:** `tests/test_tui_create_naming.py` (3 nuevas; las 3 fallan con el
+  código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo séptimo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -4450,6 +4564,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - Release: **no preparado**. No se generaron `flat cube` ni `blind cube` en este
   ciclo. El periodo de observación de 3 días y el requisito de 7 días sin
   reportes nuevos siguen en curso.
+- Cuadragésimo séptimo ciclo (2026-11-25): R-2d5b8f41, R-9f3c1a72 y
+  R-6b8e4d25 corregidos y probados (updater silencioso veraz, desinstalación de
+  Python portable y nombre canónico en el TUI); no se prepara release.
 - Verificación del cuadragésimo sexto ciclo (2026-11-25):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1096 pasan, 1
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las 7 pruebas nuevas

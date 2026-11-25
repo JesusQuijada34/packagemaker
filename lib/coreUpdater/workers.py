@@ -30,10 +30,12 @@ class InstallerWorker(QObject):
         self.url = url
         self.app = app_data["app"]
         self._running = True
+        self.error = ""
 
     def run(self):
         temp_zip = "pending_update.zip"
         ext_dir = "update_temp_extracted"
+        self.error = ""
         try:
             self.status.emit(tr("updater.status_connecting"))
             
@@ -43,7 +45,8 @@ class InstallerWorker(QObject):
                 down = 0
                 with open(temp_zip, "wb") as f:
                     for chunk in r.iter_content(8192):
-                        if not self._running: return
+                        if not self._running:
+                            return False
                         f.write(chunk)
                         down += len(chunk)
                         if total: self.progress.emit(int(down * 100 / total))
@@ -107,10 +110,13 @@ class InstallerWorker(QObject):
             
             self.status.emit(tr("updater.status_finishing"))
             self.finished.emit(True, "OK")
+            return True
 
         except Exception as e:
             log(traceback.format_exc())
+            self.error = str(e)
             self.finished.emit(False, str(e))
+            return False
 
 
 class IFLAPPInstallerWorker(QObject):
@@ -124,8 +130,10 @@ class IFLAPPInstallerWorker(QObject):
         super().__init__()
         self.iflapp_path = iflapp_path
         self.target_dir = target_dir
-    
+        self.error = ""
+
     def run(self):
+        self.error = ""
         try:
             self.status.emit(tr("updater.status_unpacking"))
             
@@ -159,10 +167,13 @@ class IFLAPPInstallerWorker(QObject):
             
             self.progress.emit(100)
             self.finished.emit(True, "OK")
-            
+            return True
+
         except Exception as e:
             log(traceback.format_exc())
+            self.error = str(e)
             self.finished.emit(False, str(e))
+            return False
 
 
 class EXEInstallerWorker(QObject):
@@ -179,11 +190,13 @@ class EXEInstallerWorker(QObject):
         self.cache_in_memory = cache_in_memory
         self._running = True
         self.temp_exe_path = None
-    
+        self.error = ""
+
     def run(self):
         import subprocess
         import tempfile
-        
+
+        self.error = ""
         try:
             cache_key = f"exe_download_{self.url}"
             
@@ -205,7 +218,7 @@ class EXEInstallerWorker(QObject):
                         downloaded = 0
                         for chunk in r.iter_content(65536):  # 64KB chunks
                             if not self._running:
-                                return
+                                return False
                             chunks.append(chunk)
                             downloaded += len(chunk)
                             if total:
@@ -301,19 +314,25 @@ class EXEInstallerWorker(QObject):
                 self.progress.emit(100)
                 self.status.emit(tr("updater.status_install_done"))
                 log("[EXE] Instalación exitosa")
-                self.finished.emit(True, "OK")
+                ok, message = True, "OK"
             else:
                 error_msg = stderr.decode("utf-8", errors="ignore")[:200] if stderr else f"Código: {process.returncode}"
                 log(f"[EXE] Error: {error_msg}")
-                self.finished.emit(False, f"Error en instalador: {error_msg}")
-            
+                self.error = f"Error en instalador: {error_msg}"
+                ok, message = False, self.error
+
             # Limpiar archivo temporal
             try:
                 if self.temp_exe_path and os.path.exists(self.temp_exe_path):
                     os.remove(self.temp_exe_path)
                     log(f"[EXE] Temporal eliminado: {self.temp_exe_path}")
             except OSError: pass
-            
+
+            self.finished.emit(ok, message)
+            return ok
+
         except Exception as e:
             log(traceback.format_exc())
+            self.error = str(e)
             self.finished.emit(False, str(e))
+            return False

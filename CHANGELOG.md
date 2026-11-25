@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-11-25 — cuadragésimo séptimo ciclo
+
+### Corregido — el updater silencioso ya no miente, la desinstalación de Python portable borra de verdad y el TUI sobrevive a una versión corta
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna sobre el
+actualizador en modo silencioso, el gestor de Python portable y el asistente de
+creación de la TUI. Ningún cambio de comportamiento del engine: las ventanas de
+actualización, el descubrimiento de instalaciones y el nombre canónico de los
+proyectos siguen exactamente igual; sólo dejan de reportarse como éxito las
+operaciones que no lo fueron.
+
+- **R-2d5b8f41 — `updater.py --install --silent` daba por instalado un paquete
+  corrupto:** `install_iflapp(..., silent=True)` ignoraba el resultado del
+  worker, que captura la excepción y emite `finished(False, …)`; en modo
+  silencioso nadie escucha esa señal. Un `.iflapp` ilegible terminaba con
+  `OK: Instalación completada` y código de salida `0`. Igual en
+  `_update_from_exe(..., silent=True)` con un setup que devolvía un código
+  distinto de cero. Ahora los tres workers devuelven `True`/`False` y guardan el
+  mensaje en `self.error`, y el instalador propaga el fallo. Reportado por
+  JesusQuijada34 (auditoría interna).
+- **R-9f3c1a72 — desinstalar un Python portable decía «desinstalado» sin
+  borrar la carpeta:** `uninstall_version()` usaba
+  `shutil.rmtree(..., ignore_errors=True)`, que descarta los errores y devolvía
+  `True` con el árbol intacto, además de eliminar el registro de la instalación;
+  `Path.exists()` sobre un padre inaccesible lanzaba `PermissionError` desde el
+  slot de Qt. Ahora usa `lib.file_ops.remove_tree` (reintenta y confirma), sólo
+  borra el registro si el borrado se verificó, no lanza con rutas ilegibles y
+  el diálogo de intérpretes avisa del fallo con un `QMessageBox` en lugar de
+  callarse. Reportado por JesusQuijada34 (auditoría interna).
+- **R-6b8e4d25 — el TUI moría al crear un proyecto con versión de un solo
+  componente:** tras un `create` correcto, `_screen_create` recalculaba el
+  nombre con `version.split("-")[0]`; con `2` el formatter lanzaba `ValueError`
+  y el TUI terminaba en traceback. Además pasaba publisher y slug en
+  minúsculas, así que la ruta mostrada no coincidía con la carpeta real. Ahora
+  usa `normalize_version_base` y los mismos valores que la CLI. Reportado por
+  JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_updater_silent_status.py` (4 nuevas),
+`tests/test_python_portable_uninstall.py` (4 nuevas) y
+`tests/test_tui_create_naming.py` (3 nuevas); 7 de ellas fallan con el código
+anterior. Suite completa: 1107 pasan, 1 omitido, 64 subtests.
+
 ## 2026-11-25 — cuadragésimo sexto ciclo
 
 ### Corregido — traductor automático sin caídas ni congelaciones, y zipapp con la codificación declarada

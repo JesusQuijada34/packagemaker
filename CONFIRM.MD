@@ -1,9 +1,9 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-25 (cuadragésimo sexto ciclo: R-7b2e9c41, R-4e8a1d63 y R-9c3f6a25; ningún cambio de engine)
-- **Último commit de `CONFIRM.MD` procesado:** `bd4d2d60` (2026-11-24), autor `openhands-agent` (cuadragésimo quinto ciclo). No aportó respuestas nuevas del propietario. La última respuesta del propietario sigue siendo `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`; la API de GitHub lista `bd4d2d60`, `db667936`, `c26f12d2` y `c0c1d7a1` como últimos commits que tocan este archivo, todos de `openhands-agent`, ninguno de `JesusQuijada34`. Las 7 preguntas de abajo siguen sin marcar. Este commit sólo actualiza la cabecera; no contiene respuestas.
+- **Última revisión:** 2026-11-25 (cuadragésimo séptimo ciclo: R-2d5b8f41, R-9f3c1a72 y R-6b8e4d25; ningún cambio de engine)
+- **Último commit de `CONFIRM.MD` procesado:** `b89ff64c` (2026-11-25), autor `openhands-agent` (cuadragésimo sexto ciclo). No aportó respuestas nuevas del propietario. La última respuesta del propietario sigue siendo `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`; la API de GitHub lista `b89ff64c`, `bd4d2d60`, `db667936`, `c26f12d2` y `c0c1d7a1` como últimos commits que tocan este archivo, todos de `openhands-agent`, ninguno de `JesusQuijada34`. Las 7 preguntas anteriores siguen sin marcar y este ciclo añade Q-015 (8 pendientes). Este commit sólo actualiza la cabecera y la nueva pregunta; no contiene respuestas.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 7 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 8 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -134,6 +134,25 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** introduce contenido remoto (descarga y
   caché de imágenes) y cambios visuales estacionales. Tú mismo lo aparcaste
   hasta tener un release estable sin reportes. Riesgo medio.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
+- **Tipo:** mejora
+- **Fecha:** 2026-11-25
+- **Qué se propone:** cuando la actualización se lanza con `--silent` y el
+  paquete publicado es un `.iflapp`, `_update_from_iflapp` ignora `silent` y
+  crea la ventana `IFLAPPInstallerWindow` (o el splash). En un servidor sin
+  pantalla (`QT_QPA_PLATFORM=offscreen`, SSH sin X, tarea programada) eso
+  significa que la actualización desatendida no instala nada o aborta al
+  construir la ventana. Se propone que `silent=True` use
+  `install_iflapp(..., silent=True)` (que ya devuelve el resultado real desde
+  R-2d5b8f41) y no cree ninguna ventana; sin `--silent` todo sigue igual.
+- **Archivos/componentes afectados:** `lib/coreUpdater/installer.py`
+  (`_update_from_iflapp`), `updater.py` (salida y código de retorno).
+- **Riesgo y efectos secundarios:** cambia el comportamiento visible de
+  `--update --silent` para los paquetes `.iflapp` (deja de haber ventana de
+  progreso). Quien dependa de ver el instalador debe quitar `--silent`. No
+  afecta al modo gráfico ni al motor. Riesgo bajo.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---
