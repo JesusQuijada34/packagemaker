@@ -1,0 +1,8 @@
+# Creación de proyectos. La página vive en lib/pm_dashboard.py.
+id: create
+order: 10
+section: main
+label: sidebar.create
+description: sidebar_desc.0
+icon: crear
+builder: build_create_page

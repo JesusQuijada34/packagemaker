@@ -47,11 +47,12 @@ def test_sidebar_has_no_ide_page(qapp):
         assert not hasattr(win, "btn_ide")
         assert not hasattr(win, "page_ide")
         assert not hasattr(win, "init_ide_tab")
-        # "Acerca de" y "Reportes" son las dos últimas pestañas; la de IDE no
-        # existe (el sidebar no tiene página de IDE).
-        assert win.sidebar_group.button(4).text() == pm.tr("sidebar.about")
-        assert win.sidebar_group.button(5).text() == pm.tr("sidebar.report")
-        assert win.sidebar_group.button(6) is None
+        # El orden lo fija addons/*.yaml: las páginas de trabajo arriba,
+        # herramientas después y "Acerca de" al final. No hay página de IDE.
+        ids = [a.id for a in win._addons]
+        assert ids == ["create", "build", "config", "moonfix", "report", "aide", "about"]
+        assert win.sidebar_group.button(len(ids) - 1).text() == pm.tr("sidebar.about")
+        assert win.sidebar_group.button(len(ids)) is None
     finally:
         win.close()
         qapp.processEvents()

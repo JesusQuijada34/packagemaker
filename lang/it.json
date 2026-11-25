@@ -37,7 +37,8 @@
     "about": "Informazioni",
     "toggle_expand": "Espandi menu (Ctrl+B)",
     "toggle_collapse": "Nascondi menu (Ctrl+B)",
-    "report": "Segnalazioni"
+    "report": "Segnalazioni",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### Crea progetto\nProgetta applicazioni da zero. Imposta identita, versioni e metadati univoci per l'ecosistema **Influent OS** con passaggi guidati.",
@@ -45,7 +46,8 @@
     "3": "### Impostazioni\nRegola il motore del programma. Controlla percorsi, lingua, aspetto e opzioni salvate in data/pm.data.",
     "4": "### MoonFix Suite\nRiparazione profonda. Analizza, rileva e correggi le incoerenze nei pacchetti. Ogni risorsa e tag XML deve essere corretto.",
     "5": "### Informazioni\nDettagli tecnici del progetto. Licenza GPL, framework Qt e il team dietro **Package Maker**.",
-    "6": "### Segnalazioni\nInvia errori e suggerimenti direttamente al repository con il tuo account GitHub. L'app allega l'ambiente del dispositivo per riprodurre il problema."
+    "6": "### Segnalazioni\nInvia errori e suggerimenti direttamente al repository con il tuo account GitHub. L'app allega l'ambiente del dispositivo per riprodurre il problema.",
+    "7": "### AIDE\nChiedi aiuto, genera un progetto o prepara una compilazione. Viene inviato solo ciò che selezioni: mai credenziali o percorsi."
   },
   "config": {
     "title": "Impostazioni",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "Stato dei caratteri e download manuale",
     "font_family": "Font dell'interfaccia",
     "font_auto": "Automatico (predefinito di sistema)",
-    "reset_hint": "Ripristina le impostazioni predefinite"
+    "reset_hint": "Ripristina le impostazioni predefinite",
+    "section_privacy": "Privacy",
+    "section_privacy_hint": "Decidi quali informazioni sugli errori lasciano il tuo dispositivo.",
+    "telemetry_enabled": "Invia automaticamente gli errori al repository (tunnel dei report)",
+    "telemetry_hint": "Usa la tua sessione GitHub per pubblicare l'errore come issue con l'ambiente del dispositivo. Se lo disattivi, gli errori restano in locale e puoi inviarli a mano da Report.",
+    "telemetry_endpoint_enabled": "Invia gli errori a un tuo server",
+    "telemetry_endpoint_hint": "Richiede la configurazione di telemetry_endpoint. Disattivato per impostazione predefinita e indipendente dal tunnel dei report.",
+    "telemetry_endpoint_url": "Server personale (URL)"
   },
   "create": {
     "sandbox": "Sandbox sicura",
@@ -810,9 +819,30 @@
     "queue_result": "Inviati: {sent}. Non riusciti: {failed}.",
     "env_title": "Dati allegati",
     "env_hint": "Non vengono mai inviati percorsi personali, il nome utente di sistema né credenziali.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "Invia i guasti automaticamente se esiste una sessione GitHub",
-    "auto_send_hint": "Se disattivato, i guasti vengono solo salvati e puoi inviarli da qui."
+    "auto_send_hint": "Se disattivato, i guasti vengono solo salvati e puoi inviarli da qui.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "Impossibile caricare l'estensione «{addon}»"
+  },
+  "aide": {
+    "title": "AIDE — assistente del repository",
+    "provider_copilot": "GitHub Copilot (il tuo account)",
+    "provider_openai": "Endpoint compatibile con OpenAI (la tua chiave)",
+    "ready": "Pronto. Verranno inviati solo la tua richiesta e il contesto selezionato.",
+    "placeholder": "Descrivi ciò che ti serve: un errore, un'idea di progetto o un dubbio sul codice.",
+    "attach_context": "Allega il contesto del progetto aperto (ripulito)",
+    "send": "Chiedi",
+    "thinking": "Sto pensando…",
+    "answer_from": "Risposta di {provider} ({model})",
+    "error": "Impossibile rispondere: {error}",
+    "empty_prompt": "Scrivi prima la tua richiesta.",
+    "state_missing_sdk": "Manca l'SDK di Copilot: pip install microsoft-copilot-sdk",
+    "state_no_session": "Accedi con il tuo account GitHub per usare Copilot.",
+    "state_no_endpoint": "Indica l'URL dell'endpoint compatibile con OpenAI nelle impostazioni.",
+    "state_no_key": "Indica la tua chiave API nelle impostazioni.",
+    "api_key_placeholder": "Chiave API (salvata in locale, mai mostrata)"
   }
 }

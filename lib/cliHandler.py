@@ -297,6 +297,7 @@ class CLIHandler:
 
         font_group = self.parser.add_argument_group('Fuentes')
         font_group.add_argument('--list-fonts', action='store_true', help='Mostrar el estado de las fuentes de la interfaz')
+        font_group.add_argument('--list-addons', action='store_true', help='Listar las extensiones del sidebar (addons/*.yaml)')
         font_group.add_argument('--download-fonts', nargs='?', const='all', metavar='KEYS', help='Descargar fuentes (todas o lista separada por comas)')
         font_group.add_argument('--force-fonts', action='store_true', help='Forzar la redescarga aunque estén en caché')
 
@@ -500,6 +501,9 @@ class CLIHandler:
 
         elif getattr(args, 'list_fonts', False):
             return ('list_fonts', None, shell_options)
+
+        elif getattr(args, 'list_addons', False):
+            return ('list_addons', None, shell_options)
 
         elif getattr(args, 'compile_mexf', None):
             return (
@@ -826,6 +830,29 @@ class HardeningReportHelper:
 
 
 # === Font Report Helper ===
+class AddonReportHelper:
+    """Lista las extensiones que componen el sidebar, en su orden real."""
+
+    @staticmethod
+    def report():
+        from pathlib import Path
+
+        from lib.addons_engine import load_addons
+
+        directory = Path(__file__).resolve().parent.parent / "addons"
+        addons = load_addons(directory)
+        skipped = getattr(type(addons[0]) if addons else None, "skipped", []) or []
+        print(f"Extensiones del sidebar ({len(addons)}):")
+        for addon in addons:
+            print(
+                f"  - {addon.id:10s} sección={addon.section:6s} "
+                f"orden={addon.order:<3d} icono={addon.icon:10s} builder={addon.builder}"
+            )
+        for error in skipped:
+            print(f"  ! {error}")
+        return True
+
+
 class FontReportHelper:
     """Lista y descarga las fuentes de la interfaz."""
 
@@ -1354,6 +1381,9 @@ def _handle_shell_actions(action, data=None):
 
     elif action == 'list_fonts':
         return FontReportHelper.report()
+
+    elif action == 'list_addons':
+        return AddonReportHelper.report()
 
     elif action == 'download_fonts':
         return FontReportHelper.download(data or {})

@@ -1,0 +1,8 @@
+# Acerca de. Va al final del sidebar, junto al bloque de sesión.
+id: about
+order: 10
+section: footer
+label: sidebar.about
+description: sidebar_desc.5
+icon: about
+builder: build_about_page

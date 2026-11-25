@@ -37,7 +37,8 @@
     "about": "Hakkında",
     "toggle_expand": "Menüyü genişlet (Ctrl+B)",
     "toggle_collapse": "Menüyü gizle (Ctrl+B)",
-    "report": "Bildirimler"
+    "report": "Bildirimler",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### Proje olustur\nUygulamalari sifirdan tasarla. **Influent OS** ekosistemi icin benzersiz kimlikler, surumler ve ust veriler belirle.",
@@ -45,7 +46,8 @@
     "3": "### Ayarlar\nProgram motorunu ayarla. Yollari, dili, gorunumu ve data/pm.data icindeki secenekleri yonet.",
     "4": "### MoonFix Suite\nDerin onarim. Paketlerindeki tutarsizliklari tara, bul ve duzelt. Her varlik ve XML etiketi dogru olmali.",
     "5": "### Hakkinda\nTeknik proje ayrintilari. GPL lisansi, Qt cercevesi ve **Package Maker** arkasindaki ekip.",
-    "6": "### Bildirimler\nHataları ve önerileri GitHub hesabınızla doğrudan depoya gönderin. Uygulama, hatanın yeniden üretilebilmesi için cihaz ortamını ekler."
+    "6": "### Bildirimler\nHataları ve önerileri GitHub hesabınızla doğrudan depoya gönderin. Uygulama, hatanın yeniden üretilebilmesi için cihaz ortamını ekler.",
+    "7": "### AIDE\nYardım isteyin, proje oluşturun veya bir derlemeye hazırlanın. Yalnızca işaretledikleriniz gönderilir: asla kimlik bilgileri veya yollar."
   },
   "config": {
     "title": "Ayarlar",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "Yazi tipi durumu ve el ile indirme",
     "font_family": "Arayuz yazi tipi",
     "font_auto": "Otomatik (sistem varsayilani)",
-    "reset_hint": "Ayarlari varsayilan degerlere dondurur"
+    "reset_hint": "Ayarlari varsayilan degerlere dondurur",
+    "section_privacy": "Gizlilik",
+    "section_privacy_hint": "Hangi hata bilgilerinin cihazınızdan çıkacağını siz belirleyin.",
+    "telemetry_enabled": "Hataları depoya otomatik gönder (rapor tüneli)",
+    "telemetry_hint": "Hatayı cihaz ortamıyla birlikte sorun olarak yayınlamak için GitHub oturumunuzu kullanır. Kapatırsanız hatalar yalnızca yerelde kalır ve Raporlar bölümünden elle gönderebilirsiniz.",
+    "telemetry_endpoint_enabled": "Hataları kendi sunucunuza gönder",
+    "telemetry_endpoint_hint": "telemetry_endpoint yapılandırması gerekir. Varsayılan olarak kapalıdır ve rapor tünelinden bağımsızdır.",
+    "telemetry_endpoint_url": "Kendi sunucunuz (URL)"
   },
   "create": {
     "sandbox": "Güvenli sanal alan",
@@ -810,9 +819,30 @@
     "queue_result": "Gönderilen: {sent}. Başarısız: {failed}.",
     "env_title": "Eklenen veriler",
     "env_hint": "Kişisel yollar, sistem kullanıcı adınız ve kimlik bilgileri asla gönderilmez.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "GitHub oturumu varsa arızaları otomatik gönder",
-    "auto_send_hint": "Kapalıysa arızalar yalnızca kaydedilir ve buradan kendiniz gönderebilirsiniz."
+    "auto_send_hint": "Kapalıysa arızalar yalnızca kaydedilir ve buradan kendiniz gönderebilirsiniz.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "«{addon}» uzantısı yüklenemedi"
+  },
+  "aide": {
+    "title": "AIDE — depo asistanı",
+    "provider_copilot": "GitHub Copilot (hesabınız)",
+    "provider_openai": "OpenAI uyumlu uç nokta (anahtarınız)",
+    "ready": "Hazır. Yalnızca isteğiniz ve işaretlediğiniz bağlam gönderilir.",
+    "placeholder": "Neye ihtiyacınız olduğunu yazın: bir hata, proje fikri veya kodla ilgili bir soru.",
+    "attach_context": "Açık projenin bağlamını ekle (temizlenmiş)",
+    "send": "Sor",
+    "thinking": "Düşünüyorum…",
+    "answer_from": "{provider} yanıtı ({model})",
+    "error": "Yanıt verilemedi: {error}",
+    "empty_prompt": "Önce isteğinizi yazın.",
+    "state_missing_sdk": "Copilot SDK eksik: pip install microsoft-copilot-sdk",
+    "state_no_session": "Copilot kullanmak için GitHub hesabınızla oturum açın.",
+    "state_no_endpoint": "Ayarlarda OpenAI uyumlu uç nokta adresini belirtin.",
+    "state_no_key": "Ayarlarda API anahtarınızı belirtin.",
+    "api_key_placeholder": "API anahtarı (yerelde saklanır, asla gösterilmez)"
   }
 }

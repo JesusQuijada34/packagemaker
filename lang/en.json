@@ -37,7 +37,8 @@
     "about": "About",
     "toggle_expand": "Expand menu (Ctrl+B)",
     "toggle_collapse": "Hide menu (Ctrl+B)",
-    "report": "Reports"
+    "report": "Reports",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
@@ -45,7 +46,8 @@
     "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
     "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
     "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**.",
-    "6": "### Reports\nSend errors and suggestions straight to the repository with your GitHub account. The app attaches the device environment so the failure can be reproduced."
+    "6": "### Reports\nSend errors and suggestions straight to the repository with your GitHub account. The app attaches the device environment so the failure can be reproduced.",
+    "7": "### AIDE\nAsk for help, generate a project or prepare a build. Only what you tick is sent: never credentials or paths."
   },
   "config": {
     "title": "Settings",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "Font status and manual download",
     "font_family": "Interface font",
     "font_auto": "Automatic (system default)",
-    "reset_hint": "Restore the settings to their default values"
+    "reset_hint": "Restore the settings to their default values",
+    "section_privacy": "Privacy",
+    "section_privacy_hint": "Decide what failure information leaves your machine.",
+    "telemetry_enabled": "Send failures automatically to the repository (report tunnel)",
+    "telemetry_hint": "Uses your GitHub session to publish the error as an issue with the device environment. If disabled, failures are only saved locally and you can send them by hand from Reports.",
+    "telemetry_endpoint_enabled": "Send failures to your own server",
+    "telemetry_endpoint_hint": "Requires configuring telemetry_endpoint. Off by default and independent from the report tunnel.",
+    "telemetry_endpoint_url": "Own server (URL)"
   },
   "create": {
     "sandbox": "Secure sandbox",
@@ -812,5 +821,26 @@
     "env_hint": "Personal paths, your system username and credentials are never sent.",
     "auto_send": "Send failures automatically when a GitHub session exists",
     "auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "The «{addon}» extension could not be loaded"
+  },
+  "aide": {
+    "title": "AIDE — repository assistant",
+    "provider_copilot": "GitHub Copilot (your account)",
+    "provider_openai": "OpenAI-compatible endpoint (your key)",
+    "ready": "Ready. Only your request and the context you tick are sent.",
+    "placeholder": "Describe what you need: an error, a project idea or a question about the code.",
+    "attach_context": "Attach context from the open project (sanitised)",
+    "send": "Ask",
+    "thinking": "Thinking…",
+    "answer_from": "Answer from {provider} ({model})",
+    "error": "Could not answer: {error}",
+    "empty_prompt": "Write your request first.",
+    "state_missing_sdk": "The Copilot SDK is missing: pip install microsoft-copilot-sdk",
+    "state_no_session": "Sign in with your GitHub account to use Copilot.",
+    "state_no_endpoint": "Set the OpenAI-compatible endpoint URL in Settings.",
+    "state_no_key": "Set your API key in Settings.",
+    "api_key_placeholder": "API key (stored locally, never shown)"
   }
 }

@@ -37,6 +37,42 @@ No se prepara release: siguen abiertos R-4f8a2c60 (Q-008/F-003), R-6a1f8c23
 (Q-011/F-004), R-8c4f1a72 (a la espera de la comprobación visual en Windows),
 R-5a7d2f16 y R-3c8e4b72. Los seis cambios de engine aprobados siguen sin
 confirmación final (`F-001`…`F-006`).
+## 2026-11-18 — quincuagésimo sexto ciclo
+
+### Añadido — addons del sidebar, switch de privacidad y asistente AIDE
+
+Tres funciones nuevas pedidas por el propietario. **Ningún cambio de
+comportamiento del engine**: la ley de nombres, el formato `.iflapp`, las
+plantillas y el contenido de los paquetes siguen igual.
+
+- **Sistema de addons.** El sidebar ya no está escrito a mano en
+  `packagemaker.py`: cada página es un manifiesto YAML en `addons/` con
+  `id`, `order`, `section`, `label`, `icon` y `builder`. `lib/addons_engine.py`
+  los lee, valida y ordena por sección (`main`, `tools`, `footer`); un manifiesto
+  roto se ignora y se anota en `Addon.skipped` para que la ventana siga
+  abriendo. Si falta `addons/` por completo (bundle incompleto) se usan los
+  addons integrados, así que el sidebar nunca queda vacío. Nueva acción
+  headless `--list-addons` para inspeccionarlos sin abrir la GUI.
+- **Switch de privacidad.** Nueva tarjeta «Privacidad» en Configuración con dos
+  interruptores independientes —envío automático de fallos al repositorio
+  (`auto_report_errors`) y envío a un servidor propio (`telemetry_enabled`)—
+  más el campo con la URL del servidor (`telemetry_endpoint`), que antes no
+  existía y hacía inutilizable la segunda opción: `errorReporter.is_enabled()`
+  exige URL y switch. Ambos valores se cargan del almacén al abrir la ventana
+  (antes el panel arrancaba siempre con los valores por defecto).
+- **AIDE.** Asistente dentro de la app con dos proveedores: GitHub Copilot por
+  el SDK oficial (`microsoft-copilot-sdk`) o cualquier endpoint compatible con
+  OpenAI con clave propia. `lib/aide_backend.py` informa del estado real —sin
+  SDK, sin sesión, sin URL, sin clave— con un código de motivo que la interfaz
+  traduce; nunca finge que funciona. Sólo se envía el prompt y el contexto que
+  el usuario marque, saneado con `lib/report_telemetry.sanitize()`. La respuesta
+  llega desde un hilo daemon, así que cruza a la GUI por una señal Qt y no
+  tocando widgets desde el hilo del backend.
+
+- **Pruebas:** `tests/test_addons_engine.py` (22), `tests/test_aide_backend.py`
+  (16) y `tests/test_privacy_switch_and_addons_ui.py` (21). Las claves nuevas
+  están en los 14 idiomas con traducciones curadas
+  (`tools/translations_extension.py`), no con texto en inglés.
 
 ## 2026-11-25 — quincuagésimo cuarto ciclo
 

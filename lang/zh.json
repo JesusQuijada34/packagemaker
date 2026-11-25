@@ -37,7 +37,8 @@
     "about": "关于",
     "toggle_expand": "展开菜单 (Ctrl+B)",
     "toggle_collapse": "隐藏菜单 (Ctrl+B)",
-    "report": "报告"
+    "report": "报告",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### 创建项目\n从头设计应用。按引导步骤为 **Influent OS** 生态设置唯一的标识、版本和元数据。",
@@ -45,7 +46,8 @@
     "3": "### 设置\n调整程序引擎。管理路径、语言、外观以及保存在 data/pm.data 中的选项。",
     "4": "### MoonFix Suite\n深度修复。扫描、检测并修复包中的不一致。确保每个资源和 XML 标签都正确。",
     "5": "### 关于\n项目的技术细节。GPL 许可证、Qt 框架以及打造 **Package Maker** 的团队。",
-    "6": "### 报告\n使用你的 GitHub 账号将错误和建议直接发送到仓库。应用会附带设备环境信息，以便复现该故障。"
+    "6": "### 报告\n使用你的 GitHub 账号将错误和建议直接发送到仓库。应用会附带设备环境信息，以便复现该故障。",
+    "7": "### AIDE\n寻求帮助、生成项目或准备编译。只会发送你勾选的内容：绝不会发送凭据或路径。"
   },
   "config": {
     "title": "设置",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "字体状态与手动下载",
     "font_family": "界面字体",
     "font_auto": "自动（跟随系统）",
-    "reset_hint": "将设置恢复为默认值"
+    "reset_hint": "将设置恢复为默认值",
+    "section_privacy": "隐私",
+    "section_privacy_hint": "决定哪些故障信息会离开你的设备。",
+    "telemetry_enabled": "自动将故障发送到仓库（报告通道）",
+    "telemetry_hint": "使用你的 GitHub 会话，将错误连同设备环境作为 issue 发布。若关闭，故障只保存在本地，你可以从报告页面手动发送。",
+    "telemetry_endpoint_enabled": "将故障发送到你自己的服务器",
+    "telemetry_endpoint_hint": "需要配置 telemetry_endpoint。默认关闭，且与报告通道相互独立。",
+    "telemetry_endpoint_url": "自有服务器（URL）"
   },
   "create": {
     "sandbox": "安全沙箱",
@@ -810,9 +819,30 @@
     "queue_result": "已发送：{sent}。失败：{failed}。",
     "env_title": "附带的数据",
     "env_hint": "绝不会发送个人路径、系统用户名或凭据。",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "有 GitHub 会话时自动发送故障",
-    "auto_send_hint": "关闭后故障只会被保存，你可以在此手动发送。"
+    "auto_send_hint": "关闭后故障只会被保存，你可以在此手动发送。",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "无法加载扩展「{addon}」"
+  },
+  "aide": {
+    "title": "AIDE — 仓库助手",
+    "provider_copilot": "GitHub Copilot（你的账户）",
+    "provider_openai": "兼容 OpenAI 的端点（你的密钥）",
+    "ready": "就绪。只会发送你的请求和勾选的上下文。",
+    "placeholder": "说明你需要什么：一个错误、一个项目想法或关于代码的问题。",
+    "attach_context": "附加已打开项目的上下文（已清理）",
+    "send": "提问",
+    "thinking": "正在思考…",
+    "answer_from": "来自 {provider} 的回答（{model}）",
+    "error": "无法回答：{error}",
+    "empty_prompt": "请先写下你的请求。",
+    "state_missing_sdk": "缺少 Copilot SDK：pip install microsoft-copilot-sdk",
+    "state_no_session": "请使用 GitHub 账户登录以使用 Copilot。",
+    "state_no_endpoint": "请在设置中填写兼容 OpenAI 的端点 URL。",
+    "state_no_key": "请在设置中填写你的 API 密钥。",
+    "api_key_placeholder": "API 密钥（本地保存，不会显示）"
   }
 }

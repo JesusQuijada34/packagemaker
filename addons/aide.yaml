@@ -1,0 +1,8 @@
+# Asistente AIDE. La página vive en lib/aide_page.py.
+id: aide
+order: 20
+section: tools
+label: sidebar.aide
+description: sidebar_desc.7
+icon: aide
+builder: build_aide_page

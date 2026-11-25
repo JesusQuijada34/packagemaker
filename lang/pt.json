@@ -37,7 +37,8 @@
     "about": "Sobre",
     "toggle_expand": "Expandir menu (Ctrl+B)",
     "toggle_collapse": "Ocultar menu (Ctrl+B)",
-    "report": "Relatórios"
+    "report": "Relatórios",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### Criar projeto\nDesenhe aplicacoes de raiz. Defina identidades, versoes e metadados unicos para o ecossistema **Influent OS** com passos guiados.",
@@ -45,7 +46,8 @@
     "3": "### Configuracoes\nAjuste o motor do programa. Controle caminhos, idioma, aparencia e opcoes guardadas em data/pm.data.",
     "4": "### MoonFix Suite\nReparacao profunda. Analise, detete e corrija inconsistencias nos pacotes. Cada recurso e etiqueta XML deve estar correto.",
     "5": "### Acerca\nDetalhes tecnicos do projeto. Licenca GPL, framework Qt e a equipa por tras do **Package Maker**.",
-    "6": "### Relatórios\nEnvie erros e sugestões diretamente ao repositório com a sua conta do GitHub. A aplicação anexa o ambiente do dispositivo para reproduzir a falha."
+    "6": "### Relatórios\nEnvie erros e sugestões diretamente ao repositório com a sua conta do GitHub. A aplicação anexa o ambiente do dispositivo para reproduzir a falha.",
+    "7": "### AIDE\nPeça ajuda, gere um projeto ou prepare uma compilação. Só é enviado o que marcar: nunca credenciais nem caminhos."
   },
   "config": {
     "title": "Configuração",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "Estado das fontes e descarga manual",
     "font_family": "Fonte da interface",
     "font_auto": "Automatica (padrao do sistema)",
-    "reset_hint": "Restaura as configuracoes padrao"
+    "reset_hint": "Restaura as configuracoes padrao",
+    "section_privacy": "Privacidade",
+    "section_privacy_hint": "Decida que informação de falhas sai do seu equipamento.",
+    "telemetry_enabled": "Enviar falhas automaticamente para o repositório (túnel de relatórios)",
+    "telemetry_hint": "Usa a sua sessão GitHub para publicar o erro como issue com o ambiente do dispositivo. Se desativar, as falhas ficam só em local e pode enviá-las à mão em Relatórios.",
+    "telemetry_endpoint_enabled": "Enviar falhas para um servidor próprio",
+    "telemetry_endpoint_hint": "Requer configurar telemetry_endpoint. Está desativado por predefinição e é independente do túnel de relatórios.",
+    "telemetry_endpoint_url": "Servidor próprio (URL)"
   },
   "create": {
     "sandbox": "Sandbox segura",
@@ -810,9 +819,30 @@
     "queue_result": "Enviados: {sent}. Falhados: {failed}.",
     "env_title": "Dados anexados",
     "env_hint": "Nunca são enviados caminhos pessoais, o nome de utilizador do sistema nem credenciais.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "Enviar falhas automaticamente quando houver sessão do GitHub",
-    "auto_send_hint": "Se desativar, as falhas apenas são guardadas e pode enviá-las aqui."
+    "auto_send_hint": "Se desativar, as falhas apenas são guardadas e pode enviá-las aqui.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "Não foi possível carregar a extensão «{addon}»"
+  },
+  "aide": {
+    "title": "AIDE — assistente do repositório",
+    "provider_copilot": "GitHub Copilot (a sua conta)",
+    "provider_openai": "Endpoint compatível com OpenAI (a sua chave)",
+    "ready": "Pronto. Só o seu pedido e o contexto marcado serão enviados.",
+    "placeholder": "Descreva o que precisa: um erro, uma ideia de projeto ou uma dúvida sobre o código.",
+    "attach_context": "Anexar contexto do projeto aberto (saneado)",
+    "send": "Perguntar",
+    "thinking": "A pensar…",
+    "answer_from": "Resposta de {provider} ({model})",
+    "error": "Não foi possível responder: {error}",
+    "empty_prompt": "Escreva primeiro o seu pedido.",
+    "state_missing_sdk": "Falta o SDK do Copilot: pip install microsoft-copilot-sdk",
+    "state_no_session": "Inicie sessão com a sua conta GitHub para usar o Copilot.",
+    "state_no_endpoint": "Indique o URL do endpoint compatível com OpenAI nas definições.",
+    "state_no_key": "Indique a sua chave de API nas definições.",
+    "api_key_placeholder": "Chave de API (guardada localmente, nunca mostrada)"
   }
 }

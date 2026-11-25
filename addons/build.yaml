@@ -1,0 +1,8 @@
+# Compilación y empaquetado. La página vive en lib/BuildPage.py.
+id: build
+order: 20
+section: main
+label: sidebar.build
+description: sidebar_desc.1
+icon: construir
+builder: build_build_page

@@ -54,6 +54,7 @@ _ALLOWED = {
     "qt 6.12.1 (pyqt6)",
     "jesus daviel",
     "moonfix",
+    "aide",
     "linux",
     "windows (knosthalij)",
     "linux (danenone)",

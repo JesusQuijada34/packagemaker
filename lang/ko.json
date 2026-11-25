@@ -37,7 +37,8 @@
     "about": "정보",
     "toggle_expand": "메뉴 펼치기 (Ctrl+B)",
     "toggle_collapse": "메뉴 숨기기 (Ctrl+B)",
-    "report": "보고서"
+    "report": "보고서",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### 프로젝트 만들기\n애플리케이션을 처음부터 설계합니다. **Influent OS** 생태계를 위한 고유 식별자, 버전, 메타데이터를 단계별로 설정합니다.",
@@ -45,7 +46,8 @@
     "3": "### 설정\n프로그램 엔진을 조정합니다. 경로, 언어, 모양 및 data/pm.data 에 저장된 옵션을 관리합니다.",
     "4": "### MoonFix Suite\n심층 복구. 패키지의 불일치를 검사, 감지, 수정합니다. 모든 자산과 XML 태그가 올바르게 유지됩니다.",
     "5": "### 정보\n프로젝트의 기술적 세부 정보. GPL 라이선스, Qt 프레임워크, **Package Maker** 를 만든 팀을 소개합니다.",
-    "6": "### 보고서\nGitHub 계정으로 오류와 제안을 저장소에 바로 보냅니다. 앱이 오류를 재현할 수 있도록 기기 환경 정보를 첨부합니다."
+    "6": "### 보고서\nGitHub 계정으로 오류와 제안을 저장소에 바로 보냅니다. 앱이 오류를 재현할 수 있도록 기기 환경 정보를 첨부합니다.",
+    "7": "### AIDE\n도움을 요청하거나 프로젝트를 생성하거나 빌드를 준비하세요. 체크한 내용만 전송됩니다: 자격 증명이나 경로는 절대 전송되지 않습니다."
   },
   "config": {
     "title": "설정",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "글꼴 상태 및 수동 다운로드",
     "font_family": "인터페이스 글꼴",
     "font_auto": "자동 (시스템 기본값)",
-    "reset_hint": "설정을 기본값으로 되돌립니다"
+    "reset_hint": "설정을 기본값으로 되돌립니다",
+    "section_privacy": "개인정보",
+    "section_privacy_hint": "어떤 오류 정보가 기기를 떠나는지 결정하세요.",
+    "telemetry_enabled": "오류를 저장소로 자동 전송(보고 터널)",
+    "telemetry_hint": "GitHub 세션을 사용해 기기 환경과 함께 오류를 이슈로 게시합니다. 끄면 오류는 로컬에만 저장되며 보고 페이지에서 직접 보낼 수 있습니다.",
+    "telemetry_endpoint_enabled": "오류를 자체 서버로 전송",
+    "telemetry_endpoint_hint": "telemetry_endpoint 설정이 필요합니다. 기본적으로 꺼져 있으며 보고 터널과 별개입니다.",
+    "telemetry_endpoint_url": "자체 서버(URL)"
   },
   "create": {
     "sandbox": "안전한 샌드박스",
@@ -810,9 +819,30 @@
     "queue_result": "전송됨: {sent}. 실패: {failed}.",
     "env_title": "첨부되는 데이터",
     "env_hint": "개인 경로, 시스템 사용자 이름, 자격 증명은 절대 전송되지 않습니다.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "GitHub 세션이 있으면 오류를 자동으로 보내기",
-    "auto_send_hint": "끄면 오류는 저장만 되며 여기에서 직접 보낼 수 있습니다."
+    "auto_send_hint": "끄면 오류는 저장만 되며 여기에서 직접 보낼 수 있습니다.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "«{addon}» 확장을 불러올 수 없습니다"
+  },
+  "aide": {
+    "title": "AIDE — 저장소 도우미",
+    "provider_copilot": "GitHub Copilot(내 계정)",
+    "provider_openai": "OpenAI 호환 엔드포인트(내 키)",
+    "ready": "준비됨. 요청과 체크한 컨텍스트만 전송됩니다.",
+    "placeholder": "필요한 것을 적어 주세요: 오류, 프로젝트 아이디어 또는 코드에 대한 질문.",
+    "attach_context": "열린 프로젝트의 컨텍스트 첨부(정리됨)",
+    "send": "질문하기",
+    "thinking": "생각 중…",
+    "answer_from": "{provider}의 답변({model})",
+    "error": "답변할 수 없습니다: {error}",
+    "empty_prompt": "먼저 요청을 작성하세요.",
+    "state_missing_sdk": "Copilot SDK가 없습니다: pip install microsoft-copilot-sdk",
+    "state_no_session": "Copilot을 사용하려면 GitHub 계정으로 로그인하세요.",
+    "state_no_endpoint": "설정에서 OpenAI 호환 엔드포인트 URL을 지정하세요.",
+    "state_no_key": "설정에서 API 키를 지정하세요.",
+    "api_key_placeholder": "API 키(로컬에 저장되며 표시되지 않음)"
   }
 }

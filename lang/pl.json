@@ -37,7 +37,8 @@
     "about": "O programie",
     "toggle_expand": "Rozwiń menu (Ctrl+B)",
     "toggle_collapse": "Ukryj menu (Ctrl+B)",
-    "report": "Raporty"
+    "report": "Raporty",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### Utworz projekt\nProjektuj aplikacje od zera. Ustal unikalne tozsamosci, wersje i metadane dla ekosystemu **Influent OS** krok po kroku.",
@@ -45,7 +46,8 @@
     "3": "### Ustawienia\nDostosuj silnik programu. Kontroluj sciezki, jezyk, wyglad i opcje zapisane w data/pm.data.",
     "4": "### MoonFix Suite\nGleboka naprawa. Skanuj, wykrywaj i naprawiaj niespojnosc w pakietach. Kazdy zasob i znacznik XML musi byc poprawny.",
     "5": "### O programie\nTechniczne szczegoly projektu. Licencja GPL, framework Qt i zespol stojacy za **Package Maker**.",
-    "6": "### Raporty\nWysyłaj błędy i sugestie bezpośrednio do repozytorium ze swoim kontem GitHub. Aplikacja dołącza środowisko urządzenia, aby można było odtworzyć błąd."
+    "6": "### Raporty\nWysyłaj błędy i sugestie bezpośrednio do repozytorium ze swoim kontem GitHub. Aplikacja dołącza środowisko urządzenia, aby można było odtworzyć błąd.",
+    "7": "### AIDE\nPoproś o pomoc, wygeneruj projekt lub przygotuj kompilację. Wysyłane jest tylko to, co zaznaczysz: nigdy dane logowania ani ścieżki."
   },
   "config": {
     "title": "Ustawienia",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "Stan czcionek i reczne pobieranie",
     "font_family": "Czcionka interfejsu",
     "font_auto": "Automatycznie (domyslna systemowa)",
-    "reset_hint": "Przywraca ustawienia domyslne"
+    "reset_hint": "Przywraca ustawienia domyslne",
+    "section_privacy": "Prywatność",
+    "section_privacy_hint": "Zdecyduj, jakie informacje o błędach opuszczają Twoje urządzenie.",
+    "telemetry_enabled": "Wysyłaj błędy automatycznie do repozytorium (tunel raportów)",
+    "telemetry_hint": "Używa Twojej sesji GitHub, aby opublikować błąd jako zgłoszenie ze środowiskiem urządzenia. Jeśli to wyłączysz, błędy pozostaną lokalnie i możesz wysłać je ręcznie z zakładki Raporty.",
+    "telemetry_endpoint_enabled": "Wysyłaj błędy na własny serwer",
+    "telemetry_endpoint_hint": "Wymaga skonfigurowania telemetry_endpoint. Domyślnie wyłączone i niezależne od tunelu raportów.",
+    "telemetry_endpoint_url": "Własny serwer (URL)"
   },
   "create": {
     "sandbox": "Bezpieczna piaskownica",
@@ -810,9 +819,30 @@
     "queue_result": "Wysłano: {sent}. Nieudane: {failed}.",
     "env_title": "Dołączone dane",
     "env_hint": "Nigdy nie wysyłamy ścieżek osobistych, nazwy użytkownika systemu ani danych logowania.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "Wysyłaj błędy automatycznie, gdy istnieje sesja GitHub",
-    "auto_send_hint": "Po wyłączeniu błędy są tylko zapisywane i możesz wysłać je tutaj."
+    "auto_send_hint": "Po wyłączeniu błędy są tylko zapisywane i możesz wysłać je tutaj.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "Nie można załadować rozszerzenia „{addon}”"
+  },
+  "aide": {
+    "title": "AIDE — asystent repozytorium",
+    "provider_copilot": "GitHub Copilot (Twoje konto)",
+    "provider_openai": "Punkt końcowy zgodny z OpenAI (Twój klucz)",
+    "ready": "Gotowe. Wysłane zostanie tylko Twoje zapytanie i zaznaczony kontekst.",
+    "placeholder": "Opisz, czego potrzebujesz: błąd, pomysł na projekt lub pytanie o kod.",
+    "attach_context": "Dołącz kontekst otwartego projektu (oczyszczony)",
+    "send": "Zapytaj",
+    "thinking": "Myślę…",
+    "answer_from": "Odpowiedź od {provider} ({model})",
+    "error": "Nie udało się odpowiedzieć: {error}",
+    "empty_prompt": "Najpierw napisz swoje zapytanie.",
+    "state_missing_sdk": "Brak SDK Copilot: pip install microsoft-copilot-sdk",
+    "state_no_session": "Zaloguj się na swoje konto GitHub, aby używać Copilot.",
+    "state_no_endpoint": "Podaj adres punktu końcowego zgodnego z OpenAI w ustawieniach.",
+    "state_no_key": "Podaj swój klucz API w ustawieniach.",
+    "api_key_placeholder": "Klucz API (przechowywany lokalnie, nigdy niepokazywany)"
   }
 }

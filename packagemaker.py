@@ -338,6 +338,7 @@ from lib.design_tokens import (
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
+from lib.addons_engine import Addon, load_addons
 from lib.report_page import ReportPage
 from lib.settings_panel import SettingsPanel
 from lib.splash_window import IntegratedSplash
@@ -438,6 +439,10 @@ else:
         return None
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
+# Los addons viajan con el código: se resuelven junto a este script, no en la
+# carpeta de datos del usuario.
+ADDONS_DIR = Path(__file__).resolve().parent / "addons"
+
 TAB_ICON_KEYS = {
     "crear": "crear",
     "construir": "construir",
@@ -447,6 +452,7 @@ TAB_ICON_KEYS = {
     "reparar": "instalar",
     "about": "about",
     "report": "report",
+    "aide": "aide",
     "instalar": "instalar",
     "desinstalar": "desinstalar",
     "refresh": "refresh",
@@ -748,15 +754,6 @@ def get_app_version():
             print(f"Error reading details.xml: {e}")
     return "Not available"  # Fallback por defecto
 
-SIDEBAR_DESC_KEYS = {
-    0: "sidebar_desc.0",
-    1: "sidebar_desc.1",
-    2: "sidebar_desc.3",
-    3: "sidebar_desc.4",
-    4: "sidebar_desc.5",
-    5: "sidebar_desc.6",
-}
-
 class PackageTodoGUI(QMainWindow):
     def __init__(self, compact_mode=False, shell_mode=False):
         super().__init__()
@@ -903,34 +900,34 @@ class PackageTodoGUI(QMainWindow):
 
         # Navigation Buttons
         dark_now = system_theme_mode() != "light"
-        self.btn_create = SidebarItem(tr("sidebar.create"), get_tab_icon("crear"), dark=dark_now, icon_key="crear")
-        self.btn_build = SidebarItem(tr("sidebar.build"), get_tab_icon("construir"), dark=dark_now, icon_key="construir")
-        self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"), dark=dark_now, icon_key="config")
-        self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"), dark=dark_now, icon_key="moonfix")
-        self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"), dark=dark_now, icon_key="about")
-        self.btn_report = SidebarItem(tr("sidebar.report"), get_tab_icon("report"), dark=dark_now, icon_key="report")
-        self._sidebar_btn_keys = {
-            self.btn_create: "sidebar.create",
-            self.btn_build: "sidebar.build",
-            self.btn_config: "sidebar.config",
-            self.btn_moonfix: "sidebar.moonfix",
-            self.btn_about: "sidebar.about",
-            self.btn_report: "sidebar.report",
-        }
+        # El sidebar se arma desde addons/*.yaml: el manifiesto dice qué es
+        # cada entrada y el motor (lib/addons_engine.py) decide cómo construirla.
+        self._addons = load_addons(ADDONS_DIR)
+        for message in getattr(Addon, "skipped", []):
+            print(f"[PackageMaker] addon omitido: {message}")
 
+        self._sidebar_items = []
         self.sidebar_group = QButtonGroup(self)
-        self.sidebar_group.addButton(self.btn_create, 0)
-        self.sidebar_group.addButton(self.btn_build, 1)
-        self.sidebar_group.addButton(self.btn_config, 2)
-        self.sidebar_group.addButton(self.btn_moonfix, 3)
-        self.sidebar_group.addButton(self.btn_about, 4)
-        self.sidebar_group.addButton(self.btn_report, 5)
         self.sidebar_group.idClicked.connect(self.switch_page)
+        for index, addon in enumerate(self._addons):
+            button = SidebarItem(
+                tr(addon.label),
+                get_tab_icon(addon.icon),
+                dark=dark_now,
+                icon_key=addon.icon,
+            )
+            setattr(self, f"btn_{addon.id}", button)
+            self._sidebar_items.append((addon, button))
+            self.sidebar_group.addButton(button, index)
 
-        self.sidebar_layout.addWidget(self.btn_create)
-        self.sidebar_layout.addWidget(self.btn_build)
-        self.sidebar_layout.addWidget(self.btn_config)
-        self.sidebar_layout.addWidget(self.btn_moonfix)
+        self._sidebar_btn_keys = {
+            button: addon.label for addon, button in self._sidebar_items
+        }
+        self._addon_index = {addon.id: i for i, (addon, _) in enumerate(self._sidebar_items)}
+
+        for addon, button in self._sidebar_items:
+            if addon.section == "main":
+                self.sidebar_layout.addWidget(button)
 
         # Area de Contexto/Descripcion (Estilo Nota UWP)
         self.sidebar_layout.addStretch()
@@ -962,8 +959,13 @@ class PackageTodoGUI(QMainWindow):
         self.github_card = self._build_github_card(dark_now)
         self.sidebar_layout.addWidget(self.github_card)
 
-        self.sidebar_layout.addWidget(self.btn_report)
-        self.sidebar_layout.addWidget(self.btn_about)
+        for addon, button in self._sidebar_items:
+            if addon.section == "tools":
+                self.sidebar_layout.addWidget(button)
+
+        for addon, button in self._sidebar_items:
+            if addon.section == "footer":
+                self.sidebar_layout.addWidget(button)
 
         self.sidebar_collapse_button = self.sidebar_collapse_toggle
 
@@ -985,31 +987,19 @@ class PackageTodoGUI(QMainWindow):
         set_qss(self.stack, 'packagemaker_008', append=False)
         self.content_container.setObjectName("ContentContainer")
 
-        # Pages
-        self.page_create = QWidget()
-        self.init_create_tab(self.page_create) # Refactorized logic below
+        # Pages: cada addon construye la suya. Un addon que falla no debe
+        # impedir abrir la ventana, así que se sustituye por un aviso.
+        for addon, _button in self._sidebar_items:
+            try:
+                page = addon.build(self)
+            except Exception as exc:
+                print(f"[PackageMaker] addon '{addon.id}' no se pudo construir: {exc}")
+                page = self._addon_error_page(addon, exc)
+            setattr(self, f"page_{addon.id}", page)
+            self.stack.addWidget(page)
 
-        self.page_build = QWidget()
-        self.init_build_tab(self.page_build)
-
-        self.page_config = QWidget()
-        self.init_config_tab(self.page_config)
-
-        self.page_moonfix = QWidget()
-        self.init_moonfix_tab(self.page_moonfix)
-
-        self.page_about = QWidget()
-        self.init_about_tab(self.page_about)
-
-        self.page_report = ReportPage()
+        self.page_report = getattr(self, "page_report", None)
         self.report_page = self.page_report
-
-        self.stack.addWidget(self.page_create)
-        self.stack.addWidget(self.page_build)
-        self.stack.addWidget(self.page_config)
-        self.stack.addWidget(self.page_moonfix)
-        self.stack.addWidget(self.page_about)
-        self.stack.addWidget(self.page_report)
 
         self.content_layout.addWidget(self.stack)
         self.v_layout.addWidget(self.content_container)
@@ -1100,7 +1090,10 @@ class PackageTodoGUI(QMainWindow):
             page.retranslate()
 
     def update_sidebar_description(self, index):
-        key = SIDEBAR_DESC_KEYS.get(index)
+        # El índice del botón corresponde a ``_sidebar_items`` (que se filtra
+        # por sección al pintar), no directamente a ``_addons``.
+        items = getattr(self, "_sidebar_items", [])
+        key = items[index][0].description if 0 <= index < len(items) else ""
         if key:
             text = tr(key)
             html = text.replace("### ", "<b style='color:white; font-size:14px;'>").replace("\n", "</b><br>")
@@ -2635,13 +2628,22 @@ class PackageTodoGUI(QMainWindow):
         if getattr(self, "_force_close", False):
             super().closeEvent(event)
             return
+        # El cierre está animado: el guardado pendiente se cierra ahora, contra
+        # el almacén que sigue activo, y no cuando la animación termina. El
+        # bloqueo se activa después para no descartar ese último guardado.
+        self._flush_pending_settings()
+        self._closing = True
         event.ignore()
         play_bounce_down_close(self, on_finished=lambda: self._finish_close(), drop_px=80)
-
 
     def _finish_close(self):
         self._force_close = True
         self.close()
+
+    def _flush_pending_settings(self):
+        panel = getattr(self, "settings_panel", None)
+        if panel is not None and hasattr(panel, "flush_autosave"):
+            panel.flush_autosave()
 
     def _conf_section_title(self, text):
         lbl = QLabel(text)
@@ -2667,6 +2669,7 @@ class PackageTodoGUI(QMainWindow):
             "language", "auto_translate", "base_dir", "fluthin_apps",
             "ui_density", "sidebar_accent_width", "card_opacity",
             "notifications_enabled", "touch_mode", "ui_font_family",
+            "auto_report_errors", "telemetry_enabled", "telemetry_endpoint",
         )}
         user["base_dir"] = user.get("base_dir") or BASE_DIR
         user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
@@ -2688,6 +2691,9 @@ class PackageTodoGUI(QMainWindow):
         self.conf_card_opacity_slider = widgets["conf_card_opacity_slider"]
         self.conf_notifications = widgets["conf_notifications"]
         self.conf_touch_mode = widgets["conf_touch_mode"]
+        self.conf_telemetry = widgets["conf_telemetry"]
+        self.conf_telemetry_endpoint = widgets["conf_telemetry_endpoint"]
+        self.conf_telemetry_url = widgets["conf_telemetry_url"]
         self.conf_fonts_btn = widgets["conf_fonts_btn"]
         self.conf_fonts_status = widgets["conf_fonts_status"]
         self.conf_fonts_labels = getattr(self.settings_panel, "conf_fonts_labels", {})
@@ -2761,6 +2767,8 @@ class PackageTodoGUI(QMainWindow):
 
     def _on_settings_changed(self) -> None:
         """Guardado automático disparado por cualquier cambio en el panel."""
+        if getattr(self, "_closing", False):
+            return
         self._save_app_config_compact(quiet=True)
 
     def _download_ui_fonts(self) -> None:
@@ -2882,6 +2890,15 @@ class PackageTodoGUI(QMainWindow):
                 if idx_den >= 0:
                     self.conf_ui_density.setCurrentIndex(idx_den)
                 self.conf_notifications.setChecked(bool(user.get("notifications_enabled", False)))
+                self.conf_telemetry.setChecked(
+                    bool(store.get_user("auto_report_errors", True))
+                )
+                self.conf_telemetry_endpoint.setChecked(
+                    bool(store.get_user("telemetry_enabled", False))
+                )
+                self.conf_telemetry_url.setText(
+                    str(store.get_user("telemetry_endpoint", "") or "")
+                )
                 self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
                 self.conf_sidebar_accent_slider.setValue(
                     store.get_user_int("sidebar_accent_width", 3) or 0
@@ -2929,6 +2946,9 @@ class PackageTodoGUI(QMainWindow):
             "sidebar_accent_width": int(self.conf_sidebar_accent_slider.value()),
             "card_opacity": round(self.conf_card_opacity_slider.value() / 100.0, 3),
             "touch_mode": bool(self.conf_touch_mode.isChecked()),
+            "auto_report_errors": bool(self.conf_telemetry.isChecked()),
+            "telemetry_enabled": bool(self.conf_telemetry_endpoint.isChecked()),
+            "telemetry_endpoint": self.conf_telemetry_url.text().strip(),
         }
 
     def _refresh_config_tab_labels(self):
@@ -3127,6 +3147,56 @@ class PackageTodoGUI(QMainWindow):
 
         return check_project_issues(project_path)
 
+
+    # --- Builders de addon ---------------------------------------------
+    # Cada addon declara ``builder: nombre`` en su YAML y el motor llama a
+    # estos métodos. Añadir una página nueva no requiere tocar el sidebar.
+    def build_create_page(self):
+        page = QWidget()
+        self.init_create_tab(page)
+        return page
+
+    def build_build_page(self):
+        page = QWidget()
+        self.init_build_tab(page)
+        return page
+
+    def build_config_page(self):
+        page = QWidget()
+        self.init_config_tab(page)
+        return page
+
+    def build_moonfix_page(self):
+        page = QWidget()
+        self.init_moonfix_tab(page)
+        return page
+
+    def build_about_page(self):
+        page = QWidget()
+        self.init_about_tab(page)
+        return page
+
+    def build_report_page(self):
+        return ReportPage()
+
+    def build_aide_page(self):
+        from lib.aide_page import AidePage
+
+        return AidePage()
+
+    def _addon_error_page(self, addon, exc):
+        """Página de aviso cuando un addon no se puede construir."""
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(32, 32, 32, 32)
+        title = QLabel(tr("addon.error_title").format(addon=addon.id))
+        title.setWordWrap(True)
+        layout.addWidget(title)
+        detail = QLabel(str(exc))
+        detail.setWordWrap(True)
+        layout.addWidget(detail)
+        layout.addStretch()
+        return page
 
     def init_about_tab(self, parent_widget=None):
         target = parent_widget if parent_widget else self.tab_about
@@ -4599,6 +4669,7 @@ def main():
                 'list_hardening',
                 'inspect_iflapp',
                 'list_fonts',
+                'list_addons',
                 'download_fonts',
                 'shell_info',
                 'install_shell_integration',

@@ -1,0 +1,8 @@
+# Reportes de fallos a GitHub (lib/report_page.py).
+id: report
+order: 10
+section: tools
+label: sidebar.report
+description: sidebar_desc.6
+icon: report
+builder: build_report_page

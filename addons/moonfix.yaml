@@ -1,0 +1,8 @@
+# Reparación de proyectos (lib/pm_repair.py).
+id: moonfix
+order: 40
+section: main
+label: sidebar.moonfix
+description: sidebar_desc.4
+icon: moonfix
+builder: build_moonfix_page

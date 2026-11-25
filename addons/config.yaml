@@ -1,0 +1,8 @@
+# Ajustes de la aplicación (lib/settings_panel.py).
+id: config
+order: 30
+section: main
+label: sidebar.config
+description: sidebar_desc.3
+icon: config
+builder: build_config_page

@@ -37,7 +37,8 @@
     "about": "حول",
     "toggle_expand": "توسيع القائمة (Ctrl+B)",
     "toggle_collapse": "إخفاء القائمة (Ctrl+B)",
-    "report": "التقارير"
+    "report": "التقارير",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### إنشاء مشروع\nصمّم التطبيقات من الصفر. حدّد معرّفات وإصدارات وبيانات وصفية فريدة لمنظومة **Influent OS** بخطوات موجّهة.",
@@ -45,7 +46,8 @@
     "3": "### الإعدادات\nاضبط محرك البرنامج. تحكّم في المسارات واللغة والمظهر والخيارات المحفوظة في data/pm.data.",
     "4": "### MoonFix Suite\nإصلاح عميق. افحص واكتشف وأصلح التناقضات في حزمك. يجب أن يكون كل أصل ووسم XML صحيحًا.",
     "5": "### حول\nتفاصيل تقنية للمشروع. رخصة GPL وإطار Qt والفريق الذي يقف خلف **Package Maker**.",
-    "6": "### التقارير\nأرسل الأخطاء والاقتراحات مباشرة إلى المستودع بحساب GitHub الخاص بك. يرفق التطبيق بيئة الجهاز حتى يمكن إعادة إنتاج الخطأ."
+    "6": "### التقارير\nأرسل الأخطاء والاقتراحات مباشرة إلى المستودع بحساب GitHub الخاص بك. يرفق التطبيق بيئة الجهاز حتى يمكن إعادة إنتاج الخطأ.",
+    "7": "### AIDE\nاطلب المساعدة أو أنشئ مشروعاً أو جهّز عملية بناء. لا يُرسل إلا ما تحدده: لا بيانات اعتماد ولا مسارات أبداً."
   },
   "config": {
     "title": "الإعدادات",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "حالة الخطوط والتنزيل اليدوي",
     "font_family": "خط الواجهة",
     "font_auto": "تلقائي (حسب النظام)",
-    "reset_hint": "يعيد الإعدادات إلى قيمها الافتراضية"
+    "reset_hint": "يعيد الإعدادات إلى قيمها الافتراضية",
+    "section_privacy": "الخصوصية",
+    "section_privacy_hint": "حدّد أي معلومات عن الأعطال تخرج من جهازك.",
+    "telemetry_enabled": "إرسال الأعطال تلقائياً إلى المستودع (نفق التقارير)",
+    "telemetry_hint": "يستخدم جلسة GitHub لنشر الخطأ كمسألة مع بيئة الجهاز. إذا أوقفت هذا الخيار، تبقى الأعطال محلياً ويمكنك إرسالها يدوياً من صفحة التقارير.",
+    "telemetry_endpoint_enabled": "إرسال الأعطال إلى خادمك الخاص",
+    "telemetry_endpoint_hint": "يتطلب ضبط telemetry_endpoint. معطّل افتراضياً ومستقل عن نفق التقارير.",
+    "telemetry_endpoint_url": "خادمك الخاص (URL)"
   },
   "create": {
     "sandbox": "بيئة معزولة آمنة",
@@ -810,9 +819,30 @@
     "queue_result": "أُرسل: {sent}. فشل: {failed}.",
     "env_title": "البيانات المرفقة",
     "env_hint": "لا تُرسل أبدًا مسارات شخصية أو اسم مستخدم النظام أو بيانات الاعتماد.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "إرسال الأعطال تلقائيًا عند وجود جلسة GitHub",
-    "auto_send_hint": "إذا عطلت هذا الخيار، تُحفظ الأعطال فقط ويمكنك إرسالها من هنا."
+    "auto_send_hint": "إذا عطلت هذا الخيار، تُحفظ الأعطال فقط ويمكنك إرسالها من هنا.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "تعذّر تحميل الإضافة «{addon}»"
+  },
+  "aide": {
+    "title": "AIDE — مساعد المستودع",
+    "provider_copilot": "GitHub Copilot (حسابك)",
+    "provider_openai": "نقطة نهاية متوافقة مع OpenAI (مفتاحك)",
+    "ready": "جاهز. سيُرسل طلبك فقط والسياق الذي تحدده.",
+    "placeholder": "اكتب ما تحتاجه: خطأ أو فكرة مشروع أو سؤال عن الشيفرة.",
+    "attach_context": "إرفاق سياق المشروع المفتوح (بعد تنقيته)",
+    "send": "اسأل",
+    "thinking": "جارٍ التفكير…",
+    "answer_from": "إجابة من {provider} ({model})",
+    "error": "تعذّرت الإجابة: {error}",
+    "empty_prompt": "اكتب طلبك أولاً.",
+    "state_missing_sdk": "حزمة Copilot SDK غير مثبّتة: pip install microsoft-copilot-sdk",
+    "state_no_session": "سجّل الدخول بحساب GitHub لاستخدام Copilot.",
+    "state_no_endpoint": "حدّد عنوان نقطة النهاية المتوافقة مع OpenAI في الإعدادات.",
+    "state_no_key": "حدّد مفتاح API في الإعدادات.",
+    "api_key_placeholder": "مفتاح API (يُحفظ محلياً ولا يُعرض)"
   }
 }

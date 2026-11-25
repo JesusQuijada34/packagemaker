@@ -72,6 +72,9 @@ _IDENTICAL_BY_DESIGN = {
     "tui.help_title",
     # "Framework" se escribe igual en varios idiomas de destino.
     "about.framework",
+    # «Privacy» se escribe igual en inglés, italiano y neerlandés: es cognado,
+    # no una traducción perdida.
+    "config.section_privacy",
     # Cognados reales (Version/System/Name/Project/No) y el nombre del
     # intérprete, que no se traduce.
     "tui.about_python",

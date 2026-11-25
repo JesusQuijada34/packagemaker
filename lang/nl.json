@@ -37,7 +37,8 @@
     "about": "Over",
     "toggle_expand": "Menu uitvouwen (Ctrl+B)",
     "toggle_collapse": "Menu verbergen (Ctrl+B)",
-    "report": "Rapporten"
+    "report": "Rapporten",
+    "aide": "AIDE"
   },
   "sidebar_desc": {
     "0": "### Project maken\nOntwerp applicaties vanaf nul. Stel unieke identiteiten, versies en metadata in voor het **Influent OS**-ecosysteem met begeleide stappen.",
@@ -45,7 +46,8 @@
     "3": "### Instellingen\nStel de programma-engine af. Beheer paden, taal, uiterlijk en opties die in data/pm.data worden bewaard.",
     "4": "### MoonFix Suite\nDiepgaande reparatie. Scan, detecteer en herstel inconsistenties in je pakketten. Elke asset en XML-tag moet kloppen.",
     "5": "### Over\nTechnische projectdetails. GPL-licentie, Qt-framework en het team achter **Package Maker**.",
-    "6": "### Rapporten\nStuur fouten en suggesties direct naar de repository met uw GitHub-account. De app voegt de apparaatomgeving toe zodat de fout te reproduceren is."
+    "6": "### Rapporten\nStuur fouten en suggesties direct naar de repository met uw GitHub-account. De app voegt de apparaatomgeving toe zodat de fout te reproduceren is.",
+    "7": "### AIDE\nVraag om hulp, genereer een project of bereid een compilatie voor. Alleen wat je aanvinkt wordt verzonden: nooit inloggegevens of paden."
   },
   "config": {
     "title": "Instellingen",
@@ -104,7 +106,14 @@
     "section_fonts_hint": "Status van lettertypen en handmatige download",
     "font_family": "Lettertype van de interface",
     "font_auto": "Automatisch (systeemstandaard)",
-    "reset_hint": "Zet de instellingen terug naar de standaardwaarden"
+    "reset_hint": "Zet de instellingen terug naar de standaardwaarden",
+    "section_privacy": "Privacy",
+    "section_privacy_hint": "Bepaal welke foutinformatie je apparaat verlaat.",
+    "telemetry_enabled": "Fouten automatisch naar de repository sturen (rapportagetunnel)",
+    "telemetry_hint": "Gebruikt je GitHub-sessie om de fout als issue te publiceren met de apparaatomgeving. Als je dit uitschakelt, blijven fouten lokaal en kun je ze handmatig versturen via Rapporten.",
+    "telemetry_endpoint_enabled": "Fouten naar je eigen server sturen",
+    "telemetry_endpoint_hint": "Vereist het instellen van telemetry_endpoint. Standaard uitgeschakeld en onafhankelijk van de rapportagetunnel.",
+    "telemetry_endpoint_url": "Eigen server (URL)"
   },
   "create": {
     "sandbox": "Veilige sandbox",
@@ -810,9 +819,30 @@
     "queue_result": "Verzonden: {sent}. Mislukt: {failed}.",
     "env_title": "Toegevoegde gegevens",
     "env_hint": "Persoonlijke paden, uw systeemgebruikersnaam en inloggegevens worden nooit verzonden.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
     "auto_send": "Fouten automatisch verzenden als er een GitHub-sessie is",
-    "auto_send_hint": "Indien uitgeschakeld worden fouten alleen opgeslagen en kunt u ze hier zelf verzenden."
+    "auto_send_hint": "Indien uitgeschakeld worden fouten alleen opgeslagen en kunt u ze hier zelf verzenden.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "addon": {
+    "error_title": "De extensie ‘{addon}’ kon niet worden geladen"
+  },
+  "aide": {
+    "title": "AIDE — assistent voor de repository",
+    "provider_copilot": "GitHub Copilot (jouw account)",
+    "provider_openai": "OpenAI-compatibel eindpunt (jouw sleutel)",
+    "ready": "Gereed. Alleen je verzoek en de aangevinkte context worden verzonden.",
+    "placeholder": "Beschrijf wat je nodig hebt: een fout, een projectidee of een vraag over de code.",
+    "attach_context": "Context van het geopende project bijvoegen (opgeschoond)",
+    "send": "Vragen",
+    "thinking": "Aan het nadenken…",
+    "answer_from": "Antwoord van {provider} ({model})",
+    "error": "Kon niet antwoorden: {error}",
+    "empty_prompt": "Schrijf eerst je verzoek.",
+    "state_missing_sdk": "De Copilot-SDK ontbreekt: pip install microsoft-copilot-sdk",
+    "state_no_session": "Meld je aan met je GitHub-account om Copilot te gebruiken.",
+    "state_no_endpoint": "Geef de URL van het OpenAI-compatibele eindpunt op in de instellingen.",
+    "state_no_key": "Geef je API-sleutel op in de instellingen.",
+    "api_key_placeholder": "API-sleutel (lokaal opgeslagen, nooit getoond)"
   }
 }

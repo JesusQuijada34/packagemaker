@@ -284,6 +284,34 @@ class SettingsPanel(QWidget):
             subtitle=tr("config.section_fonts_hint"),
         )
 
+        # Privacidad: control del túnel de reportes y del endpoint propio.
+        privacy = SettingsDetailPage(tr("config.section_privacy"))
+        privacy.add_widget(section_caption(tr("config.section_privacy")))
+
+        telemetry = QCheckBox(tr("config.telemetry_enabled"))
+        telemetry.setChecked(bool(user.get("auto_report_errors", True)))
+        self.widgets["conf_telemetry"] = telemetry
+        privacy.add_widget(telemetry)
+        privacy.add_widget(self._hint(tr("config.telemetry_hint")))
+
+        endpoint = QCheckBox(tr("config.telemetry_endpoint_enabled"))
+        endpoint.setChecked(bool(user.get("telemetry_enabled", False)))
+        self.widgets["conf_telemetry_endpoint"] = endpoint
+        privacy.add_widget(endpoint)
+        self._endpoint_field = QLineEdit(str(user.get("telemetry_endpoint", "") or ""))
+        self._endpoint_field.setStyleSheet(conf_field_stylesheet())
+        self._endpoint_field.setPlaceholderText("https://…")
+        self.widgets["conf_telemetry_url"] = self._endpoint_field
+        privacy.add_widget(
+            self._labelled(tr("config.telemetry_endpoint_url"), self._endpoint_field)
+        )
+        privacy.add_widget(self._hint(tr("config.telemetry_endpoint_hint")))
+        privacy.add_stretch()
+        self._register_card(
+            "privacy", tr("config.section_privacy"), "shield", privacy, multi=True,
+            subtitle=tr("config.section_privacy_hint"),
+        )
+
         self.root_page.add_stretch()
         self._add_reset_card()
         self.root_page.add_stretch()
@@ -415,11 +443,17 @@ class SettingsPanel(QWidget):
 
     # --- Guardado -------------------------------------------------------
     def _connect_autosave(self) -> None:
-        for key in ("conf_base_dir", "conf_fluthin_dir"):
+        for key in ("conf_base_dir", "conf_fluthin_dir", "conf_telemetry_url"):
             widget = self.widgets.get(key)
             if widget is not None:
                 widget.textChanged.connect(self._schedule_save)
-        for key in ("conf_auto_translate", "conf_notifications", "conf_touch_mode"):
+        for key in (
+            "conf_auto_translate",
+            "conf_notifications",
+            "conf_touch_mode",
+            "conf_telemetry",
+            "conf_telemetry_endpoint",
+        ):
             widget = self.widgets.get(key)
             if widget is not None:
                 widget.toggled.connect(self._schedule_save)
@@ -431,6 +465,17 @@ class SettingsPanel(QWidget):
             widget = self.widgets.get(key)
             if widget is not None:
                 widget.valueChanged.connect(self._schedule_save)
+
+    def flush_autosave(self) -> None:
+        """Cierra el guardado pendiente antes de cerrar la ventana.
+
+        Sin esto el temporizador sobrevive al cierre y escribe ajustes de una
+        ventana ya cerrada, pisando el almacén activo en ese momento.
+        """
+        if not self._autosave_timer.isActive():
+            return
+        self._autosave_timer.stop()
+        self._emit_changed()
 
     def _schedule_save(self, *_args) -> None:
         if self._loading:
