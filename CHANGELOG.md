@@ -37,8 +37,9 @@ las plantillas y el contenido de los paquetes siguen exactamente igual.
 
 Pruebas: `tests/test_create_project_overwrite_guard.py` (3 nuevas),
 `tests/test_icon_manager_readonly.py` (5 nuevas) y
-`tests/test_suite_store_isolation.py` (3 nuevas); 4 de ellas fallan con el
-código anterior. Suite completa: 1118 pasan, 1 omitido, 64 subtests.
+`tests/test_suite_store_isolation.py` (3 nuevas); 10 de las 11 fallan con el
+código anterior (comprobado restaurando los tres archivos con `git checkout`).
+Suite completa: 1118 pasan, 1 omitido, 64 subtests.
 
 ## 2026-11-25 — cuadragésimo séptimo ciclo
 

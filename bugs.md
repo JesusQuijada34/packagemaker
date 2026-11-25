@@ -4705,8 +4705,9 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   aislamiento del almacén en la suite); no se prepara release.
 - Verificación del cuadragésimo octavo ciclo (2026-11-25):
   `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1118 pasan, 1
-  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las pruebas nuevas
-  fallan con el código anterior (comprobado restaurando `packagemaker.py` con
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. 10 de las 11 pruebas
+  nuevas fallan con el código anterior (comprobado restaurando
+  `packagemaker.py`, `lib/iconManager.py` y `tests/conftest.py` con
   `git checkout`). Reproducción real: con `IconManager` el icono de 40 px
   devolvía `None` (ahora `QPixmap` 40×40 no nulo); un `data/pm.data` centinela
   se conservaba intacto tras la suite completa; la GUI construye sus 5 páginas
