@@ -5497,4 +5497,6 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   de bloqueo de `tests/test_engine_isolation.py` fallan con el código anterior
   (comprobado con `git stash` de `lib/file_ops.py` y
   `lib/blindcubeEngine/BuildThread.py`), y la prueba de los radios falla con el
-  `qradiobutton.qss` anterior.
+  `qradiobutton.qss` anterior. Build real `create_project_from_templates` +
+  `FlangCompiler.run()` (zipapp): `.iflapp` de 59 KB con `verify_iflapp()` →
+  `valid: True`, ejercitando la copia del paquete de extremo a extremo.

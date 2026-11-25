@@ -37,6 +37,9 @@ Pruebas nuevas: `tests/test_engine_isolation.py` (5 casos de copia con bloqueos
 simulados `WinError 32`, todos fallan con el código anterior) y
 `tests/test_qss_loader.py` (estados del indicador). Suite completa:
 1178 pasan, 1 omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
+Además, un build real (`create_project_from_templates` + `FlangCompiler.run()`
+con backend zipapp) produjo un `.iflapp` de 59 KB que `verify_iflapp()` acepta
+(`valid: True`), lo que ejercita de extremo a extremo la copia modificada.
 
 No se prepara release: siguen abiertos R-4f8a2c60 (Q-008/F-003), R-6a1f8c23
 (Q-011/F-004), R-8a3f1c72 (Q-020), R-4d9e2b61 (Q-019), R-7c4a1e95 (Q-012),
