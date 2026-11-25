@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (cuadragésimo séptimo ciclo)
+Última actualización: 2026-11-25 (cuadragésimo octavo ciclo)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -154,6 +154,9 @@ de auditoría.
 | R-2d5b8f41 | Bug — `updater.py --install --silent` informaba «Instalación completada» con un paquete corrupto | Alta | Resuelto |
 | R-9f3c1a72 | Bug — desinstalar un Python portable decía «desinstalado» sin borrar la carpeta | Media | Resuelto |
 | R-6b8e4d25 | Bug — el TUI moría al crear un proyecto con versión de un solo componente | Alta | Resuelto |
+| R-4f7a2c91 | Bug — el asistente de creación sobrescribía un proyecto existente sin avisar | Alta | Resuelto |
+| R-8b2d4e17 | Bug — los iconos SVG nunca se dibujaban y una carpeta de solo lectura abortaba el gestor | Media | Resuelto |
+| R-5a9c3e72 | Bug — la suite escribía en el `data/pm.data` real y desviaba `BASE_DIR` a `/tmp` | Media | Resuelto |
 
 Tras el vigésimo cuarto ciclo no quedaban bugs abiertos. El vigésimo quinto
 registra R-5b1d9e47 y R-7a3e1d92 (corregidos) y R-4f8a2c60 (prioridad alta),
@@ -2431,6 +2434,36 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `lib/design_tokens.py`, `source/qss/*`, `packagemaker.py`.
 - **Riesgo:** medio.
 
+### 11. `create` del CLI sobrescribe un proyecto existente sin avisar
+
+- **Estado:** Pendiente (Q-016).
+- **Actual:** `packagemaker.py create` escribe en la carpeta canónica aunque ya
+  exista y contenga el guion del usuario. El dashboard y el asistente gráfico
+  rechazan o preguntan; el CLI lo pisa en silencio (el asistente gráfico se
+  alineó en R-4f7a2c91, pero el CLI sigue igual).
+- **Solicitado:** rechazar con `[ERROR] ya existe` y código 1, o exigir
+  `--force` para sobrescribir (recomendación del mantenimiento: `--force`).
+- **Efectos secundarios:** cambia el código de salida de un comando existente;
+  los scripts que recrean proyectos a propósito necesitarían `--force`.
+- **Archivos:** `lib/cliHandler.py`, `packagemaker.py` (subparser `create`),
+  `tests/test_cli_*`.
+- **Riesgo:** bajo para el motor, medio para scripts existentes.
+
+### 12. El `updater.py` generado en los proyectos no tiene CLI
+
+- **Estado:** Pendiente (Q-017).
+- **Actual:** `src/templates/project/updater.py.template` sólo arranca la GUI;
+  ejecutado en un proyecto recién creado se queda en el bucle de `verificar()`
+  y no termina. El `updater.py` de la raíz del repositorio sí tiene CLI
+  (`--install`, `--update`, `--silent`, códigos de salida).
+- **Solicitado:** dar a la plantilla la misma interfaz de línea de órdenes y un
+  final claro para `verificar()` cuando no hay GUI.
+- **Efectos secundarios:** cambia el contenido de los proyectos nuevos; hay que
+  mantener sincronizadas plantilla y actualizador del repositorio.
+- **Archivos:** `src/templates/project/updater.py.template`, `updater.py`,
+  `tests/test_lifecycle_end_to_end.py`.
+- **Riesgo:** medio.
+
 ---
 
 ## R-5b1d9e47 — El hover del sidebar parpadeaba y los iconos quedaban apretados
@@ -4129,6 +4162,97 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** se registra en el cierre del cuadragésimo séptimo ciclo.
 - **Fecha de resolución:** 2026-11-25.
 
+## R-4f7a2c91 — El asistente de creación sobrescribía un proyecto existente sin avisar
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** `_ejecutarCreacionProyecto` comprobaba
+  `os.path.join(rutaBase, nombreProyecto)` —el nombre libre que escribe el
+  usuario— y, si existía, preguntaba si sobrescribir. Después recalculaba
+  `rutaProyecto` con el nombre canónico
+  (`Publisher.app.vX.x-YY.MM-HH.MM-Plataforma`) y creaba allí. Las dos rutas
+  nunca coinciden, así que el aviso no aparecía y un proyecto ya existente se
+  sobrescribía en silencio: `main.py`/`<app>.py`, `details.xml` y el resto de
+  archivos de plantilla perdían el trabajo del usuario. En el caso simétrico,
+  una carpeta antigua con el nombre libre hacía preguntar «¿sobrescribir?» para
+  luego no tocar nada. El dashboard (`pm_dashboard.NewProjectWizard`) y el CLI
+  headless ya comprobaban la ruta canónica antes de crear; sólo este diálogo
+  quedaba desalineado.
+- **Pasos para reproducir:** abrir «Crear proyecto», usar un nombre cuya
+  carpeta canónica ya exista (mismo publisher, app y minuto) y confirmar; antes
+  no se mostraba ninguna pregunta y el guion del proyecto se regeneraba.
+- **Estado:** Resuelto.
+- **Prioridad:** Alta (pérdida de datos del usuario).
+- **Solución aplicada:** el nombre canónico y su marca temporal se calculan
+  antes de comprobar la existencia; el aviso usa `folder_name` y se evalúa
+  sobre `rutaProyecto`, la misma ruta que recibe
+  `create_project_from_templates`. Sin cambios en el nombre canónico ni en el
+  contenido de las plantillas.
+- **Pruebas:** `tests/test_create_project_overwrite_guard.py` (3 nuevas; 2
+  fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-8b2d4e17 — Los iconos SVG nunca se dibujaban y una carpeta de solo lectura abortaba el gestor
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** `lib/iconManager.py` importaba `QSvgRenderer` desde
+  `PyQt6.QtSvgWidgets`, que sólo expone `QSvgWidget`; el renderer vive en
+  `PyQt6.QtSvg` (así lo importa `lib/app_icons.py`). El `ImportError` dejaba
+  `PYQT6_AVAILABLE = False`, de modo que `load_svg()` devolvía `None` siempre:
+  la tarjeta «Abrir con» y cualquier consumidor de `load_svg_icon` se quedaban
+  sin icono aunque el SVG existiera. Además, el constructor creaba
+  `assets/icons` sin protección; en una instalación sin permiso de escritura el
+  `mkdir` lanzaba `PermissionError` al construir el widget, y
+  `get_icon_path()`/`load_svg()` usaban `Path.exists()`, que también propaga el
+  error con un padre inaccesible.
+- **Pasos para reproducir:** `IconManager().load_svg("app", 40)` devolvía `None`
+  (ahora un `QPixmap` de 40×40 no nulo); `IconManager(<carpeta sin permiso de
+  escritura>)` lanzaba `PermissionError: [Errno 13] .../assets`.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (interfaz sin iconos y caída del widget en instalaciones
+  de solo lectura).
+- **Solución aplicada:** `QSvgRenderer` se importa de `PyQt6.QtSvg` con
+  respaldo a `QtSvgWidgets`; `_ensure_icons_dir` tolera `OSError` y las
+  comprobaciones de ruta usan `lib.file_ops.path_exists`.
+- **Pruebas:** `tests/test_icon_manager_readonly.py` (5 nuevas; las de
+  renderizado fallan con el código anterior).
+- **Commit:** se registra en el cierre del cuadragésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
+## R-5a9c3e72 — La suite escribía en el `data/pm.data` real y desviaba `BASE_DIR` a `/tmp`
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
+  externo)
+- **Fecha del reporte:** 2026-11-25
+- **Descripción:** varios tests construyen la GUI real y guardan ajustes a
+  través de `get_pm_data()`, que devuelve el almacén global. Al ejecutar
+  `pytest tests/` ese almacén es el real (`data/pm.data`), así que la suite
+  escribía en la configuración del usuario. Peor aún: el guardado deja
+  `packagemaker.BASE_DIR` con la ruta del formulario, de modo que un test
+  posterior guardaba ese valor en el archivo real y el `BASE_DIR` quedaba
+  apuntando a `…/pytest-N/test_path_only_save_does_not_r0/proyectos`. Tras la
+  suite, el CLI creaba los proyectos dentro de la carpeta temporal de pytest
+  (y ésta desaparece al limpiar `/tmp`). Comprobado: tras
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`, `data/pm.data`
+  contenía esa ruta de pytest.
+- **Pasos para reproducir:** anotar el `base_dir` de `data/pm.data`, ejecutar
+  la suite y volver a leerlo.
+- **Estado:** Resuelto.
+- **Prioridad:** Media (corrompe la configuración local del desarrollador y
+  desvía los proyectos que se creen después).
+- **Solución aplicada:** `tests/conftest.py` instala, antes de importar
+  `packagemaker`, un `PMDataStore` en una carpeta temporal con `base_dir` y
+  `fluthin_apps` dentro de ella, y lo deja como almacén global de la sesión
+  (se borra al terminar). Ningún cambio en el código de la aplicación.
+- **Pruebas:** `tests/test_suite_store_isolation.py` (3 nuevas). Verificado
+  además con un centinela: el `base_dir` real sobrevive a la suite completa.
+- **Commit:** se registra en el cierre del cuadragésimo octavo ciclo.
+- **Fecha de resolución:** 2026-11-25.
+
 ## Periodo de observación y release
 
 - Bugs abiertos: 2 (R-4f8a2c60 pendiente de Q-008 y R-6a1f8c23 pendiente de
@@ -4576,3 +4700,14 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   texto original); sin red, cuatro cadenas sin traducir hacían cuatro intentos
   de red (ahora uno por minuto y por idioma); un `main.py` en cp1252 no
   detectaba `main` (ahora el `.pyz` ejecuta `main`).
+- Cuadragésimo octavo ciclo (2026-11-25): R-4f7a2c91, R-8b2d4e17 y R-5a9c3e72
+  corregidos y probados (aviso de sobrescritura del asistente, iconos SVG y
+  aislamiento del almacén en la suite); no se prepara release.
+- Verificación del cuadragésimo octavo ciclo (2026-11-25):
+  `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` → 1118 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. Las pruebas nuevas
+  fallan con el código anterior (comprobado restaurando `packagemaker.py` con
+  `git checkout`). Reproducción real: con `IconManager` el icono de 40 px
+  devolvía `None` (ahora `QPixmap` 40×40 no nulo); un `data/pm.data` centinela
+  se conservaba intacto tras la suite completa; la GUI construye sus 5 páginas
+  y el diálogo «Abrir con» sin errores.

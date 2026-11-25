@@ -1,9 +1,9 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-25 (cuadragésimo séptimo ciclo: R-2d5b8f41, R-9f3c1a72 y R-6b8e4d25; ningún cambio de engine)
-- **Último commit de `CONFIRM.MD` procesado:** `b89ff64c` (2026-11-25), autor `openhands-agent` (cuadragésimo sexto ciclo). No aportó respuestas nuevas del propietario. La última respuesta del propietario sigue siendo `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`; la API de GitHub lista `b89ff64c`, `bd4d2d60`, `db667936`, `c26f12d2` y `c0c1d7a1` como últimos commits que tocan este archivo, todos de `openhands-agent`, ninguno de `JesusQuijada34`. Las 7 preguntas anteriores siguen sin marcar y este ciclo añade Q-015 (8 pendientes). Este commit sólo actualiza la cabecera y la nueva pregunta; no contiene respuestas.
+- **Última revisión:** 2026-11-25 (cuadragésimo octavo ciclo: R-4f7a2c91, R-8b2d4e17 y R-5a9c3e72; ningún cambio de engine)
+- **Último commit de `CONFIRM.MD` procesado:** `b89ff64c` (2026-11-25), autor `openhands-agent` (cuadragésimo sexto ciclo). No aportó respuestas nuevas del propietario. La última respuesta del propietario sigue siendo `0ac5457` (2026-11-23), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`; la API de GitHub lista `b89ff64c`, `bd4d2d60`, `db667936`, `c26f12d2` y `c0c1d7a1` como últimos commits que tocan este archivo, todos de `openhands-agent`, ninguno de `JesusQuijada34`. Las 8 preguntas anteriores siguen sin marcar y este ciclo añade Q-016 y Q-017 (10 pendientes). Este commit sólo actualiza la cabecera y las nuevas preguntas; no contiene respuestas.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 8 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 10 preguntas pendientes, 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -153,6 +153,44 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `--update --silent` para los paquetes `.iflapp` (deja de haber ventana de
   progreso). Quien dependa de ver el instalador debe quitar `--silent`. No
   afecta al modo gráfico ni al motor. Riesgo bajo.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-016 — `packagemaker.py create` sobrescribe un proyecto existente sin avisar
+- **Tipo:** cambio de engine (política de creación)
+- **Fecha:** 2026-11-25
+- **Qué se propone:** el CLI `create` escribe en la carpeta canónica aunque ya
+  exista y contenga el trabajo del usuario. El dashboard
+  (`pm_dashboard.NewProjectWizard`) y el asistente gráfico rechazan o
+  preguntan, pero el CLI headless lo pisa en silencio. Opciones:
+  A) rechazar con `[ERROR] ya existe` y código 1 (coherente con el dashboard;
+  puede romper scripts que recrean proyectos a propósito);
+  B) añadir `--force` para sobrescribir y rechazar sin él (compatible: quien
+  necesite recrear lo añade); C) dejarlo como está y sólo documentarlo.
+  Recomendación: B.
+- **Archivos/componentes afectados:** `lib/cliHandler.py` (rama `create`),
+  `packagemaker.py` (`main`, subparser `create`), `tests/test_cli_*`.
+- **Riesgo y efectos secundarios:** cambia el código de salida y el mensaje de
+  un comando existente; los scripts que dependan de sobrescribir dejarían de
+  funcionar sin `--force`. No toca el nombre canónico ni las plantillas.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-017 — El `updater.py` que se genera en los proyectos no tiene CLI
+- **Tipo:** cambio de engine (plantilla de proyectos)
+- **Fecha:** 2026-11-25
+- **Qué se propone:** `src/templates/project/updater.py.template` genera un
+  actualizador que sólo arranca la GUI (`updater.py` ejecutado dentro de un
+  proyecto recién creado se queda en un bucle de `verificar()` y no termina).
+  El `updater.py` de la raíz del repositorio sí tiene CLI
+  (`--install`, `--update`, `--silent`, códigos de salida). Se propone que la
+  plantilla use la misma interfaz de línea de órdenes (sin `--silent` no
+  cambia nada para el usuario final) y que `verificar()` tenga un final claro
+  cuando no hay GUI. Afecta a los proyectos que se creen a partir de ahora;
+  los ya creados conservan su copia.
+- **Archivos/componentes afectados:** `src/templates/project/updater.py.template`,
+  `updater.py`, `tests/test_lifecycle_end_to_end.py`.
+- **Riesgo y efectos secundarios:** cambia el contenido de las plantillas y,
+  por tanto, el de los proyectos nuevos; hay que mantener sincronizadas la
+  plantilla y el actualizador del repositorio. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---

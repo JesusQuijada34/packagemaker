@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-11-25 — cuadragésimo octavo ciclo
+
+### Corregido — el asistente ya avisa antes de sobrescribir un proyecto, los iconos SVG vuelven a dibujarse y la suite deja de tocar la configuración del usuario
+
+Sin reportes externos nuevos. Tres hallazgos de la auditoría interna sobre el
+diálogo de creación de proyectos, el gestor de iconos y el aislamiento de la
+propia suite. Ningún cambio de comportamiento del engine: el nombre canónico,
+las plantillas y el contenido de los paquetes siguen exactamente igual.
+
+- **R-4f7a2c91 — crear un proyecto existente lo sobrescribía sin preguntar:**
+  `_ejecutarCreacionProyecto` comprobaba `rutaBase/nombreProyecto` (el nombre
+  libre del formulario) pero escribía en la carpeta canónica
+  `Publisher.app.vX.x-YY.MM-HH.MM-Plataforma`. Las dos rutas nunca coinciden,
+  así que el aviso «¿Deseas sobrescribirla?» no aparecía y se regeneraban el
+  guion del usuario, `details.xml` y el resto de archivos. Ahora el nombre
+  canónico y su marca temporal se calculan antes de la comprobación y el aviso
+  usa esa misma ruta. Reportado por JesusQuijada34 (auditoría interna).
+- **R-8b2d4e17 — todos los iconos del gestor se perdían y una instalación de
+  solo lectura lo abortaba:** `lib/iconManager.py` importaba `QSvgRenderer`
+  desde `PyQt6.QtSvgWidgets` (que sólo expone el widget), así que
+  `PYQT6_AVAILABLE` quedaba en `False` y `load_svg()` devolvía `None` siempre;
+  la tarjeta «Abrir con» se quedaba sin icono. Además el constructor creaba
+  `assets/icons` sin protección y `Path.exists()` propagaba `PermissionError`
+  con un padre inaccesible. Ahora el renderer se importa de `PyQt6.QtSvg` (con
+  respaldo), el `mkdir` tolera `OSError` y las rutas se comprueban con
+  `lib.file_ops.path_exists`. Reportado por JesusQuijada34 (auditoría interna).
+- **R-5a9c3e72 — la suite escribía en el `data/pm.data` real y desviaba
+  `BASE_DIR` a `/tmp`:** los tests que construyen la GUI guardaban ajustes en
+  el almacén global, que al ejecutar `pytest` es el archivo real del usuario.
+  El guardado dejaba `BASE_DIR` con la ruta temporal del test y un test
+  posterior la persistía, de modo que el CLI creaba los proyectos dentro de
+  `…/pytest-N/.../proyectos`. `tests/conftest.py` instala ahora un almacén en
+  una carpeta temporal antes de importar `packagemaker`; la configuración real
+  queda intacta. Reportado por JesusQuijada34 (auditoría interna).
+
+Pruebas: `tests/test_create_project_overwrite_guard.py` (3 nuevas),
+`tests/test_icon_manager_readonly.py` (5 nuevas) y
+`tests/test_suite_store_isolation.py` (3 nuevas); 4 de ellas fallan con el
+código anterior. Suite completa: 1118 pasan, 1 omitido, 64 subtests.
+
 ## 2026-11-25 — cuadragésimo séptimo ciclo
 
 ### Corregido — el updater silencioso ya no miente, la desinstalación de Python portable borra de verdad y el TUI sobrevive a una versión corta

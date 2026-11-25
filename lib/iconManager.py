@@ -8,10 +8,17 @@ import re
 from pathlib import Path
 from typing import Optional
 
+from lib.file_ops import path_exists
+
 try:
     from PyQt6.QtGui import QPixmap, QPainter
     from PyQt6.QtCore import Qt
-    from PyQt6.QtSvgWidgets import QSvgRenderer
+    try:
+        # ``QSvgRenderer`` vive en ``QtSvg``; ``QtSvgWidgets`` sólo expone el
+        # widget. El import antiguo fallaba y dejaba todos los iconos en None.
+        from PyQt6.QtSvg import QSvgRenderer
+    except ImportError:  # versiones que aún lo reexportaban desde el widget
+        from PyQt6.QtSvgWidgets import QSvgRenderer
     PYQT6_AVAILABLE = True
 except ImportError:
     PYQT6_AVAILABLE = False
@@ -31,8 +38,16 @@ class IconManager:
         self._ensure_icons_dir()
     
     def _ensure_icons_dir(self):
-        """Asegura que el directorio de iconos exista."""
-        self.icons_dir.mkdir(parents=True, exist_ok=True)
+        """Asegura que el directorio de iconos exista.
+
+        En una instalación de solo lectura (``Program Files``) la carpeta no se
+        puede crear; los iconos caen entonces al dibujo por defecto en lugar de
+        abortar la ventana que los pide.
+        """
+        try:
+            self.icons_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
     
     def load_svg(self, icon_name: str, size: int = 24, color_role: str = 'primary') -> Optional['QPixmap']:
         """
@@ -51,7 +66,7 @@ class IconManager:
         
         svg_path = self.icons_dir / f"{icon_name}.svg"
         
-        if not svg_path.exists():
+        if not path_exists(svg_path):
             # Intentar crear un icono por defecto
             return self._create_default_icon(icon_name, size)
         
@@ -152,7 +167,7 @@ class IconManager:
             Ruta completa al archivo SVG, o None si no existe
         """
         svg_path = self.icons_dir / f"{icon_name}.svg"
-        return str(svg_path) if svg_path.exists() else None
+        return str(svg_path) if path_exists(svg_path) else None
 
 
 # Instancia global del IconManager

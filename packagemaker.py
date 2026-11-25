@@ -3393,20 +3393,6 @@ class PackageTodoGUI(QMainWindow):
                 LeviathanDialog.launch(self, tr("common.warning"), tr("dialog.project_name_required"), mode="warning")
                 return
 
-            # Crear ruta del proyecto
-            rutaProyecto = os.path.join(rutaBase, nombreProyecto)
-
-            # Verificar si ya existe
-            if os.path.exists(rutaProyecto):
-                respuesta = LeviathanDialog.launch(
-                    self,
-                    "Proyecto Existente",
-                    f"La carpeta '{nombreProyecto}' ya existe.\n¿Deseas sobrescribirla?",
-                    mode="question"
-                )
-                if respuesta != 1:  # No aceptado
-                    return
-
             from lib.makeselfEngine.template_engine import create_project_from_templates
 
             app_id = nombreProyecto.strip().lower().replace(" ", "-")
@@ -3434,6 +3420,19 @@ class PackageTodoGUI(QMainWindow):
                 LeviathanDialog.launch(self, "Error", str(exc), mode="error")
                 return
             rutaProyecto = os.path.join(rutaBase, folder_name)
+
+            # La comprobación debe usar la ruta canónica: antes se miraba
+            # ``rutaBase/nombreProyecto`` y el aviso nunca saltaba, así que un
+            # proyecto existente se sobrescribía sin preguntar.
+            if os.path.exists(rutaProyecto):
+                respuesta = LeviathanDialog.launch(
+                    self,
+                    "Proyecto Existente",
+                    f"La carpeta '{folder_name}' ya existe.\n¿Deseas sobrescribirla?",
+                    mode="question"
+                )
+                if respuesta != 1:  # No aceptado
+                    return
 
             create_project_from_templates(
                 Path(rutaProyecto),
