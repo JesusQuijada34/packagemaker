@@ -194,7 +194,8 @@
     "upload_icon_pack": "上传 Icon Pack",
     "upload_asset_pack": "上传 Asset Pack",
     "select_asset_pack": "选择 Asset Pack",
-    "select_icon_pack": "选择图标包"
+    "select_icon_pack": "选择图标包",
+    "scan": "诊断"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "正在清理构建文件...",
     "folder_removed": "已删除文件夹: {name}",
     "folder_remove_failed": "无法删除 {name}: {error}",
+    "folder_locked": "仍被其他进程占用",
     "file_removed": "已删除文件: {name}",
     "file_remove_failed": "无法删除 {name}: {error}",
     "package_folder_removed": "已删除包文件夹: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "在隔离沙箱中验证 .iflapp",
     "proc_dropper": "生成自解压 .run dropper",
     "proc_cleanup": "清理临时产物和包文件夹",
-    "proc_done": "流程已完成",
-    "folder_locked": "仍被其他进程占用"
+    "proc_done": "流程已完成"
   },
   "install_console": {
     "title": "安装进度",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "内部错误",
     "internal_error_body": "Package Maker 无法完成启动。"
+  },
+  "sysinfo": {
+    "app_version": "应用程序版本",
+    "is_compiled": "已编译",
+    "platform_os": "平台",
+    "python_version": "Python 版本",
+    "install_id": "安装 ID",
+    "data_file": "数据文件"
   }
 }

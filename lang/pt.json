@@ -194,7 +194,8 @@
     "upload_icon_pack": "Enviar Icon Pack",
     "upload_asset_pack": "Enviar Asset Pack",
     "select_asset_pack": "Selecionar Asset Pack",
-    "select_icon_pack": "Selecionar Icon Pack"
+    "select_icon_pack": "Selecionar Icon Pack",
+    "scan": "Diagnosticar"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "A limpar os ficheiros de compilacao...",
     "folder_removed": "Pasta removida: {name}",
     "folder_remove_failed": "Nao foi possivel remover {name}: {error}",
+    "folder_locked": "ainda em uso por outro processo",
     "file_removed": "Ficheiro removido: {name}",
     "file_remove_failed": "Nao foi possivel remover {name}: {error}",
     "package_folder_removed": "Pasta do pacote removida: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "Verificar o .iflapp na sandbox isolada",
     "proc_dropper": "Gerar dropper .run autoextraivel",
     "proc_cleanup": "Limpar artefactos temporarios e pasta do pacote",
-    "proc_done": "Procedimento concluido",
-    "folder_locked": "ainda em uso por outro processo"
+    "proc_done": "Procedimento concluido"
   },
   "install_console": {
     "title": "Progresso da instalacao",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Erro interno",
     "internal_error_body": "O Package Maker não conseguiu concluir a inicialização."
+  },
+  "sysinfo": {
+    "app_version": "Versão do aplicativo",
+    "is_compiled": "Compilada",
+    "platform_os": "Plataforma",
+    "python_version": "Versão do Python",
+    "install_id": "ID de instalação",
+    "data_file": "Arquivo de dados"
   }
 }

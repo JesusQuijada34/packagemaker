@@ -194,7 +194,8 @@
     "upload_icon_pack": "Icon Pack をアップロード",
     "upload_asset_pack": "Asset Pack をアップロード",
     "select_asset_pack": "Asset Pack を選択",
-    "select_icon_pack": "Icon Pack を選択"
+    "select_icon_pack": "Icon Pack を選択",
+    "scan": "診断"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "ビルドファイルを保存しています...",
     "folder_removed": "フォルダを削除しました: {name}",
     "folder_remove_failed": "{name} を削除できませんでした: {error}",
+    "folder_locked": "別のプロセスがまだ使用中です",
     "file_removed": "ファイルを削除しました: {name}",
     "file_remove_failed": "{name} を削除できませんでした: {error}",
     "package_folder_removed": "パッケージフォルダを削除しました: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "隔離サンドボックスで .iflapp を検証",
     "proc_dropper": "自己展開型 .run dropper を生成",
     "proc_cleanup": "一時ファイルとパッケージフォルダを整理",
-    "proc_done": "手順が完了しました",
-    "folder_locked": "別のプロセスがまだ使用中です"
+    "proc_done": "手順が完了しました"
   },
   "install_console": {
     "title": "インストールの進行状況",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "内部エラー",
     "internal_error_body": "Package Maker は起動を完了できませんでした。"
+  },
+  "sysinfo": {
+    "app_version": "アプリのバージョン",
+    "is_compiled": "コンパイル済み",
+    "platform_os": "プラットフォーム",
+    "python_version": "Python のバージョン",
+    "install_id": "インストール ID",
+    "data_file": "データファイル"
   }
 }

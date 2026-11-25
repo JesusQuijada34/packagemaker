@@ -194,7 +194,8 @@
     "upload_icon_pack": "Icon Pack uploaden",
     "upload_asset_pack": "Asset Pack uploaden",
     "select_asset_pack": "Asset Pack selecteren",
-    "select_icon_pack": "Icon Pack selecteren"
+    "select_icon_pack": "Icon Pack selecteren",
+    "scan": "Diagnosticeer"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "Build-bestanden worden opgeruimd...",
     "folder_removed": "Map verwijderd: {name}",
     "folder_remove_failed": "Kon {name} niet verwijderen: {error}",
+    "folder_locked": "nog in gebruik door een ander proces",
     "file_removed": "Bestand verwijderd: {name}",
     "file_remove_failed": "Kon {name} niet verwijderen: {error}",
     "package_folder_removed": "Pakketmap verwijderd: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "De .iflapp verifieren in de geisoleerde sandbox",
     "proc_dropper": "Zelfuitpakkende .run-dropper genereren",
     "proc_cleanup": "Tijdelijke artefacten en pakketmap opruimen",
-    "proc_done": "Procedure voltooid",
-    "folder_locked": "nog in gebruik door een ander proces"
+    "proc_done": "Procedure voltooid"
   },
   "install_console": {
     "title": "Installatievoortgang",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Interne fout",
     "internal_error_body": "Package Maker kon de start niet voltooien."
+  },
+  "sysinfo": {
+    "app_version": "Applicatieversie",
+    "is_compiled": "Gecompileerd",
+    "platform_os": "Platform",
+    "python_version": "Python-versie",
+    "install_id": "Installatie-ID",
+    "data_file": "Gegevensbestand"
   }
 }

@@ -194,7 +194,8 @@
     "upload_icon_pack": "Upload Icon Pack",
     "upload_asset_pack": "Upload Asset Pack",
     "select_asset_pack": "Select Asset Pack",
-    "select_icon_pack": "Select Icon Pack"
+    "select_icon_pack": "Select Icon Pack",
+    "scan": "Diagnose"
   },
   "editor": {
     "project": "Project",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Internal error",
     "internal_error_body": "Package Maker could not complete startup."
+  },
+  "sysinfo": {
+    "app_version": "Application version",
+    "is_compiled": "Compiled",
+    "platform_os": "Platform",
+    "python_version": "Python version",
+    "install_id": "Installation ID",
+    "data_file": "Data file"
   }
 }

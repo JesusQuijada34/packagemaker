@@ -4772,12 +4772,21 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Causa raíz:** `apply_ui_language()` sólo retraduce un puñado de widgets;
   las páginas se construyen una sola vez al arrancar y no tienen un método de
   retraducción. Hay cadenas fijas en varios módulos de UI.
-- **Estado:** Pendiente. La estrategia (reconstruir páginas, reiniciar o
-  mantener el banner) cambia el comportamiento de la UI y está en Q-020.
-- **Solución aplicada:** Ninguna todavía; no se modifica la UI sin la
-  confirmación de Q-020.
-- **Commit:** —
-- **Fecha de resolución:** —
+- **Estado:** Resuelto el 2026-11-25 (quincuagésimo cuarto round).
+- **Solución aplicada:** `lib/live_i18n.py` retraduce la ventana **en el sitio**,
+  sin reconstruir páginas, así que no se pierde lo escrito en los formularios.
+  Construye un índice inverso `texto -> clave` con los 14 ficheros de `lang/`
+  (y otro de plantillas tipo `Versión {version}`), recorre el árbol de widgets
+  y vuelve a traducir `text`, `placeholderText`, `toolTip`, los ítems de
+  `QComboBox` y las pestañas de `QTabWidget`. Nunca toca el texto que escribe
+  el usuario (`QLineEdit`, editores). `apply_ui_language()` lo invoca al final.
+  Se extrajeron además las cadenas fijas: el botón «Diagnosticar» pasó a
+  `moonfix.scan` y la rejilla de información del sistema mostraba las claves
+  crudas (`app_version`, `is_compiled`, …) y ahora usa `sysinfo.*` traducidas.
+  Medición real con la ventana construida: **de 72 textos sin traducir a 16**,
+  y los 16 restantes son marcas, versión, licencia, autor y valores crudos.
+- **Commit:** (este round)
+- **Fecha de resolución:** 2026-11-25
 
 ## R-4d9e2b61 — La compilación con Nuitka falla y el build no usa un entorno aislado
 

@@ -18,6 +18,13 @@ from typing import Dict
 CURATED: Dict[str, Dict[str, str]] = {}
 
 CURATED["fr"] = {
+    'moonfix.scan': 'Diagnostiquer',
+    'sysinfo.app_version': "Version de l'application",
+    'sysinfo.is_compiled': 'Compilée',
+    'sysinfo.platform_os': 'Plateforme',
+    'sysinfo.python_version': 'Version de Python',
+    'sysinfo.install_id': "ID d'installation",
+    'sysinfo.data_file': 'Fichier de données',
     'dashboard.create_failed': 'Impossible de créer le projet : {error}',
     "config.font_family": "Police de l'interface",
     "config.font_auto": "Automatique (selon le systeme)",
@@ -246,6 +253,13 @@ CURATED["fr"] = {
 }
 
 CURATED["de"] = {
+    'moonfix.scan': 'Diagnostizieren',
+    'sysinfo.app_version': 'Anwendungsversion',
+    'sysinfo.is_compiled': 'Kompiliert',
+    'sysinfo.platform_os': 'Plattform',
+    'sysinfo.python_version': 'Python-Version',
+    'sysinfo.install_id': 'Installations-ID',
+    'sysinfo.data_file': 'Datendatei',
     'dashboard.create_failed': 'Das Projekt konnte nicht erstellt werden: {error}',
     "config.font_family": "Schriftart der Oberflaeche",
     "config.font_auto": "Automatisch (Systemvorgabe)",
@@ -474,6 +488,13 @@ CURATED["de"] = {
 }
 
 CURATED["it"] = {
+    'moonfix.scan': 'Diagnostica',
+    'sysinfo.app_version': "Versione dell'applicazione",
+    'sysinfo.is_compiled': 'Compilata',
+    'sysinfo.platform_os': 'Piattaforma',
+    'sysinfo.python_version': 'Versione di Python',
+    'sysinfo.install_id': 'ID installazione',
+    'sysinfo.data_file': 'File di dati',
     'dashboard.create_failed': 'Impossibile creare il progetto: {error}',
     "config.font_family": "Font dell'interfaccia",
     "config.font_auto": "Automatico (predefinito di sistema)",
@@ -702,6 +723,13 @@ CURATED["it"] = {
 }
 
 CURATED["pt"] = {
+    'moonfix.scan': 'Diagnosticar',
+    'sysinfo.app_version': 'Versão do aplicativo',
+    'sysinfo.is_compiled': 'Compilada',
+    'sysinfo.platform_os': 'Plataforma',
+    'sysinfo.python_version': 'Versão do Python',
+    'sysinfo.install_id': 'ID de instalação',
+    'sysinfo.data_file': 'Arquivo de dados',
     'dashboard.create_failed': 'Não foi possível criar o projeto: {error}',
     "config.font_family": "Fonte da interface",
     "config.font_auto": "Automatica (padrao do sistema)",
@@ -932,6 +960,13 @@ CURATED["pt"] = {
 }
 
 CURATED["nl"] = {
+    'moonfix.scan': 'Diagnosticeer',
+    'sysinfo.app_version': 'Applicatieversie',
+    'sysinfo.is_compiled': 'Gecompileerd',
+    'sysinfo.platform_os': 'Platform',
+    'sysinfo.python_version': 'Python-versie',
+    'sysinfo.install_id': 'Installatie-ID',
+    'sysinfo.data_file': 'Gegevensbestand',
     'dashboard.create_failed': 'Kan het project niet aanmaken: {error}',
     "config.font_family": "Lettertype van de interface",
     "config.font_auto": "Automatisch (systeemstandaard)",
@@ -1160,6 +1195,13 @@ CURATED["nl"] = {
 }
 
 CURATED["pl"] = {
+    'moonfix.scan': 'Diagnozuj',
+    'sysinfo.app_version': 'Wersja aplikacji',
+    'sysinfo.is_compiled': 'Skompilowana',
+    'sysinfo.platform_os': 'Platforma',
+    'sysinfo.python_version': 'Wersja Pythona',
+    'sysinfo.install_id': 'Identyfikator instalacji',
+    'sysinfo.data_file': 'Plik danych',
     'dashboard.create_failed': 'Nie można utworzyć projektu: {error}',
     "config.font_family": "Czcionka interfejsu",
     "config.font_auto": "Automatycznie (domyslna systemowa)",
@@ -1388,6 +1430,13 @@ CURATED["pl"] = {
 }
 
 CURATED["tr"] = {
+    'moonfix.scan': 'Teşhis et',
+    'sysinfo.app_version': 'Uygulama sürümü',
+    'sysinfo.is_compiled': 'Derlenmiş',
+    'sysinfo.platform_os': 'Platform',
+    'sysinfo.python_version': 'Python sürümü',
+    'sysinfo.install_id': 'Kurulum kimliği',
+    'sysinfo.data_file': 'Veri dosyası',
     'dashboard.create_failed': 'Proje oluşturulamadı: {error}',
     "config.font_family": "Arayuz yazi tipi",
     "config.font_auto": "Otomatik (sistem varsayilani)",
@@ -1616,6 +1665,13 @@ CURATED["tr"] = {
 }
 
 CURATED["ru"] = {
+    'moonfix.scan': 'Диагностика',
+    'sysinfo.app_version': 'Версия приложения',
+    'sysinfo.is_compiled': 'Скомпилирована',
+    'sysinfo.platform_os': 'Платформа',
+    'sysinfo.python_version': 'Версия Python',
+    'sysinfo.install_id': 'Идентификатор установки',
+    'sysinfo.data_file': 'Файл данных',
     'dashboard.create_failed': 'Не удалось создать проект: {error}',
     "config.font_family": "Шрифт интерфейса",
     "config.font_auto": "Автоматически (по системе)",
@@ -1844,6 +1900,13 @@ CURATED["ru"] = {
 }
 
 CURATED["ja"] = {
+    'moonfix.scan': '診断',
+    'sysinfo.app_version': 'アプリのバージョン',
+    'sysinfo.is_compiled': 'コンパイル済み',
+    'sysinfo.platform_os': 'プラットフォーム',
+    'sysinfo.python_version': 'Python のバージョン',
+    'sysinfo.install_id': 'インストール ID',
+    'sysinfo.data_file': 'データファイル',
     'dashboard.create_failed': 'プロジェクトを作成できませんでした: {error}',
     "config.font_family": "インターフェースのフォント",
     "config.font_auto": "自動（システムに従う）",
@@ -2072,6 +2135,13 @@ CURATED["ja"] = {
 }
 
 CURATED["ko"] = {
+    'moonfix.scan': '진단',
+    'sysinfo.app_version': '앱 버전',
+    'sysinfo.is_compiled': '컴파일됨',
+    'sysinfo.platform_os': '플랫폼',
+    'sysinfo.python_version': 'Python 버전',
+    'sysinfo.install_id': '설치 ID',
+    'sysinfo.data_file': '데이터 파일',
     'dashboard.create_failed': '프로젝트를 만들 수 없습니다: {error}',
     "config.font_family": "인터페이스 글꼴",
     "config.font_auto": "자동 (시스템 기본값)",
@@ -2300,6 +2370,13 @@ CURATED["ko"] = {
 }
 
 CURATED["zh"] = {
+    'moonfix.scan': '诊断',
+    'sysinfo.app_version': '应用程序版本',
+    'sysinfo.is_compiled': '已编译',
+    'sysinfo.platform_os': '平台',
+    'sysinfo.python_version': 'Python 版本',
+    'sysinfo.install_id': '安装 ID',
+    'sysinfo.data_file': '数据文件',
     'dashboard.create_failed': '无法创建项目：{error}',
     "config.font_family": "界面字体",
     "config.font_auto": "自动（跟随系统）",
@@ -2528,6 +2605,13 @@ CURATED["zh"] = {
 }
 
 CURATED["ar"] = {
+    'moonfix.scan': 'تشخيص',
+    'sysinfo.app_version': 'إصدار التطبيق',
+    'sysinfo.is_compiled': 'مُجمَّع',
+    'sysinfo.platform_os': 'المنصة',
+    'sysinfo.python_version': 'إصدار Python',
+    'sysinfo.install_id': 'معرّف التثبيت',
+    'sysinfo.data_file': 'ملف البيانات',
     'dashboard.create_failed': 'تعذر إنشاء المشروع: {error}',
     "config.font_family": "خط الواجهة",
     "config.font_auto": "تلقائي (حسب النظام)",

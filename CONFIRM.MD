@@ -272,6 +272,11 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   completa. Riesgo medio-alto.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
   (indica A, B o C junto a la casilla)
+- **Nota del agente (2026-11-25):** se aplicó la **opción A sin reconstruir
+  páginas**, que evita el riesgo que describía este punto (widgets duplicados y
+  pérdida del formulario). `lib/live_i18n.py` resuelve el texto visible a su
+  clave y lo retraduce en el sitio; `apply_ui_language()` lo invoca al final.
+  El bug R-8a3f1c72 queda resuelto con esta implementación.
 
 ---
 

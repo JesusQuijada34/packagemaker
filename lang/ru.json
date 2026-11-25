@@ -194,7 +194,8 @@
     "upload_icon_pack": "Загрузить Icon Pack",
     "upload_asset_pack": "Загрузить Asset Pack",
     "select_asset_pack": "Выбрать Asset Pack",
-    "select_icon_pack": "Выбрать Icon Pack"
+    "select_icon_pack": "Выбрать Icon Pack",
+    "scan": "Диагностика"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "Очистка файлов сборки...",
     "folder_removed": "Папка удалена: {name}",
     "folder_remove_failed": "Не удалось удалить {name}: {error}",
+    "folder_locked": "всё ещё используется другим процессом",
     "file_removed": "Файл удален: {name}",
     "file_remove_failed": "Не удалось удалить {name}: {error}",
     "package_folder_removed": "Папка пакета удалена: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "Проверить .iflapp в изолированном sandbox",
     "proc_dropper": "Создать самораспаковывающийся dropper .run",
     "proc_cleanup": "Очистить временные артефакты и папку пакета",
-    "proc_done": "Процедура завершена",
-    "folder_locked": "всё ещё используется другим процессом"
+    "proc_done": "Процедура завершена"
   },
   "install_console": {
     "title": "Прогресс установки",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Внутренняя ошибка",
     "internal_error_body": "Package Maker не удалось завершить запуск."
+  },
+  "sysinfo": {
+    "app_version": "Версия приложения",
+    "is_compiled": "Скомпилирована",
+    "platform_os": "Платформа",
+    "python_version": "Версия Python",
+    "install_id": "Идентификатор установки",
+    "data_file": "Файл данных"
   }
 }

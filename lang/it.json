@@ -194,7 +194,8 @@
     "upload_icon_pack": "Carica Icon Pack",
     "upload_asset_pack": "Carica Asset Pack",
     "select_asset_pack": "Seleziona Asset Pack",
-    "select_icon_pack": "Seleziona Icon Pack"
+    "select_icon_pack": "Seleziona Icon Pack",
+    "scan": "Diagnostica"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "Pulizia dei file di compilazione...",
     "folder_removed": "Cartella rimossa: {name}",
     "folder_remove_failed": "Impossibile rimuovere {name}: {error}",
+    "folder_locked": "ancora in uso da un altro processo",
     "file_removed": "File rimosso: {name}",
     "file_remove_failed": "Impossibile rimuovere {name}: {error}",
     "package_folder_removed": "Cartella del pacchetto rimossa: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "Verifica il .iflapp nella sandbox isolata",
     "proc_dropper": "Genera dropper .run autoestraente",
     "proc_cleanup": "Pulisci artefatti temporanei e cartella del pacchetto",
-    "proc_done": "Procedura completata",
-    "folder_locked": "ancora in uso da un altro processo"
+    "proc_done": "Procedura completata"
   },
   "install_console": {
     "title": "Avanzamento installazione",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Errore interno",
     "internal_error_body": "Package Maker non ha potuto completare l'avvio."
+  },
+  "sysinfo": {
+    "app_version": "Versione dell'applicazione",
+    "is_compiled": "Compilata",
+    "platform_os": "Piattaforma",
+    "python_version": "Versione di Python",
+    "install_id": "ID installazione",
+    "data_file": "File di dati"
   }
 }

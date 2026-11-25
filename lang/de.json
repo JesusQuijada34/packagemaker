@@ -194,7 +194,8 @@
     "upload_icon_pack": "Icon-Paket hochladen",
     "upload_asset_pack": "Asset-Paket hochladen",
     "select_asset_pack": "Asset-Paket auswählen",
-    "select_icon_pack": "Icon-Pack auswaehlen"
+    "select_icon_pack": "Icon-Pack auswaehlen",
+    "scan": "Diagnostizieren"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "Build-Dateien werden bereinigt...",
     "folder_removed": "Ordner entfernt: {name}",
     "folder_remove_failed": "{name} konnte nicht entfernt werden: {error}",
+    "folder_locked": "wird noch von einem anderen Prozess verwendet",
     "file_removed": "Datei entfernt: {name}",
     "file_remove_failed": "{name} konnte nicht entfernt werden: {error}",
     "package_folder_removed": "Paketordner entfernt: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "Die .iflapp in der isolierten Sandbox prufen",
     "proc_dropper": "Selbstextrahierenden .run-Dropper erzeugen",
     "proc_cleanup": "Temporare Artefakte und Paketordner bereinigen",
-    "proc_done": "Vorgang abgeschlossen",
-    "folder_locked": "wird noch von einem anderen Prozess verwendet"
+    "proc_done": "Vorgang abgeschlossen"
   },
   "install_console": {
     "title": "Installationsfortschritt",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Interner Fehler",
     "internal_error_body": "Package Maker konnte den Start nicht abschließen."
+  },
+  "sysinfo": {
+    "app_version": "Anwendungsversion",
+    "is_compiled": "Kompiliert",
+    "platform_os": "Plattform",
+    "python_version": "Python-Version",
+    "install_id": "Installations-ID",
+    "data_file": "Datendatei"
   }
 }

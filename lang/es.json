@@ -193,7 +193,8 @@
     "upload_icon_pack": "Subir Icon Pack",
     "upload_asset_pack": "Subir Asset Pack",
     "select_asset_pack": "Seleccionar Asset Pack",
-    "select_icon_pack": "Seleccionar Icon Pack"
+    "select_icon_pack": "Seleccionar Icon Pack",
+    "scan": "Diagnosticar"
   },
   "editor": {
     "project": "Proyecto",
@@ -757,5 +758,13 @@
   "startup": {
     "internal_error_title": "Error interno",
     "internal_error_body": "Package Maker no pudo completar el arranque."
+  },
+  "sysinfo": {
+    "app_version": "Versión de la aplicación",
+    "is_compiled": "Compilada",
+    "platform_os": "Plataforma",
+    "python_version": "Versión de Python",
+    "install_id": "ID de instalación",
+    "data_file": "Fichero de datos"
   }
 }

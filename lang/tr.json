@@ -194,7 +194,8 @@
     "upload_icon_pack": "Icon Pack yükle",
     "upload_asset_pack": "Asset Pack yükle",
     "select_asset_pack": "Asset Pack seç",
-    "select_icon_pack": "Icon Pack sec"
+    "select_icon_pack": "Icon Pack sec",
+    "scan": "Teşhis et"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "Derleme dosyalari temizleniyor...",
     "folder_removed": "Klasor silindi: {name}",
     "folder_remove_failed": "{name} silinemedi: {error}",
+    "folder_locked": "hala baska bir surec tarafindan kullaniliyor",
     "file_removed": "Dosya silindi: {name}",
     "file_remove_failed": "{name} silinemedi: {error}",
     "package_folder_removed": "Paket klasoru silindi: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": ".iflapp'i yalitilmis sandbox'ta dogrula",
     "proc_dropper": "Kendinden cikarilabilir .run dropper olustur",
     "proc_cleanup": "Gecici dosyalari ve paket klasorunu temizle",
-    "proc_done": "Prosedur tamamlandi",
-    "folder_locked": "hala baska bir surec tarafindan kullaniliyor"
+    "proc_done": "Prosedur tamamlandi"
   },
   "install_console": {
     "title": "Yukleme ilerlemesi",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Dahili hata",
     "internal_error_body": "Package Maker başlatmayı tamamlayamadı."
+  },
+  "sysinfo": {
+    "app_version": "Uygulama sürümü",
+    "is_compiled": "Derlenmiş",
+    "platform_os": "Platform",
+    "python_version": "Python sürümü",
+    "install_id": "Kurulum kimliği",
+    "data_file": "Veri dosyası"
   }
 }

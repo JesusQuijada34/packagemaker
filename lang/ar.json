@@ -194,7 +194,8 @@
     "upload_icon_pack": "تحميل Icon Pack",
     "upload_asset_pack": "تحميل Asset Pack",
     "select_asset_pack": "اختر Asset Pack",
-    "select_icon_pack": "اختيار حزمة الأيقونات"
+    "select_icon_pack": "اختيار حزمة الأيقونات",
+    "scan": "تشخيص"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "جارٍ تنظيف ملفات البناء...",
     "folder_removed": "تمت إزالة المجلد: {name}",
     "folder_remove_failed": "تعذرت إزالة {name}: {error}",
+    "folder_locked": "لا يزال قيد الاستخدام من قبل عملية أخرى",
     "file_removed": "تمت إزالة الملف: {name}",
     "file_remove_failed": "تعذرت إزالة {name}: {error}",
     "package_folder_removed": "تمت إزالة مجلد الحزمة: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "التحقق من .iflapp في الصندوق الرملي المعزول",
     "proc_dropper": "إنشاء dropper .run ذاتي الاستخراج",
     "proc_cleanup": "تنظيف الملفات المؤقتة ومجلد الحزمة",
-    "proc_done": "اكتملت العملية",
-    "folder_locked": "لا يزال قيد الاستخدام من قبل عملية أخرى"
+    "proc_done": "اكتملت العملية"
   },
   "install_console": {
     "title": "تقدم التثبيت",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "خطأ داخلي",
     "internal_error_body": "لم يتمكن Package Maker من إكمال بدء التشغيل."
+  },
+  "sysinfo": {
+    "app_version": "إصدار التطبيق",
+    "is_compiled": "مُجمَّع",
+    "platform_os": "المنصة",
+    "python_version": "إصدار Python",
+    "install_id": "معرّف التثبيت",
+    "data_file": "ملف البيانات"
   }
 }

@@ -1074,6 +1074,15 @@ class PackageTodoGUI(QMainWindow):
             self._populate_engines()
             self.engine_combo.setToolTip(tr("build.engine_tooltip"))
 
+        # El resto de la ventana (páginas, tarjetas, Acerca de) se construyó una
+        # sola vez con tr(); se retraduce en el sitio para no reconstruir los
+        # widgets ni perder lo escrito en los formularios.
+        from lib.live_i18n import retranslate_tree
+
+        retranslate_tree(self)
+        if hasattr(self, "settings_panel") and self.settings_panel is not None:
+            retranslate_tree(self.settings_panel)
+
     def update_sidebar_description(self, index):
         key = SIDEBAR_DESC_KEYS.get(index)
         if key:
@@ -3005,7 +3014,7 @@ class PackageTodoGUI(QMainWindow):
 
         # Barra de acciones superior (estilo macOS): título + Diagnosticar.
         self.mf_scan_btn = make_action_button(
-            "Diagnosticar", "primary", get_icon("moonfix", 16)
+            tr("moonfix.scan"), "primary", get_icon("moonfix", 16)
         )
         self.mf_scan_btn.clicked.connect(self.mf_start_scan)
         self.moonfix_action_bar, self.mf_bar_title = install_page_action_bar(
@@ -3212,15 +3221,15 @@ class PackageTodoGUI(QMainWindow):
         grid = QGridLayout()
         grid.setSpacing(6)
         items = (
-            ("app_version", ro.get("app_version", "")),
-            ("is_compiled", tr("common.yes") if ro.get("is_compiled") else tr("common.no")),
-            ("platform_os", ro.get("platform_os", "")),
-            ("python_version", ro.get("python_version", "")),
-            ("install_id", ro.get("install_id", "")),
-            ("data_file", ro.get("data_file", "")),
+            ("sysinfo.app_version", ro.get("app_version", "")),
+            ("sysinfo.is_compiled", tr("common.yes") if ro.get("is_compiled") else tr("common.no")),
+            ("sysinfo.platform_os", ro.get("platform_os", "")),
+            ("sysinfo.python_version", ro.get("python_version", "")),
+            ("sysinfo.install_id", ro.get("install_id", "")),
+            ("sysinfo.data_file", ro.get("data_file", "")),
         )
         for row, (name, value) in enumerate(items):
-            name_lbl = QLabel(name)
+            name_lbl = QLabel(tr(name))
             set_qss(name_lbl, 'packagemaker_084', append=False)
             value_lbl = QLabel(str(value))
             set_qss(value_lbl, 'packagemaker_085', append=False)

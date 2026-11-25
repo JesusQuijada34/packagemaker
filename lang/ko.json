@@ -194,7 +194,8 @@
     "upload_icon_pack": "Icon Pack 업로드",
     "upload_asset_pack": "Asset Pack 업로드",
     "select_asset_pack": "Asset Pack 선택",
-    "select_icon_pack": "Icon Pack 선택"
+    "select_icon_pack": "Icon Pack 선택",
+    "scan": "진단"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "빌드 파일을 정리하는 중...",
     "folder_removed": "폴더 삭제됨: {name}",
     "folder_remove_failed": "{name}을(를) 삭제할 수 없습니다: {error}",
+    "folder_locked": "다른 프로세스가 아직 사용 중입니다",
     "file_removed": "파일 삭제됨: {name}",
     "file_remove_failed": "{name}을(를) 삭제할 수 없습니다: {error}",
     "package_folder_removed": "패키지 폴더 삭제됨: {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "격리된 샌드박스에서 .iflapp 검증",
     "proc_dropper": "자동 압축 해제 .run dropper 생성",
     "proc_cleanup": "임시 아티팩트와 패키지 폴더 정리",
-    "proc_done": "절차 완료",
-    "folder_locked": "다른 프로세스가 아직 사용 중입니다"
+    "proc_done": "절차 완료"
   },
   "install_console": {
     "title": "설치 진행률",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "내부 오류",
     "internal_error_body": "Package Maker가 시작을 완료하지 못했습니다."
+  },
+  "sysinfo": {
+    "app_version": "앱 버전",
+    "is_compiled": "컴파일됨",
+    "platform_os": "플랫폼",
+    "python_version": "Python 버전",
+    "install_id": "설치 ID",
+    "data_file": "데이터 파일"
   }
 }

@@ -194,7 +194,8 @@
     "upload_icon_pack": "Téléverser un Icon Pack",
     "upload_asset_pack": "Téléverser un Asset Pack",
     "select_asset_pack": "Sélectionner un Asset Pack",
-    "select_icon_pack": "Selectionner Icon Pack"
+    "select_icon_pack": "Selectionner Icon Pack",
+    "scan": "Diagnostiquer"
   },
   "editor": {
     "project": "Project",
@@ -699,6 +700,7 @@
     "cleanup_start": "Nettoyage des fichiers de compilation...",
     "folder_removed": "Dossier supprime : {name}",
     "folder_remove_failed": "Impossible de supprimer {name} : {error}",
+    "folder_locked": "toujours utilise par un autre processus",
     "file_removed": "Fichier supprime : {name}",
     "file_remove_failed": "Impossible de supprimer {name} : {error}",
     "package_folder_removed": "Dossier du paquet supprime : {name}",
@@ -743,8 +745,7 @@
     "proc_verify": "Verifier le .iflapp dans le bac a sable isole",
     "proc_dropper": "Generer un dropper .run autoextractible",
     "proc_cleanup": "Nettoyer les artefacts temporaires et le dossier du paquet",
-    "proc_done": "Procedure terminee",
-    "folder_locked": "toujours utilise par un autre processus"
+    "proc_done": "Procedure terminee"
   },
   "install_console": {
     "title": "Progression de l'installation",
@@ -758,5 +759,13 @@
   "startup": {
     "internal_error_title": "Erreur interne",
     "internal_error_body": "Package Maker n'a pas pu terminer le démarrage."
+  },
+  "sysinfo": {
+    "app_version": "Version de l'application",
+    "is_compiled": "Compilée",
+    "platform_os": "Plateforme",
+    "python_version": "Version de Python",
+    "install_id": "ID d'installation",
+    "data_file": "Fichier de données"
   }
 }
