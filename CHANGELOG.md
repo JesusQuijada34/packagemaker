@@ -1,4 +1,33 @@
-## 2026-11-18 — quincuagésimo sexto ciclo
+## 2026-11-25 — quincuagésimo séptimo ciclo
+
+### Verificado — cierre del issue #12 y triaje del issue #11
+
+Ciclo de verificación y triaje. **Ningún cambio de código ni de comportamiento
+del engine**: se revisa lo entregado en el ciclo anterior, se cierra lo que
+está probado y se separa lo que exige aprobación del propietario.
+
+- **Issue #12 (R-9b3e7a41) cerrado:** la tabla del entorno ya se rotula en el
+  idioma activo. Verificado en vivo con `_env_label()` sobre `lang/*.json`
+  (`es` → `Sistema operativo`/`Idioma`, `en` → `Operating system`/`Language`,
+  `ja` → `オペレーティングシステム`/`言語`, `ar` → `نظام التشغيل`/`اللغة`).
+  La suite completa pasa (1292 + 1 omitido, 64 subtests) y `pyflakes`/
+  `py_compile` están limpios.
+- **Issue #11 (R-1f6c9d38) primera parte verificada:** el cuadro «Contexto» ya
+  no existe en el sidebar y la descripción se dibuja bajo el título de la barra
+  de acciones. El issue **sigue abierto**: el resto de su texto pide una
+  sección de ayuda, addons en `lib/addons/`, conectar proyectos a repositorios
+  de GitHub (público/privado), la extensión CloudCube, el updater como
+  extensión, terminar el motor Leviathan y cambios de tema del sidebar. Todo
+  eso queda registrado como `Q-021`…`Q-026` en `CONFIRM.MD`; no se implementa
+  nada sin aprobación.
+- **Issue #10 (R-8c4f1a72) en observación:** la corrección está en `main` y
+  probada en Linux/offscreen; el issue sigue abierto hasta la comprobación
+  visual en Windows.
+
+No se prepara release: el periodo de observación sigue abierto y no han pasado
+7 días sin reportes nuevos.
+
+## 2026-11-25 — quincuagésimo sexto ciclo
 
 ### Corregido — tabla del entorno traducida (issue #12) y descripción de página fuera del sidebar (issue #11)
 
@@ -6,31 +35,31 @@ Dos reportes nuevos de JesusQuijada34. **Ningún cambio de comportamiento del
 engine**: la ley de nombres, el formato `.iflapp`, las plantillas y el contenido
 de los paquetes siguen igual.
 
-- **Issue #12 — «problema de idioma»:** la tabla de entorno que se adjunta a los
-  reportes salía siempre en español (`Dato`/`Valor`) aunque la interfaz
-  estuviera en otro idioma. `lib/report_telemetry.py` ahora resuelve las
+- **R-9b3e7a41 — Issue #12 «problema de idioma» (Media):** la tabla de entorno
+  que se adjunta a los reportes salía siempre en español (`Dato`/`Valor`)
+  aunque la interfaz estuviera en otro idioma. `lib/report_telemetry.py` ahora resuelve las
   etiquetas con `_env_label()` contra las claves `env.*` de los 14 catálogos de
   `lang/` y publica el campo `language` en el snapshot, de modo que el issue
   indica en qué idioma se estaba usando la aplicación. Verificado en vivo:
   es `Dato/Valor`, en `Field/Value`, ja `項目/値`, ar `البيان/القيمة`.
-- **Issue #11 — «Orden» (primera parte):** el cuadro de contexto del sidebar
-  desaparece (`desc_card`, `sidebar_desc_text` y las reglas
-  `QWidget#SidebarContextCard`). La descripción de la página se dibuja ahora
+- **R-1f6c9d38 — Issue #11 «Orden», primera parte (Media):** el cuadro de
+  contexto del sidebar desaparece (`desc_card`, `sidebar_desc_text` y las
+  reglas `QWidget#SidebarContextCard`). La descripción de la página se dibuja ahora
   **bajo el título de su barra de acciones y fuera de la píldora**, con
   `install_page_action_bar()` exponiendo `subtitle_label` y
   `set_action_bar_subtitle()`. El manifiesto guarda `### Título\nDetalle`; bajo
   el título de la página ese encabezado sobraba, así que sólo se muestra el
   detalle. AIDE y Configuración, que no tenían barra, la reciben.
-- **Barra de actividad (bugs.txt):** `lib/activity_bar.py` añade un marquee fino
-  bajo cada barra de acciones, siempre presente pero inactivo, que se anima
-  cuando hay trabajo en segundo plano. Sustituye al diálogo con barra de
+- **R-7d2a5b84 — Barra de actividad (bugs.txt), Media:** `lib/activity_bar.py`
+  añade un marquee fino bajo cada barra de acciones, siempre presente pero
+  inactivo, que se anima cuando hay trabajo en segundo plano. Sustituye al diálogo con barra de
   progreso; el guardado automático de Configuración ya lo enciende.
-- **Sin PyYAML la ventana no abría:** `load_addons()` devolvía una lista vacía
-  en vez de los addons integrados, así que el sidebar quedaba sin botones y
-  `__init__` reventaba en `self.btn_create.setChecked(True)`. Ahora recurre a
+- **R-4b8f1e27 — Sin PyYAML la ventana no abría (Alta):** `load_addons()`
+  devolvía una lista vacía en vez de los addons integrados, así que el sidebar
+  quedaba sin botones y `__init__` reventaba en `self.btn_create.setChecked(True)`. Ahora recurre a
   `fallback_addons()`.
 
-Commit: `pendiente`. Pruebas nuevas en `tests/test_activity_bar_and_subtitle.py`
+Commit: `1655007`. Pruebas nuevas en `tests/test_activity_bar_and_subtitle.py`
 (estado del marquee, subtítulo fuera de la píldora, pintura en ambos estados) y
 dos más en `tests/test_report_extension.py` (idioma de la tabla) y
 `tests/test_privacy_switch_and_addons_ui.py` (la descripción vive en la barra y

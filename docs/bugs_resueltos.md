@@ -2,8 +2,8 @@
 
 Entradas **ya resueltas**, retiradas de `bugs.md` el 2026-11-25 para
 dejar la cola activa manejable. El detalle de cada corrección vive
-también en `CHANGELOG.md`. Este archivo es histórico: se consulta, no
-se actualiza.
+también en `CHANGELOG.md`. Este archivo es histórico: se consulta y sólo
+recibe entradas cuando una corrección verificada se retira de `bugs.md`.
 
 ---
 
@@ -4092,3 +4092,93 @@ se actualiza.
 - **Commit:** `main` (quincuagésimo cuarto ciclo, 2026-11-25).
 - **Fecha de resolución:** 2026-11-25.
 
+
+## R-9b3e7a41 — La tabla del entorno se rotulaba siempre en español
+
+- **Usuario:** JesusQuijada34 (issue #12, «problema de idioma»; reporte enviado
+  desde la aplicación)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media
+- **Descripción:** al usar la aplicación en otro idioma, la tabla comparativa
+  del entorno que se adjunta a los reportes seguía mostrando `Dato`/`Valor` en
+  español y no indicaba el idioma activo.
+- **Pasos para reproducir:** cambiar la interfaz a inglés, abrir «Reportes» y
+  mirar la vista previa del entorno; las etiquetas seguían en español.
+- **Causa raíz:** `environment_markdown()` usaba literales en español y el
+  snapshot no publicaba el idioma de la interfaz.
+- **Estado:** Resuelto y verificado el 2026-11-25 (quincuagésimo séptimo
+  ciclo).
+- **Solución aplicada:** `lib/report_telemetry.py` resuelve las etiquetas con
+  `_env_label()` contra las claves `env.*` de los 14 catálogos de `lang/`,
+  publica el campo `language` y cae al texto español si falta la traducción.
+  Verificado en vivo: es `Sistema operativo`/`Idioma`, en `Operating
+  system`/`Language`, ja `オペレーティングシステム`/`言語`, ar
+  `نظام التشغيل`/`اللغة`.
+- **Pruebas:** `tests/test_report_extension.py` (idioma de la tabla).
+- **Commit:** `1655007` (quincuagésimo sexto ciclo, 2026-11-25).
+- **Fecha de resolución:** 2026-11-25.
+
+
+## R-1f6c9d38 — Descripción de página fuera del sidebar
+
+- **Usuario:** JesusQuijada34 (issue #11, «Orden»; reporte enviado desde la
+  aplicación)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media
+- **Descripción:** el issue pide eliminar el cuadro de contexto del sidebar y
+  mover la descripción debajo del título de la pestaña, en la barra de
+  acciones y fuera del recuadro, como detalle de la opción.
+- **Pasos para reproducir:** no es un fallo; es una mejora visual solicitada.
+- **Causa raíz:** la descripción vivía en un `desc_card` del sidebar y las
+  páginas no tenían un subtítulo en su barra de acciones.
+- **Estado:** Resuelto (primera parte del issue #11) y verificado el
+  2026-11-25 (quincuagésimo séptimo ciclo). El resto del issue queda como
+  Q-021…Q-026.
+- **Solución aplicada:** se eliminan `desc_card`, `sidebar_desc_text` y las
+  reglas `QWidget#SidebarContextCard`; `install_page_action_bar()` expone
+  `subtitle_label` y `set_action_bar_subtitle()` para dibujar el detalle bajo
+  el título y fuera de la píldora. AIDE y Configuración reciben barra. El
+  subtítulo se retraduce en vivo en todas las páginas.
+- **Pruebas:** `tests/test_privacy_switch_and_addons_ui.py` y
+  `tests/test_activity_bar_and_subtitle.py`.
+- **Commit:** `1655007` (quincuagésimo sexto ciclo, 2026-11-25).
+- **Fecha de resolución:** 2026-11-25.
+
+
+## R-7d2a5b84 — Barra de actividad marquee bajo el action bar
+
+- **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media
+- **Descripción:** se pidió una barra de actividad fina bajo las barras de
+  acción que indique trabajo en segundo plano en lugar del diálogo con barra
+  de progreso.
+- **Pasos para reproducir:** no es un fallo; es una mejora de interfaz.
+- **Causa raíz:** las tareas largas mostraban un diálogo bloqueante.
+- **Estado:** Resuelto y verificado el 2026-11-25 (quincuagésimo séptimo
+  ciclo).
+- **Solución aplicada:** `lib/activity_bar.py` añade un marquee fino bajo cada
+  barra de acciones, siempre presente pero inactivo hasta que hay trabajo; el
+  guardado automático de Configuración ya lo enciende.
+- **Pruebas:** `tests/test_activity_bar_and_subtitle.py`.
+- **Commit:** `1655007` (quincuagésimo sexto ciclo, 2026-11-25).
+- **Fecha de resolución:** 2026-11-25.
+
+
+## R-4b8f1e27 — Sin PyYAML la ventana no abría
+
+- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Alta
+- **Descripción:** sin PyYAML, `load_addons()` devolvía una lista vacía, el
+  sidebar se quedaba sin botones y la construcción de la ventana reventaba en
+  `self.btn_create.setChecked(True)`.
+- **Pasos para reproducir:** ejecutar la aplicación en un entorno sin PyYAML.
+- **Causa raíz:** el motor de addons sólo tenía la ruta YAML y no un respaldo.
+- **Estado:** Resuelto y verificado el 2026-11-25 (quincuagésimo séptimo
+  ciclo).
+- **Solución aplicada:** `load_addons()` cae a `fallback_addons()` cuando
+  PyYAML no está disponible.
+- **Pruebas:** `tests/test_privacy_switch_and_addons_ui.py`.
+- **Commit:** `1655007` (quincuagésimo sexto ciclo, 2026-11-25).
+- **Fecha de resolución:** 2026-11-25.

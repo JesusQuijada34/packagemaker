@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-18 (quincuagésimo sexto ciclo, issues #11 y #12)
+Última actualización: 2026-11-25 (quincuagésimo séptimo ciclo, verificación de #11 y #12)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -19,15 +19,19 @@ histórico.
 | R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Pendiente (Q-019) |
 | R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Pendiente (Q-012/Q-011) |
 | R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Pendiente (Q-011/F-004) |
-| R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | Corregido; verificación visual en Windows pendiente (issue #10) |
-| R-5a7d2f16 | Mejora — fondo blanco/negro translúcido sobre el blur | Media | Pendiente (mejora) |
-| R-9b3e7a41 | Bug — tabla del entorno siempre en español (issue #12) | Media | Corregido |
-| R-1f6c9d38 | Mejora — descripción de página fuera del sidebar (issue #11) | Media | Corregido |
-| R-7d2a5b84 | Mejora — barra de actividad marquee bajo el action bar | Media | Corregido |
-| R-4b8f1e27 | Bug — sin PyYAML la ventana no abría | Alta | Corregido |
+| R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | En observación; verificación visual en Windows (issue #10) |
+| R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Pendiente (Q-026) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora) |
+| R-7b3e9a52 | Mejora — sección de ayuda global de la aplicación (issue #11) | Media | Pendiente (Q-021) |
+| R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Pendiente (Q-022) |
+| R-9a4e2c83 | Cambio de engine — conectar proyecto a repo GitHub y CloudCube (issue #11) | Media | Pendiente (Q-023) |
+| R-5f1b8d24 | Cambio de engine — updater como extensión con notificaciones (issue #11) | Media | Pendiente (Q-024) |
+| R-8e6a3c15 | Cambio de engine — completar Leviathan y action bar como control (issue #11) | Media | Pendiente (Q-025) |
 
-**4 entradas abiertas** (las cuatro cerradas este ciclo se listan arriba como `Corregido`). 156 resueltas archivadas en `docs/bugs_resueltos.md`.
+**13 entradas en la cola** (bugs, mejoras y cambios de engine). Cuatro
+correcciones verificadas se retiraron este ciclo — R-9b3e7a41, R-1f6c9d38,
+R-7d2a5b84 y R-4b8f1e27 — y quedan archivadas en `docs/bugs_resueltos.md` y en
+`CHANGELOG.md`; las 156 anteriores ya estaban allí.
 
 ---
 
@@ -113,7 +117,40 @@ implementado todavía: la regla de mantenimiento exige una confirmación final
 antes de tocar el engine, y esas confirmaciones viven en la sección
 «Confirmación final» de `CONFIRM.MD` (`F-001`…`F-006`). Q-014 es una mejora de
 UI y queda pendiente de planificación. Q-015…Q-018 siguen sin responder y
-Q-019/Q-020 son nuevas.
+Q-019/Q-020 son nuevas. Q-021…Q-026 se añadieron el 2026-11-25 a partir del
+issue #11 y también siguen sin responder.
+
+### R-7b3e9a52 — Sección de ayuda global de la aplicación (Q-021)
+
+- **Usuario:** JesusQuijada34 (issue #11, «Orden»)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Media
+- **Descripción:** el issue pide «un apartado de ayuda relacionado con toda la
+  app», no una ayuda por página.
+- **Estado:** Pendiente (Q-021). Es una mejora de producto; no se implementa
+  sin aprobación.
+- **Solución propuesta:** página de ayuda del sidebar (addon `help.yaml`) con
+  buscador, temas por área (crear, compilar, blindar, reportar) y textos desde
+  los catálogos de `lang/`.
+- **Archivos:** `addons/help.yaml`, `lib/help_page.py`, `lang/*.json`,
+  `tests/`.
+- **Riesgo:** bajo (página nueva, sin tocar el engine).
+
+### R-2c8d4f71 — Addons en `lib/addons/` e instalación desde la app (Q-022)
+
+- **Usuario:** JesusQuijada34 (issue #11)
+- **Fecha del reporte:** 2026-11-25
+- **Prioridad:** Baja
+- **Descripción:** el issue pide que «las extensiones del sidebar pueden ir por
+  sistema en `lib/addons/`» y que un usuario pueda instalar un addon.
+- **Estado:** Pendiente (Q-022). Hoy los manifiestos viven en `addons/` (raíz) y
+  `lib/addons_engine.py` los carga desde ahí; no hay instalación desde la app.
+- **Solución propuesta:** mover los manifiestos a `lib/addons/` conservando una
+  ruta de compatibilidad para `addons/`, y añadir importación/validación de un
+  `.yaml` desde Configuración.
+- **Archivos:** `lib/addons_engine.py`, `addons/*.yaml`, `packagemaker.py`,
+  `lib/settings_panel.py`, `tests/test_privacy_switch_and_addons_ui.py`.
+- **Riesgo:** medio (rutas de carga y empaquetado de los addons).
 
 ### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
 
@@ -498,6 +535,52 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `lib/github_profile_card.py`, `lib/alert_dialog.py`, `lang/*.json`.
 - **Riesgo:** medio-alto.
 
+### 16. Conectar proyectos a repositorios de GitHub y extensión CloudCube (Q-023)
+
+- **Estado:** Pendiente (Q-023). Proviene del issue #11.
+- **Actual:** el usuario puede autenticarse con GitHub para reportar issues,
+  pero no hay forma de vincular un proyecto a un repositorio ni de elegir
+  visibilidad pública/privada.
+- **Solicitado:** conectar un proyecto a un repositorio de GitHub indicando si
+  debe ser público o privado, y una extensión de sidebar llamada **CloudCube**
+  que reserve los datos en la cuenta del usuario y garantice que la app no se
+  pierde con datos privados en el túnel.
+- **Efectos secundarios:** crea repositorios y sube contenido del usuario;
+  requiere permisos de escritura del token y una política de privacidad clara.
+  Un fallo podría publicar datos privados.
+- **Archivos:** `lib/github_identity.py`, `lib/github_issue_reporter.py`,
+  `addons/*.yaml`, `packagemaker.py`, `docs/privacy.md`, `tests/`.
+- **Riesgo:** alto (datos privados y operaciones remotas destructivas).
+
+### 17. El updater como extensión con notificaciones de Leviathan (Q-024)
+
+- **Estado:** Pendiente (Q-024). Proviene del issue #11.
+- **Actual:** `updater.py` y `lib/coreUpdater/` viven fuera del sistema de
+  addons y usan sus propios avisos.
+- **Solicitado:** incrustar el updater como extensión del sidebar y usar el
+  permiso de notificaciones del motor Leviathan.
+- **Efectos secundarios:** depende de Q-013/F-006 (actualizaciones silenciosas)
+  y del permiso de notificaciones; cambia el punto de entrada del updater.
+- **Archivos:** `updater.py`, `lib/coreUpdater/`, `lib/leviathan_ui/`,
+  `addons/*.yaml`, `packagemaker.py`, `tests/`.
+- **Riesgo:** alto (se solapa con el reemplazo de archivos del propio programa).
+
+### 18. Completar el motor Leviathan y el action bar como control (Q-025)
+
+- **Estado:** Pendiente (Q-025). Proviene del issue #11.
+- **Actual:** las páginas construyen sus controles y layouts con PyQt6 y
+  aplican QSS desde `lib/design_tokens.py`; la barra de acciones es un helper
+  (`lib/page_action_bar.py`), no un control del motor.
+- **Solicitado:** terminar el motor Leviathan para reducir las líneas de
+  creación de controles y layouts, de modo que Leviathan envíe los QSS a cada
+  control y layout, con el action bar como control personalizado.
+- **Efectos secundarios:** reescribe la construcción de toda la interfaz y su
+  sistema de estilos; riesgo alto de regresiones visuales y de
+  compatibilidad con el respaldo sin `leviathan_ui`.
+- **Archivos:** `lib/leviathan_ui/`, `lib/page_action_bar.py`,
+  `lib/design_tokens.py`, `lib/fluent_theme.py`, `packagemaker.py`, `tests/`.
+- **Riesgo:** alto.
+
 ---
 
 ## R-4f8a2c60 — Splash simultáneo y avisos de ventana en Windows
@@ -620,11 +703,15 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Prioridad:** Baja.
 - **Descripción:** el propietario propone un fondo blanco o negro según el modo
   del sistema, con transparencia (0,3–0,5), combinado suavemente con el blur
-  para dar el toque macOS, y texto gris en claro y blanco en oscuro.
+  para dar el toque macOS, y texto gris en claro y blanco en oscuro. El issue
+  #11 concreta el alcance: el **sidebar** con fondo blanco translúcido para
+  combinar con el blur y mantener la legibilidad, y las **pestañas** en gris
+  claro con texto gris en modo claro, invertido en modo oscuro.
 - **Pasos para reproducirlo:** no es un fallo reproducible; es una mejora
   visual solicitada.
 - **Causa raíz:** el material actual no superpone una capa translúcida al blur.
-- **Estado:** Pendiente (mejora). Se planificará cuando bajen los bugs.
+- **Estado:** Pendiente (Q-026). Se planificará cuando bajen los bugs; incluye
+  el color de las pestañas por tema del issue #11.
 - **Solución aplicada:** Ninguna todavía.
 - **Commit:** —
 - **Fecha de resolución:** —
@@ -646,10 +733,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ## Periodo de observación y release
 
-- Casos abiertos: 10 — R-4f8a2c60 (Q-008/F-003), R-6a1f8c23 (Q-011/F-004) y
-  los 8 reportes del commit `bba72d6` (R-8a3f1c72, R-4d9e2b61, R-6b2f8d43,
-  R-7c4a1e95, R-2f8b6a31, R-9e5c3d84, R-5a7d2f16 y R-3c8e4b72). R-4d8f2b61 se
-  cerró como no reproducido.
+- Casos abiertos (quincuagésimo séptimo ciclo): 13 — los bugs R-4f8a2c60
+  (Q-008/F-003), R-6a1f8c23 (Q-011/F-004), R-4d9e2b61 (Q-019), R-7c4a1e95
+  (Q-012/Q-011), R-2f8b6a31 (Q-011/F-004) y R-8c4f1a72 (en observación, issue
+  #10); las mejoras R-5a7d2f16 (Q-026), R-3c8e4b72, R-7b3e9a52 (Q-021) y
+  R-2c8d4f71 (Q-022); y los cambios de engine R-9a4e2c83 (Q-023), R-5f1b8d24
+  (Q-024) y R-8e6a3c15 (Q-025). R-4d8f2b61 se cerró como no reproducido.
 - Vigésimo séptimo ciclo (2026-11-23): R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27
   corregidos y probados; no se prepara release.
 - Vigésimo octavo ciclo (2026-11-23): R-3b6f9d24 y R-9f4c2a71 corregidos y
@@ -1213,3 +1302,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `qradiobutton.qss` anterior. Build real `create_project_from_templates` +
   `FlangCompiler.run()` (zipapp): `.iflapp` de 59 KB con `verify_iflapp()` →
   `valid: True`, ejercitando la copia del paquete de extremo a extremo.
+- Quincuagésimo sexto ciclo (2026-11-25, commit `1655007`): R-9b3e7a41
+  (tabla del entorno traducida, issue #12), R-1f6c9d38 (descripción de página
+  bajo el título de la barra de acciones, issue #11), R-7d2a5b84 (barra de
+  actividad marquee) y R-4b8f1e27 (sin PyYAML la ventana no abría)
+  corregidos y probados; 1292 pasan, 1 omitido, 64 subtests; no se prepara
+  release.
+- Quincuagésimo séptimo ciclo (2026-11-25): verificación de lo anterior sin
+  cambios de código. R-9b3e7a41, R-1f6c9d38, R-7d2a5b84 y R-4b8f1e27 se
+  retiran de la cola (probados, en `main`, registrados en `CHANGELOG.md` y en
+  `docs/bugs_resueltos.md`, sin reaparición en la suite). Issue #12 cerrado;
+  issues #11 y #10 permanecen abiertos (el primero por los cambios de
+  engine/mejoras Q-021…Q-026, el segundo por la verificación visual en
+  Windows). Suite: 1292 pasan, 1 omitido, 64 subtests; `pyflakes` y
+  `py_compile` limpios. No se prepara release: el periodo de observación sigue
+  abierto y no han pasado 7 días sin reportes nuevos.

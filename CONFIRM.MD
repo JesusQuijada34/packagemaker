@@ -1,9 +1,9 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-25 (quincuagésimo quinto ciclo)
+- **Última revisión:** 2026-11-25 (quincuagésimo séptimo ciclo)
 - **Último commit de `CONFIRM.MD` procesado:** `85c5b88` (2026-11-25, agente `openhands-agent`; sólo notas de i18n, sin respuestas). La última respuesta del propietario sigue siendo el commit `bba72d6` (2026-11-25), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>` (autoría verificada con la API de GitHub). Aportó 7 respuestas afirmativas con instrucciones adicionales: Q-004 (opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014. Q-015, Q-016, Q-017 y Q-018 siguen sin responder. Los commits posteriores que tocan este archivo (`59de9cd4`, `81aceb31`, `b3c932f` y `85c5b88`) son de un agente y no aportan respuestas.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020), 7 aprobadas pendientes de implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014; las seis de engine con confirmación final `F-001`…`F-006`), 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020) y 6 nuevas del issue #11 (Q-021…Q-026), 7 aprobadas pendientes de implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014; las seis de engine con confirmación final `F-001`…`F-006`), 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -277,6 +277,88 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   pérdida del formulario). `lib/live_i18n.py` resuelve el texto visible a su
   clave y lo retraduce en el sitio; `apply_ui_language()` lo invoca al final.
   El bug R-8a3f1c72 queda resuelto con esta implementación.
+
+
+### Q-021 — Sección de ayuda global de la aplicación
+- **Tipo:** mejora
+- **Fecha:** 2026-11-25
+- **Qué se propone:** el issue #11 pide «un apartado de ayuda relacionado con
+  toda la app». Se propone una página de ayuda en el sidebar (addon
+  `help.yaml`) con buscador y temas por área (crear, compilar, blindar,
+  reportar), con los textos en los catálogos de `lang/`.
+- **Archivos/componentes afectados:** `addons/help.yaml`,
+  `lib/help_page.py`, `lang/*.json`, `tests/`.
+- **Riesgo y efectos secundarios:** bajo; es una página nueva y no toca el
+  engine.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-022 — Addons en `lib/addons/` e instalación desde la aplicación
+- **Tipo:** mejora
+- **Fecha:** 2026-11-25
+- **Qué se propone:** mover los manifiestos de addons de `addons/` (raíz) a
+  `lib/addons/`, conservando una ruta de compatibilidad, y permitir que el
+  usuario instale un addon `.yaml` desde Configuración con validación previa.
+- **Archivos/componentes afectados:** `lib/addons_engine.py`,
+  `addons/*.yaml`, `packagemaker.py`, `lib/settings_panel.py`,
+  `tests/test_privacy_switch_and_addons_ui.py`.
+- **Riesgo y efectos secundarios:** medio; cambian las rutas de carga y hay
+  que actualizar el empaquetado y las pruebas.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-023 — Conectar proyectos a repositorios de GitHub y extensión CloudCube
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-25
+- **Qué se propone:** vincular un proyecto a un repositorio de GitHub eligiendo
+  si es público o privado, y añadir una extensión de sidebar llamada
+  **CloudCube** que reserve los datos en la cuenta del usuario y garantice que
+  la aplicación no se pierde con datos privados en el túnel.
+- **Archivos/componentes afectados:** `lib/github_identity.py`,
+  `lib/github_issue_reporter.py`, `addons/*.yaml`, `packagemaker.py`,
+  `docs/privacy.md`, `tests/`.
+- **Riesgo y efectos secundarios:** alto; crea repositorios y sube contenido
+  del usuario, requiere permisos de escritura del token y una política de
+  privacidad clara. Un fallo podría publicar datos privados.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-024 — El updater como extensión con notificaciones de Leviathan
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-25
+- **Qué se propone:** incrustar el actualizador como extensión del sidebar y
+  usar el permiso de notificaciones del motor Leviathan.
+- **Archivos/componentes afectados:** `updater.py`, `lib/coreUpdater/`,
+  `lib/leviathan_ui/`, `addons/*.yaml`, `packagemaker.py`, `tests/`.
+- **Riesgo y efectos secundarios:** alto; se solapa con Q-013/F-006 (el
+  programa se reemplaza a sí mismo) y cambia el punto de entrada del updater.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-025 — Completar el motor Leviathan y el action bar como control
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-25
+- **Qué se propone:** terminar Leviathan para reducir las líneas de creación de
+  controles y layouts, de modo que Leviathan envíe los QSS a cada control y
+  layout, con el action bar como control personalizado.
+- **Archivos/componentes afectados:** `lib/leviathan_ui/`,
+  `lib/page_action_bar.py`, `lib/design_tokens.py`, `lib/fluent_theme.py`,
+  `packagemaker.py`, `tests/`.
+- **Riesgo y efectos secundarios:** alto; reescribe la construcción de toda la
+  interfaz y su sistema de estilos, con riesgo de regresiones visuales y de
+  compatibilidad con el respaldo sin `leviathan_ui`.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-026 — Sidebar translúcido y colores de pestañas por tema
+- **Tipo:** mejora
+- **Fecha:** 2026-11-25
+- **Qué se propone:** el issue #11 concreta el fondo translúcido de R-5a7d2f16:
+  sidebar con fondo blanco translúcido para combinar con el blur y mantener la
+  legibilidad, y pestañas en gris claro con texto gris en modo claro,
+  invertido en modo oscuro.
+- **Archivos/componentes afectados:** `lib/design_tokens.py`,
+  `source/qss/qwidget.qss`, `source/qss/qframe.qss`, `lib/SidebarItem.py`,
+  `packagemaker.py`, `tests/`.
+- **Riesgo y efectos secundarios:** medio; cambios visuales amplios y
+  dependencia del blur del sistema operativo, que no se puede verificar en
+  Linux.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---
 
