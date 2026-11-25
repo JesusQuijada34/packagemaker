@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "情報",
     "toggle_expand": "メニューを展開 (Ctrl+B)",
-    "toggle_collapse": "メニューを隠す (Ctrl+B)"
+    "toggle_collapse": "メニューを隠す (Ctrl+B)",
+    "report": "レポート"
   },
   "sidebar_desc": {
     "0": "### プロジェクトを作成\nアプリケーションをゼロから設計します。**Influent OS** エコシステム向けに固有の識別子、バージョン、メタデータを手順に沿って設定します。",
     "1": "### パッケージをビルド\n作業内容をパッケージ化します。開発フォルダーを配布可能な圧縮 `.iflapp` ファイルに変換します。",
     "3": "### 設定\nプログラムエンジンを調整します。パス、言語、外観、data/pm.data に保存されたオプションを管理します。",
     "4": "### MoonFix Suite\n深い修復。パッケージの不整合をスキャン、検出、修正します。すべてのアセットと XML タグが正しい状態になります。",
-    "5": "### 情報\nプロジェクトの技術的な詳細。GPL ライセンス、Qt フレームワーク、**Package Maker** を支えるチームについて。"
+    "5": "### 情報\nプロジェクトの技術的な詳細。GPL ライセンス、Qt フレームワーク、**Package Maker** を支えるチームについて。",
+    "6": "### レポート\nGitHub アカウントでエラーや提案をリポジトリへ直接送信します。アプリは不具合を再現できるよう端末の環境情報を添付します。"
   },
   "config": {
     "title": "設定",
@@ -767,5 +769,50 @@
     "python_version": "Python のバージョン",
     "install_id": "インストール ID",
     "data_file": "データファイル"
+  },
+  "report": {
+    "session_title": "GitHub アカウント",
+    "session_hint": "レポートは、すでにサインインしているアカウントでプロジェクトのリポジトリに issue として公開されます。",
+    "session_connected": "サインイン済み: レポートはあなたのアカウント名義で送信されます。",
+    "session_missing": "GitHub セッションがありません: サインインするまでレポートはローカルに保存されます。",
+    "form_title": "新しいレポート",
+    "form_hint": "何が起きたかを説明してください。具体的なほど早く修正できます。",
+    "kind": {
+      "bug": "アプリケーションのエラー",
+      "crash": "予期しない終了",
+      "suggestion": "提案・改善"
+    },
+    "title_placeholder": "問題の短いタイトル",
+    "description_placeholder": "行ったこと、期待したこと、実際に起きたこと…",
+    "include_logs": "保留中の自動レポートを添付する",
+    "attach": "ファイルを添付",
+    "attach_clear": "添付を削除",
+    "attach_none": "添付ファイルはありません。",
+    "attach_selected": "添付: {name}",
+    "attach_ok": "{name} を添付しました。",
+    "attach_failed": "添付ファイルを読み取れませんでした。",
+    "attach_too_big": "ファイルが許容される最大サイズを超えています。",
+    "send": "レポートを送信",
+    "refresh": "更新",
+    "sent_ok": "レポートを issue #{number} として送信しました。",
+    "sent_duplicate": "この不具合はすでに報告済みです。あなたの事例を issue #{number} に追加しました。",
+    "sent_queued": "送信できませんでした ({error})。レポートはローカルに保存されました。",
+    "error_title": "レポートのタイトルを入力してください。",
+    "error_description": "送信する前に問題を説明してください。",
+    "error_no_session": "レポートを送信するには GitHub にサインインしてください。",
+    "queue_title": "保留中のレポート",
+    "queue_hint": "アプリが捕捉し、まだ公開していない不具合です。",
+    "queue_empty": "保留中のレポートはありません。",
+    "queue_count": "保留中のレポート: {count}",
+    "queue_resend": "再送信",
+    "queue_discard": "破棄",
+    "queue_cleared": "保留中のレポートを破棄しました。",
+    "queue_result": "送信: {sent}。失敗: {failed}。",
+    "env_title": "添付されるデータ",
+    "env_hint": "個人のパス、システムのユーザー名、認証情報は決して送信されません。",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "GitHub セッションがある場合に不具合を自動送信する",
+    "auto_send_hint": "無効にすると不具合は保存されるだけで、ここから手動で送信できます。"
   }
 }

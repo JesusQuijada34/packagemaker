@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "About",
     "toggle_expand": "Expand menu (Ctrl+B)",
-    "toggle_collapse": "Hide menu (Ctrl+B)"
+    "toggle_collapse": "Hide menu (Ctrl+B)",
+    "report": "Reports"
   },
   "sidebar_desc": {
     "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
     "1": "### Build Package\nPackage your work. Turn development folders into compressed `.iflapp` files ready for global distribution.",
     "3": "### Settings\nTune the program engine. Control paths, language, appearance, and options stored in data/pm.data.",
     "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
-    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**."
+    "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**.",
+    "6": "### Reports\nSend errors and suggestions straight to the repository with your GitHub account. The app attaches the device environment so the failure can be reproduced."
   },
   "config": {
     "title": "Settings",
@@ -767,5 +769,48 @@
     "python_version": "Python version",
     "install_id": "Installation ID",
     "data_file": "Data file"
+  },
+  "report": {
+    "session_title": "GitHub account",
+    "session_hint": "Reports are published as issues in the project repository with the account you already signed in with.",
+    "session_connected": "Signed in: reports are sent on behalf of your account.",
+    "session_missing": "No GitHub session: reports are kept locally until you sign in.",
+    "form_title": "New report",
+    "form_hint": "Describe what happened. The more specific you are, the faster it can be fixed.",
+    "kind": {
+      "bug": "Application error",
+      "crash": "Unexpected crash",
+      "suggestion": "Suggestion or improvement"
+    },
+    "title_placeholder": "Short title for the problem",
+    "description_placeholder": "What you did, what you expected and what actually happened…",
+    "include_logs": "Attach pending automatic reports",
+    "attach": "Attach file",
+    "attach_clear": "Remove attachment",
+    "attach_none": "No attachments.",
+    "attach_selected": "Attachment: {name}",
+    "attach_ok": "{name} was attached.",
+    "attach_failed": "The attachment could not be read.",
+    "attach_too_big": "The file exceeds the maximum allowed size.",
+    "send": "Send report",
+    "refresh": "Refresh",
+    "sent_ok": "Report sent as issue #{number}.",
+    "sent_duplicate": "That failure was already reported; your case was added to issue #{number}.",
+    "sent_queued": "Could not send ({error}). The report was saved locally.",
+    "error_title": "Write a title for the report.",
+    "error_description": "Describe the problem before sending.",
+    "error_no_session": "Sign in to GitHub to send the report.",
+    "queue_title": "Pending reports",
+    "queue_hint": "Failures the app captured that have not been published yet.",
+    "queue_empty": "No pending reports.",
+    "queue_count": "Pending reports: {count}",
+    "queue_resend": "Retry sending",
+    "queue_discard": "Discard",
+    "queue_cleared": "Pending reports were discarded.",
+    "queue_result": "Sent: {sent}. Failed: {failed}.",
+    "env_title": "Attached data",
+    "env_hint": "Personal paths, your system username and credentials are never sent.",
+    "auto_send": "Send failures automatically when a GitHub session exists",
+    "auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
   }
 }

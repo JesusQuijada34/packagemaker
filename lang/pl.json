@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "O programie",
     "toggle_expand": "Rozwiń menu (Ctrl+B)",
-    "toggle_collapse": "Ukryj menu (Ctrl+B)"
+    "toggle_collapse": "Ukryj menu (Ctrl+B)",
+    "report": "Raporty"
   },
   "sidebar_desc": {
     "0": "### Utworz projekt\nProjektuj aplikacje od zera. Ustal unikalne tozsamosci, wersje i metadane dla ekosystemu **Influent OS** krok po kroku.",
     "1": "### Zbuduj pakiet\nZapakuj swoja prace. Zamien foldery robocze w skompresowane pliki `.iflapp` gotowe do globalnej dystrybucji.",
     "3": "### Ustawienia\nDostosuj silnik programu. Kontroluj sciezki, jezyk, wyglad i opcje zapisane w data/pm.data.",
     "4": "### MoonFix Suite\nGleboka naprawa. Skanuj, wykrywaj i naprawiaj niespojnosc w pakietach. Kazdy zasob i znacznik XML musi byc poprawny.",
-    "5": "### O programie\nTechniczne szczegoly projektu. Licencja GPL, framework Qt i zespol stojacy za **Package Maker**."
+    "5": "### O programie\nTechniczne szczegoly projektu. Licencja GPL, framework Qt i zespol stojacy za **Package Maker**.",
+    "6": "### Raporty\nWysyłaj błędy i sugestie bezpośrednio do repozytorium ze swoim kontem GitHub. Aplikacja dołącza środowisko urządzenia, aby można było odtworzyć błąd."
   },
   "config": {
     "title": "Ustawienia",
@@ -767,5 +769,50 @@
     "python_version": "Wersja Pythona",
     "install_id": "Identyfikator instalacji",
     "data_file": "Plik danych"
+  },
+  "report": {
+    "session_title": "Konto GitHub",
+    "session_hint": "Raporty są publikowane jako issues w repozytorium projektu z konta, na którym już się zalogowano.",
+    "session_connected": "Zalogowano: raporty są wysyłane w imieniu Twojego konta.",
+    "session_missing": "Brak sesji GitHub: raporty pozostaną lokalnie do momentu zalogowania.",
+    "form_title": "Nowy raport",
+    "form_hint": "Opisz, co się stało. Im konkretniej, tym szybciej można to naprawić.",
+    "kind": {
+      "bug": "Błąd aplikacji",
+      "crash": "Nieoczekiwane zamknięcie",
+      "suggestion": "Sugestia lub ulepszenie"
+    },
+    "title_placeholder": "Krótki tytuł problemu",
+    "description_placeholder": "Co zrobiłeś, czego oczekiwałeś i co się faktycznie stało…",
+    "include_logs": "Dołącz oczekujące raporty automatyczne",
+    "attach": "Dołącz plik",
+    "attach_clear": "Usuń załącznik",
+    "attach_none": "Brak załączników.",
+    "attach_selected": "Załącznik: {name}",
+    "attach_ok": "Dołączono {name}.",
+    "attach_failed": "Nie udało się odczytać załącznika.",
+    "attach_too_big": "Plik przekracza maksymalny dozwolony rozmiar.",
+    "send": "Wyślij raport",
+    "refresh": "Odśwież",
+    "sent_ok": "Raport wysłany jako issue #{number}.",
+    "sent_duplicate": "Ten błąd był już zgłoszony; Twój przypadek dodano do issue #{number}.",
+    "sent_queued": "Nie udało się wysłać ({error}). Raport zapisano lokalnie.",
+    "error_title": "Wpisz tytuł raportu.",
+    "error_description": "Opisz problem przed wysłaniem.",
+    "error_no_session": "Zaloguj się do GitHub, aby wysłać raport.",
+    "queue_title": "Oczekujące raporty",
+    "queue_hint": "Błędy przechwycone przez aplikację i jeszcze nieopublikowane.",
+    "queue_empty": "Brak oczekujących raportów.",
+    "queue_count": "Oczekujące raporty: {count}",
+    "queue_resend": "Ponów wysyłanie",
+    "queue_discard": "Odrzuć",
+    "queue_cleared": "Odrzucono oczekujące raporty.",
+    "queue_result": "Wysłano: {sent}. Nieudane: {failed}.",
+    "env_title": "Dołączone dane",
+    "env_hint": "Nigdy nie wysyłamy ścieżek osobistych, nazwy użytkownika systemu ani danych logowania.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "Wysyłaj błędy automatycznie, gdy istnieje sesja GitHub",
+    "auto_send_hint": "Po wyłączeniu błędy są tylko zapisywane i możesz wysłać je tutaj."
   }
 }

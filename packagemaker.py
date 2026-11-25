@@ -338,6 +338,7 @@ from lib.design_tokens import (
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
+from lib.report_page import ReportPage
 from lib.settings_panel import SettingsPanel
 from lib.splash_window import IntegratedSplash
 from lib.window_manager_bridge import install_window_manager_bridges
@@ -445,6 +446,7 @@ TAB_ICON_KEYS = {
     "moonfix": "moonfix",
     "reparar": "instalar",
     "about": "about",
+    "report": "report",
     "instalar": "instalar",
     "desinstalar": "desinstalar",
     "refresh": "refresh",
@@ -752,6 +754,7 @@ SIDEBAR_DESC_KEYS = {
     2: "sidebar_desc.3",
     3: "sidebar_desc.4",
     4: "sidebar_desc.5",
+    5: "sidebar_desc.6",
 }
 
 class PackageTodoGUI(QMainWindow):
@@ -905,12 +908,14 @@ class PackageTodoGUI(QMainWindow):
         self.btn_config = SidebarItem(tr("sidebar.config"), get_tab_icon("config"), dark=dark_now, icon_key="config")
         self.btn_moonfix = SidebarItem(tr("sidebar.moonfix"), get_tab_icon("moonfix"), dark=dark_now, icon_key="moonfix")
         self.btn_about = SidebarItem(tr("sidebar.about"), get_tab_icon("about"), dark=dark_now, icon_key="about")
+        self.btn_report = SidebarItem(tr("sidebar.report"), get_tab_icon("report"), dark=dark_now, icon_key="report")
         self._sidebar_btn_keys = {
             self.btn_create: "sidebar.create",
             self.btn_build: "sidebar.build",
             self.btn_config: "sidebar.config",
             self.btn_moonfix: "sidebar.moonfix",
             self.btn_about: "sidebar.about",
+            self.btn_report: "sidebar.report",
         }
 
         self.sidebar_group = QButtonGroup(self)
@@ -919,6 +924,7 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar_group.addButton(self.btn_config, 2)
         self.sidebar_group.addButton(self.btn_moonfix, 3)
         self.sidebar_group.addButton(self.btn_about, 4)
+        self.sidebar_group.addButton(self.btn_report, 5)
         self.sidebar_group.idClicked.connect(self.switch_page)
 
         self.sidebar_layout.addWidget(self.btn_create)
@@ -956,6 +962,7 @@ class PackageTodoGUI(QMainWindow):
         self.github_card = self._build_github_card(dark_now)
         self.sidebar_layout.addWidget(self.github_card)
 
+        self.sidebar_layout.addWidget(self.btn_report)
         self.sidebar_layout.addWidget(self.btn_about)
 
         self.sidebar_collapse_button = self.sidebar_collapse_toggle
@@ -994,11 +1001,15 @@ class PackageTodoGUI(QMainWindow):
         self.page_about = QWidget()
         self.init_about_tab(self.page_about)
 
+        self.page_report = ReportPage()
+        self.report_page = self.page_report
+
         self.stack.addWidget(self.page_create)
         self.stack.addWidget(self.page_build)
         self.stack.addWidget(self.page_config)
         self.stack.addWidget(self.page_moonfix)
         self.stack.addWidget(self.page_about)
+        self.stack.addWidget(self.page_report)
 
         self.content_layout.addWidget(self.stack)
         self.v_layout.addWidget(self.content_container)
@@ -1082,6 +1093,11 @@ class PackageTodoGUI(QMainWindow):
         retranslate_tree(self)
         if hasattr(self, "settings_panel") and self.settings_panel is not None:
             retranslate_tree(self.settings_panel)
+        # Los textos que no son ``tr()`` directo (ítems de combo, placeholders
+        # construidos a mano) los reaplica la propia página.
+        page = getattr(self, "report_page", None)
+        if page is not None and hasattr(page, "retranslate"):
+            page.retranslate()
 
     def update_sidebar_description(self, index):
         key = SIDEBAR_DESC_KEYS.get(index)
@@ -4522,8 +4538,17 @@ main_window = None
 def main():
     global main_window
 
-    # Reporte de errores opcional (Q-001). Con la telemetría apagada —el valor
-    # por defecto— sólo se encadena el hook y no se envía nada.
+    # Captura de fallos desde el primer instante: si la aplicación revienta
+    # importando módulos de arranque todavía no hay ventana donde preguntar, así
+    # que el reporte se encola y la página de Reportes lo recoge después.
+    try:
+        from lib.crash_capture import install as install_crash_capture
+
+        install_crash_capture()
+    except Exception:
+        pass
+
+    # Reporte de errores opcional con endpoint propio (Q-001).
     try:
         from lib.errorReporter import install_excepthook
 

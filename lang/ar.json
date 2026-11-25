@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "حول",
     "toggle_expand": "توسيع القائمة (Ctrl+B)",
-    "toggle_collapse": "إخفاء القائمة (Ctrl+B)"
+    "toggle_collapse": "إخفاء القائمة (Ctrl+B)",
+    "report": "التقارير"
   },
   "sidebar_desc": {
     "0": "### إنشاء مشروع\nصمّم التطبيقات من الصفر. حدّد معرّفات وإصدارات وبيانات وصفية فريدة لمنظومة **Influent OS** بخطوات موجّهة.",
     "1": "### بناء الحزمة\nحزّم عملك. حوّل مجلدات التطوير إلى ملفات `.iflapp` مضغوطة جاهزة للتوزيع العالمي.",
     "3": "### الإعدادات\nاضبط محرك البرنامج. تحكّم في المسارات واللغة والمظهر والخيارات المحفوظة في data/pm.data.",
     "4": "### MoonFix Suite\nإصلاح عميق. افحص واكتشف وأصلح التناقضات في حزمك. يجب أن يكون كل أصل ووسم XML صحيحًا.",
-    "5": "### حول\nتفاصيل تقنية للمشروع. رخصة GPL وإطار Qt والفريق الذي يقف خلف **Package Maker**."
+    "5": "### حول\nتفاصيل تقنية للمشروع. رخصة GPL وإطار Qt والفريق الذي يقف خلف **Package Maker**.",
+    "6": "### التقارير\nأرسل الأخطاء والاقتراحات مباشرة إلى المستودع بحساب GitHub الخاص بك. يرفق التطبيق بيئة الجهاز حتى يمكن إعادة إنتاج الخطأ."
   },
   "config": {
     "title": "الإعدادات",
@@ -767,5 +769,50 @@
     "python_version": "إصدار Python",
     "install_id": "معرّف التثبيت",
     "data_file": "ملف البيانات"
+  },
+  "report": {
+    "session_title": "حساب GitHub",
+    "session_hint": "تُنشر التقارير كـ issues في مستودع المشروع بالحساب الذي سجلت الدخول به بالفعل.",
+    "session_connected": "تم تسجيل الدخول: تُرسل التقارير باسم حسابك.",
+    "session_missing": "لا توجد جلسة GitHub: تُحفظ التقارير محليًا حتى تسجل الدخول.",
+    "form_title": "تقرير جديد",
+    "form_hint": "صف ما حدث. كلما كان الوصف أدق، أسرع الإصلاح.",
+    "kind": {
+      "bug": "خطأ في التطبيق",
+      "crash": "إغلاق غير متوقع",
+      "suggestion": "اقتراح أو تحسين"
+    },
+    "title_placeholder": "عنوان قصير للمشكلة",
+    "description_placeholder": "ما فعلته، وما توقعته، وما حدث فعلاً…",
+    "include_logs": "إرفاق التقارير التلقائية المعلّقة",
+    "attach": "إرفاق ملف",
+    "attach_clear": "إزالة المرفق",
+    "attach_none": "لا توجد مرفقات.",
+    "attach_selected": "المرفق: {name}",
+    "attach_ok": "تم إرفاق {name}.",
+    "attach_failed": "تعذرت قراءة المرفق.",
+    "attach_too_big": "يتجاوز الملف الحجم الأقصى المسموح.",
+    "send": "إرسال التقرير",
+    "refresh": "تحديث",
+    "sent_ok": "أُرسل التقرير كـ issue #{number}.",
+    "sent_duplicate": "سبق الإبلاغ عن هذا العطل؛ أُضيفت حالتك إلى issue #{number}.",
+    "sent_queued": "تعذر الإرسال ({error}). حُفظ التقرير محليًا.",
+    "error_title": "اكتب عنوانًا للتقرير.",
+    "error_description": "صف المشكلة قبل الإرسال.",
+    "error_no_session": "سجّل الدخول إلى GitHub لإرسال التقرير.",
+    "queue_title": "التقارير المعلّقة",
+    "queue_hint": "أعطال التقطها التطبيق ولم تُنشر بعد.",
+    "queue_empty": "لا توجد تقارير معلّقة.",
+    "queue_count": "التقارير المعلّقة: {count}",
+    "queue_resend": "إعادة الإرسال",
+    "queue_discard": "تجاهل",
+    "queue_cleared": "تم تجاهل التقارير المعلّقة.",
+    "queue_result": "أُرسل: {sent}. فشل: {failed}.",
+    "env_title": "البيانات المرفقة",
+    "env_hint": "لا تُرسل أبدًا مسارات شخصية أو اسم مستخدم النظام أو بيانات الاعتماد.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "إرسال الأعطال تلقائيًا عند وجود جلسة GitHub",
+    "auto_send_hint": "إذا عطلت هذا الخيار، تُحفظ الأعطال فقط ويمكنك إرسالها من هنا."
   }
 }

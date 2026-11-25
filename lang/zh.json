@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "关于",
     "toggle_expand": "展开菜单 (Ctrl+B)",
-    "toggle_collapse": "隐藏菜单 (Ctrl+B)"
+    "toggle_collapse": "隐藏菜单 (Ctrl+B)",
+    "report": "报告"
   },
   "sidebar_desc": {
     "0": "### 创建项目\n从头设计应用。按引导步骤为 **Influent OS** 生态设置唯一的标识、版本和元数据。",
     "1": "### 构建包\n打包你的工作。将开发文件夹转换为可全球分发的压缩 `.iflapp` 文件。",
     "3": "### 设置\n调整程序引擎。管理路径、语言、外观以及保存在 data/pm.data 中的选项。",
     "4": "### MoonFix Suite\n深度修复。扫描、检测并修复包中的不一致。确保每个资源和 XML 标签都正确。",
-    "5": "### 关于\n项目的技术细节。GPL 许可证、Qt 框架以及打造 **Package Maker** 的团队。"
+    "5": "### 关于\n项目的技术细节。GPL 许可证、Qt 框架以及打造 **Package Maker** 的团队。",
+    "6": "### 报告\n使用你的 GitHub 账号将错误和建议直接发送到仓库。应用会附带设备环境信息，以便复现该故障。"
   },
   "config": {
     "title": "设置",
@@ -767,5 +769,50 @@
     "python_version": "Python 版本",
     "install_id": "安装 ID",
     "data_file": "数据文件"
+  },
+  "report": {
+    "session_title": "GitHub 账号",
+    "session_hint": "报告将以你已登录的账号在项目仓库中作为 issue 发布。",
+    "session_connected": "已登录：报告将以你的账号名义发送。",
+    "session_missing": "没有 GitHub 会话：报告会保存在本地，直到你登录。",
+    "form_title": "新建报告",
+    "form_hint": "描述发生了什么。描述越具体，修复越快。",
+    "kind": {
+      "bug": "应用程序错误",
+      "crash": "意外关闭",
+      "suggestion": "建议或改进"
+    },
+    "title_placeholder": "问题的简短标题",
+    "description_placeholder": "你做了什么、期望什么以及实际发生了什么……",
+    "include_logs": "附带待处理的自动报告",
+    "attach": "附加文件",
+    "attach_clear": "移除附件",
+    "attach_none": "没有附件。",
+    "attach_selected": "附件：{name}",
+    "attach_ok": "已附加 {name}。",
+    "attach_failed": "无法读取附件。",
+    "attach_too_big": "文件超过允许的最大大小。",
+    "send": "发送报告",
+    "refresh": "刷新",
+    "sent_ok": "报告已作为 issue #{number} 发送。",
+    "sent_duplicate": "该故障已被报告；你的情况已添加到 issue #{number}。",
+    "sent_queued": "发送失败（{error}）。报告已保存在本地。",
+    "error_title": "请为报告填写标题。",
+    "error_description": "发送前请描述问题。",
+    "error_no_session": "请登录 GitHub 以发送报告。",
+    "queue_title": "待处理的报告",
+    "queue_hint": "应用已捕获但尚未发布的故障。",
+    "queue_empty": "没有待处理的报告。",
+    "queue_count": "待处理的报告：{count}",
+    "queue_resend": "重试发送",
+    "queue_discard": "丢弃",
+    "queue_cleared": "已丢弃待处理的报告。",
+    "queue_result": "已发送：{sent}。失败：{failed}。",
+    "env_title": "附带的数据",
+    "env_hint": "绝不会发送个人路径、系统用户名或凭据。",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "有 GitHub 会话时自动发送故障",
+    "auto_send_hint": "关闭后故障只会被保存，你可以在此手动发送。"
   }
 }

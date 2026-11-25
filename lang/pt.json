@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "Sobre",
     "toggle_expand": "Expandir menu (Ctrl+B)",
-    "toggle_collapse": "Ocultar menu (Ctrl+B)"
+    "toggle_collapse": "Ocultar menu (Ctrl+B)",
+    "report": "Relatórios"
   },
   "sidebar_desc": {
     "0": "### Criar projeto\nDesenhe aplicacoes de raiz. Defina identidades, versoes e metadados unicos para o ecossistema **Influent OS** com passos guiados.",
     "1": "### Compilar pacote\nEmpacote o seu trabalho. Transforme pastas de desenvolvimento em ficheiros `.iflapp` comprimidos, prontos para distribuicao global.",
     "3": "### Configuracoes\nAjuste o motor do programa. Controle caminhos, idioma, aparencia e opcoes guardadas em data/pm.data.",
     "4": "### MoonFix Suite\nReparacao profunda. Analise, detete e corrija inconsistencias nos pacotes. Cada recurso e etiqueta XML deve estar correto.",
-    "5": "### Acerca\nDetalhes tecnicos do projeto. Licenca GPL, framework Qt e a equipa por tras do **Package Maker**."
+    "5": "### Acerca\nDetalhes tecnicos do projeto. Licenca GPL, framework Qt e a equipa por tras do **Package Maker**.",
+    "6": "### Relatórios\nEnvie erros e sugestões diretamente ao repositório com a sua conta do GitHub. A aplicação anexa o ambiente do dispositivo para reproduzir a falha."
   },
   "config": {
     "title": "Configuração",
@@ -767,5 +769,50 @@
     "python_version": "Versão do Python",
     "install_id": "ID de instalação",
     "data_file": "Arquivo de dados"
+  },
+  "report": {
+    "session_title": "Conta do GitHub",
+    "session_hint": "Os relatórios são publicados como issues no repositório do projeto com a conta que já iniciou sessão.",
+    "session_connected": "Sessão iniciada: os relatórios são enviados em nome da sua conta.",
+    "session_missing": "Sem sessão do GitHub: os relatórios ficam guardados localmente até iniciar sessão.",
+    "form_title": "Novo relatório",
+    "form_hint": "Descreva o que aconteceu. Quanto mais concreto, mais rápido pode ser corrigido.",
+    "kind": {
+      "bug": "Erro da aplicação",
+      "crash": "Fecho inesperado",
+      "suggestion": "Sugestão ou melhoria"
+    },
+    "title_placeholder": "Título breve do problema",
+    "description_placeholder": "O que fez, o que esperava e o que aconteceu na realidade…",
+    "include_logs": "Anexar os relatórios automáticos pendentes",
+    "attach": "Anexar ficheiro",
+    "attach_clear": "Remover anexo",
+    "attach_none": "Sem anexos.",
+    "attach_selected": "Anexo: {name}",
+    "attach_ok": "{name} foi anexado.",
+    "attach_failed": "Não foi possível ler o anexo.",
+    "attach_too_big": "O ficheiro excede o tamanho máximo permitido.",
+    "send": "Enviar relatório",
+    "refresh": "Atualizar",
+    "sent_ok": "Relatório enviado como issue #{number}.",
+    "sent_duplicate": "Essa falha já estava reportada; o seu caso foi adicionado à issue #{number}.",
+    "sent_queued": "Não foi possível enviar ({error}). O relatório ficou guardado localmente.",
+    "error_title": "Escreva um título para o relatório.",
+    "error_description": "Descreva o problema antes de enviar.",
+    "error_no_session": "Inicie sessão no GitHub para enviar o relatório.",
+    "queue_title": "Relatórios pendentes",
+    "queue_hint": "Falhas capturadas pela aplicação e ainda não publicadas.",
+    "queue_empty": "Não há relatórios pendentes.",
+    "queue_count": "Relatórios pendentes: {count}",
+    "queue_resend": "Tentar novamente",
+    "queue_discard": "Descartar",
+    "queue_cleared": "Os relatórios pendentes foram descartados.",
+    "queue_result": "Enviados: {sent}. Falhados: {failed}.",
+    "env_title": "Dados anexados",
+    "env_hint": "Nunca são enviados caminhos pessoais, o nome de utilizador do sistema nem credenciais.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "Enviar falhas automaticamente quando houver sessão do GitHub",
+    "auto_send_hint": "Se desativar, as falhas apenas são guardadas e pode enviá-las aqui."
   }
 }

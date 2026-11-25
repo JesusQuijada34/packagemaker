@@ -250,6 +250,10 @@ ICONS_SVG = {
 <path d="M3 18H2" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M15 12H22M22 12L18.5 8.5M22 12L18.5 15.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>""", #boton continuar del sandbox
+    "report": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 9C8 6.79086 9.79086 5 12 5C14.2091 5 16 6.79086 16 9V15C16 17.2091 14.2091 19 12 19C9.79086 19 8 17.2091 8 15V9Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 5V3M9.5 6.5L8 5M14.5 6.5L16 5M8 11H4M8 14H4.5M8 17L5 18.5M16 11H20M16 14H19.5M16 17L19 18.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
     "shield" : f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M5 18L3.13036 4.91253C3.05646 4.39524 3.39389 3.91247 3.90398 3.79912L11.5661 2.09641C11.8519 2.03291 12.1481 2.03291 12.4339 2.09641L20.096 3.79912C20.6061 3.91247 20.9435 4.39524 20.8696 4.91252L19 18C18.9293 18.495 18.5 21.5 12 21.5C5.5 21.5 5.07071 18.495 5 18Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>""" , #header "proc" en el recuadro de sandbox

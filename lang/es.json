@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "Acerca de",
     "toggle_expand": "Expandir menú (Ctrl+B)",
-    "toggle_collapse": "Ocultar menú (Ctrl+B)"
+    "toggle_collapse": "Ocultar menú (Ctrl+B)",
+    "report": "Reportes"
   },
   "sidebar_desc": {
     "0": "### Crear Proyecto\nDiseña aplicaciones desde cero. Establece identidades únicas, versiones y metadatos para el ecosistema **Influent OS** de forma guiada.",
     "1": "### Construir Paquete\nEmpaqueta tu trabajo. Transforma carpetas de desarrollo en archivos `.iflapp` comprimidos y listos para su distribución global.",
     "3": "### Configuración\nAjusta el motor del programa. Controla rutas, idioma, apariencia y opciones guardadas en data/pm.data.",
     "4": "### MoonFix Suite\nSanación profunda. Escanea, detecta y repara inconsistencias en tus paquetes. Asegura que cada asset y etiqueta XML sea perfecta.",
-    "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**."
+    "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**.",
+    "6": "### Reportes\nEnvía errores y sugerencias directamente al repositorio con tu cuenta de GitHub. La aplicación adjunta el entorno del dispositivo para que el fallo se pueda reproducir."
   },
   "config": {
     "title": "Configuración",
@@ -766,5 +768,48 @@
     "python_version": "Versión de Python",
     "install_id": "ID de instalación",
     "data_file": "Fichero de datos"
+  },
+  "report": {
+    "session_title": "Cuenta de GitHub",
+    "session_hint": "Los reportes se publican como issues en el repositorio del proyecto con la cuenta que ya iniciaste.",
+    "session_connected": "Sesión iniciada: los reportes se envían a nombre de tu cuenta.",
+    "session_missing": "Sin sesión de GitHub: los reportes se guardarán en local hasta que inicies sesión.",
+    "form_title": "Nuevo reporte",
+    "form_hint": "Describe qué ocurrió. Cuanto más concreto, más rápido se puede corregir.",
+    "kind": {
+      "bug": "Error de la aplicación",
+      "crash": "Cierre inesperado",
+      "suggestion": "Sugerencia o mejora"
+    },
+    "title_placeholder": "Título breve del problema",
+    "description_placeholder": "Qué hiciste, qué esperabas y qué ocurrió en realidad…",
+    "include_logs": "Adjuntar los reportes automáticos pendientes",
+    "attach": "Adjuntar archivo",
+    "attach_clear": "Quitar adjunto",
+    "attach_none": "Sin archivos adjuntos.",
+    "attach_selected": "Adjunto: {name}",
+    "attach_ok": "Se adjuntó {name}.",
+    "attach_failed": "No se pudo leer el archivo adjunto.",
+    "attach_too_big": "El archivo supera el tamaño máximo permitido.",
+    "send": "Enviar reporte",
+    "refresh": "Actualizar",
+    "sent_ok": "Reporte enviado como issue #{number}.",
+    "sent_duplicate": "Ese fallo ya estaba reportado; se añadió tu caso al issue #{number}.",
+    "sent_queued": "No se pudo enviar ({error}). El reporte quedó guardado en local.",
+    "error_title": "Escribe un título para el reporte.",
+    "error_description": "Describe el problema antes de enviarlo.",
+    "error_no_session": "Inicia sesión en GitHub para enviar el reporte.",
+    "queue_title": "Reportes pendientes",
+    "queue_hint": "Fallos que la aplicación capturó y que aún no se han publicado.",
+    "queue_empty": "No hay reportes pendientes.",
+    "queue_count": "Reportes pendientes: {count}",
+    "queue_resend": "Reintentar envío",
+    "queue_discard": "Descartar",
+    "queue_cleared": "Se descartaron los reportes pendientes.",
+    "queue_result": "Enviados: {sent}. Fallidos: {failed}.",
+    "env_title": "Datos que se adjuntan",
+    "env_hint": "Nunca se envían rutas personales, tu nombre de usuario del sistema ni credenciales.",
+    "auto_send": "Enviar los fallos automáticamente cuando haya sesión de GitHub",
+    "auto_send_hint": "Si lo desactivas, los fallos sólo se guardan y puedes enviarlos tú desde aquí."
   }
 }

@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "À propos",
     "toggle_expand": "Developper le menu (Ctrl+B)",
-    "toggle_collapse": "Masquer le menu (Ctrl+B)"
+    "toggle_collapse": "Masquer le menu (Ctrl+B)",
+    "report": "Rapports"
   },
   "sidebar_desc": {
     "0": "### Creer un projet\nConcevez des applications de zero. Definissez des identites, versions et metadonnees uniques pour l'ecosysteme **Influent OS**, guide etape par etape.",
     "1": "### Compiler le paquet\nEmpaquetez votre travail. Transformez vos dossiers de developpement en fichiers `.iflapp` compresses, prets pour une distribution mondiale.",
     "3": "### Parametres\nReglez le moteur du programme. Controlez les chemins, la langue, l'apparence et les options stockees dans data/pm.data.",
     "4": "### MoonFix Suite\nReparation profonde. Analysez, detectez et corrigez les incoherences de vos paquets. Chaque ressource et balise XML doit etre correcte.",
-    "5": "### A propos\nDetails techniques du projet. Licence GPL, framework Qt et l'equipe derriere **Package Maker**."
+    "5": "### A propos\nDetails techniques du projet. Licence GPL, framework Qt et l'equipe derriere **Package Maker**.",
+    "6": "### Rapports\nEnvoyez erreurs et suggestions directement au dépôt avec votre compte GitHub. L'application joint l'environnement de l'appareil pour reproduire le problème."
   },
   "config": {
     "title": "Paramètres",
@@ -767,5 +769,50 @@
     "python_version": "Version de Python",
     "install_id": "ID d'installation",
     "data_file": "Fichier de données"
+  },
+  "report": {
+    "session_title": "Compte GitHub",
+    "session_hint": "Les rapports sont publiés comme issues dans le dépôt du projet avec le compte déjà connecté.",
+    "session_connected": "Connecté : les rapports sont envoyés au nom de votre compte.",
+    "session_missing": "Aucune session GitHub : les rapports restent en local jusqu'à la connexion.",
+    "form_title": "Nouveau rapport",
+    "form_hint": "Décrivez ce qui s'est passé. Plus vous êtes précis, plus vite ce sera corrigé.",
+    "kind": {
+      "bug": "Erreur de l'application",
+      "crash": "Fermeture inattendue",
+      "suggestion": "Suggestion ou amélioration"
+    },
+    "title_placeholder": "Titre court du problème",
+    "description_placeholder": "Ce que vous avez fait, ce que vous attendiez et ce qui s'est produit…",
+    "include_logs": "Joindre les rapports automatiques en attente",
+    "attach": "Joindre un fichier",
+    "attach_clear": "Retirer la pièce jointe",
+    "attach_none": "Aucune pièce jointe.",
+    "attach_selected": "Pièce jointe : {name}",
+    "attach_ok": "{name} a été joint.",
+    "attach_failed": "Impossible de lire la pièce jointe.",
+    "attach_too_big": "Le fichier dépasse la taille maximale autorisée.",
+    "send": "Envoyer le rapport",
+    "refresh": "Actualiser",
+    "sent_ok": "Rapport envoyé comme issue #{number}.",
+    "sent_duplicate": "Cette panne était déjà signalée ; votre cas a été ajouté à l'issue #{number}.",
+    "sent_queued": "Envoi impossible ({error}). Le rapport a été enregistré en local.",
+    "error_title": "Écrivez un titre pour le rapport.",
+    "error_description": "Décrivez le problème avant l'envoi.",
+    "error_no_session": "Connectez-vous à GitHub pour envoyer le rapport.",
+    "queue_title": "Rapports en attente",
+    "queue_hint": "Pannes capturées par l'application et pas encore publiées.",
+    "queue_empty": "Aucun rapport en attente.",
+    "queue_count": "Rapports en attente : {count}",
+    "queue_resend": "Réessayer l'envoi",
+    "queue_discard": "Rejeter",
+    "queue_cleared": "Les rapports en attente ont été rejetés.",
+    "queue_result": "Envoyés : {sent}. Échoués : {failed}.",
+    "env_title": "Données jointes",
+    "env_hint": "Aucun chemin personnel, nom d'utilisateur système ni identifiant n'est envoyé.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "Envoyer les pannes automatiquement si une session GitHub existe",
+    "auto_send_hint": "Si vous le désactivez, les pannes sont seulement enregistrées et vous pouvez les envoyer ici."
   }
 }

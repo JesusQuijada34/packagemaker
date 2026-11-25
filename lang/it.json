@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "Informazioni",
     "toggle_expand": "Espandi menu (Ctrl+B)",
-    "toggle_collapse": "Nascondi menu (Ctrl+B)"
+    "toggle_collapse": "Nascondi menu (Ctrl+B)",
+    "report": "Segnalazioni"
   },
   "sidebar_desc": {
     "0": "### Crea progetto\nProgetta applicazioni da zero. Imposta identita, versioni e metadati univoci per l'ecosistema **Influent OS** con passaggi guidati.",
     "1": "### Compila pacchetto\nConfeziona il tuo lavoro. Trasforma le cartelle di sviluppo in file `.iflapp` compressi, pronti per la distribuzione globale.",
     "3": "### Impostazioni\nRegola il motore del programma. Controlla percorsi, lingua, aspetto e opzioni salvate in data/pm.data.",
     "4": "### MoonFix Suite\nRiparazione profonda. Analizza, rileva e correggi le incoerenze nei pacchetti. Ogni risorsa e tag XML deve essere corretto.",
-    "5": "### Informazioni\nDettagli tecnici del progetto. Licenza GPL, framework Qt e il team dietro **Package Maker**."
+    "5": "### Informazioni\nDettagli tecnici del progetto. Licenza GPL, framework Qt e il team dietro **Package Maker**.",
+    "6": "### Segnalazioni\nInvia errori e suggerimenti direttamente al repository con il tuo account GitHub. L'app allega l'ambiente del dispositivo per riprodurre il problema."
   },
   "config": {
     "title": "Impostazioni",
@@ -767,5 +769,50 @@
     "python_version": "Versione di Python",
     "install_id": "ID installazione",
     "data_file": "File di dati"
+  },
+  "report": {
+    "session_title": "Account GitHub",
+    "session_hint": "Le segnalazioni vengono pubblicate come issue nel repository del progetto con l'account già connesso.",
+    "session_connected": "Connesso: le segnalazioni vengono inviate a nome del tuo account.",
+    "session_missing": "Nessuna sessione GitHub: le segnalazioni restano in locale finché non accedi.",
+    "form_title": "Nuova segnalazione",
+    "form_hint": "Descrivi cosa è successo. Più sei preciso, più rapidamente si può correggere.",
+    "kind": {
+      "bug": "Errore dell'applicazione",
+      "crash": "Chiusura inattesa",
+      "suggestion": "Suggerimento o miglioramento"
+    },
+    "title_placeholder": "Titolo breve del problema",
+    "description_placeholder": "Cosa hai fatto, cosa ti aspettavi e cosa è successo davvero…",
+    "include_logs": "Allega le segnalazioni automatiche in sospeso",
+    "attach": "Allega file",
+    "attach_clear": "Rimuovi allegato",
+    "attach_none": "Nessun allegato.",
+    "attach_selected": "Allegato: {name}",
+    "attach_ok": "{name} è stato allegato.",
+    "attach_failed": "Impossibile leggere l'allegato.",
+    "attach_too_big": "Il file supera la dimensione massima consentita.",
+    "send": "Invia segnalazione",
+    "refresh": "Aggiorna",
+    "sent_ok": "Segnalazione inviata come issue #{number}.",
+    "sent_duplicate": "Questo guasto era già segnalato; il tuo caso è stato aggiunto alla issue #{number}.",
+    "sent_queued": "Invio non riuscito ({error}). La segnalazione è stata salvata in locale.",
+    "error_title": "Scrivi un titolo per la segnalazione.",
+    "error_description": "Descrivi il problema prima di inviarlo.",
+    "error_no_session": "Accedi a GitHub per inviare la segnalazione.",
+    "queue_title": "Segnalazioni in sospeso",
+    "queue_hint": "Guasti rilevati dall'app e non ancora pubblicati.",
+    "queue_empty": "Nessuna segnalazione in sospeso.",
+    "queue_count": "Segnalazioni in sospeso: {count}",
+    "queue_resend": "Riprova l'invio",
+    "queue_discard": "Scarta",
+    "queue_cleared": "Le segnalazioni in sospeso sono state scartate.",
+    "queue_result": "Inviati: {sent}. Non riusciti: {failed}.",
+    "env_title": "Dati allegati",
+    "env_hint": "Non vengono mai inviati percorsi personali, il nome utente di sistema né credenziali.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "Invia i guasti automaticamente se esiste una sessione GitHub",
+    "auto_send_hint": "Se disattivato, i guasti vengono solo salvati e puoi inviarli da qui."
   }
 }

@@ -45,6 +45,7 @@ DEFAULT_USER: Dict[str, Any] = {
     "interface_color": "#0d1117",
     "auto_color": True,
     "notifications_enabled": False,
+    "auto_report_errors": True,
     "default_editor": "",
     "custom_accent_color": _DEFAULT_ACCENT,
     "blur_intensity": 14,

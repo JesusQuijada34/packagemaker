@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "Hakkında",
     "toggle_expand": "Menüyü genişlet (Ctrl+B)",
-    "toggle_collapse": "Menüyü gizle (Ctrl+B)"
+    "toggle_collapse": "Menüyü gizle (Ctrl+B)",
+    "report": "Bildirimler"
   },
   "sidebar_desc": {
     "0": "### Proje olustur\nUygulamalari sifirdan tasarla. **Influent OS** ekosistemi icin benzersiz kimlikler, surumler ve ust veriler belirle.",
     "1": "### Paket derle\nCalismani paketle. Gelistirme klasorlerini kuresel dagitima hazir sikistirilmis `.iflapp` dosyalarina donustur.",
     "3": "### Ayarlar\nProgram motorunu ayarla. Yollari, dili, gorunumu ve data/pm.data icindeki secenekleri yonet.",
     "4": "### MoonFix Suite\nDerin onarim. Paketlerindeki tutarsizliklari tara, bul ve duzelt. Her varlik ve XML etiketi dogru olmali.",
-    "5": "### Hakkinda\nTeknik proje ayrintilari. GPL lisansi, Qt cercevesi ve **Package Maker** arkasindaki ekip."
+    "5": "### Hakkinda\nTeknik proje ayrintilari. GPL lisansi, Qt cercevesi ve **Package Maker** arkasindaki ekip.",
+    "6": "### Bildirimler\nHataları ve önerileri GitHub hesabınızla doğrudan depoya gönderin. Uygulama, hatanın yeniden üretilebilmesi için cihaz ortamını ekler."
   },
   "config": {
     "title": "Ayarlar",
@@ -767,5 +769,50 @@
     "python_version": "Python sürümü",
     "install_id": "Kurulum kimliği",
     "data_file": "Veri dosyası"
+  },
+  "report": {
+    "session_title": "GitHub hesabı",
+    "session_hint": "Bildirimler, zaten oturum açtığınız hesapla proje deposunda issue olarak yayımlanır.",
+    "session_connected": "Oturum açık: bildirimler hesabınız adına gönderilir.",
+    "session_missing": "GitHub oturumu yok: bildirimler oturum açana kadar yerelde tutulur.",
+    "form_title": "Yeni bildirim",
+    "form_hint": "Ne olduğunu açıklayın. Ne kadar net olursa o kadar hızlı düzeltilir.",
+    "kind": {
+      "bug": "Uygulama hatası",
+      "crash": "Beklenmeyen kapanma",
+      "suggestion": "Öneri veya iyileştirme"
+    },
+    "title_placeholder": "Sorunun kısa başlığı",
+    "description_placeholder": "Ne yaptınız, ne bekliyordunuz ve gerçekte ne oldu…",
+    "include_logs": "Bekleyen otomatik bildirimleri ekle",
+    "attach": "Dosya ekle",
+    "attach_clear": "Eki kaldır",
+    "attach_none": "Ek yok.",
+    "attach_selected": "Ek: {name}",
+    "attach_ok": "{name} eklendi.",
+    "attach_failed": "Ek okunamadı.",
+    "attach_too_big": "Dosya izin verilen en büyük boyutu aşıyor.",
+    "send": "Bildirimi gönder",
+    "refresh": "Yenile",
+    "sent_ok": "Bildirim issue #{number} olarak gönderildi.",
+    "sent_duplicate": "Bu arıza zaten bildirilmişti; durumunuz issue #{number} içine eklendi.",
+    "sent_queued": "Gönderilemedi ({error}). Bildirim yerelde saklandı.",
+    "error_title": "Bildirim için bir başlık yazın.",
+    "error_description": "Göndermeden önce sorunu açıklayın.",
+    "error_no_session": "Bildirimi göndermek için GitHub'a giriş yapın.",
+    "queue_title": "Bekleyen bildirimler",
+    "queue_hint": "Uygulamanın yakaladığı ve henüz yayımlanmamış arızalar.",
+    "queue_empty": "Bekleyen bildirim yok.",
+    "queue_count": "Bekleyen bildirimler: {count}",
+    "queue_resend": "Yeniden gönder",
+    "queue_discard": "Yok say",
+    "queue_cleared": "Bekleyen bildirimler yok sayıldı.",
+    "queue_result": "Gönderilen: {sent}. Başarısız: {failed}.",
+    "env_title": "Eklenen veriler",
+    "env_hint": "Kişisel yollar, sistem kullanıcı adınız ve kimlik bilgileri asla gönderilmez.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "GitHub oturumu varsa arızaları otomatik gönder",
+    "auto_send_hint": "Kapalıysa arızalar yalnızca kaydedilir ve buradan kendiniz gönderebilirsiniz."
   }
 }

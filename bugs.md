@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (quincuagésimo cuarto ciclo, limpieza de cola)
+Última actualización: 2026-11-18 (quincuagésimo quinto ciclo, extensión de reportes)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -23,6 +23,38 @@ histórico.
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora) |
 
 **7 entradas abiertas.** 156 resueltas archivadas en `docs/bugs_resueltos.md`.
+
+---
+
+## Extensión de Reportes (sidebar)
+
+- **Solicitud:** JesusQuijada34 — extensión «reports» en el sidebar que
+  comunique con GitHub y envíe issues al repositorio con el token ya
+  autenticado, con envío automático al ocurrir errores y telemetría del
+  dispositivo (SO, versión, Python, versión de PackageMaker, commit, adjuntos).
+- **Estado:** Implementado el 2026-11-18.
+- **Módulos nuevos:**
+  - `lib/report_telemetry.py` — recoge el entorno y sanea texto libre: la
+    carpeta personal pasa a `~`, cualquier ruta absoluta a `<path>` y los
+    valores con pinta de credencial a `<redacted>`. No recoge usuario del SO,
+    hostname, rutas ni variables de entorno.
+  - `lib/github_issue_reporter.py` — publica issues en
+    `JesusQuijada34/packagemaker` con el token de `lib/github_identity`.
+    Agrupa fallos por huella (comenta en el issue abierto en vez de duplicar) y
+    convierte todo error de red o permisos en un resultado, nunca en excepción.
+  - `lib/report_queue.py` — cola local (`data/report_queue.json`) para fallos
+    sin sesión o sin red, con reintento y registro de huellas ya enviadas.
+  - `lib/crash_capture.py` — `sys.excepthook`, `threading.excepthook` y
+    manejador de mensajes críticos de Qt. Se instala al principio de `main()`,
+    así que también captura fallos anteriores a la ventana (se encolan).
+  - `lib/report_page.py` — página del sidebar con sesión, formulario,
+    adjuntos, cola pendiente y vista previa del entorno.
+- **Ajuste:** `auto_report_errors` (`data/pm.data`, por defecto `true`) y su
+  casilla en la página; apagado, los fallos sólo se guardan en local.
+- **Privacidad:** documentado en `docs/privacy.md`.
+- **Pruebas:** `tests/test_report_extension.py` (23) y
+  `tests/test_report_page_ui.py` (10), incluidos el saneado de rutas y
+  credenciales, la no publicación sin sesión, la deduplicación y la cola.
 
 ---
 

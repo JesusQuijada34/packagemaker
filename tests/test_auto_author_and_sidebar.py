@@ -47,9 +47,11 @@ def test_sidebar_has_no_ide_page(qapp):
         assert not hasattr(win, "btn_ide")
         assert not hasattr(win, "page_ide")
         assert not hasattr(win, "init_ide_tab")
-        # El grupo sigue teniendo una sola pestaña "Acerca de" al final.
+        # "Acerca de" y "Reportes" son las dos últimas pestañas; la de IDE no
+        # existe (el sidebar no tiene página de IDE).
         assert win.sidebar_group.button(4).text() == pm.tr("sidebar.about")
-        assert win.sidebar_group.button(5) is None
+        assert win.sidebar_group.button(5).text() == pm.tr("sidebar.report")
+        assert win.sidebar_group.button(6) is None
     finally:
         win.close()
         qapp.processEvents()

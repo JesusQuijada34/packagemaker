@@ -36,14 +36,16 @@
     "moonfix": "MoonFix",
     "about": "Over",
     "toggle_expand": "Menu uitvouwen (Ctrl+B)",
-    "toggle_collapse": "Menu verbergen (Ctrl+B)"
+    "toggle_collapse": "Menu verbergen (Ctrl+B)",
+    "report": "Rapporten"
   },
   "sidebar_desc": {
     "0": "### Project maken\nOntwerp applicaties vanaf nul. Stel unieke identiteiten, versies en metadata in voor het **Influent OS**-ecosysteem met begeleide stappen.",
     "1": "### Pakket bouwen\nVerpak je werk. Zet ontwikkelmappen om in gecomprimeerde `.iflapp`-bestanden, klaar voor wereldwijde distributie.",
     "3": "### Instellingen\nStel de programma-engine af. Beheer paden, taal, uiterlijk en opties die in data/pm.data worden bewaard.",
     "4": "### MoonFix Suite\nDiepgaande reparatie. Scan, detecteer en herstel inconsistenties in je pakketten. Elke asset en XML-tag moet kloppen.",
-    "5": "### Over\nTechnische projectdetails. GPL-licentie, Qt-framework en het team achter **Package Maker**."
+    "5": "### Over\nTechnische projectdetails. GPL-licentie, Qt-framework en het team achter **Package Maker**.",
+    "6": "### Rapporten\nStuur fouten en suggesties direct naar de repository met uw GitHub-account. De app voegt de apparaatomgeving toe zodat de fout te reproduceren is."
   },
   "config": {
     "title": "Instellingen",
@@ -767,5 +769,50 @@
     "python_version": "Python-versie",
     "install_id": "Installatie-ID",
     "data_file": "Gegevensbestand"
+  },
+  "report": {
+    "session_title": "GitHub-account",
+    "session_hint": "Rapporten worden als issues in de projectrepository gepubliceerd met het account waarmee u al bent aangemeld.",
+    "session_connected": "Aangemeld: rapporten worden namens uw account verzonden.",
+    "session_missing": "Geen GitHub-sessie: rapporten blijven lokaal tot u zich aanmeldt.",
+    "form_title": "Nieuw rapport",
+    "form_hint": "Beschrijf wat er gebeurde. Hoe concreter, hoe sneller het opgelost kan worden.",
+    "kind": {
+      "bug": "Applicatiefout",
+      "crash": "Onverwachte afsluiting",
+      "suggestion": "Suggestie of verbetering"
+    },
+    "title_placeholder": "Korte titel van het probleem",
+    "description_placeholder": "Wat u deed, wat u verwachtte en wat er werkelijk gebeurde…",
+    "include_logs": "Openstaande automatische rapporten toevoegen",
+    "attach": "Bestand toevoegen",
+    "attach_clear": "Bijlage verwijderen",
+    "attach_none": "Geen bijlagen.",
+    "attach_selected": "Bijlage: {name}",
+    "attach_ok": "{name} is toegevoegd.",
+    "attach_failed": "De bijlage kon niet worden gelezen.",
+    "attach_too_big": "Het bestand overschrijdt de maximaal toegestane grootte.",
+    "send": "Rapport verzenden",
+    "refresh": "Vernieuwen",
+    "sent_ok": "Rapport verzonden als issue #{number}.",
+    "sent_duplicate": "Die fout was al gemeld; uw geval is toegevoegd aan issue #{number}.",
+    "sent_queued": "Verzenden mislukt ({error}). Het rapport is lokaal opgeslagen.",
+    "error_title": "Schrijf een titel voor het rapport.",
+    "error_description": "Beschrijf het probleem voordat u het verzendt.",
+    "error_no_session": "Meld u aan bij GitHub om het rapport te verzenden.",
+    "queue_title": "Openstaande rapporten",
+    "queue_hint": "Fouten die de app opving en nog niet zijn gepubliceerd.",
+    "queue_empty": "Geen openstaande rapporten.",
+    "queue_count": "Openstaande rapporten: {count}",
+    "queue_resend": "Opnieuw verzenden",
+    "queue_discard": "Verwerpen",
+    "queue_cleared": "Openstaande rapporten zijn verworpen.",
+    "queue_result": "Verzonden: {sent}. Mislukt: {failed}.",
+    "env_title": "Toegevoegde gegevens",
+    "env_hint": "Persoonlijke paden, uw systeemgebruikersnaam en inloggegevens worden nooit verzonden.",
+    "report.auto_send": "Send failures automatically when a GitHub session exists",
+    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here.",
+    "auto_send": "Fouten automatisch verzenden als er een GitHub-sessie is",
+    "auto_send_hint": "Indien uitgeschakeld worden fouten alleen opgeslagen en kunt u ze hier zelf verzenden."
   }
 }
