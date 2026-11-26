@@ -97,12 +97,29 @@ class TestGlobalStylesheet:
     def test_entrypoint_installs_it_at_startup(self):
         text = (ROOT / "packagemaker.py").read_text(encoding="utf-8")
         # Arranque (GUI y CLI) y reaplicado del tema comparten la hoja raíz.
-        assert text.count("app.setStyleSheet(global_stylesheet(") == 3
+        assert text.count("apply_global_stylesheet(app") == 3
+
+    def test_global_stylesheet_is_not_reapplied_when_unchanged(self):
+        """Reinstalar la misma hoja re-pule todos los widgets sin cambiar nada."""
+
+        class _FakeApp:
+            def __init__(self):
+                self.sheets = []
+
+            def setStyleSheet(self, sheet):  # noqa: N802 - API de Qt
+                self.sheets.append(sheet)
+
+        app = _FakeApp()
+        assert theme.apply_global_stylesheet(app, "#0078D4", dark=True) is True
+        assert theme.apply_global_stylesheet(app, "#0078D4", dark=True) is False
+        assert theme.apply_global_stylesheet(app, "#FF6B00", dark=True) is True
+        assert theme.apply_global_stylesheet(app, "#FF6B00", dark=False) is True
+        assert len(app.sheets) == 3
 
     def test_theme_reapply_reuses_the_same_stylesheet(self):
         text = (ROOT / "packagemaker.py").read_text(encoding="utf-8")
         block = text.split("def apply_theme", 1)[1].split("def ", 1)[0]
-        assert "global_stylesheet(accent, dark)" in block
+        assert "apply_global_stylesheet(app, accent, dark)" in block
         assert "application_stylesheet(" not in block
 
 

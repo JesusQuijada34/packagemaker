@@ -364,7 +364,7 @@ from lib.i18n import i18n, tr, system_default_language
 from lib.linux_icon_handler import ensure_linux_icon_support
 from lib.pm_data import get_pm_data, load_merged_app_config
 from lib.fluent_theme import (
-    global_stylesheet,
+    apply_global_stylesheet,
     BTN_STYLES,
     FluentCheckBox as QCheckBox,
     applyget,
@@ -830,7 +830,7 @@ class PackageTodoGUI(QMainWindow):
         self.titlebar.setStyleSheet(titlebar_background_stylesheet())
         self.titlebar.title_lbl.setText(self._fixed_title)
         patch_titlebar_maximize(self.titlebar, self)
-        self._pm_reapply_display_mode = self._apply_leviathan_and_personalization
+        self._pm_reapply_display_mode = self._refresh_window_corners
         self.v_layout.addWidget(self.titlebar)
 
         # Puentes con el gestor de ventanas del SO: arrastrar, redimensionar
@@ -1553,6 +1553,31 @@ class PackageTodoGUI(QMainWindow):
         apply_personalization_effects(self)
         self.apply_theme()
 
+    def _window_base_and_radius(self):
+        """Fondo y radio de las esquinas según tema y estado de la ventana."""
+        dark = getattr(self, "last_theme_mode", "dark") == "dark"
+        base_bg = WINDOW_BG if dark else "#f5f7fb"
+        radius = 0 if getattr(self, "_pm_maximized", False) else WINDOW_RADIUS
+        return base_bg, radius
+
+    def _refresh_window_corners(self) -> None:
+        """Reaplica sólo lo que depende de las esquinas de la ventana.
+
+        Maximizar o restaurar sólo cambia el radio, pero llamaba a
+        ``apply_theme``: reinstalar la hoja global de la aplicación re-pule
+        todos los widgets y congela la interfaz ~260 ms en cada gesto.
+        """
+        apply_personalization_effects(self)
+        base_bg, radius = self._window_base_and_radius()
+        set_qss(
+            self,
+            'packagemaker_010',
+            values=(qss_value(base_bg, None, ''), qss_value(radius, None, '')),
+            append=False,
+        )
+        if hasattr(self.titlebar, "title_lbl"):
+            self.titlebar.setStyleSheet(titlebar_chrome_stylesheet(base_bg, radius))
+
     def _apply_leviathan_and_personalization(self) -> None:
         dm = get_pm_data().get_user("display_mode") or APP_CONFIG.get(
             "DISPLAY_MODE", "GhostBlur (Cristal)"
@@ -1576,14 +1601,12 @@ class PackageTodoGUI(QMainWindow):
         density = str(store.get_user("ui_density", "normal"))
         sidebar_h = SIDEBAR_ITEM_HEIGHT if density != "compact" else 36
         dark = self.last_theme_mode == "dark"
-        base_bg = WINDOW_BG if dark else "#f5f7fb"
+        base_bg, radius = self._window_base_and_radius()
         text_col = TEXT if dark else "#1f2937"
-        # Maximizada las esquinas van rectas; si no, curvas como el overlay.
-        radius = 0 if getattr(self, "_pm_maximized", False) else WINDOW_RADIUS
 
         app = QApplication.instance()
         if app is not None:
-            app.setStyleSheet(global_stylesheet(accent, dark))
+            apply_global_stylesheet(app, accent, dark)
 
         set_qss(self.central, applyget(accent, dark), append=False)
         set_qss(
@@ -4728,7 +4751,7 @@ def main():
 
             if PYQT6_AVAILABLE:
                 app = QApplication(sys.argv)
-                app.setStyleSheet(global_stylesheet(get_accent_color()))
+                apply_global_stylesheet(app, get_accent_color())
                 font = app_font()
                 if font is not None:
                     app.setFont(font)
@@ -4760,7 +4783,7 @@ def main():
         return
 
     app = QApplication(sys.argv)
-    app.setStyleSheet(global_stylesheet(get_accent_color()))
+    apply_global_stylesheet(app, get_accent_color())
     font = app_font()
     if font is not None:
         app.setFont(font)

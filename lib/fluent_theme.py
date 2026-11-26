@@ -490,6 +490,24 @@ def global_stylesheet(accent: str = ACCENT, dark: Optional[bool] = None) -> str:
     return application_stylesheet(dark, accent) + "\n" + checkbox_stylesheet(accent, text)
 
 
+def apply_global_stylesheet(app, accent: str = ACCENT, dark: Optional[bool] = None) -> bool:
+    """Instala la hoja global sólo si cambió el acento o el tema.
+
+    Reinstalar la misma hoja en ``QApplication`` obliga a Qt a re-pulir todos
+    los widgets (~185 ms medidos en offscreen) sin cambiar un solo píxel, y se
+    notaba como congelación al aplicar ajustes que no tocan la paleta.
+    Devuelve ``True`` si la hoja se volvió a aplicar.
+    """
+    if dark is None:
+        dark = system_theme_mode() != "light"
+    key = (str(accent), bool(dark))
+    if getattr(app, "_pm_global_stylesheet_key", None) == key:
+        return False
+    app.setStyleSheet(global_stylesheet(accent, dark))
+    app._pm_global_stylesheet_key = key
+    return True
+
+
 def splash_titlebar_stylesheet():
     return """
         QWidget#SharedSplash QWidget#customTitleBar {

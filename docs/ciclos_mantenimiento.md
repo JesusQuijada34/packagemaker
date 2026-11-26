@@ -702,3 +702,19 @@ ciclos: es un registro de auditoría.
   subtests; `pyflakes` y `py_compile` limpios. R-4d9e2b61 queda abierto sólo por
   el entorno aislado de Q-019. No se prepara release: quedan bugs de prioridad
   alta y 19 aprobaciones pendientes de implementación.
+
+- Sexagésimo séptimo ciclo (2026-11-26): sin respuestas nuevas en
+  `CONFIRM.MD` (sigue sólo **Q-032** pendiente). Se corrige **R-7d4b2c95**, la
+  mitad reproducible de R-7c4a1e95: maximizar o restaurar llamaba a
+  `apply_theme`, que reinstala la hoja global de la aplicación y re-pule todos
+  los widgets (185 ms en `app.setStyleSheet`, 269 ms en `apply_theme`, 274 ms
+  por gesto, medidos en offscreen). El gesto ahora refresca sólo el radio de las
+  esquinas (~59 ms) mediante `_refresh_window_corners()`, y
+  `lib/fluent_theme.apply_global_stylesheet()` no reinstala una hoja idéntica
+  (ahorra ~185 ms al cambiar de modo de visualización). `tests/
+  test_maximize_without_theme_reapply.py` describe el fallo (con el código
+  anterior el gesto hacía 1 llamada a `setStyleSheet`) y el caso de caché vive
+  en `tests/test_design_system_phase3.py`. Verificación: 1354 pasan, 1 omitido,
+  64 subtests; `pyflakes` y `py_compile` limpios. R-7c4a1e95 sigue abierto por
+  el guardado en segundo plano (Q-012). No se prepara release: quedan bugs de
+  prioridad alta y 19 aprobaciones pendientes de implementación.

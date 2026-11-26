@@ -21,7 +21,7 @@ def test_checkbox_uses_native_painting_and_shared_root_stylesheet():
     assert 'image: url("__CHECK_ICON__")' in stylesheet
     assert 'image: url("__PARTIAL_ICON__")' in stylesheet
     # La hoja raíz única instala también el QSS del checkbox (Fase 3.1).
-    assert "app.setStyleSheet(global_stylesheet" in entrypoint
+    assert "apply_global_stylesheet(app" in entrypoint
     assert "checkbox_stylesheet(accent, text)" in theme
 
 

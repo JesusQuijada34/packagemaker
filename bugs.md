@@ -1,7 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (ciclo 66: R-8d3f6a21 corregido y en
-observación; R-4d9e2b61 queda sólo por el entorno aislado de Q-019).
+Última actualización: 2026-11-26 (ciclo 67: R-7d4b2c95 corregido y en
+observación — maximizar/restaurar ya no congela la interfaz; R-7c4a1e95 queda
+sólo por el guardado en segundo plano de Q-012).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -20,7 +21,7 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
 | R-4d9e2b61 | Bug — el build no usa un entorno aislado por proyecto | Alta | Aprobado Q-019; pendiente de implementación (el fallo de Nuitka se corrigió en R-8d3f6a21) |
-| R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Aprobado Q-012/Q-011; pendiente de implementación |
+| R-7c4a1e95 | Bug — la interfaz se congela al guardar ajustes | Alta | Aprobado Q-012; pendiente de implementación (maximizar/restaurar ya corregido en R-7d4b2c95) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
 | R-7b3e9a52 | Mejora — sección de ayuda global (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
@@ -64,23 +65,25 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
   compilación real `--standalone --onefile`.
 - **Commit / fecha de resolución:** — (el entorno aislado sigue abierto).
 
-### R-7c4a1e95 — La interfaz se congela y renderiza mal al maximizar/restaurar
+### R-7c4a1e95 — La interfaz se congela al guardar ajustes
 
 - **Usuario:** JesusQuijada34 (`bugs.txt`, commit `bba72d6`)
 - **Fecha del reporte:** 2026-11-25
 - **Prioridad:** Alta.
-- **Descripción:** al maximizar, restaurar o cambiar opciones de Configuración
-  la interfaz se congela un momento y el renderizado se ve mal.
-- **Pasos para reproducirlo:** maximizar y restaurar varias veces y cambiar
-  opciones de Configuración.
-- **Causa raíz:** la reubicación de widgets y el guardado corren en el hilo de
-  la interfaz; depende de las tareas en segundo plano y las transiciones de
-  ventana (Q-012 y Q-011).
-- **Estado:** Pendiente (Q-012/F-005 y Q-011/F-004). El arrastre y los tres
-  gestos de la titlebar ya están aplicados (R-6a1f8c23, R-2f8b6a31); falta la
-  parte de segundo plano.
-- **Solución aplicada:** parcial (gestos y arrastre de la titlebar).
-- **Commit / fecha de resolución:** `c346946`, `d6a832a`, ciclo 65 / —
+- **Descripción:** al cambiar opciones de Configuración la interfaz se congela
+  un momento mientras se guardan y se aplican. El otro síntoma del reporte
+  (maximizar y restaurar) quedó corregido en R-7d4b2c95.
+- **Pasos para reproducirlo:** cambiar varias opciones de apariencia en
+  Configuración y pulsar guardar.
+- **Causa raíz:** el guardado (`pm.data`, `settings.json`) y la reaplicación
+  del tema corren en el hilo de la interfaz. La hoja global de la aplicación ya
+  no se reinstala cuando el acento y el tema no cambian (ciclo 67); lo que
+  queda es mover el guardado a segundo plano, que es Q-012.
+- **Estado:** Pendiente (Q-012/F-005). El arrastre, los tres gestos de la
+  titlebar y el re-pulido innecesario al cambiar de modo de visualización ya
+  están aplicados (R-6a1f8c23, R-2f8b6a31, R-7d4b2c95).
+- **Solución aplicada:** parcial (gestos, arrastre y hoja global con caché).
+- **Commit / fecha de resolución:** `c346946`, `d6a832a`, ciclo 65; ciclo 67 / —
 
 ## Mejoras pendientes
 
@@ -188,16 +191,25 @@ al ciclo anterior.
 | ID | Título | Prioridad | Corregido | Prueba de regresión |
 |---|---|---|---|---|
 | R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
+| R-7d4b2c95 | Maximizar o restaurar congelaba la interfaz (~270 ms por gesto) | Alta | ciclo 67, 2026-11-26 | `tests/test_maximize_without_theme_reapply.py` |
 
 ## Periodo de observación y release
 
 - **Cola:** 16 entradas (ver Resumen). No hay bugs críticos reportados sin
-  atender; R-4d9e2b61 (sólo el entorno aislado de Q-019) y R-7c4a1e95 siguen
-  aprobados y pendientes de implementación.
+  atender; R-4d9e2b61 (sólo el entorno aislado de Q-019) y R-7c4a1e95 (guardado
+  en segundo plano, Q-012) siguen aprobados y pendientes de implementación.
 - **Release:** no se prepara. Hay bugs de prioridad alta pendientes de
   implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
+- Sexagésimo séptimo ciclo (2026-11-26): se corrige **R-7d4b2c95**, la mitad
+  reproducible de R-7c4a1e95: maximizar o restaurar llamaba a `apply_theme`,
+  que reinstala la hoja global de la aplicación y re-pule todos los widgets
+  (~270 ms por gesto, medidos en offscreen). El gesto ahora sólo refresca el
+  radio de las esquinas (~59 ms) y `apply_global_stylesheet()` no reinstala una
+  hoja idéntica (ahorra ~185 ms al cambiar de modo de visualización). Queda en
+  observación; R-7c4a1e95 sigue abierto por el guardado en segundo plano
+  (Q-012). No se prepara release.
 - Sexagésimo sexto ciclo (2026-11-26): se corrige **R-8d3f6a21**, el backend
   Nuitka que no compilaba (opciones de salida sin `=`, familia de plugins Qt
   inexistente e importación de `MainControl` fuera del `try`), y se verifica con

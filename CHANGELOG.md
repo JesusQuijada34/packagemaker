@@ -1,3 +1,47 @@
+## 2026-11-26 — sexagésimo séptimo ciclo
+
+### Corregido — maximizar o restaurar congelaba la interfaz (R-7d4b2c95, R-7c4a1e95)
+
+Reportado por JesusQuijada34 en `bugs.txt` (commit `bba72d6`, 2026-11-25): «hay
+mal renderizado al maximizar y restaurar, la interfaz se congela un momento» y
+«al maximizar o restaurar o al cambiar opciones en configuración, ¿por qué se
+queda congelado un rato?».
+
+- **Síntoma:** cada maximizar o restaurar congelaba la ventana una fracción de
+  segundo, y lo mismo al cambiar de modo de visualización en Configuración.
+- **Causa raíz:** `toggle_frameless_maximize()` invocaba
+  `_pm_reapply_display_mode`, que era `_apply_leviathan_and_personalization()` →
+  `apply_theme()`. `apply_theme()` reinstala la hoja global con
+  `QApplication.setStyleSheet(global_stylesheet(...))`, y Qt re-pule entonces
+  todos los widgets de la aplicación. Medido en offscreen con la ventana real:
+  **185 ms** sólo en `app.setStyleSheet`, **269 ms** en `apply_theme` y
+  **274 ms** por gesto. En el gesto sólo cambia el radio de las esquinas.
+- **Solución:**
+  1. `PackageTodoGUI._refresh_window_corners()` sustituye al reaplicado
+     completo en `_pm_reapply_display_mode`: refresca el radio del efecto
+     (`apply_personalization_effects`), el QSS `packagemaker_010` de la ventana
+     y el chrome de la titlebar. No reinstala la hoja global ni reconstruye el
+     efecto `WipeWindow`. El gesto baja a **~59 ms**.
+  2. `lib/fluent_theme.apply_global_stylesheet(app, accent, dark)` instala la
+     hoja global sólo si cambió el acento o el tema; una hoja idéntica no se
+     reinstala (ahorra ~185 ms al cambiar de modo de visualización o guardar
+     ajustes que no tocan la paleta). `main` y `apply_theme` usan el helper.
+  3. `_window_base_and_radius()` centraliza el fondo y el radio para que
+     `apply_theme` y el refresco de esquinas no puedan divergir.
+- **Pruebas:** `tests/test_maximize_without_theme_reapply.py` (2 casos): el
+  gesto no llama a `apply_theme` ni a `QApplication.setStyleSheet`, el radio del
+  QSS pasa a 0 al maximizar y vuelve a `WINDOW_RADIUS` al restaurar, y cambiar
+  de modo de visualización no re-pule la aplicación. Con el código anterior el
+  primero falla (1 llamada a `setStyleSheet` por gesto).
+  `tests/test_design_system_phase3.py` añade el caso de caché del helper y sus
+  dos aserciones de cableado apuntan ya a `apply_global_stylesheet`.
+- **Verificación:** 1354 pruebas pasan, 1 omitida, 64 subtests; `pyflakes` y
+  `py_compile` limpios.
+- **Commit:** ver el commit de este ciclo en `main`.
+- **Observación:** la corrección se mide en offscreen (Linux). En Windows queda
+  por confirmar visualmente que no hay parpadeo al cambiar las esquinas. La
+  otra mitad de R-7c4a1e95 (guardar en segundo plano) sigue en Q-012.
+
 ## 2026-11-26 — sexagésimo sexto ciclo
 
 ### Corregido — el backend Nuitka no podía compilar (R-8d3f6a21, R-4d9e2b61)
