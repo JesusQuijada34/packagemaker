@@ -199,5 +199,175 @@ class TitlebarCursorTests(unittest.TestCase):
         self.assertIn(("unset", None), window.cursor_calls)
 
 
+@unittest.skipUnless(QT_AVAILABLE, "Qt no disponible en este entorno")
+class MaximizedDragTests(unittest.TestCase):
+    """R-6a1f8c23: arrastrar la titlebar maximizada no debe mover la ventana.
+
+    El comportamiento aprobado en Q-011/F-004 es restaurar la ventana a su
+    tamaño normal bajo el cursor y sólo entonces iniciar el arrastre. Un clic
+    suelto, en cambio, no debe desmaximizarla.
+    """
+
+    class _FakeTitlebar:
+        def __init__(self):
+            self._drag_active = False
+            self._drag_offset = None
+
+    class _DragWindow:
+        def __init__(self, maximized=True):
+            self._pm_maximized = maximized
+            self._geometry = QRect(0, 0, 1920, 1080)
+            self._pm_restore_geometry = QRect(400, 200, 1000, 700)
+            self.moves = []
+
+        def geometry(self):
+            return QRect(self._geometry)
+
+        def frameGeometry(self):
+            return QRect(self._geometry)
+
+        def setGeometry(self, geo):
+            self._geometry = QRect(geo)
+            self.moves.append(QRect(geo))
+
+        def isMaximized(self):
+            return False
+
+        def isFullScreen(self):
+            return False
+
+        def windowHandle(self):
+            return None
+
+        def screen(self):
+            return None
+
+        def showNormal(self):
+            self._geometry = QRect(self._pm_restore_geometry)
+
+        def showMaximized(self):
+            pass
+
+        def toggle_frameless_maximize(self):
+            self._pm_maximized = False
+            self._geometry = QRect(self._pm_restore_geometry)
+
+    @staticmethod
+    def _press(global_x, global_y=12):
+        from PyQt6.QtCore import QEvent
+        from PyQt6.QtGui import QMouseEvent
+
+        local = QPoint(global_x, global_y)
+        return QMouseEvent(
+            QEvent.Type.MouseButtonPress,
+            local.toPointF(),
+            local.toPointF(),
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+
+    @staticmethod
+    def _move(global_x, global_y=12):
+        from PyQt6.QtCore import QEvent
+        from PyQt6.QtGui import QMouseEvent
+
+        local = QPoint(global_x, global_y)
+        return QMouseEvent(
+            QEvent.Type.MouseMove,
+            local.toPointF(),
+            local.toPointF(),
+            Qt.MouseButton.NoButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+
+    def _bridge(self, window, move_returns=True):
+        titlebar = self._FakeTitlebar()
+        bridge = WindowManagerBridge(window, titlebar)
+        bridge._wire_titlebar()
+        calls = []
+        bridge.start_system_move = lambda: calls.append("move") or move_returns
+        return bridge, titlebar, calls
+
+    def test_press_alone_on_maximized_titlebar_does_not_restore(self):
+        window = self._DragWindow()
+        bridge, titlebar, calls = self._bridge(window)
+
+        titlebar.mousePressEvent(self._press(960))
+
+        self.assertTrue(window._pm_maximized)
+        self.assertEqual(window.moves, [])
+        self.assertEqual(calls, [])
+
+    def test_small_jitter_does_not_restore(self):
+        window = self._DragWindow()
+        bridge, titlebar, calls = self._bridge(window)
+
+        titlebar.mousePressEvent(self._press(960))
+        bridge.eventFilter(titlebar, self._move(961))
+
+        self.assertTrue(window._pm_maximized)
+        self.assertEqual(calls, [])
+
+    def test_drag_from_maximized_restores_before_moving(self):
+        window = self._DragWindow()
+        bridge, titlebar, calls = self._bridge(window)
+
+        titlebar.mousePressEvent(self._press(960))
+        bridge.eventFilter(titlebar, self._move(980))
+
+        self.assertFalse(window._pm_maximized)
+        self.assertEqual(len(window.moves), 1)
+        geo = window.moves[0]
+        self.assertEqual((geo.width(), geo.height()), (1000, 700))
+        self.assertEqual(calls, ["move"])
+
+    def test_restore_keeps_the_cursor_over_the_same_relative_position(self):
+        window = self._DragWindow()
+        bridge, titlebar, calls = self._bridge(window)
+
+        # Pulsación en el 75 % del ancho: la ventana restaurada debe quedar
+        # colocada para que el cursor siga en ese mismo 75 % de su titlebar.
+        titlebar.mousePressEvent(self._press(1440))
+        bridge.eventFilter(titlebar, self._move(1460))
+
+        geo = window.moves[0]
+        self.assertEqual(geo.x(), 1440 - int(0.75 * 1000))
+        self.assertEqual(geo.width(), 1000)
+
+    def test_restored_window_stays_inside_the_screen(self):
+        window = self._DragWindow()
+        window._pm_restore_geometry = QRect(0, 0, 1800, 900)
+        bridge, titlebar, calls = self._bridge(window)
+
+        titlebar.mousePressEvent(self._press(1919))
+        bridge.eventFilter(titlebar, self._move(1939))
+
+        geo = window.moves[0]
+        self.assertGreaterEqual(geo.x(), 0)
+        self.assertLessEqual(geo.right(), 1919)
+
+    def test_press_on_normal_window_does_not_restore(self):
+        window = self._DragWindow(maximized=False)
+        bridge, titlebar, calls = self._bridge(window)
+
+        titlebar.mousePressEvent(self._press(500))
+
+        self.assertEqual(window.moves, [])
+        self.assertEqual(calls, ["move"])
+        self.assertFalse(titlebar._drag_active)
+
+    def test_failed_system_move_falls_back_to_manual_drag(self):
+        window = self._DragWindow()
+        bridge, titlebar, calls = self._bridge(window, move_returns=False)
+
+        titlebar.mousePressEvent(self._press(960))
+        bridge.eventFilter(titlebar, self._move(980))
+
+        self.assertTrue(titlebar._drag_active)
+        self.assertIsNotNone(titlebar._drag_offset)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -46,6 +46,10 @@ except ImportError:  # pragma: no cover - entorno sin Qt
 
 
 RESIZE_MARGIN = 6
+# Altura máxima del asidero de la titlebar al restaurar una ventana maximizada.
+TITLEBAR_GRAB_HEIGHT = 24
+# Distancia (px) que hay que arrastrar la titlebar maximizada para restaurarla.
+DRAG_START_DISTANCE = 4
 
 
 def detect_resize_edges(pos: QPoint, rect: QRect, margin: int = RESIZE_MARGIN):
@@ -120,6 +124,7 @@ class WindowManagerBridge(QObject):
         self.window = window
         self.titlebar = titlebar
         self._hover_edges = None
+        self._pending_drag: Optional[QPoint] = None
         self._enabled = PYQT6_AVAILABLE
 
     def _position_over_titlebar(self, pos: QPoint) -> bool:
@@ -163,7 +168,14 @@ class WindowManagerBridge(QObject):
 
         def on_press(event):
             if event.button() == Qt.MouseButton.LeftButton:
-                self.start_system_move()
+                global_pos = event.globalPosition().toPoint()
+                if self.is_maximized():
+                    # Un clic suelto no debe desmaximizar: se espera a que el
+                    # gesto sea un arrastre (``_continue_pending_drag``).
+                    self._pending_drag = global_pos
+                    event.accept()
+                    return
+                self._begin_drag(global_pos)
                 event.accept()
                 return
             if event.button() == Qt.MouseButton.RightButton:
@@ -181,6 +193,78 @@ class WindowManagerBridge(QObject):
         titlebar.mouseDoubleClickEvent = on_double
 
     # -- acciones nativas --------------------------------------------
+    def is_maximized(self) -> bool:
+        """``True`` si la ventana está maximizada, con o sin marco nativo."""
+        if getattr(self.window, "_pm_maximized", False):
+            return True
+        try:
+            return bool(self.window.isMaximized() or self.window.isFullScreen())
+        except (RuntimeError, AttributeError):
+            return False
+
+    def restore_for_drag(self, global_pos: QPoint) -> bool:
+        """Restaura la ventana maximizada dejando la titlebar bajo el cursor.
+
+        Arrastrar una ventana maximizada debe devolverla a su tamaño normal,
+        como hace el gestor de ventanas nativo: moverla con el tamaño de la
+        pantalla deja la ventana desproporcionada y sin bordes accesibles.
+        Devuelve ``True`` si había que restaurar y se restauró.
+        """
+        if not self.is_maximized():
+            return False
+        window = self.window
+        before = QRect(window.geometry())
+        toggle = getattr(window, "toggle_frameless_maximize", None)
+        if callable(toggle):
+            toggle()
+        else:
+            if hasattr(window, "_pm_maximized"):
+                window._pm_maximized = False
+            window.showNormal()
+        after = QRect(window.geometry())
+        if after.width() <= 0 or not after.isValid():
+            after = QRect(getattr(window, "_pm_restore_geometry", QRect()))
+        if before.width() <= 0 or not after.isValid() or after.width() <= 0:
+            return True
+        # Mantener el cursor en la misma posición relativa de la titlebar.
+        ratio = (global_pos.x() - before.left()) / before.width()
+        ratio = min(max(ratio, 0.0), 1.0)
+        grab = min(max(global_pos.y() - before.top(), 0), TITLEBAR_GRAB_HEIGHT)
+        x = int(round(global_pos.x() - ratio * after.width()))
+        y = int(round(global_pos.y() - grab))
+        x = min(max(x, before.left()), max(before.left(), before.right() - after.width() + 1))
+        y = max(y, before.top())
+        if (x, y) != (after.x(), after.y()):
+            window.setGeometry(QRect(x, y, after.width(), after.height()))
+        return True
+
+    def _begin_drag(self, anchor: QPoint) -> None:
+        """Restaura si hace falta e inicia el arrastre de la ventana."""
+        self._pending_drag = None
+        self.restore_for_drag(anchor)
+        if not self.start_system_move():
+            self._begin_manual_drag(anchor)
+
+    def _continue_pending_drag(self, global_pos: QPoint) -> None:
+        """Convierte en arrastre una pulsación sobre la titlebar maximizada."""
+        anchor = self._pending_drag
+        if anchor is None:
+            return
+        if (global_pos - anchor).manhattanLength() < DRAG_START_DISTANCE:
+            return
+        self._begin_drag(anchor)
+
+    def _begin_manual_drag(self, global_pos: QPoint) -> None:
+        """Continúa el arrastre a mano si ``startSystemMove`` no está disponible."""
+        titlebar = self.titlebar
+        if titlebar is None or not hasattr(titlebar, "_drag_active"):
+            return
+        try:
+            titlebar._drag_active = True
+            titlebar._drag_offset = global_pos - self.window.frameGeometry().topLeft()
+        except (RuntimeError, AttributeError):
+            pass
+
     def start_system_move(self) -> bool:
         handle = self.window.windowHandle()
         if handle is not None and hasattr(handle, "startSystemMove"):
@@ -248,6 +332,10 @@ class WindowManagerBridge(QObject):
             # cursor debe volver a la flecha normal (heredaba el de la ventana).
             if event.type() in (QEvent.Type.MouseMove, QEvent.Type.Enter):
                 self._reset_cursor()
+            if event.type() == QEvent.Type.MouseMove:
+                self._continue_pending_drag(event.globalPosition().toPoint())
+            elif event.type() == QEvent.Type.MouseButtonRelease:
+                self._pending_drag = None
             return False
         etype = event.type()
         if etype == QEvent.Type.MouseMove:
