@@ -282,11 +282,12 @@ class IntegratedSplash(QWidget):
 
     def __init__(self, parent=None, icon_path=None, title="appKnob"):
         super().__init__(parent)
-        self.parent = parent
+        self._host = parent
+        self.title = title
         self.accent = str(get_accent_color())
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setGeometry(0, 0, parent.width(), parent.height())
+        self._sync_geometry()
         self.setStyleSheet(f"""
             QWidget#SplashContainer {{
                 background-color: {self.accent};
@@ -297,6 +298,7 @@ class IntegratedSplash(QWidget):
         container = QWidget(self)
         container.setObjectName("SplashContainer")
         container.setGeometry(0, 0, self.width(), self.height())
+        self._container = container
 
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -320,13 +322,28 @@ class IntegratedSplash(QWidget):
         self.splash_timer.timeout.connect(self._finish_splash)
         self.splash_timer.setSingleShot(True)
 
+    def _sync_geometry(self):
+        """Ocupa la pantalla disponible si no hay ventana anfitriona.
+
+        Como ventana de nivel superior no crea ventanas hijas translúcidas, que
+        en Windows generaban avisos ``must be a top level window``.
+        """
+        if self._host is not None:
+            self.setGeometry(0, 0, self._host.width(), self._host.height())
+            return
+        screen = None
+        try:
+            screen = self.screen()
+        except Exception:  # pragma: no cover - respaldo sin Qt
+            screen = None
+        if screen is not None:
+            self.setGeometry(screen.availableGeometry())
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if self.parent:
-            self.setGeometry(0, 0, self.parent.width(), self.parent.height())
-            container = self.findChild(QWidget, "SplashContainer")
-            if container:
-                container.setGeometry(0, 0, self.width(), self.height())
+        container = getattr(self, "_container", None)
+        if container is not None:
+            container.setGeometry(0, 0, self.width(), self.height())
 
     def start(self, delay_ms=5000):
         self.show()
@@ -345,6 +362,10 @@ class IntegratedSplash(QWidget):
     def _close_and_emit(self):
         self.hide()
         self.finished.emit()
+        try:
+            self.destroy()
+        except Exception:  # pragma: no cover - respaldo sin Qt
+            pass
         self.deleteLater()
 
 def _require_gui() -> None:
@@ -369,6 +390,13 @@ def get_accent_color():
 
 def show_info_gui():
     app = QApplication.instance() or QApplication(sys.argv)
+    # El splash es de nivel superior y se pinta antes de construir la ventana:
+    # como ventana hija translúcida Qt creaba ventanas nativas auxiliares en
+    # Windows (avisos "must be a top level window" y ventanas vacías).
+    splash = IntegratedSplash(
+        icon_path=iconPath if os.path.exists(iconPath) else None,
+        title="Influent FireCube Updater",
+    )
     window = UpdaterInfoWindow()
     def on_splash_finished():
         if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
@@ -377,14 +405,10 @@ def show_info_gui():
             except (ImportError, OSError):
                 pass
         window.on_splash_finished()
-    window.show()
-    splash = IntegratedSplash(
-        parent=window,
-        icon_path=iconPath if os.path.exists(iconPath) else None,
-        title="Influent FireCube Updater",
-    )
     splash.finished.connect(on_splash_finished)
     splash.start(SPLASH_DURATION_MS)
+    window.show()
+    splash.raise_()
     sys.exit(app.exec())
 
 def main():

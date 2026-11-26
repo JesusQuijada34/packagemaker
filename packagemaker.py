@@ -4771,17 +4771,29 @@ def main():
     i18n.initialize(app, current_lang, auto_translate=auto_translate)
 
     # Coreografía de arranque (bugs.txt Fase 2.2): splash → landing →
-    # verificación de errores internos → ventana principal. Los errores se
-    # comprueban antes de construir la UI pesada; si los hay, el frame se
-    # convierte en la ventana de reporte y el proceso sale con código 1.
+    # verificación de errores internos → ventana principal.
     from lib.startup_sequence import collect_internal_errors, plan_startup
     from lib.startup_error_window import show_startup_error
+
+    # El splash es lo primero y de nivel superior (sin padre): se pinta antes de
+    # construir la UI pesada y no crea ventanas hijas translúcidas, que en
+    # Windows generaban ventanas vacías y avisos "must be a top level window".
+    # Sin temporizador falso, permanece visible hasta que la validación de
+    # sesión decide si hay que revelar el landing o entrar directamente al IDE.
+    splash = IntegratedSplash(
+        icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
+        title="Package Maker",
+        accent=get_accent_color(),
+    )
+    splash.show_splash()
 
     startup_plan = plan_startup(
         has_session=True,
         internal_errors=collect_internal_errors(BASE_DIR, Fluthin_APPS),
     )
     if startup_plan.internal_errors:
+        # El splash se convierte en la ventana de reporte; el proceso sale con 1.
+        splash.close()
         sys.exit(
             show_startup_error(
                 tr("startup.internal_error_title"),
@@ -4794,16 +4806,6 @@ def main():
     main_window = PackageTodoGUI()
     main_window.apply_ui_language()
 
-    # El splash es lo primero y actúa como compuerta lógica: sin temporizador
-    # falso, permanece visible hasta que la validación de sesión decide si hay
-    # que revelar el landing o entrar directamente al IDE.
-    splash = IntegratedSplash(
-        parent=main_window,
-        icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
-        title="Package Maker",
-        accent=get_accent_color(),
-    )
-
     def close_splash():
         if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
             try:
@@ -4813,7 +4815,9 @@ def main():
         splash.finish()
 
     main_window.show()
-    splash.show_splash()
+    # La ventana principal nace debajo del splash; se vuelve a subir éste para
+    # que la revele el desvanecido y no un parpadeo del gestor de ventanas.
+    splash.raise_()
     main_window.start_session_gate(close_splash)
 
     sys.exit(app.exec())
