@@ -113,7 +113,7 @@ class SettingsCard(QFrame):
         layout.setContentsMargins(16, 8, 16, 8)
         layout.setSpacing(12)
 
-        self.icon_lbl = QLabel()
+        self.icon_lbl = QLabel(self)
         self.icon_lbl.setFixedSize(22, 22)
         self.icon_lbl.setStyleSheet("background:transparent;border:none;")
         if icon is not None:
@@ -126,13 +126,13 @@ class SettingsCard(QFrame):
         text_box = QVBoxLayout()
         text_box.setContentsMargins(0, 0, 0, 0)
         text_box.setSpacing(1)
-        self.title_lbl = QLabel(title)
+        self.title_lbl = QLabel(title, self)
         self.title_lbl.setStyleSheet(
             f"color:{TEXT};font-family:{FONT_STACK};font-size:13px;"
             "font-weight:600;background:transparent;border:none;"
         )
         text_box.addWidget(self.title_lbl)
-        self.subtitle_lbl = QLabel(subtitle)
+        self.subtitle_lbl = QLabel(subtitle, self)
         self.subtitle_lbl.setStyleSheet(
             f"color:{TEXT_DIM};font-family:{FONT_STACK};font-size:11px;"
             "background:transparent;border:none;"
@@ -141,7 +141,7 @@ class SettingsCard(QFrame):
         text_box.addWidget(self.subtitle_lbl)
         layout.addLayout(text_box, 1)
 
-        self.arrow_lbl = QLabel(trailing)
+        self.arrow_lbl = QLabel(trailing, self)
         self.arrow_lbl.setStyleSheet(
             f"color:{SIDEBAR_TEXT_GRAY};font-family:{FONT_STACK};font-size:15px;"
             "background:transparent;border:none;"
@@ -460,13 +460,13 @@ class SettingsOptionRow(QFrame):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(16, 8, 16, 8)
         layout.setSpacing(12)
-        self.label_lbl = QLabel(label)
+        self.label_lbl = QLabel(label, self)
         self.label_lbl.setStyleSheet(
             f"color:{TEXT};font-family:{FONT_STACK};font-size:13px;"
             "background:transparent;border:none;"
         )
         layout.addWidget(self.label_lbl, 1)
-        self.check_lbl = QLabel("\u2713")
+        self.check_lbl = QLabel("\u2713", self)
         self.check_lbl.setStyleSheet(
             f"color:{ACCENT};font-family:{FONT_STACK};font-size:14px;"
             "font-weight:700;background:transparent;border:none;"

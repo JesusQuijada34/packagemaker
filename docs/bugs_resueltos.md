@@ -4,7 +4,7 @@
 corrección vive en `CHANGELOG.md` y en el issue correspondiente. Este archivo
 es histórico: no se lee en los ciclos de mantenimiento.
 
-**162 entradas resueltas.**
+**166 entradas resueltas.**
 
 | ID | Título | Usuario | Fecha | Prioridad | Commit | Solución |
 |---|---|---|---|---|---|---|
@@ -170,3 +170,7 @@ es histórico: no se lee en los ciclos de mantenimiento.
 | R-4b8f1e27 | Sin PyYAML la ventana no abría | JesusQuijada34 (auditoría interna de man… | 2026-11-25 | Alta | `1655007` (quincuagésimo sexto… | `load_addons()` cae a `fallback_addons()` cuando PyYAML no está disponible. |
 | R-4c1a9e72 | Claves sobrantes en `lang/` impedían retraducir el envío automático | auditoría interna del ciclo 58 (sin repo… | 2026-11-26 | Media | el del ciclo 58 en `main` (ver… | se retiraron las claves planas sobrantes de los 13 catálogos afectados —el valor traducido de `form.author_placeholder` se trasladó a su clave anidada… |
 | R-4e7a1d92 | Configuración con dos barras de acciones y retroceso sin nombre | JesusQuijada34 ([issue #14](https://gith… | 2026-11-26 | Media | el del ciclo 59 en `main` (ver… | una sola barra por página. - `SettingsPanel` ya no crea cabecera: emite `navigationChanged(título, profundidad, texto_confirmar)` desde `_on_depth_cha… |
+| R-d23039c0 | Telemetría centralizada de errores | JesusQuijada34 (issue #4) | 2026-07-05 | Media | `0ac5457` (ciclo 25, Q-001) | `lib/errorReporter.py`: envío asíncrono en hilo daemon (5 s), consentimiento explícito y `sanitize()`; desactivado por defecto. |
+| R-5d8e2a41 | Acentos en publisher e identificador de aplicación | JesusQuijada34 (auditoría interna) | 2026-11-21 | Media | `0ac5457` (ciclo 25, Q-002) | `ProjectNameFormatter.transliterate()` (NFKD) en `normalize_publisher()`/`normalize_app_id()`: `Jesús` → `Jesus`. |
+| R-4c8e1f27 | El publisher perdía su capitalización al crear proyectos | JesusQuijada34 (auditoría interna) | 2026-11-21 | Media | `0ac5457` (ciclo 25, Q-003) | `handle_cli_action('create_project')`, `_ejecutarCreacionProyecto()`, el dashboard y la TUI pasan el publisher por `normalize_publisher()` en vez de forzar `.lower()`. |
+| R-6c4d1f87 | Nueve ventanas vacías antes del splash (issues #15/#16) | JesusQuijada34 (issues #15 y #16) | 2026-11-26 | Alta | ciclo 62 (`main`) | `SettingsCard`/`SettingsOptionRow` creaban sus `QLabel` sin padre y `setVisible()` los mostraba como ventanas de 640x480; ahora nacen con la tarjeta como padre. `tests/test_startup_stray_windows.py`. |

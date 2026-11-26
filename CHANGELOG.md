@@ -1,3 +1,53 @@
+## 2026-11-26 — sexagésimo segundo ciclo
+
+### Corregido — las ventanas vacías del arranque (R-6c4d1f87, issues #15 y #16)
+
+Reportado por JesusQuijada34 en el issue #16 («error de gui») y en el issue #15
+(«error de implementacion»), ambos del 2026-11-26 y contra el commit `d9d3c48`.
+
+- **Síntoma:** al abrir la aplicación aparecían alrededor de nueve ventanas
+  pequeñas y vacías, abriéndose y cerrándose en cadena, antes del splash.
+- **Causa raíz:** `SettingsCard` y `SettingsOptionRow` (`lib/settings_cards.py`)
+  construían sus rótulos con `QLabel(...)` **sin padre**. Un widget sin padre es
+  una ventana de nivel superior, así que
+  `self.subtitle_lbl.setVisible(bool(subtitle))` (línea 140) y
+  `self.check_lbl.setVisible(self._checked)` (línea 474) mostraban un `QLabel`
+  vacío de 640x480 antes de que `layout.addWidget()` lo reparentara.
+  `SettingsPanel._build_cards()` monta siete tarjetas y varias filas de opción:
+  el arranque abría nueve de esas ventanas.
+- **Evidencia:** con un espía sobre `QWidget.setVisible` en un arranque real
+  (`QT_QPA_PLATFORM=offscreen`) se registraron nueve `VISIBLE-> QLabel
+  size=640x480` con la pila `SettingsPanel._build_cards → _register_card →
+  SettingsCard.__init__` y `_build_cards → SettingsOptionRow.__init__`. Antes
+  del arreglo el arranque mostraba once ventanas; después, sólo el splash y la
+  ventana principal. El arreglo del splash de nivel superior (F-003, ciclo 60)
+  era correcto pero no era la causa de estas nueve ventanas.
+- **Solución:** los rótulos de `SettingsCard` (icono, título, subtítulo y
+  flecha) y de `SettingsOptionRow` (texto y marca) nacen con su tarjeta como
+  padre, de modo que `setVisible()` nunca saca una ventana a la pantalla. No
+  cambian el aspecto ni la API pública de las tarjetas.
+- **Pruebas:** `tests/test_startup_stray_windows.py` (4 casos) instala el espía
+  en `QWidget.setVisible` y exige que construir una tarjeta con subtítulo, una
+  sin subtítulo, una opción marcada y el panel de Configuración completo no
+  muestre ningún widget sin padre. Los tres primeros casos fallan con el código
+  anterior.
+- **Verificación:** 1327 pasan, 1 omitido, 64 subtests; `pyflakes` y
+  `py_compile` limpios; arranque real sin ventanas intermedias.
+
+### Mantenimiento — cola de bugs bajo el límite y bitácora archivada
+
+- Se retiran de `bugs.md` las tres entradas resueltas que seguían en la cola
+  (R-d23039c0, R-5d8e2a41 y R-4c8e1f27, todas del ciclo 25) y se indexan en
+  `docs/bugs_resueltos.md` (162 → 166 entradas).
+- La bitácora de ciclos que vivía al final de `bugs.md` se traslada completa a
+  `docs/ciclos_mantenimiento.md`; `bugs.md` pasa de 87 KB a 40 KB y queda sólo
+  con lo pendiente, lo aprobado sin implementar y la tabla `En observación`.
+- **Issues #15 y #16:** se documenta la causa raíz real y la verificación. El
+  issue #16 queda cerrado; el #15 sigue abierto por el splash dentro de la
+  ventana (Q-032), que es un cambio de engine sin aprobar.
+- **Release:** no se prepara. Quedan bugs de prioridad alta pendientes de
+  implementación y 21 aprobaciones de engine sin aplicar.
+
 ## 2026-11-26 — purga de bugs resueltos y skills de detective/CEO
 
 - `bugs.md` queda como cola activa: 17 pendientes y una tabla compacta de

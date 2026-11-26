@@ -1,10 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-26 (sexagésimo primer ciclo)
+- **Última revisión:** 2026-11-26 (sexagésimo segundo ciclo)
 - **Último commit de `CONFIRM.MD` procesado:** `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en este ciclo y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); 21 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-015, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-016 aplicada y archivada; 9 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 62 no aplicó ninguna respuesta nueva (sólo corrigió R-6c4d1f87, las ventanas vacías del arranque, issues #15/#16); 21 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-015, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-016 aplicada y archivada; 9 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
