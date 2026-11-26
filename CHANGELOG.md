@@ -1,3 +1,15 @@
+## 2026-11-26 — purga de bugs resueltos y skills de detective/CEO
+
+- `bugs.md` queda como cola activa: 17 pendientes y una tabla compacta de
+  `En observación`. Los 162 resueltos se indexan en `docs/bugs_resueltos.md`
+  (53 KB) y el detalle completo vive en este changelog y en los issues.
+- Se añaden las skills `.agents/skills/detective/SKILL.md` (causa raíz con
+  evidencia) y `.agents/skills/ceo/SKILL.md` (priorización por impacto, riesgo
+  y esfuerzo).
+- Los prompts de mantenimiento, push y Telegram incorporan la autorización del
+  propietario sin confirmación para bugs y mejoras normales, y la purga
+  inmediata de los resueltos en el mismo ciclo.
+
 ## 2026-11-26 — sexagésimo primer ciclo
 
 ### Corregido — `create` del CLI ya no sobrescribe un proyecto existente sin `--force` (Q-016, R-6d2a8f19)

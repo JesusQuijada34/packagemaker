@@ -1,28 +1,26 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (sexagésimo primer ciclo: Q-016 aplicada — `create` exige `--force`; limpieza de resueltos pedida en el issue #15)
+Última actualización: 2026-11-26 (purga de resueltos: solo cola activa y observación)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) y
 [issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14)
 Rama de trabajo: `main`
 
-Este archivo es la **cola activa** de reportes: solo contiene lo que sigue
-abierto. Las 156 entradas ya resueltas se retiraron el 2026-11-25 a
-`docs/bugs_resueltos.md` para poder trabajar sin ruido; su detalle también
-vive en `CHANGELOG.md`. `bugs.txt` se conserva como documento de origen y plan
-histórico.
+Este archivo es la **cola activa**: solo contiene lo pendiente y una tabla
+compacta de lo que está en observación. Los bugs ya resueltos se retiran en el
+mismo ciclo y se archivan en `docs/bugs_resueltos.md` (índice) y en
+`CHANGELOG.md`; el detalle y la conversación quedan en el issue. No se acumulan
+resueltos aquí.
+
 
 ## Resumen
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Corregido (ciclo 60); en observación; verificación visual en Windows pendiente (issues #15/#16) |
 | R-6a1f8c23 | Bug — arrastrar la titlebar maximizada mueve la ventana | Alta | Aprobado Q-011 (F-004); pendiente de implementación |
 | R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Aprobado Q-019; pendiente de implementación |
 | R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Aprobado Q-012/Q-011; pendiente de implementación |
 | R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Aprobado Q-011/F-004; pendiente de implementación |
-| R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | En observación; verificación visual en Windows (issue #10) |
-| R-6d2a8f19 | Bug — `create` del CLI sobrescribía un proyecto existente sin avisar | Baja | Corregido con `--force` (ciclo 61); en observación |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
 | R-7b3e9a52 | Mejora — sección de ayuda global de la aplicación (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
@@ -37,75 +35,7 @@ histórico.
 | R-3b7e2d94 | Cambio de engine — addons empaquetados en `lib/addons/` y addons DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash dentro de la ventana principal, estilo UWP (issue #15) | Media | Pendiente de aprobación (Q-032) |
 
-**20 entradas en la cola** (bugs, mejoras y cambios de engine). Dos
-correcciones ya verificadas se retiraron este ciclo — R-4c1a9e72 (ciclo 58) y
-R-4e7a1d92 (ciclo 59), sin reaparición — y quedan archivadas en
-`docs/bugs_resueltos.md` y en `CHANGELOG.md`; las 156 anteriores ya estaban
-allí. R-6d2a8f19 se corrigió en este ciclo y queda en observación.
----
-
-## Extensión de Reportes (sidebar)
-
-- **Solicitud:** JesusQuijada34 — extensión «reports» en el sidebar que
-  comunique con GitHub y envíe issues al repositorio con el token ya
-  autenticado, con envío automático al ocurrir errores y telemetría del
-  dispositivo (SO, versión, Python, versión de PackageMaker, commit, adjuntos).
-- **Estado:** Implementado el 2026-11-18.
-- **Módulos nuevos:**
-  - `lib/report_telemetry.py` — recoge el entorno y sanea texto libre: la
-    carpeta personal pasa a `~`, cualquier ruta absoluta a `<path>` y los
-    valores con pinta de credencial a `<redacted>`. No recoge usuario del SO,
-    hostname, rutas ni variables de entorno.
-  - `lib/github_issue_reporter.py` — publica issues en
-    `JesusQuijada34/packagemaker` con el token de `lib/github_identity`.
-    Agrupa fallos por huella (comenta en el issue abierto en vez de duplicar) y
-    convierte todo error de red o permisos en un resultado, nunca en excepción.
-  - `lib/report_queue.py` — cola local (`data/report_queue.json`) para fallos
-    sin sesión o sin red, con reintento y registro de huellas ya enviadas.
-  - `lib/crash_capture.py` — `sys.excepthook`, `threading.excepthook` y
-    manejador de mensajes críticos de Qt. Se instala al principio de `main()`,
-    así que también captura fallos anteriores a la ventana (se encolan).
-  - `lib/report_page.py` — página del sidebar con sesión, formulario,
-    adjuntos, cola pendiente y vista previa del entorno.
-- **Ajuste:** `auto_report_errors` (`data/pm.data`, por defecto `true`) y su
-  casilla en la página; apagado, los fallos sólo se guardan en local.
-- **Privacidad:** documentado en `docs/privacy.md`.
-- **Pruebas:** `tests/test_report_extension.py` (23) y
-  `tests/test_report_page_ui.py` (14), incluidos el saneado de rutas y
-  credenciales, la no publicación sin sesión, la deduplicación y la cola.
-
-### R-8c4f1a72 — La página de Reportes rompe el fondo y el scrollbar no se lee
-
-- **Usuario:** JesusQuijada34 (issue #10, reporte enviado desde la aplicación)
-- **Fecha del reporte:** 2026-11-25
-- **Prioridad:** Media
-- **Estado:** Corregido y probado en Linux/offscreen; **pendiente de
-  verificación visual en Windows** (el issue #10 sigue abierto).
-- **Descripción:** la pestaña Reportes no coincidía con el resto en el fondo:
-  desde la línea superior de la barra de acciones hasta el borde superior se
-  veía una banda más oscura. El scrollbar apenas se distinguía y el formulario
-  quedaba muy abajo, obligando a desplazarse. La tabla markdown del entorno se
-  mostraba con los pipes en crudo.
-- **Pasos para reproducirlo:** abrir la pestaña «Reportes» en Windows y
-  comparar la franja situada por encima de la barra de acciones con el fondo de
-  las demás pestañas; reducir la altura de la ventana para ver el scrollbar.
-- **Causa raíz:** la página no tenía `WA_StyledBackground`, usaba un contenedor
-  de cabecera con relleno propio y el viewport del `QScrollArea` conservaba el
-  color base de la paleta, así que pintaba una capa distinta a la del resto de
-  la pila. Todo el contenido iba en una sola columna y el entorno se volcaba
-  como markdown en un `QLabel` de texto plano.
-- **Solución aplicada:** la página usa el mismo fondo que las demás
-  (`WA_StyledBackground`), el viewport del scroll es transparente, el
-  contenido se reparte en dos columnas (izquierda: sesión y formulario;
-  derecha: cola y entorno) y el scrollbar usa la nueva variante `prominent` de
-  `source/qss/qscrollbar.qss` (mango de 12 px y más opaco). La tabla del
-  entorno se convierte a HTML con `_environment_html()` y se muestra como tabla
-  enriquecida, escapando los valores.
-- **Pruebas:** `tests/test_report_page_ui.py` (dos columnas, tabla enriquecida,
-  viewport transparente y scrollbar visible) y `tests/test_qss_loader.py`
-  (variante `prominent` sin marcadores).
-- **Commit:** `b5378ad` (2026-11-25).
-- **Fecha de resolución:** pendiente de confirmación visual en Windows.
+**17 entradas pendientes en la cola** (bugs, mejoras y cambios de engine). Las 4 correcciones en observación están en la tabla de abajo, con enlace al issue; su detalle vive en `CHANGELOG.md`.
 
 ---
 
@@ -269,6 +199,8 @@ issue #11 y también siguen sin responder.
 
 Los siguientes puntos provienen de `bugs.txt`. Cambian comportamiento
 fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
+
+El punto 11 (R-6d2a8f19) quedó resuelto en el ciclo 61 y se movió a «En observación».
 
 ### 1. Aislamiento estricto BlindCube / FlatCube y formato `.blindkpkg`
 
@@ -451,24 +383,6 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Archivos:** `lib/notificationSystem.py`, `lib/app_icons.py`,
   `lib/design_tokens.py`, `source/qss/*`, `packagemaker.py`.
 - **Riesgo:** medio.
-
-### 11. `create` del CLI sobrescribía un proyecto existente sin avisar (R-6d2a8f19)
-
-- **Estado:** Aprobado con la **opción B** en Q-016 (commit `71e50f7`) y
-  **corregido** en el ciclo 61; en observación.
-- **Actual (antes):** `packagemaker.py create` escribía en la carpeta canónica
-  aunque ya existiera y contuviera el guion del usuario. El dashboard y el
-  asistente gráfico rechazaban o preguntaban; el CLI lo pisaba en silencio (el
-  asistente gráfico se alineó en R-4f7a2c91, pero el CLI seguía igual).
-- **Solución aplicada:** el subparser `create` acepta `--force`. Sin él, si la
-  carpeta canónica existe, el comando imprime
-  `[ERROR] El proyecto ya existe: <ruta>`, sugiere `Usa --force para
-  sobrescribirlo.` y sale con código 1; con `--force` avisa con
-  `[WARN] Sobrescribiendo el proyecto existente` y regenera el proyecto.
-- **Efectos secundarios:** cambia el código de salida de un comando existente;
-  los scripts que recrean proyectos a propósito necesitan añadir `--force`.
-- **Archivos:** `lib/cliHandler.py`, `tests/test_maintenance_cli_regressions.py`.
-- **Riesgo:** bajo para el motor, medio para scripts existentes.
 
 ### 12. El `updater.py` generado en los proyectos no tiene CLI
 
@@ -696,42 +610,6 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `tests/test_splash_top_level.py`.
 - **Riesgo:** medio-alto; no verificable en Windows desde este entorno.
 
-## R-4f8a2c60 — Splash simultáneo y avisos de ventana en Windows
-
-- **Usuario:** JesusQuijada34 (`bugs.txt`, commit `bed2e83`; evidencia en Q-008)
-- **Fecha del reporte:** 2026-11-22
-- **Prioridad:** Alta
-- **Descripción:** al abrir la aplicación aparecen varias ventanas vacías que
-  se abren y cierran, el splash se dibuja a la vez que la ventana principal en
-  lugar de primero, y en Windows la consola muestra
-  `QWidgetWindow(...) must be a top level window` y
-  `UpdateLayeredWindowIndirect failed for ptDst=...`.
-- **Causa probable:** `IntegratedSplash` se crea con `parent=main_window` y
-  `WA_TranslucentBackground`, y el efecto `WipeWindow` (ventana por capas) se
-  aplica sobre un widget hijo. `UpdateLayeredWindowIndirect` y el gestor de
-  ventanas de Qt exigen una ventana de nivel superior.
-- **Estado:** **Corregido el 2026-11-26 (ciclo 60)**; en observación, pendiente
-  de la verificación visual en Windows. Aprobado en Q-008 (commit `bba72d6`) y
-  confirmado en **F-003** (commit `73dcdcd`).
-- **Causa raíz confirmada:** `IntegratedSplash` se creaba con
-  `parent=main_window` y `WA_TranslucentBackground` (widget hijo translúcido) y
-  se construía después de la ventana principal. El **issue #13** (2026-11-26)
-  repite el síntoma («se abren varias ventanas de python antes de la
-  interfaz») y sospecha del *Application Frame Host* de Windows; el análisis
-  del ciclo 59 lo descarta como causa. La duración mínima del splash que pide
-  el mismo issue se registra aparte en **Q-027** (R-7b2c9e51).
-- **Solución aplicada:** el splash se crea y se muestra **antes** de
-  `PackageTodoGUI()`, sin padre y sobre la superficie disponible; al cerrarse
-  llama a `destroy()` y después a `deleteLater()`. La ventana principal se
-  muestra debajo y la revela el desvanecido. `updater.py` recibe el mismo
-  arreglo. `WipeWindow` sigue aplicándose sólo a ventanas top-level.
-- **Pruebas:** `tests/test_splash_top_level.py` (9 casos), incluido el arranque
-  real en un subproceso que comprueba que el splash ya está visible y es de
-  nivel superior cuando se construye la ventana principal.
-- **Commit:** `667780a` (ciclo 60).
-- **Fecha de resolución:** 2026-11-26 (Linux/offscreen); verificación visual en
-  Windows pendiente.
-
 ## R-6a1f8c23 — Arrastrar la titlebar con la ventana maximizada mueve la ventana
 
 - **Usuario:** JesusQuijada34 (`bugs.txt`: «porque al jalar la barra de titulo a
@@ -822,35 +700,6 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** —
 - **Fecha de resolución:** —
 
-## Issue #13 — Varias ventanas de Python antes de la interfaz
-
-- **Usuario:** JesusQuijada34 ([issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
-  etiquetas `app-report` y `crash`)
-- **Fecha del reporte:** 2026-11-26 (commit `c5d1792`, Windows 10.0.19045,
-  2 núcleos, Qt 6.11.0)
-- **Descripción:** «al abrir se abren varias ventanas de python antes de la
-  interfaz, sera culpa de el application frame host?».
-- **Análisis del ciclo 59:** el *Application Frame Host*
-  (`ApplicationFrameHost.exe`) es el proceso que aloja las ventanas UWP y sólo
-  aparece cuando la aplicación crea ventanas de ese tipo; no es el origen de
-  las ventanas vacías. Las ventanas que se ven son las que crea el propio Qt:
-  `IntegratedSplash` se construye con `parent=main_window` y
-  `WA_TranslucentBackground`, y `WipeWindow` (ventana por capas) se aplica
-  sobre un widget hijo. En Windows eso obliga a Qt a crear ventanas nativas
-  auxiliares que aparecen y desaparecen antes del primer fotograma. La consola
-  lo confirma con `QWidgetWindow(...) must be a top level window` y
-  `UpdateLayeredWindowIndirect failed for ptDst=...`.
-- **Estado:** Corregido en el ciclo 60 (F-003): el splash es una ventana de
-  nivel superior pintada antes de la interfaz. **Siguen abiertos los issues
-  #15 y #16**, reportados contra el commit `d9d3c48` (que ya incluye ese
-  arreglo): si las ventanas vacías persisten en una ejecución nueva, hace falta
-  el detalle de cómo se lanza la aplicación (fuente o compilada) y una captura
-  del orden de aparición. La petición de splash **dentro** de la ventana al
-  estilo UWP queda como **Q-032** (R-5c9a3e17).
-- **Petición añadida (Q-027 / R-7b2c9e51):** duración mínima del splash de ~5 s,
-  escalada por RAM/CPU, y reporte de los tirones del arranque (qué se ejecutó,
-  cuánto tardó y los errores restantes).
-
 ## R-5a7d2f16 — Fondo blanco/negro translúcido sobre el blur
 
 - **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
@@ -885,6 +734,19 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Solución aplicada:** Ninguna todavía.
 - **Commit:** —
 - **Fecha de resolución:** —
+
+## En observación
+
+Correcciones ya aplicadas y probadas, pendientes de confirmación visual o de
+que pase el periodo de observación. El detalle completo está en `CHANGELOG.md`
+y en el issue.
+
+| ID | Título | Estado | Seguimiento |
+|---|---|---|---|
+| R-4f8a2c60 | Splash simultáneo y avisos de ventana en Windows | Corregido (ciclo 60) | issues #15/#16 |
+| R-8c4f1a72 | La página de Reportes rompe el fondo y el scrollbar | Corregido (`b5378ad`) | issue #10 |
+| R-6d2a8f19 | `create` del CLI sobrescribía un proyecto sin avisar | Corregido con `--force` (ciclo 61) | issue #15 / Q-016 |
+| Issue #13 | Varias ventanas de Python antes de la interfaz | Corregido (ciclo 60, F-003) | issue #13 |
 
 ## Periodo de observación y release
 
