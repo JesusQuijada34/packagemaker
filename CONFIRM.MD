@@ -1,10 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-26 (sexagésimo tercer ciclo)
+- **Última revisión:** 2026-11-26 (sexagésimo cuarto ciclo)
 - **Último commit de `CONFIRM.MD` procesado:** `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 63 no encontró respuestas nuevas del propietario (aplicó Q-015, que ya estaba aprobada); 20 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-015 y Q-016 aplicadas y archivadas; 9 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 64 no encontró respuestas nuevas del propietario y aplicó la parte de arrastre de **Q-011/F-004** (`c346946`, R-6a1f8c23); 19 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; Q-011 y Q-020 quedan aplicadas en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-015 y Q-016 aplicadas y archivadas; 9 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -95,7 +95,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   nativos de Windows, que no se pueden verificar desde este entorno. Riesgo
   medio-alto. Detalle en `bugs.md` (R-6a1f8c23).
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-004** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-004** el 2026-11-26 (commit `73dcdcd`). **Aplicada en parte** en el ciclo 64 (commit `c346946`): arrastrar la titlebar maximizada restaura la ventana a su tamaño normal bajo el cursor y luego la mueve; un clic suelto no la desmaximiza. El ajuste a media pantalla y el maximizado al borde superior quedan a cargo del snap nativo del gestor de ventanas y pendientes de verificación en Windows; el límite de tres gestos es R-2f8b6a31, todavía pendiente.
 
 ### Q-012 — Tareas en segundo plano y barra marquee en las barras de acción
 - **Tipo:** mejora

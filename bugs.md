@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (ciclo 63: Q-015 aplicada y archivada)
+Última actualización: 2026-11-26 (ciclo 64: R-6a1f8c23 corregido y en observación)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) y
 [issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14)
@@ -17,7 +17,6 @@ resueltos aquí.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-6a1f8c23 | Bug — arrastrar la titlebar maximizada mueve la ventana | Alta | Aprobado Q-011 (F-004); pendiente de implementación |
 | R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Aprobado Q-019; pendiente de implementación |
 | R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Aprobado Q-012/Q-011; pendiente de implementación |
 | R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Aprobado Q-011/F-004; pendiente de implementación |
@@ -35,7 +34,7 @@ resueltos aquí.
 | R-3b7e2d94 | Cambio de engine — addons empaquetados en `lib/addons/` y addons DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash dentro de la ventana principal, estilo UWP (issue #15) | Media | Pendiente de aprobación (Q-032) |
 
-**16 entradas pendientes en la cola** (bugs, mejoras y cambios de engine). Las 4 correcciones en observación están en la tabla de abajo, con enlace al issue; su detalle vive en `CHANGELOG.md`.
+**16 entradas en la cola**: 15 pendientes de trabajo (bugs, mejoras y cambios de engine) y R-5c9a3e17 a la espera de aprobación (Q-032). Las 5 correcciones en observación están en la tabla de abajo, con enlace al issue; su detalle vive en `CHANGELOG.md`.
 
 ---
 
@@ -519,34 +518,6 @@ El punto 11 (R-6d2a8f19) quedó resuelto en el ciclo 61 y se movió a «En obser
   `tests/test_splash_top_level.py`.
 - **Riesgo:** medio-alto; no verificable en Windows desde este entorno.
 
-## R-6a1f8c23 — Arrastrar la titlebar con la ventana maximizada mueve la ventana
-
-- **Usuario:** JesusQuijada34 (`bugs.txt`: «porque al jalar la barra de titulo a
-  un lado estando maximizada, se mueve? en vez de quedar quieta y bloqueada»)
-- **Fecha del reporte:** 2026-11-23
-- **Prioridad:** Media
-- **Descripción:** con la ventana maximizada, arrastrar la barra de título
-  desplaza la ventana en lugar de mantenerla fija; el usuario pide además que
-  arrastrarla la devuelva a tamaño normal, que subirla al borde superior
-  maximice y que llevarla a un borde lateral la ajuste a media pantalla.
-- **Pasos para reproducir:** maximizar la ventana y arrastrar la titlebar hacia
-  un lado.
-- **Causa raíz:** `lib/window_manager_bridge._wire_titlebar()` sustituye
-  `mousePressEvent` de la titlebar y llama a `start_system_move()` sin
-  comprobar el estado de la ventana. El manejador original de
-  `lib/TitleBar.py` sí lo comprobaba (`not is_maximized()`), así que el puente
-  anuló esa guarda.
-- **Estado:** Aprobado Q-011 el 2026-11-25 (commit `bba72d6`); pendiente de
-  confirmación final **F-004** e implementación. No se ha modificado el
-  comportamiento de la ventana.
-- **Propuesta:** ignorar `startSystemMove()` mientras la ventana esté
-  maximizada y restaurarla antes de mover; añadir las zonas de ajuste
-  (arriba = maximizar, laterales = media pantalla) con transiciones suaves.
-- **Archivos afectados:** `lib/window_manager_bridge.py`, `lib/TitleBar.py`,
-  `lib/immersive_titlebar.py`, `packagemaker.py`.
-- **Riesgo:** medio-alto (snap y maximizado nativos; difícil de verificar sin
-  Windows).
-
 ## R-4d9e2b61 — La compilación con Nuitka falla y el build no usa un entorno aislado
 
 - **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
@@ -656,20 +627,22 @@ y en el issue.
 | R-8c4f1a72 | La página de Reportes rompe el fondo y el scrollbar | Corregido (`b5378ad`) | issue #10 |
 | R-6d2a8f19 | `create` del CLI sobrescribía un proyecto sin avisar | Corregido con `--force` (ciclo 61) | issue #15 / Q-016 |
 | R-6c4d1f87 | Nueve ventanas vacías antes del splash | Corregido (ciclo 62) | issues #15/#16 |
+| R-6a1f8c23 | Arrastrar la titlebar maximizada movía la ventana | Corregido (ciclo 64) | Q-011/F-004 |
 
 ## Periodo de observación y release
 
-- Casos abiertos (sexagésimo tercer ciclo): **16 pendientes** en la cola —
-  R-6a1f8c23 (Q-011/F-004), R-4d9e2b61 (Q-019), R-7c4a1e95 (Q-012/Q-011),
-  R-2f8b6a31 (Q-011/F-004), R-5a7d2f16 (Q-026), R-3c8e4b72, R-7b3e9a52
-  (Q-021), R-2c8d4f71 (Q-022), R-9a4e2c83 (Q-023), R-5f1b8d24 (Q-024),
-  R-8e6a3c15 (Q-025), R-7b2c9e51 (Q-027), R-9c3f5a28 (Q-028), R-2a8d4b73
-  (Q-029), R-6f1c8e35 (Q-030), R-3b7e2d94 (Q-031) y R-5c9a3e17 (Q-032, sin
-  aprobar). Las 20 aprobaciones restantes siguen sin implementar; no se toca
+- Casos abiertos (sexagésimo cuarto ciclo): **15 pendientes** en la cola —
+  R-4d9e2b61 (Q-019), R-7c4a1e95 (Q-012/Q-011), R-2f8b6a31 (Q-011/F-004),
+  R-5a7d2f16 (Q-026), R-3c8e4b72, R-7b3e9a52 (Q-021), R-2c8d4f71 (Q-022),
+  R-9a4e2c83 (Q-023), R-5f1b8d24 (Q-024), R-8e6a3c15 (Q-025), R-7b2c9e51
+  (Q-027), R-9c3f5a28 (Q-028), R-2a8d4b73 (Q-029), R-6f1c8e35 (Q-030),
+  R-3b7e2d94 (Q-031) y R-5c9a3e17 (Q-032, sin aprobar). El arrastre de
+  R-6a1f8c23 está implementado; su parte de gestos (R-2f8b6a31) sigue
+  pendiente. Las 19 aprobaciones restantes siguen sin implementar; no se toca
   el engine sin la marca del propietario.
 - **En observación:** R-4f8a2c60 (splash de nivel superior), R-8c4f1a72
-  (página de Reportes), R-6d2a8f19 (`create --force`) y R-6c4d1f87 (ventanas
-  vacías del arranque).
+  (página de Reportes), R-6d2a8f19 (`create --force`), R-6c4d1f87 (ventanas
+  vacías del arranque) y R-6a1f8c23 (arrastre de la titlebar maximizada).
 - La bitácora completa de ciclos (del primero al sexagésimo tercero) vive en
   `docs/ciclos_mantenimiento.md`.
 - **Release:** no se prepara. Hay bugs de prioridad alta pendientes de
@@ -687,3 +660,15 @@ y en el issue.
   `install_iflapp(..., silent=True)` y devuelve el resultado real, sin abrir
   ninguna ventana. Se archiva en `docs/bugs_resueltos.md`. Verificación: 1332
   pruebas (5 nuevas), `pyflakes` y `py_compile` limpios.
+
+- Sexagésimo cuarto ciclo (2026-11-26): se aplica la parte de arrastre de
+  **Q-011/F-004** y se corrige **R-6a1f8c23**. El puente
+  (`lib/window_manager_bridge.py`) ya no llama a `start_system_move()` sobre
+  una ventana maximizada: ahora un clic suelto no la toca, y en cuanto el
+  gesto supera 4 px se restaura a su tamaño normal bajo el cursor y entonces
+  se inicia el arrastre; si el sistema no ofrece `startSystemMove`, el
+  arrastre continúa con el manejador de `TitleBar`. Pruebas:
+  `MaximizedDragTests` en `tests/test_window_manager_bridge.py` (7 casos; los
+  de arrastre fallan con el código anterior). La ficha se retira de la cola y
+  queda en observación hasta la comprobación visual en Windows. Verificación:
+  ver el resumen del ciclo en `CHANGELOG.md`.

@@ -653,3 +653,16 @@ ciclos: es un registro de auditoría.
   archiva en `docs/bugs_resueltos.md`. Verificación: 1332 pasan, 1 omitido, 64
   subtests; `pyflakes` y `py_compile` limpios. No se prepara release: quedan
   bugs de prioridad alta y 20 aprobaciones pendientes de implementación.
+
+- Sexagésimo cuarto ciclo (2026-11-26): sin respuestas nuevas en `CONFIRM.MD`
+  (sigue sólo **Q-032** pendiente). Se aplica la parte de arrastre de
+  **Q-011/F-004** y se corrige **R-6a1f8c23**: el puente ya no llama a
+  `start_system_move()` sobre una ventana maximizada. Un clic suelto no la
+  toca; al superar 4 px de arrastre se restaura a su tamaño normal bajo el
+  cursor y se inicia el movimiento, con respaldo de arrastre manual cuando el
+  sistema no ofrece `startSystemMove`. `tests/test_window_manager_bridge.py`
+  gana `MaximizedDragTests` (7 casos). La ficha sale de la cola (15
+  pendientes) y queda en observación hasta la verificación visual en Windows.
+  Verificación: 1339 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
+  limpios. No se prepara release: quedan bugs de prioridad alta y 19
+  aprobaciones pendientes de implementación.

@@ -1,3 +1,46 @@
+## 2026-11-26 — sexagésimo cuarto ciclo
+
+### Corregido — arrastrar la titlebar maximizada movía la ventana (R-6a1f8c23, Q-011/F-004)
+
+Reportado por JesusQuijada34 en `bugs.txt` (2026-11-23: «al jalar la barra de
+titulo a un lado estando maximizada, se mueve? en vez de quedar quieta y
+bloqueada») y aprobado en `CONFIRM.MD` (Q-011, commit `bba72d6`, confirmación
+final F-004 en `73dcdcd`).
+
+- **Síntoma:** con la ventana maximizada, arrastrar la barra de título la
+  desplazaba conservando el tamaño de la pantalla, en lugar de restaurarla a su
+  tamaño normal. La ventana se quedaba sin bordes accesibles y con el tamaño
+  del escritorio.
+- **Causa raíz:** `WindowManagerBridge._wire_titlebar()` sustituye el
+  `mousePressEvent` de la titlebar y llamaba a `start_system_move()` sin mirar
+  el estado de la ventana. El manejador original de `lib/TitleBar.py` sí
+  comprobaba `not is_maximized()`, pero el puente lo reemplazaba, así que esa
+  guarda nunca llegaba a ejecutarse.
+- **Solución:** `restore_for_drag()` restaura la ventana maximizada (con el
+  helper `toggle_frameless_maximize`, o `showNormal()` si no existe), la coloca
+  para que el cursor quede en la misma posición relativa de la titlebar
+  (`TITLEBAR_GRAB_HEIGHT`, sin salirse del área ocupada) y sólo después se
+  inicia el arrastre. El gesto se confirma al superar 4 px
+  (`DRAG_START_DISTANCE`), de modo que un clic suelto sobre la titlebar no
+  desmaximiza la ventana; el estado pendiente se cancela al soltar el botón.
+  Si `startSystemMove()` no está disponible, el arrastre continúa con el
+  manejador de `TitleBar` (`_begin_manual_drag`).
+- **Pruebas:** `MaximizedDragTests` en `tests/test_window_manager_bridge.py`
+  (7 casos): clic suelto sin restaurar, temblor de 1 px sin restaurar,
+  restauración antes de mover, posición relativa del cursor, ventana dentro de
+  la pantalla, arrastre normal sin cambios y respaldo de arrastre manual. Los
+  casos de arrastre fallan con el código anterior. Comprobado además con
+  widgets reales en `offscreen`: maximizar, pulsar (sigue maximizada) y
+  arrastrar 60 px (vuelve a 900x600 y empieza el arrastre).
+- **Commit:** `c346946`.
+- **Verificación:** 1339 pasan, 1 omitido, 64 subtests; `pyflakes` y
+  `py_compile` limpios.
+- **Observación:** el defecto se ve en Windows y aquí sólo se verifica en
+  Linux/offscreen; R-6a1f8c23 queda en observación hasta la confirmación
+  visual. El límite de tres gestos de la titlebar (R-2f8b6a31) sigue pendiente.
+- **Release:** no se prepara. Quedan bugs de prioridad alta pendientes de
+  implementación y 19 aprobaciones de `CONFIRM.MD` sin aplicar.
+
 ## 2026-11-26 — sexagésimo tercer ciclo
 
 ### Corregido — `updater.py --silent` con `.iflapp` abría una ventana y no instalaba (R-7e3a9c25, Q-015)
