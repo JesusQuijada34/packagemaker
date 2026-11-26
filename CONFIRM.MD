@@ -185,7 +185,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el código de salida y el mensaje de
   un comando existente; los scripts que dependan de sobrescribir dejarían de
   funcionar sin `--force`. No toca el nombre canónico ni las plantillas.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X, la B] SÍ`  `[ ] NO`
 - **Nota del agente (2026-11-26):** el commit `73dcdcd` escribió `[B] SÍ`, que no es una casilla válida del canal, así que **no se aplica**. Si la intención era la **opción B** (`--force` para sobrescribir y rechazo sin él), marca `[x] SÍ` y escribe «opción B» junto a la casilla.
 
 ### Q-017 — El `updater.py` que se genera en los proyectos no tiene CLI
