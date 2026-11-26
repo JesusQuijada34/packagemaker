@@ -165,7 +165,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `--update --silent` para los paquetes `.iflapp` (deja de haber ventana de
   progreso). Quien dependa de ver el instalador debe quitar `--silent`. No
   afecta al modo gráfico ni al motor. Riesgo bajo.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-016 — `packagemaker.py create` sobrescribe un proyecto existente sin avisar
 - **Tipo:** cambio de engine (política de creación)
@@ -184,7 +184,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el código de salida y el mensaje de
   un comando existente; los scripts que dependan de sobrescribir dejarían de
   funcionar sin `--force`. No toca el nombre canónico ni las plantillas.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[B] SÍ`  `[ ] NO`
 
 ### Q-017 — El `updater.py` que se genera en los proyectos no tiene CLI
 - **Tipo:** cambio de engine (plantilla de proyectos)
@@ -203,7 +203,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el contenido de las plantillas y,
   por tanto, el de los proyectos nuevos; hay que mantener sincronizadas la
   plantilla y el actualizador del repositorio. Riesgo medio.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-018 — El build del CLI no valida `details.xml` y adivina la versión
 - **Tipo:** cambio de engine (comportamiento del build headless)
@@ -225,7 +225,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   los scripts que compilan proyectos con metadatos incompletos dejarían de
   funcionar (opción dura) o seguirían funcionando con un aviso (opción blanda).
   No toca el nombre canónico ni las plantillas. Riesgo medio.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-019 — Entorno aislado de compilación (reporte del propietario)
 
@@ -245,7 +245,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** descargas de red, más tiempo y espacio de
   build, dependencia de la disponibilidad de los binarios de Python y posible
   divergencia entre lo probado y lo empaquetado. Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x, Pero si se ajusta un nuevo switch en configuracion llamado Red, se puede poner un modo de red de uso medido para usar el emebebido pero avisar que requiere python en el sistema, y da indicaciones para instalarlo y proceder de forma offline] SÍ`  `[ ] NO`
 
 ### Q-020 — Traducir toda la interfaz al cambiar de idioma
 
@@ -270,7 +270,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** pérdida del estado de los formularios,
   widgets duplicados o referencias colgantes si la reconstrucción no es
   completa. Riesgo medio-alto.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
   (indica A, B o C junto a la casilla)
 - **Nota del agente (2026-11-25):** se aplicó la **opción A sin reconstruir
   páginas**, que evita el riesgo que describía este punto (widgets duplicados y
@@ -290,7 +290,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `lib/help_page.py`, `lang/*.json`, `tests/`.
 - **Riesgo y efectos secundarios:** bajo; es una página nueva y no toca el
   engine.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 
 ### Q-022 — Addons en `lib/addons/` e instalación desde la aplicación
 - **Tipo:** mejora
@@ -303,7 +303,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `tests/test_privacy_switch_and_addons_ui.py`.
 - **Riesgo y efectos secundarios:** medio; cambian las rutas de carga y hay
   que actualizar el empaquetado y las pruebas.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-023 — Conectar proyectos a repositorios de GitHub y extensión CloudCube
 - **Tipo:** cambio de engine
@@ -318,7 +318,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** alto; crea repositorios y sube contenido
   del usuario, requiere permisos de escritura del token y una política de
   privacidad clara. Un fallo podría publicar datos privados.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X, pero hay que manifestar el backend de la rama render para que se inicie sesion con github y enviar un codigo a la app para hacer un inicio de sesion mucho mas mejor y directo] SÍ`  `[ ] NO`
 
 ### Q-024 — El updater como extensión con notificaciones de Leviathan
 - **Tipo:** cambio de engine
@@ -329,7 +329,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `lib/leviathan_ui/`, `addons/*.yaml`, `packagemaker.py`, `tests/`.
 - **Riesgo y efectos secundarios:** alto; se solapa con Q-013/F-006 (el
   programa se reemplaza a sí mismo) y cambia el punto de entrada del updater.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-025 — Completar el motor Leviathan y el action bar como control
 - **Tipo:** cambio de engine
@@ -343,7 +343,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** alto; reescribe la construcción de toda la
   interfaz y su sistema de estilos, con riesgo de regresiones visuales y de
   compatibilidad con el respaldo sin `leviathan_ui`.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-026 — Sidebar translúcido y colores de pestañas por tema
 - **Tipo:** mejora
@@ -358,7 +358,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** medio; cambios visuales amplios y
   dependencia del blur del sistema operativo, que no se puede verificar en
   Linux.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-027 — Duración mínima del splash y reporte de tirones del arranque
 - **Tipo:** cambio de engine
@@ -377,7 +377,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   opt-in, así que se respetará ese ajuste. Si prefieres otro mínimo (p. ej.
   2 s) o que no se envíe nada sin consentimiento explícito, indícalo junto a la
   casilla.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X, perfecto] SÍ`  `[ ] NO`
 
 ### Q-028 — Librería de paneles y pestañas verticales con action bar propia
 - **Tipo:** cambio de engine
@@ -393,7 +393,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   páginas y se solapa con Q-025 (action bar como control de Leviathan). No
   cambia la ley de nombres, el formato `.iflapp` ni el contenido de los
   paquetes.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X, hazlo con compatibilidad] SÍ`  `[ ] NO`
 
 ### Q-029 — AIDE como chatbot con backend, API, servidor y puerto
 - **Tipo:** cambio de engine
@@ -407,7 +407,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   red nuevos. Hay que decidir qué se envía fuera del equipo y dónde se guardan
   las claves; se respetará el ajuste de reportes y no se enviará nada sin
   configuración explícita.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-030 — Perfil de GitHub como extensión y orden del sidebar
 - **Tipo:** mejora
@@ -421,7 +421,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** medio; cambia el orden visible del sidebar
   y añade una página que consulta la API de GitHub (límites de peticiones y
   sesión caducada). No toca el motor de compilación.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-031 — Addons empaquetados en `lib/addons/` y addons DLL externos
 - **Tipo:** cambio de engine
@@ -440,7 +440,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   sustituiría a Python para las extensiones. Se implementaría con lista de
   confianza y verificación de firma. Recomiendo partir de Q-028 (librería de
   paneles) antes que de esta.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X, eso si, tienes razon, porque pueden meter virus de extraccion de datos y fuga, se puede comprometer el programa, tienes que sandboxear las dlls que tienen codigo sospechoso y restringir llamadas a exposiciones de llaves y credenciales del sistema, por ejemplo saber la api de una persona y enviarla a un servidor, debes de ser cuidadoso hasta con los disfraces, de igual se haran parches a la base de datos impulsada por usuarios, para mantener la base limpia y fuerte frente a codigos maliciosos, o tambien ayudarse de un antivirus, aunque antivirus no sabe la base exacta de una fuga de datos] SÍ`  `[ ] NO`
 
 ---
 
@@ -460,7 +460,7 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 - **Archivos/componentes:** `lib/hardening.py`, `lib/BuildThread.py`,
   `tests/test_hardening.py`.
 - **Riesgo:** medio; borrado destructivo dentro del paquete.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### F-002 — Q-007: reorganizar `lib/` por motores y renombrar a GlassCube
 
@@ -471,7 +471,7 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 - **Archivos/componentes:** todo `lib/`, `packagemaker.py`, `updater.py`,
   `tests/`.
 - **Riesgo:** alto; rotura masiva de imports y del empaquetado.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X, con cuidado, primero clasificar archivos de engine, ordenar y hacer funcionar] SÍ`  `[ ] NO`
 
 ### F-003 — Q-008: splash de nivel superior y ciclo de vida de ventanas
 
@@ -484,7 +484,7 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   `lib/window_chrome.py`, `lib/window_manager_bridge.py`, `packagemaker.py`.
 - **Riesgo:** medio-alto; no se puede verificar visualmente en Windows desde
   este entorno.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### F-004 — Q-011: arrastre y ajuste de la ventana maximizada
 
@@ -498,7 +498,7 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   `lib/immersive_titlebar.py`, `packagemaker.py`.
 - **Riesgo:** medio-alto; depende de gestos nativos que no se pueden verificar
   en Linux.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### F-005 — Q-012: tareas en segundo plano y barra marquee
 
@@ -511,7 +511,7 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   `packagemaker.py`.
 - **Riesgo:** alto; escritura concurrente de `pm.data` y cambio del modelo de
   avisos.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### F-006 — Q-013: actualizaciones silenciosas de parches de seguridad
 
@@ -527,7 +527,7 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   `lib/blindcubeEngine/`, `version.res`, `details.xml`.
 - **Riesgo:** alto; el programa se reemplaza a sí mismo y un fallo puede dejar
   la instalación a medias.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X, un fallo reporta algo usando la cuenta logueada, mejor contraste] SÍ`  `[ ] NO`
 
 ---
 
