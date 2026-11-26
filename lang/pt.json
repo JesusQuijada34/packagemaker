@@ -142,7 +142,7 @@
       "placeholder_author": "Nome de usuário do GitHub",
       "placeholder_icon": "Caminho do arquivo .ico",
       "author_required": "O campo Autor é obrigatório.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Inicie sessão no GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Erro: {message}. Forneça um nome de usuário do GitHub válido e existente.",
     "templates_missing": "Modelos de projeto não encontrados (src/templates). Reinstale o PackageMaker ou compile-o com src/templates incluído.",
     "downloading_icon": "Baixando ícone...",
-    "project_created": "Projeto criado em: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "Inicie sessão no GitHub"
+    "project_created": "Projeto criado em: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Cancelar",
@@ -820,9 +819,7 @@
     "env_title": "Dados anexados",
     "env_hint": "Nunca são enviados caminhos pessoais, o nome de utilizador do sistema nem credenciais.",
     "auto_send": "Enviar falhas automaticamente quando houver sessão do GitHub",
-    "auto_send_hint": "Se desativar, as falhas apenas são guardadas e pode enviá-las aqui.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Se desativar, as falhas apenas são guardadas e pode enviá-las aqui."
   },
   "addon": {
     "error_title": "Não foi possível carregar a extensão «{addon}»"

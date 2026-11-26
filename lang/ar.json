@@ -142,7 +142,7 @@
       "placeholder_author": "اسم مستخدم GitHub",
       "placeholder_icon": "مسار ملف .ico",
       "author_required": "حقل المؤلف مطلوب.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "سجّل الدخول إلى GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "خطأ: {message}. يرجى إدخال اسم مستخدم GitHub صالح وموجود.",
     "templates_missing": "لم يتم العثور على قوالب المشروع (src/templates). أعد تثبيت PackageMaker أو ابنِه مع تضمين src/templates.",
     "downloading_icon": "جارٍ تنزيل الأيقونة...",
-    "project_created": "تم إنشاء المشروع في: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "سجّل الدخول إلى GitHub"
+    "project_created": "تم إنشاء المشروع في: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "إلغاء",
@@ -820,9 +819,7 @@
     "env_title": "البيانات المرفقة",
     "env_hint": "لا تُرسل أبدًا مسارات شخصية أو اسم مستخدم النظام أو بيانات الاعتماد.",
     "auto_send": "إرسال الأعطال تلقائيًا عند وجود جلسة GitHub",
-    "auto_send_hint": "إذا عطلت هذا الخيار، تُحفظ الأعطال فقط ويمكنك إرسالها من هنا.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "إذا عطلت هذا الخيار، تُحفظ الأعطال فقط ويمكنك إرسالها من هنا."
   },
   "addon": {
     "error_title": "تعذّر تحميل الإضافة «{addon}»"

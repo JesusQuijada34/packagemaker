@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-25 (quincuagésimo séptimo ciclo, verificación de #11 y #12)
+Última actualización: 2026-11-26 (quincuagésimo octavo ciclo, higiene de los catálogos de idioma)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
 Rama de trabajo: `main`
 
@@ -20,6 +20,7 @@ histórico.
 | R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Pendiente (Q-012/Q-011) |
 | R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Pendiente (Q-011/F-004) |
 | R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | En observación; verificación visual en Windows (issue #10) |
+| R-4c1a9e72 | Bug — claves sobrantes en `lang/` impiden retraducir el envío automático | Media | Corregido; en observación (ciclo 58) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Pendiente (Q-026) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora) |
 | R-7b3e9a52 | Mejora — sección de ayuda global de la aplicación (issue #11) | Media | Pendiente (Q-021) |
@@ -28,10 +29,11 @@ histórico.
 | R-5f1b8d24 | Cambio de engine — updater como extensión con notificaciones (issue #11) | Media | Pendiente (Q-024) |
 | R-8e6a3c15 | Cambio de engine — completar Leviathan y action bar como control (issue #11) | Media | Pendiente (Q-025) |
 
-**13 entradas en la cola** (bugs, mejoras y cambios de engine). Cuatro
-correcciones verificadas se retiraron este ciclo — R-9b3e7a41, R-1f6c9d38,
-R-7d2a5b84 y R-4b8f1e27 — y quedan archivadas en `docs/bugs_resueltos.md` y en
-`CHANGELOG.md`; las 156 anteriores ya estaban allí.
+**14 entradas en la cola** (bugs, mejoras y cambios de engine). Cuatro
+correcciones verificadas se retiraron el ciclo anterior — R-9b3e7a41,
+R-1f6c9d38, R-7d2a5b84 y R-4b8f1e27 — y quedan archivadas en
+`docs/bugs_resueltos.md` y en `CHANGELOG.md`; las 156 anteriores ya estaban
+allí. R-4c1a9e72 se corrigió en el ciclo 58 y sigue en observación.
 
 ---
 
@@ -696,6 +698,48 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** —
 - **Fecha de resolución:** —
 
+## R-4c1a9e72 — Claves sobrantes en `lang/` impedían retraducir el envío automático
+
+- **Usuario:** auditoría interna del ciclo 58 (sin reporte externo); misma
+  familia que el issue #12 «problema de idioma» y el #11 «Orden», ambos del
+  propietario JesusQuijada34.
+- **Fecha del reporte:** 2026-11-26
+- **Prioridad:** Media
+- **Descripción:** con la interfaz en inglés (o en cualquier idioma distinto
+  del español), al cambiar de idioma la casilla «Enviar los fallos
+  automáticamente…» y su pista de la página **Reportes** se quedaban en inglés.
+  Además, 12 de los 14 catálogos de `lang/` llevaban claves planas sobrantes
+  (`report.auto_send`, `report.auto_send_hint` dentro del objeto `report`, y
+  `form.author_placeholder` dentro de `create`) que al aplanarse creaban
+  claves inexistentes o colisionaban con las reales.
+- **Pasos para reproducirlo:** abrir la aplicación, poner la interfaz en inglés
+  y cambiar a alemán; la casilla y la pista de Reportes siguen en inglés.
+  Equivalente en código:
+  `live_i18n.key_for("Send failures automatically when a GitHub session exists")`
+  devolvía `report.report.auto_send` en vez de `report.auto_send`.
+- **Causa raíz:** `live_i18n.reverse_index()` indexa por **valor** sobre todos
+  los catálogos. La clave sobrante de `ar.json` (primer fichero por orden
+  alfabético) aportaba el texto inglés bajo `report.report.auto_send`; el
+  catálogo destino resolvía esa clave al mismo texto inglés, así que
+  `target == current` y la retraducción no cambiaba nada.
+- **Solución aplicada:** se retiraron las claves planas sobrantes de los 13
+  catálogos afectados —el valor traducido de `form.author_placeholder` se
+  trasladó a su clave anidada para no perder ninguna traducción— y
+  `lib/live_i18n.py` sólo indexa claves que existen en el catálogo español
+  (la lista canónica), tanto en `reverse_index()` como en `template_index()`.
+  Ningún valor visible cambió salvo el esperado: el texto aplanado de cada
+  catálogo es idéntico salvo las dos claves sobrantes eliminadas (comprobado
+  con `git show HEAD:lang/<x>.json`).
+- **Pruebas:** `tests/test_translation_catalog_hygiene.py` (5 casos: sin claves
+  planas con punto, mismas claves que `es.json`, marcador de Autor traducido,
+  índice inverso sólo con claves canónicas y retraducción del texto inglés del
+  envío automático a de/fr/ja/zh). Tres de ellos fallan con los catálogos
+  anteriores y con `live_i18n` sin el filtro.
+- **Commit:** el del ciclo 58 en `main` (ver `CHANGELOG.md`).
+- **Fecha de resolución:** 2026-11-26
+- **Estado:** Corregido y probado; en observación hasta el ciclo siguiente.
+  No cambia el comportamiento del engine ni el formato de los paquetes.
+
 ## R-5a7d2f16 — Fondo blanco/negro translúcido sobre el blur
 
 - **Usuario:** JesusQuijada34 (reporte en `bugs.txt`, commit `bba72d6`)
@@ -733,12 +777,13 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ## Periodo de observación y release
 
-- Casos abiertos (quincuagésimo séptimo ciclo): 13 — los bugs R-4f8a2c60
+- Casos abiertos (quincuagésimo octavo ciclo): 14 — los bugs R-4f8a2c60
   (Q-008/F-003), R-6a1f8c23 (Q-011/F-004), R-4d9e2b61 (Q-019), R-7c4a1e95
-  (Q-012/Q-011), R-2f8b6a31 (Q-011/F-004) y R-8c4f1a72 (en observación, issue
-  #10); las mejoras R-5a7d2f16 (Q-026), R-3c8e4b72, R-7b3e9a52 (Q-021) y
-  R-2c8d4f71 (Q-022); y los cambios de engine R-9a4e2c83 (Q-023), R-5f1b8d24
-  (Q-024) y R-8e6a3c15 (Q-025). R-4d8f2b61 se cerró como no reproducido.
+  (Q-012/Q-011), R-2f8b6a31 (Q-011/F-004), R-8c4f1a72 (en observación, issue
+  #10) y R-4c1a9e72 (corregido en este ciclo, en observación); las mejoras
+  R-5a7d2f16 (Q-026), R-3c8e4b72, R-7b3e9a52 (Q-021) y R-2c8d4f71 (Q-022); y
+  los cambios de engine R-9a4e2c83 (Q-023), R-5f1b8d24 (Q-024) y R-8e6a3c15
+  (Q-025). R-4d8f2b61 se cerró como no reproducido.
 - Vigésimo séptimo ciclo (2026-11-23): R-2e7c4a91, R-8b4d1f62 y R-5c9a3e27
   corregidos y probados; no se prepara release.
 - Vigésimo octavo ciclo (2026-11-23): R-3b6f9d24 y R-9f4c2a71 corregidos y
@@ -1317,3 +1362,11 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   Windows). Suite: 1292 pasan, 1 omitido, 64 subtests; `pyflakes` y
   `py_compile` limpios. No se prepara release: el periodo de observación sigue
   abierto y no han pasado 7 días sin reportes nuevos.
+- Quincuagésimo octavo ciclo (2026-11-26): R-4c1a9e72 corregido y probado
+  (claves planas sobrantes en `lang/` y filtro de claves canónicas en
+  `live_i18n`); 1297 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
+  limpios. Build real de extremo a extremo verificado (`create` → `--buildthis
+  --compiler zipapp --harden integrity` → `--inspect` → `verify_iflapp`:
+  `valid`). Sin respuestas nuevas del propietario en `CONFIRM.MD`, así que
+  sigue bloqueado todo cambio de engine (F-001…F-006 y Q-015…Q-026). No se
+  prepara release: hay bugs abiertos de prioridad alta.

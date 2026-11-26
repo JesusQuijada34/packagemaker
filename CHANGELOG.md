@@ -1,3 +1,47 @@
+## 2026-11-26 — quincuagésimo octavo ciclo
+
+### Corregido — claves sobrantes en los catálogos de idioma (R-4c1a9e72)
+
+Auditoría interna, sin reporte externo nuevo: los issues #10 y #11 siguen
+abiertos y `CONFIRM.MD` no tiene respuestas nuevas del propietario, así que
+**ningún cambio de comportamiento del engine**. La ley de nombres, el formato
+`.iflapp`, las plantillas y el contenido de los paquetes siguen igual.
+
+- **R-4c1a9e72 (Media, auditoría interna):** con la interfaz en inglés, al
+  cambiar de idioma la casilla «Enviar los fallos automáticamente…» y su pista
+  de la página **Reportes** se quedaban en inglés. Doce catálogos de `lang/`
+  llevaban claves planas sobrantes (`report.auto_send`,
+  `report.auto_send_hint` dentro del objeto `report`, y
+  `form.author_placeholder` dentro de `create`) que al aplanarse creaban
+  claves inexistentes o colisionaban con las reales. `live_i18n` indexa por
+  valor, así que el texto inglés ganaba el índice bajo `report.report.auto_send`
+  y el catálogo destino devolvía ese mismo texto inglés: la retraducción no
+  cambiaba nada.
+  - **Datos:** se retiraron las claves planas de los 13 catálogos afectados.
+    El valor traducido de `form.author_placeholder` se trasladó a su clave
+    anidada `create.form.author_placeholder`, que hasta ahora guardaba el texto
+    español en todos los idiomas y sólo se veía bien por la colisión. El texto
+    aplanado de cada catálogo queda idéntico salvo las dos claves sobrantes
+    eliminadas (comprobado contra `git show HEAD:lang/<x>.json`).
+  - **Código:** `lib/live_i18n.py` sólo indexa claves que existen en el
+    catálogo español (lista canónica), en `reverse_index()` y en
+    `template_index()`. Una clave sobrante ya no puede ganar el índice.
+  - **Pruebas:** `tests/test_translation_catalog_hygiene.py` (5 casos: sin
+    claves planas con punto, mismas claves que `es.json`, marcador de Autor
+    traducido, índice inverso sólo con claves canónicas y retraducción del
+    texto inglés del envío automático a de/fr/ja/zh). Tres fallan con los
+    catálogos anteriores y con `live_i18n` sin el filtro.
+- **Verificación:** `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` →
+  1297 pasan, 1 omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
+  Build real de extremo a extremo: `create` headless →
+  `--buildthis --compiler zipapp --harden integrity` → `--inspect` (identidad
+  canónica `AuditCo.auditdemo.v1.0-26.11-…-Danenone`, 21 archivos, raíz Merkle
+  correcta) → `verify_iflapp()` → `valid`.
+
+No se prepara release: hay bugs de prioridad alta abiertos (R-4f8a2c60,
+R-6a1f8c23, R-4d9e2b61, R-7c4a1e95) bloqueados por la confirmación final del
+propietario, y el periodo de observación sigue abierto.
+
 ## 2026-11-25 — quincuagésimo séptimo ciclo
 
 ### Verificado — cierre del issue #12 y triaje del issue #11

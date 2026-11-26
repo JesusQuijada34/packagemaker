@@ -142,7 +142,7 @@
       "placeholder_author": "GitHub ユーザー名",
       "placeholder_icon": ".ico ファイルのパス",
       "author_required": "作成者フィールドは必須です。",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "GitHub にサインイン"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "エラー: {message}。存在する有効な GitHub ユーザー名を入力してください。",
     "templates_missing": "プロジェクトテンプレートが見つかりません (src/templates)。PackageMaker を再インストールするか、src/templates を含めてビルドしてください。",
     "downloading_icon": "アイコンをダウンロード中...",
-    "project_created": "プロジェクトを作成しました: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "GitHub にサインイン"
+    "project_created": "プロジェクトを作成しました: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "キャンセル",
@@ -820,9 +819,7 @@
     "env_title": "添付されるデータ",
     "env_hint": "個人のパス、システムのユーザー名、認証情報は決して送信されません。",
     "auto_send": "GitHub セッションがある場合に不具合を自動送信する",
-    "auto_send_hint": "無効にすると不具合は保存されるだけで、ここから手動で送信できます。",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "無効にすると不具合は保存されるだけで、ここから手動で送信できます。"
   },
   "addon": {
     "error_title": "拡張機能「{addon}」を読み込めませんでした"

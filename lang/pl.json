@@ -142,7 +142,7 @@
       "placeholder_author": "Nazwa użytkownika GitHub",
       "placeholder_icon": "Ścieżka do pliku .ico",
       "author_required": "Pole Autor jest wymagane.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Zaloguj się w GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Błąd: {message}. Podaj prawidłową, istniejącą nazwę użytkownika GitHub.",
     "templates_missing": "Nie znaleziono szablonów projektu (src/templates). Zainstaluj ponownie PackageMaker lub skompiluj go z dołączonym src/templates.",
     "downloading_icon": "Pobieranie ikony...",
-    "project_created": "Projekt utworzony w: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "Zaloguj się w GitHub"
+    "project_created": "Projekt utworzony w: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Anuluj",
@@ -820,9 +819,7 @@
     "env_title": "Dołączone dane",
     "env_hint": "Nigdy nie wysyłamy ścieżek osobistych, nazwy użytkownika systemu ani danych logowania.",
     "auto_send": "Wysyłaj błędy automatycznie, gdy istnieje sesja GitHub",
-    "auto_send_hint": "Po wyłączeniu błędy są tylko zapisywane i możesz wysłać je tutaj.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Po wyłączeniu błędy są tylko zapisywane i możesz wysłać je tutaj."
   },
   "addon": {
     "error_title": "Nie można załadować rozszerzenia „{addon}”"

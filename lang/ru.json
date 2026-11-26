@@ -142,7 +142,7 @@
       "placeholder_author": "Имя пользователя GitHub",
       "placeholder_icon": "Путь к файлу .ico",
       "author_required": "Поле «Автор» обязательно.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Войдите в GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Ошибка: {message}. Укажите действующее имя пользователя GitHub.",
     "templates_missing": "Шаблоны проекта не найдены (src/templates). Переустановите PackageMaker или соберите его с включённым src/templates.",
     "downloading_icon": "Загрузка значка...",
-    "project_created": "Проект создан в: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "Войдите в GitHub"
+    "project_created": "Проект создан в: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Отмена",
@@ -820,9 +819,7 @@
     "env_title": "Прилагаемые данные",
     "env_hint": "Личные пути, имя пользователя системы и учётные данные никогда не отправляются.",
     "auto_send": "Отправлять ошибки автоматически при наличии сеанса GitHub",
-    "auto_send_hint": "Если отключено, ошибки только сохраняются, и вы можете отправить их здесь.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Если отключено, ошибки только сохраняются, и вы можете отправить их здесь."
   },
   "addon": {
     "error_title": "Не удалось загрузить расширение «{addon}»"

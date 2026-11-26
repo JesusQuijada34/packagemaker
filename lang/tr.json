@@ -142,7 +142,7 @@
       "placeholder_author": "GitHub kullanıcı adı",
       "placeholder_icon": ".ico dosyasının yolu",
       "author_required": "Yazar alanı zorunludur.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "GitHub'a giriş yapın"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Hata: {message}. Geçerli ve mevcut bir GitHub kullanıcı adı girin.",
     "templates_missing": "Proje şablonları bulunamadı (src/templates). PackageMaker'ı yeniden kurun veya src/templates dahil olacak şekilde derleyin.",
     "downloading_icon": "Simge indiriliyor...",
-    "project_created": "Proje şurada oluşturuldu: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "GitHub'a giriş yapın"
+    "project_created": "Proje şurada oluşturuldu: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "İptal",
@@ -820,9 +819,7 @@
     "env_title": "Eklenen veriler",
     "env_hint": "Kişisel yollar, sistem kullanıcı adınız ve kimlik bilgileri asla gönderilmez.",
     "auto_send": "GitHub oturumu varsa arızaları otomatik gönder",
-    "auto_send_hint": "Kapalıysa arızalar yalnızca kaydedilir ve buradan kendiniz gönderebilirsiniz.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Kapalıysa arızalar yalnızca kaydedilir ve buradan kendiniz gönderebilirsiniz."
   },
   "addon": {
     "error_title": "«{addon}» uzantısı yüklenemedi"

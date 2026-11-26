@@ -142,7 +142,7 @@
       "placeholder_author": "Nom d'utilisateur GitHub",
       "placeholder_icon": "Chemin du fichier .ico",
       "author_required": "Le champ Auteur est obligatoire.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Connectez-vous à GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Erreur : {message}. Veuillez saisir un nom d'utilisateur GitHub valide qui existe.",
     "templates_missing": "Modeles de projet introuvables (src/templates). Reinstallez PackageMaker ou compilez-le avec src/templates inclus.",
     "downloading_icon": "Telechargement de l'icone...",
-    "project_created": "Projet cree dans : {folder}/ (sha256 : {sha256})",
-    "form.author_placeholder": "Connectez-vous à GitHub"
+    "project_created": "Projet cree dans : {folder}/ (sha256 : {sha256})"
   },
   "common": {
     "cancel": "Annuler",
@@ -820,9 +819,7 @@
     "env_title": "Données jointes",
     "env_hint": "Aucun chemin personnel, nom d'utilisateur système ni identifiant n'est envoyé.",
     "auto_send": "Envoyer les pannes automatiquement si une session GitHub existe",
-    "auto_send_hint": "Si vous le désactivez, les pannes sont seulement enregistrées et vous pouvez les envoyer ici.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Si vous le désactivez, les pannes sont seulement enregistrées et vous pouvez les envoyer ici."
   },
   "addon": {
     "error_title": "L'extension « {addon} » n'a pas pu être chargée"

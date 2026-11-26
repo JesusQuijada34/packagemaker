@@ -142,7 +142,7 @@
       "placeholder_author": "GitHub-gebruikersnaam",
       "placeholder_icon": "Pad naar het .ico-bestand",
       "author_required": "Het veld Auteur is verplicht.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Aanmelden bij GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Fout: {message}. Voer een geldige, bestaande GitHub-gebruikersnaam in.",
     "templates_missing": "Projectsjablonen niet gevonden (src/templates). Installeer PackageMaker opnieuw of compileer met src/templates.",
     "downloading_icon": "Pictogram downloaden...",
-    "project_created": "Project aangemaakt in: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "Aanmelden bij GitHub"
+    "project_created": "Project aangemaakt in: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Annuleren",
@@ -820,9 +819,7 @@
     "env_title": "Toegevoegde gegevens",
     "env_hint": "Persoonlijke paden, uw systeemgebruikersnaam en inloggegevens worden nooit verzonden.",
     "auto_send": "Fouten automatisch verzenden als er een GitHub-sessie is",
-    "auto_send_hint": "Indien uitgeschakeld worden fouten alleen opgeslagen en kunt u ze hier zelf verzenden.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Indien uitgeschakeld worden fouten alleen opgeslagen en kunt u ze hier zelf verzenden."
   },
   "addon": {
     "error_title": "De extensie ‘{addon}’ kon niet worden geladen"

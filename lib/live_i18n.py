@@ -37,6 +37,22 @@ def _flatten(data, prefix: str = "") -> Iterator[Tuple[str, str]]:
             yield full, value
 
 
+def _canonical_keys() -> Optional[set]:
+    """Claves del catálogo español, que es la lista canónica de claves.
+
+    Sólo se indexan textos de claves que existen aquí: una clave sobrante en
+    otro catálogo (p. ej. una entrada plana ``report.auto_send`` dentro del
+    objeto ``report``) no debe ganar el índice por valor y devolver una clave
+    que el catálogo activo resuelve al texto del idioma equivocado.
+    """
+    try:
+        data = json.loads((_lang_dir() / "es.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    data.pop("_meta", None)
+    return {key for key, _text in _flatten(data)}
+
+
 def reverse_index() -> Dict[str, str]:
     """Mapa ``texto traducido`` -> ``clave`` para todos los idiomas.
 
@@ -48,6 +64,7 @@ def reverse_index() -> Dict[str, str]:
     if _INDEX_CACHE is not None:
         return _INDEX_CACHE
 
+    canonical = _canonical_keys()
     index: Dict[str, str] = {}
     for path in sorted(_lang_dir().glob("*.json")):
         try:
@@ -56,6 +73,8 @@ def reverse_index() -> Dict[str, str]:
             continue
         data.pop("_meta", None)
         for key, text in _flatten(data):
+            if canonical is not None and key not in canonical:
+                continue
             if not text.strip():
                 continue
             index.setdefault(text, key)
@@ -89,6 +108,7 @@ def template_index() -> List[Tuple["re.Pattern[str]", str]]:
 
     entries: List[Tuple[re.Pattern[str], str]] = []
     seen = set()
+    canonical = _canonical_keys()
     for path in sorted(_lang_dir().glob("*.json")):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
@@ -96,6 +116,8 @@ def template_index() -> List[Tuple["re.Pattern[str]", str]]:
             continue
         data.pop("_meta", None)
         for key, text in _flatten(data):
+            if canonical is not None and key not in canonical:
+                continue
             if not _PLACEHOLDER.search(text) or (key, text) in seen:
                 continue
             seen.add((key, text))

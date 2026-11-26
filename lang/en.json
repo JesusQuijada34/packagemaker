@@ -142,7 +142,7 @@
       "placeholder_author": "GitHub Username",
       "placeholder_icon": "Path to the .ico file",
       "author_required": "The Author field is required.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Sign in to GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Error: {message}. Please provide a valid GitHub username that exists.",
     "templates_missing": "Project templates were not found (src/templates). Reinstall PackageMaker or build it with src/templates included.",
     "downloading_icon": "Downloading icon...",
-    "project_created": "Project created in: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "Sign in to GitHub"
+    "project_created": "Project created in: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Cancel",

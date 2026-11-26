@@ -142,7 +142,7 @@
       "placeholder_author": "Nome utente GitHub",
       "placeholder_icon": "Percorso del file .ico",
       "author_required": "Il campo Autore è obbligatorio.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Accedi a GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Errore: {message}. Inserisci un nome utente GitHub valido ed esistente.",
     "templates_missing": "Modelli di progetto non trovati (src/templates). Reinstalla PackageMaker o compilalo con src/templates incluso.",
     "downloading_icon": "Download dell'icona...",
-    "project_created": "Progetto creato in: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "Accedi a GitHub"
+    "project_created": "Progetto creato in: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Annulla",
@@ -820,9 +819,7 @@
     "env_title": "Dati allegati",
     "env_hint": "Non vengono mai inviati percorsi personali, il nome utente di sistema né credenziali.",
     "auto_send": "Invia i guasti automaticamente se esiste una sessione GitHub",
-    "auto_send_hint": "Se disattivato, i guasti vengono solo salvati e puoi inviarli da qui.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Se disattivato, i guasti vengono solo salvati e puoi inviarli da qui."
   },
   "addon": {
     "error_title": "Impossibile caricare l'estensione «{addon}»"

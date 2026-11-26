@@ -142,7 +142,7 @@
       "placeholder_author": "GitHub-Benutzername",
       "placeholder_icon": "Pfad zur .ico-Datei",
       "author_required": "Das Feld Autor ist erforderlich.",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "Bei GitHub anmelden"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "Fehler: {message}. Bitte geben Sie einen gültigen, existierenden GitHub-Benutzernamen ein.",
     "templates_missing": "Projektvorlagen nicht gefunden (src/templates). Installieren Sie PackageMaker neu oder kompilieren Sie es mit src/templates.",
     "downloading_icon": "Symbol wird heruntergeladen...",
-    "project_created": "Projekt erstellt in: {folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "Bei GitHub anmelden"
+    "project_created": "Projekt erstellt in: {folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "Abbrechen",
@@ -820,9 +819,7 @@
     "env_title": "Beigefügte Daten",
     "env_hint": "Persönliche Pfade, Ihr Systembenutzername und Anmeldedaten werden nie gesendet.",
     "auto_send": "Fehler automatisch senden, wenn eine GitHub-Sitzung besteht",
-    "auto_send_hint": "Wenn deaktiviert, werden Fehler nur gespeichert und Sie können sie hier selbst senden.",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "Wenn deaktiviert, werden Fehler nur gespeichert und Sie können sie hier selbst senden."
   },
   "addon": {
     "error_title": "Die Erweiterung „{addon}“ konnte nicht geladen werden"

@@ -142,7 +142,7 @@
       "placeholder_author": "GitHub 用户名",
       "placeholder_icon": ".ico 文件的路径",
       "author_required": "作者字段为必填。",
-      "author_placeholder": "Inicia sesión en GitHub"
+      "author_placeholder": "登录 GitHub"
     },
     "platform": {
       "windows": "Windows (Knosthalij)",
@@ -166,8 +166,7 @@
     "invalid_username": "错误：{message}。请提供有效且存在的 GitHub 用户名。",
     "templates_missing": "未找到项目模板 (src/templates)。请重新安装 PackageMaker 或包含 src/templates 进行构建。",
     "downloading_icon": "正在下载图标...",
-    "project_created": "项目已创建于：{folder}/ (sha256: {sha256})",
-    "form.author_placeholder": "登录 GitHub"
+    "project_created": "项目已创建于：{folder}/ (sha256: {sha256})"
   },
   "common": {
     "cancel": "取消",
@@ -820,9 +819,7 @@
     "env_title": "附带的数据",
     "env_hint": "绝不会发送个人路径、系统用户名或凭据。",
     "auto_send": "有 GitHub 会话时自动发送故障",
-    "auto_send_hint": "关闭后故障只会被保存，你可以在此手动发送。",
-    "report.auto_send": "Send failures automatically when a GitHub session exists",
-    "report.auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+    "auto_send_hint": "关闭后故障只会被保存，你可以在此手动发送。"
   },
   "addon": {
     "error_title": "无法加载扩展「{addon}」"
