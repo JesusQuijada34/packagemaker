@@ -667,8 +667,9 @@ y en el issue.
   una ventana maximizada: ahora un clic suelto no la toca, y en cuanto el
   gesto supera 4 px se restaura a su tamaño normal bajo el cursor y entonces
   se inicia el arrastre; si el sistema no ofrece `startSystemMove`, el
-  arrastre continúa con el manejador de `TitleBar`. Pruebas:
-  `MaximizedDragTests` en `tests/test_window_manager_bridge.py` (7 casos; los
+  arrastre continúa con el manejador de `TitleBar`. Un movimiento sin el botón
+  pulsado cancela el gesto pendiente. Pruebas:
+  `MaximizedDragTests` en `tests/test_window_manager_bridge.py` (8 casos; los
   de arrastre fallan con el código anterior). La ficha se retira de la cola y
   queda en observación hasta la comprobación visual en Windows. Verificación:
   ver el resumen del ciclo en `CHANGELOG.md`.

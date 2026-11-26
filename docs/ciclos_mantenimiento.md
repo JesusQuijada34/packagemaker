@@ -663,6 +663,6 @@ ciclos: es un registro de auditoría.
   sistema no ofrece `startSystemMove`. `tests/test_window_manager_bridge.py`
   gana `MaximizedDragTests` (7 casos). La ficha sale de la cola (15
   pendientes) y queda en observación hasta la verificación visual en Windows.
-  Verificación: 1339 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
+  Verificación: 1340 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
   limpios. No se prepara release: quedan bugs de prioridad alta y 19
   aprobaciones pendientes de implementación.

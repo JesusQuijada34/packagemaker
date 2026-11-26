@@ -26,14 +26,15 @@ final F-004 en `73dcdcd`).
   Si `startSystemMove()` no está disponible, el arrastre continúa con el
   manejador de `TitleBar` (`_begin_manual_drag`).
 - **Pruebas:** `MaximizedDragTests` en `tests/test_window_manager_bridge.py`
-  (7 casos): clic suelto sin restaurar, temblor de 1 px sin restaurar,
-  restauración antes de mover, posición relativa del cursor, ventana dentro de
-  la pantalla, arrastre normal sin cambios y respaldo de arrastre manual. Los
+  (8 casos): clic suelto sin restaurar, temblor de 1 px sin restaurar,
+  movimiento sin el botón pulsado sin restaurar, restauración antes de mover,
+  posición relativa del cursor, ventana dentro de la pantalla, arrastre normal
+  sin cambios y respaldo de arrastre manual. Los
   casos de arrastre fallan con el código anterior. Comprobado además con
   widgets reales en `offscreen`: maximizar, pulsar (sigue maximizada) y
   arrastrar 60 px (vuelve a 900x600 y empieza el arrastre).
 - **Commit:** `c346946`.
-- **Verificación:** 1339 pasan, 1 omitido, 64 subtests; `pyflakes` y
+- **Verificación:** 1340 pasan, 1 omitido, 64 subtests; `pyflakes` y
   `py_compile` limpios.
 - **Observación:** el defecto se ve en Windows y aquí sólo se verifica en
   Linux/offscreen; R-6a1f8c23 queda en observación hasta la confirmación

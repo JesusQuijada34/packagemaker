@@ -268,17 +268,18 @@ class MaximizedDragTests(unittest.TestCase):
         )
 
     @staticmethod
-    def _move(global_x, global_y=12):
+    def _move(global_x, global_y=12, held=True):
         from PyQt6.QtCore import QEvent
         from PyQt6.QtGui import QMouseEvent
 
         local = QPoint(global_x, global_y)
+        buttons = Qt.MouseButton.LeftButton if held else Qt.MouseButton.NoButton
         return QMouseEvent(
             QEvent.Type.MouseMove,
             local.toPointF(),
             local.toPointF(),
             Qt.MouseButton.NoButton,
-            Qt.MouseButton.LeftButton,
+            buttons,
             Qt.KeyboardModifier.NoModifier,
         )
 
@@ -309,6 +310,17 @@ class MaximizedDragTests(unittest.TestCase):
 
         self.assertTrue(window._pm_maximized)
         self.assertEqual(calls, [])
+
+    def test_hover_without_the_button_held_does_not_restore(self):
+        window = self._DragWindow()
+        bridge, titlebar, calls = self._bridge(window)
+
+        titlebar.mousePressEvent(self._press(960))
+        bridge.eventFilter(titlebar, self._move(1100, held=False))
+
+        self.assertTrue(window._pm_maximized)
+        self.assertEqual(calls, [])
+        self.assertIsNone(bridge._pending_drag)
 
     def test_drag_from_maximized_restores_before_moving(self):
         window = self._DragWindow()

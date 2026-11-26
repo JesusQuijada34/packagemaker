@@ -333,7 +333,12 @@ class WindowManagerBridge(QObject):
             if event.type() in (QEvent.Type.MouseMove, QEvent.Type.Enter):
                 self._reset_cursor()
             if event.type() == QEvent.Type.MouseMove:
-                self._continue_pending_drag(event.globalPosition().toPoint())
+                if event.buttons() & Qt.MouseButton.LeftButton:
+                    self._continue_pending_drag(event.globalPosition().toPoint())
+                else:
+                    # Sin el botón pulsado no hay gesto: si llega aquí es que
+                    # la pulsación terminó fuera de la titlebar.
+                    self._pending_drag = None
             elif event.type() == QEvent.Type.MouseButtonRelease:
                 self._pending_drag = None
             return False
