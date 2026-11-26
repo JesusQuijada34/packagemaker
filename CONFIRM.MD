@@ -553,7 +553,7 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
 - **Decisión:** aprobada con `[x] SÍ` en el commit `73dcdcd` (2026-11-26;
   autoría verificada con la API de GitHub).
-- **Aplicada:** sexagésimo tercer ciclo (2026-11-26) —
+- **Aplicada:** sexagésimo tercer ciclo (2026-11-26), commit `02a6786` —
   `lib/coreUpdater/installer.py` y `tests/test_updater_silent_iflapp_update.py`.
 - **Resultado:** con `silent=True`, `_update_from_iflapp` descarga el `.iflapp`
   a un temporal, lo instala con `install_iflapp(..., silent=True)` en el

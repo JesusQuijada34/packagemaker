@@ -682,7 +682,7 @@ y en el issue.
   `docs/ciclos_mantenimiento.md`. Verificación: 1327 pasan, 1 omitido, 64
   subtests; `pyflakes` y `py_compile` limpios; arranque real sólo con el
   splash y la ventana principal.
-- Sexagésimo tercer ciclo (2026-11-26): se aplica **Q-015** (R-7e3a9c25): el
+- Sexagésimo tercer ciclo (2026-11-26, commit `02a6786`): se aplica **Q-015** (R-7e3a9c25): el
   updater silencioso con `.iflapp` descarga el paquete, lo instala con
   `install_iflapp(..., silent=True)` y devuelve el resultado real, sin abrir
   ninguna ventana. Se archiva en `docs/bugs_resueltos.md`. Verificación: 1332

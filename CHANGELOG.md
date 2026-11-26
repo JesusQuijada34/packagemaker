@@ -26,6 +26,7 @@ Reportado por JesusQuijada34 en la auditoría interna de mantenimiento
   actual, que se propaga el fallo de instalación y de descarga, que el temporal
   se elimina y que el modo gráfico sigue abriendo la ventana. Los cuatro
   primeros casos fallan con el código anterior.
+- **Commit:** `02a6786`.
 - **Verificación:** 1332 pasan, 1 omitido, 64 subtests; `pyflakes` y
   `py_compile` limpios.
 - **Release:** no se prepara. Quedan bugs de prioridad alta pendientes de
