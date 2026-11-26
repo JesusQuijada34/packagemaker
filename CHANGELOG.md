@@ -1,3 +1,54 @@
+## 2026-11-26 — sexagésimo sexto ciclo
+
+### Corregido — el backend Nuitka no podía compilar (R-8d3f6a21, R-4d9e2b61)
+
+Reportado por JesusQuijada34 en el issue #15 («error de implementacion») y en
+`bugs.txt` (commit `bba72d6`, 2026-11-25): «la compilación quedó corrupta, todo
+dice embebido, hay errores al compilar con Nuitka». Es la parte del reporte
+R-4d9e2b61 que se podía reproducir y corregir sin el log del equipo del
+propietario.
+
+- **Síntoma:** con Nuitka instalado, `--list-compilers` mostraba la versión
+  «desconocida» y cualquier build con el backend por defecto (Nuitka) fallaba.
+- **Causa raíz (tres defectos independientes, reproducidos con Nuitka 4.4):**
+  1. `build_arguments()` emitía `--output-dir <dir>` y `--output-filename
+     <nombre>` separados por espacio. Nuitka 4.x exige la forma
+     `--opción=valor` y abortaba con «The '--output-dir' option requires an
+     argument with '--output-dir='».
+  2. Pedía `--include-qt-plugins=sensible,styles`. Nuitka valida cada familia
+     contra la instalación de Qt y abortaba con «FATAL: pyqt6: Error, there is
+     no Qt plugin family 'styles'».
+  3. `from nuitka import MainControl` lanza `AssertionError`
+     (`states.is_full_compat is not None`) fuera del `__main__` de Nuitka, y la
+     importación quedaba **fuera** del `try/except`, así que la excepción
+     escapaba de `compile_to_exe` en lugar de degradar al subproceso que el
+     propio módulo documenta.
+  La versión se leía de `nuitka.__main__._getNuitkaVersion`, retirado en 4.x, y
+  de `nuitka.__version__`, que no existe: de ahí «desconocida».
+- **Solución:** las opciones de salida van con `=`; sólo se pide la familia
+  `sensible` (el conjunto por defecto) y el plugin `pyqt6` sólo se activa si el
+  binding está instalado; la importación de `MainControl` está protegida y, si
+  falla, la compilación continúa con `python -m nuitka` como subproceso
+  (documentado en el módulo), con el error de la API embebida anexado al
+  mensaje final; la versión se lee de `nuitka.Version.getNuitkaVersion()` con
+  respaldo en `importlib.metadata`.
+- **Pruebas:** `tests/test_nuitka_backend_arguments.py` (6 casos: forma `=` de
+  las opciones, familias Qt existentes en la instalación, versión real,
+  argumentos deterministas, degradación a subproceso y error reportado sin
+  excepción). Los cinco casos que describen el fallo fallan con el código
+  anterior.
+- **Verificación real:** compilación `--standalone --onefile` de un guion de
+  prueba con Nuitka 4.4 y gcc: `compile_to_exe()` devuelve el binario y el
+  ejecutable imprime su salida (`hola`, código 0). Antes del arreglo la misma
+  llamada abortaba en la importación de `MainControl`.
+- **Commit:** ver el commit de este ciclo en `main`.
+- **Observación:** la corrección se comprueba en Linux; el build de Windows
+  (Nuitka + MSVC) queda pendiente de la confirmación del propietario. El
+  **entorno aislado por proyecto** que pide el mismo reporte sigue pendiente en
+  Q-019 y no se ha tocado en este ciclo.
+- **Release:** no se prepara. Quedan bugs de prioridad alta pendientes y 19
+  aprobaciones de `CONFIRM.MD` sin aplicar.
+
 ## 2026-11-26 — sexagésimo quinto ciclo
 
 ### Corregido — la titlebar no llegaba a pantalla completa con tres gestos (R-2f8b6a31, Q-011/F-004)

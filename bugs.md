@@ -1,7 +1,7 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (ciclo 65: R-2f8b6a31 corregido y en observación;
-cola compactada a petición del propietario en el issue #15).
+Última actualización: 2026-11-26 (ciclo 66: R-8d3f6a21 corregido y en
+observación; R-4d9e2b61 queda sólo por el entorno aislado de Q-019).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -19,7 +19,7 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Aprobado Q-019; pendiente de implementación |
+| R-4d9e2b61 | Bug — el build no usa un entorno aislado por proyecto | Alta | Aprobado Q-019; pendiente de implementación (el fallo de Nuitka se corrigió en R-8d3f6a21) |
 | R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Aprobado Q-012/Q-011; pendiente de implementación |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
@@ -53,12 +53,16 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
   formato de compilación.
 - **Pasos para reproducirlo:** compilar un proyecto con Nuitka y revisar el
   log: los backends se anuncian como «embebidos» y no hay venv por proyecto.
-- **Causa raíz:** el aislamiento por proyecto no existe todavía (Q-019); el
-  fallo concreto de Nuitka necesita el log del propietario para confirmarse.
-- **Estado:** Pendiente (Q-019 aprobada). Bloqueo parcial: falta el log de
-  Nuitka del equipo del propietario.
-- **Solución aplicada:** ninguna todavía.
-- **Commit / fecha de resolución:** — / —
+- **Causa raíz:** hay dos causas distintas. Los «errores al compilar con
+  Nuitka» eran del backend (R-8d3f6a21: opciones `--output-dir`/
+  `--output-filename` sin `=`, familia Qt `styles` inexistente e importación de
+  `MainControl` sin proteger), ya corregidos en el ciclo 66. El entorno aislado
+  por proyecto simplemente no existe todavía (Q-019).
+- **Estado:** Pendiente sólo por Q-019 (entorno aislado por proyecto). El fallo
+  de compilación de Nuitka está corregido y en observación como R-8d3f6a21.
+- **Solución aplicada:** backend Nuitka corregido y verificado con una
+  compilación real `--standalone --onefile`.
+- **Commit / fecha de resolución:** — (el entorno aislado sigue abierto).
 
 ### R-7c4a1e95 — La interfaz se congela y renderiza mal al maximizar/restaurar
 
@@ -181,15 +185,24 @@ en `docs/bugs_resueltos.md` (índice); su conversación queda en el issue. Cuand
 reaparezca un caso archivado, se vuelve a abrir aquí con su ID y la referencia
 al ciclo anterior.
 
+| ID | Título | Prioridad | Corregido | Prueba de regresión |
+|---|---|---|---|---|
+| R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
+
 ## Periodo de observación y release
 
 - **Cola:** 16 entradas (ver Resumen). No hay bugs críticos reportados sin
-  atender; R-4d9e2b61 y R-7c4a1e95 siguen aprobados y pendientes de
-  implementación.
+  atender; R-4d9e2b61 (sólo el entorno aislado de Q-019) y R-7c4a1e95 siguen
+  aprobados y pendientes de implementación.
 - **Release:** no se prepara. Hay bugs de prioridad alta pendientes de
   implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
+- Sexagésimo sexto ciclo (2026-11-26): se corrige **R-8d3f6a21**, el backend
+  Nuitka que no compilaba (opciones de salida sin `=`, familia de plugins Qt
+  inexistente e importación de `MainControl` fuera del `try`), y se verifica con
+  una compilación real `--standalone --onefile`. Queda en observación; R-4d9e2b61
+  sigue abierto sólo por el entorno aislado de Q-019.
 - Sexagésimo quinto ciclo (2026-11-26): se corrige **R-2f8b6a31** (el triple
   gesto de la titlebar nunca llegaba a pantalla completa y el modo inmersivo no
   maximizaba la ventana) y se archiva en `docs/bugs_resueltos.md`. Se compacta

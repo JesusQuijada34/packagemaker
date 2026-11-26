@@ -20,6 +20,7 @@ Notas de implementación
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -32,23 +33,43 @@ NUITKA_AVAILABLE = False
 nuitka_version = "No disponible"
 
 
+def _detect_version() -> str:
+    """Versión de Nuitka instalada.
+
+    Nuitka 4.x retiró ``__main__._getNuitkaVersion`` y no expone
+    ``nuitka.__version__``; la fuente estable es ``nuitka.Version`` y, en su
+    defecto, los metadatos del paquete.
+    """
+    try:
+        from nuitka.Version import getNuitkaVersion
+
+        return getNuitkaVersion()
+    except Exception:
+        pass
+    try:
+        from importlib.metadata import version
+
+        return version("nuitka")
+    except Exception:
+        return "desconocida"
+
+
+def _module_installed(name: str) -> bool:
+    try:
+        return importlib.util.find_spec(name) is not None
+    except (ImportError, ValueError):
+        return False
+
+
 def _refresh_nuitka_availability() -> bool:
     global NUITKA_AVAILABLE, nuitka_version
-    try:
-        import nuitka  # noqa: F401
-
-        try:
-            from nuitka.__main__ import _getNuitkaVersion
-
-            nuitka_version = _getNuitkaVersion()
-        except Exception:
-            nuitka_version = getattr(nuitka, "__version__", "desconocida")
-        NUITKA_AVAILABLE = True
-        return True
-    except ImportError:
+    if not _module_installed("nuitka"):
         NUITKA_AVAILABLE = False
         nuitka_version = "No disponible"
         return False
+    nuitka_version = _detect_version()
+    NUITKA_AVAILABLE = True
+    return True
 
 
 _refresh_nuitka_availability()
@@ -61,6 +82,7 @@ class EmbeddedNuitka:
         self.available = NUITKA_AVAILABLE
         self._temp_build_dir: Optional[str] = None
         self._last_error: Optional[str] = None
+        self._embedded_error: Optional[str] = None
 
     def get_last_error(self) -> str:
         return self._last_error or "Error desconocido"
@@ -100,10 +122,8 @@ class EmbeddedNuitka:
         args: List[str] = [
             "--standalone",
             "--assume-yes-for-downloads",
-            "--output-dir",
-            os.path.abspath(output_dir),
-            "--output-filename",
-            output_name,
+            f"--output-dir={os.path.abspath(output_dir)}",
+            f"--output-filename={output_name}",
             "--remove-output",
             "--quiet",
         ]
@@ -140,8 +160,12 @@ class EmbeddedNuitka:
         for module in excludes or []:
             args.append(f"--nofollow-import-to={module}")
 
-        # Plugin Qt y exclusión de tkinter: paridad con el backend de subproceso.
-        args.extend(["--enable-plugin=pyqt6", "--include-qt-plugins=sensible,styles"])
+        # Nuitka valida las familias de plugins contra la instalación de Qt y
+        # aborta con una que no exista (``styles`` no está en todas las
+        # distribuciones). ``sensible`` es el conjunto por defecto y siempre
+        # es válido; el plugin sólo se activa si el binding está instalado.
+        if _module_installed("PyQt6"):
+            args.extend(["--enable-plugin=pyqt6", "--include-qt-plugins=sensible"])
         args.append("--nofollow-import-to=tkinter")
         args.append(os.path.abspath(script_path))
         return args
@@ -161,6 +185,7 @@ class EmbeddedNuitka:
         cwd: Optional[str] = None,
     ) -> Optional[str]:
         self._last_error = None
+        self._embedded_error = None
         if not self.available:
             self._last_error = "Nuitka no está disponible como librería"
             return None
@@ -189,37 +214,96 @@ class EmbeddedNuitka:
         old_argv = sys.argv[:]
         old_cwd = os.getcwd()
         old_env = os.environ.copy()
-        os.environ["NUITKA_CACHE_DIR"] = str(Path(build_path) / "nuitka_cache")
+        cache_dir = str(Path(build_path) / "nuitka_cache")
+        os.environ["NUITKA_CACHE_DIR"] = cache_dir
         try:
             if cwd:
                 os.chdir(cwd)
-            from nuitka import MainControl
-
-            sys.argv = ["nuitka"] + args
             try:
-                MainControl.main()
-            except SystemExit as exc:
-                # Nuitka llama a sys.exit() en varios caminos; un código 0 es
-                # una compilación correcta y no debe propagarse.
-                if exc.code not in (0, None):
-                    self._last_error = f"Nuitka terminó con código {exc.code}"
-                    return None
+                embedded_main = self._resolve_embedded_main()
             except BaseException as exc:  # noqa: BLE001 - límite de la API
-                import traceback
+                # Nuitka 4.x aborta al importar ``MainControl`` fuera de su
+                # ``__main__`` (``states.is_full_compat is None``). Es una
+                # limitación de la API interna, no del guion: se degrada al
+                # subproceso documentado en lugar de abortar la compilación.
+                embedded_main = None
+                self._embedded_error = f"{type(exc).__name__}: {exc}"
 
-                self._last_error = f"{exc}\n{traceback.format_exc()}"
-                return None
+            if embedded_main is not None:
+                sys.argv = ["nuitka"] + args
+                try:
+                    embedded_main()
+                except SystemExit as exc:
+                    # Nuitka llama a sys.exit() en varios caminos; un código 0
+                    # es una compilación correcta y no debe propagarse.
+                    if exc.code not in (0, None):
+                        self._last_error = f"Nuitka terminó con código {exc.code}"
+                        return None
+                except BaseException as exc:  # noqa: BLE001 - límite de la API
+                    import traceback
+
+                    self._embedded_error = f"{exc}\n{traceback.format_exc()}"
+                else:
+                    result = self._finish(dist_dir, output_name)
+                    if result is not None:
+                        return result
         finally:
             sys.argv = old_argv
             os.chdir(old_cwd)
             os.environ.clear()
             os.environ.update(old_env)
 
+        # Camino de subproceso: no depende de símbolos privados de Nuitka.
+        env = dict(os.environ)
+        env["NUITKA_CACHE_DIR"] = cache_dir
+        ok, error = self._run_subprocess_compiler(args, cwd=cwd, env=env)
+        if not ok:
+            if self._embedded_error:
+                first_line = self._embedded_error.splitlines()[0]
+                error = f"{error} (API embebida: {first_line})"
+            self._last_error = error
+            return None
+        return self._finish(dist_dir, output_name)
+
+    def _finish(self, dist_dir: str, output_name: str) -> Optional[str]:
         candidate = self._locate_output(dist_dir, output_name)
         if candidate is not None:
             return str(candidate)
         self._last_error = "Nuitka finalizó pero no se generó el binario esperado"
         return None
+
+    @staticmethod
+    def _resolve_embedded_main():
+        """``nuitka.MainControl.main`` para compilar en el proceso actual."""
+        from nuitka import MainControl
+
+        return MainControl.main
+
+    def _run_subprocess_compiler(
+        self,
+        args: List[str],
+        cwd: Optional[str] = None,
+        env: Optional[dict] = None,
+    ) -> Tuple[bool, str]:
+        """Compila con ``python -m nuitka`` y devuelve ``(ok, error)``."""
+        command = [sys.executable, "-m", "nuitka", *args]
+        try:
+            process = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                env=env,
+                timeout=3600,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            return False, f"No se pudo ejecutar Nuitka: {exc}"
+        if process.returncode != 0:
+            detail = (process.stderr or process.stdout or "").strip()
+            return False, (
+                f"Nuitka terminó con código {process.returncode}: {detail[-2000:]}"
+            )
+        return True, ""
 
     @staticmethod
     def _locate_output(output_dir: str, output_name: str) -> Optional[Path]:

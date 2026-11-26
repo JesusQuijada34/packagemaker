@@ -4,10 +4,11 @@
 corrección vive en `CHANGELOG.md` y en el issue correspondiente. Este archivo
 es histórico: no se lee en los ciclos de mantenimiento.
 
-**169 entradas resueltas.**
+**170 entradas resueltas.**
 
 | ID | Título | Usuario | Fecha | Prioridad | Commit | Solución |
 |---|---|---|---|---|---|---|
+| R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | JesusQuijada34 (issue #15 / `bugs.txt`) | 2026-11-25 | Alta. | ciclo 66. | `build_arguments()` emite `--output-dir=` y `--output-filename=` (Nuitka 4.x rechaza la forma separada por espacio), pide sólo la familia Qt `sensible` y activa el plugin `pyqt6` únicamente si el binding está instalado, protege la importación de `nuitka.MainControl` (lanza `AssertionError` fuera de su `__main__`) y degrada a `python -m nuitka` como subproceso; la versión se lee de `nuitka.Version` con respaldo en `importlib.metadata`. |
 | R-2f8b6a31 | La titlebar no limita los gestos a tres (máx./restaurar/fullscreen) | JesusQuijada34 (`bugs.txt`) | 2026-11-23 | Media. | ciclo 65. | El filtro de `lib/immersive_titlebar.py` cuenta el doble clic como segundo gesto en vez de reiniciar la racha, así que la secuencia real de Qt (pulsación, doble clic, pulsación) llega al tercero y entra en pantalla completa; `ImmersiveTitleBar._ensure_maximized()` maximiza la ventana al entrar y el puente ignora el doble clic mientras está en modo inmersivo, para que el tercer gesto salga sin dejar una ventana sin barra de título. |
 | R-6a1f8c23 | Arrastrar la titlebar maximizada movía la ventana | JesusQuijada34 (`bugs.txt`) | 2026-11-23 | Alta. | `c346946`. | `WindowManagerBridge.restore_for_drag()` restaura la ventana a su tamaño normal bajo el cursor (posición relativa de la titlebar, acotada a la pantalla) y sólo entonces inicia el arrastre; el gesto se confirma tras 4 px, así que un clic suelto (o un movimiento sin el botón pulsado) no desmaximiza. Respaldo de arrastre manual si no hay `startSystemMove`. |
 | R-dd68f3f4 | Ruta de exportación en Termux/Android | JesusQuijada34 (issue #4) | 2026-07-05 | Alta. | `b305945`. | `lib/platform_detect.compile_output_directory()` devuelve el Download compartido en Termux/Android y conserva la ruta histórica en escritorio. `lib/cl… |

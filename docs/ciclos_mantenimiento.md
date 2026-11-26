@@ -682,3 +682,23 @@ ciclos: es un registro de auditoría.
   lo resuelto. Verificación: 1345 pasan, 1 omitido, 64 subtests; `pyflakes` y
   `py_compile` limpios. No se prepara release: quedan bugs de prioridad alta y
   19 aprobaciones pendientes de implementación.
+
+- Sexagésimo sexto ciclo (2026-11-26): sin respuestas nuevas en `CONFIRM.MD`
+  (sigue sólo **Q-032** pendiente). Se corrige **R-8d3f6a21**, la parte
+  reproducible de R-4d9e2b61 («hay errores al compilar con Nuitka»): con
+  Nuitka 4.4 se reprodujeron tres defectos del backend — las opciones
+  `--output-dir`/`--output-filename` se emitían separadas por espacio y Nuitka
+  exige `=`, se pedía la familia de plugins Qt `styles` que la instalación no
+  tiene (aborta con FATAL) y la importación de `nuitka.MainControl` lanzaba
+  `AssertionError` fuera del `try`, escapando de `compile_to_exe` en lugar de
+  degradar al subproceso documentado. Además la versión se leía de símbolos
+  retirados en 4.x y salía «desconocida». Ahora las opciones van con `=`, sólo
+  se pide `sensible`, el plugin `pyqt6` se activa sólo si el binding existe, la
+  importación está protegida con degradación a `python -m nuitka` y la versión
+  sale de `nuitka.Version`. `tests/test_nuitka_backend_arguments.py` (6 casos;
+  los cinco que describen el fallo fallan con el código anterior) y
+  comprobación real: `--standalone --onefile` produce un binario que ejecuta y
+  `--list-compilers` muestra 4.4. Verificación: 1351 pasan, 1 omitido, 64
+  subtests; `pyflakes` y `py_compile` limpios. R-4d9e2b61 queda abierto sólo por
+  el entorno aislado de Q-019. No se prepara release: quedan bugs de prioridad
+  alta y 19 aprobaciones pendientes de implementación.
