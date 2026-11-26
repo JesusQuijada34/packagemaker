@@ -187,6 +187,11 @@ class WindowManagerBridge(QObject):
 
         def on_double(event):
             if event.button() == Qt.MouseButton.LeftButton:
+                if getattr(self.window, "_pm_immersive", False):
+                    # En pantalla completa el doble clic sólo suma un gesto: el
+                    # tercero sale del modo inmersivo. Restaurar aquí dejaba una
+                    # ventana normal sin barra de título.
+                    return
                 self.toggle_maximize()
 
         titlebar.mousePressEvent = on_press

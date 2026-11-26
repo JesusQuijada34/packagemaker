@@ -204,6 +204,73 @@ class TestImmersiveTitleBar:
         assert is_immersive(window) is False
 
 
+class TestTitleBarGestureLimit:
+    """R-2f8b6a31: la titlebar se limita a tres gestos (máx./restaurar/fullscreen)."""
+
+    @staticmethod
+    def _send(titlebar, etype):
+        from PyQt6.QtCore import QPointF, Qt
+        from PyQt6.QtGui import QMouseEvent
+        from PyQt6.QtWidgets import QApplication
+
+        local = QPointF(4.0, 4.0)
+        glob = QPointF(titlebar.mapToGlobal(local.toPoint()))
+        event = QMouseEvent(
+            etype,
+            local,
+            glob,
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        QApplication.sendEvent(titlebar, event)
+
+    def _setup(self, qt_app):
+        from PyQt6.QtWidgets import QPushButton, QWidget
+
+        from lib.immersive_titlebar import install_immersive_titlebar
+
+        window = QWidget()
+        window.resize(600, 400)
+        titlebar = QWidget(window)
+        titlebar.setFixedHeight(34)
+        titlebar.btn_max = QPushButton(titlebar)
+        state = {"maximized": False}
+        window.toggle_frameless_maximize = (
+            lambda: state.__setitem__("maximized", not state["maximized"])
+        )
+        window.isMaximized = lambda: state["maximized"]
+        controller = install_immersive_titlebar(window, titlebar)
+        return window, titlebar, controller, state
+
+    def test_qt_triple_click_sequence_reaches_fullscreen(self, qt_app):
+        from PyQt6.QtCore import QEvent
+
+        window, titlebar, _controller, _state = self._setup(qt_app)
+        # Secuencia real de Qt para un triple clic: pulsación, doble clic, pulsación.
+        self._send(titlebar, QEvent.Type.MouseButtonPress)
+        assert is_immersive(window) is False
+        self._send(titlebar, QEvent.Type.MouseButtonDblClick)
+        assert is_immersive(window) is False
+        self._send(titlebar, QEvent.Type.MouseButtonPress)
+        assert is_immersive(window) is True
+
+    def test_double_click_stops_at_two_gestures(self, qt_app):
+        from PyQt6.QtCore import QEvent
+
+        window, titlebar, _controller, _state = self._setup(qt_app)
+        self._send(titlebar, QEvent.Type.MouseButtonPress)
+        self._send(titlebar, QEvent.Type.MouseButtonDblClick)
+        assert is_immersive(window) is False
+
+    def test_entering_fullscreen_maximizes_a_normal_window(self, qt_app):
+        window, _titlebar, controller, state = self._setup(qt_app)
+        assert state["maximized"] is False
+        controller.enter()
+        assert is_immersive(window) is True
+        assert state["maximized"] is True
+
+
 class TestStartupErrorWindow:
     def test_window_shows_title_and_detail(self, qt_app):
         from lib.startup_error_window import StartupErrorWindow

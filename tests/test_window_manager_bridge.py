@@ -381,5 +381,63 @@ class MaximizedDragTests(unittest.TestCase):
         self.assertIsNotNone(titlebar._drag_offset)
 
 
+@unittest.skipUnless(QT_AVAILABLE, "Qt no disponible en este entorno")
+class ImmersiveDoubleClickTests(unittest.TestCase):
+    """R-2f8b6a31: en pantalla completa el doble clic no debe restaurar.
+
+    El tercer gesto es el que sale del modo inmersivo; si el doble clic
+    restaurara la ventana, quedaría una ventana normal sin barra de título.
+    """
+
+    _app = None
+
+    @classmethod
+    def _ensure_app(cls):
+        from PyQt6.QtWidgets import QApplication
+
+        cls._app = QApplication.instance() or QApplication([])
+
+    def _window(self):
+        from PyQt6.QtWidgets import QWidget
+
+        self._ensure_app()
+        window = QWidget()
+        window.resize(400, 300)
+        titlebar = QWidget(window)
+        calls = []
+        window.toggle_frameless_maximize = lambda: calls.append("toggle")
+        bridge = WindowManagerBridge(window, titlebar)
+        bridge.install()
+        return window, titlebar, calls
+
+    @staticmethod
+    def _double_click(titlebar):
+        from PyQt6.QtCore import QEvent, QPointF
+        from PyQt6.QtGui import QMouseEvent
+        from PyQt6.QtWidgets import QApplication
+
+        local = QPointF(5.0, 5.0)
+        event = QMouseEvent(
+            QEvent.Type.MouseButtonDblClick,
+            local,
+            QPointF(titlebar.mapToGlobal(local.toPoint())),
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        QApplication.sendEvent(titlebar, event)
+
+    def test_double_click_toggles_the_window(self):
+        _window, titlebar, calls = self._window()
+        self._double_click(titlebar)
+        self.assertEqual(calls, ["toggle"])
+
+    def test_double_click_in_fullscreen_does_not_toggle(self):
+        window, titlebar, calls = self._window()
+        window._pm_immersive = True
+        self._double_click(titlebar)
+        self.assertEqual(calls, [])
+
+
 if __name__ == "__main__":
     unittest.main()

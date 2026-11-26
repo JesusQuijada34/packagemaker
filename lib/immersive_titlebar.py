@@ -118,6 +118,7 @@ class ImmersiveTitleBar:
 
     def enter(self) -> None:
         window, titlebar = self.window, self.titlebar
+        self._ensure_maximized()
         window._pm_immersive = True
         _set_stays_on_top(window, True)
         self._swap_max_button(immersive=True)
@@ -131,6 +132,26 @@ class ImmersiveTitleBar:
         self._swap_max_button(immersive=False)
         if titlebar is not None:
             self._slide(titlebar, hide=False)
+
+    def _ensure_maximized(self) -> None:
+        """Pantalla completa exige que la ventana ocupe la pantalla.
+
+        Sin esto, un modo inmersivo iniciado desde una ventana normal dejaba
+        una ventana pequeña sin barra de título.
+        """
+        window = self.window
+        if getattr(window, "_pm_maximized", False):
+            return
+        try:
+            if window.isMaximized() or window.isFullScreen():
+                return
+        except (RuntimeError, AttributeError):
+            pass
+        toggle = getattr(window, "toggle_frameless_maximize", None)
+        if callable(toggle):
+            toggle()
+        else:
+            window.showMaximized()
 
     def reveal_titlebar(self) -> None:
         """Devuelve la barra cuando el ratón toca el borde superior."""
@@ -201,19 +222,25 @@ class ImmersiveTitleBar:
 
 
 def _make_titlebar_filter(controller):
-    """Cuenta las pulsaciones de la barra y dispara el modo inmersivo."""
+    """Cuenta las pulsaciones de la barra y dispara el modo inmersivo.
+
+    Qt entrega un triple clic como pulsación, doble clic y pulsación. Si el
+    doble clic reiniciara la cuenta, el tercer gesto nunca llegaría al máximo
+    (R-2f8b6a31); por eso se registra como el segundo gesto y se deja pasar
+    para que el doble clic siga maximizando o restaurando.
+    """
     from PyQt6.QtCore import QEvent, QObject, Qt
 
     class TitleBarFilter(QObject):
         def eventFilter(self, obj, event):  # noqa: N802 (API Qt)
             etype = event.type()
-            if etype == QEvent.Type.MouseButtonDblClick:
-                controller.streak.reset()
+            if etype not in (QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonDblClick):
                 return False
-            if etype == QEvent.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
-                if controller.streak.register(event.timestamp()):
-                    controller.toggle()
-                    return True
+            if event.button() != Qt.MouseButton.LeftButton:
+                return False
+            if controller.streak.register(event.timestamp()):
+                controller.toggle()
+                return True
             return False
 
     return TitleBarFilter(controller.titlebar)
