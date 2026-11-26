@@ -346,6 +346,7 @@ from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
 from lib.addons_engine import Addon, load_addons
 from lib.report_page import ReportPage
+from lib.settings_cards import ARROW_BACK
 from lib.settings_panel import SettingsPanel
 from lib.splash_window import IntegratedSplash
 from lib.window_manager_bridge import install_window_manager_bridges
@@ -1058,8 +1059,6 @@ class PackageTodoGUI(QMainWindow):
             self._apply_page_description(addon)
         if hasattr(self, "input_autor"):
             self._refresh_author_field()
-        if hasattr(self, "conf_header"):
-            self._refresh_config_tab_labels()
         if hasattr(self, "sandbox_switch"):
             self.sandbox_switch.setText(tr("create.sandbox"))
         if hasattr(self, "engine_combo"):
@@ -1074,6 +1073,10 @@ class PackageTodoGUI(QMainWindow):
         retranslate_tree(self)
         if hasattr(self, "settings_panel") and self.settings_panel is not None:
             retranslate_tree(self.settings_panel)
+            # Después del recorrido genérico: las tarjetas y la barra de la
+            # página se reetiquetan con sus claves (el prefijo «‹» de la flecha
+            # no existe en el índice de traducciones y no se retraduce solo).
+            self._refresh_config_tab_labels()
         # Los textos que no son ``tr()`` directo (ítems de combo, placeholders
         # construidos a mano) los reaplica la propia página.
         page = getattr(self, "report_page", None)
@@ -2654,10 +2657,10 @@ class PackageTodoGUI(QMainWindow):
     def init_config_tab(self, parent_widget=None):
         """Configuración en tarjetas con navegación en cascada (Fase 3.2).
 
-        La barra superior ya no lleva Guardar/Restablecer: el guardado es
-        automático y ``Restablecer`` es una tarjeta más. ``display_mode`` y el
-        editor de código desaparecen de la interfaz (la ventana se queda en el
-        diseño de cristal por defecto).
+        La página tiene **una sola** barra de acciones: la compartida con el
+        resto de páginas. La flecha de retroceso y el botón de confirmar de los
+        detalles viven en ella; el panel ya no dibuja una segunda cabecera.
+        El guardado es automático y ``Restablecer`` es una tarjeta más.
         """
         target = parent_widget
         target.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -2665,9 +2668,16 @@ class PackageTodoGUI(QMainWindow):
         outer.setContentsMargins(CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING, CONTENT_PADDING)
         outer.setSpacing(8)
 
-        self.config_action_bar, self.config_bar_title = install_page_action_bar(
-            outer, tr("sidebar.config")
+        self.config_back_btn = make_action_button(
+            f"{ARROW_BACK}  {tr('config.title')}", "secondary"
         )
+        self.config_back_btn.setVisible(False)
+        self.config_confirm_btn = make_action_button(tr("config.confirm"), "primary")
+        self.config_confirm_btn.setVisible(False)
+        self.config_action_bar, self.config_bar_title = install_page_action_bar(
+            outer, tr("sidebar.config"), buttons=(self.config_confirm_btn,)
+        )
+        self.config_action_bar.layout().insertWidget(0, self.config_back_btn)
 
         store = get_pm_data()
         user = {k: store.get_user(k) for k in (
@@ -2685,6 +2695,9 @@ class PackageTodoGUI(QMainWindow):
         self.settings_panel.fontsRequested.connect(self._download_ui_fonts)
         self.settings_panel.languageChanged.connect(self._on_config_language_changed)
         self.settings_panel.fontChosen.connect(self._on_font_family_chosen)
+        self.settings_panel.navigationChanged.connect(self._on_config_navigation)
+        self.config_back_btn.clicked.connect(self.settings_panel.go_back)
+        self.config_confirm_btn.clicked.connect(self.settings_panel.confirm_and_go_back)
         outer.addWidget(self.settings_panel, 1)
 
         widgets = self.settings_panel.widgets
@@ -2702,7 +2715,7 @@ class PackageTodoGUI(QMainWindow):
         self.conf_fonts_btn = widgets["conf_fonts_btn"]
         self.conf_fonts_status = widgets["conf_fonts_status"]
         self.conf_fonts_labels = getattr(self.settings_panel, "conf_fonts_labels", {})
-        self.conf_header = self.settings_panel.header.capsule
+        self.conf_header = self.config_bar_title
         self._config_language = str(user.get("language") or "es")
         self._config_tr_labels = []
 
@@ -2971,6 +2984,14 @@ class PackageTodoGUI(QMainWindow):
         panel = getattr(self, "settings_panel", None)
         if panel is not None:
             panel.retranslate()
+
+    def _on_config_navigation(self, title: str, depth: int, confirm_text: str) -> None:
+        """Refleja la navegación del panel en la única barra de la página."""
+        self.config_bar_title.setText(title or tr("sidebar.config"))
+        self.config_back_btn.setText(f"{ARROW_BACK}  {tr('config.title')}")
+        self.config_back_btn.setVisible(depth > 0)
+        self.config_confirm_btn.setText(confirm_text or tr("config.confirm"))
+        self.config_confirm_btn.setVisible(depth > 0 and bool(confirm_text))
 
     def _browse_config_dir(self):
         folder = QFileDialog.getExistingDirectory(

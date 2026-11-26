@@ -13,7 +13,7 @@ resto de la ventana ya conocía por nombre) y avisa al anfitrión con
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 
 try:
     from PyQt6.QtCore import Qt, QTimer, pyqtSignal
@@ -51,11 +51,9 @@ from lib.settings_cards import (
     ARROW_FORWARD,
     SettingsCard,
     SettingsDetailPage,
-    SettingsHeader,
     SettingsListPage,
     SettingsNavigator,
     SettingsOptionRow,
-    apply_soft_shadow,
     card_icon,
     section_caption,
 )
@@ -64,13 +62,20 @@ AUTOSAVE_DELAY_MS = 350
 
 
 class SettingsPanel(QWidget):
-    """Configuración completa: tarjetas raíz, detalles y cabecera unificada."""
+    """Configuración completa: tarjetas raíz y detalles.
+
+    La navegación se comunica al anfitrión con ``navigationChanged`` (título,
+    profundidad y texto de confirmación) para que la página coloque la flecha
+    de retroceso y el botón de confirmar en **su** barra de acciones: el panel
+    no dibuja una segunda barra.
+    """
 
     settingsChanged = pyqtSignal()
     resetRequested = pyqtSignal()
     fontsRequested = pyqtSignal()
     languageChanged = pyqtSignal(str)
     fontChosen = pyqtSignal(str)
+    navigationChanged = pyqtSignal(str, int, str)
 
     def __init__(self, host, user: Dict[str, object], parent=None):
         super().__init__(parent)
@@ -81,6 +86,8 @@ class SettingsPanel(QWidget):
         self._language_rows: Dict[str, SettingsOptionRow] = {}
         self._font_rows: Dict[str, SettingsOptionRow] = {}
         self._titles: Dict[str, str] = {}
+        self._title_keys: Dict[str, str] = {}
+        self._subtitle_keys: Dict[str, str] = {}
         self._multi_details = set()
         self._current_key = None
         self._accent = TEXT
@@ -89,12 +96,6 @@ class SettingsPanel(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
-
-        self.header = SettingsHeader(tr("config.title"))
-        self.header.backRequested.connect(self._go_back)
-        self.header.confirmRequested.connect(self._confirm_and_go_back)
-        apply_soft_shadow(self.header, blur=28, offset=8, alpha=120)
-        root.addWidget(self.header)
 
         self.navigator = SettingsNavigator()
         self.navigator.depthChanged.connect(self._on_depth_changed)
@@ -136,6 +137,8 @@ class SettingsPanel(QWidget):
         self._register_card(
             "general", tr("config.section_general"), "config", general, multi=True,
             subtitle=tr("config.section_general_hint"),
+            title_key="config.section_general",
+            subtitle_key="config.section_general_hint",
         )
 
         # Idioma: selección única, se aplica y vuelve sola.
@@ -157,6 +160,8 @@ class SettingsPanel(QWidget):
         self._register_card(
             "language", tr("config.section_language"), "language", language,
             subtitle=tr("config.section_language_hint"),
+            title_key="config.section_language",
+            subtitle_key="config.section_language_hint",
         )
 
         # Apariencia: densidad + sliders (selección múltiple).
@@ -192,6 +197,8 @@ class SettingsPanel(QWidget):
         self._register_card(
             "appearance", tr("config.section_appearance"), "palette", appearance, multi=True,
             subtitle=tr("config.section_appearance_hint"),
+            title_key="config.section_appearance",
+            subtitle_key="config.section_appearance_hint",
         )
 
         # Notificaciones y táctil (selección múltiple).
@@ -210,6 +217,8 @@ class SettingsPanel(QWidget):
         self._register_card(
             "notifications", tr("config.section_notifications"), "touch", notices, multi=True,
             subtitle=tr("config.section_notifications_hint"),
+            title_key="config.section_notifications",
+            subtitle_key="config.section_notifications_hint",
         )
 
         # Fuentes: estado en caché + descarga manual.
@@ -282,6 +291,8 @@ class SettingsPanel(QWidget):
         self._register_card(
             "fonts", tr("config.section_fonts"), "download", fonts,
             subtitle=tr("config.section_fonts_hint"),
+            title_key="config.section_fonts",
+            subtitle_key="config.section_fonts_hint",
         )
 
         # Privacidad: control del túnel de reportes y del endpoint propio.
@@ -310,17 +321,24 @@ class SettingsPanel(QWidget):
         self._register_card(
             "privacy", tr("config.section_privacy"), "shield", privacy, multi=True,
             subtitle=tr("config.section_privacy_hint"),
+            title_key="config.section_privacy",
+            subtitle_key="config.section_privacy_hint",
         )
 
         self.root_page.add_stretch()
         self._add_reset_card()
         self.root_page.add_stretch()
 
-    def _register_card(self, key, title, icon, page, multi=False, subtitle=""):
+    def _register_card(
+        self, key, title, icon, page, multi=False, subtitle="",
+        title_key="", subtitle_key="",
+    ):
         card = SettingsCard(title, card_icon(icon), ARROW_FORWARD, subtitle)
         card.clicked.connect(lambda k=key: self._open(k))
         self._cards[key] = card
         self._titles[key] = title
+        self._title_keys[key] = title_key
+        self._subtitle_keys[key] = subtitle_key
         self._pages[key] = page
         if multi:
             self._multi_details.add(key)
@@ -333,6 +351,8 @@ class SettingsPanel(QWidget):
         )
         card.clicked.connect(self.resetRequested.emit)
         self._cards["reset"] = card
+        self._title_keys["reset"] = "config.reset"
+        self._subtitle_keys["reset"] = "config.reset_hint"
         self.root_page.add_card(card)
 
     # --- Controles auxiliares -------------------------------------------
@@ -396,15 +416,13 @@ class SettingsPanel(QWidget):
     # --- Navegación -----------------------------------------------------
     def _open(self, key: str) -> None:
         page = self._pages.get(key)
-        if page is None:
+        if page is None or self.navigator.busy() or key == self._current_key:
             return
         self._current_key = key
-        self.header.set_title(self._titles.get(key, ""))
-        self.header.set_confirmation(tr("config.confirm") if key in self._multi_details else "")
         self.navigator.push(page)
 
-    def _go_back(self) -> None:
-        if self.navigator.depth() == 0:
+    def go_back(self) -> None:
+        if self.navigator.busy() or self.navigator.depth() == 0:
             return
         key = self._current_key
         if key in self._multi_details:
@@ -413,17 +431,32 @@ class SettingsPanel(QWidget):
         self._current_key = None
         self.navigator.pop()
 
-    def _confirm_and_go_back(self) -> None:
+    def confirm_and_go_back(self) -> None:
         self._emit_changed()
-        self._go_back()
+        self.go_back()
 
     def _on_depth_changed(self, depth: int) -> None:
-        self.header.set_depth(depth)
         if depth == 0:
-            self.header.set_title(tr("config.title"))
-            self.header.set_confirmation("")
             for card in self._cards.values():
                 card.set_selected(False)
+        self._emit_navigation(depth)
+
+    def _emit_navigation(self, depth: Optional[int] = None) -> None:
+        """Anuncia el estado de navegación para la barra de acciones de la página.
+
+        ``depth`` llega desde la pila porque durante la animación de salida la
+        página todavía no se ha retirado y ``depth()`` seguiría en el valor
+        anterior.
+        """
+        if depth is None:
+            depth = self.navigator.depth()
+        title = tr("config.title")
+        confirm = ""
+        if depth > 0:
+            title = self._titles.get(self._current_key, "") or title
+            if self._current_key in self._multi_details:
+                confirm = tr("config.confirm")
+        self.navigationChanged.emit(title, depth, confirm)
 
     def _on_language_chosen(self, code: str) -> None:
         """Selección única: marca, aplica y vuelve sola."""
@@ -431,7 +464,7 @@ class SettingsPanel(QWidget):
             row.set_checked(lang_code == code)
         self.languageChanged.emit(code)
         self._emit_changed()
-        QTimer.singleShot(120, self._go_back)
+        QTimer.singleShot(120, self.go_back)
 
     def _on_font_chosen(self, family: str) -> None:
         """Selección única: marca, aplica y vuelve sola."""
@@ -439,7 +472,7 @@ class SettingsPanel(QWidget):
             row.set_checked(key == family)
         self.fontChosen.emit(family)
         self._emit_changed()
-        QTimer.singleShot(120, self._go_back)
+        QTimer.singleShot(120, self.go_back)
 
     # --- Guardado -------------------------------------------------------
     def _connect_autosave(self) -> None:
@@ -501,33 +534,31 @@ class SettingsPanel(QWidget):
     # --- Tema / idioma --------------------------------------------------
     def set_accent(self, accent: str) -> None:
         self._accent = accent or TEXT
-        self.header.set_accent(self._accent)
         self.root_page.set_accent(self._accent)
         for page in self._pages.values():
             for child in page.findChildren(SettingsOptionRow):
                 child.set_accent(self._accent)
 
     def retranslate(self) -> None:
-        """Reetiqueta tarjetas, cabecera y opciones tras cambiar de idioma."""
-        root_title = tr("config.title")
-        if self.navigator.depth() == 0:
-            self.header.set_title(root_title)
-        self._titles = {
-            "general": tr("config.section_general"),
-            "language": tr("config.section_language"),
-            "appearance": tr("config.section_appearance"),
-            "notifications": tr("config.section_notifications"),
-            "fonts": tr("config.section_fonts"),
-        }
-        for key, title in self._titles.items():
+        """Reetiqueta tarjetas, títulos y opciones tras cambiar de idioma.
+
+        Recorre todas las tarjetas registradas por su clave de traducción: una
+        lista fija dejaba fuera las tarjetas nuevas (p. ej. Privacidad) y su
+        flecha de retroceso aparecía sin nombre.
+        """
+        for key, title_key in self._title_keys.items():
+            if not title_key:
+                continue
+            title = tr(title_key)
+            self._titles[key] = title
             card = self._cards.get(key)
-            if card is not None:
-                card.set_title(title)
-        if "reset" in self._cards:
-            self._cards["reset"].set_title(tr("config.reset"))
+            if card is None:
+                continue
+            card.set_title(title)
+            subtitle_key = self._subtitle_keys.get(key, "")
+            if subtitle_key:
+                card.set_subtitle(tr(subtitle_key))
         fonts_btn = self.widgets.get("conf_fonts_btn")
         if fonts_btn is not None:
             fonts_btn.setText(tr("config.fonts_download"))
-        self.header.set_confirmation(
-            tr("config.confirm") if self._current_key in self._multi_details else ""
-        )
+        self._emit_navigation()

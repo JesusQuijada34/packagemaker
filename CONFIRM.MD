@@ -1,9 +1,9 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-26 (quincuagésimo octavo ciclo)
+- **Última revisión:** 2026-11-26 (quincuagésimo noveno ciclo)
 - **Último commit de `CONFIRM.MD` procesado:** `c96d495` (2026-11-25, agente `openhands-agent`; sólo notas de estado, sin respuestas). Verificado con la API de GitHub: los commits posteriores que tocan este archivo (`1655007`, `1bc6303`, `b5378ad`, `85c5b88` y `c96d495`) son todos de `openhands-agent`. La última respuesta del propietario sigue siendo el commit `bba72d6` (2026-11-25), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>` (autoría verificada con la API de GitHub). Aportó 7 respuestas afirmativas con instrucciones adicionales: Q-004 (opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014. Q-015, Q-016, Q-017 y Q-018 siguen sin responder.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020) y 6 nuevas del issue #11 (Q-021…Q-026), 7 aprobadas pendientes de implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014; las seis de engine con confirmación final `F-001`…`F-006`), 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020), 6 del issue #11 (Q-021…Q-026) y 5 nuevas de los issues #13 y #14 (Q-027…Q-031), 7 aprobadas pendientes de implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014; las seis de engine con confirmación final `F-001`…`F-006`), 7 aprobadas y aplicadas, 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -358,6 +358,88 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** medio; cambios visuales amplios y
   dependencia del blur del sistema operativo, que no se puede verificar en
   Linux.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-027 — Duración mínima del splash y reporte de tirones del arranque
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-26 (issue #13)
+- **Qué se propone:** el splash no se retira hasta pasados ~5 s. El redondeo de
+  esos 5 s se calcula con la RAM y los núcleos de CPU (más «puntos de
+  rendimiento» = más espera) para dar tiempo a que la interfaz se dibuje. Si el
+  arranque sufre tirones, se envía un reporte con qué se ejecutó, cuánto tardó
+  y los errores restantes del arranque. Se implementaría junto con Q-008/F-003
+  (R-4f8a2c60), que ya está aprobado y elimina las ventanas vacías.
+- **Archivos/componentes afectados:** `packagemaker.py` (arranque,
+  `IntegratedSplash`), `lib/splash_window.py`, `lib/splash_bootloader.py`,
+  `lib/report.py`, `lib/crash_capture.py`, `tests/test_startup_sequence.py`.
+- **Riesgo y efectos secundarios:** el arranque tardará al menos 5 s incluso en
+  equipos rápidos; el reporte de tirones usa el túnel de reportes, que hoy es
+  opt-in, así que se respetará ese ajuste. Si prefieres otro mínimo (p. ej.
+  2 s) o que no se envíe nada sin consentimiento explícito, indícalo junto a la
+  casilla.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-028 — Librería de paneles y pestañas verticales con action bar propia
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-26 (issue #14)
+- **Qué se propone:** extraer una librería de paneles y pestañas verticales como
+  las de Configuración, de modo que cada panel traiga su propio action bar y
+  lleve por defecto el nombre de la extensión. Las cinco páginas y los addons
+  se reconstruirían sobre esa librería.
+- **Archivos/componentes afectados:** `lib/page_action_bar.py`,
+  `lib/settings_cards.py`, `lib/settings_panel.py`, `packagemaker.py`,
+  `addons/*.yaml`, `tests/`.
+- **Riesgo y efectos secundarios:** alto; reescribe la estructura de todas las
+  páginas y se solapa con Q-025 (action bar como control de Leviathan). No
+  cambia la ley de nombres, el formato `.iflapp` ni el contenido de los
+  paquetes.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-029 — AIDE como chatbot con backend, API, servidor y puerto
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-26 (issue #14)
+- **Qué se propone:** AIDE responde como chat (idealmente ya autenticado) o con
+  un backend/API/servidor y puerto configurables desde Configuración; los
+  prompts de la sesión llegan al chat como contexto.
+- **Archivos/componentes afectados:** `lib/aide_page.py`, `lib/pm_data.py`
+  (ajustes), `lib/settings_panel.py`, `addons/aide.yaml`, `tests/`.
+- **Riesgo y efectos secundarios:** alto; introduce credenciales y tráfico de
+  red nuevos. Hay que decidir qué se envía fuera del equipo y dónde se guardan
+  las claves; se respetará el ajuste de reportes y no se enviará nada sin
+  configuración explícita.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-030 — Perfil de GitHub como extensión y orden del sidebar
+- **Tipo:** mejora
+- **Fecha:** 2026-11-26 (issue #14)
+- **Qué se propone:** las extensiones restantes quedan justo debajo de MoonFix,
+  sin la tarjeta de cuenta en medio. La tarjeta de perfil pasa a ser una
+  extensión con perfil, repositorios, descripción, avatar y arroba de GitHub, y
+  su configuración se añade a Configuración.
+- **Archivos/componentes afectados:** `lib/addons_engine.py`, `addons/*.yaml`,
+  `packagemaker.py`, `lib/settings_panel.py`, `tests/`.
+- **Riesgo y efectos secundarios:** medio; cambia el orden visible del sidebar
+  y añade una página que consulta la API de GitHub (límites de peticiones y
+  sesión caducada). No toca el motor de compilación.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-031 — Addons empaquetados en `lib/addons/` y addons DLL externos
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-26 (issue #14)
+- **Qué se propone:** las extensiones de sistema se empaquetan en carpetas
+  dentro de `lib/addons/` (con su YAML ejecutor: funciones, clases e
+  importaciones definidas en YAML) y se añade un apartado para instalar
+  extensiones basadas en DLL: ZIP con starter, SVG para el sidebar y el YAML que
+  añade su configuración a Configuración; los addons que fallan reportan el
+  error en vez de romper la ventana.
+- **Archivos/componentes afectados:** `lib/addons_engine.py`, `addons/`,
+  `lib/settings_panel.py`, `lib/hardening.py` (firma), `packagemaker.py`,
+  `tests/`.
+- **Riesgo y efectos secundarios:** alto; cargar DLL de terceros es una
+  superficie de riesgo (código nativo sin firma) y un intérprete YAML
+  sustituiría a Python para las extensiones. Se implementaría con lista de
+  confianza y verificación de firma. Recomiendo partir de Q-028 (librería de
+  paneles) antes que de esta.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---

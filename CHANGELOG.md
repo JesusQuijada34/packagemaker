@@ -1,3 +1,66 @@
+## 2026-11-26 — quincuagésimo noveno ciclo
+
+### Corregido — Configuración con una sola barra de acciones y retroceso con nombre (R-4e7a1d92)
+
+Reportado por JesusQuijada34 en el [issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14)
+(«Tarjetas y problema de interfaz»). Triaje además del
+[issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) («Bug de
+codigo»). **Ningún cambio de comportamiento del engine**: la ley de nombres, el
+formato `.iflapp`, las plantillas y el contenido de los paquetes siguen igual.
+
+- **R-4e7a1d92 (Media, issue #14):** la página **Configuración** mostraba dos
+  barras de acciones (la de la página y la cabecera propia del panel, con la
+  cápsula «‹ Privacidad») y repartía los botones entre ambas; al entrar en una
+  tarjeta después de cambiar el idioma, el botón de retroceso se quedaba como
+  «‹» sin nombre. Tres causas acumuladas:
+  1. `SettingsPanel` montaba su propia `SettingsHeader` además de la barra
+     compartida que instala `init_config_tab`.
+  2. `SettingsPanel.retranslate()` reconstruía `_titles` con una lista fija de
+     cinco tarjetas que no incluía **privacy**, así que `_open("privacy")`
+     pintaba `""`. El prefijo «‹» impide que `live_i18n.retranslate_tree()`
+     recupere el texto por valor, de modo que nada lo reparaba después.
+  3. `apply_soft_shadow()` sobre la cabecera translúcida dibujaba un halo gris
+     alrededor del texto de la cápsula (el «texto con fondo detrás» del
+     reporte).
+  - **Solución:** una sola barra por página. `SettingsPanel` ya no crea
+    cabecera: emite `navigationChanged(título, profundidad, confirmar)` y
+    expone `go_back()`/`confirm_and_go_back()`. `init_config_tab()` instala la
+    barra compartida con un retroceso **con nombre** (`‹  Configuración`, de
+    `config.title`) y `Confirmar` (`config.confirm`), visibles sólo dentro de un
+    detalle, sincronizados por `_on_config_navigation()`. Los títulos de las
+    tarjetas se guardan con su clave i18n y `retranslate()` los reconstruye
+    desde ella (siete tarjetas, Privacidad incluida). `SettingsNavigator`
+    anuncia la profundidad definitiva al terminar el deslizamiento y expone
+    `busy()`, así que pulsar atrás durante la animación no desfasa la barra. Se
+    retiró la clase `SettingsHeader`, ya sin uso.
+  - **Pruebas:** `tests/test_settings_navigation_bar.py` (11 casos). Los 11
+    fallan con el código anterior (comprobado con `git stash` de
+    `packagemaker.py`, `lib/settings_panel.py` y `lib/settings_cards.py`).
+- **Issue #13 (R-4f8a2c60, sin cambios de código):** las «varias ventanas de
+  python» del arranque no las crea el *Application Frame Host* de Windows, sino
+  Qt: `IntegratedSplash` se construye con `parent=main_window` y
+  `WA_TranslucentBackground`, y `WipeWindow` se aplica sobre un widget hijo, lo
+  que obliga a crear ventanas nativas auxiliares. Es el defecto ya registrado en
+  R-4f8a2c60, aprobado en Q-008 y bloqueado por la confirmación final **F-003**.
+  La duración mínima del splash (~5 s escalada por RAM/CPU) y el reporte de
+  tirones que pide el mismo issue quedan como **Q-027** (R-7b2c9e51).
+- **Resto del issue #14 (sin implementar, requiere aprobación):** librería de
+  paneles y pestañas verticales con action bar propia (**Q-028**), AIDE como
+  chatbot con backend/API/servidor (**Q-029**), perfil de GitHub como extensión
+  y reordenación del sidebar (**Q-030**) y addons empaquetados en `lib/addons/`
+  con addons DLL (**Q-031**). Se documentan en `bugs.md` y `CONFIRM.MD`.
+- **Verificación:** `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q` →
+  1308 pasan, 1 omitido, 64 subtests. `pyflakes` y `py_compile` limpios.
+  Comprobación visual con la ventana real en `offscreen`: la página
+  Configuración muestra una única barra; el detalle «Privacidad» pinta
+  «‹  Configuración · Privacidad · Confirmar» y se retraduce a inglés
+  («‹  Settings · Privacy · Confirm») y a japonés («‹  設定 · プライバシー ·
+  確定»).
+
+No se prepara release: hay bugs de prioridad alta abiertos (R-4f8a2c60,
+R-6a1f8c23, R-4d9e2b61, R-7c4a1e95) bloqueados por la confirmación final del
+propietario, y el periodo de observación sigue abierto.
+
 ## 2026-11-26 — quincuagésimo octavo ciclo
 
 ### Corregido — claves sobrantes en los catálogos de idioma (R-4c1a9e72)

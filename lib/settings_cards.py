@@ -388,6 +388,10 @@ class SettingsNavigator(QWidget):
     def depth(self) -> int:
         return max(0, len(self._pages) - 1)
 
+    def busy(self) -> bool:
+        """Indica si hay una transición en curso (no admite otra navegación)."""
+        return bool(self._busy)
+
     def current(self):
         return self._pages[-1] if self._pages else None
 
@@ -422,6 +426,9 @@ class SettingsNavigator(QWidget):
             if not forward:
                 self._pages.pop()
             self._busy = False
+            # La pila se estabiliza al final de la animación: se anuncia la
+            # profundidad definitiva para que el anfitrión refresque su barra.
+            self.depthChanged.emit(self.depth())
 
         self._anim.finished.connect(_finished)
         self._anim.start()
@@ -433,98 +440,6 @@ class SettingsNavigator(QWidget):
             page.resize(self.size())
         if self._pages and not self._busy:
             self._pages[-1].move(0, 0)
-
-
-class SettingsHeader(QWidget):
-    """Barra superior: cápsula título/flecha a la izquierda y confirmar a la derecha.
-
-    En la raíz la cápsula no muestra flecha; al entrar en un detalle la flecha
-    de retroceso se une al título y aparece el botón de confirmación cuando el
-    detalle agrupa varias opciones.
-    """
-
-    backRequested = pyqtSignal()
-    confirmRequested = pyqtSignal()
-
-    def __init__(self, title: str = "", parent=None):
-        super().__init__(parent)
-        self.setObjectName("SettingsHeader")
-        self.setFixedHeight(52)
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setStyleSheet("QWidget#SettingsHeader{background:transparent;border:none;}")
-
-        row = QHBoxLayout(self)
-        row.setContentsMargins(0, 0, 0, 8)
-        row.setSpacing(10)
-
-        self.capsule = QPushButton()
-        self.capsule.setObjectName("SettingsCapsule")
-        self.capsule.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.capsule.setFixedHeight(36)
-        self.capsule.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.capsule.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-        self.capsule.clicked.connect(self._on_capsule)
-        row.addWidget(self.capsule)
-        row.addStretch()
-
-        self.confirm_btn = QPushButton()
-        self.confirm_btn.setObjectName("SettingsConfirmButton")
-        self.confirm_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.confirm_btn.setFixedHeight(36)
-        self.confirm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.confirm_btn.setVisible(False)
-        self.confirm_btn.clicked.connect(self.confirmRequested.emit)
-        row.addWidget(self.confirm_btn)
-
-        self._root_title = title
-        self._title = title
-        self._depth = 0
-        self._accent = ACCENT
-        self.set_title(title)
-
-    def set_accent(self, accent: str) -> None:
-        if accent:
-            self._accent = str(accent)
-            self._apply_styles()
-
-    def set_title(self, title: str) -> None:
-        self._title = title
-        self._root_title = self._root_title or title
-        self._apply_styles()
-
-    def set_depth(self, depth: int) -> None:
-        self._depth = int(depth)
-        self._apply_styles()
-
-    def set_confirmation(self, text: str) -> None:
-        self.confirm_btn.setText(text)
-        self.confirm_btn.setVisible(bool(text) and self._depth > 0)
-        self._apply_styles()
-
-    def _on_capsule(self) -> None:
-        if self._depth > 0:
-            self.backRequested.emit()
-
-    def _apply_styles(self) -> None:
-        text = f"{ARROW_BACK}  {self._title}" if self._depth > 0 else self._title
-        self.capsule.setText(text)
-        hover = with_alpha("#FFFFFF", 0.10 if self._depth > 0 else 0.0)
-        self.capsule.setStyleSheet(
-            "QPushButton#SettingsCapsule {"
-            f" background:{with_alpha('#FFFFFF', 0.06 if self._depth > 0 else 0.0)};"
-            f" border:1px solid {with_alpha('#FFFFFF', 0.10) if self._depth > 0 else 'transparent'};"
-            " border-radius:18px;"
-            f" color:{TEXT}; font-family:{FONT_STACK}; font-size:{TITLE_SIZE}px;"
-            " font-weight:600; padding:0 16px; text-align:left; }"
-            f"QPushButton#SettingsCapsule:hover {{ background:{hover}; }}"
-        )
-        self.confirm_btn.setStyleSheet(
-            "QPushButton#SettingsConfirmButton {"
-            f" background:{self._accent}; border:none; border-radius:18px;"
-            f" color:#ffffff; font-family:{FONT_STACK}; font-size:13px;"
-            " font-weight:600; padding:0 20px; }"
-        )
-        self.confirm_btn.setVisible(self.confirm_btn.text() != "" and self._depth > 0)
 
 
 class SettingsOptionRow(QFrame):

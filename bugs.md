@@ -1,7 +1,9 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (quincuagésimo octavo ciclo, higiene de los catálogos de idioma)
-Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4)
+Última actualización: 2026-11-26 (quincuagésimo noveno ciclo, issue #14: barra única de Configuración)
+Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
+[issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) y
+[issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14)
 Rama de trabajo: `main`
 
 Este archivo es la **cola activa** de reportes: solo contiene lo que sigue
@@ -21,6 +23,7 @@ histórico.
 | R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Pendiente (Q-011/F-004) |
 | R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | En observación; verificación visual en Windows (issue #10) |
 | R-4c1a9e72 | Bug — claves sobrantes en `lang/` impiden retraducir el envío automático | Media | Corregido; en observación (ciclo 58) |
+| R-4e7a1d92 | Bug — Configuración con dos barras y retroceso sin nombre (issue #14) | Media | Corregido; en observación (ciclo 59) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Pendiente (Q-026) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora) |
 | R-7b3e9a52 | Mejora — sección de ayuda global de la aplicación (issue #11) | Media | Pendiente (Q-021) |
@@ -28,12 +31,18 @@ histórico.
 | R-9a4e2c83 | Cambio de engine — conectar proyecto a repo GitHub y CloudCube (issue #11) | Media | Pendiente (Q-023) |
 | R-5f1b8d24 | Cambio de engine — updater como extensión con notificaciones (issue #11) | Media | Pendiente (Q-024) |
 | R-8e6a3c15 | Cambio de engine — completar Leviathan y action bar como control (issue #11) | Media | Pendiente (Q-025) |
+| R-7b2c9e51 | Cambio de engine — duración mínima del splash y reporte de lags (issue #13) | Alta | Pendiente (Q-027) |
+| R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas verticales con action bar (issue #14) | Media | Pendiente (Q-028) |
+| R-2a8d4b73 | Cambio de engine — AIDE como chatbot con backend/API/servidor (issue #14) | Media | Pendiente (Q-029) |
+| R-6f1c8e35 | Cambio de engine — perfil de GitHub como extensión y panel de cuenta (issue #14) | Media | Pendiente (Q-030) |
+| R-3b7e2d94 | Cambio de engine — addons empaquetados en `lib/addons/` y addons DLL (issue #14) | Media | Pendiente (Q-031) |
 
-**14 entradas en la cola** (bugs, mejoras y cambios de engine). Cuatro
-correcciones verificadas se retiraron el ciclo anterior — R-9b3e7a41,
+**19 entradas en la cola** (bugs, mejoras y cambios de engine). Cuatro
+correcciones verificadas se retiraron el ciclo 57 — R-9b3e7a41,
 R-1f6c9d38, R-7d2a5b84 y R-4b8f1e27 — y quedan archivadas en
 `docs/bugs_resueltos.md` y en `CHANGELOG.md`; las 156 anteriores ya estaban
-allí. R-4c1a9e72 se corrigió en el ciclo 58 y sigue en observación.
+allí. R-4c1a9e72 (ciclo 58) y R-4e7a1d92 (ciclo 59) están corregidos y siguen
+en observación.
 
 ---
 
@@ -583,6 +592,92 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `lib/design_tokens.py`, `lib/fluent_theme.py`, `packagemaker.py`, `tests/`.
 - **Riesgo:** alto.
 
+### 19. Duración mínima del splash y reporte de lags (Q-027)
+
+- **Estado:** Pendiente (Q-027). Proviene del issue #13.
+- **Actual:** `IntegratedSplash` se cierra en cuanto termina la carga
+  (`packagemaker.py` llama a `splash.close()` al final de `__init__`), sin
+  duración mínima ni medida de rendimiento del arranque.
+- **Solicitado:** el splash espera ~5 s antes de retirarse; el redondeo de esos
+  5 s se calcula con la RAM y los núcleos de CPU (más puntos de rendimiento =
+  más espera) para dar tiempo a que la interfaz se dibuje. Si el arranque sufre
+  tirones, se envía un reporte con qué se ejecutó, cuánto tardó y los errores
+  del resto del arranque.
+- **Efectos secundarios:** el arranque tarda al menos 5 s en todos los equipos
+  (incluidos los rápidos); el reporte de lags añade tráfico al túnel de
+  reportes, que hoy es opt-in. Se solapa con el ciclo de vida de ventanas de
+  Q-008/F-003 (R-4f8a2c60), así que conviene implementarlo junto.
+- **Archivos:** `packagemaker.py` (arranque y `IntegratedSplash`),
+  `lib/splash_window.py`, `lib/splash_bootloader.py`, `lib/report.py`,
+  `lib/crash_capture.py`, `tests/test_startup_sequence.py`.
+- **Riesgo:** medio.
+
+### 20. Librería de paneles y pestañas verticales con action bar propia (Q-028)
+
+- **Estado:** Pendiente (Q-028). Proviene del issue #14.
+- **Actual:** cada página arma su layout y su barra con
+  `install_page_action_bar()`; no existe un control reutilizable de
+  panel/pestaña vertical.
+- **Solicitado:** una librería de paneles y pestañas verticales como las de
+  Configuración, donde cada panel traiga su propio action bar y el título por
+  defecto sea el nombre de la extensión.
+- **Efectos secundarios:** reescribe la estructura de las cinco páginas y de
+  los addons; riesgo alto de regresiones visuales. Depende de Q-025.
+- **Archivos:** `lib/page_action_bar.py`, `lib/settings_cards.py`,
+  `lib/settings_panel.py`, `packagemaker.py`, `addons/*.yaml`, `tests/`.
+- **Riesgo:** alto.
+
+### 21. AIDE como chatbot con backend/API/servidor y puerto (Q-029)
+
+- **Estado:** Pendiente (Q-029). Proviene del issue #14.
+- **Actual:** `lib/aide_page.py` es una página estática de ayuda.
+- **Solicitado:** AIDE responde como chat (idealmente ya autenticado) o con un
+  backend/API/servidor y puerto configurables; los prompts llegan al chat como
+  contexto.
+- **Efectos secundarios:** introduce credenciales y tráfico de red nuevos,
+  además de un cliente HTTP con timeouts y manejo de errores; hay que decidir
+  dónde se guardan las claves y qué se envía fuera del equipo.
+- **Archivos:** `lib/aide_page.py`, `lib/i18n.py` (contexto),
+  `lib/pm_data.py` (ajustes), `addons/aide.yaml`, `tests/`.
+- **Riesgo:** alto.
+
+### 22. Perfil de GitHub como extensión y panel de cuenta (Q-030)
+
+- **Estado:** Pendiente (Q-030). Proviene del issue #14.
+- **Actual:** el sidebar dibuja las extensiones (Crear Proyecto, Construir
+  Paquete, Configuración, MoonFix, Reportes, AIDE, Acerca de) y, entre MoonFix
+  y Reportes, la tarjeta «Conecta GitHub». El orden lo fija
+  `lib/addons_engine.py` + `packagemaker.py`.
+- **Solicitado:** las extensiones restantes van justo debajo de MoonFix, sin la
+  tarjeta de cuenta en medio; la tarjeta de perfil pasa a ser una extensión con
+  perfil, repositorios, descripción, avatar y arroba de GitHub, y su
+  configuración vive en Configuración.
+- **Efectos secundarios:** cambia el orden visible del sidebar y añade una
+  página con datos de la API de GitHub (límites de peticiones, sesión
+  caducada). Es un cambio de interfaz, no de motor, pero toca el manifiesto de
+  extensiones.
+- **Archivos:** `lib/addons_engine.py`, `addons/*.yaml`, `packagemaker.py`,
+  `lib/settings_panel.py`, `tests/`.
+- **Riesgo:** medio.
+
+### 23. Addons empaquetados en `lib/addons/` y addons DLL externos (Q-031)
+
+- **Estado:** Pendiente (Q-031). Proviene del issue #14.
+- **Actual:** los addons son manifiestos `addons/*.yaml` con código Python en
+  `lib/` (p. ej. `lib/aide_page.py`); no hay instalador de extensiones.
+- **Solicitado:** extensiones de sistema empaquetadas en carpetas dentro de
+  `lib/addons/`, con su YAML ejecutor (funciones, clases e importaciones
+  definidas en YAML) y un apartado para instalar extensiones basadas en DLL:
+  ZIP con starter, SVG para el sidebar y el YAML que añade su configuración a
+  Configuración; los addons que fallan deben reportar el error.
+- **Efectos secundarios:** cargar DLL arbitrarias es una superficie de riesgo
+  (código nativo de terceros, sin firma); el intérprete YAML sustituiría a
+  Python para las extensiones. Muy alto impacto en el motor de addons y en la
+  seguridad.
+- **Archivos:** `lib/addons_engine.py`, `addons/`, `lib/settings_panel.py`,
+  `lib/hardening.py` (firma), `packagemaker.py`, `tests/`.
+- **Riesgo:** alto.
+
 ---
 
 ## R-4f8a2c60 — Splash simultáneo y avisos de ventana en Windows
@@ -602,7 +697,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Estado:** Aprobado Q-008 el 2026-11-25 (commit `bba72d6`), incluida la
   petición de eliminar las ventanas vacías del arranque; pendiente de
   confirmación final **F-003** e implementación. No se ha modificado el ciclo
-  de vida de ventanas.
+  de vida de ventanas. El **issue #13** (2026-11-26) repite el síntoma («se
+  abren varias ventanas de python antes de la interfaz») y sospecha del
+  *Application Frame Host* de Windows; el análisis del ciclo 59 lo descarta
+  como causa (ver la nota del issue #13 más abajo) y confirma que el origen
+  sigue siendo el splash hijo + `WipeWindow`. La duración mínima del splash que
+  pide el mismo issue se registra aparte en **Q-027** (R-7b2c9e51).
 - **Propuesta:** splash de nivel superior (sin padre) mostrado antes de
   `main_window.show()`, aplicar `WipeWindow` solo a ventanas top-level y
   cerrar con `destroy()`.
@@ -739,6 +839,91 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Fecha de resolución:** 2026-11-26
 - **Estado:** Corregido y probado; en observación hasta el ciclo siguiente.
   No cambia el comportamiento del engine ni el formato de los paquetes.
+
+## R-4e7a1d92 — Configuración con dos barras de acciones y retroceso sin nombre
+
+- **Usuario:** JesusQuijada34 ([issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14),
+  «Tarjetas y problema de interfaz»)
+- **Fecha del reporte:** 2026-11-26
+- **Prioridad:** Media
+- **Descripción:** «en configuracion hay dobles action bars y no hay uno solo y
+  los botones estan dispersos, al abrir el panel privacidad el boton que
+  retrocede a configuracion no tiene nombre». La página dibujaba dos barras
+  —la de la página y la cabecera propia del panel— y, tras cualquier
+  retraducción, el botón de retroceso de los detalles aparecía como «‹» sin
+  texto.
+- **Pasos para reproducirlo:** abrir **Configuración** y mirar la parte
+  superior (dos barras: «Configuración» y la cápsula del panel con
+  «‹ Privacidad»); o cambiar el idioma de la interfaz y entrar en cualquier
+  tarjeta: la cápsula queda en «‹  » sin el nombre.
+  En código: `SettingsPanel.retranslate()` seguido de `_open("privacy")`
+  producía `_titles == {}` y `navigationChanged` con un título vacío.
+- **Causa raíz:** tres defectos acumulados.
+  1. `SettingsPanel` montaba su propia `SettingsHeader` (cápsula + botón
+     Confirmar) **además** de la barra compartida que instala
+     `init_config_tab`, así que la página tenía dos barras y los botones
+     quedaban repartidos entre ambas.
+  2. `SettingsPanel.retranslate()` reconstruía `_titles` con una lista fija de
+     cinco tarjetas (general, appearance, fonts, language, notifications) que
+     no incluía **privacy**; `_open()` pintaba entonces `""` y la cápsula se
+     quedaba sin nombre. Además el prefijo «‹» impide que
+     `live_i18n.retranslate_tree()` recupere el texto por valor, así que nada
+     lo reparaba después.
+  3. La cabecera del panel tenía `apply_soft_shadow()` sobre un widget
+     translúcido: la sombra se dibujaba alrededor del texto de la cápsula
+     («texto con fondo detrás»).
+- **Solución aplicada:** una sola barra por página.
+  - `SettingsPanel` ya no crea cabecera: emite `navigationChanged(título,
+    profundidad, texto_confirmar)` desde `_on_depth_changed` y expone
+    `go_back()`/`confirm_and_go_back()` públicos.
+  - `init_config_tab` instala la barra compartida con un botón de retroceso
+    **con nombre** (`‹  Configuración`, de `config.title`) y el botón
+    `Confirmar` (`config.confirm`), visibles sólo dentro de un detalle;
+    `_on_config_navigation()` los sincroniza.
+  - Los títulos de las tarjetas se guardan con su clave i18n
+    (`_title_keys`) y `retranslate()` los reconstruye desde las claves: las
+    siete tarjetas, Privacidad incluida, sobreviven al cambio de idioma.
+  - `SettingsNavigator` expone `busy()` y anuncia la profundidad definitiva al
+    terminar el deslizamiento, de modo que la barra no se queda desfasada si
+    se pulsa atrás durante la animación. Se retiró la clase `SettingsHeader`
+    (sin uso) y su sombra.
+- **Pruebas:** `tests/test_settings_navigation_bar.py` (11 casos: una sola
+  barra, título de raíz, título/retroceso/confirmar del detalle, detalle de
+  selección única sin Confirmar, vuelta a la raíz, títulos de las siete
+  tarjetas tras `retranslate()`, retroceso con nombre tras retraducir, señal
+  de navegación, cambio de idioma a inglés y vuelta a español, doble pulsación
+  durante la animación y Confirmar). Los 11 fallan con el código anterior
+  (comprobado con `git stash` de los tres ficheros modificados).
+- **Commit:** el del ciclo 59 en `main` (ver `CHANGELOG.md`).
+- **Fecha de resolución:** 2026-11-26
+- **Estado:** Corregido y probado; en observación hasta el ciclo siguiente.
+  No cambia el comportamiento del engine, la ley de nombres, el formato
+  `.iflapp` ni el contenido de los paquetes.
+
+## Issue #13 — Varias ventanas de Python antes de la interfaz
+
+- **Usuario:** JesusQuijada34 ([issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
+  etiquetas `app-report` y `crash`)
+- **Fecha del reporte:** 2026-11-26 (commit `c5d1792`, Windows 10.0.19045,
+  2 núcleos, Qt 6.11.0)
+- **Descripción:** «al abrir se abren varias ventanas de python antes de la
+  interfaz, sera culpa de el application frame host?».
+- **Análisis del ciclo 59:** el *Application Frame Host*
+  (`ApplicationFrameHost.exe`) es el proceso que aloja las ventanas UWP y sólo
+  aparece cuando la aplicación crea ventanas de ese tipo; no es el origen de
+  las ventanas vacías. Las ventanas que se ven son las que crea el propio Qt:
+  `IntegratedSplash` se construye con `parent=main_window` y
+  `WA_TranslucentBackground`, y `WipeWindow` (ventana por capas) se aplica
+  sobre un widget hijo. En Windows eso obliga a Qt a crear ventanas nativas
+  auxiliares que aparecen y desaparecen antes del primer fotograma. La consola
+  lo confirma con `QWidgetWindow(...) must be a top level window` y
+  `UpdateLayeredWindowIndirect failed for ptDst=...`.
+- **Estado:** Pendiente; es el mismo defecto que R-4f8a2c60, aprobado en Q-008
+  y bloqueado por la confirmación final **F-003**. No se ha tocado el ciclo de
+  vida de ventanas en este ciclo.
+- **Petición añadida (Q-027 / R-7b2c9e51):** duración mínima del splash de ~5 s,
+  escalada por RAM/CPU, y reporte de los tirones del arranque (qué se ejecutó,
+  cuánto tardó y los errores restantes).
 
 ## R-5a7d2f16 — Fondo blanco/negro translúcido sobre el blur
 
@@ -1370,3 +1555,12 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `valid`). Sin respuestas nuevas del propietario en `CONFIRM.MD`, así que
   sigue bloqueado todo cambio de engine (F-001…F-006 y Q-015…Q-026). No se
   prepara release: hay bugs abiertos de prioridad alta.
+- Quincuagésimo noveno ciclo (2026-11-26): aparecen los issues **#13** («Bug de
+  codigo») y **#14** («Tarjetas y problema de interfaz»). Se corrige
+  **R-4e7a1d92** (Configuración con una sola barra de acciones y retroceso con
+  nombre; 11 pruebas nuevas en `tests/test_settings_navigation_bar.py`, todas
+  fallan con el código anterior) y se deja en observación. El resto del issue
+  #14 y la duración mínima del splash del issue #13 quedan como preguntas
+  **Q-027…Q-031** en `CONFIRM.MD`; sin aprobación no se toca el engine.
+  Verificación: 1308 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
+  limpios. No se prepara release.
