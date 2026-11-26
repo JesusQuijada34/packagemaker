@@ -1,11 +1,11 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-26 (quincuagésimo noveno ciclo)
-- **Último commit de `CONFIRM.MD` procesado:** `c96d495` (2026-11-25, agente `openhands-agent`; sólo notas de estado, sin respuestas). Verificado con la API de GitHub: los commits posteriores que tocan este archivo (`1655007`, `1bc6303`, `b5378ad`, `85c5b88` y `c96d495`) son todos de `openhands-agent`. La última respuesta del propietario sigue siendo el commit `bba72d6` (2026-11-25), autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>` (autoría verificada con la API de GitHub). Aportó 7 respuestas afirmativas con instrucciones adicionales: Q-004 (opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014. Q-015, Q-016, Q-017 y Q-018 siguen sin responder.
+- **Última revisión:** 2026-11-26 (sexagésimo ciclo)
+- **Último commit de `CONFIRM.MD` procesado:** `73dcdcd` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub; el commit sólo toca este archivo). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las seis confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales. **Q-016** quedó escrita como `[B] SÍ`, que no es una casilla válida del canal (`[x] SÍ` / `[ ] NO`): no se aplica y se vuelve a preguntar.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes sin responder (Q-015…Q-018), 2 preguntas nuevas de engine (Q-019 y Q-020), 6 del issue #11 (Q-021…Q-026) y 5 nuevas de los issues #13 y #14 (Q-027…Q-031), 7 aprobadas pendientes de implementación (Q-004, Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014; las seis de engine con confirmación final `F-001`…`F-006`), 7 aprobadas y aplicadas, 0 rechazadas.
+- **Estado:** 1 pregunta pendiente de respuesta válida (Q-016); 18 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-015 y Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`); Q-008/F-003 aplicada en parte este ciclo (splash de nivel superior, `destroy()` y fin de las ventanas vacías); 8 aprobadas y aplicadas antes; 0 rechazadas.
 
-Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[x] NO`)
+Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
 último commit que toca este archivo tenga como autor a `JesusQuijada34`; el
 silencio, una casilla ambigua o una aprobación de otro usuario se tratan como
@@ -36,7 +36,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   zipapp sin `.py` deja de arrancar. Por eso la opción A excluye ese backend.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «opción A (el corchete original indicaba la opción elegida)»
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-001** e implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-001** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### Q-007 — Reorganización de `lib/` y renombrado a GlassCube
 - **Tipo:** cambio de engine
@@ -50,7 +50,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   Riesgo alto.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «Si, pero hazlo cuidadosamente, dejando lib/ sin engines revueltos por todo eso, por lo menos encierras a cada oveja en su corral, asi que procede»
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-002** e implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-002** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación, empezando por clasificar los módulos de motor.
 
 ### Q-008 — Coreografía de splash y ciclo de vida de ventanas (repetida)
 - **Tipo:** cambio de engine
@@ -77,7 +77,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   desde este entorno. Riesgo medio-alto.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «Si, y quita el arranque de multiples ventanas python antes de correr la interfaz, ya que al abrir el programa lo primero que se ejecuta varias veces es como 5 ventanas python vacias, pequeñas y sin titulo»
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-003** e implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-003** el 2026-11-26 (commit `73dcdcd`); **aplicada en parte** el 2026-11-26 (ciclo 60): splash de nivel superior pintado antes de la ventana principal, `destroy()` al cerrarlo y fin de las ventanas vacías de Windows. El triple clic de la titlebar queda con **F-004**.
 
 ### Q-011 — Ventana: arrastre con la ventana maximizada y ajuste a media pantalla
 - **Tipo:** cambio de engine
@@ -94,7 +94,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   nativos de Windows, que no se pueden verificar desde este entorno. Riesgo
   medio-alto. Detalle en `bugs.md` (R-6a1f8c23).
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-004** e implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-004** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### Q-012 — Tareas en segundo plano y barra marquee en las barras de acción
 - **Tipo:** mejora
@@ -112,7 +112,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   Riesgo alto. (La parte de rendimiento que ya era un bug está corregida:
   R-9e2b4d17.)
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-005** e implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-005** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### Q-013 — Actualizaciones silenciosas de parches de seguridad
 - **Tipo:** cambio de engine
@@ -130,7 +130,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   puede dejar la instalación a medias. Riesgo alto.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «si y con registros y diff de archivos que no fueron actualizados, para lo mejor, dejar el actualizador de ultimo, eso si, se debe de comprobar si esta compilado o no, si no esta compilado, ofrecer el ultimo commit y un metodo para saber en que commit se encuentra usando regresiones y adelantamientos y al mismo tiempo un diff para ver, si todos los diff pasan a 1, saber que hay que actualizar la app y dejar una marca del commit para saber el estado, pero si esta compilado guiarse del release o del commit del release y compararlo con el ultimo commit en el repo para saber como actualizar, pero se usara blindcube en si mismo para instalar el paquete y reemplazar los archivos»
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de confirmación final **F-006** e implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-006** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### Q-014 — Eventos en el sidebar y temas de temporada
 - **Tipo:** mejora
@@ -166,6 +166,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   progreso). Quien dependa de ver el instalador debe quitar `--silent`. No
   afecta al modo gráfico ni al motor. Riesgo bajo.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-016 — `packagemaker.py create` sobrescribe un proyecto existente sin avisar
 - **Tipo:** cambio de engine (política de creación)
@@ -184,7 +185,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** cambia el código de salida y el mensaje de
   un comando existente; los scripts que dependan de sobrescribir dejarían de
   funcionar sin `--force`. No toca el nombre canónico ni las plantillas.
-- **Respuesta del propietario (JesusQuijada34):** `[B] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Nota del agente (2026-11-26):** el commit `73dcdcd` escribió `[B] SÍ`, que no es una casilla válida del canal, así que **no se aplica**. Si la intención era la **opción B** (`--force` para sobrescribir y rechazo sin él), marca `[x] SÍ` y escribe «opción B» junto a la casilla.
 
 ### Q-017 — El `updater.py` que se genera en los proyectos no tiene CLI
 - **Tipo:** cambio de engine (plantilla de proyectos)
@@ -204,6 +206,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   por tanto, el de los proyectos nuevos; hay que mantener sincronizadas la
   plantilla y el actualizador del repositorio. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-018 — El build del CLI no valida `details.xml` y adivina la versión
 - **Tipo:** cambio de engine (comportamiento del build headless)
@@ -226,6 +229,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   funcionar (opción dura) o seguirían funcionando con un aviso (opción blanda).
   No toca el nombre canónico ni las plantillas. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-019 — Entorno aislado de compilación (reporte del propietario)
 
@@ -245,7 +249,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** descargas de red, más tiempo y espacio de
   build, dependencia de la disponibilidad de los binarios de Python y posible
   divergencia entre lo probado y lo empaquetado. Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[x, Pero si se ajusta un nuevo switch en configuracion llamado Red, se puede poner un modo de red de uso medido para usar el emebebido pero avisar que requiere python en el sistema, y da indicaciones para instalarlo y proceder de forma offline] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `73dcdcd`):** «Pero si se ajusta un nuevo switch en configuracion llamado Red, se puede poner un modo de red de uso medido para usar el emebebido pero avisar que requiere python en el sistema, y da indicaciones para instalarlo y proceder de forma offline»
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`) con la instrucción de añadir un interruptor **Red** en Configuración: modo de uso medido que use el entorno embebido, avise de que requiere el Python del sistema y dé indicaciones para instalarlo y seguir sin conexión; pendiente de implementación.
 
 ### Q-020 — Traducir toda la interfaz al cambiar de idioma
 
@@ -270,13 +276,14 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** pérdida del estado de los formularios,
   widgets duplicados o referencias colgantes si la reconstrucción no es
   completa. Riesgo medio-alto.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
   (indica A, B o C junto a la casilla)
 - **Nota del agente (2026-11-25):** se aplicó la **opción A sin reconstruir
   páginas**, que evita el riesgo que describía este punto (widgets duplicados y
   pérdida del formulario). `lib/live_i18n.py` resuelve el texto visible a su
   clave y lo retraduce en el sitio; `apply_ui_language()` lo invoca al final.
   El bug R-8a3f1c72 queda resuelto con esta implementación.
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`); la opción A ya se aplicó sin reconstruir páginas (ciclos 58 y 59) y falta completar los textos que siguen sin traducir.
 
 
 ### Q-021 — Sección de ayuda global de la aplicación
@@ -291,6 +298,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** bajo; es una página nueva y no toca el
   engine.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-022 — Addons en `lib/addons/` e instalación desde la aplicación
 - **Tipo:** mejora
@@ -303,7 +311,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `tests/test_privacy_switch_and_addons_ui.py`.
 - **Riesgo y efectos secundarios:** medio; cambian las rutas de carga y hay
   que actualizar el empaquetado y las pruebas.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-023 — Conectar proyectos a repositorios de GitHub y extensión CloudCube
 - **Tipo:** cambio de engine
@@ -318,7 +327,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** alto; crea repositorios y sube contenido
   del usuario, requiere permisos de escritura del token y una política de
   privacidad clara. Un fallo podría publicar datos privados.
-- **Respuesta del propietario (JesusQuijada34):** `[X, pero hay que manifestar el backend de la rama render para que se inicie sesion con github y enviar un codigo a la app para hacer un inicio de sesion mucho mas mejor y directo] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `73dcdcd`):** «pero hay que manifestar el backend de la rama render para que se inicie sesion con github y enviar un codigo a la app para hacer un inicio de sesion mucho mas mejor y directo»
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`) con la instrucción de manifestar el backend de la rama `render` para iniciar sesión con GitHub y enviar un código a la aplicación; pendiente de implementación.
 
 ### Q-024 — El updater como extensión con notificaciones de Leviathan
 - **Tipo:** cambio de engine
@@ -329,7 +340,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   `lib/leviathan_ui/`, `addons/*.yaml`, `packagemaker.py`, `tests/`.
 - **Riesgo y efectos secundarios:** alto; se solapa con Q-013/F-006 (el
   programa se reemplaza a sí mismo) y cambia el punto de entrada del updater.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-025 — Completar el motor Leviathan y el action bar como control
 - **Tipo:** cambio de engine
@@ -343,7 +355,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** alto; reescribe la construcción de toda la
   interfaz y su sistema de estilos, con riesgo de regresiones visuales y de
   compatibilidad con el respaldo sin `leviathan_ui`.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-026 — Sidebar translúcido y colores de pestañas por tema
 - **Tipo:** mejora
@@ -358,7 +371,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** medio; cambios visuales amplios y
   dependencia del blur del sistema operativo, que no se puede verificar en
   Linux.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-027 — Duración mínima del splash y reporte de tirones del arranque
 - **Tipo:** cambio de engine
@@ -377,7 +391,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   opt-in, así que se respetará ese ajuste. Si prefieres otro mínimo (p. ej.
   2 s) o que no se envíe nada sin consentimiento explícito, indícalo junto a la
   casilla.
-- **Respuesta del propietario (JesusQuijada34):** `[X, perfecto] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `73dcdcd`):** «perfecto»
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, con la nota «perfecto»); pendiente de implementación.
 
 ### Q-028 — Librería de paneles y pestañas verticales con action bar propia
 - **Tipo:** cambio de engine
@@ -393,7 +409,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   páginas y se solapa con Q-025 (action bar como control de Leviathan). No
   cambia la ley de nombres, el formato `.iflapp` ni el contenido de los
   paquetes.
-- **Respuesta del propietario (JesusQuijada34):** `[X, hazlo con compatibilidad] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `73dcdcd`):** «hazlo con compatibilidad»
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, con la nota «hazlo con compatibilidad»); pendiente de implementación.
 
 ### Q-029 — AIDE como chatbot con backend, API, servidor y puerto
 - **Tipo:** cambio de engine
@@ -407,7 +425,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   red nuevos. Hay que decidir qué se envía fuera del equipo y dónde se guardan
   las claves; se respetará el ajuste de reportes y no se enviará nada sin
   configuración explícita.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-030 — Perfil de GitHub como extensión y orden del sidebar
 - **Tipo:** mejora
@@ -421,7 +440,8 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** medio; cambia el orden visible del sidebar
   y añade una página que consulta la API de GitHub (límites de peticiones y
   sesión caducada). No toca el motor de compilación.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-031 — Addons empaquetados en `lib/addons/` y addons DLL externos
 - **Tipo:** cambio de engine
@@ -440,7 +460,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   sustituiría a Python para las extensiones. Se implementaría con lista de
   confianza y verificación de firma. Recomiendo partir de Q-028 (librería de
   paneles) antes que de esta.
-- **Respuesta del propietario (JesusQuijada34):** `[X, eso si, tienes razon, porque pueden meter virus de extraccion de datos y fuga, se puede comprometer el programa, tienes que sandboxear las dlls que tienen codigo sospechoso y restringir llamadas a exposiciones de llaves y credenciales del sistema, por ejemplo saber la api de una persona y enviarla a un servidor, debes de ser cuidadoso hasta con los disfraces, de igual se haran parches a la base de datos impulsada por usuarios, para mantener la base limpia y fuerte frente a codigos maliciosos, o tambien ayudarse de un antivirus, aunque antivirus no sabe la base exacta de una fuga de datos] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `73dcdcd`):** «eso si, tienes razon, porque pueden meter virus de extraccion de datos y fuga, se puede comprometer el programa, tienes que sandboxear las dlls que tienen codigo sospechoso y restringir llamadas a exposiciones de llaves y credenciales del sistema, por ejemplo saber la api de una persona y enviarla a un servidor, debes de ser cuidadoso hasta con los disfraces, de igual se haran parches a la base de datos impulsada por usuarios, para mantener la base limpia y fuerte frente a codigos maliciosos, o tambien ayudarse de un antivirus, aunque antivirus no sabe la base exacta de una fuga de datos»
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`) con la instrucción de sandboxear las DLL sospechosas y restringir el acceso a claves y credenciales del sistema; pendiente de implementación.
 
 ---
 
@@ -460,7 +482,8 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 - **Archivos/componentes:** `lib/hardening.py`, `lib/BuildThread.py`,
   `tests/test_hardening.py`.
 - **Riesgo:** medio; borrado destructivo dentro del paquete.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** confirmación final aprobada el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### F-002 — Q-007: reorganizar `lib/` por motores y renombrar a GlassCube
 
@@ -471,20 +494,9 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 - **Archivos/componentes:** todo `lib/`, `packagemaker.py`, `updater.py`,
   `tests/`.
 - **Riesgo:** alto; rotura masiva de imports y del empaquetado.
-- **Respuesta del propietario (JesusQuijada34):** `[X, con cuidado, primero clasificar archivos de engine, ordenar y hacer funcionar] SÍ`  `[ ] NO`
-
-### F-003 — Q-008: splash de nivel superior y ciclo de vida de ventanas
-
-- **Qué cambiará:** el splash se mostrará antes de la ventana principal como
-  ventana de nivel superior (no como hijo), `WipeWindow` se aplicará sólo a
-  ventanas top-level, se cerrará con `destroy()` y se eliminarán las ventanas
-  Python vacías que aparecen al arrancar. Se conserva la secuencia splash →
-  login → verificación → ventana principal.
-- **Archivos/componentes:** `lib/splash_bootloader.py`, `lib/splash_window.py`,
-  `lib/window_chrome.py`, `lib/window_manager_bridge.py`, `packagemaker.py`.
-- **Riesgo:** medio-alto; no se puede verificar visualmente en Windows desde
-  este entorno.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `73dcdcd`):** «con cuidado, primero clasificar archivos de engine, ordenar y hacer funcionar»
+- **Estado:** confirmación final aprobada el 2026-11-26 (commit `73dcdcd`) con la nota «con cuidado, primero clasificar archivos de engine, ordenar y hacer funcionar»; pendiente de implementación.
 
 ### F-004 — Q-011: arrastre y ajuste de la ventana maximizada
 
@@ -498,7 +510,8 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   `lib/immersive_titlebar.py`, `packagemaker.py`.
 - **Riesgo:** medio-alto; depende de gestos nativos que no se pueden verificar
   en Linux.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** confirmación final aprobada el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### F-005 — Q-012: tareas en segundo plano y barra marquee
 
@@ -511,7 +524,8 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   `packagemaker.py`.
 - **Riesgo:** alto; escritura concurrente de `pm.data` y cambio del modelo de
   avisos.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Estado:** confirmación final aprobada el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### F-006 — Q-013: actualizaciones silenciosas de parches de seguridad
 
@@ -527,11 +541,28 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   `lib/blindcubeEngine/`, `version.res`, `details.xml`.
 - **Riesgo:** alto; el programa se reemplaza a sí mismo y un fallo puede dejar
   la instalación a medias.
-- **Respuesta del propietario (JesusQuijada34):** `[X, un fallo reporta algo usando la cuenta logueada, mejor contraste] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
+- **Nota del propietario (commit `73dcdcd`):** «un fallo reporta algo usando la cuenta logueada, mejor contraste»
+- **Estado:** confirmación final aprobada el 2026-11-26 (commit `73dcdcd`) con la nota «un fallo reporta algo usando la cuenta logueada, mejor contraste»; pendiente de implementación.
 
 ---
 
 ## Historial
+
+### F-003 — Q-008: splash de nivel superior y ciclo de vida de ventanas
+- **Decisión:** confirmación final aprobada con `[X] SÍ` en el commit
+  `73dcdcd` (2026-11-26; autoría verificada con la API de GitHub).
+- **Aplicada:** sexagésimo ciclo (2026-11-26) — `lib/splash_window.py`,
+  `updater.py` y `packagemaker.py`.
+- **Resultado:** el splash se crea y se muestra **antes** de
+  `PackageTodoGUI()`, como ventana de nivel superior (sin padre) que ocupa la
+  pantalla disponible; al cerrarse llama a `destroy()` y luego `deleteLater()`.
+  El updater hace lo mismo. `WipeWindow` sólo se aplica a ventanas top-level
+  (diálogos y ventana principal), que ya era el caso. Las pruebas
+  `tests/test_splash_top_level.py` arrancan la aplicación real en un
+  subproceso y comprueban que el splash ya está visible y es de nivel superior
+  cuando se construye la ventana principal, y que el arranque no emite los
+  avisos `must be a top level window`.
 
 ### Q-001 — Telemetría centralizada de errores (R-d23039c0)
 - **Decisión:** aprobada. `[x] SÍ` marcado por JesusQuijada34 en el commit

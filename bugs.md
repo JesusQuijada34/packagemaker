@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (quincuagésimo noveno ciclo, issue #14: barra única de Configuración)
+Última actualización: 2026-11-26 (sexagésimo ciclo: splash de nivel superior, Q-008/F-003; aprobaciones de `73dcdcd`)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) y
 [issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14)
@@ -16,7 +16,7 @@ histórico.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Aprobado Q-008 (F-003) |
+| R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Corregido; en observación (ciclo 60) |
 | R-6a1f8c23 | Bug — arrastrar la titlebar maximizada mueve la ventana | Alta | Aprobado Q-011 (F-004) |
 | R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Pendiente (Q-019) |
 | R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Pendiente (Q-012/Q-011) |
@@ -694,19 +694,27 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `WA_TranslucentBackground`, y el efecto `WipeWindow` (ventana por capas) se
   aplica sobre un widget hijo. `UpdateLayeredWindowIndirect` y el gestor de
   ventanas de Qt exigen una ventana de nivel superior.
-- **Estado:** Aprobado Q-008 el 2026-11-25 (commit `bba72d6`), incluida la
-  petición de eliminar las ventanas vacías del arranque; pendiente de
-  confirmación final **F-003** e implementación. No se ha modificado el ciclo
-  de vida de ventanas. El **issue #13** (2026-11-26) repite el síntoma («se
-  abren varias ventanas de python antes de la interfaz») y sospecha del
-  *Application Frame Host* de Windows; el análisis del ciclo 59 lo descarta
-  como causa (ver la nota del issue #13 más abajo) y confirma que el origen
-  sigue siendo el splash hijo + `WipeWindow`. La duración mínima del splash que
-  pide el mismo issue se registra aparte en **Q-027** (R-7b2c9e51).
-- **Propuesta:** splash de nivel superior (sin padre) mostrado antes de
-  `main_window.show()`, aplicar `WipeWindow` solo a ventanas top-level y
-  cerrar con `destroy()`.
-- **Riesgo:** alto sin verificación visual en Windows.
+- **Estado:** **Corregido el 2026-11-26 (ciclo 60)**; en observación, pendiente
+  de la verificación visual en Windows. Aprobado en Q-008 (commit `bba72d6`) y
+  confirmado en **F-003** (commit `73dcdcd`).
+- **Causa raíz confirmada:** `IntegratedSplash` se creaba con
+  `parent=main_window` y `WA_TranslucentBackground` (widget hijo translúcido) y
+  se construía después de la ventana principal. El **issue #13** (2026-11-26)
+  repite el síntoma («se abren varias ventanas de python antes de la
+  interfaz») y sospecha del *Application Frame Host* de Windows; el análisis
+  del ciclo 59 lo descarta como causa. La duración mínima del splash que pide
+  el mismo issue se registra aparte en **Q-027** (R-7b2c9e51).
+- **Solución aplicada:** el splash se crea y se muestra **antes** de
+  `PackageTodoGUI()`, sin padre y sobre la superficie disponible; al cerrarse
+  llama a `destroy()` y después a `deleteLater()`. La ventana principal se
+  muestra debajo y la revela el desvanecido. `updater.py` recibe el mismo
+  arreglo. `WipeWindow` sigue aplicándose sólo a ventanas top-level.
+- **Pruebas:** `tests/test_splash_top_level.py` (9 casos), incluido el arranque
+  real en un subproceso que comprueba que el splash ya está visible y es de
+  nivel superior cuando se construye la ventana principal.
+- **Commit:** `667780a` (ciclo 60).
+- **Fecha de resolución:** 2026-11-26 (Linux/offscreen); verificación visual en
+  Windows pendiente.
 
 ## R-6a1f8c23 — Arrastrar la titlebar con la ventana maximizada mueve la ventana
 
@@ -1564,3 +1572,18 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   **Q-027…Q-031** en `CONFIRM.MD`; sin aprobación no se toca el engine.
   Verificación: 1308 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
   limpios. No se prepara release.
+- Sexagésimo ciclo (2026-11-26, push `73dcdcd`): el propietario respondió en
+  `CONFIRM.MD` y aprobó **Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031**,
+  más las confirmaciones finales **F-001, F-002, F-004, F-005 y F-006**, con
+  instrucciones adicionales en Q-019 (interruptor **Red**), Q-023 (login por la
+  rama `render`), Q-028 (con compatibilidad) y Q-031 (sandbox de DLL y
+  restricciones sobre credenciales). **Q-016** quedó escrita como `[B] SÍ`, que
+  no es una casilla válida del canal: no se aplica y se vuelve a preguntar. Se
+  aplica **R-4f8a2c60** (Q-008/**F-003**): el splash pasa a ser una ventana de
+  nivel superior pintada antes de la ventana principal, con `destroy()` al
+  cerrar y el mismo arreglo en `updater.py`; queda en observación a la espera
+  de la verificación visual en Windows. El resto de aprobaciones (F-001, F-002,
+  F-004…F-006 y Q-015, Q-017…Q-031) siguen pendientes de implementación y no se
+  mezclan con este arreglo. Verificación: 1317 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
+  limpios; arranque real sin los avisos `must be a top level window`. No se
+  prepara release: siguen abiertos bugs de prioridad alta.

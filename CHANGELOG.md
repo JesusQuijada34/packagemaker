@@ -1,3 +1,66 @@
+## 2026-11-26 — sexagésimo ciclo
+
+### Corregido — Splash de nivel superior y fin de las ventanas vacías del arranque (R-4f8a2c60, Q-008/F-003)
+
+Reportado por JesusQuijada34 en `bugs.txt` (commit `bed2e83`) y repetido en el
+[issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) («Bug de
+codigo»). Cambio de engine **aprobado** en Q-008 (commit `bba72d6`, 2026-11-25)
+y **confirmado** en F-003 (commit `73dcdcd`, 2026-11-26; autoría verificada con
+la API de GitHub). No toca la ley de nombres, el formato `.iflapp`, las
+plantillas ni el contenido de los paquetes.
+
+- **Síntoma:** al abrir la aplicación aparecían unas cinco ventanas vacías
+  antes de la interfaz, el splash se dibujaba a la vez que la ventana principal
+  y, en Windows, la consola mostraba
+  `QWidgetWindow(...) must be a top level window` y
+  `UpdateLayeredWindowIndirect failed for ptDst=...`.
+- **Causa raíz:** `IntegratedSplash` se creaba con `parent=main_window` y
+  `WA_TranslucentBackground`, así que era un widget **hijo** translúcido; Qt
+  necesita una ventana de nivel superior para una superficie por capas. Además
+  se construía después de `PackageTodoGUI()`, no antes.
+- **Solución:** el splash se crea y se muestra antes de la ventana principal,
+  sin padre, y ocupa la pantalla disponible (`_sync_geometry`). Al cerrarse
+  llama a `destroy()` antes de `deleteLater()` para liberar la ventana nativa.
+  La ventana principal se muestra debajo y la revela el desvanecido. El
+  `IntegratedSplash` de `updater.py` recibe el mismo arreglo.
+- **`WipeWindow`:** se sigue aplicando sólo a ventanas top-level (diálogos y
+  ventana principal); el splash ya no es un hijo.
+- **Pruebas:** `tests/test_splash_top_level.py` (9 casos): splash de nivel
+  superior sin padre, geometría de pantalla completa, recolocación al
+  redimensionar, modo con padre heredado, acento recibido, `destroy()` al
+  cerrar, el del updater y un arranque real en subproceso que comprueba que el
+  splash ya está visible y es de nivel superior cuando se construye la ventana
+  principal.
+- **Verificación:** `1317 pasan, 1 omitido, 64 subtests`; `pyflakes` y
+  `py_compile` limpios; arranque real
+  (`DISPLAY=:0 QT_QPA_PLATFORM=offscreen python packagemaker.py`) sin avisos de
+  nivel superior.
+- **Pendiente:** verificación visual en Windows (el bug sigue en observación) y
+  el triple clic de la titlebar, que va con F-004.
+
+### Aprobaciones del propietario procesadas (push `73dcdcd`)
+
+El push `73dcdcd` sólo modificó `CONFIRM.MD`. Autoría verificada con la API de
+GitHub (`JesusQuijada34`). Respuestas procesadas:
+
+- **Aprobadas:** Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las
+  confirmaciones finales F-001, F-002, F-004, F-005 y F-006.
+- **Con instrucciones adicionales:** Q-019 (interruptor **Red** con modo de uso
+  medido, aviso de que requiere el Python del sistema e indicaciones para
+  seguir sin conexión), Q-023 (manifestar el backend de la rama `render` para el
+  inicio de sesión con GitHub), Q-027 («perfecto»), Q-028 («hazlo con
+  compatibilidad»), Q-031 (sandbox de DLL sospechosas y restricción del acceso a
+  claves y credenciales) y F-006 (un fallo debe reportarse con la cuenta
+  logueada y mejor contraste).
+- **No aplicada:** **Q-016**, escrita como `[B] SÍ`, que no es una casilla
+  válida (`[x] SÍ` / `[ ] NO`). Se dejó sin marcar y se volvió a preguntar.
+- **Aplicada este ciclo:** Q-008 / F-003 (el arreglo del splash).
+- **Pendientes de implementación:** el resto, empezando por clasificar los
+  módulos de motor (F-002) como pidió el propietario.
+
+No se prepara release: siguen abiertos bugs de prioridad alta y el periodo de
+7 días sin reportes no se ha cumplido.
+
 ## 2026-11-26 — quincuagésimo noveno ciclo
 
 ### Corregido — Configuración con una sola barra de acciones y retroceso con nombre (R-4e7a1d92)
