@@ -194,3 +194,6 @@ data/fonts/
 /data
 applog.txt
 *.bat
+
+# Informe de fallo que Nuitka deja en el directorio de trabajo
+nuitka-crash-report.xml
