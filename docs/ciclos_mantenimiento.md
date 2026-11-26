@@ -642,3 +642,14 @@ ciclos: es un registro de auditoría.
   ventana queda como **Q-032**, sin tocar el engine hasta que se apruebe. No se
   prepara release: siguen abiertos bugs de prioridad alta y 21 aprobaciones de
   engine pendientes de implementación.
+
+- Sexagésimo tercer ciclo (2026-11-26): sin respuestas nuevas del propietario
+  en `CONFIRM.MD` (sigue sólo **Q-032** pendiente). Se aplica **Q-015**
+  (R-7e3a9c25): `_update_from_iflapp(silent=True)` descarga el `.iflapp`, lo
+  instala con `install_iflapp(..., silent=True)` en el directorio actual,
+  devuelve el resultado real y borra el temporal, sin crear `QApplication` ni
+  `ModernUpdaterWindow`. `tests/test_updater_silent_iflapp_update.py` (5 casos;
+  los 4 primeros fallan con el código anterior). Se retira de la cola y se
+  archiva en `docs/bugs_resueltos.md`. Verificación: 1332 pasan, 1 omitido, 64
+  subtests; `pyflakes` y `py_compile` limpios. No se prepara release: quedan
+  bugs de prioridad alta y 20 aprobaciones pendientes de implementación.

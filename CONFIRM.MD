@@ -1,10 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-26 (sexagésimo segundo ciclo)
-- **Último commit de `CONFIRM.MD` procesado:** `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en este ciclo y archivada en el Historial.
+- **Última revisión:** 2026-11-26 (sexagésimo tercer ciclo)
+- **Último commit de `CONFIRM.MD` procesado:** `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 62 no aplicó ninguna respuesta nueva (sólo corrigió R-6c4d1f87, las ventanas vacías del arranque, issues #15/#16); 21 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-015, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-016 aplicada y archivada; 9 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 63 no encontró respuestas nuevas del propietario (aplicó Q-015, que ya estaba aprobada); 20 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-015 y Q-016 aplicadas y archivadas; 9 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -148,26 +148,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «si, reemplazando por completo el recuadro del sidebar"Contexto"»
 - **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de planificación (mejora de UI, no cambia el engine y no requiere confirmación final).
-
-### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
-- **Tipo:** mejora
-- **Fecha:** 2026-11-25
-- **Qué se propone:** cuando la actualización se lanza con `--silent` y el
-  paquete publicado es un `.iflapp`, `_update_from_iflapp` ignora `silent` y
-  crea la ventana `IFLAPPInstallerWindow` (o el splash). En un servidor sin
-  pantalla (`QT_QPA_PLATFORM=offscreen`, SSH sin X, tarea programada) eso
-  significa que la actualización desatendida no instala nada o aborta al
-  construir la ventana. Se propone que `silent=True` use
-  `install_iflapp(..., silent=True)` (que ya devuelve el resultado real desde
-  R-2d5b8f41) y no cree ninguna ventana; sin `--silent` todo sigue igual.
-- **Archivos/componentes afectados:** `lib/coreUpdater/installer.py`
-  (`_update_from_iflapp`), `updater.py` (salida y código de retorno).
-- **Riesgo y efectos secundarios:** cambia el comportamiento visible de
-  `--update --silent` para los paquetes `.iflapp` (deja de haber ventana de
-  progreso). Quien dependa de ver el instalador debe quitar `--silent`. No
-  afecta al modo gráfico ni al motor. Riesgo bajo.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-017 — El `updater.py` que se genera en los proyectos no tiene CLI
 - **Tipo:** cambio de engine (plantilla de proyectos)
@@ -569,6 +549,17 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   proyecto. Seis pruebas nuevas (`CreateOverwriteGuardTests`) cubren rechazo,
   mensaje, sobrescritura forzada, creación limpia y el cableado de `--force`
   en el parser.
+
+### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
+- **Decisión:** aprobada con `[x] SÍ` en el commit `73dcdcd` (2026-11-26;
+  autoría verificada con la API de GitHub).
+- **Aplicada:** sexagésimo tercer ciclo (2026-11-26) —
+  `lib/coreUpdater/installer.py` y `tests/test_updater_silent_iflapp_update.py`.
+- **Resultado:** con `silent=True`, `_update_from_iflapp` descarga el `.iflapp`
+  a un temporal, lo instala con `install_iflapp(..., silent=True)` en el
+  directorio actual, propaga el resultado real y borra el temporal; no crea
+  `QApplication` ni `ModernUpdaterWindow`. El modo gráfico no cambia. Cinco
+  pruebas nuevas; cuatro fallan con el código anterior.
 
 ### F-003 — Q-008: splash de nivel superior y ciclo de vida de ventanas
 - **Decisión:** confirmación final aprobada con `[X] SÍ` en el commit

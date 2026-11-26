@@ -1,7 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (ciclo 62: purga de resueltos, R-6c4d1f87 en
-observación y bitácora movida a `docs/ciclos_mantenimiento.md`)
+Última actualización: 2026-11-26 (ciclo 63: Q-015 aplicada y archivada)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) y
 [issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14)
@@ -36,36 +35,18 @@ resueltos aquí.
 | R-3b7e2d94 | Cambio de engine — addons empaquetados en `lib/addons/` y addons DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash dentro de la ventana principal, estilo UWP (issue #15) | Media | Pendiente de aprobación (Q-032) |
 
-**17 entradas pendientes en la cola** (bugs, mejoras y cambios de engine). Las 4 correcciones en observación están en la tabla de abajo, con enlace al issue; su detalle vive en `CHANGELOG.md`.
+**16 entradas pendientes en la cola** (bugs, mejoras y cambios de engine). Las 4 correcciones en observación están en la tabla de abajo, con enlace al issue; su detalle vive en `CHANGELOG.md`.
 
 ---
 
 ## Mejoras: estado de aprobación
 
-Las propuestas de esta sección y los cambios de engine están recogidos como
-preguntas `Q-001`…`Q-020` en `CONFIRM.MD`, el único canal de aprobación válido
-(solo JesusQuijada34). El 2026-11-23 el propietario marcó
-`[x] SÍ` en Q-001, Q-002, Q-003, Q-005, Q-006, Q-009 y Q-010 (commit `0ac5457`,
-autoría verificada con la API de GitHub). Q-001, Q-002 y Q-003 se aplicaron en
-el vigésimo quinto ciclo; Q-005, Q-006, Q-009 y Q-010 ya estaban implementados
-y quedan verificados por la suite.
-
-El 2026-11-25 el propietario aprobó con instrucciones adicionales Q-004
-(opción A), Q-007, Q-008, Q-011, Q-012, Q-013 y Q-014 en el commit `bba72d6`
-(autoría verificada con la API de GitHub). Ninguna de esas siete se ha
-implementado todavía: la regla de mantenimiento exige una confirmación final
-antes de tocar el engine, y esas confirmaciones viven en la sección
-«Confirmación final» de `CONFIRM.MD` (`F-001`…`F-006`). Q-014 es una mejora de
-UI y queda pendiente de planificación. Q-015…Q-018 siguen sin responder y
-Q-019/Q-020 son nuevas. Q-021…Q-026 se añadieron el 2026-11-25 a partir del
-issue #11 y también siguen sin responder.
-
-Estado real (ciclo 62, 2026-11-26): `CONFIRM.MD` es la única autoridad. El
-propietario aprobó en el commit `73dcdcd` Q-015, Q-017…Q-031 y las
-confirmaciones finales `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; todas
-siguen **pendientes de implementación** y no se mezclan con los bugfixes.
-Q-016 se aplicó y archivó en el Historial. Q-032 (splash UWP, issue #15) sigue
-sin marcar.
+Estado real (ciclo 63, 2026-11-26): `CONFIRM.MD` es la única autoridad y solo
+JesusQuijada34 puede aprobar. Las aprobaciones vigentes llegan de los commits
+`0ac5457`, `bba72d6` y `73dcdcd`; Q-001…Q-003, Q-005, Q-006, Q-009, Q-010,
+Q-015 y Q-016 ya están aplicadas. Las que siguen abiertas permanecen
+**pendientes de implementación** y no se mezclan con los bugfixes. Q-032
+(splash UWP, issue #15) sigue sin marcar.
 
 ### R-7b3e9a52 — Sección de ayuda global de la aplicación (Q-021)
 
@@ -98,21 +79,6 @@ sin marcar.
 - **Archivos:** `lib/addons_engine.py`, `addons/*.yaml`, `packagemaker.py`,
   `lib/settings_panel.py`, `tests/test_privacy_switch_and_addons_ui.py`.
 - **Riesgo:** medio (rutas de carga y empaquetado de los addons).
-
-### Q-015 — `updater.py --update --silent` con `.iflapp` sigue abriendo una ventana
-
-- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento; sin reporte
-  externo)
-- **Fecha del reporte:** 2026-11-25
-- **Estado:** Pendiente de aprobación (`Q-015` en `CONFIRM.MD`). **No
-  implementado**: cambiaría el comportamiento visible de `--update --silent`.
-- **Descripción:** `_update_from_iflapp` ignora el parámetro `silent` y siempre
-  construye `IFLAPPInstallerWindow` (o el splash). Sin pantalla, la
-  actualización desatendida no instala nada o aborta al crear la ventana.
-- **Solución propuesta:** en modo silencioso llamar a
-  `install_iflapp(..., silent=True)`, que ya devuelve el resultado real desde
-  R-2d5b8f41, y no crear ninguna ventana.
-- **Archivos afectados:** `lib/coreUpdater/installer.py`, `updater.py`.
 
 ### R-3e7d1c58 — `compile-only` no elimina el fuente original del paquete
 
@@ -693,18 +659,18 @@ y en el issue.
 
 ## Periodo de observación y release
 
-- Casos abiertos (sexagésimo segundo ciclo): **17 pendientes** en la cola —
+- Casos abiertos (sexagésimo tercer ciclo): **16 pendientes** en la cola —
   R-6a1f8c23 (Q-011/F-004), R-4d9e2b61 (Q-019), R-7c4a1e95 (Q-012/Q-011),
   R-2f8b6a31 (Q-011/F-004), R-5a7d2f16 (Q-026), R-3c8e4b72, R-7b3e9a52
   (Q-021), R-2c8d4f71 (Q-022), R-9a4e2c83 (Q-023), R-5f1b8d24 (Q-024),
   R-8e6a3c15 (Q-025), R-7b2c9e51 (Q-027), R-9c3f5a28 (Q-028), R-2a8d4b73
   (Q-029), R-6f1c8e35 (Q-030), R-3b7e2d94 (Q-031) y R-5c9a3e17 (Q-032, sin
-  aprobar). Las 21 aprobaciones de engine siguen sin implementar; no se toca
+  aprobar). Las 20 aprobaciones restantes siguen sin implementar; no se toca
   el engine sin la marca del propietario.
 - **En observación:** R-4f8a2c60 (splash de nivel superior), R-8c4f1a72
   (página de Reportes), R-6d2a8f19 (`create --force`) y R-6c4d1f87 (ventanas
-  vacías del arranque, este ciclo).
-- La bitácora completa de ciclos (del primero al sexagésimo segundo) vive en
+  vacías del arranque).
+- La bitácora completa de ciclos (del primero al sexagésimo tercero) vive en
   `docs/ciclos_mantenimiento.md`.
 - **Release:** no se prepara. Hay bugs de prioridad alta pendientes de
   implementación y no ha pasado el periodo sin reportes nuevos.
@@ -716,3 +682,8 @@ y en el issue.
   `docs/ciclos_mantenimiento.md`. Verificación: 1327 pasan, 1 omitido, 64
   subtests; `pyflakes` y `py_compile` limpios; arranque real sólo con el
   splash y la ventana principal.
+- Sexagésimo tercer ciclo (2026-11-26): se aplica **Q-015** (R-7e3a9c25): el
+  updater silencioso con `.iflapp` descarga el paquete, lo instala con
+  `install_iflapp(..., silent=True)` y devuelve el resultado real, sin abrir
+  ninguna ventana. Se archiva en `docs/bugs_resueltos.md`. Verificación: 1332
+  pruebas (5 nuevas), `pyflakes` y `py_compile` limpios.

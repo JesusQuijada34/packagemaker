@@ -6,6 +6,8 @@ Installation functions for the updater system.
 import os
 import sys
 import shutil
+import tempfile
+import urllib.request
 from pathlib import Path
 
 # PyQt6 imports con fallback
@@ -300,15 +302,42 @@ def _update_from_exe(app_data, exe_url, exe_filename, silent=False, accept_licen
     return True
 
 
+def _download_iflapp_package(url, dest_dir=None):
+    """Descarga un paquete ``.iflapp`` remoto en un archivo temporal."""
+    fd, path = tempfile.mkstemp(prefix="pm_update_", suffix=".iflapp", dir=dest_dir)
+    os.close(fd)
+    try:
+        with urllib.request.urlopen(url, timeout=60) as response:
+            with open(path, "wb") as out:
+                shutil.copyfileobj(response, out)
+    except Exception:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+        raise
+    return path
+
+
 def _update_from_iflapp(app_data, url, silent=False):
     """Realiza actualización desde paquete .iflapp (método alternativo)."""
     if silent:
         log("Actualizando a través de .iflapp...")
-        app = QApplication(sys.argv)
-        window = ModernUpdaterWindow(app_data, url)
-        window.show()
-        app.exec()
-        return True
+        package = None
+        try:
+            package = _download_iflapp_package(url)
+            ok, message = install_iflapp(package, os.getcwd(), silent=True)
+        except Exception as e:
+            log(f"[IFLAPP ERROR] {e}")
+            return False
+        finally:
+            if package:
+                try:
+                    os.remove(package)
+                except OSError:
+                    pass
+        log(message)
+        return ok
     else:
         app = QApplication(sys.argv)
         

@@ -1,3 +1,36 @@
+## 2026-11-26 — sexagésimo tercer ciclo
+
+### Corregido — `updater.py --silent` con `.iflapp` abría una ventana y no instalaba (R-7e3a9c25, Q-015)
+
+Reportado por JesusQuijada34 en la auditoría interna de mantenimiento
+(2026-11-25) y aprobado en `CONFIRM.MD` (Q-015, commit `73dcdcd`).
+
+- **Síntoma:** `updater.py --silent` con un paquete `.iflapp` debía actualizar
+  sin interfaz. En su lugar creaba una `QApplication` y una
+  `ModernUpdaterWindow`, mostraba la ventana y se quedaba bloqueado en
+  `app.exec()`. En un servidor sin pantalla (tarea programada, SSH sin X,
+  `QT_QPA_PLATFORM=offscreen`) la actualización desatendida no instalaba nada y
+  el updater devolvía éxito.
+- **Causa raíz:** la rama silenciosa de
+  `lib/coreUpdater/installer._update_from_iflapp` ignoraba el parámetro
+  `silent` y usaba el mismo camino que el modo gráfico, terminando con
+  `return True` incondicional.
+- **Solución:** en modo silencioso se descarga el `.iflapp` a un archivo
+  temporal (`_download_iflapp_package`, `urllib` de la biblioteca estándar y
+  tiempo límite de 60 s), se instala con `install_iflapp(..., silent=True)` en
+  el directorio actual y se devuelve el resultado real. El temporal se borra
+  siempre, también si falla la descarga o la instalación. No se crea ninguna
+  ventana. El modo gráfico no cambia.
+- **Pruebas:** `tests/test_updater_silent_iflapp_update.py` (5 casos) verifica
+  que no se instancia Qt en modo silencioso, que el destino es el directorio
+  actual, que se propaga el fallo de instalación y de descarga, que el temporal
+  se elimina y que el modo gráfico sigue abriendo la ventana. Los cuatro
+  primeros casos fallan con el código anterior.
+- **Verificación:** 1332 pasan, 1 omitido, 64 subtests; `pyflakes` y
+  `py_compile` limpios.
+- **Release:** no se prepara. Quedan bugs de prioridad alta pendientes de
+  implementación y 20 aprobaciones de `CONFIRM.MD` sin aplicar.
+
 ## 2026-11-26 — sexagésimo segundo ciclo
 
 ### Corregido — las ventanas vacías del arranque (R-6c4d1f87, issues #15 y #16)
