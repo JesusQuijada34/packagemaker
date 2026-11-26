@@ -666,3 +666,19 @@ ciclos: es un registro de auditoría.
   Verificación: 1340 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
   limpios. No se prepara release: quedan bugs de prioridad alta y 19
   aprobaciones pendientes de implementación.
+
+- Sexagésimo quinto ciclo (2026-11-26): sin respuestas nuevas en `CONFIRM.MD`
+  (sigue sólo **Q-032** pendiente). Se aplica la parte de gestos de
+  **Q-011/F-004** y se corrige **R-2f8b6a31**: el filtro de la titlebar contaba
+  mal porque Qt entrega el triple clic como pulsación, doble clic y pulsación y
+  el doble clic reiniciaba la racha, así que nunca se alcanzaba el tercer
+  gesto; ahora el doble clic cuenta como segundo gesto y sigue maximizando o
+  restaurando, y el tercero entra en pantalla completa, que además maximiza la
+  ventana al entrar (`_ensure_maximized`). El puente ignora el doble clic en
+  modo inmersivo para no dejar una ventana sin barra de título.
+  `TestTitleBarGestureLimit` (3 casos) e `ImmersiveDoubleClickTests` (2 casos);
+  los tres que describen el fallo fallan con el código anterior. A petición del
+  propietario en el issue #15 se compactó `bugs.md` (38 KB → 12 KB) y se archivó
+  lo resuelto. Verificación: 1345 pasan, 1 omitido, 64 subtests; `pyflakes` y
+  `py_compile` limpios. No se prepara release: quedan bugs de prioridad alta y
+  19 aprobaciones pendientes de implementación.

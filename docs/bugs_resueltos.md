@@ -4,10 +4,11 @@
 corrección vive en `CHANGELOG.md` y en el issue correspondiente. Este archivo
 es histórico: no se lee en los ciclos de mantenimiento.
 
-**168 entradas resueltas.**
+**169 entradas resueltas.**
 
 | ID | Título | Usuario | Fecha | Prioridad | Commit | Solución |
 |---|---|---|---|---|---|---|
+| R-2f8b6a31 | La titlebar no limita los gestos a tres (máx./restaurar/fullscreen) | JesusQuijada34 (`bugs.txt`) | 2026-11-23 | Media. | ciclo 65. | El filtro de `lib/immersive_titlebar.py` cuenta el doble clic como segundo gesto en vez de reiniciar la racha, así que la secuencia real de Qt (pulsación, doble clic, pulsación) llega al tercero y entra en pantalla completa; `ImmersiveTitleBar._ensure_maximized()` maximiza la ventana al entrar y el puente ignora el doble clic mientras está en modo inmersivo, para que el tercer gesto salga sin dejar una ventana sin barra de título. |
 | R-6a1f8c23 | Arrastrar la titlebar maximizada movía la ventana | JesusQuijada34 (`bugs.txt`) | 2026-11-23 | Alta. | `c346946`. | `WindowManagerBridge.restore_for_drag()` restaura la ventana a su tamaño normal bajo el cursor (posición relativa de la titlebar, acotada a la pantalla) y sólo entonces inicia el arrastre; el gesto se confirma tras 4 px, así que un clic suelto (o un movimiento sin el botón pulsado) no desmaximiza. Respaldo de arrastre manual si no hay `startSystemMove`. |
 | R-dd68f3f4 | Ruta de exportación en Termux/Android | JesusQuijada34 (issue #4) | 2026-07-05 | Alta. | `b305945`. | `lib/platform_detect.compile_output_directory()` devuelve el Download compartido en Termux/Android y conserva la ruta histórica en escritorio. `lib/cl… |
 | R-730ee37a | `QTextCursor.End` en PyQt6 | JesusQuijada34 (issue #4) | 2026-07-05 | Crítica. | verificado en `b305945` (códig… | los manejadores usan `QtGui.QTextCursor.MoveOperation.End`. |

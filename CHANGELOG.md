@@ -1,3 +1,50 @@
+## 2026-11-26 — sexagésimo quinto ciclo
+
+### Corregido — la titlebar no llegaba a pantalla completa con tres gestos (R-2f8b6a31, Q-011/F-004)
+
+Reportado por JesusQuijada34 en `bugs.txt` (2026-11-23: «tienes y debes
+preparar bien el engine de la titlebar, ya que tienes que hacer que espere como
+maximo los 3 gestos, si la entrada fueron 2 maximizar o restaurar, pero si
+llego al maximo, full Screen») y aprobado en `CONFIRM.MD` (Q-011, commit
+`bba72d6`, confirmación final F-004 en `73dcdcd`).
+
+- **Síntoma:** el triple clic sobre la barra de título nunca entraba en modo
+  inmersivo/pantalla completa; el único gesto que funcionaba era el doble clic
+  (maximizar o restaurar). Además, entrar en modo inmersivo desde una ventana
+  normal sólo ocultaba la barra y ponía la ventana en primer plano: la ventana
+  se quedaba con su tamaño, sin barra de título, así que no era «pantalla
+  completa».
+- **Causa raíz:** `_make_titlebar_filter()` reiniciaba la racha de pulsaciones
+  en `MouseButtonDblClick`. Qt entrega un triple clic como *pulsación, doble
+  clic, pulsación*, de modo que el doble clic ponía el contador a cero y el
+  tercer gesto volvía a contar como primero: nunca se alcanzaba
+  `TRIPLE_CLICK`. `ImmersiveTitleBar.enter()` tampoco maximizaba la ventana.
+- **Solución:** el filtro cuenta el doble clic como **segundo** gesto (y lo deja
+  pasar, así que el doble clic sigue maximizando o restaurando) y dispara el
+  modo inmersivo en el tercero. `ImmersiveTitleBar._ensure_maximized()`
+  maximiza la ventana al entrar si no lo estaba, usando el helper
+  `toggle_frameless_maximize` para conservar las esquinas rectas. El puente
+  (`WindowManagerBridge`) ignora el doble clic mientras la ventana está en modo
+  inmersivo, para que el tercer gesto salga sin dejar antes una ventana normal
+  sin barra de título.
+- **Pruebas:** `TestTitleBarGestureLimit` en `tests/test_startup_sequence.py`
+  (secuencia real de Qt `press → dblclick → press` llega a pantalla completa, el
+  doble clic se detiene en dos gestos y entrar maximiza una ventana normal) e
+  `ImmersiveDoubleClickTests` en `tests/test_window_manager_bridge.py` (el
+  doble clic alterna la ventana fuera de pantalla completa y no la toca dentro).
+  Los tres casos que describen el fallo fallan con el código anterior.
+- **Cola de bugs:** a petición del propietario en el issue #15 se compactó
+  `bugs.md` (38 KB → 12 KB): fuera lo resuelto, los cambios de engine reducidos
+  a un índice con su ficha en `CONFIRM.MD` y la cola con solo lo pendiente.
+- **Commit:** ver el commit de este ciclo en `main`.
+- **Verificación:** 1345 pasan, 1 omitido, 64 subtests; `pyflakes` y
+  `py_compile` limpios.
+- **Observación:** el gesto se comprueba en Linux/offscreen; R-2f8b6a31 queda en
+  observación hasta la confirmación visual en Windows. El snap a media pantalla
+  de Q-011 sigue a cargo del gestor de ventanas nativo.
+- **Release:** no se prepara. Quedan bugs de prioridad alta pendientes de
+  implementación y 19 aprobaciones de `CONFIRM.MD` sin aplicar.
+
 ## 2026-11-26 — sexagésimo cuarto ciclo
 
 ### Corregido — arrastrar la titlebar maximizada movía la ventana (R-6a1f8c23, Q-011/F-004)
