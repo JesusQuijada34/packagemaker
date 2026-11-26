@@ -196,6 +196,7 @@ class CLIHandler:
         create_parser.add_argument('--platform', default='win', choices=['win', 'linux', 'all'], help='Plataforma objetivo: win, linux, all')
         create_parser.add_argument('--description', default='Proyecto creado con Influent Package Maker', help='Descripción para details.xml')
         create_parser.add_argument('--headless', action='store_true', help='Crear el proyecto sin abrir la UI')
+        create_parser.add_argument('--force', action='store_true', help='Sobrescribir la carpeta canónica si el proyecto ya existe')
 
         compile_parser = subparsers.add_parser('compile', help='Compilar un proyecto en la ruta predeterminada')
         compile_parser.add_argument('--name', required=True, help='Nombre del proyecto (ej: "Mi App")')
@@ -398,7 +399,12 @@ class CLIHandler:
                     'description': getattr(args, 'description', 'Proyecto creado con Influent Package Maker'),
                     'platform': target_platform,
                 },
-                {'compact': args.compact, 'shell_mode': args.shell_mode, 'headless': getattr(args, 'headless', False)}
+                {
+                    'compact': args.compact,
+                    'shell_mode': args.shell_mode,
+                    'headless': getattr(args, 'headless', False),
+                    'force': getattr(args, 'force', False),
+                }
             )
         elif getattr(args, 'command', None) == 'compile':
             return (
@@ -1539,7 +1545,17 @@ def handle_cli_action(action, data, gui_class, compact=False, shell_mode=False, 
             publisher, app_id, version_base, platform_value, timestamp
         )
         project_path = base_path / folder_name
-        
+
+        # La carpeta canónica puede existir si se repite `create` con el mismo
+        # publisher/app/versión dentro del mismo minuto. Sobrescribirla en
+        # silencio borra el trabajo del usuario, así que hace falta `--force`.
+        if path_exists(project_path):
+            if not kwargs.get('force'):
+                print(f"[ERROR] El proyecto ya existe: {project_path}")
+                print("        Usa --force para sobrescribirlo.")
+                sys.exit(1)
+            print(f"[WARN] Sobrescribiendo el proyecto existente: {project_path}")
+
         print(f"[INFO] Creando proyecto en: {project_path}")
         try:
             create_project_from_templates(

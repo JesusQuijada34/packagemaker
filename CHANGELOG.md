@@ -1,3 +1,57 @@
+## 2026-11-26 — sexagésimo primer ciclo
+
+### Corregido — `create` del CLI ya no sobrescribe un proyecto existente sin `--force` (Q-016, R-6d2a8f19)
+
+Reportado por JesusQuijada34 en `CONFIRM.MD` (Q-016, 2026-11-25). Aprobado con
+la **opción B** en el commit `71e50f7` (2026-11-26, push que sólo toca
+`CONFIRM.MD`; autoría verificada con `git log` y la API de GitHub) y aplicado en
+este ciclo.
+
+- **Síntoma:** `packagemaker.py create` escribía en la carpeta canónica aunque
+  ya existiera. El dashboard y el asistente gráfico preguntaban antes de
+  sobrescribir, pero el CLI headless pisaba el trabajo del usuario en silencio.
+- **Causa raíz:** la rama headless de `handle_cli_action` no comprobaba la ruta
+  de destino antes de llamar a `create_project_from_templates`, que crea la
+  carpeta con `mkdir(parents=True, exist_ok=True)` y reescribe los archivos.
+- **Solución:** el subparser `create` acepta `--force` y `get_action` lo
+  propaga como opción. Si la carpeta canónica existe y no se pasó `--force`, el
+  comando imprime `[ERROR] El proyecto ya existe: <ruta>`, recuerda
+  `Usa --force para sobrescribirlo.` y sale con código 1. Con `--force` avisa
+  con `[WARN] Sobrescribiendo el proyecto existente: <ruta>` y regenera el
+  proyecto. El dashboard y el asistente gráfico no cambian.
+- **Pruebas:** `tests/test_maintenance_cli_regressions.py` gana
+  `CreateOverwriteGuardTests` (6 casos): rechazo con código 1 sin tocar el
+  guion del usuario, mensaje con la sugerencia de `--force`, sobrescritura
+  forzada con aviso, creación limpia sin aviso y el cableado de `--force` en el
+  parser (presente y ausente).
+- **Verificación:** `QT_QPA_PLATFORM=offscreen python -m pytest
+  tests/test_maintenance_cli_regressions.py tests/test_confirm_channel.py
+  tests/test_splash_top_level.py -q` → 46 pasan; `pyflakes` y `py_compile`
+  limpios.
+- **Nota de compatibilidad:** los scripts que recrean un proyecto a propósito
+  deben añadir `--force`; sin él reciben un error explícito en vez de una
+  sobrescritura silenciosa.
+
+### Mantenimiento — cola de bugs más corta y issues #15/#16 atendidos
+
+- Se retiran de `bugs.md` las entradas ya resueltas y verificadas sin
+  reaparición: **R-4c1a9e72** (catálogos de `lang/`, ciclo 58) y **R-4e7a1d92**
+  (Configuración con una sola barra, ciclo 59). Su detalle queda en
+  `docs/bugs_resueltos.md` y en este changelog. La cola pasa de 19 a 20
+  entradas: se archivan dos resueltas y se añaden R-6d2a8f19 (este ciclo) y
+  R-5c9a3e17 (splash UWP, pendiente de aprobación).
+- **Issues #15 y #16** («se abren varias ventanas de Python vacías antes de la
+  interfaz»): reportados contra el commit `d9d3c48`, que ya incluye el arreglo
+  del splash de nivel superior del ciclo 60 (F-003). Se respondió en ambos con
+  el commit del arreglo y la petición de confirmación en una ejecución nueva;
+  no se declaran resueltos hasta verificarlos en Windows.
+- **Q-032 (nuevo):** la petición del issue #15 de un splash **dentro** de la
+  ventana principal, al estilo UWP, es un cambio de engine: queda registrada en
+  `CONFIRM.MD` y en `bugs.md` (R-5c9a3e17) a la espera de aprobación. No se
+  tocó el ciclo de vida de ventanas en este ciclo.
+- No se prepara release: siguen abiertos bugs de prioridad alta y 21
+  aprobaciones de engine pendientes de implementación.
+
 ## 2026-11-26 — sexagésimo ciclo
 
 ### Corregido — Splash de nivel superior y fin de las ventanas vacías del arranque (R-4f8a2c60, Q-008/F-003)

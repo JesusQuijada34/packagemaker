@@ -1,9 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-26 (sexagésimo ciclo)
-- **Último commit de `CONFIRM.MD` procesado:** `73dcdcd` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub; el commit sólo toca este archivo). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las seis confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales. **Q-016** quedó escrita como `[B] SÍ`, que no es una casilla válida del canal (`[x] SÍ` / `[ ] NO`): no se aplica y se vuelve a preguntar.
+- **Última revisión:** 2026-11-26 (sexagésimo primer ciclo)
+- **Último commit de `CONFIRM.MD` procesado:** `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en este ciclo y archivada en el Historial.
+- **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 1 pregunta pendiente de respuesta válida (Q-016); 18 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-015 y Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`); Q-008/F-003 aplicada en parte este ciclo (splash de nivel superior, `destroy()` y fin de las ventanas vacías); 8 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); 21 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-015, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-016 aplicada y archivada; 9 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -167,26 +168,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   afecta al modo gráfico ni al motor. Riesgo bajo.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
-
-### Q-016 — `packagemaker.py create` sobrescribe un proyecto existente sin avisar
-- **Tipo:** cambio de engine (política de creación)
-- **Fecha:** 2026-11-25
-- **Qué se propone:** el CLI `create` escribe en la carpeta canónica aunque ya
-  exista y contenga el trabajo del usuario. El dashboard
-  (`pm_dashboard.NewProjectWizard`) y el asistente gráfico rechazan o
-  preguntan, pero el CLI headless lo pisa en silencio. Opciones:
-  A) rechazar con `[ERROR] ya existe` y código 1 (coherente con el dashboard;
-  puede romper scripts que recrean proyectos a propósito);
-  B) añadir `--force` para sobrescribir y rechazar sin él (compatible: quien
-  necesite recrear lo añade); C) dejarlo como está y sólo documentarlo.
-  Recomendación: B.
-- **Archivos/componentes afectados:** `lib/cliHandler.py` (rama `create`),
-  `packagemaker.py` (`main`, subparser `create`), `tests/test_cli_*`.
-- **Riesgo y efectos secundarios:** cambia el código de salida y el mensaje de
-  un comando existente; los scripts que dependan de sobrescribir dejarían de
-  funcionar sin `--force`. No toca el nombre canónico ni las plantillas.
-- **Respuesta del propietario (JesusQuijada34):** `[X, la B] SÍ`  `[ ] NO`
-- **Nota del agente (2026-11-26):** el commit `73dcdcd` escribió `[B] SÍ`, que no es una casilla válida del canal, así que **no se aplica**. Si la intención era la **opción B** (`--force` para sobrescribir y rechazo sin él), marca `[x] SÍ` y escribe «opción B» junto a la casilla.
 
 ### Q-017 — El `updater.py` que se genera en los proyectos no tiene CLI
 - **Tipo:** cambio de engine (plantilla de proyectos)
@@ -464,6 +445,28 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Nota del propietario (commit `73dcdcd`):** «eso si, tienes razon, porque pueden meter virus de extraccion de datos y fuga, se puede comprometer el programa, tienes que sandboxear las dlls que tienen codigo sospechoso y restringir llamadas a exposiciones de llaves y credenciales del sistema, por ejemplo saber la api de una persona y enviarla a un servidor, debes de ser cuidadoso hasta con los disfraces, de igual se haran parches a la base de datos impulsada por usuarios, para mantener la base limpia y fuerte frente a codigos maliciosos, o tambien ayudarse de un antivirus, aunque antivirus no sabe la base exacta de una fuga de datos»
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`) con la instrucción de sandboxear las DLL sospechosas y restringir el acceso a claves y credenciales del sistema; pendiente de implementación.
 
+
+### Q-032 — Splash dentro de la ventana principal, estilo UWP (issue #15)
+- **Tipo:** cambio de engine (arranque)
+- **Fecha:** 2026-11-26 ([issue #15](https://github.com/JesusQuijada34/packagemaker/issues/15), «error de implementacion»)
+- **Qué se propone:** hoy el splash es una ventana propia que ocupa la pantalla
+  disponible y después se desvanece para revelar la ventana principal. Lo
+  pedido es el patrón de una aplicación UWP: el splash se dibuja **dentro** de
+  la misma ventana (con su marco y su tamaño final desde el primer fotograma),
+  la interfaz se construye detrás y, al terminar, el splash se retira sin que
+  aparezca ni se cierre ninguna ventana adicional.
+- **Estado actual:** `main()` crea `IntegratedSplash` como ventana de nivel
+  superior (decisión F-003) y la pinta antes de `PackageTodoGUI()`; cuando la
+  validación de sesión termina, el splash se desvanece y se cierra.
+- **Archivos/componentes afectados:** `lib/splash_window.py`,
+  `packagemaker.py` (`main`, `start_session_gate`, `close_splash`),
+  `lib/window_chrome.py`, `tests/test_splash_top_level.py`.
+- **Riesgo y efectos secundarios:** reabre la coreografía aprobada en F-003. Si
+  el splash vive dentro de la ventana principal, la ventana se muestra antes de
+  validar la sesión y un fallo de arranque deja ver un marco vacío. No se puede
+  verificar visualmente en Windows desde este entorno.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
 ---
 
 ## Confirmación final de cambios de engine aprobados
@@ -548,6 +551,24 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-016 — `create` del CLI sobrescribe un proyecto existente sin avisar
+- **Decisión:** aprobada con la **opción B** (`--force` para sobrescribir y
+  rechazo con código 1 sin él). `[X, la B] SÍ` marcado por JesusQuijada34 en el
+  commit `71e50f7` (2026-11-26; autoría verificada con la API de GitHub y con
+  `git log`; el commit sólo toca este archivo). Sustituye a la casilla `[B] SÍ`
+  del commit `73dcdcd`, que no era válida.
+- **Aplicada:** sexagésimo primer ciclo (2026-11-26) — `lib/cliHandler.py`
+  (subparser `create`, `get_action` y la rama headless de
+  `handle_cli_action`) y `tests/test_maintenance_cli_regressions.py`.
+- **Resultado:** `packagemaker.py create` comprueba la carpeta canónica antes
+  de escribir. Si ya existe y no se pasó `--force`, imprime
+  `[ERROR] El proyecto ya existe: <ruta>` con la sugerencia
+  `Usa --force para sobrescribirlo.` y sale con código 1; con `--force`
+  avisa con `[WARN] Sobrescribiendo el proyecto existente` y regenera el
+  proyecto. Seis pruebas nuevas (`CreateOverwriteGuardTests`) cubren rechazo,
+  mensaje, sobrescritura forzada, creación limpia y el cableado de `--force`
+  en el parser.
 
 ### F-003 — Q-008: splash de nivel superior y ciclo de vida de ventanas
 - **Decisión:** confirmación final aprobada con `[X] SÍ` en el commit

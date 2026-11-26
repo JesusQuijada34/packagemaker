@@ -4182,3 +4182,105 @@ recibe entradas cuando una corrección verificada se retira de `bugs.md`.
 - **Pruebas:** `tests/test_privacy_switch_and_addons_ui.py`.
 - **Commit:** `1655007` (quincuagésimo sexto ciclo, 2026-11-25).
 - **Fecha de resolución:** 2026-11-25.
+
+## R-4c1a9e72 — Claves sobrantes en `lang/` impedían retraducir el envío automático
+
+- **Usuario:** auditoría interna del ciclo 58 (sin reporte externo); misma
+  familia que el issue #12 «problema de idioma» y el #11 «Orden», ambos del
+  propietario JesusQuijada34.
+- **Fecha del reporte:** 2026-11-26
+- **Prioridad:** Media
+- **Descripción:** con la interfaz en inglés (o en cualquier idioma distinto
+  del español), al cambiar de idioma la casilla «Enviar los fallos
+  automáticamente…» y su pista de la página **Reportes** se quedaban en inglés.
+  Además, 12 de los 14 catálogos de `lang/` llevaban claves planas sobrantes
+  (`report.auto_send`, `report.auto_send_hint` dentro del objeto `report`, y
+  `form.author_placeholder` dentro de `create`) que al aplanarse creaban
+  claves inexistentes o colisionaban con las reales.
+- **Pasos para reproducirlo:** abrir la aplicación, poner la interfaz en inglés
+  y cambiar a alemán; la casilla y la pista de Reportes siguen en inglés.
+  Equivalente en código:
+  `live_i18n.key_for("Send failures automatically when a GitHub session exists")`
+  devolvía `report.report.auto_send` en vez de `report.auto_send`.
+- **Causa raíz:** `live_i18n.reverse_index()` indexa por **valor** sobre todos
+  los catálogos. La clave sobrante de `ar.json` (primer fichero por orden
+  alfabético) aportaba el texto inglés bajo `report.report.auto_send`; el
+  catálogo destino resolvía esa clave al mismo texto inglés, así que
+  `target == current` y la retraducción no cambiaba nada.
+- **Solución aplicada:** se retiraron las claves planas sobrantes de los 13
+  catálogos afectados —el valor traducido de `form.author_placeholder` se
+  trasladó a su clave anidada para no perder ninguna traducción— y
+  `lib/live_i18n.py` sólo indexa claves que existen en el catálogo español
+  (la lista canónica), tanto en `reverse_index()` como en `template_index()`.
+  Ningún valor visible cambió salvo el esperado: el texto aplanado de cada
+  catálogo es idéntico salvo las dos claves sobrantes eliminadas (comprobado
+  con `git show HEAD:lang/<x>.json`).
+- **Pruebas:** `tests/test_translation_catalog_hygiene.py` (5 casos: sin claves
+  planas con punto, mismas claves que `es.json`, marcador de Autor traducido,
+  índice inverso sólo con claves canónicas y retraducción del texto inglés del
+  envío automático a de/fr/ja/zh). Tres de ellos fallan con los catálogos
+  anteriores y con `live_i18n` sin el filtro.
+- **Commit:** el del ciclo 58 en `main` (ver `CHANGELOG.md`).
+- **Fecha de resolución:** 2026-11-26
+- **Estado:** Resuelto, probado y retirado de `bugs.md` el 2026-11-26 (ciclo 61) tras un ciclo completo sin reaparición.
+  No cambia el comportamiento del engine ni el formato de los paquetes.
+
+## R-4e7a1d92 — Configuración con dos barras de acciones y retroceso sin nombre
+
+- **Usuario:** JesusQuijada34 ([issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14),
+  «Tarjetas y problema de interfaz»)
+- **Fecha del reporte:** 2026-11-26
+- **Prioridad:** Media
+- **Descripción:** «en configuracion hay dobles action bars y no hay uno solo y
+  los botones estan dispersos, al abrir el panel privacidad el boton que
+  retrocede a configuracion no tiene nombre». La página dibujaba dos barras
+  —la de la página y la cabecera propia del panel— y, tras cualquier
+  retraducción, el botón de retroceso de los detalles aparecía como «‹» sin
+  texto.
+- **Pasos para reproducirlo:** abrir **Configuración** y mirar la parte
+  superior (dos barras: «Configuración» y la cápsula del panel con
+  «‹ Privacidad»); o cambiar el idioma de la interfaz y entrar en cualquier
+  tarjeta: la cápsula queda en «‹  » sin el nombre.
+  En código: `SettingsPanel.retranslate()` seguido de `_open("privacy")`
+  producía `_titles == {}` y `navigationChanged` con un título vacío.
+- **Causa raíz:** tres defectos acumulados.
+  1. `SettingsPanel` montaba su propia `SettingsHeader` (cápsula + botón
+     Confirmar) **además** de la barra compartida que instala
+     `init_config_tab`, así que la página tenía dos barras y los botones
+     quedaban repartidos entre ambas.
+  2. `SettingsPanel.retranslate()` reconstruía `_titles` con una lista fija de
+     cinco tarjetas (general, appearance, fonts, language, notifications) que
+     no incluía **privacy**; `_open()` pintaba entonces `""` y la cápsula se
+     quedaba sin nombre. Además el prefijo «‹» impide que
+     `live_i18n.retranslate_tree()` recupere el texto por valor, así que nada
+     lo reparaba después.
+  3. La cabecera del panel tenía `apply_soft_shadow()` sobre un widget
+     translúcido: la sombra se dibujaba alrededor del texto de la cápsula
+     («texto con fondo detrás»).
+- **Solución aplicada:** una sola barra por página.
+  - `SettingsPanel` ya no crea cabecera: emite `navigationChanged(título,
+    profundidad, texto_confirmar)` desde `_on_depth_changed` y expone
+    `go_back()`/`confirm_and_go_back()` públicos.
+  - `init_config_tab` instala la barra compartida con un botón de retroceso
+    **con nombre** (`‹  Configuración`, de `config.title`) y el botón
+    `Confirmar` (`config.confirm`), visibles sólo dentro de un detalle;
+    `_on_config_navigation()` los sincroniza.
+  - Los títulos de las tarjetas se guardan con su clave i18n
+    (`_title_keys`) y `retranslate()` los reconstruye desde las claves: las
+    siete tarjetas, Privacidad incluida, sobreviven al cambio de idioma.
+  - `SettingsNavigator` expone `busy()` y anuncia la profundidad definitiva al
+    terminar el deslizamiento, de modo que la barra no se queda desfasada si
+    se pulsa atrás durante la animación. Se retiró la clase `SettingsHeader`
+    (sin uso) y su sombra.
+- **Pruebas:** `tests/test_settings_navigation_bar.py` (11 casos: una sola
+  barra, título de raíz, título/retroceso/confirmar del detalle, detalle de
+  selección única sin Confirmar, vuelta a la raíz, títulos de las siete
+  tarjetas tras `retranslate()`, retroceso con nombre tras retraducir, señal
+  de navegación, cambio de idioma a inglés y vuelta a español, doble pulsación
+  durante la animación y Confirmar). Los 11 fallan con el código anterior
+  (comprobado con `git stash` de los tres ficheros modificados).
+- **Commit:** el del ciclo 59 en `main` (ver `CHANGELOG.md`).
+- **Fecha de resolución:** 2026-11-26
+- **Estado:** Resuelto, probado y retirado de `bugs.md` el 2026-11-26 (ciclo 61) tras un ciclo completo sin reaparición.
+  No cambia el comportamiento del engine, la ley de nombres, el formato
+  `.iflapp` ni el contenido de los paquetes.

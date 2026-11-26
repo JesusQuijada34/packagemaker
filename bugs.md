@@ -1,6 +1,6 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (sexagésimo ciclo: splash de nivel superior, Q-008/F-003; aprobaciones de `73dcdcd`)
+Última actualización: 2026-11-26 (sexagésimo primer ciclo: Q-016 aplicada — `create` exige `--force`; limpieza de resueltos pedida en el issue #15)
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13) y
 [issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14)
@@ -16,34 +16,32 @@ histórico.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Corregido; en observación (ciclo 60) |
-| R-6a1f8c23 | Bug — arrastrar la titlebar maximizada mueve la ventana | Alta | Aprobado Q-011 (F-004) |
-| R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Pendiente (Q-019) |
-| R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Pendiente (Q-012/Q-011) |
-| R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Pendiente (Q-011/F-004) |
+| R-4f8a2c60 | Bug — splash simultáneo y avisos de ventana en Windows | Alta | Corregido (ciclo 60); en observación; verificación visual en Windows pendiente (issues #15/#16) |
+| R-6a1f8c23 | Bug — arrastrar la titlebar maximizada mueve la ventana | Alta | Aprobado Q-011 (F-004); pendiente de implementación |
+| R-4d9e2b61 | Bug — Nuitka falla y el build no usa entorno aislado | Alta | Aprobado Q-019; pendiente de implementación |
+| R-7c4a1e95 | Bug — la interfaz se congela al maximizar/restaurar | Alta | Aprobado Q-012/Q-011; pendiente de implementación |
+| R-2f8b6a31 | Bug — la titlebar no limita los gestos a tres | Media | Aprobado Q-011/F-004; pendiente de implementación |
 | R-8c4f1a72 | Bug — la página de Reportes rompe el fondo y no se lee el scrollbar | Media | En observación; verificación visual en Windows (issue #10) |
-| R-4c1a9e72 | Bug — claves sobrantes en `lang/` impiden retraducir el envío automático | Media | Corregido; en observación (ciclo 58) |
-| R-4e7a1d92 | Bug — Configuración con dos barras y retroceso sin nombre (issue #14) | Media | Corregido; en observación (ciclo 59) |
-| R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Pendiente (Q-026) |
-| R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora) |
-| R-7b3e9a52 | Mejora — sección de ayuda global de la aplicación (issue #11) | Media | Pendiente (Q-021) |
-| R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Pendiente (Q-022) |
-| R-9a4e2c83 | Cambio de engine — conectar proyecto a repo GitHub y CloudCube (issue #11) | Media | Pendiente (Q-023) |
-| R-5f1b8d24 | Cambio de engine — updater como extensión con notificaciones (issue #11) | Media | Pendiente (Q-024) |
-| R-8e6a3c15 | Cambio de engine — completar Leviathan y action bar como control (issue #11) | Media | Pendiente (Q-025) |
-| R-7b2c9e51 | Cambio de engine — duración mínima del splash y reporte de lags (issue #13) | Alta | Pendiente (Q-027) |
-| R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas verticales con action bar (issue #14) | Media | Pendiente (Q-028) |
-| R-2a8d4b73 | Cambio de engine — AIDE como chatbot con backend/API/servidor (issue #14) | Media | Pendiente (Q-029) |
-| R-6f1c8e35 | Cambio de engine — perfil de GitHub como extensión y panel de cuenta (issue #14) | Media | Pendiente (Q-030) |
-| R-3b7e2d94 | Cambio de engine — addons empaquetados en `lib/addons/` y addons DLL (issue #14) | Media | Pendiente (Q-031) |
+| R-6d2a8f19 | Bug — `create` del CLI sobrescribía un proyecto existente sin avisar | Baja | Corregido con `--force` (ciclo 61); en observación |
+| R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
+| R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
+| R-7b3e9a52 | Mejora — sección de ayuda global de la aplicación (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
+| R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Aprobado Q-022; pendiente de implementación |
+| R-9a4e2c83 | Cambio de engine — conectar proyecto a repo GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
+| R-5f1b8d24 | Cambio de engine — updater como extensión con notificaciones (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
+| R-8e6a3c15 | Cambio de engine — completar Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
+| R-7b2c9e51 | Cambio de engine — duración mínima del splash y reporte de lags (issue #13) | Alta | Aprobado Q-027; pendiente de implementación |
+| R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas verticales con action bar (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
+| R-2a8d4b73 | Cambio de engine — AIDE como chatbot con backend/API/servidor (issue #14) | Media | Aprobado Q-029; pendiente de implementación |
+| R-6f1c8e35 | Cambio de engine — perfil de GitHub como extensión y panel de cuenta (issue #14) | Media | Aprobado Q-030; pendiente de implementación |
+| R-3b7e2d94 | Cambio de engine — addons empaquetados en `lib/addons/` y addons DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
+| R-5c9a3e17 | Cambio de engine — splash dentro de la ventana principal, estilo UWP (issue #15) | Media | Pendiente de aprobación (Q-032) |
 
-**19 entradas en la cola** (bugs, mejoras y cambios de engine). Cuatro
-correcciones verificadas se retiraron el ciclo 57 — R-9b3e7a41,
-R-1f6c9d38, R-7d2a5b84 y R-4b8f1e27 — y quedan archivadas en
+**20 entradas en la cola** (bugs, mejoras y cambios de engine). Dos
+correcciones ya verificadas se retiraron este ciclo — R-4c1a9e72 (ciclo 58) y
+R-4e7a1d92 (ciclo 59), sin reaparición — y quedan archivadas en
 `docs/bugs_resueltos.md` y en `CHANGELOG.md`; las 156 anteriores ya estaban
-allí. R-4c1a9e72 (ciclo 58) y R-4e7a1d92 (ciclo 59) están corregidos y siguen
-en observación.
-
+allí. R-6d2a8f19 se corrigió en este ciclo y queda en observación.
 ---
 
 ## Extensión de Reportes (sidebar)
@@ -454,19 +452,22 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   `lib/design_tokens.py`, `source/qss/*`, `packagemaker.py`.
 - **Riesgo:** medio.
 
-### 11. `create` del CLI sobrescribe un proyecto existente sin avisar
+### 11. `create` del CLI sobrescribía un proyecto existente sin avisar (R-6d2a8f19)
 
-- **Estado:** Pendiente (Q-016).
-- **Actual:** `packagemaker.py create` escribe en la carpeta canónica aunque ya
-  exista y contenga el guion del usuario. El dashboard y el asistente gráfico
-  rechazan o preguntan; el CLI lo pisa en silencio (el asistente gráfico se
-  alineó en R-4f7a2c91, pero el CLI sigue igual).
-- **Solicitado:** rechazar con `[ERROR] ya existe` y código 1, o exigir
-  `--force` para sobrescribir (recomendación del mantenimiento: `--force`).
+- **Estado:** Aprobado con la **opción B** en Q-016 (commit `71e50f7`) y
+  **corregido** en el ciclo 61; en observación.
+- **Actual (antes):** `packagemaker.py create` escribía en la carpeta canónica
+  aunque ya existiera y contuviera el guion del usuario. El dashboard y el
+  asistente gráfico rechazaban o preguntaban; el CLI lo pisaba en silencio (el
+  asistente gráfico se alineó en R-4f7a2c91, pero el CLI seguía igual).
+- **Solución aplicada:** el subparser `create` acepta `--force`. Sin él, si la
+  carpeta canónica existe, el comando imprime
+  `[ERROR] El proyecto ya existe: <ruta>`, sugiere `Usa --force para
+  sobrescribirlo.` y sale con código 1; con `--force` avisa con
+  `[WARN] Sobrescribiendo el proyecto existente` y regenera el proyecto.
 - **Efectos secundarios:** cambia el código de salida de un comando existente;
-  los scripts que recrean proyectos a propósito necesitarían `--force`.
-- **Archivos:** `lib/cliHandler.py`, `packagemaker.py` (subparser `create`),
-  `tests/test_cli_*`.
+  los scripts que recrean proyectos a propósito necesitan añadir `--force`.
+- **Archivos:** `lib/cliHandler.py`, `tests/test_maintenance_cli_regressions.py`.
 - **Riesgo:** bajo para el motor, medio para scripts existentes.
 
 ### 12. El `updater.py` generado en los proyectos no tiene CLI
@@ -680,6 +681,21 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 
 ---
 
+### 24. Splash dentro de la ventana principal, estilo UWP (Q-032)
+
+- **Estado:** Pendiente de aprobación (Q-032), pedido en el
+  [issue #15](https://github.com/JesusQuijada34/packagemaker/issues/15).
+- **Actual:** el splash es una ventana de nivel superior que ocupa la pantalla
+  disponible (F-003) y se desvanece para revelar la ventana principal.
+- **Solicitado:** el patrón de una app UWP: splash dibujado **dentro** de la
+  misma ventana, interfaz construida detrás y retirada del splash sin abrir ni
+  cerrar ventanas adicionales.
+- **Efectos secundarios:** reabre la coreografía aprobada en F-003; la ventana
+  principal quedaría visible antes de validar la sesión.
+- **Archivos:** `lib/splash_window.py`, `packagemaker.py`, `lib/window_chrome.py`,
+  `tests/test_splash_top_level.py`.
+- **Riesgo:** medio-alto; no verificable en Windows desde este entorno.
+
 ## R-4f8a2c60 — Splash simultáneo y avisos de ventana en Windows
 
 - **Usuario:** JesusQuijada34 (`bugs.txt`, commit `bed2e83`; evidencia en Q-008)
@@ -806,108 +822,6 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
 - **Commit:** —
 - **Fecha de resolución:** —
 
-## R-4c1a9e72 — Claves sobrantes en `lang/` impedían retraducir el envío automático
-
-- **Usuario:** auditoría interna del ciclo 58 (sin reporte externo); misma
-  familia que el issue #12 «problema de idioma» y el #11 «Orden», ambos del
-  propietario JesusQuijada34.
-- **Fecha del reporte:** 2026-11-26
-- **Prioridad:** Media
-- **Descripción:** con la interfaz en inglés (o en cualquier idioma distinto
-  del español), al cambiar de idioma la casilla «Enviar los fallos
-  automáticamente…» y su pista de la página **Reportes** se quedaban en inglés.
-  Además, 12 de los 14 catálogos de `lang/` llevaban claves planas sobrantes
-  (`report.auto_send`, `report.auto_send_hint` dentro del objeto `report`, y
-  `form.author_placeholder` dentro de `create`) que al aplanarse creaban
-  claves inexistentes o colisionaban con las reales.
-- **Pasos para reproducirlo:** abrir la aplicación, poner la interfaz en inglés
-  y cambiar a alemán; la casilla y la pista de Reportes siguen en inglés.
-  Equivalente en código:
-  `live_i18n.key_for("Send failures automatically when a GitHub session exists")`
-  devolvía `report.report.auto_send` en vez de `report.auto_send`.
-- **Causa raíz:** `live_i18n.reverse_index()` indexa por **valor** sobre todos
-  los catálogos. La clave sobrante de `ar.json` (primer fichero por orden
-  alfabético) aportaba el texto inglés bajo `report.report.auto_send`; el
-  catálogo destino resolvía esa clave al mismo texto inglés, así que
-  `target == current` y la retraducción no cambiaba nada.
-- **Solución aplicada:** se retiraron las claves planas sobrantes de los 13
-  catálogos afectados —el valor traducido de `form.author_placeholder` se
-  trasladó a su clave anidada para no perder ninguna traducción— y
-  `lib/live_i18n.py` sólo indexa claves que existen en el catálogo español
-  (la lista canónica), tanto en `reverse_index()` como en `template_index()`.
-  Ningún valor visible cambió salvo el esperado: el texto aplanado de cada
-  catálogo es idéntico salvo las dos claves sobrantes eliminadas (comprobado
-  con `git show HEAD:lang/<x>.json`).
-- **Pruebas:** `tests/test_translation_catalog_hygiene.py` (5 casos: sin claves
-  planas con punto, mismas claves que `es.json`, marcador de Autor traducido,
-  índice inverso sólo con claves canónicas y retraducción del texto inglés del
-  envío automático a de/fr/ja/zh). Tres de ellos fallan con los catálogos
-  anteriores y con `live_i18n` sin el filtro.
-- **Commit:** el del ciclo 58 en `main` (ver `CHANGELOG.md`).
-- **Fecha de resolución:** 2026-11-26
-- **Estado:** Corregido y probado; en observación hasta el ciclo siguiente.
-  No cambia el comportamiento del engine ni el formato de los paquetes.
-
-## R-4e7a1d92 — Configuración con dos barras de acciones y retroceso sin nombre
-
-- **Usuario:** JesusQuijada34 ([issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14),
-  «Tarjetas y problema de interfaz»)
-- **Fecha del reporte:** 2026-11-26
-- **Prioridad:** Media
-- **Descripción:** «en configuracion hay dobles action bars y no hay uno solo y
-  los botones estan dispersos, al abrir el panel privacidad el boton que
-  retrocede a configuracion no tiene nombre». La página dibujaba dos barras
-  —la de la página y la cabecera propia del panel— y, tras cualquier
-  retraducción, el botón de retroceso de los detalles aparecía como «‹» sin
-  texto.
-- **Pasos para reproducirlo:** abrir **Configuración** y mirar la parte
-  superior (dos barras: «Configuración» y la cápsula del panel con
-  «‹ Privacidad»); o cambiar el idioma de la interfaz y entrar en cualquier
-  tarjeta: la cápsula queda en «‹  » sin el nombre.
-  En código: `SettingsPanel.retranslate()` seguido de `_open("privacy")`
-  producía `_titles == {}` y `navigationChanged` con un título vacío.
-- **Causa raíz:** tres defectos acumulados.
-  1. `SettingsPanel` montaba su propia `SettingsHeader` (cápsula + botón
-     Confirmar) **además** de la barra compartida que instala
-     `init_config_tab`, así que la página tenía dos barras y los botones
-     quedaban repartidos entre ambas.
-  2. `SettingsPanel.retranslate()` reconstruía `_titles` con una lista fija de
-     cinco tarjetas (general, appearance, fonts, language, notifications) que
-     no incluía **privacy**; `_open()` pintaba entonces `""` y la cápsula se
-     quedaba sin nombre. Además el prefijo «‹» impide que
-     `live_i18n.retranslate_tree()` recupere el texto por valor, así que nada
-     lo reparaba después.
-  3. La cabecera del panel tenía `apply_soft_shadow()` sobre un widget
-     translúcido: la sombra se dibujaba alrededor del texto de la cápsula
-     («texto con fondo detrás»).
-- **Solución aplicada:** una sola barra por página.
-  - `SettingsPanel` ya no crea cabecera: emite `navigationChanged(título,
-    profundidad, texto_confirmar)` desde `_on_depth_changed` y expone
-    `go_back()`/`confirm_and_go_back()` públicos.
-  - `init_config_tab` instala la barra compartida con un botón de retroceso
-    **con nombre** (`‹  Configuración`, de `config.title`) y el botón
-    `Confirmar` (`config.confirm`), visibles sólo dentro de un detalle;
-    `_on_config_navigation()` los sincroniza.
-  - Los títulos de las tarjetas se guardan con su clave i18n
-    (`_title_keys`) y `retranslate()` los reconstruye desde las claves: las
-    siete tarjetas, Privacidad incluida, sobreviven al cambio de idioma.
-  - `SettingsNavigator` expone `busy()` y anuncia la profundidad definitiva al
-    terminar el deslizamiento, de modo que la barra no se queda desfasada si
-    se pulsa atrás durante la animación. Se retiró la clase `SettingsHeader`
-    (sin uso) y su sombra.
-- **Pruebas:** `tests/test_settings_navigation_bar.py` (11 casos: una sola
-  barra, título de raíz, título/retroceso/confirmar del detalle, detalle de
-  selección única sin Confirmar, vuelta a la raíz, títulos de las siete
-  tarjetas tras `retranslate()`, retroceso con nombre tras retraducir, señal
-  de navegación, cambio de idioma a inglés y vuelta a español, doble pulsación
-  durante la animación y Confirmar). Los 11 fallan con el código anterior
-  (comprobado con `git stash` de los tres ficheros modificados).
-- **Commit:** el del ciclo 59 en `main` (ver `CHANGELOG.md`).
-- **Fecha de resolución:** 2026-11-26
-- **Estado:** Corregido y probado; en observación hasta el ciclo siguiente.
-  No cambia el comportamiento del engine, la ley de nombres, el formato
-  `.iflapp` ni el contenido de los paquetes.
-
 ## Issue #13 — Varias ventanas de Python antes de la interfaz
 
 - **Usuario:** JesusQuijada34 ([issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -926,9 +840,13 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   auxiliares que aparecen y desaparecen antes del primer fotograma. La consola
   lo confirma con `QWidgetWindow(...) must be a top level window` y
   `UpdateLayeredWindowIndirect failed for ptDst=...`.
-- **Estado:** Pendiente; es el mismo defecto que R-4f8a2c60, aprobado en Q-008
-  y bloqueado por la confirmación final **F-003**. No se ha tocado el ciclo de
-  vida de ventanas en este ciclo.
+- **Estado:** Corregido en el ciclo 60 (F-003): el splash es una ventana de
+  nivel superior pintada antes de la interfaz. **Siguen abiertos los issues
+  #15 y #16**, reportados contra el commit `d9d3c48` (que ya incluye ese
+  arreglo): si las ventanas vacías persisten en una ejecución nueva, hace falta
+  el detalle de cómo se lanza la aplicación (fuente o compilada) y una captura
+  del orden de aparición. La petición de splash **dentro** de la ventana al
+  estilo UWP queda como **Q-032** (R-5c9a3e17).
 - **Petición añadida (Q-027 / R-7b2c9e51):** duración mínima del splash de ~5 s,
   escalada por RAM/CPU, y reporte de los tirones del arranque (qué se ejecutó,
   cuánto tardó y los errores restantes).
@@ -1587,3 +1505,19 @@ fundamental, UI o empaquetado; **no se implementan sin aprobación explícita**.
   mezclan con este arreglo. Verificación: 1317 pasan, 1 omitido, 64 subtests; `pyflakes` y `py_compile`
   limpios; arranque real sin los avisos `must be a top level window`. No se
   prepara release: siguen abiertos bugs de prioridad alta.
+
+- Sexagésimo primer ciclo (2026-11-26, push `71e50f7`): el push sólo toca
+  `CONFIRM.MD` y marca **Q-016** como `[X, la B] SÍ` (opción B). Autoría
+  verificada (`JesusQuijada34`, `git log -1` y la API de GitHub). Se aplica
+  **Q-016**: `create` acepta `--force`, rechaza con `[ERROR] El proyecto ya
+  existe` y código 1 cuando la carpeta canónica existe y avisa con `[WARN]` al
+  sobrescribir (R-6d2a8f19). Seis pruebas nuevas en
+  `tests/test_maintenance_cli_regressions.py` (`CreateOverwriteGuardTests`).
+  Limpieza pedida en el issue #15: se retiran de la cola R-4c1a9e72 (ciclo 58) y
+  R-4e7a1d92 (ciclo 59), ya resueltas y sin reaparición, archivadas en
+  `docs/bugs_resueltos.md`. Los issues **#15** y **#16** (ventanas vacías y
+  splash UWP) se atienden con una respuesta en cada uno: el arreglo del splash
+  de nivel superior ya está en `main` y la petición de splash dentro de la
+  ventana queda como **Q-032**, sin tocar el engine hasta que se apruebe. No se
+  prepara release: siguen abiertos bugs de prioridad alta y 21 aprobaciones de
+  engine pendientes de implementación.

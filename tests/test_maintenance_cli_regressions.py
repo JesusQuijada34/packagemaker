@@ -941,3 +941,139 @@ class AccentedPublisherCreateTests(unittest.TestCase):
             self.assertEqual(len(projects), 1, "no se creó el proyecto transliterado")
             details = (projects[0] / "details.xml").read_text(encoding="utf-8")
             self.assertIn("<publisher>Jesus</publisher>", details)
+
+
+class CreateOverwriteGuardTests(unittest.TestCase):
+    """Q-016 (opción B): ``create`` no pisa un proyecto existente sin ``--force``.
+
+    La carpeta canónica lleva la marca temporal al minuto, así que repetir
+    ``create`` con los mismos datos dentro del mismo minuto escribía encima del
+    trabajo del usuario sin avisar (el dashboard sí preguntaba).
+    """
+
+    TIMESTAMP = "26.11-05.00"
+    FOLDER = "Influent.demo.v1.0.0-26.11-05.00-Knosthalij"
+
+    def _create(self, base, force=False):
+        from lib.cliHandler import handle_cli_action
+
+        out = io.StringIO()
+        with patch(
+            "lib.makeselfEngine.naming.ProjectNameFormatter.get_timestamp",
+            staticmethod(lambda: self.TIMESTAMP),
+        ):
+            with redirect_stdout(out):
+                handle_cli_action(
+                    "create_project",
+                    {
+                        "path": str(base),
+                        "name": "Demo",
+                        "shortname": "demo",
+                        "version": "1.0.0",
+                        "author": "JesusQuijada34",
+                        "publisher": "Influent",
+                        "platform": "Knosthalij",
+                        "description": "proyecto de prueba",
+                    },
+                    None,
+                    headless=True,
+                    force=force,
+                )
+        return out.getvalue()
+
+    def test_existing_project_is_not_overwritten_without_force(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            project = base / self.FOLDER
+            project.mkdir(parents=True)
+            script = project / "demo.py"
+            script.write_text("print('codigo del usuario')\n", encoding="utf-8")
+
+            with self.assertRaises(SystemExit) as ctx:
+                self._create(base)
+
+            self.assertEqual(ctx.exception.code, 1)
+            self.assertEqual(
+                script.read_text(encoding="utf-8"), "print('codigo del usuario')\n"
+            )
+
+    def test_error_message_points_at_force(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            (base / self.FOLDER).mkdir(parents=True)
+
+            out = io.StringIO()
+            with patch(
+                "lib.makeselfEngine.naming.ProjectNameFormatter.get_timestamp",
+                staticmethod(lambda: self.TIMESTAMP),
+            ):
+                with redirect_stdout(out):
+                    with self.assertRaises(SystemExit):
+                        from lib.cliHandler import handle_cli_action
+
+                        handle_cli_action(
+                            "create_project",
+                            {
+                                "path": str(base),
+                                "name": "Demo",
+                                "shortname": "demo",
+                                "version": "1.0.0",
+                                "publisher": "Influent",
+                                "platform": "Knosthalij",
+                            },
+                            None,
+                            headless=True,
+                        )
+
+            printed = out.getvalue()
+            self.assertIn("[ERROR]", printed)
+            self.assertIn("ya existe", printed)
+            self.assertIn("--force", printed)
+
+    def test_force_overwrites_existing_project(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            project = base / self.FOLDER
+            project.mkdir(parents=True)
+            script = project / "demo.py"
+            script.write_text("print('codigo del usuario')\n", encoding="utf-8")
+
+            printed = self._create(base, force=True)
+
+            self.assertIn("[WARN] Sobrescribiendo", printed)
+            self.assertNotIn("codigo del usuario", script.read_text(encoding="utf-8"))
+
+    def test_new_project_is_created_without_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "projects"
+            base.mkdir()
+
+            printed = self._create(base)
+
+            self.assertNotIn("[WARN] Sobrescribiendo", printed)
+            self.assertTrue((base / self.FOLDER / "demo.py").is_file())
+
+    def test_parser_accepts_force_for_create(self):
+        from lib.cliHandler import CLIHandler
+
+        parser = CLIHandler(base_dir=Path(tempfile.gettempdir())).parser
+        args = parser.parse_args(
+            ["create", "--name", "Demo", "--shortname", "demo", "--force"]
+        )
+        self.assertTrue(args.force)
+        action, _data, options = CLIHandler(
+            base_dir=Path(tempfile.gettempdir())
+        ).get_action(args)
+        self.assertEqual(action, "create_project")
+        self.assertTrue(options["force"])
+
+    def test_parser_defaults_to_no_force(self):
+        from lib.cliHandler import CLIHandler
+
+        parser = CLIHandler(base_dir=Path(tempfile.gettempdir())).parser
+        args = parser.parse_args(["create", "--name", "Demo", "--shortname", "demo"])
+        self.assertFalse(args.force)
+        _action, _data, options = CLIHandler(
+            base_dir=Path(tempfile.gettempdir())
+        ).get_action(args)
+        self.assertFalse(options["force"])
