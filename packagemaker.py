@@ -349,6 +349,7 @@ from lib.report_page import ReportPage
 from lib.settings_cards import ARROW_BACK
 from lib.settings_panel import SettingsPanel
 from lib.splash_window import IntegratedSplash
+from lib.startup_timing import SplashWaiter, StartupTimeline, minimum_splash_seconds
 from lib.window_manager_bridge import install_window_manager_bridges
 from lib.immersive_titlebar import install_immersive_titlebar
 from lib.ios_progress_dialog import show_ios_progress
@@ -4671,6 +4672,35 @@ class PackageTodoGUI(QMainWindow):
 
 main_window = None
 
+
+def report_startup_lags(timeline, errors=(), minimum=None, ready=None) -> bool:
+    """Encola el reporte de tirones del arranque si el envío automático está activo.
+
+    Respeta el ajuste «envío automático» de la página de Reportes: desactivado,
+    no se guarda nada. La entrada se encola (nunca se envía durante el arranque)
+    y la página la reintenta.
+    """
+    try:
+        from lib import crash_capture, report_queue
+        from lib.startup_timing import startup_lag_report
+
+        if not crash_capture.auto_report_enabled():
+            return False
+        entry = startup_lag_report(
+            timeline, errors=errors, minimum=minimum, ready=ready
+        )
+        if entry is None:
+            return False
+        fingerprint = entry.get("fingerprint", "")
+        if report_queue.already_sent(fingerprint):
+            return False
+        if any(item.get("fingerprint") == fingerprint for item in report_queue.pending()):
+            return False
+        return bool(report_queue.enqueue(entry))
+    except Exception:
+        return False
+
+
 def main():
     global main_window
 
@@ -4789,15 +4819,21 @@ def main():
         return
 
     app = QApplication(sys.argv)
+    # Q-027: se mide cada tramo del arranque para retirar el splash cuando la
+    # interfaz ya se dibujó y para reportar tirones reales, no impresiones.
+    timeline = StartupTimeline.start()
     apply_global_stylesheet(app, get_accent_color())
+    timeline.mark("estilos")
     font = app_font()
     if font is not None:
         app.setFont(font)
+    timeline.mark("fuente")
 
     config = load_app_config()
     current_lang = config.get("LANGUAGE") or system_default_language()
     auto_translate = bool(config.get("auto_translate", True))
     i18n.initialize(app, current_lang, auto_translate=auto_translate)
+    timeline.mark("idioma")
 
     # Coreografía de arranque (bugs.txt Fase 2.2): splash → landing →
     # verificación de errores internos → ventana principal.
@@ -4807,19 +4843,29 @@ def main():
     # El splash es lo primero y de nivel superior (sin padre): se pinta antes de
     # construir la UI pesada y no crea ventanas hijas translúcidas, que en
     # Windows generaban ventanas vacías y avisos "must be a top level window".
-    # Sin temporizador falso, permanece visible hasta que la validación de
-    # sesión decide si hay que revelar el landing o entrar directamente al IDE.
+    # Permanece visible un mínimo de ``splash_seconds`` (Q-027) para que la
+    # interfaz termine de dibujarse antes de abrir la cortina.
     splash = IntegratedSplash(
         icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
         title="Package Maker",
         accent=get_accent_color(),
     )
     splash.show_splash()
+    timeline.mark("splash_visible")
+    splash_seconds = minimum_splash_seconds()
+    splash_waiter = SplashWaiter(
+        splash_seconds,
+        schedule=lambda delay, callback: QTimer.singleShot(
+            int(delay * 1000) + 1, callback
+        ),
+    )
+    splash_waiter.arm()
 
     startup_plan = plan_startup(
         has_session=True,
         internal_errors=collect_internal_errors(BASE_DIR, Fluthin_APPS),
     )
+    timeline.mark("verificacion")
     if startup_plan.internal_errors:
         # El splash se convierte en la ventana de reporte; el proceso sale con 1.
         splash.close()
@@ -4833,17 +4879,38 @@ def main():
         )
 
     main_window = PackageTodoGUI()
+    timeline.mark("ventana")
     main_window.apply_ui_language()
+    timeline.mark("idioma_ui")
 
-    def close_splash():
+    splash_closed = {"done": False}
+
+    def finish_splash():
+        splash_closed["done"] = True
         if getattr(sys, "frozen", False) and os.environ.get("_PYI_SPLASH_IPC"):
             try:
                 importlib.import_module("pyi_splash").close()
             except (ImportError, OSError):
                 pass
         splash.finish()
+        report_startup_lags(
+            timeline,
+            errors=startup_plan.internal_errors,
+            minimum=splash_seconds,
+            ready=splash_waiter.ready_seconds,
+        )
+
+    def close_splash():
+        if splash_closed["done"]:
+            return
+        if splash_waiter.ready_seconds is None:
+            # La compuerta ya decidió: aquí acaba el arranque real. La espera
+            # mínima que viene después es pacing deliberado, no un tirón.
+            timeline.mark("compuerta")
+        splash_waiter.request(finish_splash, timeline=timeline)
 
     main_window.show()
+    timeline.mark("show")
     # La ventana principal nace debajo del splash; se vuelve a subir éste para
     # que la revele el desvanecido y no un parpadeo del gestor de ventanas.
     splash.raise_()
