@@ -329,7 +329,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   el splash vive dentro de la ventana principal, la ventana se muestra antes de
   validar la sesión y un fallo de arranque deja ver un marco vacío. No se puede
   verificar visualmente en Windows desde este entorno.
-- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
 
 ### Q-033 — Alcance restante de Q-012 sin hilo de guardado (R-7c4a1e95)
 - **Tipo:** mejora (ajuste de alcance de Q-012)
