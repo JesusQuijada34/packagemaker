@@ -319,3 +319,22 @@ al ciclo anterior.
   help, aide, extra, about y la tarjeta muestra «Instaladas: extra». Suite:
   1466 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. No se prepara release: siguen pendientes los
   cambios de engine aprobados y R-7f2b9c41 espera Q-034.
+- Septuagésimo octavo ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`, así que se aplica **Q-030** (R-6f1c8e35, issue #14): la
+  tarjeta de cuenta sale del sidebar, las extensiones quedan justo debajo de
+  MoonFix y el perfil pasa a ser la extensión «Perfil»
+  (`lib/addons/profile.yaml` + `lib/profile_page.py`) con avatar, nombre,
+  `@login`, descripción, seguidores y repositorios. La descarga de repositorios
+  corre en un `QThread` (`github_identity.fetch_repositories()`: `/user/repos`
+  con token y `/users/<login>/repos` sin él) y `GitHubProfile.extras` guarda
+  `bio`, `public_repos`, `followers` y `following`. Configuración gana la
+  tarjeta **Cuenta** con el estado de la sesión y los botones de acceso y
+  cierre, que delegan en el anfitrión; `_refresh_github_card()` refresca
+  tarjeta, página y panel a la vez. Claves `sidebar.profile`, `sidebar_desc.9`,
+  `profile.*` y `config.account_*` en los 14 catálogos y en
+  `tools/translations_curated.py`. Verificado con la ventana real (offscreen):
+  sidebar create, build, config, moonfix, report, help, aide, perfil, about.
+  Suite: 1481 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. Commit
+  `8ac30ad` en `main`. No se prepara release: siguen pendientes los cambios de
+  engine aprobados y R-7f2b9c41 espera Q-034.
