@@ -864,3 +864,16 @@ ciclos: es un registro de auditoría.
   `pyflakes` limpio. Commit del código `804c50c`. No se prepara release: siguen
   pendientes los cambios de engine aprobados y R-7f2b9c41 espera la decisión de
   Q-034.
+- Septuagésimo sexto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`. Se aplica en parte **Q-022** (R-2c8d4f71): `git mv addons
+  lib/addons` y nuevos `shipped_addons_dirs()` / `load_addons_from_dirs()` en
+  `lib/addons_engine.py`, con `addons/` como ruta de compatibilidad y
+  precedencia por `id` (gana el primer directorio). `packagemaker.py` y
+  `--list-addons` usan el resolutor. Verificación: el CLI lista los 8 addons en
+  su orden y las pruebas `ShippedDirsTest` cubren precedencia, compatibilidad y
+  respaldo integrado. La instalación de un addon `.yaml` desde Configuración
+  (segunda mitad de Q-022) queda pendiente por requerir UI y traducciones en 14
+  catálogos. Suite: 1444 pasan, 2 omitidas, 64 subtests; `pyflakes` limpio. No
+  se prepara release: siguen pendientes los cambios de engine aprobados y
+  R-7f2b9c41 espera la decisión de Q-034.

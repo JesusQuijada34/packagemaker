@@ -298,7 +298,7 @@ class CLIHandler:
 
         font_group = self.parser.add_argument_group('Fuentes')
         font_group.add_argument('--list-fonts', action='store_true', help='Mostrar el estado de las fuentes de la interfaz')
-        font_group.add_argument('--list-addons', action='store_true', help='Listar las extensiones del sidebar (addons/*.yaml)')
+        font_group.add_argument('--list-addons', action='store_true', help='Listar las extensiones del sidebar (lib/addons/*.yaml)')
         font_group.add_argument('--download-fonts', nargs='?', const='all', metavar='KEYS', help='Descargar fuentes (todas o lista separada por comas)')
         font_group.add_argument('--force-fonts', action='store_true', help='Forzar la redescarga aunque estén en caché')
 
@@ -841,12 +841,9 @@ class AddonReportHelper:
 
     @staticmethod
     def report():
-        from pathlib import Path
+        from lib.addons_engine import load_addons_from_dirs, shipped_addons_dirs
 
-        from lib.addons_engine import load_addons
-
-        directory = Path(__file__).resolve().parent.parent / "addons"
-        addons = load_addons(directory)
+        addons = load_addons_from_dirs(shipped_addons_dirs())
         skipped = getattr(type(addons[0]) if addons else None, "skipped", []) or []
         print(f"Extensiones del sidebar ({len(addons)}):")
         for addon in addons:

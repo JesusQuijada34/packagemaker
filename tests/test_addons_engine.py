@@ -10,7 +10,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from lib import addons_engine
-from lib.addons_engine import Addon, AddonError, load_addons, parse_manifest
+from lib.addons_engine import (
+    Addon,
+    AddonError,
+    load_addons,
+    load_addons_from_dirs,
+    parse_manifest,
+    shipped_addons_dirs,
+)
 
 
 def _write(directory: Path, name: str, body: str) -> Path:
@@ -230,24 +237,55 @@ class RealAddonsTest(unittest.TestCase):
     """Los manifiestos que viajan con la app deben ser válidos."""
 
     def test_shipped_addons_are_valid(self):
-        directory = Path(__file__).resolve().parents[1] / "addons"
+        directory = Path(__file__).resolve().parents[1] / "lib" / "addons"
         self.assertTrue(directory.is_dir(), "falta el directorio addons/")
         problems = addons_engine.validate_directory(directory)
         self.assertEqual(problems, [])
 
     def test_shipped_addons_have_expected_ids(self):
-        directory = Path(__file__).resolve().parents[1] / "addons"
+        directory = Path(__file__).resolve().parents[1] / "lib" / "addons"
         ids = [a.id for a in load_addons(directory, strict=True)]
         self.assertEqual(
             ids, ["create", "build", "config", "moonfix", "report", "help", "aide", "about"]
         )
 
     def test_every_shipped_addon_points_to_a_real_builder(self):
-        directory = Path(__file__).resolve().parents[1] / "addons"
+        directory = Path(__file__).resolve().parents[1] / "lib" / "addons"
         for addon in load_addons(directory, strict=True):
             self.assertEqual(addon.kind, "builder", addon.id)
             self.assertTrue(addon.builder.startswith("build_"), addon.id)
             self.assertTrue(addon.label.startswith("sidebar."), addon.id)
+
+
+class ShippedDirsTest(unittest.TestCase):
+    """``lib/addons/`` es la ubicación actual; ``addons/`` queda de respaldo."""
+
+    def test_shipped_dir_is_lib_addons(self):
+        dirs = shipped_addons_dirs()
+        self.assertTrue(dirs)
+        self.assertEqual(dirs[0], Path(addons_engine.SHIPPED_ADDONS_DIR))
+        self.assertEqual(dirs[0].name, "addons")
+        self.assertEqual(dirs[0].parent.name, "lib")
+
+    def test_merged_loader_reads_shipped_manifests(self):
+        ids = [a.id for a in load_addons_from_dirs(shipped_addons_dirs(), strict=True)]
+        self.assertEqual(
+            ids, ["create", "build", "config", "moonfix", "report", "help", "aide", "about"]
+        )
+
+    def test_first_directory_wins_and_ids_are_not_duplicated(self):
+        with tempfile.TemporaryDirectory() as one, tempfile.TemporaryDirectory() as two:
+            first, second = Path(one), Path(two)
+            _write(first, "uno.yaml", "id: uno\nsection: main\norder: 10\nlabel: sidebar.uno\nbuilder: build_uno_page\n")
+            _write(second, "uno.yaml", "id: uno\nsection: main\norder: 90\nlabel: sidebar.otro\nbuilder: build_otro_page\n")
+            _write(second, "dos.yaml", "id: dos\nsection: tools\norder: 10\nlabel: sidebar.dos\nbuilder: build_dos_page\n")
+            addons = load_addons_from_dirs([first, second], strict=True)
+            self.assertEqual([a.id for a in addons], ["uno", "dos"])
+            self.assertEqual(addons[0].order, 10)  # gana el primero
+
+    def test_merged_loader_ignores_missing_directories(self):
+        ids = [a.id for a in load_addons_from_dirs([Path("/no/existe")])]
+        self.assertEqual(len(ids), 8)  # respaldo integrado, nunca un sidebar vacío
 
 
 class PluginTest(unittest.TestCase):

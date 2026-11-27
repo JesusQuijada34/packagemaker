@@ -155,7 +155,7 @@ def build_system_prompt(app_version: str = "") -> str:
         "compongas a mano.\n"
         "- Los colores y estilos salen de lib/design_tokens.py y de source/qss/*.qss; "
         "no escribas colores literales.\n"
-        "- Cada página del sidebar es un addon declarado en addons/*.yaml.\n"
+        "- Cada página del sidebar es un addon declarado en lib/addons/*.yaml.\n"
         "- Las cadenas visibles pasan por tr() y usan claves seccion.clave.\n"
         "Si no sabes algo del proyecto, dilo en vez de inventarlo."
     )

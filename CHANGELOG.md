@@ -1,3 +1,37 @@
+## 2026-11-27 — septuagésimo sexto ciclo
+
+### Aplicado en parte — addons en `lib/addons/` (Q-022 / R-2c8d4f71)
+
+Los manifiestos del sidebar se trasladan de `addons/` (raíz) a `lib/addons/`,
+la ubicación que pidió el propietario en el issue #11 («las extensiones del
+sidebar pueden ir por sistema en `lib/addons/`»), conservando `addons/` como
+ruta de compatibilidad.
+
+- **Resolución:** nuevos `SHIPPED_ADDONS_DIR`, `LEGACY_ADDONS_DIR`,
+  `shipped_addons_dirs()` y `load_addons_from_dirs()` en
+  `lib/addons_engine.py`. Se combinan los directorios existentes; el primero
+  gana por `id`, así que `lib/addons/` manda y `addons/` sólo aporta lo que
+  falte (bundles antiguos). Si no hay ninguno, se mantiene el respaldo
+  integrado `DEFAULT_ADDONS`.
+- **Consumidores:** `packagemaker.py` (`ADDONS_DIRS` +
+  `load_addons_from_dirs`) y el CLI `--list-addons` usan el resolutor; la
+  ayuda del CLI apunta a `lib/addons/*.yaml`.
+- **Pruebas:** `tests/test_addons_engine.py` valida la nueva ubicación y añade
+  `ShippedDirsTest` (precedencia entre directorios, sin ids duplicados,
+  directorios ausentes ignorados y respaldo integrado);
+  `tests/test_help_page.py` lee de `lib/addons/`.
+- **Pendiente:** instalar un addon `.yaml` desde Configuración con validación
+  previa (segunda mitad de Q-022). Requiere UI nueva y claves en los 14
+  catálogos de `lang/`; se hará en un ciclo propio para no mezclar el cambio
+  de rutas con una función de interfaz.
+- **Reporte:** JesusQuijada34 (issue #11). Sin cambios de comportamiento del
+  engine ni del formato de paquetes.
+
+### Suite
+
+1444 pasan, 2 omitidas, 64 subtests; `pyflakes` limpio. No se prepara release:
+siguen pendientes los cambios de engine aprobados y R-7f2b9c41 espera Q-034.
+
 ## 2026-11-27 — septuagésimo quinto ciclo
 
 ### Corregido — el sidebar nunca pintaba su fondo QSS (R-8f4b2d61)

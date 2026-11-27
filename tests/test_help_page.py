@@ -63,7 +63,7 @@ def _flat(data, prefix=""):
 def test_manifest_is_shipped_and_valid():
     addons = {
         addon.id: addon
-        for addon in addons_engine.load_addons(ROOT / "addons", strict=True)
+        for addon in addons_engine.load_addons(ROOT / "lib" / "addons", strict=True)
     }
     assert "help" in addons
     addon = addons["help"]

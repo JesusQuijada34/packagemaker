@@ -344,7 +344,7 @@ from lib.design_tokens import (
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
-from lib.addons_engine import Addon, load_addons
+from lib.addons_engine import Addon, load_addons_from_dirs, shipped_addons_dirs
 from lib.report_page import ReportPage
 from lib.settings_cards import ARROW_BACK
 from lib.settings_panel import SettingsPanel
@@ -448,8 +448,10 @@ else:
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
 # Los addons viajan con el código: se resuelven junto a este script, no en la
-# carpeta de datos del usuario.
-ADDONS_DIR = Path(__file__).resolve().parent / "addons"
+# carpeta de datos del usuario. ``lib/addons/`` es la ubicación actual y
+# ``addons/`` se mantiene como ruta de compatibilidad.
+ADDONS_DIRS = shipped_addons_dirs()
+ADDONS_DIR = ADDONS_DIRS[0] if ADDONS_DIRS else Path(__file__).resolve().parent / "lib" / "addons"
 
 TAB_ICON_KEYS = {
     "crear": "crear",
@@ -911,9 +913,9 @@ class PackageTodoGUI(QMainWindow):
 
         # Navigation Buttons
         dark_now = system_theme_mode() != "light"
-        # El sidebar se arma desde addons/*.yaml: el manifiesto dice qué es
+        # El sidebar se arma desde lib/addons/*.yaml: el manifiesto dice qué es
         # cada entrada y el motor (lib/addons_engine.py) decide cómo construirla.
-        self._addons = load_addons(ADDONS_DIR)
+        self._addons = load_addons_from_dirs(ADDONS_DIRS)
         for message in getattr(Addon, "skipped", []):
             print(f"[PackageMaker] addon omitido: {message}")
 

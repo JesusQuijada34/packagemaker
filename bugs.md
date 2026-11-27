@@ -1,8 +1,9 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 75: R-8f4b2d61 corregido —el sidebar
-ya pinta su fondo QSS translúcido— y Q-026 aplicada en parte; la superficie y
-el texto de las pestañas esperan Q-036).
+Última actualización: 2026-11-27 (ciclo 76: Q-022 aplicada en parte —los
+manifiestos de addons viven en `lib/addons/` con `addons/` como ruta de
+compatibilidad—; la instalación de un addon desde Configuración sigue
+pendiente).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -23,7 +24,7 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aplicada en parte (sidebar, R-8f4b2d61); falta superficie/texto de pestañas (Q-036) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
-| R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Aprobado Q-022; pendiente de implementación |
+| R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Aplicada en parte (Q-022): reubicación y compatibilidad; falta la instalación desde Configuración |
 | R-9a4e2c83 | Cambio de engine — GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
@@ -113,10 +114,20 @@ R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
 - **Descripción:** mover los manifiestos a `lib/addons/` conservando
   compatibilidad con `addons/` y añadir importación/validación de un `.yaml`
   desde Configuración.
-- **Estado:** Aprobada (Q-022); pendiente de implementación.
-- **Archivos:** `lib/addons_engine.py`, `addons/*.yaml`, `packagemaker.py`,
-  `lib/settings_panel.py`, `tests/test_privacy_switch_and_addons_ui.py`.
+- **Estado:** **Aplicada en parte** (Q-022, ciclo 76). Los manifiestos viven
+  ahora en `lib/addons/` y `addons/` se conserva como ruta de compatibilidad
+  (el primer directorio gana por `id`). Falta la segunda mitad: instalar un
+  addon `.yaml` desde Configuración con validación previa, que necesita UI
+  nueva y claves de traducción en los 14 catálogos; se hará en un ciclo
+  propio para no mezclar un cambio de rutas con una función de interfaz.
+- **Archivos:** `lib/addons_engine.py`, `lib/addons/*.yaml`,
+  `packagemaker.py`, `lib/cliHandler.py`, `lib/settings_panel.py`, `tests/`.
 - **Riesgo:** medio (rutas de carga y empaquetado).
+- **Solución aplicada:** `git mv addons lib/addons`; nuevos
+  `shipped_addons_dirs()` y `load_addons_from_dirs()` en
+  `lib/addons_engine.py` (precedencia `lib/addons/` → `addons/`, sin
+  duplicar ids); `packagemaker.py` y `--list-addons` usan el resolutor;
+  pruebas de precedencia, compatibilidad y respaldo. Commit `—` (ciclo 76).
 
 ## Cambios de engine pendientes
 
@@ -298,3 +309,17 @@ al ciclo anterior.
   Q-036. R-8f4b2d61 se archiva en `docs/bugs_resueltos.md`. Suite: 1441 pasan,
   1 omitida, 64 subtests; `pyflakes` limpio. No se prepara release: siguen
   pendientes los cambios de engine aprobados y R-7f2b9c41 espera Q-034.
+- Septuagésimo sexto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`. Se aplica en parte **Q-022** (R-2c8d4f71): los manifiestos
+  del sidebar pasan de `addons/` a `lib/addons/` —la ubicación que pidió el
+  propietario en el issue #11— y `addons/` se conserva como ruta de
+  compatibilidad. El nuevo `load_addons_from_dirs()` combina los directorios
+  existentes sin duplicar ids (gana el primero); `packagemaker.py` y
+  `--list-addons` usan el resolutor. Pruebas: `ShippedDirsTest` (precedencia,
+  compatibilidad y respaldo) y `tests/test_help_page.py` apunta a la nueva
+  ruta. La instalación de un addon `.yaml` desde Configuración sigue pendiente:
+  exige UI nueva y claves en los 14 catálogos, así que se hará en un ciclo
+  propio. Suite: 1444 pasan, 2 omitidas, 64 subtests; `pyflakes` limpio. No se
+  prepara release: siguen pendientes los cambios de engine aprobados y
+  R-7f2b9c41 espera Q-034.

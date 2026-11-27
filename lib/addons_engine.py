@@ -1,6 +1,6 @@
 """Motor de addons del sidebar.
 
-Cada entrada del sidebar es un addon declarado en ``addons/<id>.yaml``. El YAML
+Cada entrada del sidebar es un addon declarado en ``lib/addons/<id>.yaml``. El YAML
 manifiesta *qué* es el addon; este módulo decide *cómo* se construye.
 
 Manifiesto mínimo::
@@ -47,7 +47,7 @@ import importlib.util
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 try:  # PyYAML es una dependencia de la app, pero el motor no debe romperse sin ella.
     import yaml
@@ -184,7 +184,7 @@ def parse_manifest(data: Any, source: Path) -> Optional[Addon]:
     )
 
 
-#: Respaldo si falta ``addons/`` (bundle incompleto, instalación a medias).
+#: Respaldo si falta ``lib/addons/`` (bundle incompleto, instalación a medias).
 #: Sin él la ventana abriría con el sidebar vacío y sin páginas.
 DEFAULT_ADDONS = (
     ("create", 10, "main", "sidebar.create", "sidebar_desc.0", "crear", "build_create_page"),
@@ -215,6 +215,38 @@ def fallback_addons() -> List[Addon]:
     return sorted(addons, key=lambda a: (SECTIONS.index(a.section), a.order, a.id))
 
 
+def _read_directory(directory: Path, *, strict: bool, errors: List[str]) -> List[Addon]:
+    addons: List[Addon] = []
+    for path in sorted(directory.glob("*.yaml")):
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            addon = parse_manifest(data, path)
+        except AddonError as exc:
+            if strict:
+                raise
+            errors.append(str(exc))
+            continue
+        except Exception as exc:  # YAML inválido, permisos, encoding…
+            if strict:
+                raise AddonError(f"{path.name}: {exc}") from exc
+            errors.append(f"{path.name}: {exc}")
+            continue
+        if addon is not None:
+            addons.append(addon)
+    return addons
+
+
+#: ``lib/addons/`` es la ubicación de los manifiestos que viajan con la app.
+#: ``addons/`` en la raíz se conserva para bundles antiguos (compatibilidad).
+SHIPPED_ADDONS_DIR = Path(__file__).resolve().parent / "addons"
+LEGACY_ADDONS_DIR = Path(__file__).resolve().parent.parent / "addons"
+
+
+def shipped_addons_dirs() -> List[Path]:
+    """Directorios de manifiestos incluidos, por precedencia (primero gana)."""
+    return [d for d in (SHIPPED_ADDONS_DIR, LEGACY_ADDONS_DIR) if d.is_dir()]
+
+
 def load_addons(directory: Path, *, strict: bool = False) -> List[Addon]:
     """Carga y ordena los manifiestos de *directory*.
 
@@ -241,27 +273,41 @@ def load_addons(directory: Path, *, strict: bool = False) -> List[Addon]:
         Addon.skipped = [f"no existe {directory}: se usan los addons por defecto"]
         return fallback_addons()
 
-    for path in sorted(directory.glob("*.yaml")):
-        try:
-            data = yaml.safe_load(path.read_text(encoding="utf-8"))
-            addon = parse_manifest(data, path)
-        except AddonError as exc:
-            if strict:
-                raise
-            errors.append(str(exc))
-            continue
-        except Exception as exc:  # YAML inválido, permisos, encoding…
-            if strict:
-                raise AddonError(f"{path.name}: {exc}") from exc
-            errors.append(f"{path.name}: {exc}")
-            continue
-        if addon is not None:
-            addons.append(addon)
-
+    addons = _read_directory(directory, strict=strict, errors=errors)
     addons.sort(key=lambda a: (SECTIONS.index(a.section), a.order, a.id))
     Addon.skipped = errors  # type: ignore[attr-defined]
     if not addons and not strict:
         errors.append(f"sin manifiestos en {directory}: se usan los addons por defecto")
+        return fallback_addons()
+    return addons
+
+
+def load_addons_from_dirs(directories: Iterable[Path], *, strict: bool = False) -> List[Addon]:
+    """Carga manifiestos de varios directorios; el primero gana por ``id``.
+
+    Sirve para combinar la ubicación incluida (``lib/addons/``) con la ruta de
+    compatibilidad (``addons/``) sin duplicar entradas. Los directorios que no
+    existan se ignoran.
+    """
+    if yaml is None:
+        if strict:
+            raise AddonError("PyYAML no está instalado: no se pueden leer los addons")
+        Addon.skipped = ["PyYAML no está instalado: se usan los addons por defecto"]
+        return fallback_addons()
+
+    merged: Dict[str, Addon] = {}
+    errors: List[str] = []
+    for directory in directories:
+        directory = Path(directory)
+        if not directory.is_dir():
+            continue
+        for addon in _read_directory(directory, strict=strict, errors=errors):
+            merged.setdefault(addon.id, addon)
+
+    addons = sorted(merged.values(), key=lambda a: (SECTIONS.index(a.section), a.order, a.id))
+    Addon.skipped = errors  # type: ignore[attr-defined]
+    if not addons and not strict:
+        errors.append("sin manifiestos: se usan los addons por defecto")
         return fallback_addons()
     return addons
 
