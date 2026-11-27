@@ -38,7 +38,8 @@
     "toggle_expand": "Menüyü genişlet (Ctrl+B)",
     "toggle_collapse": "Menüyü gizle (Ctrl+B)",
     "report": "Bildirimler",
-    "aide": "AIDE"
+    "aide": "AIDE",
+    "help": "Yardım"
   },
   "sidebar_desc": {
     "0": "### Proje olustur\nUygulamalari sifirdan tasarla. **Influent OS** ekosistemi icin benzersiz kimlikler, surumler ve ust veriler belirle.",
@@ -47,7 +48,8 @@
     "4": "### MoonFix Suite\nDerin onarim. Paketlerindeki tutarsizliklari tara, bul ve duzelt. Her varlik ve XML etiketi dogru olmali.",
     "5": "### Hakkinda\nTeknik proje ayrintilari. GPL lisansi, Qt cercevesi ve **Package Maker** arkasindaki ekip.",
     "6": "### Bildirimler\nHataları ve önerileri GitHub hesabınızla doğrudan depoya gönderin. Uygulama, hatanın yeniden üretilebilmesi için cihaz ortamını ekler.",
-    "7": "### AIDE\nYardım isteyin, proje oluşturun veya bir derlemeye hazırlanın. Yalnızca işaretledikleriniz gönderilir: asla kimlik bilgileri veya yollar."
+    "7": "### AIDE\nYardım isteyin, proje oluşturun veya bir derlemeye hazırlanın. Yalnızca işaretledikleriniz gönderilir: asla kimlik bilgileri veya yollar.",
+    "8": "### Yardım\nTüm uygulama için kılavuz: oluştur, derle, koru ve bildir; arama kutusuyla."
   },
   "config": {
     "title": "Ayarlar",
@@ -825,6 +827,29 @@
     "env_hint": "Kişisel yollar, sistem kullanıcı adınız ve kimlik bilgileri asla gönderilmez.",
     "auto_send": "GitHub oturumu varsa arızaları otomatik gönder",
     "auto_send_hint": "Kapalıysa arızalar yalnızca kaydedilir ve buradan kendiniz gönderebilirsiniz."
+  },
+  "help": {
+    "intro": "Tüm uygulama için hızlı kılavuz. Konuları filtrelemek için bir sözcük yazın.",
+    "search_placeholder": "Yardımda ara",
+    "empty": "Aramayla eşleşen konu yok.",
+    "topics": {
+      "start": {
+        "title": "Proje oluştur",
+        "body": "Proje Oluştur bölümünde publisher, ad, sürüm ve platform seçilir. Son ad, kurallı yasaya publisher.app.vX.x-YY.MM-HH.MM-Platform uyar ve klasör zorunlu şablonlarla oluşturulur: details.xml, version.res, autorun, .storedetail ve config/settings.json. Onaylamadan önce önizlemeyi denetleyin; sonradan yeniden adlandırmak üst verilerin de düzeltilmesini gerektirir."
+      },
+      "build": {
+        "title": "Paket derle",
+        "body": "Paket Oluştur, açık projeden bir .iflapp kapsayıcısı üretir. Varsayılan arka uç Nuitka'dır; yoksa PyInstaller ve son çare olarak zipapp kullanılır, böylece her zaman bir derleme yolu vardır. Her proje build/pm-sandbox altındaki kendi yalıtılmış ortamında derlenir; Ayarlar → Ağ ölçülü kullanımda değilse. Son paket dist içinde kalır."
+      },
+      "harden": {
+        "title": "İkili dosyayı koru",
+        "body": "Koruma pakete katman ekler: strip ve upx boyutu küçültür, checksum ve integrity kurcalamayı saptar, sign içeriği HMAC-SHA256 ile mühürler. compile-only yalnızca bayt kodunu bırakır ve rename-symbols adları gizler. Yalnızca gerekeni açın: upx ve rename-symbols kendi kodunu okuyan programları bozabilir."
+      },
+      "report": {
+        "title": "Hata bildir",
+        "body": "Bildirimler sayfası GitHub hesabınızla depoda bir issue açar ve cihaz ortamını ekler. Uygulamanın kendi bulduğu arızalar kuyrukta kalır ve otomatik gönderimi açarsanız gönderilir. Yeniden üretme adımlarını ekleyin; kimlik bilgilerini veya özel yolları yapıştırmayın: issue herkese açıktır."
+      }
+    }
   },
   "addon": {
     "error_title": "«{addon}» uzantısı yüklenemedi"

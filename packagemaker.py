@@ -460,6 +460,7 @@ TAB_ICON_KEYS = {
     "reparar": "instalar",
     "about": "about",
     "report": "report",
+    "help": "help",
     "aide": "aide",
     "instalar": "instalar",
     "desinstalar": "desinstalar",
@@ -1080,9 +1081,10 @@ class PackageTodoGUI(QMainWindow):
             self._refresh_config_tab_labels()
         # Los textos que no son ``tr()`` directo (ítems de combo, placeholders
         # construidos a mano) los reaplica la propia página.
-        page = getattr(self, "report_page", None)
-        if page is not None and hasattr(page, "retranslate"):
-            page.retranslate()
+        for name in ("report_page", "page_help"):
+            page = getattr(self, name, None)
+            if page is not None and hasattr(page, "retranslate"):
+                page.retranslate()
 
     def _apply_page_description(self, addon, index: int = 0) -> None:
         page = getattr(self, f"page_{addon.id}", None)
@@ -3245,6 +3247,11 @@ class PackageTodoGUI(QMainWindow):
 
     def build_report_page(self):
         return ReportPage()
+
+    def build_help_page(self):
+        from lib.help_page import HelpPage
+
+        return HelpPage()
 
     def build_aide_page(self):
         from lib.aide_page import AidePage

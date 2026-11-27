@@ -38,7 +38,8 @@
     "toggle_expand": "Developper le menu (Ctrl+B)",
     "toggle_collapse": "Masquer le menu (Ctrl+B)",
     "report": "Rapports",
-    "aide": "AIDE"
+    "aide": "AIDE",
+    "help": "Aide"
   },
   "sidebar_desc": {
     "0": "### Creer un projet\nConcevez des applications de zero. Definissez des identites, versions et metadonnees uniques pour l'ecosysteme **Influent OS**, guide etape par etape.",
@@ -47,7 +48,8 @@
     "4": "### MoonFix Suite\nReparation profonde. Analysez, detectez et corrigez les incoherences de vos paquets. Chaque ressource et balise XML doit etre correcte.",
     "5": "### A propos\nDetails techniques du projet. Licence GPL, framework Qt et l'equipe derriere **Package Maker**.",
     "6": "### Rapports\nEnvoyez erreurs et suggestions directement au dépôt avec votre compte GitHub. L'application joint l'environnement de l'appareil pour reproduire le problème.",
-    "7": "### AIDE\nDemandez de l'aide, générez un projet ou préparez une compilation. Seul ce que vous cochez est envoyé : jamais d'identifiants ni de chemins."
+    "7": "### AIDE\nDemandez de l'aide, générez un projet ou préparez une compilation. Seul ce que vous cochez est envoyé : jamais d'identifiants ni de chemins.",
+    "8": "### Aide\nGuide de toute l'application : créer, compiler, protéger et signaler, avec une recherche."
   },
   "config": {
     "title": "Paramètres",
@@ -825,6 +827,29 @@
     "env_hint": "Aucun chemin personnel, nom d'utilisateur système ni identifiant n'est envoyé.",
     "auto_send": "Envoyer les pannes automatiquement si une session GitHub existe",
     "auto_send_hint": "Si vous le désactivez, les pannes sont seulement enregistrées et vous pouvez les envoyer ici."
+  },
+  "help": {
+    "intro": "Guide rapide de toute l'application. Saisissez un mot pour filtrer les thèmes.",
+    "search_placeholder": "Rechercher dans l'aide",
+    "empty": "Aucun thème ne correspond à la recherche.",
+    "topics": {
+      "start": {
+        "title": "Créer un projet",
+        "body": "Dans Créer un projet, vous choisissez le publisher, le nom, la version et la plateforme. Le nom final suit la loi canonique publisher.app.vX.x-YY.MM-HH.MM-Platform et le dossier est créé avec les modèles obligatoires : details.xml, version.res, autorun, .storedetail et config/settings.json. Vérifiez l'aperçu avant de confirmer : renommer ensuite oblige aussi à corriger les métadonnées."
+      },
+      "build": {
+        "title": "Compiler un paquet",
+        "body": "Construire le paquet génère un conteneur .iflapp à partir du projet ouvert. Le backend par défaut est Nuitka ; s'il manque, PyInstaller est utilisé et, en dernier recours, zipapp, il existe donc toujours une voie de compilation. Chaque projet compile dans son propre environnement isolé sous build/pm-sandbox, sauf si Configuration → Réseau est en usage mesuré. Le paquet final reste dans dist."
+      },
+      "harden": {
+        "title": "Protéger le binaire",
+        "body": "Le blindage ajoute des couches au paquet : strip et upx réduisent la taille, checksum et integrity détectent les manipulations et sign scelle le contenu avec HMAC-SHA256. compile-only ne garde que le bytecode et rename-symbols obscurcit les noms. N'activez que le nécessaire : upx et rename-symbols peuvent casser les programmes qui lisent leur propre code."
+      },
+      "report": {
+        "title": "Signaler un bug",
+        "body": "La page Rapports ouvre un issue dans le dépôt avec votre compte GitHub et joint l'environnement de l'appareil. Les pannes que l'application détecte seule restent dans la file et sont envoyées si vous activez l'envoi automatique. Indiquez les étapes de reproduction et ne collez ni identifiants ni chemins privés : l'issue est public."
+      }
+    }
   },
   "addon": {
     "error_title": "L'extension « {addon} » n'a pas pu être chargée"

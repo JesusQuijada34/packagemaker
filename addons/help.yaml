@@ -1,0 +1,8 @@
+# Ayuda global de la aplicación (lib/help_page.py).
+id: help
+order: 15
+section: tools
+label: sidebar.help
+description: sidebar_desc.8
+icon: help
+builder: build_help_page

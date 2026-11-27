@@ -192,6 +192,7 @@ DEFAULT_ADDONS = (
     ("config", 30, "main", "sidebar.config", "sidebar_desc.3", "config", "build_config_page"),
     ("moonfix", 40, "main", "sidebar.moonfix", "sidebar_desc.4", "moonfix", "build_moonfix_page"),
     ("report", 10, "tools", "sidebar.report", "sidebar_desc.6", "report", "build_report_page"),
+    ("help", 15, "tools", "sidebar.help", "sidebar_desc.8", "help", "build_help_page"),
     ("aide", 20, "tools", "sidebar.aide", "sidebar_desc.7", "aide", "build_aide_page"),
     ("about", 10, "footer", "sidebar.about", "sidebar_desc.5", "about", "build_about_page"),
 )

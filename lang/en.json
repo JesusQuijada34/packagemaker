@@ -38,7 +38,8 @@
     "toggle_expand": "Expand menu (Ctrl+B)",
     "toggle_collapse": "Hide menu (Ctrl+B)",
     "report": "Reports",
-    "aide": "AIDE"
+    "aide": "AIDE",
+    "help": "Help"
   },
   "sidebar_desc": {
     "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
@@ -47,7 +48,8 @@
     "4": "### MoonFix Suite\nDeep repair. Scan, detect, and fix inconsistencies in your packages. Ensure every asset and XML tag is correct.",
     "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**.",
     "6": "### Reports\nSend errors and suggestions straight to the repository with your GitHub account. The app attaches the device environment so the failure can be reproduced.",
-    "7": "### AIDE\nAsk for help, generate a project or prepare a build. Only what you tick is sent: never credentials or paths."
+    "7": "### AIDE\nAsk for help, generate a project or prepare a build. Only what you tick is sent: never credentials or paths.",
+    "8": "### Help\nGuide to the whole application: create, build, harden and report, with a search box."
   },
   "config": {
     "title": "Settings",
@@ -825,6 +827,29 @@
     "env_hint": "Personal paths, your system username and credentials are never sent.",
     "auto_send": "Send failures automatically when a GitHub session exists",
     "auto_send_hint": "If disabled, failures are only saved and you can send them yourself from here."
+  },
+  "help": {
+    "intro": "Quick guide to the whole application. Type a word to filter the topics.",
+    "search_placeholder": "Search help",
+    "empty": "No topic matches your search.",
+    "topics": {
+      "start": {
+        "title": "Create a project",
+        "body": "In Create Project you choose publisher, name, version and platform. The final name follows the canonical law publisher.app.vX.x-YY.MM-HH.MM-Platform and the folder is created with the required templates: details.xml, version.res, autorun, .storedetail and config/settings.json. Check the preview before confirming, because renaming later also forces the metadata to be fixed."
+      },
+      "build": {
+        "title": "Build a package",
+        "body": "Build Package creates an .iflapp container from the open project. The default backend is Nuitka; if it is missing, PyInstaller is used and, as a last resort, zipapp, so there is always a build path. Each project builds in its own isolated environment under build/pm-sandbox, unless Settings → Network is set to metered use. The final package is left in dist."
+      },
+      "harden": {
+        "title": "Harden the binary",
+        "body": "Hardening adds layers to the package: strip and upx reduce size, checksum and integrity detect tampering, and sign seals the content with HMAC-SHA256. compile-only keeps only the bytecode and rename-symbols obfuscates the names. Enable only what you need: upx and rename-symbols can break programs that read their own code."
+      },
+      "report": {
+        "title": "Report a bug",
+        "body": "The Reports page opens an issue in the repository with your GitHub account and attaches the device environment. Failures the application detects by itself are kept in the queue and sent if you enable automatic sending. Include the steps to reproduce it and do not paste credentials or private paths: the issue is public."
+      }
+    }
   },
   "addon": {
     "error_title": "The «{addon}» extension could not be loaded"

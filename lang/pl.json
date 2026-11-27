@@ -38,7 +38,8 @@
     "toggle_expand": "Rozwiń menu (Ctrl+B)",
     "toggle_collapse": "Ukryj menu (Ctrl+B)",
     "report": "Raporty",
-    "aide": "AIDE"
+    "aide": "AIDE",
+    "help": "Pomoc"
   },
   "sidebar_desc": {
     "0": "### Utworz projekt\nProjektuj aplikacje od zera. Ustal unikalne tozsamosci, wersje i metadane dla ekosystemu **Influent OS** krok po kroku.",
@@ -47,7 +48,8 @@
     "4": "### MoonFix Suite\nGleboka naprawa. Skanuj, wykrywaj i naprawiaj niespojnosc w pakietach. Kazdy zasob i znacznik XML musi byc poprawny.",
     "5": "### O programie\nTechniczne szczegoly projektu. Licencja GPL, framework Qt i zespol stojacy za **Package Maker**.",
     "6": "### Raporty\nWysyłaj błędy i sugestie bezpośrednio do repozytorium ze swoim kontem GitHub. Aplikacja dołącza środowisko urządzenia, aby można było odtworzyć błąd.",
-    "7": "### AIDE\nPoproś o pomoc, wygeneruj projekt lub przygotuj kompilację. Wysyłane jest tylko to, co zaznaczysz: nigdy dane logowania ani ścieżki."
+    "7": "### AIDE\nPoproś o pomoc, wygeneruj projekt lub przygotuj kompilację. Wysyłane jest tylko to, co zaznaczysz: nigdy dane logowania ani ścieżki.",
+    "8": "### Pomoc\nPrzewodnik po całej aplikacji: tworzenie, kompilacja, ochrona i zgłaszanie, z wyszukiwarką."
   },
   "config": {
     "title": "Ustawienia",
@@ -825,6 +827,29 @@
     "env_hint": "Nigdy nie wysyłamy ścieżek osobistych, nazwy użytkownika systemu ani danych logowania.",
     "auto_send": "Wysyłaj błędy automatycznie, gdy istnieje sesja GitHub",
     "auto_send_hint": "Po wyłączeniu błędy są tylko zapisywane i możesz wysłać je tutaj."
+  },
+  "help": {
+    "intro": "Skrócony przewodnik po całej aplikacji. Wpisz słowo, aby filtrować tematy.",
+    "search_placeholder": "Szukaj w pomocy",
+    "empty": "Żaden temat nie pasuje do wyszukiwania.",
+    "topics": {
+      "start": {
+        "title": "Tworzenie projektu",
+        "body": "W sekcji Utwórz projekt wybierasz publishera, nazwę, wersję i platformę. Ostateczna nazwa podlega prawu kanonicznemu publisher.app.vX.x-YY.MM-HH.MM-Platform, a folder powstaje z obowiązkowych szablonów: details.xml, version.res, autorun, .storedetail i config/settings.json. Sprawdź podgląd przed potwierdzeniem, bo późniejsza zmiana nazwy wymaga też poprawy metadanych."
+      },
+      "build": {
+        "title": "Kompilacja pakietu",
+        "body": "Zbuduj pakiet tworzy kontener .iflapp z otwartego projektu. Domyślnym backendem jest Nuitka; gdy go brak, używany jest PyInstaller, a w ostateczności zipapp, więc zawsze istnieje droga kompilacji. Każdy projekt kompiluje się w osobnym, izolowanym środowisku w build/pm-sandbox, chyba że Ustawienia → Sieć są w trybie oszczędzania. Gotowy pakiet zostaje w dist."
+      },
+      "harden": {
+        "title": "Ochrona pliku binarnego",
+        "body": "Ochrona dodaje warstwy: strip i upx zmniejszają rozmiar, checksum i integrity wykrywają manipulacje, a sign pieczętuje zawartość przez HMAC-SHA256. compile-only zostawia tylko bytecode, a rename-symbols zaciera nazwy. Włączaj tylko potrzebne: upx i rename-symbols mogą psuć programy czytające własny kod."
+      },
+      "report": {
+        "title": "Zgłaszanie błędu",
+        "body": "Strona Zgłoszenia otwiera issue w repozytorium z Twoim kontem GitHub i dołącza środowisko urządzenia. Błędy wykryte automatycznie trafiają do kolejki i są wysyłane po włączeniu automatycznego wysyłania. Podaj kroki reprodukcji i nie wklejaj danych logowania ani prywatnych ścieżek: issue jest publiczne."
+      }
+    }
   },
   "addon": {
     "error_title": "Nie można załadować rozszerzenia „{addon}”"

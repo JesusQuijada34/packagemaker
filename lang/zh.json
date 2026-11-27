@@ -38,7 +38,8 @@
     "toggle_expand": "展开菜单 (Ctrl+B)",
     "toggle_collapse": "隐藏菜单 (Ctrl+B)",
     "report": "报告",
-    "aide": "AIDE"
+    "aide": "AIDE",
+    "help": "帮助"
   },
   "sidebar_desc": {
     "0": "### 创建项目\n从头设计应用。按引导步骤为 **Influent OS** 生态设置唯一的标识、版本和元数据。",
@@ -47,7 +48,8 @@
     "4": "### MoonFix Suite\n深度修复。扫描、检测并修复包中的不一致。确保每个资源和 XML 标签都正确。",
     "5": "### 关于\n项目的技术细节。GPL 许可证、Qt 框架以及打造 **Package Maker** 的团队。",
     "6": "### 报告\n使用你的 GitHub 账号将错误和建议直接发送到仓库。应用会附带设备环境信息，以便复现该故障。",
-    "7": "### AIDE\n寻求帮助、生成项目或准备编译。只会发送你勾选的内容：绝不会发送凭据或路径。"
+    "7": "### AIDE\n寻求帮助、生成项目或准备编译。只会发送你勾选的内容：绝不会发送凭据或路径。",
+    "8": "### 帮助\n整个应用的使用指南：创建、编译、加固和报告，并支持搜索。"
   },
   "config": {
     "title": "设置",
@@ -825,6 +827,29 @@
     "env_hint": "绝不会发送个人路径、系统用户名或凭据。",
     "auto_send": "有 GitHub 会话时自动发送故障",
     "auto_send_hint": "关闭后故障只会被保存，你可以在此手动发送。"
+  },
+  "help": {
+    "intro": "整个应用的快速指南。输入关键词即可筛选主题。",
+    "search_placeholder": "搜索帮助",
+    "empty": "没有与搜索匹配的主题。",
+    "topics": {
+      "start": {
+        "title": "创建项目",
+        "body": "在“创建项目”中选择 publisher、名称、版本和平台。最终名称遵循规范 publisher.app.vX.x-YY.MM-HH.MM-Platform，文件夹会使用必需模板创建：details.xml、version.res、autorun、.storedetail 和 config/settings.json。确认前请检查预览，之后重命名还需同步修改元数据。"
+      },
+      "build": {
+        "title": "编译软件包",
+        "body": "“构建软件包”会从当前项目生成 .iflapp 容器。默认后端是 Nuitka；若不可用则使用 PyInstaller，最后回退到 zipapp，因此始终有可用的编译方式。每个项目都在 build/pm-sandbox 下的独立环境中编译，除非“设置 → 网络”选择了计量使用模式。最终软件包保存在 dist 中。"
+      },
+      "harden": {
+        "title": "加固二进制文件",
+        "body": "加固会为软件包增加多层防护：strip 和 upx 减小体积，checksum 和 integrity 检测篡改，sign 使用 HMAC-SHA256 封签内容。compile-only 只保留字节码，rename-symbols 混淆名称。只启用需要的项：upx 和 rename-symbols 可能破坏会读取自身代码的程序。"
+      },
+      "report": {
+        "title": "报告错误",
+        "body": "“报告”页面会使用你的 GitHub 账号在仓库中打开 issue，并附带设备环境。应用自行捕获的故障会进入队列，启用自动发送后会提交。请附上复现步骤，不要粘贴凭据或私人路径：issue 是公开的。"
+      }
+    }
   },
   "addon": {
     "error_title": "无法加载扩展「{addon}」"

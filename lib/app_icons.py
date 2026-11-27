@@ -254,6 +254,11 @@ ICONS_SVG = {
 <rect x="4" y="7" width="16" height="12" rx="3" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M12 3V7M9 12H9.01M15 12H15.01M9 16H15" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>""",
+    "help": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="9" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M9.6 9.3C9.6 7.9 10.7 6.9 12 6.9C13.3 6.9 14.4 7.9 14.4 9.3C14.4 11.1 12 11.5 12 13.4" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 16.9H12.01" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>""",
     "report": f"""<svg width="64" height="64" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M8 9C8 6.79086 9.79086 5 12 5C14.2091 5 16 6.79086 16 9V15C16 17.2091 14.2091 19 12 19C9.79086 19 8 17.2091 8 15V9Z" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M12 5V3M9.5 6.5L8 5M14.5 6.5L16 5M8 11H4M8 14H4.5M8 17L5 18.5M16 11H20M16 14H19.5M16 17L19 18.5" stroke="{ACCENT}" stroke-linecap="round" stroke-linejoin="round"/>

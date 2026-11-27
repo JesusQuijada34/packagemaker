@@ -208,12 +208,12 @@ class LoadOrderTest(unittest.TestCase):
         addons = load_addons(self.dir / "no_existe")
         self.assertEqual(
             [a.id for a in addons],
-            ["create", "build", "config", "moonfix", "report", "aide", "about"],
+            ["create", "build", "config", "moonfix", "report", "help", "aide", "about"],
         )
         self.assertTrue(all(a.builder for a in addons))
 
     def test_empty_directory_falls_back_to_builtin_addons(self):
-        self.assertEqual(len(load_addons(self.dir)), 7)
+        self.assertEqual(len(load_addons(self.dir)), 8)
 
     def test_strict_mode_does_not_fall_back(self):
         self.assertEqual(load_addons(self.dir / "no_existe", strict=True), [])
@@ -239,7 +239,7 @@ class RealAddonsTest(unittest.TestCase):
         directory = Path(__file__).resolve().parents[1] / "addons"
         ids = [a.id for a in load_addons(directory, strict=True)]
         self.assertEqual(
-            ids, ["create", "build", "config", "moonfix", "report", "aide", "about"]
+            ids, ["create", "build", "config", "moonfix", "report", "help", "aide", "about"]
         )
 
     def test_every_shipped_addon_points_to_a_real_builder(self):

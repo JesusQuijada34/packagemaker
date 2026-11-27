@@ -38,7 +38,8 @@
     "toggle_expand": "Menu uitvouwen (Ctrl+B)",
     "toggle_collapse": "Menu verbergen (Ctrl+B)",
     "report": "Rapporten",
-    "aide": "AIDE"
+    "aide": "AIDE",
+    "help": "Hulp"
   },
   "sidebar_desc": {
     "0": "### Project maken\nOntwerp applicaties vanaf nul. Stel unieke identiteiten, versies en metadata in voor het **Influent OS**-ecosysteem met begeleide stappen.",
@@ -47,7 +48,8 @@
     "4": "### MoonFix Suite\nDiepgaande reparatie. Scan, detecteer en herstel inconsistenties in je pakketten. Elke asset en XML-tag moet kloppen.",
     "5": "### Over\nTechnische projectdetails. GPL-licentie, Qt-framework en het team achter **Package Maker**.",
     "6": "### Rapporten\nStuur fouten en suggesties direct naar de repository met uw GitHub-account. De app voegt de apparaatomgeving toe zodat de fout te reproduceren is.",
-    "7": "### AIDE\nVraag om hulp, genereer een project of bereid een compilatie voor. Alleen wat je aanvinkt wordt verzonden: nooit inloggegevens of paden."
+    "7": "### AIDE\nVraag om hulp, genereer een project of bereid een compilatie voor. Alleen wat je aanvinkt wordt verzonden: nooit inloggegevens of paden.",
+    "8": "### Hulp\nGids voor de hele applicatie: maken, bouwen, beveiligen en melden, met zoekvak."
   },
   "config": {
     "title": "Instellingen",
@@ -825,6 +827,29 @@
     "env_hint": "Persoonlijke paden, uw systeemgebruikersnaam en inloggegevens worden nooit verzonden.",
     "auto_send": "Fouten automatisch verzenden als er een GitHub-sessie is",
     "auto_send_hint": "Indien uitgeschakeld worden fouten alleen opgeslagen en kunt u ze hier zelf verzenden."
+  },
+  "help": {
+    "intro": "Beknopte gids voor de hele applicatie. Typ een woord om de onderwerpen te filteren.",
+    "search_placeholder": "Help doorzoeken",
+    "empty": "Geen onderwerp komt overeen met de zoekopdracht.",
+    "topics": {
+      "start": {
+        "title": "Een project maken",
+        "body": "In Project maken kies je publisher, naam, versie en platform. De uiteindelijke naam volgt de canonieke wet publisher.app.vX.x-YY.MM-HH.MM-Platform en de map wordt aangemaakt met de verplichte sjablonen: details.xml, version.res, autorun, .storedetail en config/settings.json. Controleer de voorbeeldweergave voordat je bevestigt, want later hernoemen vereist ook het bijwerken van de metadata."
+      },
+      "build": {
+        "title": "Een pakket bouwen",
+        "body": "Pakket bouwen maakt een .iflapp-container van het geopende project. De standaardbackend is Nuitka; ontbreekt die, dan wordt PyInstaller gebruikt en als laatste zipapp, dus er is altijd een bouwroute. Elk project bouwt in zijn eigen geïsoleerde omgeving onder build/pm-sandbox, tenzij Instellingen → Netwerk op gemeten gebruik staat. Het definitieve pakket blijft in dist."
+      },
+      "harden": {
+        "title": "Het binaire bestand beveiligen",
+        "body": "Beveiliging voegt lagen toe: strip en upx verkleinen, checksum en integrity detecteren manipulatie en sign verzegelt de inhoud met HMAC-SHA256. compile-only laat alleen bytecode over en rename-symbols versluiert de namen. Schakel alleen in wat je nodig hebt: upx en rename-symbols kunnen programma's breken die hun eigen code lezen."
+      },
+      "report": {
+        "title": "Een fout melden",
+        "body": "De pagina Meldingen opent een issue in de repository met je GitHub-account en voegt de apparaatomgeving toe. Fouten die de applicatie zelf vindt, blijven in de wachtrij en worden verzonden als je automatisch verzenden aanzet. Voeg de stappen toe om het te reproduceren en plak geen inloggegevens of privépaden: het issue is openbaar."
+      }
+    }
   },
   "addon": {
     "error_title": "De extensie ‘{addon}’ kon niet worden geladen"

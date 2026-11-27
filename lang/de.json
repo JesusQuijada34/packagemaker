@@ -38,7 +38,8 @@
     "toggle_expand": "Menü erweitern (Strg+B)",
     "toggle_collapse": "Menü ausblenden (Strg+B)",
     "report": "Berichte",
-    "aide": "AIDE"
+    "aide": "AIDE",
+    "help": "Hilfe"
   },
   "sidebar_desc": {
     "0": "### Projekt erstellen\nEntwickle Anwendungen von Grund auf. Lege eindeutige Identitaeten, Versionen und Metadaten fuer das **Influent OS**-Oekosystem in gefuehrten Schritten fest.",
@@ -47,7 +48,8 @@
     "4": "### MoonFix Suite\nTiefgehende Reparatur. Scanne, erkenne und behebe Inkonsistenzen in deinen Paketen. Jede Ressource und jedes XML-Tag muss korrekt sein.",
     "5": "### Ueber\nTechnische Projektdetails. GPL-Lizenz, Qt-Framework und das Team hinter **Package Maker**.",
     "6": "### Berichte\nSenden Sie Fehler und Vorschläge direkt an das Repository, mit Ihrem GitHub-Konto. Die App fügt die Geräteumgebung bei, damit der Fehler nachvollziehbar ist.",
-    "7": "### AIDE\nBitten Sie um Hilfe, erzeugen Sie ein Projekt oder bereiten Sie eine Kompilierung vor. Nur was Sie markieren, wird gesendet: niemals Zugangsdaten oder Pfade."
+    "7": "### AIDE\nBitten Sie um Hilfe, erzeugen Sie ein Projekt oder bereiten Sie eine Kompilierung vor. Nur was Sie markieren, wird gesendet: niemals Zugangsdaten oder Pfade.",
+    "8": "### Hilfe\nAnleitung für die ganze Anwendung: erstellen, kompilieren, härten und melden, mit Suchfeld."
   },
   "config": {
     "title": "Einstellungen",
@@ -825,6 +827,29 @@
     "env_hint": "Persönliche Pfade, Ihr Systembenutzername und Anmeldedaten werden nie gesendet.",
     "auto_send": "Fehler automatisch senden, wenn eine GitHub-Sitzung besteht",
     "auto_send_hint": "Wenn deaktiviert, werden Fehler nur gespeichert und Sie können sie hier selbst senden."
+  },
+  "help": {
+    "intro": "Kurzanleitung für die ganze Anwendung. Ein Wort eingeben, um die Themen zu filtern.",
+    "search_placeholder": "Hilfe durchsuchen",
+    "empty": "Kein Thema passt zur Suche.",
+    "topics": {
+      "start": {
+        "title": "Ein Projekt erstellen",
+        "body": "In Projekt erstellen wählst du Publisher, Namen, Version und Plattform. Der endgültige Name folgt dem kanonischen Gesetz publisher.app.vX.x-YY.MM-HH.MM-Platform und der Ordner wird mit den Pflichtvorlagen angelegt: details.xml, version.res, autorun, .storedetail und config/settings.json. Prüfe die Vorschau vor dem Bestätigen, denn ein späteres Umbenennen erfordert auch die Korrektur der Metadaten."
+      },
+      "build": {
+        "title": "Ein Paket kompilieren",
+        "body": "Paket bauen erzeugt einen .iflapp-Container aus dem geöffneten Projekt. Das Standard-Backend ist Nuitka; fehlt es, wird PyInstaller und zuletzt zipapp verwendet, sodass immer ein Kompilierweg existiert. Jedes Projekt kompiliert in seiner eigenen isolierten Umgebung unter build/pm-sandbox, außer Einstellungen → Netzwerk steht auf gemessener Nutzung. Das fertige Paket bleibt in dist."
+      },
+      "harden": {
+        "title": "Die Binärdatei härten",
+        "body": "Die Härtung fügt dem Paket Schichten hinzu: strip und upx verkleinern, checksum und integrity erkennen Manipulationen und sign versiegelt den Inhalt mit HMAC-SHA256. compile-only behält nur den Bytecode und rename-symbols verschleiert die Namen. Aktiviere nur, was du brauchst: upx und rename-symbols können Programme brechen, die ihren eigenen Code lesen."
+      },
+      "report": {
+        "title": "Einen Fehler melden",
+        "body": "Die Seite Berichte öffnet ein Issue im Repository mit deinem GitHub-Konto und hängt die Geräteumgebung an. Fehler, die die Anwendung selbst erkennt, bleiben in der Warteschlange und werden bei aktiviertem automatischem Senden gesendet. Gib die Schritte zur Reproduktion an und füge keine Zugangsdaten oder privaten Pfade ein: das Issue ist öffentlich."
+      }
+    }
   },
   "addon": {
     "error_title": "Die Erweiterung „{addon}“ konnte nicht geladen werden"
