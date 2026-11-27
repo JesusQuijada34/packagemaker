@@ -12,7 +12,6 @@ Cubren, con código real:
 
 import os
 import sys
-import time
 from pathlib import Path
 
 import pytest
@@ -160,20 +159,24 @@ class TestSettingsAutosave:
         window._save_app_config_compact(quiet=True)  # no debe lanzar
         assert "No se pudo guardar" in window.reporter.last_message
 
-    def test_path_only_save_does_not_repaint_theme(self, window, tmp_path):
-        started = time.perf_counter()
-        window.apply_theme()
-        theme_cost = time.perf_counter() - started
+    def test_path_only_save_does_not_repaint_theme(self, window, tmp_path, monkeypatch):
+        theme_calls = []
+        personalization_calls = []
+        monkeypatch.setattr(window, "apply_theme", lambda *a, **k: theme_calls.append(1))
+        monkeypatch.setattr(
+            window,
+            "_apply_leviathan_and_personalization",
+            lambda *a, **k: personalization_calls.append(1),
+        )
 
         window.conf_base_dir.setText(str(tmp_path / "proyectos"))
-        started = time.perf_counter()
         window._save_app_config_compact(quiet=True)
-        elapsed = time.perf_counter() - started
 
-        # Reaplicar el tema completo (lo que hacía cada guardado, dos veces)
-        # cuesta un orden de magnitud más que guardar sólo una ruta.
-        assert theme_cost > 0.005
-        assert elapsed < theme_cost / 2
+        # Guardar sólo una ruta no cambia la apariencia: no debe repintarse el
+        # tema. Se comprueba el efecto, no el tiempo: con la hoja idempotente
+        # reaplicar el mismo tema es barato y ya no sirve como termómetro.
+        assert theme_calls == []
+        assert personalization_calls == []
 
     def test_engine_choice_survives_an_autosave(self, window):
         index = window.engine_combo.findData("flatcube")

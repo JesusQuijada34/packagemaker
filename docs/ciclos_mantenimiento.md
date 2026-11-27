@@ -732,3 +732,18 @@ ciclos: es un registro de auditoría.
   omitido, 64 subtests; `pyflakes` y `py_compile` limpios. No se prepara
   release: quedan bugs de prioridad alta y 18 aprobaciones pendientes de
   implementación.
+
+- Sexagésimo noveno ciclo (2026-11-27): sin respuestas nuevas en `CONFIRM.MD`
+  (siguen **Q-032** y la nueva **Q-033** pendientes). Se corrige **R-7c4a1e95**
+  (la interfaz se congelaba al guardar ajustes): medido en offscreen,
+  `PMDataStore.save()` tarda 0,5 ms y un guardado de ruta 1,7 ms, pero un cambio
+  de apariencia 120 ms porque `lib/fluent_theme.set_qss()` reinstalaba hojas
+  idénticas y Qt re-pulía el árbol (35 ms sólo en `central`). `set_qss()` ahora
+  compara con `widget.styleSheet()` y no vuelve a llamar a `setStyleSheet()` si
+  el resultado no cambió: el guardado baja a ~5 ms y `central` deja de recibir
+  `StyleChange`. `tests/test_settings_save_repolish.py` (4 casos; 3 fallan con el
+  código anterior) y se ajustó `test_path_only_save_does_not_repaint_theme` para
+  comprobar el efecto en vez del tiempo. Verificación: 1365 pasan, 1 omitido, 64
+  subtests; `pyflakes` y `py_compile` limpios. No se prepara release: sigue
+  pendiente el entorno aislado de Q-019 y el resto de cambios de engine
+  aprobados.

@@ -1,7 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 68: R-3e7d1c58 corregido y archivado —
-`compile-only` retira el `.py` del paquete salvo en builds `zipapp`, Q-004/F-001).
+Última actualización: 2026-11-27 (ciclo 69: R-7c4a1e95 corregido y en
+observación — guardar ajustes ya no re-pule hojas de estilo idénticas; el
+guardado baja de ~120 ms a ~5 ms).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -20,7 +21,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
 | R-4d9e2b61 | Bug — el build no usa un entorno aislado por proyecto | Alta | Aprobado Q-019; pendiente de implementación (el fallo de Nuitka se corrigió en R-8d3f6a21) |
-| R-7c4a1e95 | Bug — la interfaz se congela al guardar ajustes | Alta | Aprobado Q-012; pendiente de implementación (maximizar/restaurar ya corregido en R-7d4b2c95) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
 | R-7b3e9a52 | Mejora — sección de ayuda global (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
@@ -35,8 +35,8 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**15 entradas en la cola**: 3 bugs/mejoras de producto y 12 cambios de engine
-(11 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
+**14 entradas en la cola**: 1 bug, 4 mejoras de producto y 9 cambios de engine
+(8 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
 
 ## Bugs pendientes
 
@@ -62,26 +62,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 - **Solución aplicada:** backend Nuitka corregido y verificado con una
   compilación real `--standalone --onefile`.
 - **Commit / fecha de resolución:** — (el entorno aislado sigue abierto).
-
-### R-7c4a1e95 — La interfaz se congela al guardar ajustes
-
-- **Usuario:** JesusQuijada34 (`bugs.txt`, commit `bba72d6`)
-- **Fecha del reporte:** 2026-11-25
-- **Prioridad:** Alta.
-- **Descripción:** al cambiar opciones de Configuración la interfaz se congela
-  un momento mientras se guardan y se aplican. El otro síntoma del reporte
-  (maximizar y restaurar) quedó corregido en R-7d4b2c95.
-- **Pasos para reproducirlo:** cambiar varias opciones de apariencia en
-  Configuración y pulsar guardar.
-- **Causa raíz:** el guardado (`pm.data`, `settings.json`) y la reaplicación
-  del tema corren en el hilo de la interfaz. La hoja global de la aplicación ya
-  no se reinstala cuando el acento y el tema no cambian (ciclo 67); lo que
-  queda es mover el guardado a segundo plano, que es Q-012.
-- **Estado:** Pendiente (Q-012/F-005). El arrastre, los tres gestos de la
-  titlebar y el re-pulido innecesario al cambiar de modo de visualización ya
-  están aplicados (R-6a1f8c23, R-2f8b6a31, R-7d4b2c95).
-- **Solución aplicada:** parcial (gestos, arrastre y hoja global con caché).
-- **Commit / fecha de resolución:** `c346946`, `d6a832a`, ciclo 65; ciclo 67 / —
 
 ## Mejoras pendientes
 
@@ -143,7 +123,7 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 |---|---|---|---|---|
 | 3 | Q-007 / F-002 | Reorganización de `lib/` y renombrado a GlassCube | Aprobado; pendiente | alto |
 | 4 | Q-008 / F-003 (R-4f8a2c60) | Coreografía de splash y ventanas | Aprobado en parte; pendiente | medio-alto |
-| 8 | Q-012 / F-005 (R-7c4a1e95) | Tareas en segundo plano y barra marquee | Aprobado; pendiente | alto |
+| 8 | Q-012 / F-005 | Tareas en segundo plano y barra marquee | Aprobado; pendiente (el congelado de R-7c4a1e95 ya está corregido) | alto |
 | 9 | Q-013 / F-006 | Actualizaciones silenciosas de parches | Aprobado; pendiente | alto |
 | 10 | Q-014 | Eventos del sidebar y temas de temporada | Aprobado; pendiente | medio |
 | 12 | Q-017 | CLI en el `updater.py` de las plantillas | Aprobado; pendiente | medio |
@@ -177,15 +157,26 @@ al ciclo anterior.
 | R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
 | R-7d4b2c95 | Maximizar o restaurar congelaba la interfaz (~270 ms por gesto) | Alta | ciclo 67, 2026-11-26 | `tests/test_maximize_without_theme_reapply.py` |
 | R-3e7d1c58 | `compile-only` no retiraba el fuente del paquete | Media | ciclo 68, 2026-11-27 | `tests/test_hardening.py::CompileOnlySourceRemovalTests` |
+| R-7c4a1e95 | La interfaz se congelaba al guardar ajustes (~120 ms por re-pulido redundante) | Alta | ciclo 69, 2026-11-27 | `tests/test_settings_save_repolish.py` |
 
 ## Periodo de observación y release
 
-- **Cola:** 15 entradas (ver Resumen). No hay bugs críticos reportados sin
-  atender; R-4d9e2b61 (sólo el entorno aislado de Q-019) y R-7c4a1e95 (guardado
-  en segundo plano, Q-012) siguen aprobados y pendientes de implementación.
-- **Release:** no se prepara. Hay bugs de prioridad alta pendientes de
-  implementación y no ha pasado el periodo sin reportes nuevos.
+- **Cola:** 14 entradas (ver Resumen). No hay bugs críticos reportados sin
+  atender; R-4d9e2b61 (sólo el entorno aislado de Q-019) sigue aprobado y
+  pendiente de implementación. R-7c4a1e95 queda en observación: su congelado
+  está corregido y probado, y de Q-012 sólo quedan la barra marquee permanente
+  y las notificaciones nativas (mejora, no fallo de rendimiento).
+- **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
+  de implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
+
+- Sexagésimo noveno ciclo (2026-11-27): se corrige **R-7c4a1e95** (guardar
+  ajustes congelaba la interfaz). Medido: `store.save()` 0,5 ms y un guardado de
+  ruta 1,7 ms, pero un cambio de apariencia 120 ms porque `set_qss()` reinstalaba
+  hojas idénticas y Qt re-pulía el árbol. `set_qss()` ahora es idempotente: el
+  guardado baja a ~5 ms y `central` ya no recibe `StyleChange`. Queda en
+  observación. No se prepara release: sigue pendiente el entorno aislado de
+  Q-019 y el resto de cambios de engine aprobados.
 
 - Sexagésimo octavo ciclo (2026-11-27): se corrige **R-3e7d1c58** y se archiva
   (Q-004/F-001, opción A): `compile-only` compila todos los `.py` del paquete,

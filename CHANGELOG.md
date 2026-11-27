@@ -1,3 +1,47 @@
+## 2026-11-27 — sexagésimo noveno ciclo
+
+### Corregido — guardar ajustes ya no re-pule hojas de estilo idénticas (R-7c4a1e95)
+
+Reportado por JesusQuijada34 en `bugs.txt` (commit `bba72d6`, 2026-11-25):
+«al cambiar opciones de Configuración la interfaz se congela un momento
+mientras se guardan y se aplican».
+
+- **Síntoma:** cambiar una opción de apariencia en Configuración (por ejemplo
+  el ancho del acento del sidebar) bloqueaba la ventana una fracción de
+  segundo perceptible. Guardar una ruta o un aviso no se notaba.
+- **Evidencia (offscreen, ventana real):** `PMDataStore.save()` tarda **0,5 ms**
+  y un guardado que sólo cambia una ruta, **1,7 ms**: el guardado de archivos no
+  era el culpable. Un guardado que cambia la apariencia tardaba **120 ms**.
+  Perfilado: `apply_theme()` volvía a llamar a `setStyleSheet()` con la **misma**
+  hoja en la página central (35 ms) y en otros widgets; Qt re-pule el árbol
+  entero aunque no cambie un píxel.
+- **Causa raíz:** `lib/fluent_theme.set_qss()` aplicaba siempre la hoja, sin
+  comparar con la que el widget ya tenía. Reaplicar el tema tras guardar
+  reinstalaba hojas idénticas en cada widget y cada una disparaba un
+  `QEvent.StyleChange` en cascada.
+- **Solución:** `set_qss()` es idempotente: resuelve la plantilla (incluido
+  `append=True`), compara con `widget.styleSheet()` y **no** vuelve a llamar a
+  `setStyleSheet()` si el resultado es idéntico. No cambia ningún color, radio
+  ni texto: sólo evita el re-pulido que no produce cambios. Medido: el mismo
+  guardado pasa de **120 ms a ~5 ms** y la página central ya no recibe ningún
+  `StyleChange`.
+- **Pruebas:** `tests/test_settings_save_repolish.py` (4 casos; 3 fallan con el
+  código anterior): `set_qss` no repule una hoja idéntica, sí aplica una
+  distinta, conserva la acumulación de `append` y un guardado que sólo cambia
+  el ancho del acento no genera `StyleChange` en `central`; un cambio real de
+  acento sigue repintando. Se actualizó
+  `tests/test_settings_save_guards.py::test_path_only_save_does_not_repaint_theme`
+  para comprobar el efecto (no se llama a `apply_theme`) en vez de medir el
+  tiempo, porque reaplicar el mismo tema ahora es barato.
+- **Verificación:** 1365 pruebas pasan, 1 omitida, 64 subtests; `pyflakes` y
+  `py_compile` limpios.
+- **Nota sobre Q-012:** mover el guardado a un hilo aparte no habría cambiado
+  nada: la escritura son 0,5 ms. Lo que congelaba la interfaz era el re-pulido
+  redundante, ya eliminado. Q-012 sigue pendiente sólo por la barra marquee
+  permanente y las notificaciones nativas (PushBox), que son mejora visible y
+  no un fallo de rendimiento.
+- **Commit:** ver el commit de este ciclo en `main`.
+
 ## 2026-11-27 — sexagésimo octavo ciclo
 
 ### Corregido — `compile-only` no retiraba el fuente del paquete (R-3e7d1c58, Q-004/F-001)

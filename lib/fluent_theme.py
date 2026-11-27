@@ -274,6 +274,11 @@ def set_qss(widget, stylesheet, values=(), append=False):
     if append:
         current = widget.styleSheet().rstrip()
         stylesheet = f"{current}\n{stylesheet}" if current else stylesheet
+    # Reinstalar la misma hoja no cambia un píxel y obliga a Qt a re-pulir el
+    # widget y sus hijos (~35 ms medidos en la página central). Reaplicar el
+    # tema tras guardar ajustes se notaba como congelación por este trabajo.
+    if widget.styleSheet() == stylesheet:
+        return
     widget.setStyleSheet(stylesheet)
 
 

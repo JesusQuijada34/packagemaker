@@ -1,10 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (sexagésimo octavo ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `4bf14f4` (mantenimiento del ciclo 67, autor `openhands`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
+- **Última revisión:** 2026-11-27 (sexagésimo noveno ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `b51c612` (mantenimiento del ciclo 68, autor `openhands-agent`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 68 no encontró respuestas nuevas del propietario (el último commit que tocó este archivo es del propio mantenimiento) y aplicó Q-004/F-001 (R-3e7d1c58, `compile-only` retira el fuente del paquete); 18 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015 y Q-016 aplicadas y archivadas; 10 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 2 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15, y Q-033, alcance restante de Q-012); el ciclo 69 no encontró respuestas nuevas del propietario (el último commit que tocó este archivo es del propio mantenimiento) y corrigió R-7c4a1e95 (guardar ajustes ya no re-pule hojas idénticas); 18 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015 y Q-016 aplicadas y archivadas; 10 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -91,7 +91,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   Riesgo alto. (La parte de rendimiento que ya era un bug está corregida:
   R-9e2b4d17.)
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-005** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-005** el 2026-11-26 (commit `73dcdcd`). El congelado que la motivaba (R-7c4a1e95) está corregido en el ciclo 69 sin hilo de escritura: `set_qss()` ya no reinstala hojas idénticas y el guardado baja de ~120 ms a ~5 ms. Quedan pendientes la barra marquee permanente y las notificaciones nativas (PushBox); el alcance restante se confirma en **Q-033**.
 
 ### Q-013 — Actualizaciones silenciosas de parches de seguridad
 - **Tipo:** cambio de engine
@@ -423,6 +423,23 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   el splash vive dentro de la ventana principal, la ventana se muestra antes de
   validar la sesión y un fallo de arranque deja ver un marco vacío. No se puede
   verificar visualmente en Windows desde este entorno.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-033 — Alcance restante de Q-012 sin hilo de guardado (R-7c4a1e95)
+- **Tipo:** mejora (ajuste de alcance de Q-012)
+- **Fecha:** 2026-11-27
+- **Qué se propone:** Q-012 incluía mover el guardado de ajustes a un hilo
+  aparte. La medición del ciclo 69 muestra que `PMDataStore.save()` tarda
+  **0,5 ms** y guardar una ruta **1,7 ms**: el bloqueo de ~120 ms era
+  `set_qss()` reinstalando hojas idénticas, ya corregido en R-7c4a1e95
+  (`tests/test_settings_save_repolish.py`). Se propone dar por cubierta la parte
+  de rendimiento de Q-012 **sin** añadir un hilo de escritura (evita las carreras
+  sobre `pm.data` que la propia ficha advertía) y dejar pendientes sólo la barra
+  marquee permanente y las notificaciones nativas (PushBox).
+- **Archivos/componentes afectados:** ninguno nuevo; se retiraría del alcance de
+  Q-012 el guardado en `packagemaker.py` y `lib/pm_data.py`.
+- **Riesgo y efectos secundarios:** ninguno funcional. Mantener el hilo no
+  aporta latencia perceptible y conserva el riesgo de escritura concurrente.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 ---
