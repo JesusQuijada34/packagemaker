@@ -1,3 +1,74 @@
+## 2026-11-27 — septuagésimo primer ciclo
+
+### Corregido — las cuatro ventanas del updater morían al construirse (R-6b4d2f81)
+
+Encontrado por la auditoría interna de este ciclo al reproducir R-3a9c6e28; no
+hay reporte externo. Prioridad alta: la actualización con interfaz nunca llegaba
+a abrirse.
+
+- **Síntoma:** al abrir la ventana del updater con PyQt6 instalado, el proceso
+  moría en el constructor. Reproducción en offscreen:
+  `AttributeError: type object 'Qt' has no attribute 'WindowFlags'`.
+- **Causa raíz:** `lib/coreUpdater/windows.py` acumulaba cuatro usos de API que
+  no existen:
+  1. `Qt.WindowFlags(Qt.WindowType.Dialog | ...)`: en PyQt6 el tipo de las
+     banderas es el propio `Qt.WindowType`; `Qt.WindowFlags` no existe.
+  2. `CustomTitleBar(self, title=..., is_main=True)`: la clase de
+     `leviathan_ui` (vendorizada y de PyPI) acepta
+     `parent, title, icon, hide_max, back_callback`, no `is_main`.
+  3. `self.title_bar.set_color(QColor(0,0,0,0))`: el método no existe; la
+     propia titlebar ya nace con fondo transparente.
+  4. `self.pbar.setValue(...)` sobre `LeviathanProgressBar`, que expone
+     `value` como propiedad y no tiene `setValue`.
+  Las cuatro ventanas (`ModernUpdaterWindow`, `IFLAPPInstallerWindow`,
+  `LicenseTermsDialog` y `EXEInstallerWindow`) tenían los tres primeros
+  defectos y las dos de instalación también el cuarto.
+- **Solución** (`lib/coreUpdater/windows.py`):
+  - las banderas se pasan directamente (`Qt.WindowType.Dialog |
+    Qt.WindowType.FramelessWindowHint`);
+  - `CustomTitleBar` se construye sólo con `parent` y `title`;
+  - se retira la llamada a `set_color` y el import de `QColor`, ya sin uso;
+  - se añade el parche de compatibilidad que ya usaba `packagemaker.py`:
+    si `LeviathanProgressBar` no tiene `setValue`, se le asigna uno que
+    escribe en la propiedad `value`.
+- **Pruebas:** `tests/test_updater_windows_construct.py` construye las cuatro
+  ventanas con Qt real en offscreen y comprueba que son frameless; los cuatro
+  casos fallan con el código anterior.
+- **Verificación:** 1376 pruebas pasan, 1 omitida, 64 subtests; `pyflakes` y
+  `py_compile` limpios. Con Qt real la ventana del updater se muestra y vive en
+  el hilo de la interfaz.
+- **Commit:** `70cf903` en `main`.
+
+### Corregido — el updater de plantilla crea la interfaz en el hilo principal (R-3a9c6e28)
+
+Reportado por la auditoría interna del ciclo 70 (2026-11-27).
+
+- **Síntoma:** en el modo vigilancia (`updater.py` sin argumentos) la
+  `QApplication` y la ventana de instalación se construían dentro del hilo que
+  consulta GitHub. Qt exige que la interfaz viva en el hilo principal; en
+  Windows puede abortar el proceso o dejar la ventana sin pintar.
+- **Causa raíz:** `ciclo_embestido()` lanzaba `verificar()` en un hilo y era
+  `verificar()` quien hacía `QApplication(sys.argv)` y `app.exec()`.
+- **Solución** (`src/templates/project/updater.py.template`):
+  - `verificar()` hace una sola pasada y devuelve `(datos, url)` o `None`; no
+    crea la aplicación.
+  - `UpdateWatcher` (un `QObject` con `pyqtSignal`) consulta GitHub en un hilo
+    y emite `encontrada(datos, url)`; la conexión encolada ejecuta el slot en el
+    hilo de la interfaz.
+  - `ciclo_embestido(app)` conecta ese slot, que crea la ventana con
+    `WA_DeleteOnClose` y cierra la aplicación al destruirse.
+  - `main()` crea la `QApplication` en el hilo principal y termina con
+    `app.exec()`, en lugar del `while True: time.sleep(100)` anterior.
+  - La plantilla también recibe el arreglo de titlebar y barra de progreso de
+    R-6b4d2f81, porque copiaba el mismo código defectuoso.
+- **Pruebas:** `tests/test_template_updater_gui_thread.py` carga la plantilla
+  real con un PyQt6 falso que anota el hilo de cada construcción: comprueba que
+  la `QApplication` sólo se crea en el hilo principal, que la ventana se
+  construye en él y que `verificar()` no crea la aplicación.
+- **Verificación:** con Qt real y offscreen, `ciclo_embestido(app)` abre la
+  ventana y `w.thread() is app.thread()` es `True`.
+- **Commit:** `70cf903` en `main`.
+
 ## 2026-11-27 — septuagésimo ciclo
 
 ### Implementado — el `updater.py` de los proyectos nuevos ya tiene CLI (Q-017)

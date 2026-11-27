@@ -1,8 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 70: aplicado Q-017 — el `updater.py`
-de los proyectos nuevos ya tiene CLI y termina; dos hallazgos nuevos en la cola,
-R-7f2b9c41 y R-3a9c6e28).
+Última actualización: 2026-11-27 (ciclo 71: corregidas R-6b4d2f81, las cuatro
+ventanas del updater morían al construirse, y R-3a9c6e28, la `QApplication` del
+updater de plantilla nacía en un hilo de trabajo; ambas en observación).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -22,7 +22,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 |---|---|---|---|
 | R-4d9e2b61 | Bug — el build no usa un entorno aislado por proyecto | Alta | Aprobado Q-019; pendiente de implementación (el fallo de Nuitka se corrigió en R-8d3f6a21) |
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
-| R-3a9c6e28 | Bug — `verificar()` crea la `QApplication` en un hilo de trabajo | Media | Pendiente (sin aprobación necesaria) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
 | R-7b3e9a52 | Mejora — sección de ayuda global (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
@@ -37,9 +36,10 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**16 entradas en la cola**: 3 bugs, 4 mejoras de producto y 9 cambios de engine
+**15 entradas en la cola**: 2 bugs, 4 mejoras de producto y 9 cambios de engine
 (8 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
-Q-017 salió de la cola en este ciclo (aplicada).
+R-3a9c6e28 salió de la cola en este ciclo (corregida y en observación) y
+R-6b4d2f81, encontrada al reproducirla, también quedó corregida.
 
 ## Bugs pendientes
 
@@ -91,26 +91,6 @@ Q-017 salió de la cola en este ciclo (aplicada).
   PackageMaker o dejar `.zip` como único formato documentado.
 - **Solución aplicada:** ninguna todavía. El CLI de Q-017 ya informa del
   formato no soportado en vez de fallar con un traceback.
-- **Commit / fecha de resolución:** —
-
-### R-3a9c6e28 — `verificar()` crea la `QApplication` en un hilo de trabajo
-
-- **Usuario:** auditoría interna de mantenimiento (ciclo 70)
-- **Fecha del reporte:** 2026-11-27
-- **Prioridad:** Media.
-- **Descripción:** `ciclo_embestido()` lanza `_vigilar()` en un hilo y, dentro
-  de ese hilo, `verificar()` hace `QApplication(sys.argv)`. Qt exige que la
-  interfaz viva en el hilo principal: en Windows puede abortar el proceso o
-  dejar la ventana de instalación sin pintar.
-- **Pasos para reproducirlo:** ejecutar el `updater.py` de un proyecto sin
-  argumentos (modo vigilancia) cuando hay una versión nueva publicada.
-- **Causa raíz:** el modo vigilancia se diseñó como hilo con bucle y crea la
-  aplicación gráfica en la primera pasada con actualización, en vez de crear la
-  `QApplication` en `main()` y abrir la ventana con una señal encolada al hilo
-  principal.
-- **Estado:** pendiente. No se puede reproducir en Linux/offscreen; la
-  corrección debe verificarse con Qt real antes de darse por resuelta.
-- **Solución aplicada:** ninguna todavía.
 - **Commit / fecha de resolución:** —
 
 ## Mejoras pendientes
@@ -208,20 +188,31 @@ al ciclo anterior.
 | R-7d4b2c95 | Maximizar o restaurar congelaba la interfaz (~270 ms por gesto) | Alta | ciclo 67, 2026-11-26 | `tests/test_maximize_without_theme_reapply.py` |
 | R-3e7d1c58 | `compile-only` no retiraba el fuente del paquete | Media | ciclo 68, 2026-11-27 | `tests/test_hardening.py::CompileOnlySourceRemovalTests` |
 | R-7c4a1e95 | La interfaz se congelaba al guardar ajustes (~120 ms por re-pulido redundante) | Alta | ciclo 69, 2026-11-27 | `tests/test_settings_save_repolish.py` |
+| R-6b4d2f81 | Las cuatro ventanas del updater morían al construirse (`Qt.WindowFlags`, `is_main`, `set_color`, `setValue`) | Alta | ciclo 71, 2026-11-27 | `tests/test_updater_windows_construct.py` |
+| R-3a9c6e28 | El updater de plantilla creaba la `QApplication` en el hilo de vigilancia | Media | ciclo 71, 2026-11-27 | `tests/test_template_updater_gui_thread.py` |
 
 ## Periodo de observación y release
 
-- **Cola:** 16 entradas (ver Resumen). No hay bugs críticos reportados sin
+- **Cola:** 15 entradas (ver Resumen). No hay bugs críticos reportados sin
   atender. R-4d9e2b61 (sólo el entorno aislado de Q-019) sigue aprobado y
-  pendiente de implementación. Los dos hallazgos de la auditoría del ciclo 70
-  (R-7f2b9c41, la plantilla no extrae `.iflapp`; R-3a9c6e28, `QApplication` en
-  un hilo) quedan en la cola: el primero espera la decisión de Q-034.
-  R-7c4a1e95 sigue en observación y de Q-012 sólo quedan la barra marquee
-  permanente y las notificaciones nativas (mejora, no fallo de rendimiento).
+  pendiente de implementación. R-7f2b9c41 sigue esperando la decisión de
+  Q-034. R-7c4a1e95, R-6b4d2f81 y R-3a9c6e28 quedan en observación y de Q-012
+  sólo quedan la barra marquee permanente y las notificaciones nativas (mejora,
+  no fallo de rendimiento).
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
+- Septuagésimo primer ciclo (2026-11-27): se corrige **R-6b4d2f81**, encontrado
+  al reproducir R-3a9c6e28: las cuatro ventanas de `lib/coreUpdater/windows.py`
+  morían al construirse (`Qt.WindowFlags` no existe en PyQt6, `CustomTitleBar`
+  no acepta `is_main` ni expone `set_color`, y `LeviathanProgressBar` no tiene
+  `setValue`), así que la actualización con interfaz nunca llegaba a abrirse.
+  También se corrige **R-3a9c6e28**: el `updater.py` de las plantillas creaba la
+  `QApplication` dentro del hilo de vigilancia; ahora `main()` crea la
+  aplicación y `UpdateWatcher` avisa por señal encolada, de modo que la ventana
+  nace en el hilo de la interfaz. Las dos quedan en observación. No se prepara
+  release.
 - Septuagésimo ciclo (2026-11-27): se aplica **Q-017**: el `updater.py` de los
   proyectos nuevos ya tiene CLI (`--check`, `--install`, `--target`,
   `--silent`, `--version`) con códigos de salida y termina cuando no hay

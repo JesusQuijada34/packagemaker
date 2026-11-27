@@ -767,3 +767,26 @@ ciclos: es un registro de auditoría.
   (`verificar()` crea la `QApplication` en un hilo de trabajo). Se añade
   **Q-035** porque Q-018 quedó aprobada sin indicar cuál de sus dos opciones se
   aplica, y una aprobación ambigua no se implementa. No se prepara release.
+
+- Septuagésimo primer ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 y #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD` (el último commit que toca el archivo es del mantenimiento del
+  ciclo 70), así que el ciclo se dedica a bugs. Se corrige **R-3a9c6e28**: el
+  `updater.py` de las plantillas creaba la `QApplication` dentro del hilo de
+  vigilancia; ahora `main()` crea la aplicación en el hilo principal,
+  `UpdateWatcher` consulta GitHub en un hilo y emite `encontrada(datos, url)`
+  por señal encolada, y la ventana nace en el hilo de la interfaz
+  (`w.thread() is app.thread()` con Qt real en offscreen). Al reproducirlo
+  aparece **R-6b4d2f81**, de prioridad alta: las cuatro ventanas de
+  `lib/coreUpdater/windows.py` morían al construirse porque usaban
+  `Qt.WindowFlags` (no existe en PyQt6), `CustomTitleBar(..., is_main=True)`,
+  `title_bar.set_color()` y `LeviathanProgressBar.setValue()`; se pasan las
+  banderas directamente, la titlebar se construye sólo con `parent` y `title`,
+  se retira `set_color` y se aplica el parche de `setValue` que ya usaba
+  `packagemaker.py`. La plantilla recibe los mismos arreglos porque copiaba el
+  código. Pruebas nuevas: `tests/test_updater_windows_construct.py` (4 casos) y
+  `tests/test_template_updater_gui_thread.py` (2 casos). Verificación: 1376
+  pasan, 1 omitida, 64 subtests; `pyflakes` y `py_compile` limpios. Ambas
+  quedan en observación. No se prepara release: sigue pendiente el entorno
+  aislado de Q-019 y el resto de cambios de engine aprobados, y R-7f2b9c41
+  espera la decisión de Q-034.
