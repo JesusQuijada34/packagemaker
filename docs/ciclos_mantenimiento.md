@@ -830,3 +830,21 @@ ciclos: es un registro de auditoría.
   `tests/test_startup_timing.py` (30 casos). R-7b2c9e51 queda en observación.
   No se prepara release: siguen pendientes los cambios de engine aprobados y
   R-7f2b9c41 espera la decisión de Q-034.
+
+- Septuagésimo cuarto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`, así que se aplica la mejora aprobada **Q-021** (R-7b3e9a52,
+  issue #11: «un apartado de ayuda relacionado con toda la app»). Nuevo addon
+  `help` (`addons/help.yaml`, sección `tools`, `order: 15`) y página
+  `lib/help_page.py`: cuatro temas (crear, compilar, blindar, reportar) con
+  buscador que filtra por título y cuerpo, barra de acciones propia y
+  retraducción en vivo. Textos en `help.*` de los 14 catálogos de `lang/` más
+  `sidebar.help` y `sidebar_desc.8`; icono `help` en `lib/app_icons.py` y en
+  `TAB_ICON_KEYS`; respaldo en `DEFAULT_ADDONS`. Sin cambios de comportamiento
+  del engine. Verificación en la ventana real (offscreen): sidebar `create,
+  build, config, moonfix, report, help, aide, about`, subtítulo desde el
+  manifiesto y la búsqueda «upx» deja sólo el tema de blindaje. Pruebas:
+  `tests/test_help_page.py`; suite 1435 pasan, 1 omitida, 64 subtests y
+  `pyflakes` limpio. Commit del código `d97237a`. R-7b3e9a52 sale de la cola.
+  No se prepara release: siguen pendientes los cambios de engine aprobados y
+  R-7f2b9c41 espera la decisión de Q-034.

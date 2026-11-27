@@ -1,3 +1,35 @@
+## 2026-11-27 — septuagésimo cuarto ciclo
+
+### Implementado — página de ayuda global con buscador (R-7b3e9a52 / Q-021)
+
+Solicitado por JesusQuijada34 (issue #11, 2026-11-25): «un apartado de ayuda
+relacionado con toda la app», no una ayuda por página. Aprobado como **Q-021**
+(commit `73dcdcd`, autoría verificada). Prioridad media; es una página nueva y
+no toca el comportamiento del engine.
+
+- **Qué se añade:** el addon `help` (`addons/help.yaml`, sección `tools`,
+  `order: 15`) coloca «Ayuda» en el sidebar entre Reportes y AIDE. La página
+  (`lib/help_page.py`) tiene barra de acciones propia, buscador y cuatro temas
+  —crear, compilar, blindar y reportar— con el texto real de cada área.
+- **Buscador:** filtra en vivo por título y cuerpo, sin distinguir mayúsculas;
+  cuando no queda ningún tema muestra un aviso en vez de una página vacía.
+- **Textos:** `help.intro`, `help.search_placeholder`, `help.empty` y
+  `help.topics.<tema>.{title,body}` en los **14** catálogos de `lang/`, más
+  `sidebar.help` y `sidebar_desc.8`. `retranslate()` reaplica todo al cambiar
+  de idioma desde `apply_ui_language()`.
+- **Icono:** `help` en `lib/app_icons.py` (mismo gris de sidebar que el resto)
+  y en `TAB_ICON_KEYS`.
+- **Respaldo:** `DEFAULT_ADDONS` de `lib/addons_engine.py` incluye el addon, de
+  modo que un bundle sin `addons/` sigue abriendo con la página.
+- **Verificación:** ventana real en offscreen: sidebar `create, build, config,
+  moonfix, report, help, aide, about`, subtítulo tomado del manifiesto y la
+  búsqueda «upx» deja sólo el tema de blindaje.
+- **Pruebas:** `tests/test_help_page.py` (manifiesto, icono, claves en los 14
+  catálogos, temas, filtro, estado vacío y retraducción). Se actualizan las
+  listas de addons de `tests/test_addons_engine.py` y
+  `tests/test_auto_author_and_sidebar.py`.
+- **Suite:** 1435 pasan, 1 omitida, 64 subtests; `pyflakes` limpio.
+
 ## 2026-11-27 — septuagésimo tercer ciclo
 
 ### Implementado — duración mínima del splash y reporte de tirones del arranque (R-7b2c9e51 / Q-027)

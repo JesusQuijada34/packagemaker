@@ -1,8 +1,8 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo tercer ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `41b8e15`
-  (mantenimiento del ciclo 72, autor `openhands`; no aporta respuestas). Último
+- **Última revisión:** 2026-11-27 (septuagésimo cuarto ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0297476`
+  (mantenimiento del ciclo 73, autor `openhands`; no aporta respuestas). Último
   commit **del propietario** procesado: `71e50f7` (2026-11-26, autor
   `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API
   de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio
@@ -11,7 +11,7 @@
   y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 73 no encontró respuestas nuevas del propietario: aplica **Q-027** (splash mínimo y reporte de tirones) y la archiva. Quedan 17 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020…Q-026, Q-028…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019 y Q-027 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 74 no encontró respuestas nuevas del propietario: aplica **Q-021** (página de ayuda global) y la archiva. Quedan 16 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-022…Q-026, Q-028…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021 y Q-027 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -189,20 +189,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   El bug R-8a3f1c72 queda resuelto con esta implementación.
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`); la opción A ya se aplicó sin reconstruir páginas (ciclos 58 y 59) y falta completar los textos que siguen sin traducir.
 
-
-### Q-021 — Sección de ayuda global de la aplicación
-- **Tipo:** mejora
-- **Fecha:** 2026-11-25
-- **Qué se propone:** el issue #11 pide «un apartado de ayuda relacionado con
-  toda la app». Se propone una página de ayuda en el sidebar (addon
-  `help.yaml`) con buscador y temas por área (crear, compilar, blindar,
-  reportar), con los textos en los catálogos de `lang/`.
-- **Archivos/componentes afectados:** `addons/help.yaml`,
-  `lib/help_page.py`, `lang/*.json`, `tests/`.
-- **Riesgo y efectos secundarios:** bajo; es una página nueva y no toca el
-  engine.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-022 — Addons en `lib/addons/` e instalación desde la aplicación
 - **Tipo:** mejora
@@ -499,6 +485,20 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-021 — Sección de ayuda global de la aplicación
+- **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con
+  la API de GitHub).
+- **Aplicada:** septuagésimo cuarto ciclo (2026-11-27) — `addons/help.yaml`
+  (nuevo), `lib/help_page.py` (nuevo), `lib/app_icons.py` (icono `help`),
+  `lib/addons_engine.py` (respaldo), `packagemaker.py` (constructor y
+  retraducción), `lang/*.json` (14 catálogos) y `tests/test_help_page.py`.
+  Commit del código `d97237a`.
+- **Resultado:** el sidebar gana «Ayuda» entre Reportes y AIDE, con una página
+  de cuatro temas —crear, compilar, blindar y reportar— y buscador que filtra
+  por título y cuerpo. Los textos viven en `help.*` de los catálogos, el
+  subtítulo en `sidebar_desc.8` y la página se retraduce al cambiar de idioma.
+  Sin cambios de comportamiento del engine.
 
 ### Q-027 — Duración mínima del splash y reporte de tirones del arranque
 - **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con

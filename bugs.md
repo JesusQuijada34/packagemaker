@@ -1,8 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 73: aplicada Q-027, la duración mínima
-del splash y el reporte de tirones del arranque; R-7b2c9e51 queda en
-observación).
+Última actualización: 2026-11-27 (ciclo 74: aplicada Q-021, la página de ayuda
+global; R-7b3e9a52 sale de la cola y queda archivada en el changelog y en el
+issue #11).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -23,7 +23,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
-| R-7b3e9a52 | Mejora — sección de ayuda global (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
 | R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Aprobado Q-022; pendiente de implementación |
 | R-9a4e2c83 | Cambio de engine — GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
@@ -34,11 +33,13 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**13 entradas en la cola**: 1 bug, 4 mejoras de producto y 8 cambios de engine
+**12 entradas en la cola**: 1 bug, 3 mejoras de producto y 8 cambios de engine
 (7 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
-R-7b2c9e51 salió de la cola en este ciclo: Q-027 quedó implementada, probada y
-verificada con un arranque real (splash cerrado a los 5,61 s con un mínimo de
-5,50 s) y con el reporte de tirones en la cola de reportes.
+R-7b3e9a52 (ayuda global, Q-021) salió de la cola en este ciclo: implementada,
+probada y verificada en la ventana real.
+R-7b2c9e51 salió de la cola en el ciclo anterior: Q-027 quedó implementada,
+probada y verificada con un arranque real (splash cerrado a los 5,61 s con un
+mínimo de 5,50 s) y con el reporte de tirones en la cola de reportes.
 R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
 
 ## Bugs pendientes
@@ -95,17 +96,6 @@ R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
 - **Estado:** Pendiente. El propio propietario la condiciona a que bajen los
   bugs; no entra en un ciclo con bugs de prioridad alta abiertos.
 
-### R-7b3e9a52 — Sección de ayuda global de la aplicación (Q-021)
-
-- **Usuario:** JesusQuijada34 (issue #11)
-- **Fecha del reporte:** 2026-11-25
-- **Prioridad:** Media.
-- **Descripción:** «un apartado de ayuda relacionado con toda la app», no una
-  ayuda por página.
-- **Estado:** Aprobada (Q-021); pendiente de implementación.
-- **Archivos:** `addons/help.yaml`, `lib/help_page.py`, `lang/*.json`, `tests/`.
-- **Riesgo:** bajo.
-
 ### R-2c8d4f71 — Addons en `lib/addons/` e instalación desde la app (Q-022)
 
 - **Usuario:** JesusQuijada34 (issue #11)
@@ -151,8 +141,9 @@ Ya implementados y verificados: aislamiento BlindCube/FlatCube y `.blindkpkg`
 sidebar con hover y modo contraído (Q-010), la ventana con arrastre, snap y
 límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31), el CLI del
 `updater.py` de las plantillas (Q-017, ciclo 70), el entorno de compilación
-aislado por proyecto con la tarjeta Red (Q-019, ciclo 72) y la duración mínima
-del splash con el reporte de tirones (Q-027, ciclo 73).
+aislado por proyecto con la tarjeta Red (Q-019, ciclo 72), la duración mínima
+del splash con el reporte de tirones (Q-027, ciclo 73) y la página de ayuda
+global con buscador (Q-021, ciclo 74).
 
 ## En observación
 
@@ -174,7 +165,7 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 13 entradas (ver Resumen). No hay bugs críticos reportados sin
+- **Cola:** 12 entradas (ver Resumen). No hay bugs críticos reportados sin
   atender. El único bug abierto, R-7f2b9c41, espera la decisión de Q-034.
   R-4d9e2b61 (Q-019, entorno aislado) y R-7b2c9e51 (Q-027, splash mínimo y
   reporte de tirones) quedan en observación tras verificarse con arranques y
@@ -269,3 +260,17 @@ al ciclo anterior.
   reporte aparece en la cola con las fases medidas). R-7b2c9e51 queda en
   observación. No se prepara release: siguen pendientes los cambios de engine
   aprobados y R-7f2b9c41 espera Q-034.
+- Septuagésimo cuarto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`, así que se aplica la mejora aprobada **Q-021** (R-7b3e9a52,
+  issue #11: «un apartado de ayuda relacionado con toda la app»). Nuevo addon
+  `help` (`addons/help.yaml`) y página `lib/help_page.py`: cuatro temas (crear,
+  compilar, blindar, reportar) con buscador que filtra por título y cuerpo,
+  barra de acciones propia y retraducción en vivo. Los textos viven en
+  `help.*` de los 14 catálogos de `lang/` y el icono se añade a
+  `lib/app_icons.py`. Sin cambios de comportamiento del engine. Verificado en
+  la ventana real (offscreen): el sidebar queda create, build, config, moonfix,
+  report, help, aide, about; el subtítulo sale del manifiesto y «upx» deja sólo
+  el tema de blindaje. Pruebas: `tests/test_help_page.py`. R-7b3e9a52 sale de
+  la cola. No se prepara release: siguen pendientes los cambios de engine
+  aprobados y R-7f2b9c41 espera la decisión de Q-034.
