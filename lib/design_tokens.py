@@ -35,12 +35,13 @@ SURFACE_HOVER = "#3A3A3C"
 BORDER = "#444444"
 DIVIDER = "#333333"
 
-SIDEBAR_BG = "rgba(40, 40, 40, 0.85)"
-SIDEBAR_BG_SOLID = "#282828"
+# Sidebar translúcido (alfa 0,3–0,5): el efecto Mica/Acrylic de Leviathan
+# (``WipeWindow``) se ve a través y el texto conserva contraste. El color se
+# invierte con el tema: blanco en claro y negro en oscuro.
+SIDEBAR_BG = "rgba(28, 28, 30, 0.45)"           # barra lateral, tema oscuro
+SIDEBAR_BG_LIGHT = "rgba(255, 255, 255, 0.45)"  # barra lateral, tema claro
+SIDEBAR_BG_SOLID = "#282828"                    # respaldo sin blur
 
-# Fondos translúcidos para que el efecto Mica/Acrylic (Leviathan WipeWindow)
-# se vea a través de ellos. Deben seguir siendo lo bastante opacos para que el
-# texto conserve contraste sobre cualquier fondo de escritorio.
 TITLEBAR_BG = "rgba(40, 40, 40, 0.85)"
 CONTENT_BG = "rgba(28, 28, 30, 0.82)"
 
@@ -411,6 +412,7 @@ def sidebar_qss(dark: bool = True, accent: str = ACCENT) -> str:
         "qwidget",
         role="sidebar-dark" if dark else "sidebar-light",
         SIDEBAR_BG=SIDEBAR_BG,
+        SIDEBAR_BG_LIGHT=SIDEBAR_BG_LIGHT,
         DIVIDER=DIVIDER,
         TEXT_MUTED=TEXT_MUTED,
         TEXT=TEXT,

@@ -25,7 +25,7 @@ QWidget#NavigationSidebar QPushButton:checked {
 
 /* @role: sidebar-light */
 QWidget#NavigationSidebar {
-    background: rgba(242,242,247,0.9);
+    background: __SIDEBAR_BG_LIGHT__;
     border-right: 1px solid #D1D1D6;
 }
 QWidget#NavigationSidebar QPushButton {
@@ -92,7 +92,7 @@ QWidget#NavigationSidebar QPushButton { color: __SIDEBAR_TEXT_GRAY__; font-famil
 QWidget#NavigationSidebar QPushButton:focus { outline: none; }
 
 /* @role: sidebar-frame-light */
-QWidget#NavigationSidebar { background: rgba(242,242,247,.9); border-right: 1px solid #D1D1D6; }
+QWidget#NavigationSidebar { background: __SIDEBAR_BG_LIGHT__; border-right: 1px solid #D1D1D6; }
 QPushButton#SidebarCollapseButton { background: transparent; color: __SIDEBAR_TEXT_GRAY__; border: none; border-radius: 7px; }
 QPushButton#SidebarCollapseButton:hover { background: rgba(15,23,42,.07); }
 QPushButton#SidebarCollapseButton:pressed { background: __ACCENT_SOFT__; }

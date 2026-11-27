@@ -857,7 +857,9 @@ class PackageTodoGUI(QMainWindow):
         self.sidebar.setMinimumWidth(60)
         self.sidebar.setMaximumWidth(SIDEBAR_MAX_WIDTH)
         self.sidebar.resize(SIDEBAR_MAX_WIDTH, 480)
-        self.sidebar.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        # ``WA_TranslucentBackground`` activa ``WA_NoSystemBackground`` y anula
+        # el fondo QSS del sidebar. La transparencia la aporta el alfa del token.
+        self.sidebar.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.sidebar.setMouseTracking(True)
         set_qss(self.sidebar, 'packagemaker_003', append=False)
         self.sidebar_layout = QVBoxLayout(self.sidebar)

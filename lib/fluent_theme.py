@@ -24,6 +24,7 @@ from lib.design_tokens import (
     PILL_RADIUS,
     SECTION_LABEL_SIZE,
     SIDEBAR_BG,
+    SIDEBAR_BG_LIGHT,
     SIDEBAR_ICON_INSET,
     SIDEBAR_TEXT_GRAY,
     SURFACE,
@@ -390,6 +391,7 @@ def sidebar_stylesheet(dark, accent="#0078d4"):
         "qwidget",
         role="sidebar-frame-dark" if dark else "sidebar-frame-light",
         SIDEBAR_BG=SIDEBAR_BG,
+        SIDEBAR_BG_LIGHT=SIDEBAR_BG_LIGHT,
         SIDEBAR_TEXT_GRAY=SIDEBAR_TEXT_GRAY,
         CARD_RADIUS=CARD_RADIUS,
         FONT_STACK=FONT_STACK,
@@ -724,6 +726,7 @@ def applyget(accent: str, dark: bool = True) -> str:
     text = TEXT if dark else "#000000"
     label = "#cccccc" if dark else "#1f2937"
     page = WINDOW_BG if dark else "#F5F7FB"
+    sidebar_bg = SIDEBAR_BG if dark else SIDEBAR_BG_LIGHT
     card_surface = SURFACE if dark else "#FFFFFF"
     card_border = BORDER if dark else "#D1D1D6"
     glass_bg = GLASS_BG if dark else "rgba(255, 255, 255, 0.72)"
@@ -741,8 +744,8 @@ def applyget(accent: str, dark: bool = True) -> str:
         "ACCENT": accent,
         "ACCENT_HOVER": accent_hover,
         "ACCENT_PRESSED": accent_pressed,
-        "WINDOW_BG": WINDOW_BG,
-        "SIDEBAR_BG": SIDEBAR_BG,
+        "WINDOW_BG": page,
+        "SIDEBAR_BG": sidebar_bg,
         "SURFACE": SURFACE,
         "BORDER": BORDER,
         "CARD_SURFACE": card_surface,
