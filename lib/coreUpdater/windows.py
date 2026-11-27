@@ -12,7 +12,7 @@ try:
         QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, 
         QProgressBar, QPushButton, QTextEdit, QHBoxLayout, QCheckBox
     )
-    from PyQt6.QtGui import QFont, QIcon, QPixmap, QColor, QGuiApplication
+    from PyQt6.QtGui import QFont, QIcon, QPixmap, QGuiApplication
     from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
     PYQT6_AVAILABLE = True
 except ImportError:
@@ -30,7 +30,6 @@ except ImportError:
     QFont = object
     QIcon = object
     QPixmap = object
-    QColor = object
     QGuiApplication = None
     Qt = None
     QThread = object
@@ -75,12 +74,19 @@ except ImportError:
     class InmersiveSplash: pass
 
 
+# LeviathanProgressBar expone ``value`` como propiedad y no tiene setValue().
+if HAS_LEVIATHAN and not hasattr(LeviathanProgressBar, "setValue"):
+    def _set_value_patch(self, value):
+        self.value = value
+    LeviathanProgressBar.setValue = _set_value_patch
+
+
 class ModernUpdaterWindow(QMainWindow):
     def __init__(self, app_data, url):
         super().__init__()
         self.app_data = app_data
         self.url = url
-        self.setWindowFlags(Qt.WindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint))
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(480, 320)
         if HAS_LEVIATHAN:
@@ -112,8 +118,7 @@ class ModernUpdaterWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         
         if HAS_LEVIATHAN:
-            self.title_bar = CustomTitleBar(self, title="System Updater", is_main=True)
-            self.title_bar.set_color(QColor(0,0,0,0))
+            self.title_bar = CustomTitleBar(self, title="System Updater")
             layout.addWidget(self.title_bar)
 
         content = QWidget()
@@ -209,7 +214,7 @@ class IFLAPPInstallerWindow(QMainWindow):
         super().__init__(parent)
         self.iflapp_path = iflapp_path
         self.target_dir = target_dir or os.path.join(os.getcwd(), "installed_app")
-        self.setWindowFlags(Qt.WindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint))
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(480, 280)
         if HAS_LEVIATHAN:
@@ -232,8 +237,7 @@ class IFLAPPInstallerWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         
         if HAS_LEVIATHAN:
-            self.title_bar = CustomTitleBar(self, title="Instalador IFLAPP", is_main=True)
-            self.title_bar.set_color(QColor(0,0,0,0))
+            self.title_bar = CustomTitleBar(self, title="Instalador IFLAPP")
             layout.addWidget(self.title_bar)
         
         content = QWidget()
@@ -300,7 +304,7 @@ class LicenseTermsDialog(QMainWindow):
     def __init__(self, app_name="Aplicación", license_text=None, parent=None):
         super().__init__(parent)
         self.app_name = app_name
-        self.setWindowFlags(Qt.WindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint))
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(600, 450)
         if HAS_LEVIATHAN:
@@ -371,8 +375,7 @@ class LicenseTermsDialog(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         
         if HAS_LEVIATHAN:
-            self.title_bar = CustomTitleBar(self, title="Términos de Licencia", is_main=True)
-            self.title_bar.set_color(QColor(0,0,0,0))
+            self.title_bar = CustomTitleBar(self, title="Términos de Licencia")
             layout.addWidget(self.title_bar)
         
         content = QWidget()
@@ -461,7 +464,7 @@ class EXEInstallerWindow(QMainWindow):
         self.url = url
         self.filename = filename
         self.cache_in_memory = cache_in_memory
-        self.setWindowFlags(Qt.WindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint))
+        self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.resize(480, 280)
         if HAS_LEVIATHAN:
@@ -484,8 +487,7 @@ class EXEInstallerWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         
         if HAS_LEVIATHAN:
-            self.title_bar = CustomTitleBar(self, title="Instalador Setup", is_main=True)
-            self.title_bar.set_color(QColor(0,0,0,0))
+            self.title_bar = CustomTitleBar(self, title="Instalador Setup")
             layout.addWidget(self.title_bar)
         
         content = QWidget()

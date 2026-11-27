@@ -320,6 +320,13 @@ class InstallerWorker(QObject):
         finally:
             shutil.rmtree(work_dir, ignore_errors=True)
 
+# LeviathanProgressBar expone ``value`` como propiedad y no tiene setValue().
+if HAS_LEVIATHAN and not hasattr(LeviathanProgressBar, "setValue"):
+    def _set_value_patch(self, value):
+        self.value = value
+    LeviathanProgressBar.setValue = _set_value_patch
+
+
 class ModernUpdaterWindow(QMainWindow):
     """Main updater window with modern UI."""
     
@@ -351,8 +358,7 @@ class ModernUpdaterWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         
         if HAS_LEVIATHAN:
-            self.title_bar = CustomTitleBar(self, title="System Updater", is_main=True)
-            self.title_bar.set_color(QColor(0,0,0,0))
+            self.title_bar = CustomTitleBar(self, title="System Updater")
             layout.addWidget(self.title_bar)
 
         content = QWidget()
@@ -407,39 +413,77 @@ class ModernUpdaterWindow(QMainWindow):
             self.lbl_status.setStyleSheet("color: #ff5252;")
 
 def verificar():
-    """Una pasada de verificación; abre la ventana si hay actualización.
+    """Una pasada de verificación sin abrir ventana.
 
-    Devuelve ``True`` si se mostró la ventana de instalación. Sin interfaz
-    gráfica termina con un mensaje claro en lugar de esperar en bucle.
+    Devuelve ``(datos, url)`` si hay actualización o ``None``. No crea la
+    ``QApplication``: la interfaz sólo puede nacer en el hilo principal.
     """
     resultado = check_update()
     if not resultado:
         log("[UPDATER] No se pudo leer details.xml")
-        return False
+        return None
     url = resultado["url"]
     if not url:
-        return False
+        return None
     log(f"[UPDATE] Nueva versión disponible: {resultado['remoto']} ({resultado['tipo']})")
     if not PYQT6_AVAILABLE:
         log("[UPDATER] Sin PyQt6 no hay ventana de instalación; usa --check, --silent o --install")
-        return False
-    app = QApplication.instance() or QApplication(sys.argv)
-    ventana = ModernUpdaterWindow(resultado["datos"], url)
-    ventana.show()
-    app.exec()
-    return True
+        return None
+    return resultado["datos"], url
 
-def ciclo_embestido():
-    """Vigila actualizaciones en segundo plano; sin GUI termina de inmediato."""
+class UpdateWatcher(QObject):
+    """Busca actualizaciones en un hilo y avisa al hilo de la interfaz."""
+
+    encontrada = pyqtSignal(object, str)
+
+    def __init__(self):
+        super().__init__()
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def start(self):
+        self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+
+    def _run(self):
+        while not self._stop.is_set():
+            try:
+                actualizacion = verificar()
+            except Exception:
+                log(traceback.format_exc())
+                actualizacion = None
+            if actualizacion:
+                self.encontrada.emit(*actualizacion)
+                return
+            self._stop.wait(CHECK_INTERVAL)
+
+_watcher = None
+_ventanas = []
+
+def ciclo_embestido(app):
+    """Vigila actualizaciones en segundo plano; sin GUI termina de inmediato.
+
+    La ventana se construye en el hilo de la ``QApplication`` a través de una
+    señal encolada, nunca en el hilo que consulta GitHub.
+    """
+    global _watcher
     if not PYQT6_AVAILABLE:
         log("[UPDATER] Sin PyQt6 no hay vigilancia en segundo plano; usa --check, --silent o --install")
-        return
-    def _vigilar():
-        while True:
-            if verificar():
-                return
-            time.sleep(CHECK_INTERVAL)
-    threading.Thread(target=_vigilar, daemon=True).start()
+        return None
+
+    def _abrir(datos, url):
+        ventana = ModernUpdaterWindow(datos, url)
+        ventana.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        ventana.destroyed.connect(app.quit)
+        ventana.show()
+        _ventanas.append(ventana)
+
+    _watcher = UpdateWatcher()
+    _watcher.encontrada.connect(_abrir)
+    _watcher.start()
+    return _watcher
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
@@ -515,9 +559,9 @@ el updater de PackageMaker.
             file=sys.stderr,
         )
         return 1
-    ciclo_embestido()
-    while True:
-        time.sleep(100)
+    app = QApplication.instance() or QApplication(sys.argv)
+    ciclo_embestido(app)
+    return app.exec()
 
 if __name__ == "__main__":
     sys.exit(main())
