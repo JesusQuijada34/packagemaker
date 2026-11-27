@@ -1,8 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 74: aplicada Q-021, la página de ayuda
-global; R-7b3e9a52 sale de la cola y queda archivada en el changelog y en el
-issue #11).
+Última actualización: 2026-11-27 (ciclo 75: R-8f4b2d61 corregido —el sidebar
+ya pinta su fondo QSS translúcido— y Q-026 aplicada en parte; la superficie y
+el texto de las pestañas esperan Q-036).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -21,7 +21,7 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
-| R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
+| R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aplicada en parte (sidebar, R-8f4b2d61); falta superficie/texto de pestañas (Q-036) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
 | R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Aprobado Q-022; pendiente de implementación |
 | R-9a4e2c83 | Cambio de engine — GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
@@ -81,10 +81,19 @@ R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
 - **Descripción:** fondo blanco o negro según el modo del sistema con
   transparencia (0,3–0,5) combinado con el blur; sidebar blanco translúcido y
   pestañas gris claro con texto gris en modo claro, invertido en oscuro.
-- **Estado:** Pendiente (Q-026). No es un fallo reproducible, es una mejora
-  visual aprobada.
-- **Archivos:** `lib/design_tokens.py`, `source/qss/*`, `lib/fluent_theme.py`.
-- **Solución aplicada:** ninguna todavía.
+- **Estado:** **Aplicada en parte** (Q-026). El sidebar ya pinta su fondo
+  translúcido por tema con el arreglo R-8f4b2d61. La inversión de la superficie
+  de las pestañas queda pendiente de Q-036: los ~40 estilos de
+  `lib/fluent_theme.py` llevan `color:white` y una superficie clara dejaría el
+  texto invisible (comprobado en captura offscreen).
+- **Archivos:** `lib/design_tokens.py`, `source/qss/*`, `lib/fluent_theme.py`,
+  `packagemaker.py`, `tests/`.
+- **Solución aplicada:** `SIDEBAR_BG = rgba(28,28,30,0.45)`,
+  `SIDEBAR_BG_LIGHT = rgba(255,255,255,0.45)`, sidebar con
+  `WA_StyledBackground` (sin `WA_TranslucentBackground`) y QSS resuelto por
+  tema. Commit `804c50c` (ciclo 75).
+- **Commit / fecha de resolución:** sidebar `804c50c` (2026-11-27); pestañas
+  pendientes de Q-036.
 
 ### R-3c8e4b72 — Faltan ajustes en Configuración
 
@@ -274,3 +283,18 @@ al ciclo anterior.
   el tema de blindaje. Pruebas: `tests/test_help_page.py`. R-7b3e9a52 sale de
   la cola. No se prepara release: siguen pendientes los cambios de engine
   aprobados y R-7f2b9c41 espera la decisión de Q-034.
+- Septuagésimo quinto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`. Se aplica la mitad segura de **Q-026** (R-5a7d2f16): el
+  sidebar se creaba con `WA_TranslucentBackground`, que anula el fondo QSS del
+  widget, así que el blanco translúcido nunca se pintaba. Ahora usa
+  `WA_StyledBackground`, `SIDEBAR_BG` pasa a `rgba(28,28,30,0.45)` y se añade
+  `SIDEBAR_BG_LIGHT` `rgba(255,255,255,0.45)`, con los roles
+  `sidebar-light`/`sidebar-frame-light` resueltos por tema. Verificado con
+  capturas offscreen (blanco en claro, oscuro en oscuro) y
+  `tests/test_theme_surfaces.py`. La superficie y el texto de las pestañas no se
+  invierten: los ~40 estilos de `lib/fluent_theme.py` llevan `color:white` y el
+  texto quedaría invisible sobre un fondo claro; el alcance se pregunta en
+  Q-036. R-8f4b2d61 se archiva en `docs/bugs_resueltos.md`. Suite: 1441 pasan,
+  1 omitida, 64 subtests; `pyflakes` limpio. No se prepara release: siguen
+  pendientes los cambios de engine aprobados y R-7f2b9c41 espera Q-034.

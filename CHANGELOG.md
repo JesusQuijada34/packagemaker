@@ -1,3 +1,49 @@
+## 2026-11-27 — septuagésimo quinto ciclo
+
+### Corregido — el sidebar nunca pintaba su fondo QSS (R-8f4b2d61)
+
+Encontrado por la auditoría interna al aplicar **Q-026** (R-5a7d2f16). El
+sidebar se creaba con `WA_TranslucentBackground`, que activa
+`WA_NoSystemBackground` y **anula el fondo QSS** del widget: la regla
+`QWidget#NavigationSidebar { background: … }` se aplicaba pero no se pintaba,
+así que el panel quedaba transparente y el blanco translúcido que pidió el
+propietario en el issue #11 nunca llegaba a verse.
+
+- **Tokens:** `SIDEBAR_BG` pasa a `rgba(28, 28, 30, 0.45)` y se añade
+  `SIDEBAR_BG_LIGHT = "rgba(255, 255, 255, 0.45)"` (alfa dentro del 0,3–0,5
+  pedido). El sidebar invierte su color con el tema.
+- **QSS:** los roles `sidebar-light` y `sidebar-frame-light` de
+  `source/qss/qwidget.qss` usan `__SIDEBAR_BG_LIGHT__` en vez del literal
+  `rgba(242,242,247,.9)`; `sidebar_qss()`, `sidebar_stylesheet()` y `applyget()`
+  resuelven el token por tema.
+- **Widget:** el sidebar se construye con `WA_StyledBackground` y sin
+  `WA_TranslucentBackground`; la transparencia la aporta el alfa del token.
+- **Verificación:** capturas offscreen: sidebar `(255,255,255,α)` en tema claro
+  y `(29,29,29,α)` en oscuro, con el texto gris legible. El panel de páginas
+  sigue oscuro y su texto no cambia (ver más abajo).
+- **Pruebas:** `tests/test_theme_surfaces.py` (6 casos: alfa pedido, inversión
+  por tema, QSS sin literal claro, `applyget` por tema, guarda contra
+  `WA_TranslucentBackground` y pintado real del sidebar en ambos temas).
+- **Reporte:** auditoría interna de mantenimiento (ciclo 75); no hay reporte
+  externo.
+
+### Aplicado en parte — sidebar translúcido de Q-026 (R-5a7d2f16)
+
+La mitad del sidebar de **Q-026** queda implementada con el arreglo anterior.
+La otra mitad —invertir la superficie de las pestañas y pasar su texto a gris
+claro/oscuro— **no se aplica todavía**: las páginas llevan ~40 estilos con
+`color:white` en `lib/fluent_theme.py`, así que una superficie clara deja el
+título, las etiquetas y la descripción invisibles (comprobado con una captura
+offscreen). El alcance se pregunta en **Q-036** de `CONFIRM.MD`.
+
+### Suite
+
+- `QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`: **1441 pasan**,
+  1 omitida, 64 subtests.
+- `python -m pyflakes $(git ls-files '*.py')`: limpio.
+- `python -m py_compile $(git ls-files '*.py')`: correcto.
+- Commit del código: `804c50c`.
+
 ## 2026-11-27 — septuagésimo cuarto ciclo
 
 ### Implementado — página de ayuda global con buscador (R-7b3e9a52 / Q-021)

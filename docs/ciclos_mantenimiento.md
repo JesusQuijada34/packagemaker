@@ -848,3 +848,19 @@ ciclos: es un registro de auditoría.
   `pyflakes` limpio. Commit del código `d97237a`. R-7b3e9a52 sale de la cola.
   No se prepara release: siguen pendientes los cambios de engine aprobados y
   R-7f2b9c41 espera la decisión de Q-034.
+- Septuagésimo quinto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`. Se aplica la mitad segura de **Q-026** (R-5a7d2f16):
+  R-8f4b2d61 corregido —el sidebar se creaba con `WA_TranslucentBackground`,
+  que anula el fondo QSS del widget—; ahora usa `WA_StyledBackground`,
+  `SIDEBAR_BG` pasa a `rgba(28,28,30,0.45)` y se añade `SIDEBAR_BG_LIGHT`
+  `rgba(255,255,255,0.45)`, con los roles `sidebar-light`/`sidebar-frame-light`
+  resueltos por tema. Verificación en capturas offscreen: sidebar blanco en
+  claro y oscuro en oscuro, con el texto gris legible. La superficie y el texto
+  de las pestañas no se invierten porque los ~40 estilos de
+  `lib/fluent_theme.py` llevan `color:white` y quedarían invisibles sobre un
+  fondo claro; se pregunta el alcance en Q-036. Pruebas:
+  `tests/test_theme_surfaces.py`; suite 1441 pasan, 1 omitida, 64 subtests y
+  `pyflakes` limpio. Commit del código `804c50c`. No se prepara release: siguen
+  pendientes los cambios de engine aprobados y R-7f2b9c41 espera la decisión de
+  Q-034.

@@ -1,8 +1,8 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo cuarto ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0297476`
-  (mantenimiento del ciclo 73, autor `openhands`; no aporta respuestas). Último
+- **Última revisión:** 2026-11-27 (septuagésimo quinto ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `ea11a81`
+  (mantenimiento del ciclo 74, autor `openhands`; no aporta respuestas). Último
   commit **del propietario** procesado: `71e50f7` (2026-11-26, autor
   `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API
   de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio
@@ -11,7 +11,7 @@
   y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 74 no encontró respuestas nuevas del propietario: aplica **Q-021** (página de ayuda global) y la archiva. Quedan 16 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-022…Q-026, Q-028…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021 y Q-027 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 5 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 75 no encontró respuestas nuevas del propietario: aplica en parte **Q-026** (sidebar translúcido blanco/oscuro, commit `804c50c`) y añade Q-036 para el resto. Quedan 15 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-022…Q-025, Q-028…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021 y Q-027 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -262,7 +262,12 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   dependencia del blur del sistema operativo, que no se puede verificar en
   Linux.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
+- **Aplicación:** ciclo 75 — sidebar translúcido blanco/oscuro y corrección del
+  fondo QSS (commit `804c50c`). La superficie y el texto de las pestañas quedan
+  a la espera de Q-036.
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada);
+  aplicada en parte en el ciclo 75 (sidebar); superficie/texto de pestañas a la
+  espera de Q-036.
 
 ### Q-028 — Librería de paneles y pestañas verticales con action bar propia
 - **Tipo:** cambio de engine
@@ -411,6 +416,30 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   proyectos con metadatos incompletos; la B deja pasar paquetes con metadatos
   corregidos en silencio. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO` (indica A o B en una nota)
+
+### Q-036 — Q-026: ¿se invierte también la superficie y el texto de las pestañas?
+- **Tipo:** aclaración de una aprobación existente (Q-026)
+- **Fecha:** 2026-11-27
+- **Qué se propone:** Q-026 está marcada `[x] SÍ`. En el ciclo 75 se aplicó la
+  mitad segura —sidebar blanco translúcido en claro y oscuro en oscuro— y se
+  comprobó que invertir también la superficie de las pestañas **deja el texto
+  invisible**: las páginas usan ~40 estilos con `color:white` en
+  `lib/fluent_theme.py` (título, etiquetas, descripción y grupos). Elige:
+  - **A (completo):** invertir la superficie de las pestañas y refactorizar
+    esos ~40 estilos a tokens de texto por tema (gris oscuro en claro, gris
+    claro en oscuro). Cambio visual amplio; requiere verificación en Windows.
+  - **B (sólo sidebar):** dejar las pestañas oscuras en ambos temas y conservar
+    únicamente el sidebar translúcido (estado actual del ciclo 75).
+  - **C (superficie sin texto):** invertir sólo el fondo de las pestañas y
+    mantener el texto actual; **no recomendado**, oculta el texto en claro.
+- **Archivos/componentes afectados:** `lib/fluent_theme.py` (estilos
+  `packagemaker_0xx`), `lib/design_tokens.py` (`CONTENT_BG`,
+  `CONTENT_BG_LIGHT`), `source/qss/qwidget.qss`, `packagemaker.py`
+  (`apply_theme`), `tests/test_theme_surfaces.py`.
+- **Riesgo y efectos secundarios:** A es un cambio visual amplio con riesgo
+  medio de contraste en algunas páginas y no se puede verificar el blur de
+  Windows en Linux; B no cambia nada más; C rompe la legibilidad.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO` (indica A, B o C en una nota)
 
 
 ---
