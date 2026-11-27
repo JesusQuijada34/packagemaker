@@ -120,7 +120,15 @@
     "section_network_hint": "İndirmeler ve yalıtılmış derleme",
     "network_unrestricted": "Sınırsız (proje başına yalıtılmış ortam)",
     "network_metered": "Ölçülü kullanım (indirme yok)",
-    "network_hint": "Yalıtılmış ortam her proje için bir venv oluşturur ve derlemeden önce bağımlılıkları kurar. Ölçülü kullanım modunda gömülü ortam derler: Python sistemde kurulu olmalı ve çevrimdışıyken bağımlılıklar önceden kurulmuş olmalıdır."
+    "network_hint": "Yalıtılmış ortam her proje için bir venv oluşturur ve derlemeden önce bağımlılıkları kurar. Ölçülü kullanım modunda gömülü ortam derler: Python sistemde kurulu olmalı ve çevrimdışıyken bağımlılıklar önceden kurulmuş olmalıdır.",
+    "section_addons": "Uzantılar",
+    "section_addons_hint": "Kenar çubuğu manifestlerini yükle",
+    "addons_install": "Uzantı yükle…",
+    "addons_installed": "Yüklü",
+    "addons_none": "Yüklü uzantı yok.",
+    "addons_ok": "Uzantı yüklendi. Kenar çubuğunda görmek için yeniden başlat.",
+    "addons_error": "Uzantı yüklenemedi:",
+    "addons_warning": "Yalnızca .yaml manifestleri yüklenir. 'class' içeren bir uzantı, zaten yüklü bir modülün kodunu çalıştırır: yalnızca güvendiğin uzantıları yükle."
   },
   "create": {
     "sandbox": "Güvenli sanal alan",

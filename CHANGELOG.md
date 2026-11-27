@@ -1,3 +1,54 @@
+## 2026-11-27 — septuagésimo séptimo ciclo
+
+### Aplicado — instalar extensiones `.yaml` desde Configuración (Q-022 / R-2c8d4f71)
+
+Segunda mitad de la aprobación Q-022 del issue #11 («las extensiones del
+sidebar pueden ir por sistema en `lib/addons/`» y poder instalarlas desde la
+aplicación). La primera mitad (manifiestos en `lib/addons/`) se aplicó en el
+ciclo 76.
+
+- **Motor:** nuevos `USER_ADDONS_DIR`, `user_addons_dir()`, `all_addons_dirs()`,
+  `installed_addons()` e `install_addon()` en `lib/addons_engine.py`. El
+  directorio de usuario (`data/addons/`, o `PM_USER_ADDONS_DIR`) se carga
+  **después** de `lib/addons/` y de `addons/`, así que una extensión instalada
+  nunca suplanta una página base.
+- **Validación previa:** `install_addon()` reutiliza `parse_manifest()` —la
+  misma puerta que el cargador— y además rechaza los ids de addons incluidos,
+  los manifiestos desactivados (`enabled: false`), un `builder` que el
+  anfitrión no tenga y los manifiestos con `plugin` suelto: ese `.py` viajaría
+  junto al YAML y se ejecutaría al arrancar, que es el alcance de Q-031
+  (extensiones empaquetadas con lista de confianza y firma). `class` debe ser
+  `modulo:Clase` y no se importa durante la validación.
+- **Copia atómica:** se escribe un temporal en el directorio destino y se
+  sustituye con `os.replace()`; un fallo deja intacto el manifiesto anterior y
+  no quedan ficheros temporales.
+- **Interfaz:** nueva tarjeta **Configuración → Extensiones** con el botón
+  «Instalar extensión…», la lista de extensiones instaladas, el resultado de la
+  operación y un aviso sobre las extensiones con `class`. La tarjeta se
+  retraduce al cambiar de idioma.
+- **Consumidores:** `packagemaker.py` (`ADDONS_DIRS = all_addons_dirs()`) y el
+  CLI `--list-addons` cargan también `data/addons/`.
+- **Traducciones:** claves `config.section_addons`, `config.section_addons_hint`
+  y `config.addons_install/installed/none/ok/error/warning` en los 14 catálogos
+  de `lang/` y en `tools/translations_curated.py`.
+- **Pruebas:** `tests/test_addons_install.py` (copia válida, sin temporales,
+  reinstalación, ids incluidos, `builder` inexistente, `class`, `plugin`,
+  desactivado, YAML inválido, extensión distinta de `.yaml`, directorio de
+  usuario y respaldo integrado) y `tests/test_addons_settings_ui.py` (tarjeta
+  registrada, instalación correcta, error visible sin copiar y cancelación).
+- **Verificación:** la ventana real (offscreen) arranca con el sidebar
+  create, build, config, moonfix, report, help, aide, extra, about y la tarjeta
+  muestra «Instaladas: extra»; `--list-addons` sigue listando los 8 addons
+  incluidos.
+- **Reporte:** JesusQuijada34 (issue #11). Sin cambios de comportamiento del
+  engine, del formato `.iflapp` ni del nombre canónico.
+
+### Suite
+
+1466 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. No se prepara
+release: siguen pendientes los cambios de engine aprobados y R-7f2b9c41
+espera la decisión de Q-034.
+
 ## 2026-11-27 — septuagésimo sexto ciclo
 
 ### Aplicado en parte — addons en `lib/addons/` (Q-022 / R-2c8d4f71)

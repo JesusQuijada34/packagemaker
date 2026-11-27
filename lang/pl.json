@@ -120,7 +120,15 @@
     "section_network_hint": "Pobierania i kompilacja izolowana",
     "network_unrestricted": "Bez ograniczeń (izolowane środowisko dla projektu)",
     "network_metered": "Oszczędzanie danych (bez pobierania)",
-    "network_hint": "Izolowane środowisko tworzy venv dla każdego projektu i instaluje zależności przed kompilacją. W trybie oszczędzania danych kompiluje środowisko wbudowane: Python musi być zainstalowany w systemie, a offline zależności muszą być już obecne."
+    "network_hint": "Izolowane środowisko tworzy venv dla każdego projektu i instaluje zależności przed kompilacją. W trybie oszczędzania danych kompiluje środowisko wbudowane: Python musi być zainstalowany w systemie, a offline zależności muszą być już obecne.",
+    "section_addons": "Rozszerzenia",
+    "section_addons_hint": "Instaluj manifesty paska bocznego",
+    "addons_install": "Zainstaluj rozszerzenie…",
+    "addons_installed": "Zainstalowane",
+    "addons_none": "Brak zainstalowanych rozszerzeń.",
+    "addons_ok": "Rozszerzenie zainstalowane. Uruchom ponownie, aby zobaczyć je na pasku bocznym.",
+    "addons_error": "Nie udało się zainstalować rozszerzenia:",
+    "addons_warning": "Instalowane są tylko manifesty .yaml. Rozszerzenie z 'class' uruchamia kod już zainstalowanego modułu: instaluj tylko zaufane."
   },
   "create": {
     "sandbox": "Bezpieczna piaskownica",

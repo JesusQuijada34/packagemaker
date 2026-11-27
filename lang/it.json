@@ -120,7 +120,15 @@
     "section_network_hint": "Download e compilazione isolata",
     "network_unrestricted": "Senza restrizioni (ambiente isolato per progetto)",
     "network_metered": "Consumo ridotto (nessun download)",
-    "network_hint": "L'ambiente isolato crea un venv per progetto e installa le dipendenze prima di compilare. In modalità consumo ridotto compila l'ambiente integrato: Python deve essere installato nel sistema e, offline, le dipendenze devono essere già presenti."
+    "network_hint": "L'ambiente isolato crea un venv per progetto e installa le dipendenze prima di compilare. In modalità consumo ridotto compila l'ambiente integrato: Python deve essere installato nel sistema e, offline, le dipendenze devono essere già presenti.",
+    "section_addons": "Estensioni",
+    "section_addons_hint": "Installa manifesti della barra laterale",
+    "addons_install": "Installa estensione…",
+    "addons_installed": "Installate",
+    "addons_none": "Nessuna estensione installata.",
+    "addons_ok": "Estensione installata. Riavvia per vederla nella barra laterale.",
+    "addons_error": "Impossibile installare l'estensione:",
+    "addons_warning": "Si installano solo manifesti .yaml. Un'estensione con 'class' esegue codice di un modulo già installato: installa solo quelle affidabili."
   },
   "create": {
     "sandbox": "Sandbox sicura",

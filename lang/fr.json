@@ -120,7 +120,15 @@
     "section_network_hint": "Téléchargements et compilation isolée",
     "network_unrestricted": "Sans restriction (environnement isolé par projet)",
     "network_metered": "Données limitées (aucun téléchargement)",
-    "network_hint": "L'environnement isolé crée un venv par projet et installe ses dépendances avant de compiler. En mode données limitées, la compilation utilise l'environnement intégré : Python doit être installé sur le système et, hors ligne, les dépendances doivent déjà être présentes."
+    "network_hint": "L'environnement isolé crée un venv par projet et installe ses dépendances avant de compiler. En mode données limitées, la compilation utilise l'environnement intégré : Python doit être installé sur le système et, hors ligne, les dépendances doivent déjà être présentes.",
+    "section_addons": "Modules complémentaires",
+    "section_addons_hint": "Installer des manifestes de la barre latérale",
+    "addons_install": "Installer une extension…",
+    "addons_installed": "Installées",
+    "addons_none": "Aucune extension installée.",
+    "addons_ok": "Extension installée. Redémarrez pour la voir dans la barre latérale.",
+    "addons_error": "Impossible d'installer l'extension :",
+    "addons_warning": "Seuls les manifestes .yaml sont installés. Une extension avec 'class' exécute le code d'un module déjà installé : n'installez que celles de confiance."
   },
   "create": {
     "sandbox": "Sandbox sécurisé",

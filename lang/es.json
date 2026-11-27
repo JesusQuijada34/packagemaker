@@ -120,7 +120,15 @@
     "section_network_hint": "Descargas y compilación aislada",
     "network_unrestricted": "Sin restricción (entorno aislado por proyecto)",
     "network_metered": "Uso medido (sin descargas)",
-    "network_hint": "El entorno aislado crea un venv por proyecto e instala sus dependencias antes de compilar. En uso medido compila el entorno embebido: hace falta Python instalado en el sistema y, sin conexión, las dependencias deben estar ya instaladas."
+    "network_hint": "El entorno aislado crea un venv por proyecto e instala sus dependencias antes de compilar. En uso medido compila el entorno embebido: hace falta Python instalado en el sistema y, sin conexión, las dependencias deben estar ya instaladas.",
+    "section_addons": "Extensiones",
+    "section_addons_hint": "Instala manifiestos del sidebar",
+    "addons_install": "Instalar extensión…",
+    "addons_installed": "Instaladas",
+    "addons_none": "No hay extensiones instaladas.",
+    "addons_ok": "Extensión instalada. Reinicia para verla en el sidebar.",
+    "addons_error": "No se pudo instalar la extensión:",
+    "addons_warning": "Solo se instalan manifiestos .yaml. Una extensión con 'class' ejecuta código de un módulo ya instalado: instala solo las de confianza."
   },
   "create": {
     "sandbox": "Sandbox seguro",

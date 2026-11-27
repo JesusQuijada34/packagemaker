@@ -120,7 +120,15 @@
     "section_network_hint": "下载与隔离编译",
     "network_unrestricted": "无限制（每个项目独立环境）",
     "network_metered": "按流量计费（不下载）",
-    "network_hint": "隔离环境会为每个项目创建 venv 并在编译前安装依赖。按流量计费模式下使用内置环境编译：系统中必须已安装 Python，离线时依赖必须已经安装。"
+    "network_hint": "隔离环境会为每个项目创建 venv 并在编译前安装依赖。按流量计费模式下使用内置环境编译：系统中必须已安装 Python，离线时依赖必须已经安装。",
+    "section_addons": "扩展",
+    "section_addons_hint": "安装侧边栏清单",
+    "addons_install": "安装扩展…",
+    "addons_installed": "已安装",
+    "addons_none": "没有已安装的扩展。",
+    "addons_ok": "扩展已安装。重新启动后可在侧边栏看到它。",
+    "addons_error": "无法安装扩展：",
+    "addons_warning": "只能安装 .yaml 清单。带有 'class' 的扩展会运行已安装模块的代码：请只安装可信的扩展。"
   },
   "create": {
     "sandbox": "安全沙箱",

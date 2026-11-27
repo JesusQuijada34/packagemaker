@@ -1,8 +1,8 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo sexto ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `4c867a4`
-  (mantenimiento del ciclo 75, autor `openhands`; no aporta respuestas). Último
+- **Última revisión:** 2026-11-27 (septuagésimo séptimo ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `34870b1`
+  (mantenimiento del ciclo 76, autor `openhands-agent`; no aporta respuestas). Último
   commit **del propietario** procesado: `71e50f7` (2026-11-26, autor
   `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API
   de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio
@@ -11,7 +11,7 @@
   y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 5 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 76 tampoco encontró respuestas nuevas del propietario: aplica en parte **Q-022** (manifiestos en `lib/addons/` con `addons/` como ruta de compatibilidad); la instalación de un addon desde Configuración sigue pendiente. Quedan 14 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-022 y Q-026 quedan aplicadas en parte (Q-022, rutas; Q-026, sidebar) y el resto de Q-026 espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021 y Q-027 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 5 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 77 tampoco encontró respuestas nuevas del propietario: completa **Q-022** con la instalación de un addon `.yaml` desde Configuración (validación previa, directorio de usuario y claves en los 14 catálogos). Quedan 13 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022 y Q-027 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -189,25 +189,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   El bug R-8a3f1c72 queda resuelto con esta implementación.
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`); la opción A ya se aplicó sin reconstruir páginas (ciclos 58 y 59) y falta completar los textos que siguen sin traducir.
 
-
-### Q-022 — Addons en `lib/addons/` e instalación desde la aplicación
-- **Tipo:** mejora
-- **Fecha:** 2026-11-25
-- **Qué se propone:** mover los manifiestos de addons de `addons/` (raíz) a
-  `lib/addons/`, conservando una ruta de compatibilidad, y permitir que el
-  usuario instale un addon `.yaml` desde Configuración con validación previa.
-- **Archivos/componentes afectados:** `lib/addons_engine.py`,
-  `addons/*.yaml`, `packagemaker.py`, `lib/settings_panel.py`,
-  `tests/test_privacy_switch_and_addons_ui.py`.
-- **Riesgo y efectos secundarios:** medio; cambian las rutas de carga y hay
-  que actualizar el empaquetado y las pruebas.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada);
-  **aplicada en parte** el 2026-11-27 (ciclo 76): los manifiestos viven en
-  `lib/addons/` y `addons/` queda como ruta de compatibilidad
-  (`shipped_addons_dirs()` / `load_addons_from_dirs()`). Falta la instalación
-  de un addon `.yaml` desde Configuración con validación previa, que requiere
-  UI nueva y claves en los 14 catálogos.
 
 ### Q-023 — Conectar proyectos a repositorios de GitHub y extensión CloudCube
 - **Tipo:** cambio de engine
@@ -519,6 +500,32 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-022 — Addons en `lib/addons/` e instalación desde la aplicación
+- **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con
+  la API de GitHub).
+- **Aplicada:** septuagésimo sexto ciclo (2026-11-27), primera mitad —
+  `git mv addons lib/addons` y `shipped_addons_dirs()` /
+  `load_addons_from_dirs()`, con `addons/` como ruta de compatibilidad
+  (commit `34870b1`). Septuagésimo séptimo ciclo (2026-11-27), segunda mitad —
+  `user_addons_dir()`, `all_addons_dirs()`, `installed_addons()` e
+  `install_addon()` en `lib/addons_engine.py`; tarjeta **Configuración →
+  Extensiones** en `lib/settings_panel.py`; `packagemaker.py` y
+  `--list-addons` cargan también `data/addons/`; claves
+  `config.section_addons*` y `config.addons_*` en los 14 catálogos y en
+  `tools/translations_curated.py`; pruebas `tests/test_addons_install.py` y
+  `tests/test_addons_settings_ui.py`.
+- **Resultado:** el usuario instala un manifiesto `.yaml` desde Configuración.
+  Antes de copiarlo se valida con el mismo `parse_manifest()` del cargador y se
+  rechazan: ids de addons incluidos (nunca se suplanta una página base),
+  manifiestos desactivados, `builder` que el anfitrión no tiene y `plugin`
+  suelto (el `.py` se ejecutaría al arrancar; eso es el alcance de Q-031).
+  `class` debe ser `modulo:Clase` y no se importa durante la validación. La
+  copia es atómica en `data/addons/`, que se carga **después** de los addons
+  incluidos y de la ruta de compatibilidad. Verificado con la ventana real
+  (offscreen): el sidebar pasa a create, build, config, moonfix, report, help,
+  aide, extra, about y la tarjeta muestra «Instaladas: extra». Sin cambios de
+  comportamiento del engine.
 
 ### Q-021 — Sección de ayuda global de la aplicación
 - **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con

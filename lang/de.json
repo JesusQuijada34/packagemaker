@@ -120,7 +120,15 @@
     "section_network_hint": "Downloads und isolierte Kompilierung",
     "network_unrestricted": "Uneingeschränkt (isoliertes Umfeld pro Projekt)",
     "network_metered": "Datenbegrenzt (keine Downloads)",
-    "network_hint": "Das isolierte Umfeld erstellt ein venv pro Projekt und installiert vor dem Kompilieren die Abhängigkeiten. Im datenbegrenzten Modus kompiliert das eingebettete Umfeld: Python muss im System installiert sein und die Abhängigkeiten müssen offline bereits vorhanden sein."
+    "network_hint": "Das isolierte Umfeld erstellt ein venv pro Projekt und installiert vor dem Kompilieren die Abhängigkeiten. Im datenbegrenzten Modus kompiliert das eingebettete Umfeld: Python muss im System installiert sein und die Abhängigkeiten müssen offline bereits vorhanden sein.",
+    "section_addons": "Erweiterungen",
+    "section_addons_hint": "Manifeste für die Seitenleiste installieren",
+    "addons_install": "Erweiterung installieren…",
+    "addons_installed": "Installiert",
+    "addons_none": "Keine Erweiterungen installiert.",
+    "addons_ok": "Erweiterung installiert. Starte die App neu, um sie in der Seitenleiste zu sehen.",
+    "addons_error": "Die Erweiterung konnte nicht installiert werden:",
+    "addons_warning": "Es werden nur .yaml-Manifeste installiert. Eine Erweiterung mit 'class' führt Code aus einem bereits installierten Modul aus: Installiere nur vertrauenswürdige."
   },
   "create": {
     "sandbox": "Sichere Sandbox",

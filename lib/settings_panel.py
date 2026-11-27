@@ -13,6 +13,7 @@ resto de la ventana ya conocía por nombre) y avisa al anfitrión con
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Dict, Optional
 
 try:
@@ -20,6 +21,7 @@ try:
     from PyQt6.QtWidgets import (
         QCheckBox,
         QComboBox,
+        QFileDialog,
         QGridLayout,
         QHBoxLayout,
         QLabel,
@@ -41,7 +43,13 @@ except ImportError:  # pragma: no cover - entorno sin Qt
     def pyqtSignal(*args, **kwargs):  # type: ignore[no-redef]
         return None
 
+    class QFileDialog:  # type: ignore[no-redef]
+        @staticmethod
+        def getOpenFileName(*args, **kwargs):
+            return ("", "")
 
+
+from lib.addons_engine import AddonError, install_addon, installed_addons
 from lib.design_tokens import TEXT, TEXT_DIM, uwp_button_qss
 from lib.fluent_theme import conf_field_stylesheet
 from lib.i18n import tr
@@ -347,6 +355,41 @@ class SettingsPanel(QWidget):
             subtitle_key="config.section_privacy_hint",
         )
 
+        # Extensiones: instalar un manifiesto del sidebar (Q-022).
+        addons_page = SettingsDetailPage(tr("config.section_addons"))
+        addons_page.add_widget(section_caption(tr("config.section_addons")))
+        self.widgets["conf_addons_install"] = QPushButton(tr("config.addons_install"))
+        install_btn = self.widgets["conf_addons_install"]
+        install_btn.setFixedHeight(36)
+        install_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        install_btn.setStyleSheet(uwp_button_qss())
+        install_btn.clicked.connect(self._install_addon)
+        addons_page.add_widget(install_btn)
+        self._addons_list = QLabel("")
+        self._addons_list.setStyleSheet(
+            f"color:{TEXT};font-size:12px;background:transparent;"
+        )
+        self._addons_list.setWordWrap(True)
+        self.widgets["conf_addons_list"] = self._addons_list
+        addons_page.add_widget(self._addons_list)
+        self._addons_status = QLabel("")
+        self._addons_status.setStyleSheet(
+            f"color:{TEXT_DIM};font-size:11px;background:transparent;"
+        )
+        self._addons_status.setWordWrap(True)
+        self.widgets["conf_addons_status"] = self._addons_status
+        addons_page.add_widget(self._addons_status)
+        self.widgets["conf_addons_warning"] = self._hint(tr("config.addons_warning"))
+        addons_page.add_widget(self.widgets["conf_addons_warning"])
+        addons_page.add_stretch()
+        self._register_card(
+            "addons", tr("config.section_addons"), "download", addons_page,
+            subtitle=tr("config.section_addons_hint"),
+            title_key="config.section_addons",
+            subtitle_key="config.section_addons_hint",
+        )
+        self._refresh_addons_list()
+
         self.root_page.add_stretch()
         self._add_reset_card()
         self.root_page.add_stretch()
@@ -555,6 +598,37 @@ class SettingsPanel(QWidget):
             return
         self.settingsChanged.emit()
 
+    # --- Extensiones del sidebar (Q-022) --------------------------------
+    def _refresh_addons_list(self) -> None:
+        label = getattr(self, "_addons_list", None)
+        if label is None:
+            return
+        ids = [addon.id for addon in installed_addons()]
+        label.setText(
+            f"{tr('config.addons_installed')}: {', '.join(ids)}"
+            if ids
+            else tr("config.addons_none")
+        )
+
+    def _set_addons_status(self, message: str) -> None:
+        status = getattr(self, "_addons_status", None)
+        if status is not None:
+            status.setText(message)
+
+    def _install_addon(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self, tr("config.addons_install"), "", "*.yaml *.yml"
+        )
+        if not path:
+            return
+        try:
+            destination = install_addon(Path(path), host=self.host)
+        except AddonError as exc:
+            self._set_addons_status(f"{tr('config.addons_error')} {exc}")
+            return
+        self._refresh_addons_list()
+        self._set_addons_status(f"{tr('config.addons_ok')} ({destination.name})")
+
     # --- Acciones delegadas al anfitrión --------------------------------
     def _browse_projects(self) -> None:
         host = self.host
@@ -596,4 +670,11 @@ class SettingsPanel(QWidget):
         fonts_btn = self.widgets.get("conf_fonts_btn")
         if fonts_btn is not None:
             fonts_btn.setText(tr("config.fonts_download"))
+        addons_btn = self.widgets.get("conf_addons_install")
+        if addons_btn is not None:
+            addons_btn.setText(tr("config.addons_install"))
+        warning = self.widgets.get("conf_addons_warning")
+        if warning is not None:
+            warning.setText(tr("config.addons_warning"))
+        self._refresh_addons_list()
         self._emit_navigation()

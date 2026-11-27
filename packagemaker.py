@@ -344,7 +344,7 @@ from lib.design_tokens import (
 )
 from lib.SidebarItem import SidebarItem
 from lib.sidebar_resize import SidebarResizeHandle
-from lib.addons_engine import Addon, load_addons_from_dirs, shipped_addons_dirs
+from lib.addons_engine import Addon, all_addons_dirs, load_addons_from_dirs
 from lib.report_page import ReportPage
 from lib.settings_cards import ARROW_BACK
 from lib.settings_panel import SettingsPanel
@@ -447,10 +447,11 @@ else:
         return None
 
 # Diccionario de claves de iconos (los iconos se crearán de manera diferida)
-# Los addons viajan con el código: se resuelven junto a este script, no en la
-# carpeta de datos del usuario. ``lib/addons/`` es la ubicación actual y
-# ``addons/`` se mantiene como ruta de compatibilidad.
-ADDONS_DIRS = shipped_addons_dirs()
+# Los addons incluidos viajan con el código (``lib/addons/``, con ``addons/``
+# como ruta de compatibilidad) y los instalados desde Configuración viven en
+# ``data/addons/``. El orden lo fija el motor: incluido > compatibilidad >
+# usuario, así que una extensión del usuario nunca suplanta una página base.
+ADDONS_DIRS = all_addons_dirs()
 ADDONS_DIR = ADDONS_DIRS[0] if ADDONS_DIRS else Path(__file__).resolve().parent / "lib" / "addons"
 
 TAB_ICON_KEYS = {

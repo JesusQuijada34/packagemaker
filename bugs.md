@@ -1,9 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 76: Q-022 aplicada en parte —los
-manifiestos de addons viven en `lib/addons/` con `addons/` como ruta de
-compatibilidad—; la instalación de un addon desde Configuración sigue
-pendiente).
+Última actualización: 2026-11-27 (ciclo 77: Q-022 completa —el usuario instala
+manifiestos `.yaml` desde Configuración → Extensiones con validación previa—;
+R-2c8d4f71 sale de la cola y se archiva).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -24,7 +23,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aplicada en parte (sidebar, R-8f4b2d61); falta superficie/texto de pestañas (Q-036) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
-| R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Aplicada en parte (Q-022): reubicación y compatibilidad; falta la instalación desde Configuración |
 | R-9a4e2c83 | Cambio de engine — GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
@@ -34,8 +32,10 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**12 entradas en la cola**: 1 bug, 3 mejoras de producto y 8 cambios de engine
+**11 entradas en la cola**: 1 bug, 2 mejoras de producto y 8 cambios de engine
 (7 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
+R-2c8d4f71 (addons en `lib/addons/` e instalación desde Configuración, Q-022)
+sale de la cola en este ciclo: implementada, probada y verificada.
 R-7b3e9a52 (ayuda global, Q-021) salió de la cola en este ciclo: implementada,
 probada y verificada en la ventana real.
 R-7b2c9e51 salió de la cola en el ciclo anterior: Q-027 quedó implementada,
@@ -106,29 +106,6 @@ R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
 - **Estado:** Pendiente. El propio propietario la condiciona a que bajen los
   bugs; no entra en un ciclo con bugs de prioridad alta abiertos.
 
-### R-2c8d4f71 — Addons en `lib/addons/` e instalación desde la app (Q-022)
-
-- **Usuario:** JesusQuijada34 (issue #11)
-- **Fecha del reporte:** 2026-11-25
-- **Prioridad:** Baja.
-- **Descripción:** mover los manifiestos a `lib/addons/` conservando
-  compatibilidad con `addons/` y añadir importación/validación de un `.yaml`
-  desde Configuración.
-- **Estado:** **Aplicada en parte** (Q-022, ciclo 76). Los manifiestos viven
-  ahora en `lib/addons/` y `addons/` se conserva como ruta de compatibilidad
-  (el primer directorio gana por `id`). Falta la segunda mitad: instalar un
-  addon `.yaml` desde Configuración con validación previa, que necesita UI
-  nueva y claves de traducción en los 14 catálogos; se hará en un ciclo
-  propio para no mezclar un cambio de rutas con una función de interfaz.
-- **Archivos:** `lib/addons_engine.py`, `lib/addons/*.yaml`,
-  `packagemaker.py`, `lib/cliHandler.py`, `lib/settings_panel.py`, `tests/`.
-- **Riesgo:** medio (rutas de carga y empaquetado).
-- **Solución aplicada:** `git mv addons lib/addons`; nuevos
-  `shipped_addons_dirs()` y `load_addons_from_dirs()` en
-  `lib/addons_engine.py` (precedencia `lib/addons/` → `addons/`, sin
-  duplicar ids); `packagemaker.py` y `--list-addons` usan el resolutor;
-  pruebas de precedencia, compatibilidad y respaldo. Commit `—` (ciclo 76).
-
 ## Cambios de engine pendientes
 
 Cambian comportamiento fundamental, UI o empaquetado y **sólo se implementan
@@ -185,7 +162,7 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 12 entradas (ver Resumen). No hay bugs críticos reportados sin
+- **Cola:** 11 entradas (ver Resumen). No hay bugs críticos reportados sin
   atender. El único bug abierto, R-7f2b9c41, espera la decisión de Q-034.
   R-4d9e2b61 (Q-019, entorno aislado) y R-7b2c9e51 (Q-027, splash mínimo y
   reporte de tirones) quedan en observación tras verificarse con arranques y
@@ -323,3 +300,20 @@ al ciclo anterior.
   propio. Suite: 1444 pasan, 2 omitidas, 64 subtests; `pyflakes` limpio. No se
   prepara release: siguen pendientes los cambios de engine aprobados y
   R-7f2b9c41 espera Q-034.
+- Septuagésimo séptimo ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`, así que se completa **Q-022** (R-2c8d4f71, issue #11) con su
+  segunda mitad: instalar un addon `.yaml` desde Configuración → Extensiones.
+  Nuevos `user_addons_dir()`, `all_addons_dirs()`, `installed_addons()` e
+  `install_addon()` en `lib/addons_engine.py`: el manifiesto se valida con el
+  mismo `parse_manifest()` del cargador y se rechazan los ids de addons
+  incluidos, los manifiestos desactivados, un `builder` que el anfitrión no
+  tenga y los `plugin` sueltos (su `.py` se ejecutaría al arrancar; eso queda
+  para Q-031). La copia es atómica en `data/addons/`, que se carga después de
+  `lib/addons/` y de `addons/`, así que una extensión del usuario nunca
+  suplanta una página base. `packagemaker.py` y `--list-addons` usan el nuevo
+  resolutor y la tarjeta nueva trae claves en los 14 catálogos. Verificado con
+  la ventana real (offscreen): sidebar create, build, config, moonfix, report,
+  help, aide, extra, about y la tarjeta muestra «Instaladas: extra». Suite:
+  1466 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. No se prepara release: siguen pendientes los
+  cambios de engine aprobados y R-7f2b9c41 espera Q-034.

@@ -841,9 +841,9 @@ class AddonReportHelper:
 
     @staticmethod
     def report():
-        from lib.addons_engine import load_addons_from_dirs, shipped_addons_dirs
+        from lib.addons_engine import all_addons_dirs, load_addons_from_dirs
 
-        addons = load_addons_from_dirs(shipped_addons_dirs())
+        addons = load_addons_from_dirs(all_addons_dirs())
         skipped = getattr(type(addons[0]) if addons else None, "skipped", []) or []
         print(f"Extensiones del sidebar ({len(addons)}):")
         for addon in addons:

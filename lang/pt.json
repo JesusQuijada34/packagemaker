@@ -120,7 +120,15 @@
     "section_network_hint": "Downloads e compilação isolada",
     "network_unrestricted": "Sem restrições (ambiente isolado por projeto)",
     "network_metered": "Uso medido (sem downloads)",
-    "network_hint": "O ambiente isolado cria um venv por projeto e instala as dependências antes de compilar. No modo de uso medido compila o ambiente embutido: o Python tem de estar instalado no sistema e, sem ligação, as dependências têm de estar já instaladas."
+    "network_hint": "O ambiente isolado cria um venv por projeto e instala as dependências antes de compilar. No modo de uso medido compila o ambiente embutido: o Python tem de estar instalado no sistema e, sem ligação, as dependências têm de estar já instaladas.",
+    "section_addons": "Extensões",
+    "section_addons_hint": "Instalar manifestos da barra lateral",
+    "addons_install": "Instalar extensão…",
+    "addons_installed": "Instaladas",
+    "addons_none": "Nenhuma extensão instalada.",
+    "addons_ok": "Extensão instalada. Reinicie para vê-la na barra lateral.",
+    "addons_error": "Não foi possível instalar a extensão:",
+    "addons_warning": "Só são instalados manifestos .yaml. Uma extensão com 'class' executa código de um módulo já instalado: instale apenas as de confiança."
   },
   "create": {
     "sandbox": "Sandbox segura",

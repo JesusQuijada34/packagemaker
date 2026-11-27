@@ -120,7 +120,15 @@
     "section_network_hint": "Downloads en geïsoleerde compilatie",
     "network_unrestricted": "Onbeperkt (geïsoleerde omgeving per project)",
     "network_metered": "Databesparing (geen downloads)",
-    "network_hint": "De geïsoleerde omgeving maakt een venv per project en installeert de afhankelijkheden voordat er wordt gecompileerd. In de databesparingsmodus compileert de ingebouwde omgeving: Python moet op het systeem staan en offline moeten de afhankelijkheden al aanwezig zijn."
+    "network_hint": "De geïsoleerde omgeving maakt een venv per project en installeert de afhankelijkheden voordat er wordt gecompileerd. In de databesparingsmodus compileert de ingebouwde omgeving: Python moet op het systeem staan en offline moeten de afhankelijkheden al aanwezig zijn.",
+    "section_addons": "Extensies",
+    "section_addons_hint": "Manifesten voor de zijbalk installeren",
+    "addons_install": "Extensie installeren…",
+    "addons_installed": "Geïnstalleerd",
+    "addons_none": "Geen extensies geïnstalleerd.",
+    "addons_ok": "Extensie geïnstalleerd. Herstart om haar in de zijbalk te zien.",
+    "addons_error": "De extensie kon niet worden geïnstalleerd:",
+    "addons_warning": "Alleen .yaml-manifesten worden geïnstalleerd. Een extensie met 'class' voert code uit van een al geïnstalleerde module: installeer alleen vertrouwde."
   },
   "create": {
     "sandbox": "Veilige sandbox",

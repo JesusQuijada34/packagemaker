@@ -877,3 +877,21 @@ ciclos: es un registro de auditoría.
   catálogos. Suite: 1444 pasan, 2 omitidas, 64 subtests; `pyflakes` limpio. No
   se prepara release: siguen pendientes los cambios de engine aprobados y
   R-7f2b9c41 espera la decisión de Q-034.
+- Septuagésimo séptimo ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`. Se completa **Q-022** (R-2c8d4f71, issue #11) con su segunda
+  mitad: instalar un addon `.yaml` desde Configuración → Extensiones. El motor
+  gana `user_addons_dir()`, `all_addons_dirs()`, `installed_addons()` e
+  `install_addon()`: valida con `parse_manifest()`, rechaza ids de addons
+  incluidos (nunca se suplanta una página base), manifiestos desactivados,
+  `builder` que el anfitrión no tenga y `plugin` suelto (queda para Q-031), y
+  copia de forma atómica a `data/addons/`, cargado después de `lib/addons/` y
+  `addons/`. La tarjeta nueva trae claves en los 14 catálogos y en
+  `tools/translations_curated.py`. Verificación: la ventana real (offscreen)
+  arranca con create, build, config, moonfix, report, help, aide, extra, about
+  y la tarjeta muestra «Instaladas: extra»; `--list-addons` sigue listando los
+  8 addons incluidos. Suite: 1466 pasan, 1 omitida, 64 subtests;
+  `pyflakes` limpio. No se prepara
+  release: siguen pendientes los cambios de engine aprobados y R-7f2b9c41
+  espera la decisión de Q-034.
+

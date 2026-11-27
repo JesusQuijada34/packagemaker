@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -240,11 +241,29 @@ def _read_directory(directory: Path, *, strict: bool, errors: List[str]) -> List
 #: ``addons/`` en la raíz se conserva para bundles antiguos (compatibilidad).
 SHIPPED_ADDONS_DIR = Path(__file__).resolve().parent / "addons"
 LEGACY_ADDONS_DIR = Path(__file__).resolve().parent.parent / "addons"
+#: Extensiones instaladas desde Configuración. Va la última: un addon del
+#: usuario nunca puede suplantar una entrada incluida (el primero gana por id).
+USER_ADDONS_DIR = Path(__file__).resolve().parent.parent / "data" / "addons"
 
 
 def shipped_addons_dirs() -> List[Path]:
     """Directorios de manifiestos incluidos, por precedencia (primero gana)."""
     return [d for d in (SHIPPED_ADDONS_DIR, LEGACY_ADDONS_DIR) if d.is_dir()]
+
+
+def user_addons_dir() -> Path:
+    """Directorio de extensiones instaladas por el usuario (puede no existir)."""
+    override = os.environ.get("PM_USER_ADDONS_DIR")
+    return Path(override) if override else USER_ADDONS_DIR
+
+
+def all_addons_dirs() -> List[Path]:
+    """Directorios de carga: incluidos, compatibilidad y usuario, en ese orden."""
+    directories = shipped_addons_dirs()
+    user = user_addons_dir()
+    if user not in directories:
+        directories.append(user)
+    return directories
 
 
 def load_addons(directory: Path, *, strict: bool = False) -> List[Addon]:
@@ -330,3 +349,92 @@ def missing_requirements(addon: Addon) -> List[str]:
         except Exception:
             missing.append(module_name)
     return missing
+
+
+def installed_addons() -> List[Addon]:
+    """Manifiestos instalados por el usuario, sin el respaldo integrado.
+
+    ``load_addons()`` cae a ``DEFAULT_ADDONS`` cuando el directorio no existe;
+    para listar sólo lo que instaló el usuario hace falta leer el directorio
+    tal cual.
+    """
+    directory = user_addons_dir()
+    if yaml is None or not directory.is_dir():
+        return []
+    return _read_directory(directory, strict=False, errors=[])
+
+
+def install_addon(
+    source: Path, *, target_dir: Optional[Path] = None, host: Any = None
+) -> Path:
+    """Valida e instala un manifiesto ``.yaml`` en el directorio de usuario.
+
+    La validación es la misma que aplica el cargador (``parse_manifest``) más
+    las comprobaciones que evitan dejar una extensión que no pueda construirse:
+
+    - el ``id`` no puede pertenecer a un addon incluido (nunca se suplanta una
+      página del sistema);
+    - un ``builder`` debe existir en el anfitrión cuando se pasa ``host``;
+    - ``class`` debe tener el formato ``modulo:Clase``;
+    - ``plugin`` se rechaza: el ``.py`` viajaría junto al manifiesto y se
+      ejecutaría al arrancar, que es el alcance de Q-031 (extensiones
+      empaquetadas con lista de confianza y firma).
+
+    Devuelve la ruta del manifiesto instalado. Lanza ``AddonError`` con el
+    motivo si no se puede instalar.
+    """
+    source = Path(source)
+    if source.suffix.lower() not in (".yaml", ".yml"):
+        raise AddonError(f"{source.name}: la extensión debe ser un fichero .yaml")
+    if not source.is_file():
+        raise AddonError(f"{source.name}: no existe el fichero")
+    if yaml is None:
+        raise AddonError("PyYAML no está instalado: no se pueden validar extensiones")
+
+    try:
+        text = source.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise AddonError(f"{source.name}: {exc}") from exc
+    try:
+        data = yaml.safe_load(text)
+    except Exception as exc:
+        raise AddonError(f"{source.name}: YAML inválido ({exc})") from exc
+
+    addon = parse_manifest(data, source)
+    if addon is None:
+        raise AddonError(f"{source.name}: el manifiesto está desactivado (enabled: false)")
+
+    shipped_ids = {a.id for a in load_addons_from_dirs(shipped_addons_dirs())}
+    if addon.id in shipped_ids:
+        raise AddonError(
+            f"{source.name}: el id '{addon.id}' pertenece a un addon incluido "
+            "y no se puede reemplazar"
+        )
+    if addon.kind == "plugin":
+        raise AddonError(
+            f"{source.name}: las extensiones con 'plugin' se instalan como paquete "
+            "firmado, no como manifiesto suelto"
+        )
+    if addon.kind == "class":
+        module_name, _, attr = addon.class_path.partition(":")
+        if not module_name or not attr:
+            raise AddonError(f"{source.name}: 'class' debe ser 'modulo:Clase'")
+    if addon.kind == "builder" and host is not None:
+        if not callable(getattr(host, addon.builder, None)):
+            raise AddonError(f"{source.name}: el anfitrión no tiene {addon.builder}()")
+
+    directory = Path(target_dir) if target_dir is not None else user_addons_dir()
+    destination = directory / f"{addon.id}.yaml"
+    temporary = destination.with_name(f".{addon.id}.yaml.tmp")
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        temporary.write_text(text, encoding="utf-8")
+        os.replace(temporary, destination)
+    except OSError as exc:
+        raise AddonError(f"{source.name}: no se pudo copiar a {directory} ({exc})") from exc
+    finally:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError:
+            pass
+    return destination

@@ -120,7 +120,15 @@
     "section_network_hint": "Downloads and isolated compilation",
     "network_unrestricted": "Unrestricted (isolated environment per project)",
     "network_metered": "Metered (no downloads)",
-    "network_hint": "The isolated environment creates a venv per project and installs its dependencies before compiling. In metered mode the embedded environment compiles: Python must be installed on the system, and offline the dependencies must already be installed."
+    "network_hint": "The isolated environment creates a venv per project and installs its dependencies before compiling. In metered mode the embedded environment compiles: Python must be installed on the system, and offline the dependencies must already be installed.",
+    "section_addons": "Extensions",
+    "section_addons_hint": "Install sidebar manifests",
+    "addons_install": "Install extension…",
+    "addons_installed": "Installed",
+    "addons_none": "No extensions installed.",
+    "addons_ok": "Extension installed. Restart to see it in the sidebar.",
+    "addons_error": "Could not install the extension:",
+    "addons_warning": "Only .yaml manifests are installed. An extension with 'class' runs code from an already installed module: install only trusted ones."
   },
   "create": {
     "sandbox": "Secure sandbox",
