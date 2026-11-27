@@ -113,7 +113,12 @@
     "telemetry_hint": "Gebruikt je GitHub-sessie om de fout als issue te publiceren met de apparaatomgeving. Als je dit uitschakelt, blijven fouten lokaal en kun je ze handmatig versturen via Rapporten.",
     "telemetry_endpoint_enabled": "Fouten naar je eigen server sturen",
     "telemetry_endpoint_hint": "Vereist het instellen van telemetry_endpoint. Standaard uitgeschakeld en onafhankelijk van de rapportagetunnel.",
-    "telemetry_endpoint_url": "Eigen server (URL)"
+    "telemetry_endpoint_url": "Eigen server (URL)",
+    "section_network": "Netwerk",
+    "section_network_hint": "Downloads en geïsoleerde compilatie",
+    "network_unrestricted": "Onbeperkt (geïsoleerde omgeving per project)",
+    "network_metered": "Databesparing (geen downloads)",
+    "network_hint": "De geïsoleerde omgeving maakt een venv per project en installeert de afhankelijkheden voordat er wordt gecompileerd. In de databesparingsmodus compileert de ingebouwde omgeving: Python moet op het systeem staan en offline moeten de afhankelijkheden al aanwezig zijn."
   },
   "create": {
     "sandbox": "Veilige sandbox",

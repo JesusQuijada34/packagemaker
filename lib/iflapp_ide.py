@@ -194,6 +194,7 @@ def compile_project(
     Reutiliza ``lib.compilers`` tal cual: el IDE no reimplementa la compilación,
     solo elige el guion de entrada y los imports ocultos.
     """
+    from lib.blindcubeEngine import build_sandbox
     from lib.blindcubeEngine.compilers import CompilerUnavailableError, resolve_backend
 
     project = scan_project(root)
@@ -214,6 +215,7 @@ def compile_project(
         _log(f"[ERROR] {exc}")
         return outcome
 
+    engine = build_sandbox.wrap_backend(engine, project.root, log_callback=_log)
     outcome.backend = engine.name
     scripts = project.scripts or ([project.entry] if project.entry else [])
     if not scripts:

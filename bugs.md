@@ -1,8 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 71: corregidas R-6b4d2f81, las cuatro
-ventanas del updater morían al construirse, y R-3a9c6e28, la `QApplication` del
-updater de plantilla nacía en un hilo de trabajo; ambas en observación).
+Última actualización: 2026-11-27 (ciclo 72: implementada Q-019, el entorno de
+compilación aislado por proyecto con el interruptor «Red» en Configuración;
+R-4d9e2b61 queda en observación).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -20,7 +20,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-4d9e2b61 | Bug — el build no usa un entorno aislado por proyecto | Alta | Aprobado Q-019; pendiente de implementación (el fallo de Nuitka se corrigió en R-8d3f6a21) |
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
@@ -36,35 +35,12 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**15 entradas en la cola**: 2 bugs, 4 mejoras de producto y 9 cambios de engine
+**14 entradas en la cola**: 1 bug, 4 mejoras de producto y 9 cambios de engine
 (8 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
-R-3a9c6e28 salió de la cola en este ciclo (corregida y en observación) y
-R-6b4d2f81, encontrada al reproducirla, también quedó corregida.
+R-4d9e2b61 salió de la cola en este ciclo: Q-019 quedó implementada, probada y
+verificada con dos compilaciones reales dentro del entorno aislado.
 
 ## Bugs pendientes
-
-### R-4d9e2b61 — La compilación con Nuitka falla y el build no usa un entorno aislado
-
-- **Usuario:** JesusQuijada34 (`bugs.txt`, commit `bba72d6`)
-- **Fecha del reporte:** 2026-11-25
-- **Prioridad:** Alta.
-- **Descripción:** «la compilación quedó corrupta, todo dice embebido, hay
-  errores al compilar con Nuitka, nada tiene el entorno aislado». Pide que el
-  build descargue el Python del proyecto, cree un entorno aislado, instale
-  dependencias, pruebe, compile y saque el resultado fuera, sin cambiar el
-  formato de compilación.
-- **Pasos para reproducirlo:** compilar un proyecto con Nuitka y revisar el
-  log: los backends se anuncian como «embebidos» y no hay venv por proyecto.
-- **Causa raíz:** hay dos causas distintas. Los «errores al compilar con
-  Nuitka» eran del backend (R-8d3f6a21: opciones `--output-dir`/
-  `--output-filename` sin `=`, familia Qt `styles` inexistente e importación de
-  `MainControl` sin proteger), ya corregidos en el ciclo 66. El entorno aislado
-  por proyecto simplemente no existe todavía (Q-019).
-- **Estado:** Pendiente sólo por Q-019 (entorno aislado por proyecto). El fallo
-  de compilación de Nuitka está corregido y en observación como R-8d3f6a21.
-- **Solución aplicada:** backend Nuitka corregido y verificado con una
-  compilación real `--standalone --onefile`.
-- **Commit / fecha de resolución:** — (el entorno aislado sigue abierto).
 
 ### R-7f2b9c41 — El updater de los proyectos no puede instalar un `.iflapp`
 
@@ -157,7 +133,7 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 9 | Q-013 / F-006 | Actualizaciones silenciosas de parches | Aprobado; pendiente | alto |
 | 10 | Q-014 | Eventos del sidebar y temas de temporada | Aprobado; pendiente | medio |
 | 13 | Q-018 | El build del CLI no valida `details.xml` | Aprobado; pendiente de elegir opción (Q-035) | medio |
-| 14 | Q-019 (R-4d9e2b61) | Entorno aislado de compilación | Aprobado; pendiente | alto |
+| 14 | Q-019 (R-4d9e2b61) | Entorno aislado de compilación | **Aplicado** (ciclo 72); R-4d9e2b61 en observación | alto |
 | 15 | Q-020 | Traducción completa al cambiar de idioma | Aprobado; aplicado en parte | medio-alto |
 | 16 | Q-023 (R-9a4e2c83) | Conectar proyectos a GitHub y extensión CloudCube | Aprobado; pendiente | alto |
 | 17 | Q-024 (R-5f1b8d24) | El updater como extensión con notificaciones | Aprobado; pendiente | alto |
@@ -172,8 +148,9 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 Ya implementados y verificados: aislamiento BlindCube/FlatCube y `.blindkpkg`
 (Q-005), pruebas previas y diálogo `.env` (Q-006), rediseño de UI (Q-009),
 sidebar con hover y modo contraído (Q-010), la ventana con arrastre, snap y
-límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31) y el CLI del
-`updater.py` de las plantillas (Q-017, ciclo 70).
+límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31), el CLI del
+`updater.py` de las plantillas (Q-017, ciclo 70) y el entorno de compilación
+aislado por proyecto con la tarjeta Red (Q-019, ciclo 72).
 
 ## En observación
 
@@ -190,15 +167,16 @@ al ciclo anterior.
 | R-7c4a1e95 | La interfaz se congelaba al guardar ajustes (~120 ms por re-pulido redundante) | Alta | ciclo 69, 2026-11-27 | `tests/test_settings_save_repolish.py` |
 | R-6b4d2f81 | Las cuatro ventanas del updater morían al construirse (`Qt.WindowFlags`, `is_main`, `set_color`, `setValue`) | Alta | ciclo 71, 2026-11-27 | `tests/test_updater_windows_construct.py` |
 | R-3a9c6e28 | El updater de plantilla creaba la `QApplication` en el hilo de vigilancia | Media | ciclo 71, 2026-11-27 | `tests/test_template_updater_gui_thread.py` |
+| R-4d9e2b61 | El build no usaba un entorno aislado por proyecto (Q-019) | Alta | ciclo 72, 2026-11-27 | `tests/test_build_sandbox.py`, `tests/test_settings_navigation_bar.py` |
 
 ## Periodo de observación y release
 
-- **Cola:** 15 entradas (ver Resumen). No hay bugs críticos reportados sin
-  atender. R-4d9e2b61 (sólo el entorno aislado de Q-019) sigue aprobado y
-  pendiente de implementación. R-7f2b9c41 sigue esperando la decisión de
-  Q-034. R-7c4a1e95, R-6b4d2f81 y R-3a9c6e28 quedan en observación y de Q-012
-  sólo quedan la barra marquee permanente y las notificaciones nativas (mejora,
-  no fallo de rendimiento).
+- **Cola:** 14 entradas (ver Resumen). No hay bugs críticos reportados sin
+  atender. El único bug abierto, R-7f2b9c41, espera la decisión de Q-034.
+  R-4d9e2b61 (Q-019, entorno aislado) queda en observación tras verificarse con
+  compilaciones reales de Nuitka y PyInstaller. De Q-012 sólo quedan la barra
+  marquee permanente y las notificaciones nativas (mejora, no fallo de
+  rendimiento).
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
@@ -256,3 +234,19 @@ al ciclo anterior.
   maximizaba la ventana) y se archiva en `docs/bugs_resueltos.md`. Se compacta
   esta cola a petición del propietario en el issue #15: fuera los resueltos,
   los cambios de engine reducidos a su índice y las fichas en `CONFIRM.MD`.
+
+- Septuagésimo segundo ciclo (2026-11-27): no había reportes nuevos en los
+  issues #4, #10, #11, #13, #14 ni #15, no había pull requests abiertas y
+  `CONFIRM.MD` no tenía respuestas nuevas, así que el ciclo aplica una
+  aprobación de prioridad alta: **Q-019** (R-4d9e2b61, «nada tiene el entorno
+  aislado»). El build compila ahora dentro de un venv por proyecto
+  (`<proyecto>/build/pm-sandbox/<backend>/venv`): instala las dependencias del
+  proyecto y las del backend, comprueba que el backend se importa dentro del
+  entorno y lanza Nuitka o PyInstaller como subproceso; el binario se copia a
+  `dist` como antes y, si el entorno falla, se reintenta con el backend
+  embebido. Se añade la tarjeta **Configuración → Red** con el modo de uso
+  medido que pidió el propietario (sin descargas, aviso de que hace falta Python
+  del sistema y de cómo seguir sin conexión). Verificado con dos compilaciones
+  reales (PyInstaller 10,9 s y Nuitka 60,5 s) cuyos binarios se ejecutaron
+  correctamente. R-4d9e2b61 queda en observación. No se prepara release: siguen
+  pendientes los cambios de engine aprobados y R-7f2b9c41 espera Q-034.

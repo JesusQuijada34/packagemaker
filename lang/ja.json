@@ -113,7 +113,12 @@
     "telemetry_hint": "GitHub セッションを使って、端末環境とともにエラーを issue として投稿します。オフにすると障害はローカルにのみ保存され、レポート画面から手動で送信できます。",
     "telemetry_endpoint_enabled": "障害を自前のサーバーへ送信",
     "telemetry_endpoint_hint": "telemetry_endpoint の設定が必要です。既定ではオフで、レポートトンネルとは独立しています。",
-    "telemetry_endpoint_url": "自前のサーバー (URL)"
+    "telemetry_endpoint_url": "自前のサーバー (URL)",
+    "section_network": "ネットワーク",
+    "section_network_hint": "ダウンロードと分離ビルド",
+    "network_unrestricted": "制限なし（プロジェクトごとの分離環境）",
+    "network_metered": "従量制（ダウンロードなし）",
+    "network_hint": "分離環境はプロジェクトごとに venv を作成し、ビルド前に依存関係をインストールします。従量制モードでは組み込み環境でビルドするため、Python がシステムに必要で、オフライン時は依存関係が導入済みである必要があります。"
   },
   "create": {
     "sandbox": "安全なサンドボックス",

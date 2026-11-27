@@ -54,6 +54,9 @@ DEFAULT_USER: Dict[str, Any] = {
     "card_opacity": 0.08,
     "ui_density": "normal",
     "sidebar_width": 270,
+    # Modo de red del build (Q-019): «unrestricted» compila en un entorno
+    # aislado por proyecto; «metered» usa el backend embebido sin descargas.
+    "network_mode": "unrestricted",
     # Telemetría opcional (Q-001): apagada salvo consentimiento explícito.
     "telemetry_enabled": False,
     "telemetry_endpoint": "",

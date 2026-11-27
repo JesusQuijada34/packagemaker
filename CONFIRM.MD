@@ -1,10 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo primer ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `861d1ec` (mantenimiento del ciclo 70, autor `openhands-agent`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
+- **Última revisión:** 2026-11-27 (septuagésimo segundo ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `7de08c5` (mantenimiento del ciclo 71, autor `openhands`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 71 no encontró respuestas nuevas del propietario: se dedica a dos bugs (R-6b4d2f81 y R-3a9c6e28), sin tocar ninguna aprobación. Quedan 19 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-019…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016 y Q-017 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 72 no encontró respuestas nuevas del propietario: aplica **Q-019** (entorno aislado de compilación) y la archiva. Quedan 18 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017 y Q-019 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -149,28 +149,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   No toca el nombre canónico ni las plantillas. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
-
-### Q-019 — Entorno aislado de compilación (reporte del propietario)
-
-- **Tipo:** cambio de engine
-- **Fecha:** 2026-11-25
-- **Qué se propone:** que el build descargue en la carpeta del proyecto la
-  versión de Python correspondiente a la plataforma, cree un entorno aislado,
-  instale las dependencias, ejecute las pruebas, compile y mueva el resultado
-  fuera del entorno. Hoy Nuitka y PyInstaller se ejecutan «embebidos» en el
-  intérprete actual y el reporte del propietario indica errores al compilar con
-  Nuitka. El propietario pide conservar el formato de compilación actual.
-- **Archivos/componentes afectados:** `lib/blindcubeEngine/BuildThread.py`,
-  `lib/blindcubeEngine/compilers.py`,
-  `lib/blindcubeEngine/nuitka_embedded.py`,
-  `lib/flatcubeEngine/pyinstaller_embedded.py`,
-  `lib/blindcubeEngine/build_preflight.py`, `packagemaker.py` y pruebas.
-- **Riesgo y efectos secundarios:** descargas de red, más tiempo y espacio de
-  build, dependencia de la disponibilidad de los binarios de Python y posible
-  divergencia entre lo probado y lo empaquetado. Riesgo alto.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Nota del propietario (commit `73dcdcd`):** «Pero si se ajusta un nuevo switch en configuracion llamado Red, se puede poner un modo de red de uso medido para usar el emebebido pero avisar que requiere python en el sistema, y da indicaciones para instalarlo y proceder de forma offline»
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`) con la instrucción de añadir un interruptor **Red** en Configuración: modo de uso medido que use el entorno embebido, avise de que requiere el Python del sistema y dé indicaciones para instalarlo y seguir sin conexión; pendiente de implementación.
 
 ### Q-020 — Traducir toda la interfaz al cambiar de idioma
 
@@ -535,6 +513,24 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-019 — Entorno aislado de compilación (reporte del propietario)
+- **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con
+  la API de GitHub) con la instrucción de añadir un interruptor **Red**.
+- **Aplicada:** septuagésimo segundo ciclo (2026-11-27) —
+  `lib/blindcubeEngine/build_sandbox.py` (nuevo),
+  `lib/blindcubeEngine/BuildThread.py`, `lib/iflapp_ide.py`, `lib/pm_data.py`,
+  `lib/settings_panel.py`, `packagemaker.py`, `lang/*.json` y pruebas.
+- **Resultado:** el build compila dentro de un venv por proyecto
+  (`<proyecto>/build/pm-sandbox/<backend>/venv`): instala las dependencias del
+  proyecto y del backend, comprueba que el backend se importa dentro del
+  entorno y lanza Nuitka/PyInstaller como subproceso; el binario se copia a
+  `dist` y, si el entorno no se puede preparar, se reintenta con el backend
+  embebido. La tarjeta **Configuración → Red** ofrece *sin restricción*
+  (aislado, por defecto) y *uso medido* (sin descargas, aviso de Python del
+  sistema e indicaciones para seguir sin conexión), como pidió el propietario.
+  Verificado con builds reales de PyInstaller (10,9 s) y Nuitka (60,5 s).
+  R-4d9e2b61 queda en observación.
 
 ### Q-017 — CLI en el `updater.py` de las plantillas
 - **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada

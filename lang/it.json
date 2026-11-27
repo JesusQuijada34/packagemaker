@@ -113,7 +113,12 @@
     "telemetry_hint": "Usa la tua sessione GitHub per pubblicare l'errore come issue con l'ambiente del dispositivo. Se lo disattivi, gli errori restano in locale e puoi inviarli a mano da Report.",
     "telemetry_endpoint_enabled": "Invia gli errori a un tuo server",
     "telemetry_endpoint_hint": "Richiede la configurazione di telemetry_endpoint. Disattivato per impostazione predefinita e indipendente dal tunnel dei report.",
-    "telemetry_endpoint_url": "Server personale (URL)"
+    "telemetry_endpoint_url": "Server personale (URL)",
+    "section_network": "Rete",
+    "section_network_hint": "Download e compilazione isolata",
+    "network_unrestricted": "Senza restrizioni (ambiente isolato per progetto)",
+    "network_metered": "Consumo ridotto (nessun download)",
+    "network_hint": "L'ambiente isolato crea un venv per progetto e installa le dipendenze prima di compilare. In modalità consumo ridotto compila l'ambiente integrato: Python deve essere installato nel sistema e, offline, le dipendenze devono essere già presenti."
   },
   "create": {
     "sandbox": "Sandbox sicura",

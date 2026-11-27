@@ -113,7 +113,12 @@
     "telemetry_hint": "Hatayı cihaz ortamıyla birlikte sorun olarak yayınlamak için GitHub oturumunuzu kullanır. Kapatırsanız hatalar yalnızca yerelde kalır ve Raporlar bölümünden elle gönderebilirsiniz.",
     "telemetry_endpoint_enabled": "Hataları kendi sunucunuza gönder",
     "telemetry_endpoint_hint": "telemetry_endpoint yapılandırması gerekir. Varsayılan olarak kapalıdır ve rapor tünelinden bağımsızdır.",
-    "telemetry_endpoint_url": "Kendi sunucunuz (URL)"
+    "telemetry_endpoint_url": "Kendi sunucunuz (URL)",
+    "section_network": "Ağ",
+    "section_network_hint": "İndirmeler ve yalıtılmış derleme",
+    "network_unrestricted": "Sınırsız (proje başına yalıtılmış ortam)",
+    "network_metered": "Ölçülü kullanım (indirme yok)",
+    "network_hint": "Yalıtılmış ortam her proje için bir venv oluşturur ve derlemeden önce bağımlılıkları kurar. Ölçülü kullanım modunda gömülü ortam derler: Python sistemde kurulu olmalı ve çevrimdışıyken bağımlılıklar önceden kurulmuş olmalıdır."
   },
   "create": {
     "sandbox": "Güvenli sanal alan",

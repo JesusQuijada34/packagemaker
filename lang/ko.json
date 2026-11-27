@@ -113,7 +113,12 @@
     "telemetry_hint": "GitHub 세션을 사용해 기기 환경과 함께 오류를 이슈로 게시합니다. 끄면 오류는 로컬에만 저장되며 보고 페이지에서 직접 보낼 수 있습니다.",
     "telemetry_endpoint_enabled": "오류를 자체 서버로 전송",
     "telemetry_endpoint_hint": "telemetry_endpoint 설정이 필요합니다. 기본적으로 꺼져 있으며 보고 터널과 별개입니다.",
-    "telemetry_endpoint_url": "자체 서버(URL)"
+    "telemetry_endpoint_url": "자체 서버(URL)",
+    "section_network": "네트워크",
+    "section_network_hint": "다운로드 및 격리 빌드",
+    "network_unrestricted": "제한 없음(프로젝트별 격리 환경)",
+    "network_metered": "종량제(다운로드 없음)",
+    "network_hint": "격리 환경은 프로젝트마다 venv를 만들고 빌드 전에 의존성을 설치합니다. 종량제 모드에서는 내장 환경으로 빌드하므로 시스템에 Python이 필요하고, 오프라인에서는 의존성이 이미 설치되어 있어야 합니다."
   },
   "create": {
     "sandbox": "안전한 샌드박스",

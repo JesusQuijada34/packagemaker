@@ -113,7 +113,12 @@
     "telemetry_hint": "Usa a sua sessão GitHub para publicar o erro como issue com o ambiente do dispositivo. Se desativar, as falhas ficam só em local e pode enviá-las à mão em Relatórios.",
     "telemetry_endpoint_enabled": "Enviar falhas para um servidor próprio",
     "telemetry_endpoint_hint": "Requer configurar telemetry_endpoint. Está desativado por predefinição e é independente do túnel de relatórios.",
-    "telemetry_endpoint_url": "Servidor próprio (URL)"
+    "telemetry_endpoint_url": "Servidor próprio (URL)",
+    "section_network": "Rede",
+    "section_network_hint": "Downloads e compilação isolada",
+    "network_unrestricted": "Sem restrições (ambiente isolado por projeto)",
+    "network_metered": "Uso medido (sem downloads)",
+    "network_hint": "O ambiente isolado cria um venv por projeto e instala as dependências antes de compilar. No modo de uso medido compila o ambiente embutido: o Python tem de estar instalado no sistema e, sem ligação, as dependências têm de estar já instaladas."
   },
   "create": {
     "sandbox": "Sandbox segura",

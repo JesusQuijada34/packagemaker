@@ -92,6 +92,15 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   así que siempre hay un backend operativo.
 - `lib/nuitka_embedded.py` — backend Nuitka embebido (`build_arguments()`
   construye la línea de comandos sin lanzar procesos).
+- `lib/blindcubeEngine/build_sandbox.py` — entorno de compilación aislado por
+  proyecto (Q-019): `plan_sandbox()` describe
+  `<proyecto>/build/pm-sandbox/<backend>/venv`; `BuildSandbox` crea el venv,
+  instala las dependencias del proyecto y del backend y compila por subproceso;
+  `wrap_backend()` envuelve el backend en `FlangCompiler._ensure_compiler()` y
+  en `iflapp_ide.compile_project()`, y si el entorno falla se compila con el
+  backend embebido. La tarjeta Configuración → Red (`network_mode` en
+  `data/pm.data`) elige «sin restricción» (aislado) o «uso medido» (embebido,
+  sin descargas). `PM_BUILD_ISOLATION=0` lo desactiva (`tests/conftest.py`).
 - `lib/page_action_bar.py` — barra de acciones superior estilo macOS compartida
   por las 5 páginas (`install_page_action_bar`/`make_action_button`). Cada
   página instala la suya; no reutilices nombres de atributo entre páginas

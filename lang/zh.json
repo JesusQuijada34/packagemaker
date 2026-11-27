@@ -113,7 +113,12 @@
     "telemetry_hint": "使用你的 GitHub 会话，将错误连同设备环境作为 issue 发布。若关闭，故障只保存在本地，你可以从报告页面手动发送。",
     "telemetry_endpoint_enabled": "将故障发送到你自己的服务器",
     "telemetry_endpoint_hint": "需要配置 telemetry_endpoint。默认关闭，且与报告通道相互独立。",
-    "telemetry_endpoint_url": "自有服务器（URL）"
+    "telemetry_endpoint_url": "自有服务器（URL）",
+    "section_network": "网络",
+    "section_network_hint": "下载与隔离编译",
+    "network_unrestricted": "无限制（每个项目独立环境）",
+    "network_metered": "按流量计费（不下载）",
+    "network_hint": "隔离环境会为每个项目创建 venv 并在编译前安装依赖。按流量计费模式下使用内置环境编译：系统中必须已安装 Python，离线时依赖必须已经安装。"
   },
   "create": {
     "sandbox": "安全沙箱",

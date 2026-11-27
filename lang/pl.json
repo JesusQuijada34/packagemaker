@@ -113,7 +113,12 @@
     "telemetry_hint": "Używa Twojej sesji GitHub, aby opublikować błąd jako zgłoszenie ze środowiskiem urządzenia. Jeśli to wyłączysz, błędy pozostaną lokalnie i możesz wysłać je ręcznie z zakładki Raporty.",
     "telemetry_endpoint_enabled": "Wysyłaj błędy na własny serwer",
     "telemetry_endpoint_hint": "Wymaga skonfigurowania telemetry_endpoint. Domyślnie wyłączone i niezależne od tunelu raportów.",
-    "telemetry_endpoint_url": "Własny serwer (URL)"
+    "telemetry_endpoint_url": "Własny serwer (URL)",
+    "section_network": "Sieć",
+    "section_network_hint": "Pobierania i kompilacja izolowana",
+    "network_unrestricted": "Bez ograniczeń (izolowane środowisko dla projektu)",
+    "network_metered": "Oszczędzanie danych (bez pobierania)",
+    "network_hint": "Izolowane środowisko tworzy venv dla każdego projektu i instaluje zależności przed kompilacją. W trybie oszczędzania danych kompiluje środowisko wbudowane: Python musi być zainstalowany w systemie, a offline zależności muszą być już obecne."
   },
   "create": {
     "sandbox": "Bezpieczna piaskownica",

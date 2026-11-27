@@ -14,6 +14,7 @@ creaba los proyectos dentro de ``/tmp`` tras ejecutar la suite.
 """
 
 import atexit
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -40,6 +41,26 @@ def _install_isolated_store():
 
 
 _SESSION_STORE = _install_isolated_store()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _no_isolated_builds():
+    """Desactiva el entorno aislado de build durante la suite.
+
+    Los tests que compilan de verdad deben usar el backend embebido: crear un
+    venv por proyecto e instalar dependencias haría la suite lenta y dependiente
+    de la red. El aislamiento tiene sus propias pruebas en
+    ``tests/test_build_sandbox.py``.
+    """
+    from lib.blindcubeEngine import build_sandbox
+
+    previous = os.environ.get(build_sandbox.DISABLE_ENV)
+    os.environ[build_sandbox.DISABLE_ENV] = "0"
+    yield
+    if previous is None:
+        os.environ.pop(build_sandbox.DISABLE_ENV, None)
+    else:
+        os.environ[build_sandbox.DISABLE_ENV] = previous
 
 
 @pytest.fixture(scope="session", autouse=True)

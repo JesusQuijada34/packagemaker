@@ -113,7 +113,12 @@
     "telemetry_hint": "Usa tu sesión de GitHub para publicar el error como issue con el entorno del dispositivo. Si lo desactivas, los fallos sólo se guardan en local y puedes enviarlos a mano desde Reportes.",
     "telemetry_endpoint_enabled": "Enviar fallos a un servidor propio",
     "telemetry_endpoint_hint": "Requiere configurar telemetry_endpoint. Está desactivado por defecto y es independiente del túnel de reportes.",
-    "telemetry_endpoint_url": "Servidor propio (URL)"
+    "telemetry_endpoint_url": "Servidor propio (URL)",
+    "section_network": "Red",
+    "section_network_hint": "Descargas y compilación aislada",
+    "network_unrestricted": "Sin restricción (entorno aislado por proyecto)",
+    "network_metered": "Uso medido (sin descargas)",
+    "network_hint": "El entorno aislado crea un venv por proyecto e instala sus dependencias antes de compilar. En uso medido compila el entorno embebido: hace falta Python instalado en el sistema y, sin conexión, las dependencias deben estar ya instaladas."
   },
   "create": {
     "sandbox": "Sandbox seguro",

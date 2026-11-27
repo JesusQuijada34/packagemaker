@@ -113,7 +113,12 @@
     "telemetry_hint": "Nutzt Ihre GitHub-Sitzung, um den Fehler als Issue mit der Geräteumgebung zu veröffentlichen. Wenn Sie dies deaktivieren, bleiben Fehler lokal und Sie können sie manuell über Berichte senden.",
     "telemetry_endpoint_enabled": "Fehler an einen eigenen Server senden",
     "telemetry_endpoint_hint": "Erfordert die Konfiguration von telemetry_endpoint. Standardmäßig deaktiviert und unabhängig vom Berichtstunnel.",
-    "telemetry_endpoint_url": "Eigener Server (URL)"
+    "telemetry_endpoint_url": "Eigener Server (URL)",
+    "section_network": "Netzwerk",
+    "section_network_hint": "Downloads und isolierte Kompilierung",
+    "network_unrestricted": "Uneingeschränkt (isoliertes Umfeld pro Projekt)",
+    "network_metered": "Datenbegrenzt (keine Downloads)",
+    "network_hint": "Das isolierte Umfeld erstellt ein venv pro Projekt und installiert vor dem Kompilieren die Abhängigkeiten. Im datenbegrenzten Modus kompiliert das eingebettete Umfeld: Python muss im System installiert sein und die Abhängigkeiten müssen offline bereits vorhanden sein."
   },
   "create": {
     "sandbox": "Sichere Sandbox",

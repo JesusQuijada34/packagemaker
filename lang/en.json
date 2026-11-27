@@ -113,7 +113,12 @@
     "telemetry_hint": "Uses your GitHub session to publish the error as an issue with the device environment. If disabled, failures are only saved locally and you can send them by hand from Reports.",
     "telemetry_endpoint_enabled": "Send failures to your own server",
     "telemetry_endpoint_hint": "Requires configuring telemetry_endpoint. Off by default and independent from the report tunnel.",
-    "telemetry_endpoint_url": "Own server (URL)"
+    "telemetry_endpoint_url": "Own server (URL)",
+    "section_network": "Network",
+    "section_network_hint": "Downloads and isolated compilation",
+    "network_unrestricted": "Unrestricted (isolated environment per project)",
+    "network_metered": "Metered (no downloads)",
+    "network_hint": "The isolated environment creates a venv per project and installs its dependencies before compiling. In metered mode the embedded environment compiles: Python must be installed on the system, and offline the dependencies must already be installed."
   },
   "create": {
     "sandbox": "Secure sandbox",

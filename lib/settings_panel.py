@@ -75,6 +75,7 @@ class SettingsPanel(QWidget):
     fontsRequested = pyqtSignal()
     languageChanged = pyqtSignal(str)
     fontChosen = pyqtSignal(str)
+    networkModeChanged = pyqtSignal(str)
     navigationChanged = pyqtSignal(str, int, str)
 
     def __init__(self, host, user: Dict[str, object], parent=None):
@@ -85,6 +86,8 @@ class SettingsPanel(QWidget):
         self._pages: Dict[str, SettingsDetailPage] = {}
         self._language_rows: Dict[str, SettingsOptionRow] = {}
         self._font_rows: Dict[str, SettingsOptionRow] = {}
+        self._network_rows: Dict[str, SettingsOptionRow] = {}
+        self._network_mode = str(user.get("network_mode") or "unrestricted")
         self._titles: Dict[str, str] = {}
         self._title_keys: Dict[str, str] = {}
         self._subtitle_keys: Dict[str, str] = {}
@@ -295,6 +298,25 @@ class SettingsPanel(QWidget):
             subtitle_key="config.section_fonts_hint",
         )
 
+        # Red: compilación aislada o uso medido (Q-019).
+        network = SettingsDetailPage(tr("config.section_network"))
+        network.add_widget(section_caption(tr("config.section_network")))
+        for mode in ("unrestricted", "metered"):
+            row = SettingsOptionRow(
+                tr(f"config.network_{mode}"), mode, checked=mode == self._network_mode
+            )
+            row.chosen.connect(self._on_network_mode_chosen)
+            self._network_rows[mode] = row
+            network.add_widget(row)
+        network.add_widget(self._hint(tr("config.network_hint")))
+        network.add_stretch()
+        self._register_card(
+            "network", tr("config.section_network"), "download", network,
+            subtitle=tr("config.section_network_hint"),
+            title_key="config.section_network",
+            subtitle_key="config.section_network_hint",
+        )
+
         # Privacidad: control del túnel de reportes y del endpoint propio.
         privacy = SettingsDetailPage(tr("config.section_privacy"))
         privacy.add_widget(section_caption(tr("config.section_privacy")))
@@ -463,6 +485,19 @@ class SettingsPanel(QWidget):
         for lang_code, row in self._language_rows.items():
             row.set_checked(lang_code == code)
         self.languageChanged.emit(code)
+        self._emit_changed()
+        QTimer.singleShot(120, self.go_back)
+
+    def network_mode(self) -> str:
+        """Modo de red elegido (``unrestricted`` o ``metered``)."""
+        return self._network_mode
+
+    def _on_network_mode_chosen(self, mode: str) -> None:
+        """Selección única: marca, aplica y vuelve sola."""
+        self._network_mode = str(mode)
+        for key, row in self._network_rows.items():
+            row.set_checked(key == self._network_mode)
+        self.networkModeChanged.emit(self._network_mode)
         self._emit_changed()
         QTimer.singleShot(120, self.go_back)
 

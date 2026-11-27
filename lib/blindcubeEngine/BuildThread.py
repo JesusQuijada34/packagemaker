@@ -220,6 +220,14 @@ class FlangCompiler:
         """Informe de compiladores disponibles para la interfaz y el CLI."""
         return available_backends(log_callback=self.log)
 
+    def _isolated(self, backend):
+        """Envuelve el backend con el entorno aislado del proyecto (Q-019)."""
+        if backend is None:
+            return None
+        from lib.blindcubeEngine import build_sandbox
+
+        return build_sandbox.wrap_backend(backend, self.repo_path, log_callback=self.log)
+
     def _ensure_compiler(self):
         """Resuelve y garantiza un backend de compilación operativo.
 
@@ -235,7 +243,7 @@ class FlangCompiler:
         # paquete BlindCube podía acabar construido por PyInstaller.
         target = (self.compiler_name or "nuitka").strip().lower()
         try:
-            self._backend = resolve_backend(target, log_callback=self.log)
+            self._backend = self._isolated(resolve_backend(target, log_callback=self.log))
             if self._backend.name == target:
                 self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
                 return self._backend
@@ -248,7 +256,7 @@ class FlangCompiler:
 
         self.log(f"[INFO] Compilador {target!r} no disponible; instalando dependencias...")
         if ensure_backend(target, log_callback=self.log):
-            self._backend = resolve_backend(target, log_callback=self.log)
+            self._backend = self._isolated(resolve_backend(target, log_callback=self.log))
             if self._backend.name == target:
                 self.log(f"[INFO] Compilador seleccionado: {self._backend.display_name}")
                 return self._backend

@@ -790,3 +790,23 @@ ciclos: es un registro de auditoría.
   quedan en observación. No se prepara release: sigue pendiente el entorno
   aislado de Q-019 y el resto de cambios de engine aprobados, y R-7f2b9c41
   espera la decisión de Q-034.
+
+- Septuagésimo segundo ciclo (2026-11-27): sin reportes nuevos en los issues
+  #4, #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas
+  nuevas en `CONFIRM.MD`, así que se aplica la aprobación de prioridad alta
+  **Q-019** (R-4d9e2b61: «nada tiene el entorno aislado»). Nuevo
+  `lib/blindcubeEngine/build_sandbox.py`: plan del entorno
+  (`<proyecto>/build/pm-sandbox/<backend>/venv`), preparación (venv, `pip
+  install` de las dependencias del proyecto y del backend, comprobación de que
+  el backend se importa dentro), compilación por subproceso y copia del binario
+  fuera del entorno. `wrap_backend()` envuelve el backend en
+  `FlangCompiler._ensure_compiler()` y en `iflapp_ide.compile_project()`; si el
+  entorno falla, se registra el motivo y se compila con el backend embebido.
+  Nueva tarjeta Configuración → Red con `network_mode` (sin restricción /
+  uso medido, este último con aviso de Python del sistema e indicaciones
+  offline), traducida en los 14 catálogos. Verificación real: build aislado con
+  PyInstaller (10,9 s) y con Nuitka (60,5 s), con el binario ejecutado en ambos
+  casos; la falta de `patchelf` en Linux ahora se explica en el error. Suite:
+  1398 pasan, 1 omitida, 64 subtests; `pyflakes` y `py_compile` limpios.
+  R-4d9e2b61 queda en observación. No se prepara release: siguen pendientes los
+  cambios de engine aprobados y R-7f2b9c41 espera la decisión de Q-034.

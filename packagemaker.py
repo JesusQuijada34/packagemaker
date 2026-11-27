@@ -2708,6 +2708,7 @@ class PackageTodoGUI(QMainWindow):
             "ui_density", "sidebar_accent_width", "card_opacity",
             "notifications_enabled", "touch_mode", "ui_font_family",
             "auto_report_errors", "telemetry_enabled", "telemetry_endpoint",
+            "network_mode",
         )}
         user["base_dir"] = user.get("base_dir") or BASE_DIR
         user["fluthin_apps"] = user.get("fluthin_apps") or Fluthin_APPS
@@ -2965,6 +2966,10 @@ class PackageTodoGUI(QMainWindow):
                     chosen_font = str(store.get_user("ui_font_family") or "")
                     for family, row in getattr(panel, "_font_rows", {}).items():
                         row.set_checked(family == chosen_font)
+                    chosen_network = str(store.get_user("network_mode") or "unrestricted")
+                    panel._network_mode = chosen_network
+                    for mode, row in getattr(panel, "_network_rows", {}).items():
+                        row.set_checked(mode == chosen_network)
             finally:
                 if panel is not None:
                     panel._loading = False
@@ -3001,6 +3006,7 @@ class PackageTodoGUI(QMainWindow):
             "auto_report_errors": bool(self.conf_telemetry.isChecked()),
             "telemetry_enabled": bool(self.conf_telemetry_endpoint.isChecked()),
             "telemetry_endpoint": self.conf_telemetry_url.text().strip(),
+            "network_mode": self.settings_panel.network_mode(),
         }
 
     def _refresh_config_tab_labels(self):

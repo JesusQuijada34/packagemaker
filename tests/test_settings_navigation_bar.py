@@ -196,3 +196,47 @@ def test_confirm_button_returns_to_the_root(window):
     assert panel.navigator.depth() == 0
     assert isinstance(window.config_confirm_btn, QPushButton)
     assert window.config_confirm_btn.isHidden()
+
+
+# --- Tarjeta «Red» (Q-019) -------------------------------------------------
+def test_network_card_offers_both_modes(window):
+    panel = window.settings_panel
+    assert set(panel._network_rows) == {"unrestricted", "metered"}
+    assert panel._cards["network"].title_lbl.text() == i18n.tr("config.section_network")
+    assert panel._network_rows["unrestricted"].is_checked() is True
+    assert panel._network_rows["metered"].is_checked() is False
+    assert panel.network_mode() == "unrestricted"
+
+
+def test_choosing_metered_marks_the_row_and_returns(window):
+    panel = window.settings_panel
+    panel._open("network")
+    _pump(QApplication.instance())
+    panel._on_network_mode_chosen("metered")
+    _pump(QApplication.instance())
+
+    assert panel.network_mode() == "metered"
+    assert panel._network_rows["metered"].is_checked() is True
+    assert panel._network_rows["unrestricted"].is_checked() is False
+    assert panel.navigator.depth() == 0
+
+
+def test_network_mode_is_saved_in_pm_data(window, isolated_store):
+    panel = window.settings_panel
+    panel._on_network_mode_chosen("metered")
+    window._save_app_config_compact(quiet=True)
+
+    assert isolated_store.get_user("network_mode") == "metered"
+    assert panel.network_mode() == "metered"
+
+
+def test_network_card_is_retranslated(window):
+    panel = window.settings_panel
+    try:
+        assert i18n.i18n.load_translation("en")
+        window.apply_ui_language()
+        assert panel._cards["network"].title_lbl.text() == "Network"
+    finally:
+        i18n.i18n.load_translation("es")
+        window.apply_ui_language()
+    assert panel._cards["network"].title_lbl.text() == "Red"

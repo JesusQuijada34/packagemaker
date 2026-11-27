@@ -1,3 +1,57 @@
+## 2026-11-27 — septuagésimo segundo ciclo
+
+### Implementado — compilación en un entorno aislado por proyecto (R-4d9e2b61 / Q-019)
+
+Reportado por JesusQuijada34 (`bugs.txt`, commit `bba72d6`, 2026-11-25): «nada
+tiene el entorno aislado». Prioridad alta; aprobado como **Q-019** (commit
+`73dcdcd`) con la instrucción de añadir un interruptor **Red** en Configuración.
+
+- **Comportamiento anterior:** el build ejecutaba Nuitka o PyInstaller
+  «embebidos» dentro del propio proceso de PackageMaker, con los módulos del
+  intérprete anfitrión. El registro decía «embebido» y el proyecto no tenía
+  entorno propio, así que una dependencia distinta a la del sistema no se podía
+  compilar.
+- **Solución** (`lib/blindcubeEngine/build_sandbox.py`, nuevo):
+  - `plan_sandbox()` describe el entorno:
+    `<proyecto>/build/pm-sandbox/<backend>/venv`. Vive bajo `build/`, que el
+    empaquetado ya excluye, así que nunca entra en el `.iflapp`.
+  - `BuildSandbox.prepare()` crea el venv con el intérprete del sistema,
+    instala las dependencias del proyecto (`requirements.txt`) y las del
+    backend (`nuitka`, `ordered-set`, `zstandard`; `pyinstaller`), deja una
+    marca con el conjunto instalado para no repetir la descarga y comprueba que
+    el backend se importa **dentro** del entorno.
+  - `BuildSandbox.compile()` ejecuta `python -m nuitka` o
+    `python -m PyInstaller` como subproceso en ese intérprete y devuelve el
+    binario, que `_compile_binary` copia a `dist` como antes.
+  - `wrap_backend()` envuelve el backend resuelto (`IsolatedBackend`) y lo usan
+    `FlangCompiler._ensure_compiler()` y `iflapp_ide.compile_project()`. Si el
+    venv no se puede crear, `pip` falla o la compilación aislada devuelve error,
+    se registra el motivo y se reintenta con el backend embebido: el build
+    nunca se queda sin salida.
+  - El plugin `pyqt6` de Nuitka sólo se pide si el venv declara PyQt6 entre sus
+    requisitos (el constructor embebido lo decidía por el entorno del proceso,
+    lo que abortaba la compilación en un venv sin Qt).
+  - Si Nuitka aborta por falta de `patchelf` en `--onefile` (Linux), el error
+    incluye la indicación `sudo apt install patchelf`.
+- **Interruptor Red (nota del propietario en Q-019):** nueva tarjeta
+  **Configuración → Red**, con la preferencia `network_mode` en `data/pm.data`:
+  - *Sin restricción*: entorno aislado por proyecto (valor por defecto).
+  - *Uso medido*: no descarga nada; compila con el backend embebido y avisa de
+    que hace falta Python instalado en el sistema y de que, sin conexión, las
+    dependencias deben estar ya instaladas.
+  Traducida en los 14 catálogos de `lang/`.
+- **Pruebas:** `tests/test_build_sandbox.py` (18 casos: plan, modo de red,
+  preparación con `runner` falso, reutilización de la marca, filtrado del plugin
+  Qt, argumentos de PyInstaller, caída al backend embebido y envoltura desde
+  `FlangCompiler`) y cuatro casos nuevos en
+  `tests/test_settings_navigation_bar.py` (tarjeta Red, guardado en `pm.data` y
+  retraducción). `tests/conftest.py` desactiva el aislamiento durante la suite
+  (`PM_BUILD_ISOLATION=0`) para no crear venvs reales en cada build de prueba.
+- **Verificación real:** dos builds completos con el sandbox de verdad en esta
+  máquina — PyInstaller (10,9 s) y Nuitka (60,5 s) —; en ambos casos el binario
+  producido se ejecutó y escribió su salida. Suite: 1398 pasan, 1 omitida, 64
+  subtests; `pyflakes` y `py_compile` limpios.
+
 ## 2026-11-27 — septuagésimo primer ciclo
 
 ### Corregido — las cuatro ventanas del updater morían al construirse (R-6b4d2f81)
