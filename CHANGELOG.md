@@ -1,3 +1,41 @@
+## 2026-11-27 — sexagésimo octavo ciclo
+
+### Corregido — `compile-only` no retiraba el fuente del paquete (R-3e7d1c58, Q-004/F-001)
+
+Reportado por JesusQuijada34 (auditoría interna de mantenimiento) y aprobado en
+**Q-004** (commit `bba72d6`) con la confirmación final **F-001** (commit
+`73dcdcd`), opción A: `compile-only` debe retirar el `.py` del árbol del
+paquete, salvo en builds `zipapp`.
+
+- **Síntoma:** con el blindaje `compile-only` el paquete `.iflapp` seguía
+  llevando los `.py` legibles del proyecto; el método sólo añadía un `.pyc` O2
+  junto a cada fuente, así que la promesa «sin fuentes legibles» no se cumplía.
+- **Causa raíz:** `hardening.compile_to_bytecode()` compilaba y devolvía el
+  `.pyc`, pero nunca retiraba el `.py`; además `BuildThread.apply_hardening()`
+  sólo compilaba el primer `.py` que encontraba con `rglob`.
+- **Solución:**
+  1. `compile_to_bytecode(script, *, remove_source=True)` retira el `.py`
+     compilado. El `.pyc` queda en la ubicación clásica (junto al fuente), que
+     Python importa sin el original; si el borrado falla, el informe lo dice en
+     vez de dar el trabajo por bueno.
+  2. `apply_all(..., remove_source=True)` compila **todos** los `.py` del árbol
+     del paquete y retira sus fuentes, salvo `updater.py`, que pertenece al
+     contrato de estructura obligatorio del paquete.
+  3. `BuildThread.apply_hardening()` pasa `remove_source=False` cuando el
+     backend es `zipapp`, que empaqueta módulos `.py` por definición.
+  4. `apply_all()` ejecuta `compile-only` después de las transformaciones de
+     fuente (`anti-debug`, `obfuscate`) y **antes** de `checksum`/`integrity`,
+     para que los manifiestos describan el árbol final; los informes conservan
+     el orden solicitado.
+- **Pruebas:** `tests/test_hardening.py::CompileOnlySourceRemovalTests` (7
+  casos): retirada por defecto, conservación con `remove_source=False`, árbol
+  completo con `updater.py` intacto, backend `zipapp` frente a `nuitka` en
+  `BuildThread.apply_hardening()` y manifiestos de digests coherentes con el
+  árbol final. Con el código anterior fallan cinco de ellos.
+- **Verificación:** 1361 pruebas pasan, 1 omitida, 64 subtests; `pyflakes` y
+  `py_compile` limpios.
+- **Commit:** ver el commit de este ciclo en `main`.
+
 ## 2026-11-26 — sexagésimo séptimo ciclo
 
 ### Corregido — maximizar o restaurar congelaba la interfaz (R-7d4b2c95, R-7c4a1e95)

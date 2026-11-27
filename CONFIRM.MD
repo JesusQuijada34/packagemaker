@@ -1,10 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-26 (sexagésimo séptimo ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `10b2406` (mantenimiento del ciclo 66, autor `openhands`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
+- **Última revisión:** 2026-11-27 (sexagésimo octavo ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `4bf14f4` (mantenimiento del ciclo 67, autor `openhands`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 67 no encontró respuestas nuevas del propietario (el último commit que tocó este archivo es del propio mantenimiento) y corrigió R-7d4b2c95 (maximizar/restaurar congelaba la interfaz, primera mitad de R-7c4a1e95); 19 aprobadas pendientes de implementación (Q-004, Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-001`, `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-015 y Q-016 aplicadas y archivadas; 9 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 1 pregunta pendiente de respuesta (Q-032, splash estilo UWP del issue #15); el ciclo 68 no encontró respuestas nuevas del propietario (el último commit que tocó este archivo es del propio mantenimiento) y aplicó Q-004/F-001 (R-3e7d1c58, `compile-only` retira el fuente del paquete); 18 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015 y Q-016 aplicadas y archivadas; 10 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -16,28 +16,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 ---
 
 ## Pendientes
-
-### Q-004 — `compile-only` y el fuente del paquete (necesita aclaración)
-- **Tipo:** mejora
-- **Fecha:** 2026-11-23
-- **Tu respuesta anterior (commit `0ac5457`):** «decide tu, un zip app no debe de contener archivos python, solamente el ejecutable compilado con pyinstaller y ya» + `SÍ`.
-- **Por qué no se ha aplicado:** contiene dos instrucciones incompatibles.
-  «Decide tú» delega la decisión, pero «un zip app no debe contener archivos
-  Python» no es viable: el backend `zipapp` empaqueta por definición módulos
-  `.py`/`.pyc` y sin ellos el artefacto no arranca. El resto de la frase habla
-  de PyInstaller, que no es zipapp.
-- **Qué se propone (opción A, la recomendada):** `compile-only` retira el `.py`
-  del árbol del paquete tras generar el `.pyc` O2, **salvo** en builds `zipapp`,
-  donde se conserva el fuente y se documenta el motivo. Si prefieres la
-  opción B (solo añadir el `.pyc` y documentar que el `.py` permanece) o una C
-  distinta, escríbelo junto a la casilla.
-- **Archivos/componentes afectados:** `lib/hardening.py`, `lib/BuildThread.py`,
-  `tests/test_hardening.py`.
-- **Riesgo y efectos secundarios:** borrado destructivo dentro del paquete; un
-  zipapp sin `.py` deja de arrancar. Por eso la opción A excluye ese backend.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Nota del propietario (commit `bba72d6`):** «opción A (el corchete original indicaba la opción elegida)»
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-001** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### Q-007 — Reorganización de `lib/` y renombrado a GlassCube
 - **Tipo:** cambio de engine
@@ -452,21 +430,9 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 ## Confirmación final de cambios de engine aprobados
 
 La regla de mantenimiento exige una confirmación final, indicando exactamente
-qué comportamiento cambiará, antes de tocar el engine. Estos seis puntos ya
+qué comportamiento cambiará, antes de tocar el engine. Estos cinco puntos ya
 tienen tu `SÍ` del commit `bba72d6`; marca `SÍ` sólo si quieres que se
 implementen tal como se describen. Sin esta marca no se modifica el engine.
-
-### F-001 — Q-004: `compile-only` retira el `.py` del paquete salvo en zipapp
-
-- **Qué cambiará:** `hardening.compile_to_bytecode()` seguirá generando el
-  `.pyc` O2 y, además, retirará el `.py` del árbol del paquete (nunca del
-  proyecto fuente). En builds `zipapp` el `.py` se conserva porque es el punto
-  de entrada del artefacto, y el motivo se registra en el log.
-- **Archivos/componentes:** `lib/hardening.py`, `lib/BuildThread.py`,
-  `tests/test_hardening.py`.
-- **Riesgo:** medio; borrado destructivo dentro del paquete.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** confirmación final aprobada el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
 
 ### F-002 — Q-007: reorganizar `lib/` por motores y renombrar a GlassCube
 
@@ -531,6 +497,24 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-004 / F-001 — `compile-only` retira el `.py` del paquete salvo en zipapp (R-3e7d1c58)
+- **Decisión:** aprobada con la **opción A** (`[x] SÍ` y la nota «opción A (el
+  corchete original indicaba la opción elegida)» en el commit `bba72d6`,
+  2026-11-25) y confirmada en **F-001** el 2026-11-26 (commit `73dcdcd`,
+  autoría verificada con la API de GitHub).
+- **Aplicada:** sexagésimo octavo ciclo (2026-11-27) —
+  `lib/blindcubeEngine/hardening.py`, `lib/blindcubeEngine/BuildThread.py` y
+  `tests/test_hardening.py`.
+- **Resultado:** `compile_to_bytecode(..., remove_source=True)` retira el `.py`
+  compilado (el `.pyc` queda junto a él, en la ubicación clásica que Python
+  importa sin fuente). `apply_all(..., remove_source=True)` compila todos los
+  `.py` del árbol del paquete y retira sus fuentes, salvo `updater.py`, que es
+  parte del contrato de estructura. `BuildThread.apply_hardening()` conserva el
+  fuente cuando el backend es `zipapp`, que empaqueta módulos `.py` por
+  definición. `compile-only` se ejecuta antes de `checksum`/`integrity` para que
+  los manifiestos describan el árbol final. Siete pruebas nuevas en
+  `CompileOnlySourceRemovalTests`; cinco fallan con el código anterior.
 
 ### Q-016 — `create` del CLI sobrescribe un proyecto existente sin avisar
 - **Decisión:** aprobada con la **opción B** (`--force` para sobrescribir y

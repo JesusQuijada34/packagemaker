@@ -868,12 +868,16 @@ class FlangCompiler:
             (candidate for candidate in Path(package_path).rglob("*.py") if candidate.is_file()),
             None,
         )
+        # `compile-only` retira los `.py` del paquete, salvo en zipapp, que
+        # empaqueta módulos fuente por definición (Q-004/F-001).
+        remove_source = getattr(self._backend, "name", None) != "zipapp"
         return hardening_mod.apply_all(
             binary=binary,
             script=script,
             package_dir=package_path,
             icon=icon,
             methods=self.hardening_methods,
+            remove_source=remove_source,
             log_callback=self.log,
         )
 

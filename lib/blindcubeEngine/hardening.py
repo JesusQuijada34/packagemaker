@@ -413,8 +413,20 @@ def embed_integrity_manifest(package_dir: Path | str) -> HardeningReport:
     return HardeningReport("integrity", True, f"raíz Merkle {root[:16]}…", [str(out)])
 
 
-def compile_to_bytecode(script: Path | str, *, optimize: int = 2) -> HardeningReport:
-    """Compila un script a ``.pyc`` optimizado (sin fuentes legibles)."""
+# El `updater.py` forma parte del contrato de estructura del paquete, así que
+# `compile-only` nunca lo retira aunque el resto de fuentes desaparezcan.
+COMPILE_ONLY_KEEP = frozenset({"updater.py"})
+
+
+def compile_to_bytecode(
+    script: Path | str, *, optimize: int = 2, remove_source: bool = True
+) -> HardeningReport:
+    """Compila un script a ``.pyc`` optimizado y retira el fuente.
+
+    El ``.pyc`` se escribe junto al ``.py`` (ubicación clásica sin fuente), que
+    Python importa sin el original. ``remove_source=False`` conserva el ``.py``
+    para los builds ``zipapp``, que empaquetan módulos ``.py`` por definición.
+    """
     script = Path(script)
     if not script.is_file():
         return HardeningReport("compile-only", False, f"no existe el script: {script}")
@@ -425,7 +437,50 @@ def compile_to_bytecode(script: Path | str, *, optimize: int = 2) -> HardeningRe
         py_compile.compile(str(script), cfile=str(target), doraise=True, optimize=optimize)
     except py_compile.PyCompileError as exc:
         return HardeningReport("compile-only", False, str(exc))
-    return HardeningReport("compile-only", True, f"bytecode optimizado (O{optimize})", [str(target)])
+    detail = f"bytecode optimizado (O{optimize})"
+    if remove_source:
+        try:
+            script.unlink()
+        except OSError as exc:
+            detail += f"; no se pudo retirar el fuente: {exc}"
+        else:
+            detail += "; fuente retirado"
+    return HardeningReport("compile-only", True, detail, [str(target)])
+
+
+def _compile_only_targets(
+    script: Optional[Path | str], package_dir: Optional[Path | str]
+) -> List[Path]:
+    if package_dir:
+        root = Path(package_dir)
+        return [
+            candidate
+            for candidate in sorted(root.rglob("*.py"))
+            if candidate.is_file() and candidate.name not in COMPILE_ONLY_KEEP
+        ]
+    return [Path(script)] if script else []
+
+
+def _compile_package_sources(
+    targets: Sequence[Path], *, optimize: int = 2, remove_source: bool = True
+) -> HardeningReport:
+    if not targets:
+        return HardeningReport("compile-only", False, "no hay fuentes que compilar")
+    artifacts: List[str] = []
+    failures: List[str] = []
+    for target in targets:
+        report = compile_to_bytecode(target, optimize=optimize, remove_source=remove_source)
+        if report.applied:
+            artifacts.extend(report.artifacts)
+        else:
+            failures.append(f"{target.name}: {report.detail}")
+    if not artifacts:
+        return HardeningReport("compile-only", False, "; ".join(failures)[:400])
+    detail = f"bytecode optimizado (O{optimize}) de {len(artifacts)} archivo(s)"
+    detail += "; fuentes retirados" if remove_source else "; fuentes conservados (zipapp)"
+    if failures:
+        detail += f"; {len(failures)} fallo(s): " + "; ".join(failures)[:200]
+    return HardeningReport("compile-only", True, detail, artifacts)
 
 
 def rename_symbols(binary: Path | str) -> HardeningReport:
@@ -453,21 +508,34 @@ def apply_all(
     package_dir: Optional[Path | str] = None,
     icon: Optional[Path | str] = None,
     methods: Optional[Sequence[str]] = None,
+    remove_source: bool = True,
     log_callback=None,
 ) -> List[HardeningReport]:
     """Aplica los métodos de blindaje solicitados y devuelve sus informes.
 
     Los métodos que no aplican al artefacto disponible se registran como no
-    aplicados en lugar de interrumpir el flujo.
+    aplicados en lugar de interrumpir el flujo. ``remove_source=False`` conserva
+    los ``.py`` del paquete para los builds ``zipapp``.
     """
     selected = [m for m in (methods or method_names())]
-    reports: List[HardeningReport] = []
+    results: List[Optional[HardeningReport]] = [None] * len(selected)
 
     def _log(message: str) -> None:
         if log_callback:
             log_callback(message)
 
-    for method in selected:
+    # Los manifiestos de digests deben describir el árbol final, así que
+    # `compile-only` se ejecuta después de las transformaciones de fuente y
+    # antes de `checksum`/`integrity`, aunque se hayan pedido en otro orden.
+    def _priority(method: str) -> int:
+        if method == "compile-only":
+            return 2
+        if method in ("checksum", "integrity"):
+            return 3
+        return 1
+
+    for index in sorted(range(len(selected)), key=lambda i: (_priority(selected[i]), i)):
+        method = selected[index]
         try:
             if method == "strip" and binary:
                 report = strip_binary(binary)
@@ -485,18 +553,21 @@ def apply_all(
                 report = sign_binary(binary)
             elif method == "integrity" and package_dir:
                 report = embed_integrity_manifest(package_dir)
-            elif method == "compile-only" and script:
-                report = compile_to_bytecode(script)
+            elif method == "compile-only" and (script or package_dir):
+                report = _compile_package_sources(
+                    _compile_only_targets(script, package_dir),
+                    remove_source=remove_source,
+                )
             elif method == "rename-symbols" and binary:
                 report = rename_symbols(binary)
             else:
                 report = HardeningReport(method, False, "artefacto no aplicable")
         except Exception as exc:  # el blindaje nunca debe abortar la compilación
             report = HardeningReport(method, False, f"error: {exc}")
-        reports.append(report)
+        results[index] = report
         status = "OK" if report.applied else "OMITIDO"
         _log(f"[harden:{method}] {status} — {report.detail}")
-    return reports
+    return [report for report in results if report is not None]
 
 
 def available_methods() -> Dict[str, bool]:

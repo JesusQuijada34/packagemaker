@@ -185,3 +185,116 @@ print(anotado)
             report = hardening.obfuscate_strings(script)
             self.assertFalse(report.applied)
             self.assertEqual(script.read_text(encoding="utf-8"), broken)
+
+
+class CompileOnlySourceRemovalTests(unittest.TestCase):
+    """Q-004/F-001: `compile-only` no deja fuentes legibles en el paquete.
+
+    El `.pyc` O2 se escribe en la ubicación clásica (junto al `.py`), que Python
+    importa sin fuente. La única excepción son los builds `zipapp`, que
+    empaquetan módulos `.py` por definición, y el `updater.py` obligatorio del
+    contrato de estructura del paquete.
+    """
+
+    def _package(self, tmp: str) -> Path:
+        root = Path(tmp)
+        (root / "app.py").write_text("print('hola')\n", encoding="utf-8")
+        (root / "helpers").mkdir()
+        (root / "helpers" / "mod.py").write_text("VALUE = 1\n", encoding="utf-8")
+        (root / "updater.py").write_text("print('updater')\n", encoding="utf-8")
+        return root
+
+    def test_compile_to_bytecode_removes_the_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "app.py"
+            script.write_text("print('hola')\n", encoding="utf-8")
+            report = hardening.compile_to_bytecode(script)
+            self.assertTrue(report.applied, report.detail)
+            self.assertFalse(script.exists())
+            self.assertTrue(Path(report.artifacts[0]).is_file())
+
+    def test_compile_to_bytecode_can_keep_the_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "app.py"
+            script.write_text("print('hola')\n", encoding="utf-8")
+            report = hardening.compile_to_bytecode(script, remove_source=False)
+            self.assertTrue(report.applied, report.detail)
+            self.assertTrue(script.is_file())
+            self.assertTrue(Path(report.artifacts[0]).is_file())
+
+    def test_apply_all_removes_project_sources_but_keeps_updater(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._package(tmp)
+            reports = hardening.apply_all(package_dir=root, methods=["compile-only"])
+            self.assertTrue(reports[0].applied, reports[0].detail)
+            self.assertFalse((root / "app.py").exists())
+            self.assertFalse((root / "helpers" / "mod.py").exists())
+            self.assertTrue((root / "app.pyc").is_file())
+            self.assertTrue((root / "helpers" / "mod.pyc").is_file())
+            self.assertTrue((root / "updater.py").is_file())
+
+    def test_apply_all_keeps_sources_for_zipapp_builds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._package(tmp)
+            reports = hardening.apply_all(
+                package_dir=root, methods=["compile-only"], remove_source=False
+            )
+            self.assertTrue(reports[0].applied, reports[0].detail)
+            self.assertTrue((root / "app.py").is_file())
+            self.assertTrue((root / "helpers" / "mod.py").is_file())
+
+    def test_apply_hardening_keeps_sources_when_the_backend_is_zipapp(self):
+        import types
+
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._package(tmp)
+            thread = FlangCompiler(
+                Path(tmp) / "repo",
+                output_path=Path(tmp) / "out",
+                sandbox=False,
+                hardening=["compile-only"],
+            )
+            thread._backend = types.SimpleNamespace(name="zipapp")
+            thread.apply_hardening(root)
+            self.assertTrue((root / "app.py").is_file())
+
+    def test_apply_hardening_removes_sources_for_native_backends(self):
+        import types
+
+        from lib.blindcubeEngine.BuildThread import FlangCompiler
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._package(tmp)
+            thread = FlangCompiler(
+                Path(tmp) / "repo",
+                output_path=Path(tmp) / "out",
+                sandbox=False,
+                hardening=["compile-only"],
+            )
+            thread._backend = types.SimpleNamespace(name="nuitka")
+            thread.apply_hardening(root)
+            self.assertFalse((root / "app.py").exists())
+            self.assertTrue((root / "app.pyc").is_file())
+            self.assertTrue((root / "updater.py").is_file())
+
+    def test_digest_manifests_describe_the_tree_after_compile_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._package(tmp)
+            reports = hardening.apply_all(
+                package_dir=root, methods=hardening.method_names()
+            )
+            self.assertEqual([report.method for report in reports], hardening.method_names())
+
+            integrity = json.loads((root / ".iflapp.integrity").read_text(encoding="utf-8"))
+            integrity_paths = {entry["path"] for entry in integrity["files"]}
+            self.assertNotIn("app.py", integrity_paths)
+            self.assertIn("app.pyc", integrity_paths)
+            self.assertIn("updater.py", integrity_paths)
+
+            checksum_path = root.with_suffix(root.suffix + ".manifest.json")
+            checksum = json.loads(checksum_path.read_text(encoding="utf-8"))
+            checksum_paths = {entry["path"] for entry in checksum["files"]}
+            self.assertNotIn("app.py", checksum_paths)
+            self.assertIn("app.pyc", checksum_paths)

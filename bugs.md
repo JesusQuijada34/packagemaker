@@ -1,8 +1,7 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-26 (ciclo 67: R-7d4b2c95 corregido y en
-observación — maximizar/restaurar ya no congela la interfaz; R-7c4a1e95 queda
-sólo por el guardado en segundo plano de Q-012).
+Última actualización: 2026-11-27 (ciclo 68: R-3e7d1c58 corregido y archivado —
+`compile-only` retira el `.py` del paquete salvo en builds `zipapp`, Q-004/F-001).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -26,7 +25,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
 | R-7b3e9a52 | Mejora — sección de ayuda global (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
 | R-2c8d4f71 | Mejora — addons en `lib/addons/` e instalación desde la app (issue #11) | Baja | Aprobado Q-022; pendiente de implementación |
-| R-3e7d1c58 | Mejora — `compile-only` no elimina el fuente del paquete | Media | Aprobado Q-004/F-001; pendiente de implementación |
 | R-9a4e2c83 | Cambio de engine — GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
@@ -37,7 +35,7 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**16 entradas en la cola**: 4 bugs/mejoras de producto y 12 cambios de engine
+**15 entradas en la cola**: 3 bugs/mejoras de producto y 12 cambios de engine
 (11 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
 
 ## Bugs pendientes
@@ -134,20 +132,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
   `lib/settings_panel.py`, `tests/test_privacy_switch_and_addons_ui.py`.
 - **Riesgo:** medio (rutas de carga y empaquetado).
 
-### R-3e7d1c58 — `compile-only` no elimina el fuente original del paquete (Q-004)
-
-- **Usuario:** JesusQuijada34 (auditoría interna de mantenimiento)
-- **Fecha del reporte:** 2026-11-21
-- **Prioridad:** Media.
-- **Descripción:** `hardening.compile_to_bytecode()` escribe el `.pyc` O2 junto
-  al `.py`, pero no retira el fuente; el método promete «sin fuentes legibles».
-- **Solicitado:** opción A aprobada en Q-004/F-001: retirar el `.py` del árbol
-  del paquete tras generar el `.pyc`, salvo en builds `zipapp`.
-- **Estado:** Aprobada y pendiente de implementación.
-- **Archivos:** `lib/hardening.py`, `lib/BuildThread.py`,
-  `tests/test_hardening.py`.
-- **Riesgo:** medio (borrado dentro del paquete).
-
 ## Cambios de engine pendientes
 
 Cambian comportamiento fundamental, UI o empaquetado y **sólo se implementan
@@ -192,16 +176,23 @@ al ciclo anterior.
 |---|---|---|---|---|
 | R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
 | R-7d4b2c95 | Maximizar o restaurar congelaba la interfaz (~270 ms por gesto) | Alta | ciclo 67, 2026-11-26 | `tests/test_maximize_without_theme_reapply.py` |
+| R-3e7d1c58 | `compile-only` no retiraba el fuente del paquete | Media | ciclo 68, 2026-11-27 | `tests/test_hardening.py::CompileOnlySourceRemovalTests` |
 
 ## Periodo de observación y release
 
-- **Cola:** 16 entradas (ver Resumen). No hay bugs críticos reportados sin
+- **Cola:** 15 entradas (ver Resumen). No hay bugs críticos reportados sin
   atender; R-4d9e2b61 (sólo el entorno aislado de Q-019) y R-7c4a1e95 (guardado
   en segundo plano, Q-012) siguen aprobados y pendientes de implementación.
 - **Release:** no se prepara. Hay bugs de prioridad alta pendientes de
   implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
+- Sexagésimo octavo ciclo (2026-11-27): se corrige **R-3e7d1c58** y se archiva
+  (Q-004/F-001, opción A): `compile-only` compila todos los `.py` del paquete,
+  retira sus fuentes (salvo el `updater.py` obligatorio) y conserva el fuente
+  sólo en builds `zipapp`; los manifiestos de digests se calculan después de la
+  retirada. Queda en observación. No se prepara release: siguen pendientes los
+  cambios de engine aprobados Q-019 y Q-012.
 - Sexagésimo séptimo ciclo (2026-11-26): se corrige **R-7d4b2c95**, la mitad
   reproducible de R-7c4a1e95: maximizar o restaurar llamaba a `apply_theme`,
   que reinstala la hoja global de la aplicación y re-pule todos los widgets

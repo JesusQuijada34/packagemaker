@@ -718,3 +718,17 @@ ciclos: es un registro de auditoría.
   64 subtests; `pyflakes` y `py_compile` limpios. R-7c4a1e95 sigue abierto por
   el guardado en segundo plano (Q-012). No se prepara release: quedan bugs de
   prioridad alta y 19 aprobaciones pendientes de implementación.
+
+- Sexagésimo octavo ciclo (2026-11-27): sin respuestas nuevas en `CONFIRM.MD`
+  (sigue sólo **Q-032** pendiente). Se corrige **R-3e7d1c58** (Q-004/F-001,
+  opción A): `compile-only` compilaba un único `.py` y dejaba el fuente en el
+  paquete. Ahora `compile_to_bytecode(..., remove_source=True)` retira el `.py`
+  compilado, `apply_all()` compila todos los `.py` del árbol salvo el
+  `updater.py` obligatorio y `BuildThread.apply_hardening()` conserva el fuente
+  cuando el backend es `zipapp`; `compile-only` se ejecuta antes de
+  `checksum`/`integrity` para que los manifiestos describan el árbol final.
+  `tests/test_hardening.py::CompileOnlySourceRemovalTests` (7 casos) describe el
+  fallo; cinco fallan con el código anterior. Verificación: 1361 pasan, 1
+  omitido, 64 subtests; `pyflakes` y `py_compile` limpios. No se prepara
+  release: quedan bugs de prioridad alta y 18 aprobaciones pendientes de
+  implementación.
