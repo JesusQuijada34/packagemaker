@@ -7,6 +7,8 @@ This template is used when creating new projects.
 
 import sys
 import os
+import argparse
+import tempfile
 import time
 import shutil
 import zipfile
@@ -75,6 +77,7 @@ XML_PATH = "details.xml"
 LOG_PATH = "updater_log.txt"
 CHECK_INTERVAL = 60
 GITHUB_API = "https://api.github.com"
+UPDATER_VERSION = "Influent Updater (plantilla de proyecto) v1.0"
 
 def log(msg):
     """Log message to file and console."""
@@ -159,6 +162,135 @@ def buscar_release_exe(author, app, version, platform, publisher):
             return url, filename
     return None, None
 
+def _download(url, destination, progress=None):
+    """Descarga *url* en *destination* (``requests`` si está, si no ``urllib``)."""
+    if requests:
+        r = requests.get(url, stream=True)
+        total = int(r.headers.get("content-length", 0))
+        down = 0
+        with open(destination, "wb") as f:
+            for chunk in r.iter_content(8192):
+                f.write(chunk)
+                down += len(chunk)
+                if total and progress: progress(int(down * 100 / total))
+        return
+    import urllib.request
+    with urllib.request.urlopen(url, timeout=60) as response:
+        total = int(response.headers.get("Content-Length", 0))
+        down = 0
+        with open(destination, "wb") as f:
+            while True:
+                chunk = response.read(8192)
+                if not chunk: break
+                f.write(chunk)
+                down += len(chunk)
+                if total and progress: progress(int(down * 100 / total))
+
+def _kill_target(target_name):
+    """Kill processes by name."""
+    log(f"Matando procesos de: {target_name}")
+    try:
+        if sys.platform == "win32":
+            subprocess.call(f"taskkill /F /IM {target_name}.exe", shell=True)
+            subprocess.call(f"taskkill /F /IM {target_name}", shell=True)
+        else:
+            subprocess.call(f"pkill -9 -f {target_name}", shell=True)
+    except Exception as e:
+        log(f"Kill error: {e}")
+
+def _sync_templates(extracted_dir, target):
+    """Sync templates from extracted update."""
+    src = os.path.join(extracted_dir, "src", "templates")
+    tgt = os.path.join(target, "src", "templates")
+    if os.path.isdir(src):
+        try:
+            for root, dirs, files in os.walk(src):
+                for file in files:
+                    src_file = os.path.join(root, file)
+                    rel = os.path.relpath(src_file, src)
+                    tgt_file = os.path.join(tgt, rel)
+                    os.makedirs(os.path.dirname(tgt_file), exist_ok=True)
+                    shutil.copy2(src_file, tgt_file)
+            log("[TEMPLATE SYNC] Plantillas sincronizadas")
+        except Exception as e:
+            log(f"[TEMPLATE SYNC] Error: {e}")
+
+def install_archive(archive_path, target=".", app_name=None, status=None):
+    """Instala un paquete ``.zip`` sobre *target*.
+
+    Devuelve ``(ok, mensaje)``. No sobrescribe el updater que está en
+    ejecución y deja el paquete intacto: la extracción ocurre en un
+    directorio temporal que se borra siempre.
+    """
+    archive_path = os.path.abspath(archive_path)
+    target = os.path.abspath(target)
+    ext_dir = tempfile.mkdtemp(prefix="updater_extract_")
+    try:
+        if not zipfile.is_zipfile(archive_path):
+            return False, (
+                "el paquete no es un .zip; los contenedores .iflapp se "
+                "instalan con el updater de PackageMaker"
+            )
+        if status: status("Descomprimiendo actualización...")
+        with zipfile.ZipFile(archive_path, "r") as z:
+            z.extractall(ext_dir)
+
+        if app_name:
+            if status: status("Cerrando aplicación principal...")
+            _kill_target(app_name)
+            time.sleep(2)
+
+        if status: status("Sobrescribiendo sistema...")
+        os.makedirs(target, exist_ok=True)
+        for root, dirs, files in os.walk(ext_dir):
+            rel = os.path.relpath(root, ext_dir)
+            dest_fold = target if rel == "." else os.path.join(target, rel)
+            os.makedirs(dest_fold, exist_ok=True)
+            for file in files:
+                src = os.path.join(root, file)
+                dst = os.path.join(dest_fold, file)
+                if os.path.abspath(dst) == os.path.abspath(sys.argv[0]): continue
+                if os.path.exists(dst):
+                    try: os.remove(dst)
+                    except OSError:
+                        try: os.rename(dst, dst + f".old.{int(time.time())}")
+                        except OSError: continue
+                try: shutil.move(src, dst)
+                except OSError: pass
+
+        _sync_templates(ext_dir, target)
+        return True, f"paquete instalado en {target}"
+    finally:
+        shutil.rmtree(ext_dir, ignore_errors=True)
+
+def check_update():
+    """Una pasada de verificación contra GitHub.
+
+    Devuelve ``{}`` si no se puede leer ``details.xml``; en otro caso, un
+    diccionario con ``datos``, ``remoto``, ``url``, ``tipo`` y ``nombre``
+    (``url`` es ``None`` cuando ya se tiene la última versión).
+    """
+    datos = leer_xml(XML_PATH)
+    if not datos:
+        return {}
+    resultado = {"datos": datos, "remoto": "", "url": None, "tipo": None, "nombre": None}
+    remoto = leer_xml_remoto(datos["author"], datos["app"])
+    if not remoto or remoto == datos["version"]:
+        return resultado
+    resultado["remoto"] = remoto
+    exe_url, exe_file = buscar_release_exe(
+        datos["author"], datos["app"], remoto, datos["platform"], datos["publisher"]
+    )
+    if exe_url:
+        resultado.update(url=exe_url, tipo="EXE_SETUP", nombre=exe_file)
+        return resultado
+    url = buscar_release(
+        datos["author"], datos["app"], remoto, datos["platform"], datos["publisher"]
+    )
+    if url:
+        resultado.update(url=url, tipo="IFLAPP_PACKAGE", nombre=os.path.basename(url))
+    return resultado
+
 class InstallerWorker(QObject):
     """Worker thread for downloading and installing updates."""
     finished = pyqtSignal(bool, str)
@@ -169,108 +301,24 @@ class InstallerWorker(QObject):
         super().__init__()
         self.url = url
         self.app = app_data["app"]
-        self._running = True
 
     def run(self):
-        temp_zip = "pending_update.zip"
-        ext_dir = "update_temp_extracted"
+        work_dir = tempfile.mkdtemp(prefix="updater_download_")
+        temp_zip = os.path.join(work_dir, "pending_update.zip")
         try:
             self.status.emit("Conectando con el servidor...")
-            
-            if requests:
-                r = requests.get(self.url, stream=True)
-                total = int(r.headers.get("content-length", 0))
-                down = 0
-                with open(temp_zip, "wb") as f:
-                    for chunk in r.iter_content(8192):
-                        if not self._running: return
-                        f.write(chunk)
-                        down += len(chunk)
-                        if total: self.progress.emit(int(down * 100 / total))
-            else:
-                # Fallback usando urllib
-                import urllib.request
-                with urllib.request.urlopen(self.url, timeout=60) as response:
-                    total = int(response.headers.get("Content-Length", 0))
-                    down = 0
-                    with open(temp_zip, "wb") as f:
-                        while True:
-                            chunk = response.read(8192)
-                            if not chunk or not self._running: break
-                            f.write(chunk)
-                            down += len(chunk)
-                            if total: self.progress.emit(int(down * 100 / total))
-
-            self.status.emit("Descomprimiendo actualización...")
-            if os.path.exists(ext_dir): shutil.rmtree(ext_dir)
-            with zipfile.ZipFile(temp_zip, "r") as z:
-                z.extractall(ext_dir)
-
-            self.status.emit("Cerrando aplicación principal...")
-            self._kill_target(self.app)
-            time.sleep(2)
-
-            self.status.emit("Sobrescribiendo sistema...")
-            for root, dirs, files in os.walk(ext_dir):
-                rel = os.path.relpath(root, ext_dir)
-                dest_fold = rel if rel != "." else "."
-                if dest_fold != "." and not os.path.exists(dest_fold):
-                    os.makedirs(dest_fold)
-                for file in files:
-                    src = os.path.join(root, file)
-                    dst = os.path.join(dest_fold, file)
-                    if os.path.abspath(dst) == os.path.abspath(sys.argv[0]): continue
-                    if os.path.exists(dst):
-                        try: os.remove(dst)
-                        except:
-                            try: os.rename(dst, dst + f".old.{int(time.time())}")
-                            except: continue
-                    try: shutil.move(src, dst)
-                    except: pass
-
-            # Sincronizar plantillas
-            self._sync_templates()
-
-            try: shutil.rmtree(ext_dir)
-            except: pass
-            try: os.remove(temp_zip)
-            except: pass
-            
-            self.status.emit("Finalizando...")
-            self.finished.emit(True, "OK")
-
+            _download(self.url, temp_zip, progress=self.progress.emit)
+            ok, msg = install_archive(
+                temp_zip, os.getcwd(), app_name=self.app, status=self.status.emit
+            )
+            if ok:
+                self.status.emit("Finalizando...")
+            self.finished.emit(ok, msg)
         except Exception as e:
             log(traceback.format_exc())
             self.finished.emit(False, str(e))
-
-    def _kill_target(self, target_name):
-        """Kill processes by name."""
-        log(f"Matando procesos de: {target_name}")
-        try:
-            if sys.platform == "win32":
-                subprocess.call(f"taskkill /F /IM {target_name}.exe", shell=True)
-                subprocess.call(f"taskkill /F /IM {target_name}", shell=True)
-            else:
-                subprocess.call(f"pkill -9 -f {target_name}", shell=True)
-        except Exception as e:
-            log(f"Kill error: {e}")
-
-    def _sync_templates(self):
-        """Sync templates from extracted update."""
-        src = os.path.join("update_temp_extracted", "src", "templates")
-        tgt = os.path.join("src", "templates")
-        if os.path.isdir(src):
-            try:
-                for root, dirs, files in os.walk(src):
-                    for file in files:
-                        src_file = os.path.join(root, file)
-                        rel = os.path.relpath(src_file, src)
-                        tgt_file = os.path.join(tgt, rel)
-                        os.makedirs(os.path.dirname(tgt_file), exist_ok=True)
-                        shutil.copy2(src_file, tgt_file)
-                log("[TEMPLATE SYNC] Plantillas sincronizadas")
-            except Exception as e:
-                log(f"[TEMPLATE SYNC] Error: {e}")
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
 
 class ModernUpdaterWindow(QMainWindow):
     """Main updater window with modern UI."""
@@ -358,34 +406,118 @@ class ModernUpdaterWindow(QMainWindow):
             self.lbl_status.setText(f"Error: {msg}")
             self.lbl_status.setStyleSheet("color: #ff5252;")
 
+def verificar():
+    """Una pasada de verificación; abre la ventana si hay actualización.
+
+    Devuelve ``True`` si se mostró la ventana de instalación. Sin interfaz
+    gráfica termina con un mensaje claro en lugar de esperar en bucle.
+    """
+    resultado = check_update()
+    if not resultado:
+        log("[UPDATER] No se pudo leer details.xml")
+        return False
+    url = resultado["url"]
+    if not url:
+        return False
+    log(f"[UPDATE] Nueva versión disponible: {resultado['remoto']} ({resultado['tipo']})")
+    if not PYQT6_AVAILABLE:
+        log("[UPDATER] Sin PyQt6 no hay ventana de instalación; usa --check, --silent o --install")
+        return False
+    app = QApplication.instance() or QApplication(sys.argv)
+    ventana = ModernUpdaterWindow(resultado["datos"], url)
+    ventana.show()
+    app.exec()
+    return True
+
 def ciclo_embestido():
-    """Background update checker."""
-    def verificar():
+    """Vigila actualizaciones en segundo plano; sin GUI termina de inmediato."""
+    if not PYQT6_AVAILABLE:
+        log("[UPDATER] Sin PyQt6 no hay vigilancia en segundo plano; usa --check, --silent o --install")
+        return
+    def _vigilar():
         while True:
-            datos = leer_xml(XML_PATH)
-            if datos:
-                remoto = leer_xml_remoto(datos["author"], datos["app"])
-                if remoto and remoto != datos["version"]:
-                    # Buscar .exe primero, luego .iflapp
-                    exe_url, exe_file = buscar_release_exe(
-                        datos["author"], datos["app"], remoto,
-                        datos["platform"], datos["publisher"]
-                    )
-                    if exe_url:
-                        log(f"[UPDATE] Nueva versión disponible: {remoto}")
-                        # Por ahora solo .iflapp para descarga directa
-                    
-                    url = buscar_release(datos["author"], datos["app"], remoto, datos["platform"], datos["publisher"])
-                    if url:
-                        if PYQT6_AVAILABLE:
-                            app = QApplication(sys.argv)
-                            w = ModernUpdaterWindow(datos, url)
-                            w.show()
-                            app.exec()
-                        return 
+            if verificar():
+                return
             time.sleep(CHECK_INTERVAL)
-    threading.Thread(target=verificar, daemon=True).start()
+    threading.Thread(target=_vigilar, daemon=True).start()
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Actualizador del proyecto (plantilla de PackageMaker)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Ejemplos:
+  updater.py --check                              Verificar si hay versión nueva
+  updater.py --install paquete.zip                Instalar un paquete .zip aquí
+  updater.py --install paquete.zip --target DIR   Instalar en otro directorio
+  updater.py --silent                             Actualizar sin interfaz (0/1)
+
+Esta plantilla extrae paquetes .zip; los contenedores .iflapp se instalan con
+el updater de PackageMaker.
+""",
+    )
+    parser.add_argument("--check", action="store_true", help="Verificar si hay actualizaciones disponibles")
+    parser.add_argument("--silent", action="store_true", help="Ejecutar sin interfaz gráfica")
+    parser.add_argument("--install", metavar="FILE", help="Instalar un paquete .zip")
+    parser.add_argument("--target", metavar="DIR", help="Directorio destino (por defecto, el actual)")
+    parser.add_argument("--version", action="store_true", help="Mostrar la versión del updater")
+    parser.add_argument("--accept-license", action="store_true", help="Compatibilidad: esta plantilla no exige licencia")
+    parser.add_argument("--no-cache", action="store_true", help="Compatibilidad: esta plantilla no usa caché")
+    args = parser.parse_args(argv)
+
+    if args.version:
+        print(UPDATER_VERSION)
+        return 0
+
+    if args.install:
+        ok, msg = install_archive(args.install, args.target or os.getcwd())
+        print(f"{'OK' if ok else 'ERROR'}: {msg}")
+        return 0 if ok else 1
+
+    if args.check:
+        resultado = check_update()
+        if not resultado:
+            print("ERROR: No se pudo leer details.xml", file=sys.stderr)
+            return 1
+        if resultado["url"]:
+            print(f"UPDATE_AVAILABLE: {resultado['datos']['version']} -> {resultado['remoto']}")
+            print(f"TYPE: {resultado['tipo']}")
+            print(f"DOWNLOAD_URL: {resultado['url']}")
+            return 0
+        print("NO_UPDATE: Ya tienes la versión más reciente")
+        return 0
+
+    if args.silent:
+        resultado = check_update()
+        if not resultado:
+            print("ERROR: No se pudo leer details.xml", file=sys.stderr)
+            return 1
+        if not resultado["url"]:
+            print("NO_UPDATE: Ya tienes la versión más reciente")
+            return 0
+        work_dir = tempfile.mkdtemp(prefix="updater_download_")
+        destino = os.path.join(work_dir, resultado["nombre"] or "update.zip")
+        try:
+            _download(resultado["url"], destino)
+            ok, msg = install_archive(destino, os.getcwd())
+        except Exception as e:
+            log(traceback.format_exc())
+            ok, msg = False, str(e)
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
+        print(f"{'OK' if ok else 'ERROR'}: {msg}")
+        return 0 if ok else 1
+
+    if not PYQT6_AVAILABLE:
+        print(
+            "ERROR: esta operación necesita PyQt6 (interfaz gráfica); "
+            "usa --check, --silent o --install",
+            file=sys.stderr,
+        )
+        return 1
+    ciclo_embestido()
+    while True:
+        time.sleep(100)
 
 if __name__ == "__main__":
-    ciclo_embestido()
-    while True: time.sleep(100)
+    sys.exit(main())

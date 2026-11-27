@@ -1,10 +1,10 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (sexagésimo noveno ciclo)
+- **Última revisión:** 2026-11-27 (septuagésimo ciclo)
 - **Último commit de `CONFIRM.MD` procesado en este ciclo:** `b51c612` (mantenimiento del ciclo 68, autor `openhands-agent`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 2 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15, y Q-033, alcance restante de Q-012); el ciclo 69 no encontró respuestas nuevas del propietario (el último commit que tocó este archivo es del propio mantenimiento) y corrigió R-7c4a1e95 (guardar ajustes ya no re-pule hojas idénticas); 18 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-017…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015 y Q-016 aplicadas y archivadas; 10 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 70 no encontró respuestas nuevas del propietario y aplicó **Q-017** (el `updater.py` de las plantillas ya tiene CLI y termina), archivada en el Historial. Quedan 19 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-019…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016 y Q-017 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -126,26 +126,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «si, reemplazando por completo el recuadro del sidebar"Contexto"»
 - **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de planificación (mejora de UI, no cambia el engine y no requiere confirmación final).
-
-### Q-017 — El `updater.py` que se genera en los proyectos no tiene CLI
-- **Tipo:** cambio de engine (plantilla de proyectos)
-- **Fecha:** 2026-11-25
-- **Qué se propone:** `src/templates/project/updater.py.template` genera un
-  actualizador que sólo arranca la GUI (`updater.py` ejecutado dentro de un
-  proyecto recién creado se queda en un bucle de `verificar()` y no termina).
-  El `updater.py` de la raíz del repositorio sí tiene CLI
-  (`--install`, `--update`, `--silent`, códigos de salida). Se propone que la
-  plantilla use la misma interfaz de línea de órdenes (sin `--silent` no
-  cambia nada para el usuario final) y que `verificar()` tenga un final claro
-  cuando no hay GUI. Afecta a los proyectos que se creen a partir de ahora;
-  los ya creados conservan su copia.
-- **Archivos/componentes afectados:** `src/templates/project/updater.py.template`,
-  `updater.py`, `tests/test_lifecycle_end_to_end.py`.
-- **Riesgo y efectos secundarios:** cambia el contenido de las plantillas y,
-  por tanto, el de los proyectos nuevos; hay que mantener sincronizadas la
-  plantilla y el actualizador del repositorio. Riesgo medio.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
 ### Q-018 — El build del CLI no valida `details.xml` y adivina la versión
 - **Tipo:** cambio de engine (comportamiento del build headless)
@@ -442,6 +422,47 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   aporta latencia perceptible y conserva el riesgo de escritura concurrente.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
+
+### Q-034 — Cómo instalar un `.iflapp` desde el updater de los proyectos
+- **Tipo:** cambio de engine (plantillas y empaquetado)
+- **Fecha:** 2026-11-27
+- **Qué se propone:** el `updater.py` de la plantilla sólo extrae `.zip`; las
+  releases de PackageMaker son contenedores `.iflapp` v2, así que el updater
+  nunca ha podido aplicar una actualización (R-7f2b9c41). Elige una opción:
+  - **A)** copiar a cada proyecto un lector del contenedor, de biblioteca
+    estándar, generado desde `lib/blindcubeEngine/iflapp_format.py` (como ya se
+    hace con `lib/splash_bootloader.py`) y con una prueba que compare ambos.
+  - **B)** dejar `.zip` como único formato y documentar que las actualizaciones
+    se aplican con el updater de PackageMaker.
+  - **C)** que la plantilla invoque el instalador de PackageMaker si está
+    disponible y, si no, avise con un mensaje claro.
+- **Archivos/componentes afectados:** `src/templates/project/updater.py.template`,
+  `lib/blindcubeEngine/iflapp_format.py`, `lib/makeselfEngine/templates.py`,
+  `lib/blindcubeEngine/BuildThread.py`, `tests/`.
+- **Riesgo y efectos secundarios:** la opción A duplica dentro de cada proyecto
+  código sensible (verificación HMAC y descifrado), con el riesgo de que
+  divergan; la C depende de que PackageMaker esté instalado en la máquina; la B
+  no arregla nada, sólo documenta la limitación. Riesgo medio.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO` (indica A, B o C en una nota)
+
+### Q-035 — Q-018: ¿bloqueo duro o aviso en el build headless?
+- **Tipo:** aclaración de una aprobación existente (Q-018)
+- **Fecha:** 2026-11-27
+- **Qué se propone:** Q-018 quedó marcada `[x] SÍ`, pero su ficha ofrecía dos
+  opciones y no se indicó cuál; no se aplica una aprobación ambigua. Elige:
+  - **A (duro):** `--buildthis` aborta con `[ERROR]` y código 1 si
+    `details.xml` no pasa `validate_build_fields`.
+  - **B (blando):** avisa en stderr con `[WARN]`, normaliza la versión y sigue
+    compilando (no rompe scripts existentes).
+- **Archivos/componentes afectados:** `lib/cliHandler.py`,
+  `packagemaker.py` (`--buildthis`),
+  `lib/blindcubeEngine/build_validation.py`, `tests/test_build_validation.py`.
+- **Riesgo y efectos secundarios:** la opción A rompe los scripts que compilan
+  proyectos con metadatos incompletos; la B deja pasar paquetes con metadatos
+  corregidos en silencio. Riesgo medio.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO` (indica A o B en una nota)
+
+
 ---
 
 ## Confirmación final de cambios de engine aprobados
@@ -514,6 +535,20 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-017 — CLI en el `updater.py` de las plantillas
+- **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada
+  con la API de GitHub).
+- **Aplicada:** septuagésimo ciclo (2026-11-27) —
+  `src/templates/project/updater.py.template` y
+  `tests/test_template_updater_cli.py`.
+- **Resultado:** la plantilla tiene `main()` con `argparse` (`--check`,
+  `--install`, `--target`, `--silent`, `--version`, más `--accept-license` y
+  `--no-cache` por compatibilidad), códigos de salida 0/1 y `verificar()` de una
+  sola pasada que termina sin interfaz. Antes cualquier argumento se ignoraba y
+  el proceso se quedaba en `while True: time.sleep(100)`.
+- **Pendiente asociado:** R-7f2b9c41 (la plantilla no puede extraer `.iflapp`),
+  con la decisión abierta en **Q-034**.
 
 ### Q-004 / F-001 — `compile-only` retira el `.py` del paquete salvo en zipapp (R-3e7d1c58)
 - **Decisión:** aprobada con la **opción A** (`[x] SÍ` y la nota «opción A (el

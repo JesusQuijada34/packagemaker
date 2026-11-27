@@ -1,3 +1,58 @@
+## 2026-11-27 — septuagésimo ciclo
+
+### Implementado — el `updater.py` de los proyectos nuevos ya tiene CLI (Q-017)
+
+Aprobado por JesusQuijada34 en `CONFIRM.MD` (commit `73dcdcd`, autoría
+verificada). No hay reporte externo: es la ficha **Q-017** de la cola de
+cambios de engine de `bugs.md`.
+
+- **Síntoma:** el `updater.py` que `create_project_from_templates()` copia a
+  cada proyecto nuevo ignoraba los argumentos y no terminaba nunca.
+  `python updater.py --check`, `--version` o `--install` se quedaban en
+  `while True: time.sleep(100)` y había que matar el proceso.
+- **Reproducción:** crear un proyecto con las plantillas y ejecutar
+  `timeout 6 python updater.py --check` → código **124** (el proceso sigue
+  vivo). Con `--version` y `--install`, lo mismo.
+- **Causa raíz:** la plantilla sólo tenía el modo vigilancia (hilo en segundo
+  plano más un bucle infinito en el `__main__`), sin `argparse` ni códigos de
+  salida. El bucle interno de `verificar()` tampoco terminaba cuando no había
+  PyQt6, así que el updater era inutilizable como herramienta de línea de
+  órdenes y, sin interfaz, se quedaba colgado para siempre.
+- **Solución** (`src/templates/project/updater.py.template`):
+  - `main()` con `argparse`: `--check` (una pasada, `UPDATE_AVAILABLE`/
+    `NO_UPDATE` con `TYPE` y `DOWNLOAD_URL`, código 0/1), `--install FILE`
+    con `--target DIR`, `--silent` (actualización sin interfaz, código 0/1) y
+    `--version`. `--accept-license` y `--no-cache` se aceptan por
+    compatibilidad con la interfaz del updater de PackageMaker y se documentan
+    como sin efecto en esta plantilla.
+  - `check_update()` concentra la pasada de verificación que antes vivía dentro
+    del bucle; la usan `--check`, `--silent` y la vigilancia.
+  - `install_archive()` instala un paquete `.zip` sobre el destino (extracción
+    en un directorio temporal, sin tocar el updater en ejecución) y devuelve
+    `(ok, mensaje)`; `InstallerWorker` la reutiliza en lugar de duplicar la
+    lógica de descompresión y sobrescritura.
+  - `verificar()` hace **una** pasada y termina; sin PyQt6 registra un aviso
+    claro y devuelve `False` en vez de esperar en bucle. `ciclo_embestido()`
+    tampoco arranca el hilo de vigilancia sin interfaz.
+  - La plantilla sigue usando sólo la biblioteca estándar más PyQt6/leviathan
+    opcionales: se puede copiar a un proyecto sin arrastrar módulos de
+    PackageMaker.
+- **Pruebas:** `tests/test_template_updater_cli.py` (5 casos; los 5 fallan con
+  la plantilla anterior, todos por `TimeoutExpired`): `--version` y `--check`
+  terminan y reportan la actualización disponible con un `requests` falso
+  (sin red), `NO_UPDATE` cuando las versiones coinciden, `--install` de un
+  `.zip` reemplaza los archivos del proyecto, un contenedor que no es ZIP
+  aborta con `ERROR:` y código 1, y sin PyQt6 y sin argumentos el proceso sale
+  con código 1 en lugar de colgarse.
+- **Verificación:** 1370 pruebas pasan, 1 omitida, 64 subtests; `pyflakes` y
+  `py_compile` limpios.
+- **Limitación conocida:** la plantilla sólo extrae `.zip`; las releases de
+  PackageMaker son contenedores `.iflapp` v2 y no se pueden descomprimir con
+  `zipfile`. Queda registrado como **R-7f2b9c41** y la decisión de cómo
+  resolverlo (lector embebido, delegar o dejar sólo `.zip`) se pide en
+  **Q-034** de `CONFIRM.MD`.
+- **Commit:** ver el commit de este ciclo en `main`.
+
 ## 2026-11-27 — sexagésimo noveno ciclo
 
 ### Corregido — guardar ajustes ya no re-pule hojas de estilo idénticas (R-7c4a1e95)

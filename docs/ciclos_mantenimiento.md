@@ -747,3 +747,23 @@ ciclos: es un registro de auditoría.
   subtests; `pyflakes` y `py_compile` limpios. No se prepara release: sigue
   pendiente el entorno aislado de Q-019 y el resto de cambios de engine
   aprobados.
+
+- Septuagésimo ciclo (2026-11-27): sin reportes nuevos en los issues #4, #10,
+  #11, #13, #14 y #15 y sin respuestas nuevas en `CONFIRM.MD` (el último commit
+  que toca el archivo es del mantenimiento del ciclo 68), así que se aplica una
+  aprobación pendiente de riesgo contenido: **Q-017**. El `updater.py` que
+  `create_project_from_templates()` copia a cada proyecto nuevo no tenía CLI
+  (cualquier argumento se ignoraba) y terminaba en
+  `while True: time.sleep(100)`; reproducido con `timeout 6` → código 124.
+  Ahora tiene `main()` con `argparse` (`--check`, `--install`/`--target`,
+  `--silent`, `--version`), `check_update()` de una pasada, `install_archive()`
+  reutilizada por `InstallerWorker` y `verificar()` que termina sin GUI, con
+  códigos de salida 0/1. `tests/test_template_updater_cli.py` (5 casos; los 5
+  fallan con la plantilla anterior). Verificación: 1370 pasan, 1 omitida, 64
+  subtests; `pyflakes` y `py_compile` limpios. La auditoría del ciclo deja dos
+  hallazgos nuevos en la cola: **R-7f2b9c41** (la plantilla trata el `.iflapp`
+  de la release como ZIP, así que nunca pudo aplicar una actualización; la
+  decisión de cómo resolverlo queda en **Q-034**) y **R-3a9c6e28**
+  (`verificar()` crea la `QApplication` en un hilo de trabajo). Se añade
+  **Q-035** porque Q-018 quedó aprobada sin indicar cuál de sus dos opciones se
+  aplica, y una aprobación ambigua no se implementa. No se prepara release.

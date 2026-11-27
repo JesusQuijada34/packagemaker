@@ -1,8 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 69: R-7c4a1e95 corregido y en
-observación — guardar ajustes ya no re-pule hojas de estilo idénticas; el
-guardado baja de ~120 ms a ~5 ms).
+Última actualización: 2026-11-27 (ciclo 70: aplicado Q-017 — el `updater.py`
+de los proyectos nuevos ya tiene CLI y termina; dos hallazgos nuevos en la cola,
+R-7f2b9c41 y R-3a9c6e28).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -21,6 +21,8 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
 | R-4d9e2b61 | Bug — el build no usa un entorno aislado por proyecto | Alta | Aprobado Q-019; pendiente de implementación (el fallo de Nuitka se corrigió en R-8d3f6a21) |
+| R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
+| R-3a9c6e28 | Bug — `verificar()` crea la `QApplication` en un hilo de trabajo | Media | Pendiente (sin aprobación necesaria) |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aprobado Q-026; pendiente de implementación |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
 | R-7b3e9a52 | Mejora — sección de ayuda global (issue #11) | Media | Aprobado Q-021; pendiente de implementación |
@@ -35,8 +37,9 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**14 entradas en la cola**: 1 bug, 4 mejoras de producto y 9 cambios de engine
+**16 entradas en la cola**: 3 bugs, 4 mejoras de producto y 9 cambios de engine
 (8 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
+Q-017 salió de la cola en este ciclo (aplicada).
 
 ## Bugs pendientes
 
@@ -62,6 +65,53 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 - **Solución aplicada:** backend Nuitka corregido y verificado con una
   compilación real `--standalone --onefile`.
 - **Commit / fecha de resolución:** — (el entorno aislado sigue abierto).
+
+### R-7f2b9c41 — El updater de los proyectos no puede instalar un `.iflapp`
+
+- **Usuario:** auditoría interna de mantenimiento (ciclo 70, al implementar
+  Q-017); no hay reporte externo.
+- **Fecha del reporte:** 2026-11-27
+- **Prioridad:** Alta.
+- **Descripción:** el `updater.py` que se copia a cada proyecto descarga el
+  artefacto de la release y lo trata como un ZIP. Las releases de PackageMaker
+  son contenedores `.iflapp` v2 (cabecera `IFLAPP2\0`), así que la extracción
+  falla siempre y el updater nunca ha podido aplicar una actualización.
+- **Pasos para reproducirlo:** crear un proyecto con las plantillas, generar un
+  paquete con `pack_iflapp()` y ejecutar
+  `python updater.py --install <paquete>.iflapp`; responde
+  `ERROR: el paquete no es un .zip …` y código 1.
+- **Evidencia:** el contenedor empieza por `IFLAPP2\x00\x00` y
+  `zipfile.ZipFile()` lanza `BadZipFile: File is not a zip file`; el mismo
+  fallo tenía el antiguo `InstallerWorker` al descomprimir la descarga.
+- **Causa raíz:** la plantilla no incluye lector del contenedor `.iflapp` y
+  `lib/blindcubeEngine/iflapp_format.py` no se copia a los proyectos, así que
+  no puede leer la carga útil (TAR + LZMA, opcionalmente cifrada).
+- **Estado:** pendiente de decisión del propietario (**Q-034** en
+  `CONFIRM.MD`): lector embebido en la plantilla, delegar en el updater de
+  PackageMaker o dejar `.zip` como único formato documentado.
+- **Solución aplicada:** ninguna todavía. El CLI de Q-017 ya informa del
+  formato no soportado en vez de fallar con un traceback.
+- **Commit / fecha de resolución:** —
+
+### R-3a9c6e28 — `verificar()` crea la `QApplication` en un hilo de trabajo
+
+- **Usuario:** auditoría interna de mantenimiento (ciclo 70)
+- **Fecha del reporte:** 2026-11-27
+- **Prioridad:** Media.
+- **Descripción:** `ciclo_embestido()` lanza `_vigilar()` en un hilo y, dentro
+  de ese hilo, `verificar()` hace `QApplication(sys.argv)`. Qt exige que la
+  interfaz viva en el hilo principal: en Windows puede abortar el proceso o
+  dejar la ventana de instalación sin pintar.
+- **Pasos para reproducirlo:** ejecutar el `updater.py` de un proyecto sin
+  argumentos (modo vigilancia) cuando hay una versión nueva publicada.
+- **Causa raíz:** el modo vigilancia se diseñó como hilo con bucle y crea la
+  aplicación gráfica en la primera pasada con actualización, en vez de crear la
+  `QApplication` en `main()` y abrir la ventana con una señal encolada al hilo
+  principal.
+- **Estado:** pendiente. No se puede reproducir en Linux/offscreen; la
+  corrección debe verificarse con Qt real antes de darse por resuelta.
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
 
 ## Mejoras pendientes
 
@@ -126,8 +176,7 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 8 | Q-012 / F-005 | Tareas en segundo plano y barra marquee | Aprobado; pendiente (el congelado de R-7c4a1e95 ya está corregido) | alto |
 | 9 | Q-013 / F-006 | Actualizaciones silenciosas de parches | Aprobado; pendiente | alto |
 | 10 | Q-014 | Eventos del sidebar y temas de temporada | Aprobado; pendiente | medio |
-| 12 | Q-017 | CLI en el `updater.py` de las plantillas | Aprobado; pendiente | medio |
-| 13 | Q-018 | El build del CLI no valida `details.xml` | Aprobado; pendiente | medio |
+| 13 | Q-018 | El build del CLI no valida `details.xml` | Aprobado; pendiente de elegir opción (Q-035) | medio |
 | 14 | Q-019 (R-4d9e2b61) | Entorno aislado de compilación | Aprobado; pendiente | alto |
 | 15 | Q-020 | Traducción completa al cambiar de idioma | Aprobado; aplicado en parte | medio-alto |
 | 16 | Q-023 (R-9a4e2c83) | Conectar proyectos a GitHub y extensión CloudCube | Aprobado; pendiente | alto |
@@ -142,8 +191,9 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 
 Ya implementados y verificados: aislamiento BlindCube/FlatCube y `.blindkpkg`
 (Q-005), pruebas previas y diálogo `.env` (Q-006), rediseño de UI (Q-009),
-sidebar con hover y modo contraído (Q-010) y la ventana con arrastre, snap y
-límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31).
+sidebar con hover y modo contraído (Q-010), la ventana con arrastre, snap y
+límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31) y el CLI del
+`updater.py` de las plantillas (Q-017, ciclo 70).
 
 ## En observación
 
@@ -161,15 +211,28 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 14 entradas (ver Resumen). No hay bugs críticos reportados sin
-  atender; R-4d9e2b61 (sólo el entorno aislado de Q-019) sigue aprobado y
-  pendiente de implementación. R-7c4a1e95 queda en observación: su congelado
-  está corregido y probado, y de Q-012 sólo quedan la barra marquee permanente
-  y las notificaciones nativas (mejora, no fallo de rendimiento).
+- **Cola:** 16 entradas (ver Resumen). No hay bugs críticos reportados sin
+  atender. R-4d9e2b61 (sólo el entorno aislado de Q-019) sigue aprobado y
+  pendiente de implementación. Los dos hallazgos de la auditoría del ciclo 70
+  (R-7f2b9c41, la plantilla no extrae `.iflapp`; R-3a9c6e28, `QApplication` en
+  un hilo) quedan en la cola: el primero espera la decisión de Q-034.
+  R-7c4a1e95 sigue en observación y de Q-012 sólo quedan la barra marquee
+  permanente y las notificaciones nativas (mejora, no fallo de rendimiento).
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
+- Septuagésimo ciclo (2026-11-27): se aplica **Q-017**: el `updater.py` de los
+  proyectos nuevos ya tiene CLI (`--check`, `--install`, `--target`,
+  `--silent`, `--version`) con códigos de salida y termina cuando no hay
+  interfaz; antes cualquier argumento se ignoraba y el proceso se quedaba en un
+  bucle infinito (reproducido: `timeout 6` devuelve 124). La auditoría del mismo
+  ciclo deja dos hallazgos nuevos: **R-7f2b9c41** (la plantilla trata el
+  `.iflapp` de la release como ZIP, así que nunca podía instalar una
+  actualización; decisión en **Q-034**) y **R-3a9c6e28** (`verificar()` crea la
+  `QApplication` en un hilo). Se añade **Q-035** para que el propietario elija
+  entre la opción dura y la blanda de Q-018, que quedó marcada sin indicar
+  cuál. No se prepara release.
 - Sexagésimo noveno ciclo (2026-11-27): se corrige **R-7c4a1e95** (guardar
   ajustes congelaba la interfaz). Medido: `store.save()` 0,5 ms y un guardado de
   ruta 1,7 ms, pero un cambio de apariencia 120 ms porque `set_qss()` reinstalaba
