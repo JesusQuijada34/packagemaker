@@ -51,7 +51,7 @@ cambios de engine de `bugs.md`.
   `zipfile`. Queda registrado como **R-7f2b9c41** y la decisión de cómo
   resolverlo (lector embebido, delegar o dejar sólo `.zip`) se pide en
   **Q-034** de `CONFIRM.MD`.
-- **Commit:** ver el commit de este ciclo en `main`.
+- **Commit:** `861d1ec` en `main`.
 
 ## 2026-11-27 — sexagésimo noveno ciclo
 
