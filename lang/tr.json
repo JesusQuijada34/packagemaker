@@ -135,7 +135,9 @@
     "section_account_hint": "GitHub oturumu ve herkese açık profil",
     "account_connected": "@{login} olarak bağlı",
     "account_missing": "GitHub oturumu yok",
-    "account_hint": "Tam profil, kenar çubuğundaki Profil uzantısında görünür."
+    "account_hint": "Tam profil, kenar çubuğundaki Profil uzantısında görünür.",
+    "patch_check": "Yamaları ve yeni commit'leri bildir",
+    "patch_check_hint": "Açılışta her 6 saatte bir api.github.com'u sorgular. Yalnızca okuma: hiçbir şey indirmez veya değiştirmez."
   },
   "create": {
     "sandbox": "Güvenli sanal alan",
@@ -908,5 +910,15 @@
     "distribution": "Dağıtım",
     "cpu_count": "İşlemci çekirdeği",
     "language": "Dil"
+  },
+  "updates": {
+    "check_now": "Şimdi denetle",
+    "title": "Yama mevcut",
+    "state_idle": "Henüz denetlenmedi",
+    "available": "Yeni bir commit var ({sha}): {message}",
+    "up_to_date": "Güncel: bekleyen yama yok",
+    "unavailable": "Denetlenemedi: {error}",
+    "unknown": "Commit'iniz belirlenemedi; en son {sha}",
+    "metered": "Ölçülü kullanım modunda devre dışı"
   }
 }

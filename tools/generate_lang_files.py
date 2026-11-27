@@ -406,6 +406,7 @@ def _nest(flat: dict) -> dict:
 def main() -> None:
     from tools.translations_curated import CURATED
     from tools.translations_extension import EXTENSION_CURATED
+    from tools.translations_updates import UPDATES_CURATED
 
     source = json.loads((LANG_DIR / "es.json").read_text(encoding="utf-8"))
     fallback = json.loads((LANG_DIR / "en.json").read_text(encoding="utf-8"))
@@ -417,6 +418,7 @@ def main() -> None:
         # que de otro modo caerían al inglés.
         merged = _deep_merge(merged, _nest(CURATED.get(code, {})))
         merged = _deep_merge(merged, _nest(EXTENSION_CURATED.get(code, {})))
+        merged = _deep_merge(merged, _nest(UPDATES_CURATED.get(code, {})))
         merged["_meta"] = overlay["_meta"]
         out = LANG_DIR / f"{code}.json"
         out.write_text(

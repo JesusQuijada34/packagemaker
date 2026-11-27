@@ -109,6 +109,14 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
 - `lib/iflapp_format.py` — contenedor `.iflapp` v2 (cabecera en claro con icono
   y `details.xml`, firma HMAC-SHA256). `verify_iflapp()` devuelve clave `"valid"`.
 - `lib/iflapp_reader.py` — `IflappReader` lee cabecera sin descompilar.
+- `lib/patch_watch.py` — vigilancia de parches (Q-013/F-006, etapa 1): `GET`
+  anónimo a `api.github.com` para comparar el último commit de `main` con el
+  local (`data/patch_state.json` o `HEAD` de `.git`). Seis estados
+  (`up_to_date`/`available`/`unknown`/`offline`/`metered`/`disabled`), sin
+  descargas ni reemplazos. Corre en un hilo daemon de `packagemaker.py` y
+  vuelve por la señal `patchChecked`; cada 6 h, se salta en modo red «uso
+  medido» y se apaga con `PM_PATCH_CHECK=0` (`tests/conftest.py` lo apaga en la
+  suite para que ningún test salga del equipo).
 - `lib/hardware_sandbox.py` — aislamiento jerárquico
   (qemu-kvm → systemd-nspawn → docker/podman → bwrap/firejail → unshare → local).
   `qemu-kvm` sólo se anuncia con kernel/initrd (`IFLAPP_QEMU_KERNEL`/`_INITRD`).

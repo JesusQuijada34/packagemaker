@@ -105,3 +105,31 @@ convierte en `~` y cualquier ruta absoluta en `<path>`.
 La clave de API se guarda en `data/pm.data` (`aide_api_key`) en claro, igual que
 el resto de preferencias; no se registra en logs ni se muestra en la interfaz
 una vez escrita.
+
+## Aviso de parches y commits nuevos (Q-013, primera etapa)
+
+`lib/patch_watch.py` consulta el repositorio para avisar de un commit más
+reciente que el instalado. Es una consulta **de sólo lectura**:
+
+- una petición `GET` a
+  `https://api.github.com/repos/JesusQuijada34/packagemaker/commits/main`;
+- **sin token** y sin cabecera de autorización: GitHub sólo ve la dirección IP
+  pública del equipo, como en cualquier visita a una web;
+- no se envía nada del proyecto, ni rutas, ni la versión instalada, ni
+  credenciales, ni datos de uso;
+- no se descarga ningún archivo ni se reemplaza nada: el aviso es informativo.
+
+Cuándo se consulta: al arrancar, como máximo una vez cada 6 horas, en un hilo
+daemon que no bloquea la interfaz.
+
+Cómo desactivarlo:
+
+- Configuración → Notificaciones → «Avisar de parches y commits nuevos»
+  (`patch_check_enabled` en `data/pm.data`);
+- elegir el modo red «uso medido» en Configuración → Red, que salta la consulta
+  por completo;
+- o arrancar con `PM_PATCH_CHECK=0`.
+
+El resultado se guarda en `data/patch_state.json` (`last_check` y
+`last_remote`): sólo el instante de la consulta y el identificador del commit
+remoto, nada del usuario.

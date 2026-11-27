@@ -895,3 +895,22 @@ ciclos: es un registro de auditoría.
   release: siguen pendientes los cambios de engine aprobados y R-7f2b9c41
   espera la decisión de Q-034.
 
+- Septuagésimo noveno ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`, así que se aplica la **primera etapa de Q-013** (F-006,
+  petición del propietario: avisar en segundo plano de commits y parches de
+  seguridad). Nuevo `lib/patch_watch.py`, sólo biblioteca estándar: `GET`
+  anónimo a `api.github.com` para leer el último commit de `main`, comparación
+  con el commit local (marca `applied_commit` o `HEAD` de `.git` leído sin
+  lanzar git) y seis estados; nunca descarga ni reemplaza archivos. La consulta
+  corre en un hilo daemon cada 6 h, respeta el modo red «uso medido», se apaga
+  con `PM_PATCH_CHECK=0` y devuelve el resultado por la señal `patchChecked`.
+  Configuración → Notificaciones gana la casilla, el botón «Comprobar ahora» y
+  la línea de estado; diez claves nuevas en los 14 catálogos
+  (`tools/translations_updates.py`). Verificado con la consulta real: local
+  `52e9c89` = último de `main`, estado `up_to_date`. Pruebas nuevas:
+  `tests/test_patch_watch.py` (21) y `tests/test_patch_watch_ui.py` (9); el
+  `conftest` apaga la vigilancia durante la suite. Se corrige además la cola:
+  **Q-029** ya estaba cubierta por el asistente AIDE del ciclo 56 y **Q-014**
+  la aplaza el propietario en `bugs.txt` hasta tener un release estable. No se
+  prepara release.

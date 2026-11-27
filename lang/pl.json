@@ -135,7 +135,9 @@
     "section_account_hint": "Sesja GitHub i profil publiczny",
     "account_connected": "Zalogowano jako @{login}",
     "account_missing": "Brak sesji GitHub",
-    "account_hint": "Pełny profil znajduje się w rozszerzeniu Profil na pasku bocznym."
+    "account_hint": "Pełny profil znajduje się w rozszerzeniu Profil na pasku bocznym.",
+    "patch_check": "Powiadamiaj o poprawkach i nowych commitach",
+    "patch_check_hint": "Odpyta api.github.com przy starcie co 6 godzin. Tylko odczyt: nic nie pobiera ani nie zastępuje."
   },
   "create": {
     "sandbox": "Bezpieczna piaskownica",
@@ -908,5 +910,15 @@
     "distribution": "Dystrybucja",
     "cpu_count": "Rdzenie procesora",
     "language": "Język"
+  },
+  "updates": {
+    "check_now": "Sprawdź teraz",
+    "title": "Poprawka dostępna",
+    "state_idle": "Jeszcze nie sprawdzono",
+    "available": "Dostępny jest nowy commit ({sha}): {message}",
+    "up_to_date": "Aktualne: brak oczekujących poprawek",
+    "unavailable": "Nie udało się sprawdzić: {error}",
+    "unknown": "Nie udało się ustalić Twojego commita; najnowszy to {sha}",
+    "metered": "Wyłączone w trybie oszczędzania danych"
   }
 }

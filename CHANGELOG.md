@@ -1,3 +1,75 @@
+## 2026-11-27 — septuagésimo noveno ciclo
+
+### Aplicado en parte — vigilancia de parches y commits nuevos (Q-013 / F-006, etapa 1)
+
+Aprobación Q-013 del propietario, que pidió en su último reporte que
+«updater.py notificara en segundo plano estando compilado o no sobre nuevos
+commits y parches de seguridad». Esta etapa es **sólo de lectura**: avisa, no
+descarga, no compila y no reemplaza ningún archivo.
+
+- **`lib/patch_watch.py` (nuevo, sólo biblioteca estándar).**
+  `fetch_latest_commit()` hace un `GET` anónimo a
+  `api.github.com/repos/JesusQuijada34/packagemaker/commits/main` —sin token y
+  sin datos del usuario— y `check_for_patch()` devuelve uno de seis estados:
+  `up_to_date`, `available`, `unknown` (no se pudo determinar el commit local),
+  `offline`, `metered` y `disabled`. `local_commit()` usa la marca
+  `applied_commit` de `data/patch_state.json` y, si no existe, lee `HEAD` de
+  `.git` sin lanzar `git` (referencia suelta, `packed-refs` y HEAD separado).
+  El estado se escribe tolerando una instalación de sólo lectura.
+- **Sin bloquear la interfaz.** La consulta corre en un hilo daemon y el
+  resultado vuelve por la señal `patchChecked` (conexión en cola). Un fallo de
+  red, un `HTTPError` o una respuesta ilegible se convierten en `offline`: la
+  interfaz nunca recibe una excepción. Se comprueba al arrancar cada 6 horas,
+  se salta en modo red «uso medido» y se apaga con `PM_PATCH_CHECK=0`.
+- **Configuración → Notificaciones.** Casilla «Avisar de parches y commits
+  nuevos» (`patch_check_enabled`, activada por defecto), botón «Comprobar
+  ahora» y una línea con el resultado. El aviso también aparece en la barra de
+  estado y, cuando hay parche, como notificación nativa si el usuario las tiene
+  activas. El estado se recompone al cambiar de idioma.
+- **Traducciones.** Diez claves nuevas (`config.patch_check`,
+  `config.patch_check_hint` y `updates.*`) en los 14 catálogos, con
+  `tools/translations_updates.py` y el generador `tools/generate_lang_files.py`
+  actualizados.
+- **Privacidad.** `docs/privacy.md` documenta la consulta: un `GET` a
+  `api.github.com`, sin token, sin datos del proyecto y sin nada del usuario, y
+  cómo desactivarla.
+- **Pruebas.** `tests/test_patch_watch.py` (21, sin red: `opener` falso) y
+  `tests/test_patch_watch_ui.py` (9, ventana real con la consulta sustituida).
+  `tests/conftest.py` apaga la vigilancia para toda la suite, así que ninguna
+  prueba sale del equipo.
+- **Verificado** con la consulta real: el commit local (`52e9c89`) coincide con
+  el último de `main`, estado `up_to_date`, y el estado queda en
+  `data/patch_state.json` (ignorado por git).
+- **Pendiente (etapa 2).** Descargar y aplicar el parche con verificación de
+  integridad y reinicio controlado, y marcar el commit en los paquetes
+  compilados para que también ellos puedan comparar. Forma parte de F-006, ya
+  confirmada: no requiere una aprobación nueva.
+- **Sin cambios de motor en compilación, empaquetado ni blindaje:** no se toca
+  la ley de nombres, el formato `.iflapp` ni el contenido de los paquetes.
+
+### Documentación — la cola de trabajo queda al día
+
+- **Q-029 (AIDE como chatbot, issue #14)** figuraba como pendiente, pero el
+  asistente ya existe desde el ciclo 56: dos proveedores (Copilot y endpoint
+  compatible con OpenAI), clave propia, contexto saneado y respuesta desde un
+  hilo daemon. Sólo falta trasladar los campos del endpoint a Configuración;
+  se anota así en `bugs.md` y `CONFIRM.MD` en vez de darla por implementada.
+- **Q-014 (eventos y temas de temporada)** está aprobada, pero el propietario
+  la aplaza en `bugs.txt` hasta tener «un release estable funcionando» sin
+  reportes. Se deja constancia y no se implementa.
+- Se corrige el recuento de la cola (`bugs.md` decía 11 entradas y la tabla
+  suma 10).
+
+### Verificación
+
+- Suite completa: **1511 pruebas pasan**, 1 omitida y 64 subtests
+  (`QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q`, 240 s).
+- `python -m pyflakes` limpio en todo el árbol; `python -m py_compile` sin
+  errores.
+- Consulta real contra GitHub: `up_to_date` con el commit `52e9c89`.
+- Sin cambios de comportamiento del engine: no se toca la ley de nombres, el
+  formato `.iflapp`, las plantillas ni el contenido de los paquetes.
+
 ## 2026-11-27 — septuagésimo octavo ciclo
 
 ### Aplicado — perfil de GitHub como extensión y orden del sidebar (Q-030 / R-6f1c8e35)

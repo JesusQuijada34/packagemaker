@@ -1,8 +1,8 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo octavo ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `c557aed`
-  (mantenimiento del ciclo 77, autor `openhands-agent`; no aporta respuestas). Último
+- **Última revisión:** 2026-11-27 (septuagésimo noveno ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `8ac30ad`
+  (mantenimiento del ciclo 78, autor `openhands-agent`; no aporta respuestas). Último
   commit **del propietario** procesado: `71e50f7` (2026-11-26, autor
   `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API
   de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio
@@ -11,7 +11,7 @@
   y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 5 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica; Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 78 tampoco encontró respuestas nuevas del propietario: aplica **Q-030** (perfil de GitHub como extensión, extensiones justo debajo de MoonFix y tarjeta de cuenta en Configuración). Quedan 13 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027 y Q-030 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 5 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 79 tampoco encontró respuestas nuevas del propietario: aplica la **primera etapa de Q-013** (vigilancia de parches de sólo lectura, aviso en la barra de estado y en Configuración → Notificaciones), deja constancia de que **Q-029** ya estaba cubierta por el asistente AIDE del ciclo 56 y de que **Q-014** la aplaza el propietario en `bugs.txt` hasta tener un release estable sin reportes. Quedan 13 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027 y Q-030 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -116,7 +116,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   puede dejar la instalación a medias. Riesgo alto.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «si y con registros y diff de archivos que no fueron actualizados, para lo mejor, dejar el actualizador de ultimo, eso si, se debe de comprobar si esta compilado o no, si no esta compilado, ofrecer el ultimo commit y un metodo para saber en que commit se encuentra usando regresiones y adelantamientos y al mismo tiempo un diff para ver, si todos los diff pasan a 1, saber que hay que actualizar la app y dejar una marca del commit para saber el estado, pero si esta compilado guiarse del release o del commit del release y compararlo con el ultimo commit en el repo para saber como actualizar, pero se usara blindcube en si mismo para instalar el paquete y reemplazar los archivos»
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-006** el 2026-11-26 (commit `73dcdcd`); pendiente de implementación.
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`) y confirmada en **F-006** el 2026-11-26 (commit `73dcdcd`). **Aplicada en parte** en el ciclo 79: `lib/patch_watch.py` consulta el último commit de `main` (sólo `GET`, sin token), lo compara con el commit local y avisa en la barra de estado y en Configuración → Notificaciones; respeta el modo red «uso medido» y se apaga con `PM_PATCH_CHECK=0`. **Pendiente:** descargar y aplicar el parche con verificación de integridad y reinicio controlado, y marcar el commit en los paquetes compilados para que también ellos puedan comparar. No requiere una aprobación nueva: forma parte de F-006, ya confirmada.
 
 ### Q-014 — Eventos en el sidebar y temas de temporada
 - **Tipo:** mejora
@@ -132,7 +132,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   hasta tener un release estable sin reportes. Riesgo medio.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Nota del propietario (commit `bba72d6`):** «si, reemplazando por completo el recuadro del sidebar"Contexto"»
-- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`); pendiente de planificación (mejora de UI, no cambia el engine y no requiere confirmación final).
+- **Estado:** aprobada el 2026-11-25 (commit `bba72d6`), pero **aplazada por el propietario** en `bugs.txt`: «lo de los eventos y ads no va todavia, queda como feature pendiente despues de que este libre, sin reportes, un release estable funcionando». No se implementa hasta que lo reactive; no requiere confirmación final nueva.
 
 ### Q-018 — El build del CLI no valida `details.xml` y adivina la versión
 - **Tipo:** cambio de engine (comportamiento del build headless)
@@ -286,7 +286,7 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   las claves; se respetará el ajuste de reportes y no se enviará nada sin
   configuración explícita.
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
+- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada). **Cubierta en su mayor parte** por el asistente AIDE del ciclo 56 (`lib/aide_page.py` + `lib/aide_backend.py`): chat con GitHub Copilot o un endpoint compatible con OpenAI, clave propia, contexto saneado y respuesta desde un hilo daemon. Lo único que falta de la ficha es trasladar los campos del endpoint a Configuración; hoy viven en la propia página.
 
 ### Q-031 — Addons empaquetados en `lib/addons/` y addons DLL externos
 - **Tipo:** cambio de engine

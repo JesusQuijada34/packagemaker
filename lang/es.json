@@ -135,7 +135,9 @@
     "section_account_hint": "Sesión de GitHub y perfil público",
     "account_connected": "Conectado como @{login}",
     "account_missing": "Sin sesión de GitHub",
-    "account_hint": "El perfil completo se muestra en la extensión Perfil del sidebar."
+    "account_hint": "El perfil completo se muestra en la extensión Perfil del sidebar.",
+    "patch_check": "Avisar de parches y commits nuevos",
+    "patch_check_hint": "Consulta api.github.com al arrancar cada 6 horas. Sólo lectura: no descarga ni reemplaza archivos."
   },
   "create": {
     "sandbox": "Sandbox seguro",
@@ -908,5 +910,15 @@
     "distribution": "Distribución",
     "cpu_count": "Núcleos de CPU",
     "language": "Idioma"
+  },
+  "updates": {
+    "check_now": "Comprobar ahora",
+    "title": "Parche disponible",
+    "state_idle": "Sin comprobar todavía",
+    "available": "Hay un commit nuevo ({sha}): {message}",
+    "up_to_date": "Al día: no hay parches pendientes",
+    "unavailable": "No se pudo comprobar: {error}",
+    "unknown": "No se pudo saber tu commit; el último es {sha}",
+    "metered": "Desactivado en modo de uso medido"
   }
 }

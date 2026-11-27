@@ -135,7 +135,9 @@
     "section_account_hint": "GitHub-Sitzung und öffentliches Profil",
     "account_connected": "Angemeldet als @{login}",
     "account_missing": "Keine GitHub-Sitzung",
-    "account_hint": "Das vollständige Profil erscheint in der Erweiterung Profil der Seitenleiste."
+    "account_hint": "Das vollständige Profil erscheint in der Erweiterung Profil der Seitenleiste.",
+    "patch_check": "Auf Patches und neue Commits hinweisen",
+    "patch_check_hint": "Fragt beim Start alle 6 Stunden api.github.com ab. Nur Lesen: es wird nichts geladen oder ersetzt."
   },
   "create": {
     "sandbox": "Sichere Sandbox",
@@ -908,5 +910,15 @@
     "distribution": "Verteilung",
     "cpu_count": "CPU-Kerne",
     "language": "Sprache"
+  },
+  "updates": {
+    "check_now": "Jetzt prüfen",
+    "title": "Patch verfügbar",
+    "state_idle": "Noch nicht geprüft",
+    "available": "Ein neuer Commit ist verfügbar ({sha}): {message}",
+    "up_to_date": "Aktuell: keine ausstehenden Patches",
+    "unavailable": "Prüfung nicht möglich: {error}",
+    "unknown": "Ihr Commit konnte nicht ermittelt werden; der neueste ist {sha}",
+    "metered": "Im getakteten Modus deaktiviert"
   }
 }

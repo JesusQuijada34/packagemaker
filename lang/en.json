@@ -135,7 +135,9 @@
     "section_account_hint": "GitHub session and public profile",
     "account_connected": "Signed in as @{login}",
     "account_missing": "No GitHub session",
-    "account_hint": "The full profile is shown in the Profile extension of the sidebar."
+    "account_hint": "The full profile is shown in the Profile extension of the sidebar.",
+    "patch_check": "Notify about patches and new commits",
+    "patch_check_hint": "Checks api.github.com at startup every 6 hours. Read-only: it downloads nothing and replaces no files."
   },
   "create": {
     "sandbox": "Secure sandbox",
@@ -908,5 +910,15 @@
     "distribution": "Distribution",
     "cpu_count": "CPU cores",
     "language": "Language"
+  },
+  "updates": {
+    "check_now": "Check now",
+    "title": "Patch available",
+    "state_idle": "Not checked yet",
+    "available": "A new commit is available ({sha}): {message}",
+    "up_to_date": "Up to date: no pending patches",
+    "unavailable": "Could not check: {error}",
+    "unknown": "Your commit could not be determined; the latest is {sha}",
+    "metered": "Disabled in metered mode"
   }
 }

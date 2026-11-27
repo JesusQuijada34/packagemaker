@@ -135,7 +135,9 @@
     "section_account_hint": "Sessione GitHub e profilo pubblico",
     "account_connected": "Connesso come @{login}",
     "account_missing": "Nessuna sessione GitHub",
-    "account_hint": "Il profilo completo si trova nell'estensione Profilo della barra laterale."
+    "account_hint": "Il profilo completo si trova nell'estensione Profilo della barra laterale.",
+    "patch_check": "Avvisa di patch e nuovi commit",
+    "patch_check_hint": "Consulta api.github.com all'avvio ogni 6 ore. Solo lettura: non scarica né sostituisce file."
   },
   "create": {
     "sandbox": "Sandbox sicura",
@@ -908,5 +910,15 @@
     "distribution": "Distribuzione",
     "cpu_count": "Nuclei della CPU",
     "language": "Lingua"
+  },
+  "updates": {
+    "check_now": "Controlla ora",
+    "title": "Patch disponibile",
+    "state_idle": "Non ancora verificato",
+    "available": "È disponibile un nuovo commit ({sha}): {message}",
+    "up_to_date": "Aggiornato: nessuna patch in sospeso",
+    "unavailable": "Impossibile verificare: {error}",
+    "unknown": "Impossibile determinare il tuo commit; l'ultimo è {sha}",
+    "metered": "Disattivato in modalità a consumo"
   }
 }

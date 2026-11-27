@@ -135,7 +135,9 @@
     "section_account_hint": "GitHub-sessie en openbaar profiel",
     "account_connected": "Aangemeld als @{login}",
     "account_missing": "Geen GitHub-sessie",
-    "account_hint": "Het volledige profiel staat in de extensie Profiel van de zijbalk."
+    "account_hint": "Het volledige profiel staat in de extensie Profiel van de zijbalk.",
+    "patch_check": "Melden bij patches en nieuwe commits",
+    "patch_check_hint": "Vraagt bij het opstarten elke 6 uur api.github.com. Alleen lezen: er wordt niets gedownload of vervangen."
   },
   "create": {
     "sandbox": "Veilige sandbox",
@@ -908,5 +910,15 @@
     "distribution": "Distributie",
     "cpu_count": "CPU-kernen",
     "language": "Taal"
+  },
+  "updates": {
+    "check_now": "Nu controleren",
+    "title": "Patch beschikbaar",
+    "state_idle": "Nog niet gecontroleerd",
+    "available": "Er is een nieuwe commit ({sha}): {message}",
+    "up_to_date": "Bijgewerkt: geen openstaande patches",
+    "unavailable": "Kon niet controleren: {error}",
+    "unknown": "Je commit kon niet worden bepaald; de nieuwste is {sha}",
+    "metered": "Uitgeschakeld in databesparingsmodus"
   }
 }

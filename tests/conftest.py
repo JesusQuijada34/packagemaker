@@ -64,6 +64,25 @@ def _no_isolated_builds():
 
 
 @pytest.fixture(scope="session", autouse=True)
+def _no_patch_watch():
+    """Desactiva la vigilancia de parches durante la suite.
+
+    La ventana real se construye decenas de veces en los tests; sin este
+    interruptor cada construcción lanzaría un ``GET`` a ``api.github.com``.
+    La vigilancia tiene sus propias pruebas en ``tests/test_patch_watch.py``.
+    """
+    from lib import patch_watch
+
+    previous = os.environ.get(patch_watch.DISABLE_ENV)
+    os.environ[patch_watch.DISABLE_ENV] = "0"
+    yield
+    if previous is None:
+        os.environ.pop(patch_watch.DISABLE_ENV, None)
+    else:
+        os.environ[patch_watch.DISABLE_ENV] = previous
+
+
+@pytest.fixture(scope="session", autouse=True)
 def _qt_app():
     global _APP
     try:

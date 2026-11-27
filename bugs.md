@@ -1,9 +1,9 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 78: Q-030 aplicada —el perfil de
-GitHub es la extensión «Perfil», las extensiones van justo debajo de MoonFix y
-la cuenta se gestiona desde Configuración—; R-6f1c8e35 sale de la cola y se
-archiva).
+Última actualización: 2026-11-27 (ciclo 79: **Q-013 aplicada en parte** —la
+vigilancia de parches de sólo lectura ya avisa de commits nuevos—; la cola
+queda al día: Q-029 ya estaba cubierta por el asistente AIDE del ciclo 56 y
+Q-014 la aplaza el propio propietario hasta tener un release estable).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -28,12 +28,15 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
-| R-2a8d4b73 | Cambio de engine — AIDE como chatbot (issue #14) | Media | Aprobado Q-029; pendiente de implementación |
+| R-2a8d4b73 | Cambio de engine — AIDE como chatbot (issue #14) | Media | Cubierto por el asistente AIDE del ciclo 56 (dos proveedores y clave propia); sólo falta exponer sus campos en Configuración |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
 **10 entradas en la cola**: 1 bug, 2 mejoras de producto y 7 cambios de engine
-(6 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
+(5 aprobados y pendientes de implementación, 1 cubierto en su mayor parte y 1
+esperando la marca `[x] SÍ`). Q-013 pasa a «aplicada en parte»: su primera
+etapa (consulta y aviso de parches) ya está en `main`; la descarga y la
+aplicación del parche siguen pendientes.
 R-6f1c8e35 (perfil de GitHub como extensión, Q-030) sale de la cola en este
 ciclo: implementada, probada y verificada en la ventana real.
 R-2c8d4f71 (addons en `lib/addons/` e instalación desde Configuración, Q-022)
@@ -120,8 +123,8 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 3 | Q-007 / F-002 | Reorganización de `lib/` y renombrado a GlassCube | Aprobado; pendiente | alto |
 | 4 | Q-008 / F-003 (R-4f8a2c60) | Coreografía de splash y ventanas | Aprobado en parte; pendiente | medio-alto |
 | 8 | Q-012 / F-005 | Tareas en segundo plano y barra marquee | Aprobado; pendiente (el congelado de R-7c4a1e95 ya está corregido) | alto |
-| 9 | Q-013 / F-006 | Actualizaciones silenciosas de parches | Aprobado; pendiente | alto |
-| 10 | Q-014 | Eventos del sidebar y temas de temporada | Aprobado; pendiente | medio |
+| 9 | Q-013 / F-006 | Actualizaciones silenciosas de parches | **Aplicada en parte** (etapa 1: vigilancia y aviso, ciclo 79); falta descargar y aplicar el parche | alto |
+| 10 | Q-014 | Eventos del sidebar y temas de temporada | Aprobado, pero **aplazado por el propietario** hasta tener un release estable sin reportes | medio |
 | 13 | Q-018 | El build del CLI no valida `details.xml` | Aprobado; pendiente de elegir opción (Q-035) | medio |
 | 14 | Q-019 (R-4d9e2b61) | Entorno aislado de compilación | **Aplicado** (ciclo 72); R-4d9e2b61 en observación | alto |
 | 15 | Q-020 | Traducción completa al cambiar de idioma | Aprobado; aplicado en parte | medio-alto |
@@ -130,7 +133,7 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 18 | Q-025 (R-8e6a3c15) | Completar Leviathan y el action bar como control | Aprobado; pendiente | alto |
 | 19 | Q-027 (R-7b2c9e51) | Duración mínima del splash y reporte de tirones | **Aplicado** (ciclo 73); R-7b2c9e51 en observación | medio |
 | 20 | Q-028 (R-9c3f5a28) | Librería de paneles y pestañas verticales | Aprobado; pendiente | alto |
-| 21 | Q-029 (R-2a8d4b73) | AIDE como chatbot con backend/API/servidor | Aprobado; pendiente | alto |
+| 21 | Q-029 (R-2a8d4b73) | AIDE como chatbot con backend/API/servidor | Cubierto por el asistente del ciclo 56; falta trasladar sus campos a Configuración | medio |
 | 23 | Q-031 (R-3b7e2d94) | Addons empaquetados en `lib/addons/` y addons DLL | Aprobado; pendiente | alto |
 | 24 | Q-032 (R-5c9a3e17) | Splash dentro de la ventana principal, estilo UWP | **Sin aprobar** | medio-alto |
 
@@ -142,7 +145,9 @@ límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31), el CLI del
 `updater.py` de las plantillas (Q-017, ciclo 70), el entorno de compilación
 aislado por proyecto con la tarjeta Red (Q-019, ciclo 72), la duración mínima
 del splash con el reporte de tirones (Q-027, ciclo 73) y la página de ayuda
-global con buscador (Q-021, ciclo 74).
+global con buscador (Q-021, ciclo 74). Q-029 (AIDE como chatbot) ya estaba
+cubierta por el asistente del ciclo 56 —dos proveedores, clave propia y
+contexto saneado—; sólo queda trasladar sus campos a Configuración.
 
 ## En observación
 
@@ -164,7 +169,7 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 11 entradas (ver Resumen). No hay bugs críticos reportados sin
+- **Cola:** 10 entradas (ver Resumen). No hay bugs críticos reportados sin
   atender. El único bug abierto, R-7f2b9c41, espera la decisión de Q-034.
   R-4d9e2b61 (Q-019, entorno aislado) y R-7b2c9e51 (Q-027, splash mínimo y
   reporte de tirones) quedan en observación tras verificarse con arranques y
@@ -172,6 +177,10 @@ al ciclo anterior.
   notificaciones nativas (mejora, no fallo de rendimiento).
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación y no ha pasado el periodo sin reportes nuevos.
+- **Nuevo en el ciclo 79:** la vigilancia de parches (Q-013, etapa 1) no cambia
+  compilación, empaquetado ni blindaje: sólo hace un `GET` de lectura y avisa.
+  No entra en observación porque no sustituye nada; su verificación es la
+  consulta real (`up_to_date` con el commit `52e9c89`) y las 30 pruebas nuevas.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
 - Septuagésimo primer ciclo (2026-11-27): se corrige **R-6b4d2f81**, encontrado
@@ -338,3 +347,30 @@ al ciclo anterior.
   Suite: 1481 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. Commit
   `8ac30ad` en `main`. No se prepara release: siguen pendientes los cambios de
   engine aprobados y R-7f2b9c41 espera Q-034.
+- Septuagésimo noveno ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD` (el último commit que toca el archivo sigue siendo
+  mantenimiento de `openhands`). Se aplica la **primera etapa de Q-013**
+  (F-006, issue del propietario: «que updater.py notificara en segundo plano
+  estando compilado o no sobre nuevos commits y parches de seguridad»). Nuevo
+  `lib/patch_watch.py`, sólo biblioteca estándar: un `GET` anónimo a
+  `api.github.com/repos/JesusQuijada34/packagemaker/commits/main`, comparación
+  con el commit local (marca `applied_commit` de `data/patch_state.json` o
+  `HEAD` leído de `.git` sin lanzar git) y seis estados (`up_to_date`,
+  `available`, `unknown`, `offline`, `metered`, `disabled`). La consulta corre
+  en un hilo daemon y vuelve por la señal `patchChecked`; al arrancar se hace
+  cada 6 h, se salta en modo red «uso medido» y se apaga con
+  `PM_PATCH_CHECK=0`. Configuración → Notificaciones gana la casilla
+  «Avisar de parches y commits nuevos», el botón «Comprobar ahora» y una línea
+  con el resultado; el aviso también sale en la barra de estado y como
+  notificación nativa si están activas. Diez claves nuevas en los 14 catálogos
+  (`tools/translations_updates.py`). Verificado con la consulta real: commit
+  local `52e9c89` = último de `main`, estado `up_to_date`. Pruebas:
+  `tests/test_patch_watch.py` (21) y `tests/test_patch_watch_ui.py` (9); el
+  `conftest` apaga la vigilancia durante la suite para que ningún test salga del
+  equipo. La cola queda al día: **Q-029** ya estaba cubierta por el asistente
+  AIDE del ciclo 56 (falta sólo trasladar sus campos a Configuración) y
+  **Q-014** la aplaza el propietario en `bugs.txt` hasta tener un release
+  estable sin reportes. No se prepara release: siguen pendientes los cambios de
+  engine aprobados, la segunda etapa de Q-013 (descargar y aplicar el parche) y
+  R-7f2b9c41 espera la decisión de Q-034.

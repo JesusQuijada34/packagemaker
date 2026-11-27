@@ -81,6 +81,7 @@ class SettingsPanel(QWidget):
     settingsChanged = pyqtSignal()
     resetRequested = pyqtSignal()
     fontsRequested = pyqtSignal()
+    patchCheckRequested = pyqtSignal()
     languageChanged = pyqtSignal(str)
     fontChosen = pyqtSignal(str)
     networkModeChanged = pyqtSignal(str)
@@ -228,6 +229,31 @@ class SettingsPanel(QWidget):
         self.widgets["conf_touch_mode"] = touch
         notices.add_widget(touch)
         notices.add_widget(self._hint(tr("config.touch_mode_hint")))
+
+        # Parches y commits nuevos (Q-013/F-006, primera etapa: sólo consulta).
+        patch_check = QCheckBox(tr("config.patch_check"))
+        patch_check.setChecked(bool(user.get("patch_check_enabled", True)))
+        self.widgets["conf_patch_check"] = patch_check
+        notices.add_widget(patch_check)
+        self.widgets["conf_patch_hint"] = self._hint(tr("config.patch_check_hint"))
+        notices.add_widget(self.widgets["conf_patch_hint"])
+
+        patch_row = QHBoxLayout()
+        self.widgets["conf_patch_check_now"] = QPushButton(tr("updates.check_now"))
+        patch_btn = self.widgets["conf_patch_check_now"]
+        patch_btn.setFixedHeight(36)
+        patch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        patch_btn.setStyleSheet(uwp_button_qss())
+        patch_btn.clicked.connect(self.patchCheckRequested.emit)
+        patch_row.addWidget(patch_btn)
+        patch_row.addStretch()
+        notices.add_layout(patch_row)
+
+        self.widgets["conf_patch_status"] = QLabel(tr("updates.state_idle"))
+        patch_status = self.widgets["conf_patch_status"]
+        patch_status.setStyleSheet(f"color:{TEXT_DIM};font-size:11px;background:transparent;")
+        patch_status.setWordWrap(True)
+        notices.add_widget(patch_status)
         notices.add_stretch()
         self._register_card(
             "notifications", tr("config.section_notifications"), "touch", notices, multi=True,
@@ -641,6 +667,7 @@ class SettingsPanel(QWidget):
             "conf_touch_mode",
             "conf_telemetry",
             "conf_telemetry_endpoint",
+            "conf_patch_check",
         ):
             widget = self.widgets.get(key)
             if widget is not None:
@@ -691,6 +718,12 @@ class SettingsPanel(QWidget):
         status = getattr(self, "_addons_status", None)
         if status is not None:
             status.setText(message)
+
+    def set_patch_status(self, message: str) -> None:
+        """Publica en su tarjeta el resultado de la vigilancia de parches."""
+        label = self.widgets.get("conf_patch_status")
+        if label is not None and message:
+            label.setText(message)
 
     def _install_addon(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -762,6 +795,15 @@ class SettingsPanel(QWidget):
         hint = self.widgets.get("conf_account_hint")
         if hint is not None:
             hint.setText(tr("config.account_hint"))
+        patch_check = self.widgets.get("conf_patch_check")
+        if patch_check is not None:
+            patch_check.setText(tr("config.patch_check"))
+        patch_hint = self.widgets.get("conf_patch_hint")
+        if patch_hint is not None:
+            patch_hint.setText(tr("config.patch_check_hint"))
+        patch_btn = self.widgets.get("conf_patch_check_now")
+        if patch_btn is not None:
+            patch_btn.setText(tr("updates.check_now"))
         self.refresh_account()
         self._refresh_addons_list()
         self._emit_navigation()

@@ -61,6 +61,8 @@ DEFAULT_USER: Dict[str, Any] = {
     "telemetry_enabled": False,
     "telemetry_endpoint": "",
     "telemetry_consent_at": "",
+    # Vigilancia de parches (Q-013, etapa 1): sólo consulta el repositorio.
+    "patch_check_enabled": True,
     "ui_font_family": "",
 }
 

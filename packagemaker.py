@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 import importlib
+import threading
 
 
 # Importar detector de modo de ejecución
@@ -768,6 +769,10 @@ def get_app_version():
     return "Not available"  # Fallback por defecto
 
 class PackageTodoGUI(QMainWindow):
+    # La vigilancia de parches corre en un hilo daemon; la señal cruza el
+    # resultado al hilo de la interfaz por conexión en cola (Q-013, etapa 1).
+    patchChecked = pyqtSignal(object)
+
     def __init__(self, compact_mode=False, shell_mode=False):
         super().__init__()
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -1021,6 +1026,11 @@ class PackageTodoGUI(QMainWindow):
             notifier=self._notify_user,
         )
 
+        # Vigilancia de parches (Q-013, etapa 1: sólo consulta y avisa).
+        self._patch_thread = None
+        self._patch_status = None
+        self.patchChecked.connect(self._on_patch_checked)
+
         # Set default
         self.btn_create.setChecked(True)
         self.stack.setCurrentIndex(0)
@@ -1059,6 +1069,85 @@ class PackageTodoGUI(QMainWindow):
         self.setup_touch_gestures()
 
         i18n.register_ui_refresh(self.apply_ui_language)
+        self._start_patch_watch()
+
+    # --- Vigilancia de parches (Q-013/F-006, primera etapa) --------------
+    def _start_patch_watch(self, force: bool = False, enabled: bool = None) -> None:
+        """Consulta el repositorio en segundo plano sin bloquear la interfaz.
+
+        Sin ``force`` respeta el ajuste y el intervalo; la interfaz nunca espera
+        a la red porque el trabajo ocurre en un hilo daemon y el resultado
+        vuelve por ``patchChecked``.
+        """
+        from lib import patch_watch
+
+        if patch_watch.disabled_by_env():
+            return
+        store = get_pm_data()
+        if enabled is None:
+            enabled = bool(store.get_user("patch_check_enabled", True))
+        if not force and (
+            not enabled
+            or not patch_watch.should_check(patch_watch.DEFAULT_INTERVAL_HOURS)
+        ):
+            return
+        thread = getattr(self, "_patch_thread", None)
+        if thread is not None and thread.is_alive():
+            return
+        self._patch_thread = threading.Thread(
+            target=self._patch_watch_worker,
+            args=(enabled, str(store.get_user("network_mode", "unrestricted"))),
+            daemon=True,
+            name="pm-patch-watch",
+        )
+        self._patch_thread.start()
+
+    def _patch_watch_worker(self, enabled: bool, network_mode: str) -> None:
+        from lib import patch_watch
+
+        try:
+            status = patch_watch.check_for_patch(
+                enabled=enabled, network_mode=network_mode
+            )
+        except Exception as exc:  # un fallo aquí nunca debe tumbar la interfaz
+            status = patch_watch.PatchStatus(patch_watch.STATUS_OFFLINE, detail=str(exc))
+        self.patchChecked.emit(status)
+
+    def _on_patch_checked(self, status) -> None:
+        from lib import patch_watch
+
+        self._patch_status = status
+        text = self._patch_status_text(status)
+        panel = getattr(self, "settings_panel", None)
+        if panel is not None:
+            panel.set_patch_status(text)
+        if status.has_patch:
+            self.status_bar.showMessage(text, 12000)
+            self._notify_user("info", tr("updates.title"), text)
+        elif status.kind == patch_watch.STATUS_UP_TO_DATE:
+            self.status_bar.showMessage(text, 6000)
+
+    def _patch_status_text(self, status) -> str:
+        from lib import patch_watch
+
+        kind = status.kind
+        if kind == patch_watch.STATUS_AVAILABLE:
+            return tr("updates.available").format(
+                sha=status.short_remote, message=status.message or ""
+            ).strip()
+        if kind == patch_watch.STATUS_UP_TO_DATE:
+            return tr("updates.up_to_date")
+        if kind == patch_watch.STATUS_OFFLINE:
+            return tr("updates.unavailable").format(error=status.detail or "")
+        if kind == patch_watch.STATUS_UNKNOWN:
+            return tr("updates.unknown").format(sha=status.short_remote)
+        if kind == patch_watch.STATUS_METERED:
+            return tr("updates.metered")
+        return tr("updates.state_idle")
+
+    def _check_patches_now(self) -> None:
+        """Botón «Comprobar ahora»: consulta explícita, sin esperar intervalo."""
+        self._start_patch_watch(force=True, enabled=True)
 
     def apply_ui_language(self):
         """Actualiza textos de la interfaz al idioma activo."""
@@ -1090,6 +1179,15 @@ class PackageTodoGUI(QMainWindow):
             # página se reetiquetan con sus claves (el prefijo «‹» de la flecha
             # no existe en el índice de traducciones y no se retraduce solo).
             self._refresh_config_tab_labels()
+        # El estado de la vigilancia de parches se construye con tr(): se
+        # recompone en el idioma nuevo (el recorrido genérico no lo traduce).
+        if (
+            getattr(self, "_patch_status", None) is not None
+            and getattr(self, "settings_panel", None) is not None
+        ):
+            self.settings_panel.set_patch_status(
+                self._patch_status_text(self._patch_status)
+            )
         # Los textos que no son ``tr()`` directo (ítems de combo, placeholders
         # construidos a mano) los reaplica la propia página.
         for name in ("report_page", "page_help", "page_profile"):
@@ -2745,6 +2843,7 @@ class PackageTodoGUI(QMainWindow):
         self.settings_panel.languageChanged.connect(self._on_config_language_changed)
         self.settings_panel.fontChosen.connect(self._on_font_family_chosen)
         self.settings_panel.navigationChanged.connect(self._on_config_navigation)
+        self.settings_panel.patchCheckRequested.connect(self._check_patches_now)
         self.config_back_btn.clicked.connect(self.settings_panel.go_back)
         self.config_confirm_btn.clicked.connect(self.settings_panel.confirm_and_go_back)
         outer.addWidget(self.settings_panel, 1)
@@ -2758,6 +2857,8 @@ class PackageTodoGUI(QMainWindow):
         self.conf_card_opacity_slider = widgets["conf_card_opacity_slider"]
         self.conf_notifications = widgets["conf_notifications"]
         self.conf_touch_mode = widgets["conf_touch_mode"]
+        self.conf_patch_check = widgets["conf_patch_check"]
+        self.conf_patch_status = widgets["conf_patch_status"]
         self.conf_telemetry = widgets["conf_telemetry"]
         self.conf_telemetry_endpoint = widgets["conf_telemetry_endpoint"]
         self.conf_telemetry_url = widgets["conf_telemetry_url"]
@@ -2978,6 +3079,9 @@ class PackageTodoGUI(QMainWindow):
                     str(store.get_user("telemetry_endpoint", "") or "")
                 )
                 self.conf_touch_mode.setChecked(bool(user.get("touch_mode", False)))
+                self.conf_patch_check.setChecked(
+                    bool(store.get_user("patch_check_enabled", True))
+                )
                 self.conf_sidebar_accent_slider.setValue(
                     store.get_user_int("sidebar_accent_width", 3) or 0
                 )
@@ -3028,6 +3132,7 @@ class PackageTodoGUI(QMainWindow):
             "sidebar_accent_width": int(self.conf_sidebar_accent_slider.value()),
             "card_opacity": round(self.conf_card_opacity_slider.value() / 100.0, 3),
             "touch_mode": bool(self.conf_touch_mode.isChecked()),
+            "patch_check_enabled": bool(self.conf_patch_check.isChecked()),
             "auto_report_errors": bool(self.conf_telemetry.isChecked()),
             "telemetry_enabled": bool(self.conf_telemetry_endpoint.isChecked()),
             "telemetry_endpoint": self.conf_telemetry_url.text().strip(),

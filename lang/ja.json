@@ -135,7 +135,9 @@
     "section_account_hint": "GitHub セッションと公開プロフィール",
     "account_connected": "@{login} としてサインイン中",
     "account_missing": "GitHub セッションがありません",
-    "account_hint": "完全なプロフィールはサイドバーの「プロフィール」拡張に表示されます。"
+    "account_hint": "完全なプロフィールはサイドバーの「プロフィール」拡張に表示されます。",
+    "patch_check": "パッチと新しいコミットを通知する",
+    "patch_check_hint": "起動時に6時間ごとに api.github.com を確認します。読み取りのみで、ダウンロードや置換は行いません。"
   },
   "create": {
     "sandbox": "安全なサンドボックス",
@@ -908,5 +910,15 @@
     "distribution": "配布形態",
     "cpu_count": "CPU コア数",
     "language": "言語"
+  },
+  "updates": {
+    "check_now": "今すぐ確認",
+    "title": "パッチがあります",
+    "state_idle": "まだ確認していません",
+    "available": "新しいコミットがあります（{sha}）: {message}",
+    "up_to_date": "最新です: 保留中のパッチはありません",
+    "unavailable": "確認できませんでした: {error}",
+    "unknown": "あなたのコミットを特定できません。最新は {sha} です",
+    "metered": "従量制モードでは無効です"
   }
 }

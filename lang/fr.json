@@ -135,7 +135,9 @@
     "section_account_hint": "Session GitHub et profil public",
     "account_connected": "Connecté en tant que @{login}",
     "account_missing": "Aucune session GitHub",
-    "account_hint": "Le profil complet s'affiche dans l'extension Profil de la barre latérale."
+    "account_hint": "Le profil complet s'affiche dans l'extension Profil de la barre latérale.",
+    "patch_check": "Signaler les correctifs et les nouveaux commits",
+    "patch_check_hint": "Consulte api.github.com au démarrage toutes les 6 heures. Lecture seule : rien n'est téléchargé ni remplacé."
   },
   "create": {
     "sandbox": "Sandbox sécurisé",
@@ -908,5 +910,15 @@
     "distribution": "Distribution",
     "cpu_count": "Cœurs de processeur",
     "language": "Langue"
+  },
+  "updates": {
+    "check_now": "Vérifier maintenant",
+    "title": "Correctif disponible",
+    "state_idle": "Pas encore vérifié",
+    "available": "Un nouveau commit est disponible ({sha}) : {message}",
+    "up_to_date": "À jour : aucun correctif en attente",
+    "unavailable": "Vérification impossible : {error}",
+    "unknown": "Impossible de déterminer votre commit ; le dernier est {sha}",
+    "metered": "Désactivé en mode mesuré"
   }
 }

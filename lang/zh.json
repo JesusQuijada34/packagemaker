@@ -135,7 +135,9 @@
     "section_account_hint": "GitHub 会话与公开资料",
     "account_connected": "已登录为 @{login}",
     "account_missing": "未登录 GitHub",
-    "account_hint": "完整资料显示在侧边栏的“个人资料”扩展中。"
+    "account_hint": "完整资料显示在侧边栏的“个人资料”扩展中。",
+    "patch_check": "通知补丁和新提交",
+    "patch_check_hint": "启动时每 6 小时查询一次 api.github.com。仅读取，不下载也不替换任何文件。"
   },
   "create": {
     "sandbox": "安全沙箱",
@@ -908,5 +910,15 @@
     "distribution": "分发方式",
     "cpu_count": "CPU 核心数",
     "language": "语言"
+  },
+  "updates": {
+    "check_now": "立即检查",
+    "title": "有可用补丁",
+    "state_idle": "尚未检查",
+    "available": "有新提交（{sha}）：{message}",
+    "up_to_date": "已是最新：没有待处理的补丁",
+    "unavailable": "无法检查：{error}",
+    "unknown": "无法确定你的提交；最新的是 {sha}",
+    "metered": "计量模式下已停用"
   }
 }
