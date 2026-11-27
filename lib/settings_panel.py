@@ -152,6 +152,10 @@ class SettingsPanel(QWidget):
             subtitle_key="config.section_general_hint",
         )
 
+        # Cuenta de GitHub: el perfil pasó a ser la extensión «Perfil» del
+        # sidebar (Q-030); aquí queda su inicio y cierre de sesión.
+        self._build_account_card()
+
         # Idioma: selección única, se aplica y vuelve sola.
         language = SettingsDetailPage(tr("config.section_language"))
         language.add_widget(section_caption(tr("config.language")))
@@ -409,6 +413,79 @@ class SettingsPanel(QWidget):
             self._multi_details.add(key)
         self.root_page.add_card(card)
         return card
+
+    def _build_account_card(self) -> None:
+        """Tarjeta de cuenta: estado de la sesión de GitHub y sus acciones."""
+        account = SettingsDetailPage(tr("config.section_account"))
+        account.add_widget(section_caption(tr("config.section_account")))
+
+        self._account_status = QLabel("")
+        self._account_status.setWordWrap(True)
+        self._account_status.setStyleSheet(
+            f"color:{TEXT};font-size:12px;background:transparent;"
+        )
+        self.widgets["conf_account_status"] = self._account_status
+        account.add_widget(self._account_status)
+
+        self.widgets["conf_account_hint"] = self._hint(tr("config.account_hint"))
+        account.add_widget(self.widgets["conf_account_hint"])
+
+        row = QWidget()
+        row.setStyleSheet("background:transparent;")
+        box = QHBoxLayout(row)
+        box.setContentsMargins(0, 0, 0, 0)
+        box.setSpacing(8)
+        for key, label, handler in (
+            ("conf_account_login", "github.sign_in", "_github_login"),
+            ("conf_account_logout", "github.logout", "_github_logout"),
+        ):
+            button = QPushButton(tr(label))
+            button.setFixedHeight(36)
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.setStyleSheet(uwp_button_qss())
+            button.clicked.connect(lambda _=False, name=handler: self._delegate(name))
+            self.widgets[key] = button
+            box.addWidget(button)
+        box.addStretch(1)
+        account.add_widget(row)
+        account.add_stretch()
+
+        self._register_card(
+            "account", tr("config.section_account"), "profile", account,
+            subtitle=tr("config.section_account_hint"),
+            title_key="config.section_account",
+            subtitle_key="config.section_account_hint",
+        )
+        self.refresh_account()
+
+    def refresh_account(self) -> None:
+        """Refleja el estado de la sesión de GitHub en la tarjeta de cuenta."""
+        from lib import github_identity
+
+        try:
+            profile = github_identity.load_profile()
+        except Exception:
+            profile = None
+        login = str(getattr(profile, "login", "") or "")
+        status = self.widgets.get("conf_account_status")
+        if status is not None:
+            status.setText(
+                tr("config.account_connected").format(login=login)
+                if login
+                else tr("config.account_missing")
+            )
+        login_btn = self.widgets.get("conf_account_login")
+        if login_btn is not None:
+            login_btn.setVisible(not login)
+        logout_btn = self.widgets.get("conf_account_logout")
+        if logout_btn is not None:
+            logout_btn.setVisible(bool(login))
+
+    def _delegate(self, name: str) -> None:
+        """Ejecuta una acción de sesión del anfitrión si la ofrece."""
+        handler = getattr(self.host, name, None)
+        if callable(handler):
+            handler()
 
     def _add_reset_card(self) -> None:
         card = SettingsCard(
@@ -676,5 +753,15 @@ class SettingsPanel(QWidget):
         warning = self.widgets.get("conf_addons_warning")
         if warning is not None:
             warning.setText(tr("config.addons_warning"))
+        login_btn = self.widgets.get("conf_account_login")
+        if login_btn is not None:
+            login_btn.setText(tr("github.sign_in"))
+        logout_btn = self.widgets.get("conf_account_logout")
+        if logout_btn is not None:
+            logout_btn.setText(tr("github.logout"))
+        hint = self.widgets.get("conf_account_hint")
+        if hint is not None:
+            hint.setText(tr("config.account_hint"))
+        self.refresh_account()
         self._refresh_addons_list()
         self._emit_navigation()

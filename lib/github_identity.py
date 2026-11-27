@@ -15,7 +15,7 @@ import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from lib.pm_data import get_pm_data
 from lib import session_cache
@@ -226,7 +226,12 @@ def _profile_from_payload(payload: Dict[str, Any], *, authenticated: bool) -> Gi
         email=str(payload.get("email", "") or ""),
         html_url=str(payload.get("html_url", "") or ""),
         authenticated=authenticated,
-        extras={"public_repos": payload.get("public_repos", 0)},
+        extras={
+            "public_repos": payload.get("public_repos", 0) or 0,
+            "followers": payload.get("followers", 0) or 0,
+            "following": payload.get("following", 0) or 0,
+            "bio": str(payload.get("bio", "") or ""),
+        },
     )
 
 
@@ -258,6 +263,44 @@ def fetch_avatar(profile: GitHubProfile, *, timeout: float = 15.0) -> Optional[b
             return response.read()
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError):
         return None
+
+
+def fetch_repositories(
+    login: str = "", token: str = "", *, limit: int = 12, timeout: float = 10.0
+) -> List[Dict[str, Any]]:
+    """Lista los repositorios del usuario, los actualizados más recientemente.
+
+    Con token usa ``/user/repos`` (incluye los privados del propio usuario); sin
+    token, ``/users/<login>/repos``. Sólo devuelve los campos que pinta el
+    perfil, para no arrastrar la carga completa de la API a la interfaz.
+    """
+    token = sanitize_token(token or load_token())
+    login = login or load_profile().login
+    if token:
+        url = f"{GITHUB_API}/user/repos?per_page={limit}&sort=updated"
+    elif login:
+        url = f"{GITHUB_API}/users/{login}/repos?per_page={limit}&sort=updated"
+    else:
+        raise GitHubIdentityError("No hay token ni login de GitHub configurado")
+
+    payload = _request(url, token, timeout=timeout)
+    if not isinstance(payload, list):
+        raise GitHubIdentityError("GitHub devolvió una respuesta inesperada")
+    repositories: List[Dict[str, Any]] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        repositories.append(
+            {
+                "name": str(item.get("name", "") or ""),
+                "description": str(item.get("description", "") or ""),
+                "html_url": str(item.get("html_url", "") or ""),
+                "language": str(item.get("language", "") or ""),
+                "private": bool(item.get("private", False)),
+                "updated_at": str(item.get("updated_at", "") or ""),
+            }
+        )
+    return repositories
 
 
 def signer_from_store() -> str:

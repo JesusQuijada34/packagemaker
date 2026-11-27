@@ -39,7 +39,8 @@
     "toggle_collapse": "Menüyü gizle (Ctrl+B)",
     "report": "Bildirimler",
     "aide": "AIDE",
-    "help": "Yardım"
+    "help": "Yardım",
+    "profile": "Profil"
   },
   "sidebar_desc": {
     "0": "### Proje olustur\nUygulamalari sifirdan tasarla. **Influent OS** ekosistemi icin benzersiz kimlikler, surumler ve ust veriler belirle.",
@@ -49,7 +50,8 @@
     "5": "### Hakkinda\nTeknik proje ayrintilari. GPL lisansi, Qt cercevesi ve **Package Maker** arkasindaki ekip.",
     "6": "### Bildirimler\nHataları ve önerileri GitHub hesabınızla doğrudan depoya gönderin. Uygulama, hatanın yeniden üretilebilmesi için cihaz ortamını ekler.",
     "7": "### AIDE\nYardım isteyin, proje oluşturun veya bir derlemeye hazırlanın. Yalnızca işaretledikleriniz gönderilir: asla kimlik bilgileri veya yollar.",
-    "8": "### Yardım\nTüm uygulama için kılavuz: oluştur, derle, koru ve bildir; arama kutusuyla."
+    "8": "### Yardım\nTüm uygulama için kılavuz: oluştur, derle, koru ve bildir; arama kutusuyla.",
+    "9": "### Profil\nGitHub hesabınız: avatar, açıklama, takipçiler ve depolar. Oturumu buradan açıp kapatır ve listeyi yenilersiniz."
   },
   "config": {
     "title": "Ayarlar",
@@ -128,7 +130,12 @@
     "addons_none": "Yüklü uzantı yok.",
     "addons_ok": "Uzantı yüklendi. Kenar çubuğunda görmek için yeniden başlat.",
     "addons_error": "Uzantı yüklenemedi:",
-    "addons_warning": "Yalnızca .yaml manifestleri yüklenir. 'class' içeren bir uzantı, zaten yüklü bir modülün kodunu çalıştırır: yalnızca güvendiğin uzantıları yükle."
+    "addons_warning": "Yalnızca .yaml manifestleri yüklenir. 'class' içeren bir uzantı, zaten yüklü bir modülün kodunu çalıştırır: yalnızca güvendiğin uzantıları yükle.",
+    "section_account": "Hesap",
+    "section_account_hint": "GitHub oturumu ve herkese açık profil",
+    "account_connected": "@{login} olarak bağlı",
+    "account_missing": "GitHub oturumu yok",
+    "account_hint": "Tam profil, kenar çubuğundaki Profil uzantısında görünür."
   },
   "create": {
     "sandbox": "Güvenli sanal alan",
@@ -858,6 +865,17 @@
         "body": "Bildirimler sayfası GitHub hesabınızla depoda bir issue açar ve cihaz ortamını ekler. Uygulamanın kendi bulduğu arızalar kuyrukta kalır ve otomatik gönderimi açarsanız gönderilir. Yeniden üretme adımlarını ekleyin; kimlik bilgilerini veya özel yolları yapıştırmayın: issue herkese açıktır."
       }
     }
+  },
+  "profile": {
+    "refresh": "Yenile",
+    "repositories": "Depolar",
+    "repositories_loading": "Depolar yükleniyor…",
+    "repositories_empty": "Bu kullanıcının herkese açık deposu yok.",
+    "repositories_error": "Depolar yüklenemedi: {error}",
+    "guest": "GitHub oturumu yok",
+    "guest_hint": "Profilinizi ve depolarınızı görmek için oturum açın.",
+    "open": "Aç",
+    "stats": "{repositories} depo · {followers} takipçi · {following} takip edilen"
   },
   "addon": {
     "error_title": "«{addon}» uzantısı yüklenemedi"

@@ -39,7 +39,8 @@
     "toggle_collapse": "Hide menu (Ctrl+B)",
     "report": "Reports",
     "aide": "AIDE",
-    "help": "Help"
+    "help": "Help",
+    "profile": "Profile"
   },
   "sidebar_desc": {
     "0": "### Create Project\nDesign applications from scratch. Set unique identities, versions, and metadata for the **Influent OS** ecosystem with guided steps.",
@@ -49,7 +50,8 @@
     "5": "### About\nTechnical project details. GPL license, Qt framework, and the team behind **Package Maker**.",
     "6": "### Reports\nSend errors and suggestions straight to the repository with your GitHub account. The app attaches the device environment so the failure can be reproduced.",
     "7": "### AIDE\nAsk for help, generate a project or prepare a build. Only what you tick is sent: never credentials or paths.",
-    "8": "### Help\nGuide to the whole application: create, build, harden and report, with a search box."
+    "8": "### Help\nGuide to the whole application: create, build, harden and report, with a search box.",
+    "9": "### Profile\nYour GitHub account: avatar, description, followers and repositories. Sign in or out and refresh the list from here."
   },
   "config": {
     "title": "Settings",
@@ -128,7 +130,12 @@
     "addons_none": "No extensions installed.",
     "addons_ok": "Extension installed. Restart to see it in the sidebar.",
     "addons_error": "Could not install the extension:",
-    "addons_warning": "Only .yaml manifests are installed. An extension with 'class' runs code from an already installed module: install only trusted ones."
+    "addons_warning": "Only .yaml manifests are installed. An extension with 'class' runs code from an already installed module: install only trusted ones.",
+    "section_account": "Account",
+    "section_account_hint": "GitHub session and public profile",
+    "account_connected": "Signed in as @{login}",
+    "account_missing": "No GitHub session",
+    "account_hint": "The full profile is shown in the Profile extension of the sidebar."
   },
   "create": {
     "sandbox": "Secure sandbox",
@@ -858,6 +865,17 @@
         "body": "The Reports page opens an issue in the repository with your GitHub account and attaches the device environment. Failures the application detects by itself are kept in the queue and sent if you enable automatic sending. Include the steps to reproduce it and do not paste credentials or private paths: the issue is public."
       }
     }
+  },
+  "profile": {
+    "refresh": "Refresh",
+    "repositories": "Repositories",
+    "repositories_loading": "Loading repositories…",
+    "repositories_empty": "This user has no public repositories.",
+    "repositories_error": "Could not load the repositories: {error}",
+    "guest": "No GitHub session",
+    "guest_hint": "Sign in to see your profile and repositories.",
+    "open": "Open",
+    "stats": "{repositories} repositories · {followers} followers · {following} following"
   },
   "addon": {
     "error_title": "The «{addon}» extension could not be loaded"

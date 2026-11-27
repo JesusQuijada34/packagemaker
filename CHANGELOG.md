@@ -1,3 +1,58 @@
+## 2026-11-27 — septuagésimo octavo ciclo
+
+### Aplicado — perfil de GitHub como extensión y orden del sidebar (Q-030 / R-6f1c8e35)
+
+Aprobación Q-030 del issue #14 (JesusQuijada34): la tarjeta de cuenta dejó de
+ocupar el hueco entre MoonFix y las herramientas, el perfil pasa a ser una
+extensión propia y su inicio de sesión se traslada a Configuración.
+
+- **Orden del sidebar:** las extensiones (`section: tools`) van justo debajo de
+  las páginas de trabajo y antes del hueco elástico; «Acerca de» sigue al pie.
+  La tarjeta de identidad ya no se inserta en el sidebar, así que la fila queda
+  create, build, config, moonfix, report, help, aide, **perfil**, about.
+- **Página nueva `lib/profile_page.py`:** barra de acciones propia con
+  «Actualizar», tarjeta de identidad (avatar de 72 px, nombre, `@login`,
+  descripción, repositorios/seguidores/seguidos), la tarjeta de cuenta existente
+  y la lista de repositorios con botón «Abrir» por cada uno. Estado de invitado
+  con el botón de acceso cuando no hay sesión.
+- **Sin bloquear la interfaz:** los repositorios se piden en un `QThread` al
+  entrar por primera vez en la página o al pulsar «Actualizar»; la barra de
+  acciones muestra su marquee mientras dura la petición y los errores se
+  escriben en la propia tarjeta, no en un diálogo modal.
+- **Identidad:** `github_identity.fetch_repositories()` usa `/user/repos` con
+  token (incluye los privados) y `/users/<login>/repos` sin él, y devuelve sólo
+  los campos que pinta el perfil (nombre, descripción, URL, lenguaje, privado y
+  fecha). `fetch_profile()` guarda `bio`, `public_repos`, `followers` y
+  `following` en `GitHubProfile.extras`.
+- **Configuración → Cuenta:** tarjeta nueva con el estado de la sesión
+  («Conectado como @login» o «Sin sesión»), inicio y cierre de sesión delegados
+  al anfitrión y el aviso de que el perfil completo está en la extensión.
+  `_refresh_github_card()` refresca a la vez la tarjeta, la página y la tarjeta
+  de Configuración, así que iniciar o cerrar sesión se ve en los tres sitios.
+- **Navegación:** el botón «ver perfil» de la tarjeta abre la página Perfil (con
+  el diálogo clásico como respaldo si la extensión no está cargada).
+- **Traducciones:** claves `sidebar.profile`, `sidebar_desc.9`, `profile.*` y
+  `config.section_account*`/`config.account_*` en los 14 catálogos de `lang/` y
+  en `tools/translations_curated.py`. `config.section_account` y
+  `profile.repositories` se añaden a los cognados aceptados de
+  `tests/test_i18n_curated.py` («Account» en italiano y neerlandés,
+  «Repositories» en neerlandés).
+- **Pruebas:** `tests/test_profile_page.py` (endpoint con y sin token, mapeo de
+  campos, sesión ausente, carga real del perfil, invitado, pintado de perfil y
+  repositorios, error de red, hilo de descarga, retraducción, manifiesto de la
+  extensión, orden del sidebar y construcción de la ventana con la tarjeta de
+  cuenta). Se actualizan las listas de ids del sidebar en
+  `tests/test_addons_engine.py`, `tests/test_addons_install.py`,
+  `tests/test_auto_author_and_sidebar.py` y la comprobación del modo contraído
+  en `tests/test_design_system_phase3.py`.
+- **Verificación:** suite completa en verde (1481 pruebas, 1 omitida, 64
+  subtests) y `pyflakes` limpio. Ventana real (offscreen): el sidebar queda
+  create, build, config, moonfix, report, help, aide, perfil, about, la tarjeta
+  de cuenta cuelga de la página Perfil y Configuración lista las tarjetas
+  general, cuenta, idioma, apariencia, notificaciones, tipografías, red,
+  privacidad, extensiones y restablecer.
+- **Sin cambios de motor:** no se toca compilación, empaquetado ni blindaje.
+
 ## 2026-11-27 — septuagésimo séptimo ciclo
 
 ### Aplicado — instalar extensiones `.yaml` desde Configuración (Q-022 / R-2c8d4f71)

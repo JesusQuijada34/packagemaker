@@ -39,7 +39,8 @@
     "toggle_collapse": "Menü ausblenden (Strg+B)",
     "report": "Berichte",
     "aide": "AIDE",
-    "help": "Hilfe"
+    "help": "Hilfe",
+    "profile": "Profil"
   },
   "sidebar_desc": {
     "0": "### Projekt erstellen\nEntwickle Anwendungen von Grund auf. Lege eindeutige Identitaeten, Versionen und Metadaten fuer das **Influent OS**-Oekosystem in gefuehrten Schritten fest.",
@@ -49,7 +50,8 @@
     "5": "### Ueber\nTechnische Projektdetails. GPL-Lizenz, Qt-Framework und das Team hinter **Package Maker**.",
     "6": "### Berichte\nSenden Sie Fehler und Vorschläge direkt an das Repository, mit Ihrem GitHub-Konto. Die App fügt die Geräteumgebung bei, damit der Fehler nachvollziehbar ist.",
     "7": "### AIDE\nBitten Sie um Hilfe, erzeugen Sie ein Projekt oder bereiten Sie eine Kompilierung vor. Nur was Sie markieren, wird gesendet: niemals Zugangsdaten oder Pfade.",
-    "8": "### Hilfe\nAnleitung für die ganze Anwendung: erstellen, kompilieren, härten und melden, mit Suchfeld."
+    "8": "### Hilfe\nAnleitung für die ganze Anwendung: erstellen, kompilieren, härten und melden, mit Suchfeld.",
+    "9": "### Profil\nDein GitHub-Konto: Avatar, Beschreibung, Follower und Repositorys. Hier meldest du dich an oder ab und aktualisierst die Liste."
   },
   "config": {
     "title": "Einstellungen",
@@ -128,7 +130,12 @@
     "addons_none": "Keine Erweiterungen installiert.",
     "addons_ok": "Erweiterung installiert. Starte die App neu, um sie in der Seitenleiste zu sehen.",
     "addons_error": "Die Erweiterung konnte nicht installiert werden:",
-    "addons_warning": "Es werden nur .yaml-Manifeste installiert. Eine Erweiterung mit 'class' führt Code aus einem bereits installierten Modul aus: Installiere nur vertrauenswürdige."
+    "addons_warning": "Es werden nur .yaml-Manifeste installiert. Eine Erweiterung mit 'class' führt Code aus einem bereits installierten Modul aus: Installiere nur vertrauenswürdige.",
+    "section_account": "Konto",
+    "section_account_hint": "GitHub-Sitzung und öffentliches Profil",
+    "account_connected": "Angemeldet als @{login}",
+    "account_missing": "Keine GitHub-Sitzung",
+    "account_hint": "Das vollständige Profil erscheint in der Erweiterung Profil der Seitenleiste."
   },
   "create": {
     "sandbox": "Sichere Sandbox",
@@ -858,6 +865,17 @@
         "body": "Die Seite Berichte öffnet ein Issue im Repository mit deinem GitHub-Konto und hängt die Geräteumgebung an. Fehler, die die Anwendung selbst erkennt, bleiben in der Warteschlange und werden bei aktiviertem automatischem Senden gesendet. Gib die Schritte zur Reproduktion an und füge keine Zugangsdaten oder privaten Pfade ein: das Issue ist öffentlich."
       }
     }
+  },
+  "profile": {
+    "refresh": "Aktualisieren",
+    "repositories": "Repositorys",
+    "repositories_loading": "Repositorys werden geladen…",
+    "repositories_empty": "Dieser Benutzer hat keine öffentlichen Repositorys.",
+    "repositories_error": "Repositorys konnten nicht geladen werden: {error}",
+    "guest": "Keine GitHub-Sitzung",
+    "guest_hint": "Melde dich an, um dein Profil und deine Repositorys zu sehen.",
+    "open": "Öffnen",
+    "stats": "{repositories} Repositorys · {followers} Follower · {following} folgt"
   },
   "addon": {
     "error_title": "Die Erweiterung „{addon}“ konnte nicht geladen werden"

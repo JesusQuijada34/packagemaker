@@ -465,6 +465,7 @@ TAB_ICON_KEYS = {
     "report": "report",
     "help": "help",
     "aide": "aide",
+    "profile": "profile",
     "instalar": "instalar",
     "desinstalar": "desinstalar",
     "refresh": "refresh",
@@ -943,16 +944,21 @@ class PackageTodoGUI(QMainWindow):
             if addon.section == "main":
                 self.sidebar_layout.addWidget(button)
 
+        # Las extensiones van justo debajo de MoonFix: la tarjeta de cuenta ya
+        # no ocupa el hueco entre ellas (Q-030, issue #14). El perfil vive en
+        # su propia página.
+        for addon, button in self._sidebar_items:
+            if addon.section == "tools":
+                self.sidebar_layout.addWidget(button)
+
         # La descripción de cada página se muestra bajo el título de su barra
         # de acciones (ver ``update_sidebar_description``), no en el sidebar.
         self.sidebar_layout.addStretch()
 
-        self.github_card = self._build_github_card(dark_now)
-        self.sidebar_layout.addWidget(self.github_card)
-
-        for addon, button in self._sidebar_items:
-            if addon.section == "tools":
-                self.sidebar_layout.addWidget(button)
+        # La tarjeta de identidad la construye la página Perfil (Q-030): aquí
+        # sólo se reserva el atributo para que el resto del ciclo de sesión
+        # (login, logout, refresco) siga teniendo un único punto de acceso.
+        self.github_card = None
 
         for addon, button in self._sidebar_items:
             if addon.section == "footer":
@@ -1086,7 +1092,7 @@ class PackageTodoGUI(QMainWindow):
             self._refresh_config_tab_labels()
         # Los textos que no son ``tr()`` directo (ítems de combo, placeholders
         # construidos a mano) los reaplica la propia página.
-        for name in ("report_page", "page_help"):
+        for name in ("report_page", "page_help", "page_profile"):
             page = getattr(self, name, None)
             if page is not None and hasattr(page, "retranslate"):
                 page.retranslate()
@@ -1164,8 +1170,6 @@ class PackageTodoGUI(QMainWindow):
             if hasattr(btn, "set_compact"):
                 btn.set_compact(collapsed)
         self.lbl_menu_main.setVisible(not collapsed)
-        if hasattr(self, "github_card") and self.github_card is not None:
-            self.github_card.setVisible(not collapsed)
         if hasattr(self, "sidebar_collapse_toggle"):
             self.sidebar_collapse_toggle.setVisible(True)
 
@@ -1280,18 +1284,23 @@ class PackageTodoGUI(QMainWindow):
         return card
 
     def _refresh_github_card(self, card=None) -> None:
-        """Refresca la tarjeta con el perfil guardado y su avatar en caché."""
+        """Refresca la tarjeta y la página Perfil con el perfil guardado."""
         from lib import github_identity
 
-        card = card or getattr(self, "github_card", None)
-        if card is None:
-            return
         profile = github_identity.load_profile()
-        card.set_profile(profile if profile.login else None)
-        if profile.login and profile.avatar_url:
-            cached = github_identity.load_cached_avatar(profile.login)
-            if cached:
-                card.set_avatar_bytes(cached)
+        card = card or getattr(self, "github_card", None)
+        if card is not None:
+            card.set_profile(profile if profile.login else None)
+            if profile.login and profile.avatar_url:
+                cached = github_identity.load_cached_avatar(profile.login)
+                if cached:
+                    card.set_avatar_bytes(cached)
+        page = getattr(self, "page_profile", None)
+        if page is not None:
+            page.refresh()
+        panel = getattr(self, "settings_panel", None)
+        if panel is not None and hasattr(panel, "refresh_account"):
+            panel.refresh_account()
 
     def _github_login(self) -> None:
         """Pide el token y resuelve el perfil de GitHub."""
@@ -1396,7 +1405,6 @@ class PackageTodoGUI(QMainWindow):
         """Revela el IDE con la sesión cacheada y cierra el splash."""
         self._refresh_github_card()
         self._refresh_author_field()
-        self.github_card.show()
         self._landing_active = False
         self._set_landing_lock(False)
         self._close_splash()
@@ -1485,7 +1493,16 @@ class PackageTodoGUI(QMainWindow):
                 landing.raise_()
 
     def _show_github_profile(self) -> None:
-        """Muestra los datos del perfil autenticado desde la tarjeta lateral."""
+        """Abre la página Perfil (Q-030); sin ella, muestra el diálogo clásico."""
+        index = getattr(self, "_addon_index", {}).get("profile")
+        if index is not None and hasattr(self, "page_profile"):
+            button = self.sidebar_group.button(index)
+            if button is not None:
+                button.setChecked(True)
+            self.switch_page(index)
+            self.page_profile.refresh_repositories()
+            return
+
         from lib import github_identity
 
         profile = github_identity.load_profile()
@@ -3262,6 +3279,18 @@ class PackageTodoGUI(QMainWindow):
         from lib.aide_page import AidePage
 
         return AidePage()
+
+    def build_profile_page(self):
+        """Perfil de GitHub como página propia (Q-030, issue #14)."""
+        from lib.profile_page import ProfilePage
+
+        if getattr(self, "github_card", None) is None:
+            self.github_card = self._build_github_card(system_theme_mode() != "light")
+        return ProfilePage(
+            card=self.github_card,
+            on_login=self._github_login,
+            on_logout=self._github_logout,
+        )
 
     def _addon_error_page(self, addon, exc):
         """Página de aviso cuando un addon no se puede construir."""

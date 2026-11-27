@@ -39,7 +39,8 @@
     "toggle_collapse": "Ocultar menu (Ctrl+B)",
     "report": "Relatórios",
     "aide": "AIDE",
-    "help": "Ajuda"
+    "help": "Ajuda",
+    "profile": "Perfil"
   },
   "sidebar_desc": {
     "0": "### Criar projeto\nDesenhe aplicacoes de raiz. Defina identidades, versoes e metadados unicos para o ecossistema **Influent OS** com passos guiados.",
@@ -49,7 +50,8 @@
     "5": "### Acerca\nDetalhes tecnicos do projeto. Licenca GPL, framework Qt e a equipa por tras do **Package Maker**.",
     "6": "### Relatórios\nEnvie erros e sugestões diretamente ao repositório com a sua conta do GitHub. A aplicação anexa o ambiente do dispositivo para reproduzir a falha.",
     "7": "### AIDE\nPeça ajuda, gere um projeto ou prepare uma compilação. Só é enviado o que marcar: nunca credenciais nem caminhos.",
-    "8": "### Ajuda\nGuia de toda a aplicação: criar, compilar, blindar e reportar, com uma caixa de pesquisa."
+    "8": "### Ajuda\nGuia de toda a aplicação: criar, compilar, blindar e reportar, com uma caixa de pesquisa.",
+    "9": "### Perfil\nA sua conta GitHub: avatar, descrição, seguidores e repositórios. É aqui que inicia ou termina a sessão e atualiza a lista."
   },
   "config": {
     "title": "Configuração",
@@ -128,7 +130,12 @@
     "addons_none": "Nenhuma extensão instalada.",
     "addons_ok": "Extensão instalada. Reinicie para vê-la na barra lateral.",
     "addons_error": "Não foi possível instalar a extensão:",
-    "addons_warning": "Só são instalados manifestos .yaml. Uma extensão com 'class' executa código de um módulo já instalado: instale apenas as de confiança."
+    "addons_warning": "Só são instalados manifestos .yaml. Uma extensão com 'class' executa código de um módulo já instalado: instale apenas as de confiança.",
+    "section_account": "Conta",
+    "section_account_hint": "Sessão de GitHub e perfil público",
+    "account_connected": "Sessão iniciada como @{login}",
+    "account_missing": "Sem sessão de GitHub",
+    "account_hint": "O perfil completo aparece na extensão Perfil da barra lateral."
   },
   "create": {
     "sandbox": "Sandbox segura",
@@ -858,6 +865,17 @@
         "body": "A página Relatórios abre um issue no repositório com a tua conta do GitHub e anexa o ambiente do dispositivo. As falhas que a aplicação deteta sozinha ficam na fila e são enviadas se ativares o envio automático. Inclui os passos para reproduzir e não coles credenciais nem caminhos privados: o issue é público."
       }
     }
+  },
+  "profile": {
+    "refresh": "Atualizar",
+    "repositories": "Repositórios",
+    "repositories_loading": "A carregar repositórios…",
+    "repositories_empty": "Este utilizador não tem repositórios públicos.",
+    "repositories_error": "Não foi possível carregar os repositórios: {error}",
+    "guest": "Sem sessão de GitHub",
+    "guest_hint": "Inicie sessão para ver o seu perfil e os seus repositórios.",
+    "open": "Abrir",
+    "stats": "{repositories} repositórios · {followers} seguidores · {following} a seguir"
   },
   "addon": {
     "error_title": "Não foi possível carregar a extensão «{addon}»"

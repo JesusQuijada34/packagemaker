@@ -195,6 +195,7 @@ DEFAULT_ADDONS = (
     ("report", 10, "tools", "sidebar.report", "sidebar_desc.6", "report", "build_report_page"),
     ("help", 15, "tools", "sidebar.help", "sidebar_desc.8", "help", "build_help_page"),
     ("aide", 20, "tools", "sidebar.aide", "sidebar_desc.7", "aide", "build_aide_page"),
+    ("profile", 25, "tools", "sidebar.profile", "sidebar_desc.9", "profile", "build_profile_page"),
     ("about", 10, "footer", "sidebar.about", "sidebar_desc.5", "about", "build_about_page"),
 )
 

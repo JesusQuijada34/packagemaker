@@ -50,7 +50,10 @@ def test_sidebar_has_no_ide_page(qapp):
         # El orden lo fija addons/*.yaml: las páginas de trabajo arriba,
         # herramientas después y "Acerca de" al final. No hay página de IDE.
         ids = [a.id for a in win._addons]
-        assert ids == ["create", "build", "config", "moonfix", "report", "help", "aide", "about"]
+        assert ids == [
+            "create", "build", "config", "moonfix",
+            "report", "help", "aide", "profile", "about",
+        ]
         assert win.sidebar_group.button(len(ids) - 1).text() == pm.tr("sidebar.about")
         assert win.sidebar_group.button(len(ids)) is None
     finally:

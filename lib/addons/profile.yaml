@@ -1,0 +1,9 @@
+# Perfil de GitHub. La página vive en lib/profile_page.py y sustituye a la
+# tarjeta de cuenta que ocupaba el sidebar (Q-030, issue #14).
+id: profile
+order: 25
+section: tools
+label: sidebar.profile
+description: sidebar_desc.9
+icon: profile
+builder: build_profile_page

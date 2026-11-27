@@ -39,7 +39,8 @@
     "toggle_collapse": "Menu verbergen (Ctrl+B)",
     "report": "Rapporten",
     "aide": "AIDE",
-    "help": "Hulp"
+    "help": "Hulp",
+    "profile": "Profiel"
   },
   "sidebar_desc": {
     "0": "### Project maken\nOntwerp applicaties vanaf nul. Stel unieke identiteiten, versies en metadata in voor het **Influent OS**-ecosysteem met begeleide stappen.",
@@ -49,7 +50,8 @@
     "5": "### Over\nTechnische projectdetails. GPL-licentie, Qt-framework en het team achter **Package Maker**.",
     "6": "### Rapporten\nStuur fouten en suggesties direct naar de repository met uw GitHub-account. De app voegt de apparaatomgeving toe zodat de fout te reproduceren is.",
     "7": "### AIDE\nVraag om hulp, genereer een project of bereid een compilatie voor. Alleen wat je aanvinkt wordt verzonden: nooit inloggegevens of paden.",
-    "8": "### Hulp\nGids voor de hele applicatie: maken, bouwen, beveiligen en melden, met zoekvak."
+    "8": "### Hulp\nGids voor de hele applicatie: maken, bouwen, beveiligen en melden, met zoekvak.",
+    "9": "### Profiel\nJe GitHub-account: avatar, beschrijving, volgers en repositories. Hier meld je je aan of af en ververs je de lijst."
   },
   "config": {
     "title": "Instellingen",
@@ -128,7 +130,12 @@
     "addons_none": "Geen extensies geïnstalleerd.",
     "addons_ok": "Extensie geïnstalleerd. Herstart om haar in de zijbalk te zien.",
     "addons_error": "De extensie kon niet worden geïnstalleerd:",
-    "addons_warning": "Alleen .yaml-manifesten worden geïnstalleerd. Een extensie met 'class' voert code uit van een al geïnstalleerde module: installeer alleen vertrouwde."
+    "addons_warning": "Alleen .yaml-manifesten worden geïnstalleerd. Een extensie met 'class' voert code uit van een al geïnstalleerde module: installeer alleen vertrouwde.",
+    "section_account": "Account",
+    "section_account_hint": "GitHub-sessie en openbaar profiel",
+    "account_connected": "Aangemeld als @{login}",
+    "account_missing": "Geen GitHub-sessie",
+    "account_hint": "Het volledige profiel staat in de extensie Profiel van de zijbalk."
   },
   "create": {
     "sandbox": "Veilige sandbox",
@@ -858,6 +865,17 @@
         "body": "De pagina Meldingen opent een issue in de repository met je GitHub-account en voegt de apparaatomgeving toe. Fouten die de applicatie zelf vindt, blijven in de wachtrij en worden verzonden als je automatisch verzenden aanzet. Voeg de stappen toe om het te reproduceren en plak geen inloggegevens of privépaden: het issue is openbaar."
       }
     }
+  },
+  "profile": {
+    "refresh": "Vernieuwen",
+    "repositories": "Repositories",
+    "repositories_loading": "Repositories laden…",
+    "repositories_empty": "Deze gebruiker heeft geen openbare repositories.",
+    "repositories_error": "Repositories konden niet worden geladen: {error}",
+    "guest": "Geen GitHub-sessie",
+    "guest_hint": "Meld je aan om je profiel en repositories te zien.",
+    "open": "Openen",
+    "stats": "{repositories} repositories · {followers} volgers · {following} volgend"
   },
   "addon": {
     "error_title": "De extensie ‘{addon}’ kon niet worden geladen"

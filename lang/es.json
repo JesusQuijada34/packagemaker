@@ -39,7 +39,8 @@
     "toggle_collapse": "Ocultar menú (Ctrl+B)",
     "report": "Reportes",
     "aide": "AIDE",
-    "help": "Ayuda"
+    "help": "Ayuda",
+    "profile": "Perfil"
   },
   "sidebar_desc": {
     "0": "### Crear Proyecto\nDiseña aplicaciones desde cero. Establece identidades únicas, versiones y metadatos para el ecosistema **Influent OS** de forma guiada.",
@@ -49,7 +50,8 @@
     "5": "### Acerca de\nDetalles técnicos del proyecto. Información sobre la licencia GPL, el framework Qt y el equipo que hace posible **Package Maker**.",
     "6": "### Reportes\nEnvía errores y sugerencias directamente al repositorio con tu cuenta de GitHub. La aplicación adjunta el entorno del dispositivo para que el fallo se pueda reproducir.",
     "7": "### AIDE\nPide ayuda, genera un proyecto o prepara una compilación. Se envía sólo lo que marques: nunca credenciales ni rutas.",
-    "8": "### Ayuda\nGuía de la aplicación completa: crear, compilar, blindar y reportar, con buscador por tema."
+    "8": "### Ayuda\nGuía de la aplicación completa: crear, compilar, blindar y reportar, con buscador por tema.",
+    "9": "### Perfil\nTu cuenta de GitHub: avatar, descripción, seguidores y repositorios. Desde aquí inicias o cierras sesión y actualizas la lista."
   },
   "config": {
     "title": "Configuración",
@@ -128,7 +130,12 @@
     "addons_none": "No hay extensiones instaladas.",
     "addons_ok": "Extensión instalada. Reinicia para verla en el sidebar.",
     "addons_error": "No se pudo instalar la extensión:",
-    "addons_warning": "Solo se instalan manifiestos .yaml. Una extensión con 'class' ejecuta código de un módulo ya instalado: instala solo las de confianza."
+    "addons_warning": "Solo se instalan manifiestos .yaml. Una extensión con 'class' ejecuta código de un módulo ya instalado: instala solo las de confianza.",
+    "section_account": "Cuenta",
+    "section_account_hint": "Sesión de GitHub y perfil público",
+    "account_connected": "Conectado como @{login}",
+    "account_missing": "Sin sesión de GitHub",
+    "account_hint": "El perfil completo se muestra en la extensión Perfil del sidebar."
   },
   "create": {
     "sandbox": "Sandbox seguro",
@@ -858,6 +865,17 @@
         "body": "La página Reportes abre un issue en el repositorio con tu cuenta de GitHub y adjunta el entorno del dispositivo. Los fallos que la aplicación detecta sola se guardan en la cola y se envían si activas el envío automático. Incluye los pasos para reproducirlo y no pegues credenciales ni rutas privadas: el issue es público."
       }
     }
+  },
+  "profile": {
+    "refresh": "Actualizar",
+    "repositories": "Repositorios",
+    "repositories_loading": "Cargando repositorios…",
+    "repositories_empty": "Este usuario no tiene repositorios públicos.",
+    "repositories_error": "No se pudieron cargar los repositorios: {error}",
+    "guest": "Sin sesión de GitHub",
+    "guest_hint": "Inicia sesión para ver tu perfil y tus repositorios.",
+    "open": "Abrir",
+    "stats": "{repositories} repositorios · {followers} seguidores · {following} siguiendo"
   },
   "addon": {
     "error_title": "La extensión «{addon}» no se pudo cargar"

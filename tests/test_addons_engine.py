@@ -215,12 +215,15 @@ class LoadOrderTest(unittest.TestCase):
         addons = load_addons(self.dir / "no_existe")
         self.assertEqual(
             [a.id for a in addons],
-            ["create", "build", "config", "moonfix", "report", "help", "aide", "about"],
+            [
+                "create", "build", "config", "moonfix", "report", "help",
+                "aide", "profile", "about",
+            ],
         )
         self.assertTrue(all(a.builder for a in addons))
 
     def test_empty_directory_falls_back_to_builtin_addons(self):
-        self.assertEqual(len(load_addons(self.dir)), 8)
+        self.assertEqual(len(load_addons(self.dir)), 9)
 
     def test_strict_mode_does_not_fall_back(self):
         self.assertEqual(load_addons(self.dir / "no_existe", strict=True), [])
@@ -246,7 +249,10 @@ class RealAddonsTest(unittest.TestCase):
         directory = Path(__file__).resolve().parents[1] / "lib" / "addons"
         ids = [a.id for a in load_addons(directory, strict=True)]
         self.assertEqual(
-            ids, ["create", "build", "config", "moonfix", "report", "help", "aide", "about"]
+            ids, [
+                "create", "build", "config", "moonfix", "report", "help",
+                "aide", "profile", "about",
+            ]
         )
 
     def test_every_shipped_addon_points_to_a_real_builder(self):
@@ -270,7 +276,10 @@ class ShippedDirsTest(unittest.TestCase):
     def test_merged_loader_reads_shipped_manifests(self):
         ids = [a.id for a in load_addons_from_dirs(shipped_addons_dirs(), strict=True)]
         self.assertEqual(
-            ids, ["create", "build", "config", "moonfix", "report", "help", "aide", "about"]
+            ids, [
+                "create", "build", "config", "moonfix", "report", "help",
+                "aide", "profile", "about",
+            ]
         )
 
     def test_first_directory_wins_and_ids_are_not_duplicated(self):
@@ -285,7 +294,7 @@ class ShippedDirsTest(unittest.TestCase):
 
     def test_merged_loader_ignores_missing_directories(self):
         ids = [a.id for a in load_addons_from_dirs([Path("/no/existe")])]
-        self.assertEqual(len(ids), 8)  # respaldo integrado, nunca un sidebar vacío
+        self.assertEqual(len(ids), 9)  # respaldo integrado, nunca un sidebar vacío
 
 
 class PluginTest(unittest.TestCase):

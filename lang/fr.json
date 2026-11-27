@@ -39,7 +39,8 @@
     "toggle_collapse": "Masquer le menu (Ctrl+B)",
     "report": "Rapports",
     "aide": "AIDE",
-    "help": "Aide"
+    "help": "Aide",
+    "profile": "Profil"
   },
   "sidebar_desc": {
     "0": "### Creer un projet\nConcevez des applications de zero. Definissez des identites, versions et metadonnees uniques pour l'ecosysteme **Influent OS**, guide etape par etape.",
@@ -49,7 +50,8 @@
     "5": "### A propos\nDetails techniques du projet. Licence GPL, framework Qt et l'equipe derriere **Package Maker**.",
     "6": "### Rapports\nEnvoyez erreurs et suggestions directement au dépôt avec votre compte GitHub. L'application joint l'environnement de l'appareil pour reproduire le problème.",
     "7": "### AIDE\nDemandez de l'aide, générez un projet ou préparez une compilation. Seul ce que vous cochez est envoyé : jamais d'identifiants ni de chemins.",
-    "8": "### Aide\nGuide de toute l'application : créer, compiler, protéger et signaler, avec une recherche."
+    "8": "### Aide\nGuide de toute l'application : créer, compiler, protéger et signaler, avec une recherche.",
+    "9": "### Profil\nVotre compte GitHub : avatar, description, abonnés et dépôts. C'est ici que vous vous connectez ou déconnectez et que vous actualisez la liste."
   },
   "config": {
     "title": "Paramètres",
@@ -128,7 +130,12 @@
     "addons_none": "Aucune extension installée.",
     "addons_ok": "Extension installée. Redémarrez pour la voir dans la barre latérale.",
     "addons_error": "Impossible d'installer l'extension :",
-    "addons_warning": "Seuls les manifestes .yaml sont installés. Une extension avec 'class' exécute le code d'un module déjà installé : n'installez que celles de confiance."
+    "addons_warning": "Seuls les manifestes .yaml sont installés. Une extension avec 'class' exécute le code d'un module déjà installé : n'installez que celles de confiance.",
+    "section_account": "Compte",
+    "section_account_hint": "Session GitHub et profil public",
+    "account_connected": "Connecté en tant que @{login}",
+    "account_missing": "Aucune session GitHub",
+    "account_hint": "Le profil complet s'affiche dans l'extension Profil de la barre latérale."
   },
   "create": {
     "sandbox": "Sandbox sécurisé",
@@ -858,6 +865,17 @@
         "body": "La page Rapports ouvre un issue dans le dépôt avec votre compte GitHub et joint l'environnement de l'appareil. Les pannes que l'application détecte seule restent dans la file et sont envoyées si vous activez l'envoi automatique. Indiquez les étapes de reproduction et ne collez ni identifiants ni chemins privés : l'issue est public."
       }
     }
+  },
+  "profile": {
+    "refresh": "Actualiser",
+    "repositories": "Dépôts",
+    "repositories_loading": "Chargement des dépôts…",
+    "repositories_empty": "Cet utilisateur n'a aucun dépôt public.",
+    "repositories_error": "Impossible de charger les dépôts : {error}",
+    "guest": "Aucune session GitHub",
+    "guest_hint": "Connectez-vous pour voir votre profil et vos dépôts.",
+    "open": "Ouvrir",
+    "stats": "{repositories} dépôts · {followers} abonnés · {following} abonnements"
   },
   "addon": {
     "error_title": "L'extension « {addon} » n'a pas pu être chargée"

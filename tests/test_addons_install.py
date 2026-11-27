@@ -74,7 +74,7 @@ class InstallAddonTest(unittest.TestCase):
             [a.id for a in load_addons_from_dirs(all_addons_dirs(), strict=True)],
             [
                 "create", "build", "config", "moonfix",
-                "report", "help", "aide", "extra", "about",
+                "report", "help", "aide", "profile", "extra", "about",
             ],
         )
 

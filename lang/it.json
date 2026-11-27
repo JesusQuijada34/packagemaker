@@ -39,7 +39,8 @@
     "toggle_collapse": "Nascondi menu (Ctrl+B)",
     "report": "Segnalazioni",
     "aide": "AIDE",
-    "help": "Guida"
+    "help": "Guida",
+    "profile": "Profilo"
   },
   "sidebar_desc": {
     "0": "### Crea progetto\nProgetta applicazioni da zero. Imposta identita, versioni e metadati univoci per l'ecosistema **Influent OS** con passaggi guidati.",
@@ -49,7 +50,8 @@
     "5": "### Informazioni\nDettagli tecnici del progetto. Licenza GPL, framework Qt e il team dietro **Package Maker**.",
     "6": "### Segnalazioni\nInvia errori e suggerimenti direttamente al repository con il tuo account GitHub. L'app allega l'ambiente del dispositivo per riprodurre il problema.",
     "7": "### AIDE\nChiedi aiuto, genera un progetto o prepara una compilazione. Viene inviato solo ciò che selezioni: mai credenziali o percorsi.",
-    "8": "### Guida\nGuida all'intera applicazione: creare, compilare, proteggere e segnalare, con ricerca."
+    "8": "### Guida\nGuida all'intera applicazione: creare, compilare, proteggere e segnalare, con ricerca.",
+    "9": "### Profilo\nIl tuo account GitHub: avatar, descrizione, follower e repository. Da qui accedi o esci e aggiorni l'elenco."
   },
   "config": {
     "title": "Impostazioni",
@@ -128,7 +130,12 @@
     "addons_none": "Nessuna estensione installata.",
     "addons_ok": "Estensione installata. Riavvia per vederla nella barra laterale.",
     "addons_error": "Impossibile installare l'estensione:",
-    "addons_warning": "Si installano solo manifesti .yaml. Un'estensione con 'class' esegue codice di un modulo già installato: installa solo quelle affidabili."
+    "addons_warning": "Si installano solo manifesti .yaml. Un'estensione con 'class' esegue codice di un modulo già installato: installa solo quelle affidabili.",
+    "section_account": "Account",
+    "section_account_hint": "Sessione GitHub e profilo pubblico",
+    "account_connected": "Connesso come @{login}",
+    "account_missing": "Nessuna sessione GitHub",
+    "account_hint": "Il profilo completo si trova nell'estensione Profilo della barra laterale."
   },
   "create": {
     "sandbox": "Sandbox sicura",
@@ -858,6 +865,17 @@
         "body": "La pagina Segnalazioni apre un issue nel repository con il tuo account GitHub e allega l'ambiente del dispositivo. I guasti che l'applicazione rileva da sola restano in coda e vengono inviati se attivi l'invio automatico. Includi i passaggi per riprodurlo e non incollare credenziali o percorsi privati: l'issue è pubblico."
       }
     }
+  },
+  "profile": {
+    "refresh": "Aggiorna",
+    "repositories": "Repository",
+    "repositories_loading": "Caricamento dei repository…",
+    "repositories_empty": "Questo utente non ha repository pubblici.",
+    "repositories_error": "Impossibile caricare i repository: {error}",
+    "guest": "Nessuna sessione GitHub",
+    "guest_hint": "Accedi per vedere il tuo profilo e i tuoi repository.",
+    "open": "Apri",
+    "stats": "{repositories} repository · {followers} follower · {following} seguiti"
   },
   "addon": {
     "error_title": "Impossibile caricare l'estensione «{addon}»"

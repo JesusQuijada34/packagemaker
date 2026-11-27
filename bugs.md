@@ -1,8 +1,9 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 77: Q-022 completa —el usuario instala
-manifiestos `.yaml` desde Configuración → Extensiones con validación previa—;
-R-2c8d4f71 sale de la cola y se archiva).
+Última actualización: 2026-11-27 (ciclo 78: Q-030 aplicada —el perfil de
+GitHub es la extensión «Perfil», las extensiones van justo debajo de MoonFix y
+la cuenta se gestiona desde Configuración—; R-6f1c8e35 sale de la cola y se
+archiva).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -28,14 +29,15 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-2a8d4b73 | Cambio de engine — AIDE como chatbot (issue #14) | Media | Aprobado Q-029; pendiente de implementación |
-| R-6f1c8e35 | Cambio de engine — perfil de GitHub como extensión (issue #14) | Media | Aprobado Q-030; pendiente de implementación |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**11 entradas en la cola**: 1 bug, 2 mejoras de producto y 8 cambios de engine
-(7 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
+**10 entradas en la cola**: 1 bug, 2 mejoras de producto y 7 cambios de engine
+(6 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
+R-6f1c8e35 (perfil de GitHub como extensión, Q-030) sale de la cola en este
+ciclo: implementada, probada y verificada en la ventana real.
 R-2c8d4f71 (addons en `lib/addons/` e instalación desde Configuración, Q-022)
-sale de la cola en este ciclo: implementada, probada y verificada.
+salió en el ciclo anterior: implementada, probada y verificada.
 R-7b3e9a52 (ayuda global, Q-021) salió de la cola en este ciclo: implementada,
 probada y verificada en la ventana real.
 R-7b2c9e51 salió de la cola en el ciclo anterior: Q-027 quedó implementada,
@@ -129,11 +131,11 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 19 | Q-027 (R-7b2c9e51) | Duración mínima del splash y reporte de tirones | **Aplicado** (ciclo 73); R-7b2c9e51 en observación | medio |
 | 20 | Q-028 (R-9c3f5a28) | Librería de paneles y pestañas verticales | Aprobado; pendiente | alto |
 | 21 | Q-029 (R-2a8d4b73) | AIDE como chatbot con backend/API/servidor | Aprobado; pendiente | alto |
-| 22 | Q-030 (R-6f1c8e35) | Perfil de GitHub como extensión y panel de cuenta | Aprobado; pendiente | medio |
 | 23 | Q-031 (R-3b7e2d94) | Addons empaquetados en `lib/addons/` y addons DLL | Aprobado; pendiente | alto |
 | 24 | Q-032 (R-5c9a3e17) | Splash dentro de la ventana principal, estilo UWP | **Sin aprobar** | medio-alto |
 
-Ya implementados y verificados: aislamiento BlindCube/FlatCube y `.blindkpkg`
+Ya implementados y verificados: perfil de GitHub como extensión y panel de
+cuenta (Q-030, ciclo 78), aislamiento BlindCube/FlatCube y `.blindkpkg`
 (Q-005), pruebas previas y diálogo `.env` (Q-006), rediseño de UI (Q-009),
 sidebar con hover y modo contraído (Q-010), la ventana con arrastre, snap y
 límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31), el CLI del

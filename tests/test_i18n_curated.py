@@ -75,6 +75,10 @@ _IDENTICAL_BY_DESIGN = {
     # «Privacy» se escribe igual en inglés, italiano y neerlandés: es cognado,
     # no una traducción perdida.
     "config.section_privacy",
+    # Cognados de Q-030: «Account» en italiano y neerlandés, «Repositories» en
+    # neerlandés. Son las palabras propias de esos idiomas.
+    "config.section_account",
+    "profile.repositories",
     # Cognados reales (Version/System/Name/Project/No) y el nombre del
     # intérprete, que no se traduce.
     "tui.about_python",

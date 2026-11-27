@@ -39,7 +39,8 @@
     "toggle_collapse": "Ukryj menu (Ctrl+B)",
     "report": "Raporty",
     "aide": "AIDE",
-    "help": "Pomoc"
+    "help": "Pomoc",
+    "profile": "Profil"
   },
   "sidebar_desc": {
     "0": "### Utworz projekt\nProjektuj aplikacje od zera. Ustal unikalne tozsamosci, wersje i metadane dla ekosystemu **Influent OS** krok po kroku.",
@@ -49,7 +50,8 @@
     "5": "### O programie\nTechniczne szczegoly projektu. Licencja GPL, framework Qt i zespol stojacy za **Package Maker**.",
     "6": "### Raporty\nWysyłaj błędy i sugestie bezpośrednio do repozytorium ze swoim kontem GitHub. Aplikacja dołącza środowisko urządzenia, aby można było odtworzyć błąd.",
     "7": "### AIDE\nPoproś o pomoc, wygeneruj projekt lub przygotuj kompilację. Wysyłane jest tylko to, co zaznaczysz: nigdy dane logowania ani ścieżki.",
-    "8": "### Pomoc\nPrzewodnik po całej aplikacji: tworzenie, kompilacja, ochrona i zgłaszanie, z wyszukiwarką."
+    "8": "### Pomoc\nPrzewodnik po całej aplikacji: tworzenie, kompilacja, ochrona i zgłaszanie, z wyszukiwarką.",
+    "9": "### Profil\nTwoje konto GitHub: awatar, opis, obserwujący i repozytoria. Tutaj logujesz się, wylogowujesz i odświeżasz listę."
   },
   "config": {
     "title": "Ustawienia",
@@ -128,7 +130,12 @@
     "addons_none": "Brak zainstalowanych rozszerzeń.",
     "addons_ok": "Rozszerzenie zainstalowane. Uruchom ponownie, aby zobaczyć je na pasku bocznym.",
     "addons_error": "Nie udało się zainstalować rozszerzenia:",
-    "addons_warning": "Instalowane są tylko manifesty .yaml. Rozszerzenie z 'class' uruchamia kod już zainstalowanego modułu: instaluj tylko zaufane."
+    "addons_warning": "Instalowane są tylko manifesty .yaml. Rozszerzenie z 'class' uruchamia kod już zainstalowanego modułu: instaluj tylko zaufane.",
+    "section_account": "Konto",
+    "section_account_hint": "Sesja GitHub i profil publiczny",
+    "account_connected": "Zalogowano jako @{login}",
+    "account_missing": "Brak sesji GitHub",
+    "account_hint": "Pełny profil znajduje się w rozszerzeniu Profil na pasku bocznym."
   },
   "create": {
     "sandbox": "Bezpieczna piaskownica",
@@ -858,6 +865,17 @@
         "body": "Strona Zgłoszenia otwiera issue w repozytorium z Twoim kontem GitHub i dołącza środowisko urządzenia. Błędy wykryte automatycznie trafiają do kolejki i są wysyłane po włączeniu automatycznego wysyłania. Podaj kroki reprodukcji i nie wklejaj danych logowania ani prywatnych ścieżek: issue jest publiczne."
       }
     }
+  },
+  "profile": {
+    "refresh": "Odśwież",
+    "repositories": "Repozytoria",
+    "repositories_loading": "Ładowanie repozytoriów…",
+    "repositories_empty": "Ten użytkownik nie ma publicznych repozytoriów.",
+    "repositories_error": "Nie udało się wczytać repozytoriów: {error}",
+    "guest": "Brak sesji GitHub",
+    "guest_hint": "Zaloguj się, aby zobaczyć profil i repozytoria.",
+    "open": "Otwórz",
+    "stats": "{repositories} repozytoriów · {followers} obserwujących · {following} obserwowanych"
   },
   "addon": {
     "error_title": "Nie można załadować rozszerzenia „{addon}”"

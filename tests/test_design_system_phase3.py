@@ -177,11 +177,13 @@ class TestSidebarHoverFlicker:
 
 
 class TestCollapsedSidebar:
-    def test_collapsed_sidebar_keeps_icons_and_hides_the_login_card(self):
+    def test_collapsed_sidebar_keeps_icons_and_has_no_login_card(self):
+        # Q-030: la tarjeta de cuenta dejó el sidebar (vive en la página
+        # Perfil), así que el modo contraído ya no tiene que ocultarla.
         text = (ROOT / "packagemaker.py").read_text(encoding="utf-8")
         block = text.split("def _apply_sidebar_state", 1)[1].split("def enterCompactShellMode", 1)[0]
         assert "btn.set_compact(collapsed)" in block
-        assert "self.github_card.setVisible(not collapsed)" in block
+        assert "self.github_card.setVisible(not collapsed)" not in block
         assert "btn.setVisible(not collapsed)" not in block
 
     def test_compact_item_hides_text_and_keeps_a_tooltip(self, qt_app):
