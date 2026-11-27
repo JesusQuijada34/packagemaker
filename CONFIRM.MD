@@ -1,10 +1,17 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo segundo ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `7de08c5` (mantenimiento del ciclo 71, autor `openhands`; no aporta respuestas). Último commit **del propietario** procesado: `71e50f7` (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create` exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo y archivada en el Historial.
+- **Última revisión:** 2026-11-27 (septuagésimo tercer ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `41b8e15`
+  (mantenimiento del ciclo 72, autor `openhands`; no aporta respuestas). Último
+  commit **del propietario** procesado: `71e50f7` (2026-11-26, autor
+  `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API
+  de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio
+  fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create`
+  exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo
+  y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 72 no encontró respuestas nuevas del propietario: aplica **Q-019** (entorno aislado de compilación) y la archiva. Quedan 18 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017 y Q-019 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 4 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; y Q-035, qué opción de Q-018 se aplica). El ciclo 73 no encontró respuestas nuevas del propietario: aplica **Q-027** (splash mínimo y reporte de tirones) y la archiva. Quedan 17 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020…Q-026, Q-028…Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019 y Q-027 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -271,27 +278,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada); pendiente de implementación.
 
-### Q-027 — Duración mínima del splash y reporte de tirones del arranque
-- **Tipo:** cambio de engine
-- **Fecha:** 2026-11-26 (issue #13)
-- **Qué se propone:** el splash no se retira hasta pasados ~5 s. El redondeo de
-  esos 5 s se calcula con la RAM y los núcleos de CPU (más «puntos de
-  rendimiento» = más espera) para dar tiempo a que la interfaz se dibuje. Si el
-  arranque sufre tirones, se envía un reporte con qué se ejecutó, cuánto tardó
-  y los errores restantes del arranque. Se implementaría junto con Q-008/F-003
-  (R-4f8a2c60), que ya está aprobado y elimina las ventanas vacías.
-- **Archivos/componentes afectados:** `packagemaker.py` (arranque,
-  `IntegratedSplash`), `lib/splash_window.py`, `lib/splash_bootloader.py`,
-  `lib/report.py`, `lib/crash_capture.py`, `tests/test_startup_sequence.py`.
-- **Riesgo y efectos secundarios:** el arranque tardará al menos 5 s incluso en
-  equipos rápidos; el reporte de tirones usa el túnel de reportes, que hoy es
-  opt-in, así que se respetará ese ajuste. Si prefieres otro mínimo (p. ej.
-  2 s) o que no se envíe nada sin consentimiento explícito, indícalo junto a la
-  casilla.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Nota del propietario (commit `73dcdcd`):** «perfecto»
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, con la nota «perfecto»); pendiente de implementación.
-
 ### Q-028 — Librería de paneles y pestañas verticales con action bar propia
 - **Tipo:** cambio de engine
 - **Fecha:** 2026-11-26 (issue #14)
@@ -513,6 +499,21 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-027 — Duración mínima del splash y reporte de tirones del arranque
+- **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con
+  la API de GitHub) con la nota «perfecto».
+- **Aplicada:** septuagésimo tercer ciclo (2026-11-27) — `lib/startup_timing.py`
+  (nuevo), `packagemaker.py` (arranque), `tests/test_startup_timing.py`.
+- **Resultado:** el splash permanece visible un mínimo de 5 s más el redondeo
+  por puntos de rendimiento (RAM y núcleos, hasta +1 s, múltiplos de 0,25 s);
+  medido en este equipo: mínimo 5,50 s y cierre a los 5,61 s. `SplashWaiter`
+  retrasa el cierre sin bloquear el bucle de eventos y guarda el tiempo real de
+  arranque antes de la espera. Si una fase supera 0,5 s o la interfaz no está
+  lista dentro del mínimo, se encola un reporte `StartupLag` con las fases
+  medidas y los errores restantes; respeta el ajuste de envío automático y no
+  duplica entradas ya enviadas o en cola. `PM_SPLASH_MIN_SECONDS` permite
+  acortar la espera en desarrollo y pruebas.
 
 ### Q-019 — Entorno aislado de compilación (reporte del propietario)
 - **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con

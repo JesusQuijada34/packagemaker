@@ -1,8 +1,8 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 72: implementada Q-019, el entorno de
-compilación aislado por proyecto con el interruptor «Red» en Configuración;
-R-4d9e2b61 queda en observación).
+Última actualización: 2026-11-27 (ciclo 73: aplicada Q-027, la duración mínima
+del splash y el reporte de tirones del arranque; R-7b2c9e51 queda en
+observación).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -28,17 +28,18 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-9a4e2c83 | Cambio de engine — GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
-| R-7b2c9e51 | Cambio de engine — splash mínimo y reporte de lags (issue #13) | Alta | Aprobado Q-027; pendiente de implementación |
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-2a8d4b73 | Cambio de engine — AIDE como chatbot (issue #14) | Media | Aprobado Q-029; pendiente de implementación |
 | R-6f1c8e35 | Cambio de engine — perfil de GitHub como extensión (issue #14) | Media | Aprobado Q-030; pendiente de implementación |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 | R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
 
-**14 entradas en la cola**: 1 bug, 4 mejoras de producto y 9 cambios de engine
-(8 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
-R-4d9e2b61 salió de la cola en este ciclo: Q-019 quedó implementada, probada y
-verificada con dos compilaciones reales dentro del entorno aislado.
+**13 entradas en la cola**: 1 bug, 4 mejoras de producto y 8 cambios de engine
+(7 aprobados y pendientes de implementación, 1 esperando la marca `[x] SÍ`).
+R-7b2c9e51 salió de la cola en este ciclo: Q-027 quedó implementada, probada y
+verificada con un arranque real (splash cerrado a los 5,61 s con un mínimo de
+5,50 s) y con el reporte de tirones en la cola de reportes.
+R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
 
 ## Bugs pendientes
 
@@ -138,7 +139,7 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 16 | Q-023 (R-9a4e2c83) | Conectar proyectos a GitHub y extensión CloudCube | Aprobado; pendiente | alto |
 | 17 | Q-024 (R-5f1b8d24) | El updater como extensión con notificaciones | Aprobado; pendiente | alto |
 | 18 | Q-025 (R-8e6a3c15) | Completar Leviathan y el action bar como control | Aprobado; pendiente | alto |
-| 19 | Q-027 (R-7b2c9e51) | Duración mínima del splash y reporte de lags | Aprobado; pendiente | medio |
+| 19 | Q-027 (R-7b2c9e51) | Duración mínima del splash y reporte de tirones | **Aplicado** (ciclo 73); R-7b2c9e51 en observación | medio |
 | 20 | Q-028 (R-9c3f5a28) | Librería de paneles y pestañas verticales | Aprobado; pendiente | alto |
 | 21 | Q-029 (R-2a8d4b73) | AIDE como chatbot con backend/API/servidor | Aprobado; pendiente | alto |
 | 22 | Q-030 (R-6f1c8e35) | Perfil de GitHub como extensión y panel de cuenta | Aprobado; pendiente | medio |
@@ -149,8 +150,9 @@ Ya implementados y verificados: aislamiento BlindCube/FlatCube y `.blindkpkg`
 (Q-005), pruebas previas y diálogo `.env` (Q-006), rediseño de UI (Q-009),
 sidebar con hover y modo contraído (Q-010), la ventana con arrastre, snap y
 límite de tres gestos (Q-011/F-004, R-6a1f8c23 y R-2f8b6a31), el CLI del
-`updater.py` de las plantillas (Q-017, ciclo 70) y el entorno de compilación
-aislado por proyecto con la tarjeta Red (Q-019, ciclo 72).
+`updater.py` de las plantillas (Q-017, ciclo 70), el entorno de compilación
+aislado por proyecto con la tarjeta Red (Q-019, ciclo 72) y la duración mínima
+del splash con el reporte de tirones (Q-027, ciclo 73).
 
 ## En observación
 
@@ -168,15 +170,16 @@ al ciclo anterior.
 | R-6b4d2f81 | Las cuatro ventanas del updater morían al construirse (`Qt.WindowFlags`, `is_main`, `set_color`, `setValue`) | Alta | ciclo 71, 2026-11-27 | `tests/test_updater_windows_construct.py` |
 | R-3a9c6e28 | El updater de plantilla creaba la `QApplication` en el hilo de vigilancia | Media | ciclo 71, 2026-11-27 | `tests/test_template_updater_gui_thread.py` |
 | R-4d9e2b61 | El build no usaba un entorno aislado por proyecto (Q-019) | Alta | ciclo 72, 2026-11-27 | `tests/test_build_sandbox.py`, `tests/test_settings_navigation_bar.py` |
+| R-7b2c9e51 | El splash se retiraba antes de que la interfaz estuviera dibujada y los tirones del arranque no se reportaban (Q-027) | Alta | ciclo 73, 2026-11-27 | `tests/test_startup_timing.py` |
 
 ## Periodo de observación y release
 
-- **Cola:** 14 entradas (ver Resumen). No hay bugs críticos reportados sin
+- **Cola:** 13 entradas (ver Resumen). No hay bugs críticos reportados sin
   atender. El único bug abierto, R-7f2b9c41, espera la decisión de Q-034.
-  R-4d9e2b61 (Q-019, entorno aislado) queda en observación tras verificarse con
-  compilaciones reales de Nuitka y PyInstaller. De Q-012 sólo quedan la barra
-  marquee permanente y las notificaciones nativas (mejora, no fallo de
-  rendimiento).
+  R-4d9e2b61 (Q-019, entorno aislado) y R-7b2c9e51 (Q-027, splash mínimo y
+  reporte de tirones) quedan en observación tras verificarse con arranques y
+  compilaciones reales. De Q-012 sólo quedan la barra marquee permanente y las
+  notificaciones nativas (mejora, no fallo de rendimiento).
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación y no ha pasado el periodo sin reportes nuevos.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
@@ -250,3 +253,19 @@ al ciclo anterior.
   reales (PyInstaller 10,9 s y Nuitka 60,5 s) cuyos binarios se ejecutaron
   correctamente. R-4d9e2b61 queda en observación. No se prepara release: siguen
   pendientes los cambios de engine aprobados y R-7f2b9c41 espera Q-034.
+- Septuagésimo tercer ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`, así que se aplica la aprobación de prioridad alta **Q-027**
+  (R-7b2c9e51, issue #13: el splash se retiraba antes de que la interfaz
+  estuviera dibujada y los tirones no se reportaban). Nuevo
+  `lib/startup_timing.py`: mínimo del splash de 5 s más hasta 1 s según los
+  puntos de rendimiento (RAM y núcleos), redondeado a 0,25 s; `StartupTimeline`
+  mide cada fase y `SplashWaiter` retrasa el cierre sin bloquear el bucle de
+  eventos, guardando el tiempo real de arranque antes de la espera. Si una fase
+  supera 0,5 s o la interfaz no está lista dentro del mínimo, se encola un
+  reporte `StartupLag` con las fases medidas y los errores restantes, con el
+  opt-in de Reportes y sin duplicar entradas. Verificado con el arranque real
+  (mínimo 5,50 s, cierre a los 5,61 s; con `PM_SPLASH_MIN_SECONDS=0.05` el
+  reporte aparece en la cola con las fases medidas). R-7b2c9e51 queda en
+  observación. No se prepara release: siguen pendientes los cambios de engine
+  aprobados y R-7f2b9c41 espera Q-034.

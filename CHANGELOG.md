@@ -1,3 +1,56 @@
+## 2026-11-27 — septuagésimo tercer ciclo
+
+### Implementado — duración mínima del splash y reporte de tirones del arranque (R-7b2c9e51 / Q-027)
+
+Reportado por JesusQuijada34 (issue #13, 2026-11-26): «se abren primero 5
+ventanas gui python vacías y pequeñas» y tirones al arrancar. Las ventanas
+vacías ya se corrigieron en R-6c4d1f87; esta entrega cubre lo que faltaba:
+que el splash no se retire hasta que la interfaz esté dibujada y que los
+tirones reales se reporten con datos. Prioridad alta; aprobado como **Q-027**
+(commit `73dcdcd`, nota «perfecto»).
+
+- **Comportamiento anterior:** el splash se cerraba en cuanto la compuerta de
+  sesión decidía, sin espera mínima, y no se medía ninguna fase del arranque.
+  Un equipo lento veía el primer fotograma de la interfaz a medio pintar y no
+  quedaba rastro de qué había tardado.
+- **Solución** (`lib/startup_timing.py`, nuevo; sin Qt):
+  - `minimum_splash_seconds()` parte de **5 s** y suma hasta **1 s** según los
+    puntos de rendimiento (`performance_points()`: uno por cada 4 GB de RAM y
+    uno por cada 4 núcleos, con tope de 8), redondeado a múltiplos de 0,25 s.
+    En este equipo (16 GB, 4 núcleos) da **5,50 s**.
+  - `StartupTimeline` mide cada tramo del arranque (`estilos`, `fuente`,
+    `idioma`, `splash_visible`, `verificacion`, `ventana`, `idioma_ui`, `show`,
+    `compuerta`) y sólo cuenta hasta la decisión de la compuerta: la espera
+    deliberada del splash no se confunde con un tirón.
+  - `SplashWaiter` retrasa el cierre con `QTimer.singleShot` (sin bloquear el
+    bucle de eventos) y guarda `ready_seconds`, el tiempo real de arranque.
+    Sin planificador, o con mínimo 0, cierra de inmediato.
+  - `startup_lag_report()` arma la entrada `StartupLag` si una fase supera
+    **0,5 s** o si la interfaz no estuvo lista dentro del mínimo. El cuerpo
+    lleva las fases más lentas, el mínimo esperado, el tiempo real y los
+    errores restantes del arranque.
+- **Cableado** (`packagemaker.py`): marcas de tiempo en el arranque de la GUI y
+  `close_splash()` pasa por `SplashWaiter`; al cerrar, `report_startup_lags()`
+  encola el reporte **sólo** si el envío automático está activo (mismo ajuste
+  que la captura de fallos) y no repite una huella ya enviada o en cola. La
+  entrada se reintenta desde la página de Reportes, nunca se envía durante el
+  arranque.
+- **Desarrollo y pruebas:** `PM_SPLASH_MIN_SECONDS` acorta o anula la espera.
+- **Verificación real:** arranque completo en offscreen con la instrumentación
+  activa: mínimo calculado **5,50 s**, `splash.finish()` a los **5,61 s** y
+  cola de reportes vacía (arranque sano). Forzando `PM_SPLASH_MIN_SECONDS=0.05`
+  aparece en la cola la entrada `[auto] Arranque lento…` con
+  `Interfaz lista en: 0,59 s` y las fases medidas (`ventana` 0,37 s,
+  `idioma_ui` 0,17 s).
+- **Pruebas nuevas:** `tests/test_startup_timing.py` (30 casos): puntos de
+  rendimiento, mínimo acotado y redondeado, sobrescritura por entorno,
+  cronómetro por fases, compuerta temporal (no cierra antes del mínimo, cierra
+  al cumplirlo, cierre inmediato sin planificador), contenido y huella del
+  reporte, opt-in desactivado, deduplicación, y que el splash real no se cierra
+  antes del mínimo con un `QTimer` de verdad.
+- **Riesgo:** el arranque tarda al menos 5 s incluso en equipos rápidos, como
+  pidió el propietario. R-7b2c9e51 queda en observación.
+
 ## 2026-11-27 — septuagésimo segundo ciclo
 
 ### Implementado — compilación en un entorno aislado por proyecto (R-4d9e2b61 / Q-019)

@@ -810,3 +810,23 @@ ciclos: es un registro de auditoría.
   1398 pasan, 1 omitida, 64 subtests; `pyflakes` y `py_compile` limpios.
   R-4d9e2b61 queda en observación. No se prepara release: siguen pendientes los
   cambios de engine aprobados y R-7f2b9c41 espera la decisión de Q-034.
+
+- Septuagésimo tercer ciclo (2026-11-27): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD`, así que se aplica la aprobación de prioridad alta **Q-027**
+  (R-7b2c9e51). Nuevo `lib/startup_timing.py`: `minimum_splash_seconds()` parte
+  de 5 s y suma hasta 1 s según los puntos de rendimiento (RAM y núcleos,
+  redondeo de 0,25 s); `StartupTimeline` mide las fases del arranque hasta la
+  decisión de la compuerta; `SplashWaiter` retrasa el cierre del splash con
+  `QTimer.singleShot` sin bloquear el bucle de eventos y guarda el tiempo real
+  de arranque antes de la espera; `startup_lag_report()` arma la entrada
+  `StartupLag` (fases más lentas, mínimo esperado, tiempo real y errores
+  restantes) cuando una fase supera 0,5 s o la interfaz no llega dentro del
+  mínimo. `packagemaker.py` instrumenta el arranque y encola el reporte sólo
+  con el opt-in activo y sin huellas repetidas; `PM_SPLASH_MIN_SECONDS` acorta
+  la espera en pruebas. Verificación real: mínimo 5,50 s, `splash.finish()` a
+  los 5,61 s y cola vacía en un arranque sano; con el mínimo forzado a 0,05 s
+  aparece el reporte con `Interfaz lista en: 0,59 s`. Pruebas:
+  `tests/test_startup_timing.py` (30 casos). R-7b2c9e51 queda en observación.
+  No se prepara release: siguen pendientes los cambios de engine aprobados y
+  R-7f2b9c41 espera la decisión de Q-034.
