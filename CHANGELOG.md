@@ -51,6 +51,7 @@ tiene el entorno aislado». Prioridad alta; aprobado como **Q-019** (commit
   máquina — PyInstaller (10,9 s) y Nuitka (60,5 s) —; en ambos casos el binario
   producido se ejecutó y escribió su salida. Suite: 1398 pasan, 1 omitida, 64
   subtests; `pyflakes` y `py_compile` limpios.
+- **Commit:** `fc24df3` en `main`.
 
 ## 2026-11-27 — septuagésimo primer ciclo
 
