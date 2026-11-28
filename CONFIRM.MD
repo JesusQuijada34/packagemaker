@@ -1,17 +1,20 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo noveno ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `8ac30ad`
-  (mantenimiento del ciclo 78, autor `openhands-agent`; no aporta respuestas). Último
-  commit **del propietario** procesado: `71e50f7` (2026-11-26, autor
-  `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API
-  de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio
-  fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create`
-  exige `--force` para sobrescribir. **Aplicada** en el sexagésimo primer ciclo
-  y archivada en el Historial.
-- **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
+- **Última revisión:** 2026-11-28 (octogésimo ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
+  (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría
+  verificada con la API de GitHub: el commit sólo toca este archivo y añade una
+  línea). Su único cambio fue marcar **Q-032** como `[X] SÍ`: el splash debe
+  pasar a ser un overlay **dentro** de la ventana principal, estilo UWP (issue
+  #15). **Aplicada** en el octogésimo ciclo y archivada en el Historial.
+- **Último commit anterior procesado:** `8ac30ad`
+  (mantenimiento del ciclo 78, autor `openhands-agent`; no aporta respuestas).
+  Antes, `71e50f7` (2026-11-26, autor `JesusQuijada34`, autoría verificada) marcó
+  **Q-016** como `[X, la B] SÍ` —la opción B: `create` exige `--force` para
+  sobrescribir—, aplicada en el sexagésimo primer ciclo.
+- **Último commit anterior del propietario:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 5 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 79 tampoco encontró respuestas nuevas del propietario: aplica la **primera etapa de Q-013** (vigilancia de parches de sólo lectura, aviso en la barra de estado y en Configuración → Notificaciones), deja constancia de que **Q-029** ya estaba cubierta por el asistente AIDE del ciclo 56 y de que **Q-014** la aplaza el propietario en `bugs.txt` hasta tener un release estable sin reportes. Quedan 13 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027 y Q-030 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 4 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 80 aplica **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 12 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -310,27 +313,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`) con la instrucción de sandboxear las DLL sospechosas y restringir el acceso a claves y credenciales del sistema; pendiente de implementación.
 
 
-### Q-032 — Splash dentro de la ventana principal, estilo UWP (issue #15)
-- **Tipo:** cambio de engine (arranque)
-- **Fecha:** 2026-11-26 ([issue #15](https://github.com/JesusQuijada34/packagemaker/issues/15), «error de implementacion»)
-- **Qué se propone:** hoy el splash es una ventana propia que ocupa la pantalla
-  disponible y después se desvanece para revelar la ventana principal. Lo
-  pedido es el patrón de una aplicación UWP: el splash se dibuja **dentro** de
-  la misma ventana (con su marco y su tamaño final desde el primer fotograma),
-  la interfaz se construye detrás y, al terminar, el splash se retira sin que
-  aparezca ni se cierre ninguna ventana adicional.
-- **Estado actual:** `main()` crea `IntegratedSplash` como ventana de nivel
-  superior (decisión F-003) y la pinta antes de `PackageTodoGUI()`; cuando la
-  validación de sesión termina, el splash se desvanece y se cierra.
-- **Archivos/componentes afectados:** `lib/splash_window.py`,
-  `packagemaker.py` (`main`, `start_session_gate`, `close_splash`),
-  `lib/window_chrome.py`, `tests/test_splash_top_level.py`.
-- **Riesgo y efectos secundarios:** reabre la coreografía aprobada en F-003. Si
-  el splash vive dentro de la ventana principal, la ventana se muestra antes de
-  validar la sesión y un fallo de arranque deja ver un marco vacío. No se puede
-  verificar visualmente en Windows desde este entorno.
-- **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
-
 ### Q-033 — Alcance restante de Q-012 sin hilo de guardado (R-7c4a1e95)
 - **Tipo:** mejora (ajuste de alcance de Q-012)
 - **Fecha:** 2026-11-27
@@ -485,6 +467,35 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
 ---
 
 ## Historial
+
+### Q-032 — Splash dentro de la ventana principal, estilo UWP (issue #15)
+- **Decisión:** aprobada el 2026-11-26 (commit `0addecb`, autoría verificada con
+  la API de GitHub: el commit sólo toca este archivo y añade la marca `[X] SÍ`
+  en este bloque).
+- **Aplicada:** octogésimo ciclo (2026-11-28). `IntegratedSplash` gana el modo
+  **overlay**: con padre no es ventana (sin banderas de ventana ni fondo
+  translúcido, que en Windows creaban ventanas nativas auxiliares), cubre el
+  rectángulo del área de contenido y sigue sus redimensionados por filtro de
+  eventos. El fundido de un hijo no puede usar `windowOpacity` (no tiene
+  efecto): va por `QGraphicsOpacityEffect` sobre la propiedad `opacity`, y el
+  cierre ya no llama a `destroy()` sobre un widget hijo (borraba el objeto C++
+  y el siguiente acceso lanzaba `RuntimeError: wrapped C/C++ object ... has
+  been deleted`). `main()` verifica los errores internos **antes** de crear la
+  ventana, construye `PackageTodoGUI`, crea el splash como hijo de
+  `content_container` y muestra ventana y splash juntos: el primer fotograma
+  ya trae el marco y el tamaño finales, la interfaz queda detrás y la cortina
+  se retira sin abrir ni cerrar otra ventana. El modo de nivel superior se
+  conserva para el splash suelto (el del `updater.py`).
+- **Resultado:** verificado con la ventana real en offscreen: el centro del
+  área de contenido sale con el acento exacto `(0, 120, 212)` y la titlebar
+  conserva su píxel propio, es decir, el splash no tapa el marco. Pruebas
+  reescritas en `tests/test_splash_top_level.py` (13 casos, incluido un
+  arranque real por subproceso que comprueba una sola ventana y el splash
+  dentro). Suite completa en verde y `pyflakes` limpio.
+- **Riesgo residual:** el riesgo declarado en la ficha (la ventana se muestra
+  antes de validar la sesión) queda cubierto porque la comprobación de errores
+  internos se hace antes de crear la ventana; no se puede verificar
+  visualmente en Windows desde este entorno.
 
 ### Q-030 — Perfil de GitHub como extensión y orden del sidebar
 - **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con

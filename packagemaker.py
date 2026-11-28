@@ -4986,35 +4986,14 @@ def main():
     from lib.startup_sequence import collect_internal_errors, plan_startup
     from lib.startup_error_window import show_startup_error
 
-    # El splash es lo primero y de nivel superior (sin padre): se pinta antes de
-    # construir la UI pesada y no crea ventanas hijas translúcidas, que en
-    # Windows generaban ventanas vacías y avisos "must be a top level window".
-    # Permanece visible un mínimo de ``splash_seconds`` (Q-027) para que la
-    # interfaz termine de dibujarse antes de abrir la cortina.
-    splash = IntegratedSplash(
-        icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
-        title="Package Maker",
-        accent=get_accent_color(),
-    )
-    splash.show_splash()
-    timeline.mark("splash_visible")
-    splash_seconds = minimum_splash_seconds()
-    splash_waiter = SplashWaiter(
-        splash_seconds,
-        schedule=lambda delay, callback: QTimer.singleShot(
-            int(delay * 1000) + 1, callback
-        ),
-    )
-    splash_waiter.arm()
-
     startup_plan = plan_startup(
         has_session=True,
         internal_errors=collect_internal_errors(BASE_DIR, Fluthin_APPS),
     )
     timeline.mark("verificacion")
     if startup_plan.internal_errors:
-        # El splash se convierte en la ventana de reporte; el proceso sale con 1.
-        splash.close()
+        # El error se reporta antes de crear la ventana: un fallo de arranque
+        # no deja un marco vacío (Q-032). El proceso sale con 1.
         sys.exit(
             show_startup_error(
                 tr("startup.internal_error_title"),
@@ -5028,6 +5007,27 @@ def main():
     timeline.mark("ventana")
     main_window.apply_ui_language()
     timeline.mark("idioma_ui")
+
+    # Q-032 (patrón UWP): el splash es un hijo del área de contenido. Se crea
+    # antes del primer ``show`` para que el primer fotograma ya lo muestre con
+    # el marco y el tamaño finales de la ventana; la interfaz queda detrás y se
+    # retira sin abrir ni cerrar ninguna ventana adicional. Permanece visible
+    # un mínimo de ``splash_seconds`` (Q-027) para que la interfaz termine de
+    # dibujarse antes de abrir la cortina.
+    splash = IntegratedSplash(
+        parent=main_window.content_container,
+        icon_path=IPM_ICON_PATH if os.path.exists(IPM_ICON_PATH) else None,
+        title="Package Maker",
+        accent=get_accent_color(),
+    )
+    splash_seconds = minimum_splash_seconds()
+    splash_waiter = SplashWaiter(
+        splash_seconds,
+        schedule=lambda delay, callback: QTimer.singleShot(
+            int(delay * 1000) + 1, callback
+        ),
+    )
+    splash_waiter.arm()
 
     splash_closed = {"done": False}
 
@@ -5057,8 +5057,10 @@ def main():
 
     main_window.show()
     timeline.mark("show")
-    # La ventana principal nace debajo del splash; se vuelve a subir éste para
-    # que la revele el desvanecido y no un parpadeo del gestor de ventanas.
+    # El splash se sube sobre las páginas ya dibujadas y lo revela el
+    # desvanecido, no un parpadeo del gestor de ventanas.
+    splash.show_splash()
+    timeline.mark("splash_visible")
     splash.raise_()
     main_window.start_session_gate(close_splash)
 

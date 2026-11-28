@@ -1,3 +1,50 @@
+## 2026-11-28 — octogésimo ciclo
+
+### Aplicado — el splash vive dentro de la ventana principal, estilo UWP (Q-032 / R-5c9a3e17, issue #15)
+
+Aprobación del propietario en `CONFIRM.MD` (commit `0addecb`, autoría
+verificada con la API de GitHub), que pedía en el issue #15 «un uwp tiene su
+splash dentro de la misma ventana y detras de el dibuja la interfaz y luego
+corre todo normal». El splash deja de ser una ventana propia a pantalla
+completa y pasa a ser un overlay hijo de la ventana principal.
+
+- **`lib/splash_window.py`.** `IntegratedSplash` gana el modo overlay: con
+  padre **no** es ventana (ni `FramelessWindowHint` ni `WindowStaysOnTopHint`)
+  y es **opaco** —sin `WA_TranslucentBackground`, que en Windows creaba
+  ventanas nativas auxiliares y anulaba el fondo QSS—, con
+  `WA_StyledBackground` en el overlay y en su contenedor. Cubre el rectángulo
+  del anfitrión y sigue sus redimensionados con un filtro de eventos (el
+  contenedor se sincroniza también al cambiar la geometría porque un widget
+  oculto no recibe `resizeEvent` hasta mostrarse).
+- **Fundido correcto en un hijo.** `windowOpacity` no tiene efecto sobre un
+  widget hijo, así que el desvanecido va por un `QGraphicsOpacityEffect`
+  animado sobre la propiedad `opacity`; el cierre ya no llama a `destroy()`
+  sobre un hijo —borraba el objeto C++ y el siguiente acceso lanzaba
+  `RuntimeError: wrapped C/C++ object of type IntegratedSplash has been
+  deleted`—, sólo oculta, retira el efecto y encola `deleteLater()`.
+- **`packagemaker.py` (`main`).** La verificación de errores internos pasa a
+  ejecutarse **antes** de crear la ventana, de modo que un fallo de arranque se
+  reporta sin dejar un marco vacío (el riesgo que advertía la ficha). Después
+  se construye `PackageTodoGUI`, se crea el splash como hijo de
+  `main_window.content_container` y se muestra la ventana; el primer fotograma
+  ya trae el marco y el tamaño finales, la interfaz queda detrás y la cortina
+  se retira sin abrir ni cerrar ninguna ventana adicional. La titlebar queda
+  visible. El modo de nivel superior se conserva para el splash suelto del
+  `updater.py`.
+- **Pacing intacto (Q-027).** `SplashWaiter` sigue retrasando el cierre hasta
+  el mínimo calculado y el reporte de tirones se encola igual que antes.
+- **Verificación.** Captura offscreen de la ventana real: el centro del área de
+  contenido sale con el acento exacto `(0, 120, 212)` y la titlebar conserva su
+  propio píxel, es decir, el splash no tapa el marco. Arranque real por
+  subproceso: una sola ventana, splash hijo de `content_container`, visible al
+  mostrarse y salida 0.
+- **Pruebas.** `tests/test_splash_top_level.py` reescrito (13 casos): overlay
+  hijo opaco, geometría y redimensionado, orden z, fundido por efecto gráfico,
+  cierre sin destruir el objeto, modo de nivel superior intacto y coreografía
+  de `main` (incluido que el error de arranque se reporte antes de crear la
+  ventana). Suite completa en verde y `pyflakes` limpio.
+- **Sin cambios de motor:** no se toca compilación, empaquetado ni blindaje.
+
 ## 2026-11-27 — septuagésimo noveno ciclo
 
 ### Aplicado en parte — vigilancia de parches y commits nuevos (Q-013 / F-006, etapa 1)

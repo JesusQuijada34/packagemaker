@@ -914,3 +914,27 @@ ciclos: es un registro de auditoría.
   **Q-029** ya estaba cubierta por el asistente AIDE del ciclo 56 y **Q-014**
   la aplaza el propietario en `bugs.txt` hasta tener un release estable. No se
   prepara release.
+
+- Octogésimo ciclo (2026-11-28): push a `main` del propietario
+  (`0addecb`, «Update CONFIRM.MD», autoría verificada con la API de GitHub)
+  que marca **Q-032** como `[X] SÍ`. Se aplica: el splash deja de ser una
+  ventana propia a pantalla completa y pasa a ser un overlay **hijo** del área
+  de contenido de la ventana principal (patrón UWP, issue #15). El modo overlay
+  es opaco —`WA_StyledBackground` en el overlay y en el contenedor, sin
+  `WA_TranslucentBackground`, que en Windows creaba ventanas nativas
+  auxiliares—, cubre el rectángulo del anfitrión y sigue sus redimensionados
+  con un filtro de eventos. El fundido de un hijo no puede usar
+  `windowOpacity`; va por `QGraphicsOpacityEffect`, y el cierre ya no llama a
+  `destroy()` sobre un hijo, que borraba el objeto C++ (`RuntimeError: wrapped
+  C/C++ object ... has been deleted`). `main()` comprueba los errores internos
+  antes de crear la ventana —así un fallo de arranque no deja un marco vacío—,
+  muestra ventana y splash juntos y retira la cortina sin abrir ni cerrar otra
+  ventana; la titlebar queda visible y el modo de nivel superior se conserva
+  para el splash suelto del `updater.py`. Verificado offscreen con la ventana
+  real (centro del contenido en el acento exacto `(0, 120, 212)`, titlebar con
+  su propio píxel) y con un arranque real por subproceso (una sola ventana,
+  splash dentro, salida 0). `tests/test_splash_top_level.py` reescrito con 13
+  casos. Suite: 1515 pasan, 1 omitida, 64 subtests; `pyflakes` y `py_compile`
+  limpios. R-5c9a3e17 sale de la cola y queda en observación. No se prepara
+  release: siguen pendientes los cambios de engine aprobados y R-7f2b9c41
+  espera la decisión de Q-034.
