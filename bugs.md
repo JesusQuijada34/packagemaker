@@ -1,8 +1,9 @@
 # Cola de bugs y reportes — Influent Package Maker
 
 Última actualización: 2026-11-28 (ciclo 80: **Q-032 aplicada** —el splash ya
-vive dentro de la ventana principal, estilo UWP—; el propietario aprobó la
-ficha en el commit `0addecb` y R-5c9a3e17 sale de la cola tras verificarse).
+vive dentro de la ventana principal, estilo UWP— y **R-4a9d1c63** corregido
+—la vigilancia de parches de Q-013 ya se reevalúa cada 10 minutos—. La cola
+baja a 9 entradas porque R-5c9a3e17 sale tras verificarse).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -158,6 +159,7 @@ al ciclo anterior.
 
 | ID | Título | Prioridad | Corregido | Prueba de regresión |
 |---|---|---|---|---|
+| R-4a9d1c63 | La vigilancia de parches sólo consultaba al arrancar (Q-013, etapa 1) | Media | ciclo 80, 2026-11-28 | `tests/test_patch_watch_ui.py::test_watch_rechecks_on_a_timer_without_user_action` |
 | R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
 | R-7d4b2c95 | Maximizar o restaurar congelaba la interfaz (~270 ms por gesto) | Alta | ciclo 67, 2026-11-26 | `tests/test_maximize_without_theme_reapply.py` |
 | R-3e7d1c58 | `compile-only` no retiraba el fuente del paquete | Media | ciclo 68, 2026-11-27 | `tests/test_hardening.py::CompileOnlySourceRemovalTests` |
@@ -188,6 +190,10 @@ al ciclo anterior.
   offscreen (acento exacto en el contenido, titlebar intacta) y las 13 pruebas
   de `tests/test_splash_top_level.py`, incluido un arranque real por
   subproceso.
+- **Nuevo en el ciclo 80:** **R-4a9d1c63** (la vigilancia de parches sólo
+  consultaba al arrancar) queda en observación con su prueba de regresión. Es
+  un método corto en `packagemaker.py` más la constante `CHECK_TICK_SECONDS`;
+  no sustituye nada del empaquetado.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
 - Septuagésimo primer ciclo (2026-11-27): se corrige **R-6b4d2f81**, encontrado
@@ -354,6 +360,23 @@ al ciclo anterior.
   Suite: 1481 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. Commit
   `8ac30ad` en `main`. No se prepara release: siguen pendientes los cambios de
   engine aprobados y R-7f2b9c41 espera Q-034.
+- Octogésimo ciclo (2026-11-28): sin reportes nuevos en los issues #4, #10,
+  #11, #13, #14 ni #15 y sin pull requests abiertas. `CONFIRM.MD` sí trae una
+  respuesta nueva del propietario (`0addecb`, autoría verificada): **Q-032
+  aprobada** (splash dentro de la ventana, estilo UWP). Además se audita la
+  entrega del ciclo anterior y se corrige
+  **R-4a9d1c63**: la vigilancia de parches de Q-013 se lanzaba sólo al
+  construir la ventana, así que el intervalo de 6 h nunca se reevaluaba y una
+  ventana abierta no avisaba de commits nuevos. `CHECK_TICK_SECONDS = 600` y
+  `PackageTodoGUI._install_patch_timer()` añaden un `QTimer` hijo de la ventana
+  que llama a `_start_patch_watch()` cada 10 minutos; ese método sigue
+  aplicando el ajuste del usuario, el modo red «uso medido» y el intervalo de
+  6 h. Verificado en la ventana real (offscreen): temporizador activo con
+  600000 ms, una consulta con `last_check` de hace 7 h y ninguna con el ajuste
+  apagado. Pruebas nuevas en `tests/test_patch_watch.py` y
+  `tests/test_patch_watch_ui.py`. No se prepara release: siguen pendientes los
+  cambios de engine aprobados, la segunda etapa de Q-013 y R-7f2b9c41 espera la
+  decisión de Q-034.
 - Septuagésimo noveno ciclo (2026-11-27): sin reportes nuevos en los issues #4,
   #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
   en `CONFIRM.MD` (el último commit que toca el archivo sigue siendo

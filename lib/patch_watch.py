@@ -36,6 +36,9 @@ USER_AGENT = "InfluentPackageMaker-patch-watch"
 DISABLE_ENV = "PM_PATCH_CHECK"
 STATE_FILE = "patch_state.json"
 DEFAULT_INTERVAL_HOURS = 6.0
+# Cada cuánto vuelve a mirar la ventana. No es el intervalo de consulta: en cada
+# tick se llama a ``should_check``, que sólo deja consultar si pasaron las 6 h.
+CHECK_TICK_SECONDS = 600.0
 
 NETWORK_UNRESTRICTED = "unrestricted"
 NETWORK_METERED = "metered"

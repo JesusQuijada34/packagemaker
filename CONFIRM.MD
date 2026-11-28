@@ -2,16 +2,20 @@
 
 - **Última revisión:** 2026-11-28 (octogésimo ciclo)
 - **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
-  (2026-11-26, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría
-  verificada con la API de GitHub: el commit sólo toca este archivo y añade una
-  línea). Su único cambio fue marcar **Q-032** como `[X] SÍ`: el splash debe
-  pasar a ser un overlay **dentro** de la ventana principal, estilo UWP (issue
-  #15). **Aplicada** en el octogésimo ciclo y archivada en el Historial.
-- **Último commit anterior procesado:** `8ac30ad`
-  (mantenimiento del ciclo 78, autor `openhands-agent`; no aporta respuestas).
-  Antes, `71e50f7` (2026-11-26, autor `JesusQuijada34`, autoría verificada) marcó
-  **Q-016** como `[X, la B] SÍ` —la opción B: `create` exige `--force` para
-  sobrescribir—, aplicada en el sexagésimo primer ciclo.
+- **Última revisión:** 2026-11-28 (octogésimo ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
+  (2026-11-26, 21:40 (-04:00), autor `JesusQuijada34
+  <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub: el
+  commit sólo toca este archivo y añade una línea). Su único cambio fue marcar
+  **Q-032** como `[X] SÍ`: el splash debe pasar a ser un overlay **dentro** de
+  la ventana principal, estilo UWP (issue #15). **Aplicada** en el octogésimo
+  ciclo y archivada en el Historial.
+- **Commit anterior procesado:** `03d4d37`
+  (mantenimiento del ciclo 79, autor `openhands-agent`; no aporta respuestas).
+  Último commit **del propietario** anterior: `71e50f7` (2026-11-26, autor
+  `JesusQuijada34`, autoría verificada), que marcó **Q-016** como
+  `[X, la B] SÍ` —la opción B: `create` exige `--force` para sobrescribir—,
+  aplicada en el sexagésimo primer ciclo.
 - **Último commit anterior del propietario:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
 - **Estado:** 4 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 80 aplica **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 12 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.

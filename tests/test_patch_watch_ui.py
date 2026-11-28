@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
 
 pytest.importorskip("PyQt6.QtWidgets")
 
+from PyQt6.QtCore import QTimer  # noqa: E402
 from PyQt6.QtWidgets import QApplication, QCheckBox, QLabel, QPushButton  # noqa: E402
 
 import lib.i18n as i18n  # noqa: E402
@@ -130,6 +131,30 @@ def test_startup_check_respects_the_interval(window, monkeypatch):
     window._patch_thread = None
     window._start_patch_watch()
     assert window._patch_thread is None
+
+
+def test_watch_rechecks_on_a_timer_without_user_action(window, monkeypatch):
+    """La consulta no puede depender del arranque: una ventana abierta debe
+    volver a preguntar sola para poder avisar de commits nuevos."""
+    timer = getattr(window, "_patch_timer", None)
+    assert isinstance(timer, QTimer)
+    assert timer.isActive()
+    assert 0 < timer.interval() <= patch_watch.DEFAULT_INTERVAL_HOURS * 3600 * 1000
+
+    calls = []
+    monkeypatch.setattr(patch_watch, "should_check", lambda *a, **k: True)
+    monkeypatch.setattr(
+        patch_watch,
+        "check_for_patch",
+        lambda **kwargs: calls.append(kwargs)
+        or _status(patch_watch.STATUS_UP_TO_DATE),
+    )
+    window._patch_thread = None
+    timer.timeout.emit()
+    assert window._patch_thread is not None
+    window._patch_thread.join(timeout=5)
+    _pump(_ensure_app())
+    assert calls, "el tick del temporizador debe volver a consultar el repositorio"
 
 
 def test_environment_switch_blocks_every_check(window, monkeypatch):

@@ -226,6 +226,15 @@ class StateTests(unittest.TestCase):
             self.assertTrue(patch_watch.should_check(6, state, now=1000.0 + 6 * 3600))
             self.assertTrue(patch_watch.should_check(6, Path(tmp) / "missing.json", now=0))
 
+    def test_tick_is_shorter_than_the_check_interval(self):
+        # La ventana reconsulta en cada tick; el intervalo de 6 h lo decide
+        # should_check, así que el tick tiene que caber varias veces dentro.
+        self.assertGreater(patch_watch.CHECK_TICK_SECONDS, 0)
+        self.assertLessEqual(
+            patch_watch.CHECK_TICK_SECONDS,
+            patch_watch.DEFAULT_INTERVAL_HOURS * 3600,
+        )
+
     def test_write_state_tolerates_read_only_locations(self):
         with TemporaryDirectory() as tmp:
             blocker = Path(tmp) / "file"
