@@ -1,11 +1,15 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-28 (ciclo 83: se extrae y corrige **R-4b8e2c76**
-del issue #17 —el modo inmersivo no revelaba la titlebar, el icono de salir era
-inalcanzable y la ventana no cubría la barra de tareas—; pasa a observación. El
-resto del issue #17 se reparte: el orden del splash queda en **R-7e3a1b95** y
-el gesto de maximizar antes del tercer clic en **R-6c2e4d91**, que espera la
-decisión **Q-038**. No hay respuestas nuevas del propietario en `CONFIRM.MD`).
+Última actualización: 2026-11-28 (ciclo 84: se ataca la fase «ventana» del
+arranque de **R-6d1e4a83** con evidencia medida —el aplanado del catálogo i18n
+se repetía en cada `tr()`, los QSS se releían del disco por widget y cada
+refresco del panel Reportes lanzaba `git rev-parse`—; se corrigen las tres
+repeticiones y la fase «ventana» deja un desglose propio en el reporte
+`StartupLag`. El caso sigue **pendiente**: falta el desglose real de Windows
+para confirmar los 10,32 s. **R-7e3a1b95** queda bloqueado: el orden
+ventana→splash está fijado por la coreografía aprobada de Q-032 y no se
+reproduce en offscreen. No hay respuestas nuevas del propietario en
+`CONFIRM.MD`).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -24,10 +28,10 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-7e3a1b95 | Bug — el splash no aparece primero: la ventana se oculta y salta (issue #17) | Alta | Pendiente |
+| R-7e3a1b95 | Bug — el splash no aparece primero: la ventana se pinta antes (issue #17) | Alta | Bloqueado: orden de Q-032; falta captura de Windows |
 | R-6c2e4d91 | Bug — la titlebar se maximiza en el segundo gesto del triple clic (issue #17) | Media | Pendiente de decisión (Q-038) |
 | R-2f9b7c14 | Bug — el tema claro no se aplica al contenido (issue #18) | Alta | Diagnosticado; alcance en Q-036 |
-| R-6d1e4a83 | Bug — arranque con tirones: 10,3 s en la fase «ventana» (issue #19) | Alta | Pendiente |
+| R-6d1e4a83 | Bug — arranque con tirones: 10,3 s en la fase «ventana» (issue #19) | Alta | Mitigado en parte (ciclo 84); falta desglose de Windows |
 | R-9b5d3e72 | Bug — el borde del sidebar no se ve como en Reportes (issue #21) | Baja | Pendiente |
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
 | R-1a7c6d94 | Mejora — faltan temas de ayuda y explicar cada artefacto (issue #22) | Media | Pendiente |
@@ -44,16 +48,16 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 
-**19 entradas en la cola**: 6 bugs (R-4b8e2c76, extraído del issue #17, se
-corrige en este ciclo y pasa a observación), 6 mejoras, 1 tarea de
-documentación externa y 6 cambios de engine (5 aprobados y pendientes, más
-R-7c4b9e36 que espera Q-037). Q-013 sigue «aplicada en parte»: la consulta y el
-aviso de parches ya están en `main`; la descarga y la aplicación siguen
-pendientes. El reparto de Q-013/Q-026 no cambia: el tema claro y las pestañas
-dependen del alcance que fije el propietario en Q-036. Siguen archivados Q-029
-(AIDE en Configuración), Q-030 (perfil como extensión), Q-022 (addons), Q-021
-(ayuda), Q-027 (splash mínimo), Q-019 (entorno aislado) y Q-032 (splash dentro
-de la ventana).
+**19 entradas en la cola**: 6 bugs (R-4b8e2c76 ya en observación; R-6d1e4a83
+mitigado en parte, a la espera del desglose de Windows; R-7e3a1b95 bloqueado por
+la coreografía de Q-032), 6 mejoras, 1 tarea de documentación externa y 6
+cambios de engine (5 aprobados y pendientes, más R-7c4b9e36 que espera Q-037).
+Q-013 sigue «aplicada en parte»: la consulta y el aviso de parches ya están en
+`main`; la descarga y la aplicación siguen pendientes. El reparto de Q-013/Q-026
+no cambia: el tema claro y las pestañas dependen del alcance que fije el
+propietario en Q-036. Siguen archivados Q-029 (AIDE en Configuración), Q-030
+(perfil como extensión), Q-022 (addons), Q-021 (ayuda), Q-027 (splash mínimo),
+Q-019 (entorno aislado) y Q-032 (splash dentro de la ventana).
 
 ## Bugs pendientes
 
@@ -91,18 +95,34 @@ de la ventana).
 - **Prioridad:** Alta.
 - **Descripción:** al arrancar, la ventana se oculta primero y luego «salta» el
   splash, en vez de que el splash sea lo primero que se ve. El resto de
-  síntomas del issue (titlebar y pantalla completa) se corrigió en este ciclo
-  como **R-4b8e2c76**; AIDE como chatbot se sigue en **R-8f2e5b13** (issue
-  #23); el gesto de maximizar antes del tercer clic es **R-6c2e4d91**.
+  síntomas del issue (titlebar y pantalla completa) se corrigió como
+  **R-4b8e2c76** (ciclo 83); AIDE como chatbot se sigue en **R-8f2e5b13**
+  (issue #23); el gesto de maximizar antes del tercer clic es **R-6c2e4d91**.
 - **Pasos para reproducirlo:** arrancar la aplicación en Windows y observar la
-  secuencia de ventana y splash (el reporte es de la versión `v3.2.7-26.05-20.13`,
-  commit `a1e52d2`, que ya incluye el splash dentro de la ventana de Q-032).
-- **Evidencia recogida (ciclo 83):** no se puede verificar el orden en
-  offscreen; hace falta el desglose de `StartupTimeline` en el equipo del
-  reporte (`ventana` 10,32 s frente a `splash_visible` 0,14 s, issue #19).
-- **Estado:** pendiente. Se atiende junto con la fase «ventana» de R-6d1e4a83,
-  que es donde se pierde el tiempo.
-- **Solución aplicada:** ninguna todavía.
+  secuencia de ventana y splash (reporte de `v3.2.7-26.05-20.13`, commit
+  `a1e52d2`, que ya incluye el splash dentro de la ventana de Q-032).
+- **Evidencia recogida (ciclo 84):**
+  - `main()` crea el splash → muestra la ventana (`main_window.show()`) →
+    muestra el splash (`splash.show_splash()`). El orden está fijado por
+    `tests/test_splash_top_level.py::test_main_attaches_the_splash_to_the_main_window`,
+    que exige `window_at < splash_at < show_at < splash_show_at`, y por la
+    coreografía aprobada de Q-032: la cortina es un hijo del área de contenido y
+    no puede mostrarse antes que su ventana.
+  - Traza de eventos en offscreen: al mostrar la ventana, el splash ya recibe
+    `Show` (es hijo) y en el mismo ciclo de pintura se pinta al final, encima de
+    la pila de páginas. Aquí no hay fotograma con la ventana descubierta ni
+    salto de geometría (el filtro de `Resize` la sincroniza antes de pintar).
+  - Si no hay sesión cacheada, `show_github_landing()` sube el landing sobre el
+    splash (`landing.raise_()`): esa sí es una ruta donde la cortina queda
+    debajo. No es el caso del reporte (usuario con sesión), pero explica un
+    splash que «no se ve».
+- **Estado:** **bloqueado**. No se puede reproducir el fotograma intermedio en
+  Linux/offscreen y cualquier cambio de orden contradice la coreografía de
+  Q-032 aprobada por el propietario. Hace falta una captura o grabación del
+  arranque en el equipo del reporte (¿se ve la ventana completa, sólo la
+  titlebar o el landing?) y el desglose de `StartupTimeline` que ya emite el
+  ciclo 84.
+- **Solución aplicada:** ninguna todavía (no se toca sin evidencia).
 - **Commit / fecha de resolución:** —
 
 ### R-6c2e4d91 — La titlebar se maximiza en el segundo gesto del triple clic (issue #17)
@@ -153,13 +173,36 @@ de la ventana).
 - **Descripción:** el arranque tarda 16,21 s en dejar lista la interfaz; la
   fase «ventana» consume 10,32 s, seguida de `idioma_ui` (2,93 s) y `fuente`
   (1,22 s). Equipo de 2 núcleos con Windows 10.
-- **Reproducción:** `PM_SPLASH_MIN_SECONDS=0.05` no reproduce el tiempo real;
-  hace falta medir la construcción de la ventana con `StartupTimeline` en el
-  equipo del reporte.
-- **Estado:** pendiente. No se puede atribuir la causa sin el desglose interno
-  de la fase «ventana» en Windows (los tiempos offscreen no son comparables).
-- **Solución aplicada:** ninguna todavía.
-- **Commit / fecha de resolución:** —
+- **Reproducción:** `PM_SPLASH_MIN_SECONDS=0.05` no reproduce el tiempo real y
+  los tiempos offscreen no son comparables (aquí la ventana tarda ~0,5 s). Se
+  perfila la construcción para separar el trabajo que no depende de la máquina.
+- **Evidencia y causa parcial (ciclo 84, medido en offscreen con cProfile e
+  instrumentación):**
+  1. **i18n cuadrático.** `_lookup_key()` aplanaba el catálogo completo en cada
+     `tr()` (y otra vez el de `es` de respaldo): **24.816 aplanados** durante
+     construcción + `apply_ui_language` en este equipo (566 consultas). Cada
+     `tr()` pagaba O(n) sobre ~1.000 claves.
+  2. **QSS releídos del disco.** `qss_loader.read_qss_file()` abría el fichero
+     en cada llamada, sin caché: 97 lecturas por ventana. En Windows con
+     antivirus cada apertura cuesta más.
+  3. **`git rev-parse` en bucle.** El panel Reportes llama a
+     `collect_environment()` al construirse y en cada refresco; cada llamada
+     lanzaba un subproceso `git` (timeout de 3 s). En Windows el arranque de un
+     proceso se nota.
+  4. Desglose interno añadido: `ventana_paginas`, `ventana_tema` y
+     `ventana_landing`. En offscreen el tramo dominante es `ventana_tema`
+     (0,234 s de 0,475 s), que es el pulido de Qt y depende del equipo.
+- **Resultado medido (offscreen, mismo equipo):** ventana 0,603 s → 0,475 s
+  (−21 %); `idioma_ui` 0,210 s → 0,139 s (−34 %); total 0,759 s → 0,614 s.
+- **Estado:** **mitigado en parte**, sigue pendiente. No se puede confirmar la
+  desaparición de los 10,32 s sin el desglose de Windows: el siguiente reporte
+  `StartupLag` ya trae `ventana_paginas`/`ventana_tema`/`ventana_landing` y
+  dirá qué tramo queda.
+- **Solución aplicada:** `lib/i18n.py` (`_flat_catalog` con invalidación por
+  identidad del catálogo), `lib/qss_loader.py` (`_TEXT_CACHE` por mtime y
+  tamaño), `lib/report_telemetry.py` (`_git_commit_cache`), y
+  `lib/startup_timing.py` + `packagemaker.py` (desglose de la fase «ventana»).
+- **Commit / fecha de resolución:** — (mitigación del ciclo 84).
 
 ### R-9b5d3e72 — El borde del sidebar no se ve como en Reportes (issue #21)
 
@@ -332,16 +375,30 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 19 entradas (ver Resumen). El issue #17 se reparte: R-4b8e2c76
-  (modo inmersivo) se corrige en este ciclo y pasa a observación, R-7e3a1b95
-  queda como el orden del splash y R-6c2e4d91 como el gesto de maximizar, que
-  espera Q-038. R-7f2b9c41 sigue esperando Q-034; el tema claro (R-2f9b7c14,
-  issue #18) queda diagnosticado y espera el alcance de Q-036; R-7c4b9e36
-  (issue #26) espera Q-037. R-4d9e2b61 (Q-019) y R-7b2c9e51 (Q-027) siguen en
-  observación tras verificarse con arranques y compilaciones reales.
+- **Cola:** 19 entradas (ver Resumen). R-6d1e4a83 queda **mitigado en parte**
+  en el ciclo 84 (i18n, QSS y `git rev-parse` ya no repiten trabajo, y la fase
+  «ventana» emite su desglose) pero no se cierra sin el reporte de Windows.
+  R-7e3a1b95 queda **bloqueado** por el orden aprobado en Q-032. R-6c2e4d91
+  espera Q-038; R-7f2b9c41 espera Q-034; el tema claro (R-2f9b7c14, issue #18)
+  espera Q-036; R-7c4b9e36 (issue #26) espera Q-037. R-4d9e2b61 (Q-019) y
+  R-7b2c9e51 (Q-027) siguen en observación tras verificarse con arranques y
+  compilaciones reales.
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación, bugs de prioridad alta recién reportados y no ha pasado el
   periodo sin reportes nuevos.
+- **Nuevo en el ciclo 84:** **R-6d1e4a83** queda mitigado en parte. Tres
+  repeticiones medidas desaparecen: el catálogo i18n se aplana una vez por
+  idioma, cada QSS se lee una vez mientras no cambie y `git rev-parse` se
+  consulta una vez por sesión. Además `main` inyecta en `StartupTimeline` los
+  tramos `ventana_paginas`, `ventana_tema` y `ventana_landing`, así que el
+  próximo reporte `StartupLag` señalará el tramo culpable. Medido en offscreen:
+  ventana −21 %, `idioma_ui` −34 %. No toca compilación, empaquetado ni
+  blindaje; es seguro y reversible.
+- **Nuevo en el ciclo 84:** **R-7e3a1b95** queda bloqueado sin cambio de
+  código. El orden ventana→splash está impuesto por Q-032 (el splash es hijo del
+  área de contenido) y la traza offscreen no reproduce el fotograma intermedio.
+  Se pide al propietario una captura del arranque y el desglose de
+  `StartupTimeline`.
 - **Nuevo en el ciclo 83:** **R-4b8e2c76** (issue #17) queda en observación. Sólo
   cambia la coreografía del modo inmersivo de `lib/immersive_titlebar.py`: un
   sondeo del puntero de 80 ms mientras el modo está activo, la ocultación al
@@ -377,6 +434,20 @@ al ciclo anterior.
   nada a la red por sí misma; no entra en observación como cambio de motor
   porque no altera compilación, empaquetado ni blindaje.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
+
+- Octogésimo cuarto ciclo (2026-11-28): sin respuestas nuevas en `CONFIRM.MD`,
+  se ataca la fase «ventana» de **R-6d1e4a83** (issue #19) con perfilado. Tres
+  repeticiones: `_lookup_key()` aplanaba el catálogo i18n en cada `tr()`
+  (24.816 aplanados por arranque), `qss_loader.read_qss_file()` releía el
+  fichero en cada widget (97 lecturas) y `collect_environment()` lanzaba
+  `git rev-parse` en cada refresco del panel Reportes. Ahora hay caché de
+  catálogo aplanado (invalidada por identidad), de texto QSS (por mtime y
+  tamaño) y de commit (por sesión), y la ventana mide e inyecta sus tramos
+  `ventana_paginas`/`ventana_tema`/`ventana_landing` en el reporte de tirones.
+  Medido offscreen: ventana 0,603→0,475 s e `idioma_ui` 0,210→0,139 s. Queda
+  mitigado en parte hasta ver el desglose de Windows. **R-7e3a1b95** (splash
+  primero) queda bloqueado: el orden está fijado por Q-032 y no se reproduce en
+  offscreen. No se prepara release.
 
 - Octogésimo tercer ciclo (2026-11-28): sin reportes nuevos ni respuestas en
   `CONFIRM.MD`, se corrige **R-4b8e2c76**, extraído del issue #17: el modo

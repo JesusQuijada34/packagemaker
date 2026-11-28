@@ -28,6 +28,23 @@ QSS_DIR = Path(__file__).resolve().parent.parent / "source" / "qss"
 
 _ROLE_RE = re.compile(r"/\*\s*@role:\s*([\w-]+)\s*\*/")
 
+#: Texto por fichero, con el estado (mtime y tamaño) que lo produjo. Construir
+#: una ventana pedía el mismo QSS decenas de veces; releerlo no aporta nada y en
+#: Windows con antivirus cada lectura cuesta. La clave incluye el estado para
+#: que un fichero editado se relea (desarrollo y pruebas).
+_TEXT_CACHE: dict[Path, tuple[tuple[int, int], str]] = {}
+
+
+def _read_text(path: Path) -> str:
+    stat = path.stat()
+    key = (stat.st_mtime_ns, stat.st_size)
+    cached = _TEXT_CACHE.get(path)
+    if cached is not None and cached[0] == key:
+        return cached[1]
+    text = path.read_text(encoding="utf-8")
+    _TEXT_CACHE[path] = (key, text)
+    return text
+
 
 def available_controls() -> list[str]:
     """Nombres de control con fichero QSS (sin extensión), ordenados."""
@@ -47,7 +64,7 @@ def read_qss_file(control: str, role: str | None = None) -> str:
     path = QSS_DIR / f"{control}.qss"
     if not path.is_file():
         raise FileNotFoundError(f"No hay QSS para el control '{control}': {path}")
-    text = path.read_text(encoding="utf-8")
+    text = _read_text(path)
     if role is not None:
         return _extract_role(text, role)
     if _ROLE_RE.search(text):

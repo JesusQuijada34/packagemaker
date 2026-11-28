@@ -44,6 +44,12 @@ SUPPORTED_LANGUAGES = {
 }
 
 _translation_cache: Dict[str, Dict[str, str]] = {}
+#: Catálogo aplanado por idioma, junto al diccionario crudo del que salió. La
+#: referencia al crudo permite invalidar por identidad cuando se recarga el
+#: fichero (o un test sustituye ``_translation_cache``). Aplanar el catálogo en
+#: cada ``tr()`` era cuadrático: 24.816 aplanados durante la construcción de la
+#: ventana (issue #19).
+_flat_cache: Dict[str, tuple[Dict[str, Any], Dict[str, str]]] = {}
 _ui_refresh_callbacks = []
 
 #: Ventana durante la que no se reintenta la traducción automática tras un fallo
@@ -101,6 +107,17 @@ def _flatten_translations(data: Dict[str, Any], prefix: str = "") -> Dict[str, s
         else:
             result[full_key] = str(value)
     return result
+
+
+def _flat_catalog(lang_code: str) -> Dict[str, str]:
+    """Catálogo del idioma ya aplanado, reutilizado entre llamadas."""
+    data = _load_lang_file(lang_code)
+    cached = _flat_cache.get(lang_code)
+    if cached is not None and cached[0] is data:
+        return cached[1]
+    flat = _flatten_translations(data)
+    _flat_cache[lang_code] = (data, flat)
+    return flat
 
 
 def _auto_translate_google(text: str, source: str, target: str) -> Optional[str]:
@@ -166,7 +183,7 @@ class I18nManager:
     def initialize(self, app: 'QCoreApplication', lang: str = "es", auto_translate: bool = True):
         self._app = app
         self._auto_translate = auto_translate
-        self._flat_es = _flatten_translations(_load_lang_file("es"))
+        self._flat_es = _flat_catalog("es")
         self.load_translation(lang)
 
     def set_auto_translate(self, enabled: bool) -> None:
@@ -201,12 +218,11 @@ class I18nManager:
         return True
 
     def _lookup_key(self, key: str) -> Optional[str]:
-        lang_data = _load_lang_file(self._current_lang)
-        flat = _flatten_translations(lang_data)
+        flat = _flat_catalog(self._current_lang)
         if key in flat:
             return flat[key]
         if self._current_lang != "es":
-            es_flat = _flatten_translations(_load_lang_file("es"))
+            es_flat = _flat_catalog("es")
             if key in es_flat:
                 return es_flat[key]
         return None
@@ -215,7 +231,7 @@ class I18nManager:
         for k, v in self._flat_es.items():
             if v == text:
                 return self._lookup_key(k)
-        flat = _flatten_translations(_load_lang_file(self._current_lang))
+        flat = _flat_catalog(self._current_lang)
         return flat.get(text)
 
     def _cache_get(self, key: str) -> Optional[str]:

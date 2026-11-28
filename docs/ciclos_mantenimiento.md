@@ -1038,3 +1038,52 @@ ventana al área disponible con el sondeo detenido. Pruebas nuevas:
 `tests/test_immersive_fullscreen.py` (10 casos). No se prepara release: siguen
 pendientes los cambios de engine aprobados y los bugs de prioridad alta del
 ciclo 82.
+
+## Octogésimo cuarto ciclo (2026-11-28)
+
+Sin respuestas nuevas del propietario en `CONFIRM.MD` (último commit procesado
+`8690f7d`, de mantenimiento) y sin reportes nuevos. Se ataca la fase «ventana»
+de **R-6d1e4a83** (issue #19, 10,32 s de los 16,21 s del arranque) con
+perfilado en offscreen, porque los tiempos absolutos de Windows no se pueden
+reproducir aquí.
+
+**Evidencia.** cProfile sobre `PackageTodoGUI()` mostró tres repeticiones que no
+dependen de la máquina:
+
+1. `I18nManager._lookup_key()` llamaba a `_flatten_translations()` en **cada**
+   `tr()`: 24.816 aplanados completos del catálogo durante construcción y
+   `apply_ui_language` (566 consultas), con ~1.000 claves por catálogo.
+2. `qss_loader.read_qss_file()` leía el fichero de disco sin caché: 97 lecturas
+   para construir una ventana (el mismo `qframe:card` diez veces).
+3. `report_telemetry.collect_environment()` lanzaba `git rev-parse` (subproceso
+   con timeout de 3 s) al construir el panel Reportes y en cada refresco.
+
+**Solución.** `_flat_catalog()` memoriza el catálogo aplanado y se invalida por
+identidad del diccionario crudo (recarga de idioma o sustitución de
+`_translation_cache`); `_TEXT_CACHE` guarda el QSS con `(mtime_ns, tamaño)` como
+clave, así que un fichero editado se relee; `_git_commit_cache` consulta el
+commit una vez por sesión. La ventana mide sus tramos con `_startup_mark()` y
+`main()` los inyecta con `StartupTimeline.add()`, de modo que el total de
+«ventana» no se parte y el reporte gana `ventana_paginas`, `ventana_tema` y
+`ventana_landing`.
+
+**Medición (offscreen, mismo equipo).** Ventana 0,603 s → 0,475 s (−21 %);
+`idioma_ui` 0,210 s → 0,139 s (−34 %); total 0,759 s → 0,614 s. El tramo
+interno dominante sigue siendo `ventana_tema` (0,234 s), que es el pulido de Qt
+y escala con la máquina: ahí es donde apuntará el próximo reporte de Windows.
+
+**Pruebas.** `tests/test_startup_hot_paths.py` (6 casos, fallan con el código
+anterior): aplanado único, invalidación al recargar el catálogo, lectura única
+del QSS con recarga al cambiar el fichero, un solo `git rev-parse` por sesión y
+presencia de los tres tramos internos. Suite completa: 1548 pasan, 1 omitida.
+`pyflakes` y `py_compile` limpios.
+
+**R-7e3a1b95 (splash primero) queda bloqueado.** La traza de eventos en
+offscreen no reproduce el fotograma con la ventana descubierta: el splash es
+hijo del área de contenido, recibe `Show` con la ventana y se pinta al final del
+mismo ciclo. El orden `ventana.show()` → `splash.show_splash()` está fijado por
+Q-032 y por `tests/test_splash_top_level.py`. Sin captura del arranque en
+Windows no se toca. Se documenta en `bugs.md` y se pide evidencia.
+
+No se prepara release: siguen los cambios de engine aprobados, R-6d1e4a83 sin
+verificar en Windows y el periodo sin reportes nuevos sin cumplir.

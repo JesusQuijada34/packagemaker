@@ -138,6 +138,16 @@ class StartupTimeline:
         self._last = now
         return phase.seconds
 
+    def add(self, name: str, seconds: float) -> Phase:
+        """Registra una fase medida fuera del cronómetro.
+
+        La ventana principal mide sus tramos internos con su propio reloj; así
+        el total de «ventana» no se parte y el reporte gana el desglose.
+        """
+        phase = Phase(str(name), max(0.0, float(seconds)))
+        self._phases.append(phase)
+        return phase
+
     @property
     def phases(self) -> Sequence[Phase]:
         return tuple(self._phases)

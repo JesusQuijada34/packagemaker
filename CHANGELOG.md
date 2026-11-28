@@ -1,3 +1,53 @@
+## 2026-11-28 — octogésimo cuarto ciclo
+
+### Mitigado en parte — arranque con tirones: la fase «ventana» repetía trabajo (R-6d1e4a83, issue #19)
+
+Reportado por **JesusQuijada34** en el [issue #19](https://github.com/JesusQuijada34/packagemaker/issues/19)
+(reporte automático `StartupLag`): el arranque tarda 16,21 s en dejar lista la
+interfaz y la fase «ventana» consume 10,32 s, seguida de `idioma_ui` (2,93 s) y
+`fuente` (1,22 s) en un equipo de 2 núcleos con Windows 10.
+
+- **Evidencia (perfilado offscreen).** El tiempo absoluto de Windows no se
+  reproduce aquí, pero cProfile sobre `PackageTodoGUI()` aisló tres
+  repeticiones que no dependen de la máquina:
+  1. `I18nManager._lookup_key()` aplanaba el catálogo completo en **cada**
+     `tr()`: 24.816 aplanados durante construcción + `apply_ui_language`
+     (566 consultas), sobre catálogos de ~1.000 claves. Coste cuadrático.
+  2. `qss_loader.read_qss_file()` abría el fichero en cada llamada, sin caché:
+     97 lecturas para construir una ventana (el mismo `qframe:card` diez veces).
+  3. `report_telemetry.collect_environment()` lanzaba `git rev-parse` (proceso
+     con timeout de 3 s) al construir el panel Reportes y en cada refresco.
+- **Solución.**
+  - `lib/i18n.py`: `_flat_catalog()` memoriza el catálogo aplanado y lo
+    invalida por **identidad** del diccionario crudo, así que recargar un idioma
+    o sustituir `_translation_cache` no deja datos viejos.
+  - `lib/qss_loader.py`: `_TEXT_CACHE` guarda el texto con `(mtime_ns, tamaño)`
+    como clave; un fichero editado se relee y el resto se sirve de memoria.
+  - `lib/report_telemetry.py`: `_git_commit_cache` consulta el commit una vez
+    por sesión (el commit no cambia mientras la aplicación corre).
+  - `lib/startup_timing.py` + `packagemaker.py`: la ventana mide
+    `ventana_paginas`, `ventana_tema` y `ventana_landing` con su propio reloj y
+    `main()` los inyecta con `StartupTimeline.add()`. El total de «ventana»
+    sigue siendo un solo tramo; el reporte de tirones gana el desglose que
+    faltaba para señalar al culpable en Windows.
+- **Medición (offscreen, mismo equipo).** Ventana 0,603 s → 0,475 s (−21 %);
+  `idioma_ui` 0,210 s → 0,139 s (−34 %); total 0,759 s → 0,614 s. El tramo
+  dominante restante es `ventana_tema` (0,234 s), que es el pulido de Qt y
+  escala con la máquina.
+- **Pruebas.** `tests/test_startup_hot_paths.py` (6 casos): aplanado único del
+  catálogo, invalidación al recargarlo, lectura única del QSS con recarga al
+  cambiar el fichero, un solo `git rev-parse` por sesión y presencia de los tres
+  tramos internos. Cinco de los seis fallan con el código anterior. Suite
+  completa: 1548 pasan, 1 omitida; `pyflakes` y `py_compile` limpios.
+- **Estado:** **mitigado en parte**. Sin el desglose de Windows no se puede
+  confirmar que los 10,32 s desaparezcan; el próximo reporte `StartupLag` ya
+  trae los tres tramos. R-6d1e4a83 sigue en la cola.
+- **Sin cambios de motor:** no toca compilación, empaquetado ni blindaje.
+- **Bloqueado, sin cambio de código:** R-7e3a1b95 (el splash no aparece
+  primero, issue #17). El orden ventana→splash está fijado por la coreografía
+  aprobada de Q-032 y la traza offscreen no reproduce el fotograma intermedio;
+  hace falta una captura del arranque en Windows.
+
 ## 2026-11-28 — octogésimo tercer ciclo
 
 ### Corregido — modo inmersivo: pantalla completa real, barra que entra y sale y icono de salida (R-4b8e2c76, issue #17)

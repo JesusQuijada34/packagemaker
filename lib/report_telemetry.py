@@ -25,6 +25,12 @@ _SECRET_RE = re.compile(r"(?i)\b(token|password|passwd|secret|api[_-]?key)\b(\s*
 
 _MAX_TEXT_CHARS = 20000
 
+#: El commit no cambia mientras la aplicación corre, pero el panel de Reportes
+#: llama a ``collect_environment()`` en cada refresco (y al construirse). Sin
+#: memoizar, cada refresco lanzaba ``git rev-parse`` y en Windows ese proceso
+#: se paga durante el arranque.
+_git_commit_cache: Dict[str, str] = {}
+
 
 def sanitize(text: str, home: Optional[str] = None) -> str:
     """Quita rutas absolutas y credenciales de un texto libre."""
@@ -58,8 +64,10 @@ def _git_commit() -> str:
     """Commit del repo si se ejecuta desde el árbol de trabajo.
 
     Sin ``git`` o en una instalación congelada no hay commit que reportar: es
-    un dato informativo, no un requisito.
+    un dato informativo, no un requisito. Se consulta una sola vez por sesión.
     """
+    if "value" in _git_commit_cache:
+        return _git_commit_cache["value"]
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
@@ -70,9 +78,11 @@ def _git_commit() -> str:
             check=False,
         )
         commit = (result.stdout or "").strip()
-        return commit if re.fullmatch(r"[0-9a-f]{4,40}", commit) else ""
+        commit = commit if re.fullmatch(r"[0-9a-f]{4,40}", commit) else ""
     except (OSError, subprocess.SubprocessError):
-        return ""
+        commit = ""
+    _git_commit_cache["value"] = commit
+    return commit
 
 
 def _os_version() -> str:

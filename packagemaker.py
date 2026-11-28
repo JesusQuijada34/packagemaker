@@ -775,6 +775,10 @@ class PackageTodoGUI(QMainWindow):
 
     def __init__(self, compact_mode=False, shell_mode=False):
         super().__init__()
+        # Desglose interno de la fase «ventana» del arranque (issue #19). El
+        # total lo sigue midiendo ``main``; estos tramos dicen en qué se fue.
+        self._startup_subphases = []
+        self._startup_subphase_clock = time.perf_counter()
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.compact_mode = compact_mode
         self.shell_mode = shell_mode
@@ -1004,6 +1008,7 @@ class PackageTodoGUI(QMainWindow):
         # sin subtítulo hasta el siguiente cambio.
         for index, (addon, _button) in enumerate(self._sidebar_items):
             self._apply_page_description(addon, index)
+        self._startup_mark("ventana_paginas")
 
         self.page_report = getattr(self, "page_report", None)
         self.report_page = self.page_report
@@ -1053,8 +1058,10 @@ class PackageTodoGUI(QMainWindow):
 
         # Apply Global Styles
         self.apply_theme()
+        self._startup_mark("ventana_tema")
         self._apply_leviathan_and_personalization()
         self._setup_github_landing()
+        self._startup_mark("ventana_landing")
 
         if self.compact_mode or self.shell_mode:
             self.enterCompactShellMode()
@@ -1705,6 +1712,18 @@ class PackageTodoGUI(QMainWindow):
             "DISPLAY_MODE", "GhostBlur (Cristal)"
         )
         self._apply_display_mode_by_name(str(dm))
+
+    def _startup_mark(self, name: str) -> float:
+        """Cierra un tramo interno de la construcción de la ventana."""
+        now = time.perf_counter()
+        seconds = max(0.0, now - self._startup_subphase_clock)
+        self._startup_subphases.append((str(name), seconds))
+        self._startup_subphase_clock = now
+        return seconds
+
+    def startup_subphases(self):
+        """Tramos internos de «ventana», en orden y en segundos."""
+        return tuple(self._startup_subphases)
 
     def check_theme_change(self):
         current_mode = system_theme_mode()
@@ -5001,6 +5020,10 @@ def main():
         )
 
     main_window = PackageTodoGUI()
+    # El total de «ventana» sigue siendo un solo tramo; el desglose interno se
+    # añade aparte para que el reporte de tirones señale la parte culpable.
+    for subphase, seconds in main_window.startup_subphases():
+        timeline.add(subphase, seconds)
     timeline.mark("ventana")
     main_window.apply_ui_language()
     timeline.mark("idioma_ui")
