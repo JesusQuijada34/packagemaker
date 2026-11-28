@@ -361,6 +361,12 @@ al ciclo anterior.
 | R-4d9e2b61 | El build no usaba un entorno aislado por proyecto (Q-019) | Alta | ciclo 72, 2026-11-27 | `tests/test_build_sandbox.py`, `tests/test_settings_navigation_bar.py` |
 | R-7b2c9e51 | El splash se retiraba antes de que la interfaz estuviera dibujada y los tirones del arranque no se reportaban (Q-027) | Alta | ciclo 73, 2026-11-27 | `tests/test_startup_timing.py` |
 | R-5c9a3e17 | El splash era una ventana propia a pantalla completa en vez de vivir dentro de la ventana (Q-032) | Media | ciclo 80, 2026-11-28 | `tests/test_splash_top_level.py` |
+| R-8c4f1a72 | La pestaña Reportes rompía el fondo, el scrollbar no se leía y la tabla del entorno no se enriquecía (issue #10) | Media | ciclo 55, 2026-11-25 | `tests/test_report_page_ui.py` |
+
+> R-8c4f1a72 se recupera en esta tabla del ciclo 85: la corrección está en `main`
+> desde el ciclo 55 (`b5378ad`) y sigue **pendiente de la comprobación visual en
+> Windows** del propietario, así que el issue #10 continúa abierto y el caso no
+> debe perderse de la trazabilidad.
 
 ## Periodo de observación y release
 
