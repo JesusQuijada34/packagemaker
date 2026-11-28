@@ -1028,6 +1028,7 @@ class PackageTodoGUI(QMainWindow):
 
         # Vigilancia de parches (Q-013, etapa 1: sólo consulta y avisa).
         self._patch_thread = None
+        self._patch_timer = None
         self._patch_status = None
         self.patchChecked.connect(self._on_patch_checked)
 
@@ -1070,8 +1071,23 @@ class PackageTodoGUI(QMainWindow):
 
         i18n.register_ui_refresh(self.apply_ui_language)
         self._start_patch_watch()
+        self._install_patch_timer()
 
     # --- Vigilancia de parches (Q-013/F-006, primera etapa) --------------
+    def _install_patch_timer(self) -> None:
+        """Reconsulta periódicamente: el intervalo de 6 h lo aplica ``should_check``.
+
+        Sin este temporizador la vigilancia sólo ocurría al arrancar, así que una
+        ventana abierta nunca avisaba de commits nuevos.
+        """
+        from lib import patch_watch
+
+        timer = QTimer(self)
+        timer.setInterval(int(patch_watch.CHECK_TICK_SECONDS * 1000))
+        timer.timeout.connect(self._start_patch_watch)
+        timer.start()
+        self._patch_timer = timer
+
     def _start_patch_watch(self, force: bool = False, enabled: bool = None) -> None:
         """Consulta el repositorio en segundo plano sin bloquear la interfaz.
 

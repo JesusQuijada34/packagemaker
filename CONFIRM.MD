@@ -1,9 +1,14 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-27 (septuagésimo noveno ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `8ac30ad`
-  (mantenimiento del ciclo 78, autor `openhands-agent`; no aporta respuestas). Último
-  commit **del propietario** procesado: `71e50f7` (2026-11-26, autor
+- **Última revisión:** 2026-11-28 (octogésimo ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
+  (2026-11-27, autor `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría
+  verificada con la API de GitHub; el commit sólo toca este archivo). Su único
+  cambio fue marcar **Q-032** como `[X] SÍ`: splash dentro de la ventana
+  principal, estilo UWP. **Aprobada**; queda pendiente de implementación.
+- **Commit anterior procesado:** `03d4d37`
+  (mantenimiento del ciclo 79, autor `openhands-agent`; no aporta respuestas). Último
+  commit **del propietario** anterior: `71e50f7` (2026-11-26, autor
   `JesusQuijada34 <jesusquijada34.gh@gmail.com>`, autoría verificada con la API
   de GitHub y con `git log`; el commit sólo toca este archivo). Su único cambio
   fue marcar **Q-016** como `[X, la B] SÍ`, es decir la **opción B**: `create`
@@ -11,7 +16,23 @@
   y archivada en el Historial.
 - **Último commit anterior procesado:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 5 preguntas pendientes de respuesta (Q-032, splash estilo UWP del issue #15; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 79 tampoco encontró respuestas nuevas del propietario: aplica la **primera etapa de Q-013** (vigilancia de parches de sólo lectura, aviso en la barra de estado y en Configuración → Notificaciones), deja constancia de que **Q-029** ya estaba cubierta por el asistente AIDE del ciclo 56 y de que **Q-014** la aplaza el propietario en `bugs.txt` hasta tener un release estable sin reportes. Quedan 13 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027 y Q-030 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 4 preguntas pendientes de respuesta (Q-033, alcance restante de
+  Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla;
+  Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la
+  superficie y el texto de las pestañas de Q-026). **Q-032** (splash estilo UWP
+  del issue #15) quedó **aprobada** el 2026-11-27 (commit `0addecb`, autoría
+  verificada) y pasa a la lista de aprobadas pendientes de implementación. El
+  ciclo 80 lee esa respuesta, corrige además **R-4a9d1c63** (la vigilancia de
+  parches sólo consultaba al arrancar, sin temporizador) y deja Q-032 para un
+  cambio propio. Quedan 14 aprobadas pendientes de implementación (Q-007,
+  Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031 y Q-032, con
+  confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda
+  pendiente la verificación en Windows del snap a media pantalla y Q-020 queda
+  aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera
+  Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035);
+  Q-008/F-003 aplicada en parte (splash de nivel superior); Q-004/F-001, Q-015,
+  Q-016, Q-017, Q-019, Q-021, Q-022, Q-027 y Q-030 aplicadas y archivadas; 11
+  aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -330,6 +351,10 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   validar la sesión y un fallo de arranque deja ver un marco vacío. No se puede
   verificar visualmente en Windows desde este entorno.
 - **Respuesta del propietario (JesusQuijada34):** `[X] SÍ`  `[ ] NO`
+- **Estado:** aprobada el 2026-11-27 (commit `0addecb`, autoría verificada con
+  la API de GitHub); pendiente de implementación. Sustituye la parte visual de
+  F-003: el splash deja de ser una ventana propia y pasa a dibujarse dentro de
+  la ventana principal.
 
 ### Q-033 — Alcance restante de Q-012 sin hilo de guardado (R-7c4a1e95)
 - **Tipo:** mejora (ajuste de alcance de Q-012)

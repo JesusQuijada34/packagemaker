@@ -1,3 +1,46 @@
+## 2026-11-28 — octogésimo ciclo
+
+### Corregido — la vigilancia de parches sólo consultaba al arrancar (R-4a9d1c63)
+
+Bug encontrado en la auditoría interna de este ciclo, sobre la primera etapa de
+Q-013 entregada en el ciclo 79. No hay reporte externo.
+
+- **Síntoma.** La promesa del ajuste es avisar «en segundo plano» de commits y
+  parches nuevos, y el intervalo declarado son 6 horas. En la práctica la
+  consulta ocurría **una sola vez**, al construir la ventana; después sólo se
+  repetía si el usuario pulsaba «Comprobar ahora». Una ventana abierta todo el
+  día nunca volvía a mirar el repositorio.
+- **Causa raíz.** `_start_patch_watch()` tenía exactamente dos llamadas —
+  `PackageTodoGUI.__init__` y `_check_patches_now()`— y no existía ningún
+  `QTimer` que la repitiese, así que `should_check()` y
+  `DEFAULT_INTERVAL_HOURS = 6` sólo se evaluaban al arrancar.
+- **Solución.** `lib/patch_watch.py` expone `CHECK_TICK_SECONDS = 600` (cada
+  cuánto reconsulta la ventana, distinto del intervalo de 6 h) y
+  `PackageTodoGUI._install_patch_timer()` crea un `QTimer` hijo de la ventana
+  que llama a `_start_patch_watch()` en cada tick. Ese método sigue aplicando
+  el ajuste del usuario, el modo red «uso medido» y el intervalo de 6 h, y no
+  abre un segundo hilo si el anterior sigue vivo: el temporizador no cambia
+  cuándo se consulta, sólo asegura que se vuelva a evaluar.
+- **Pruebas.** `tests/test_patch_watch.py::StateTests::test_tick_is_shorter_than_the_check_interval`
+  y `tests/test_patch_watch_ui.py::test_watch_rechecks_on_a_timer_without_user_action`
+  (las dos fallan antes del arreglo).
+- **Verificado** en la ventana real (offscreen): `_patch_timer` activo con
+  `600000` ms; con `last_check` de hace 7 h el tick produce una consulta; con
+  el ajuste «Avisar de parches y commits nuevos» apagado no consulta.
+- **Sin cambios de motor:** no se toca la ley de nombres, el formato `.iflapp`,
+  las plantillas ni el contenido de los paquetes, y no se descarga nada.
+
+### Aprobación leída — Q-032 (splash UWP dentro de la ventana)
+
+El propietario marcó **Q-032** como `[X] SÍ` en el commit `0addecb`
+(2026-11-27, autoría verificada con la API de GitHub; el commit sólo toca
+`CONFIRM.MD`). La ficha queda aprobada y **pendiente de implementación**: no se
+aplica en este ciclo porque exige separar la construcción de la ventana
+principal en armazón y contenido. Si el splash se creara después de
+`PackageTodoGUI()` (que es lo que cuesta ~2 s), la ventana pasaría ese tiempo
+sin ningún fotograma visible, justo lo contrario del patrón UWP pedido. El plan
+está anotado en `bugs.md` y no requiere una aprobación nueva.
+
 ## 2026-11-27 — septuagésimo noveno ciclo
 
 ### Aplicado en parte — vigilancia de parches y commits nuevos (Q-013 / F-006, etapa 1)

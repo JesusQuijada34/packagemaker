@@ -914,3 +914,22 @@ ciclos: es un registro de auditoría.
   **Q-029** ya estaba cubierta por el asistente AIDE del ciclo 56 y **Q-014**
   la aplaza el propietario en `bugs.txt` hasta tener un release estable. No se
   prepara release.
+
+- Octogésimo ciclo (2026-11-28): sin reportes nuevos en los issues #4, #10,
+  #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas en
+  `CONFIRM.MD`. Se audita la entrega del ciclo 79 y se corrige **R-4a9d1c63**:
+  `_start_patch_watch()` sólo se llamaba al construir la ventana y desde
+  «Comprobar ahora», así que `should_check()` y el intervalo de 6 h no se
+  reevaluaban nunca y una ventana abierta no avisaba de commits nuevos. Ahora
+  `lib/patch_watch.CHECK_TICK_SECONDS = 600` y
+  `PackageTodoGUI._install_patch_timer()` añaden un `QTimer` hijo de la ventana
+  que llama a `_start_patch_watch()` cada 10 minutos; el método sigue
+  respetando el ajuste del usuario, el modo red «uso medido» y el intervalo de
+  6 h, y no abre un hilo si el anterior sigue vivo. Verificado en la ventana
+  real (offscreen): temporizador activo con 600000 ms, una consulta con
+  `last_check` de hace 7 h y ninguna con el ajuste apagado. Pruebas nuevas:
+  `tests/test_patch_watch.py::StateTests::test_tick_is_shorter_than_the_check_interval`
+  y `tests/test_patch_watch_ui.py::test_watch_rechecks_on_a_timer_without_user_action`.
+  R-4a9d1c63 queda en observación. No se prepara release: siguen pendientes los
+  cambios de engine aprobados, la segunda etapa de Q-013 y R-7f2b9c41 espera la
+  decisión de Q-034.

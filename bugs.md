@@ -1,9 +1,9 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-27 (ciclo 79: **Q-013 aplicada en parte** —la
-vigilancia de parches de sólo lectura ya avisa de commits nuevos—; la cola
-queda al día: Q-029 ya estaba cubierta por el asistente AIDE del ciclo 56 y
-Q-014 la aplaza el propio propietario hasta tener un release estable).
+Última actualización: 2026-11-28 (ciclo 80: se corrige **R-4a9d1c63** —la
+vigilancia de parches de Q-013 sólo consultaba al arrancar porque no había
+temporizador—; la cola no cambia de tamaño: el bug lo encontró la auditoría
+interna de este ciclo y se archivó el mismo día).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -30,13 +30,14 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-2a8d4b73 | Cambio de engine — AIDE como chatbot (issue #14) | Media | Cubierto por el asistente AIDE del ciclo 56 (dos proveedores y clave propia); sólo falta exponer sus campos en Configuración |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
-| R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | **Sin aprobar** (Q-032) |
+| R-5c9a3e17 | Cambio de engine — splash UWP dentro de la ventana (issue #15) | Media | Aprobado (Q-032, `0addecb`); pendiente de implementación |
 
 **10 entradas en la cola**: 1 bug, 2 mejoras de producto y 7 cambios de engine
-(5 aprobados y pendientes de implementación, 1 cubierto en su mayor parte y 1
-esperando la marca `[x] SÍ`). Q-013 pasa a «aplicada en parte»: su primera
-etapa (consulta y aviso de parches) ya está en `main`; la descarga y la
-aplicación del parche siguen pendientes.
+(6 aprobados y pendientes de implementación y 1 cubierto en su mayor parte).
+Q-032 recibió la marca `[x] SÍ` del propietario el 2026-11-27 (commit
+`0addecb`). Q-013 pasa a «aplicada en parte»: su primera etapa (consulta y
+aviso de parches) ya está en `main`; la descarga y la aplicación del parche
+siguen pendientes.
 R-6f1c8e35 (perfil de GitHub como extensión, Q-030) sale de la cola en este
 ciclo: implementada, probada y verificada en la ventana real.
 R-2c8d4f71 (addons en `lib/addons/` e instalación desde Configuración, Q-022)
@@ -135,7 +136,7 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 20 | Q-028 (R-9c3f5a28) | Librería de paneles y pestañas verticales | Aprobado; pendiente | alto |
 | 21 | Q-029 (R-2a8d4b73) | AIDE como chatbot con backend/API/servidor | Cubierto por el asistente del ciclo 56; falta trasladar sus campos a Configuración | medio |
 | 23 | Q-031 (R-3b7e2d94) | Addons empaquetados en `lib/addons/` y addons DLL | Aprobado; pendiente | alto |
-| 24 | Q-032 (R-5c9a3e17) | Splash dentro de la ventana principal, estilo UWP | **Sin aprobar** | medio-alto |
+| 24 | Q-032 (R-5c9a3e17) | Splash dentro de la ventana principal, estilo UWP | Aprobado (`0addecb`, 2026-11-27); pendiente | medio-alto |
 
 Ya implementados y verificados: perfil de GitHub como extensión y panel de
 cuenta (Q-030, ciclo 78), aislamiento BlindCube/FlatCube y `.blindkpkg`
@@ -149,6 +150,23 @@ global con buscador (Q-021, ciclo 74). Q-029 (AIDE como chatbot) ya estaba
 cubierta por el asistente del ciclo 56 —dos proveedores, clave propia y
 contexto saneado—; sólo queda trasladar sus campos a Configuración.
 
+### R-5c9a3e17 — Splash UWP dentro de la ventana (Q-032, aprobada)
+
+- **Usuario:** JesusQuijada34 (issue #15).
+- **Fecha del reporte:** 2026-11-26. **Aprobada:** 2026-11-27 (commit `0addecb`).
+- **Estado:** aprobada, pendiente de implementación.
+- **Plan:** partir `PackageTodoGUI.__init__` en armazón (ventana, título y
+  barras vacías) y contenido (sidebar, páginas y tarjetas); mostrar el armazón
+  con el splash como hijo (`WA_StyledBackground`, nunca
+  `WA_TranslucentBackground`) y construir el contenido detrás; al cerrar la
+  compuerta de sesión, desvanecer con `QGraphicsOpacityEffect` y borrar el
+  overlay. El camino de error de arranque conserva `show_startup_error` como
+  ventana única.
+- **Riesgo:** alto en arranque. `tests/test_splash_top_level.py` y
+  `tests/test_startup_timing.py` fijan la coreografía actual y habrá que
+  reescribirlos; no se puede verificar visualmente en Windows desde este
+  entorno. Por eso no entra en el ciclo 80, que ya lleva una corrección.
+
 ## En observación
 
 Las correcciones aplicadas y probadas se archivan en `CHANGELOG.md` (detalle) y
@@ -158,6 +176,7 @@ al ciclo anterior.
 
 | ID | Título | Prioridad | Corregido | Prueba de regresión |
 |---|---|---|---|---|
+| R-4a9d1c63 | La vigilancia de parches sólo consultaba al arrancar (Q-013, etapa 1) | Media | ciclo 80, 2026-11-28 | `tests/test_patch_watch_ui.py::test_watch_rechecks_on_a_timer_without_user_action` |
 | R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
 | R-7d4b2c95 | Maximizar o restaurar congelaba la interfaz (~270 ms por gesto) | Alta | ciclo 67, 2026-11-26 | `tests/test_maximize_without_theme_reapply.py` |
 | R-3e7d1c58 | `compile-only` no retiraba el fuente del paquete | Media | ciclo 68, 2026-11-27 | `tests/test_hardening.py::CompileOnlySourceRemovalTests` |
@@ -181,6 +200,10 @@ al ciclo anterior.
   compilación, empaquetado ni blindaje: sólo hace un `GET` de lectura y avisa.
   No entra en observación porque no sustituye nada; su verificación es la
   consulta real (`up_to_date` con el commit `52e9c89`) y las 30 pruebas nuevas.
+- **Nuevo en el ciclo 80:** **R-4a9d1c63** (la vigilancia de parches sólo
+  consultaba al arrancar) queda en observación con su prueba de regresión. Es
+  un método corto en `packagemaker.py` más la constante `CHECK_TICK_SECONDS`;
+  no sustituye nada del empaquetado.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
 - Septuagésimo primer ciclo (2026-11-27): se corrige **R-6b4d2f81**, encontrado
@@ -347,6 +370,23 @@ al ciclo anterior.
   Suite: 1481 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. Commit
   `8ac30ad` en `main`. No se prepara release: siguen pendientes los cambios de
   engine aprobados y R-7f2b9c41 espera Q-034.
+- Octogésimo ciclo (2026-11-28): sin reportes nuevos en los issues #4, #10,
+  #11, #13, #14 ni #15 y sin pull requests abiertas. `CONFIRM.MD` sí trae una
+  respuesta nueva del propietario (`0addecb`, autoría verificada): **Q-032
+  aprobada** (splash dentro de la ventana, estilo UWP). Además se audita la
+  entrega del ciclo anterior y se corrige
+  **R-4a9d1c63**: la vigilancia de parches de Q-013 se lanzaba sólo al
+  construir la ventana, así que el intervalo de 6 h nunca se reevaluaba y una
+  ventana abierta no avisaba de commits nuevos. `CHECK_TICK_SECONDS = 600` y
+  `PackageTodoGUI._install_patch_timer()` añaden un `QTimer` hijo de la ventana
+  que llama a `_start_patch_watch()` cada 10 minutos; ese método sigue
+  aplicando el ajuste del usuario, el modo red «uso medido» y el intervalo de
+  6 h. Verificado en la ventana real (offscreen): temporizador activo con
+  600000 ms, una consulta con `last_check` de hace 7 h y ninguna con el ajuste
+  apagado. Pruebas nuevas en `tests/test_patch_watch.py` y
+  `tests/test_patch_watch_ui.py`. No se prepara release: siguen pendientes los
+  cambios de engine aprobados, la segunda etapa de Q-013 y R-7f2b9c41 espera la
+  decisión de Q-034.
 - Septuagésimo noveno ciclo (2026-11-27): sin reportes nuevos en los issues #4,
   #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
   en `CONFIRM.MD` (el último commit que toca el archivo sigue siendo
