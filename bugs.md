@@ -1,9 +1,9 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-28 (ciclo 80: **Q-032 aplicada** —el splash ya
-vive dentro de la ventana principal, estilo UWP— y **R-4a9d1c63** corregido
-—la vigilancia de parches de Q-013 ya se reevalúa cada 10 minutos—. La cola
-baja a 9 entradas porque R-5c9a3e17 sale tras verificarse).
+Última actualización: 2026-11-28 (ciclo 81: **Q-029 aplicada** —los campos de
+AIDE ya se configuran en Configuración— y **R-8b5c1d47** corregido —el
+subtítulo de la barra ya no muestra el Markdown de los catálogos—. La cola baja
+a 8 entradas porque R-2a8d4b73 sale al quedar cubierto por completo).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -28,16 +28,15 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
-| R-2a8d4b73 | Cambio de engine — AIDE como chatbot (issue #14) | Media | Cubierto por el asistente AIDE del ciclo 56 (dos proveedores y clave propia); sólo falta exponer sus campos en Configuración |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 
-**9 entradas en la cola**: 1 bug, 2 mejoras de producto y 6 cambios de engine
-(5 aprobados y pendientes de implementación y 1 cubierto en su mayor parte).
-Q-013 pasa a «aplicada en parte»: su primera etapa (consulta y aviso de
-parches) ya está en `main`; la descarga y la aplicación del parche siguen
-pendientes. R-5c9a3e17 (splash UWP, Q-032) sale de la cola en este ciclo:
-aprobada por el propietario en el commit `0addecb`, implementada, probada y
-verificada con la ventana real.
+**8 entradas en la cola**: 1 bug, 2 mejoras de producto y 5 cambios de engine
+(4 aprobados y pendientes de implementación y Q-013 aplicada en parte). Q-013
+sigue «aplicada en parte»: su primera etapa (consulta y aviso de parches) ya
+está en `main`; la descarga y la aplicación del parche siguen pendientes.
+R-2a8d4b73 (AIDE como chatbot, Q-029) sale de la cola en este ciclo: sus
+campos ya se configuran en Configuración, probados y verificados en la ventana
+real. R-5c9a3e17 (splash UWP, Q-032) salió en el ciclo anterior.
 R-6f1c8e35 (perfil de GitHub como extensión, Q-030) sale de la cola en este
 ciclo: implementada, probada y verificada en la ventana real.
 R-2c8d4f71 (addons en `lib/addons/` e instalación desde Configuración, Q-022)
@@ -134,7 +133,6 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 18 | Q-025 (R-8e6a3c15) | Completar Leviathan y el action bar como control | Aprobado; pendiente | alto |
 | 19 | Q-027 (R-7b2c9e51) | Duración mínima del splash y reporte de tirones | **Aplicado** (ciclo 73); R-7b2c9e51 en observación | medio |
 | 20 | Q-028 (R-9c3f5a28) | Librería de paneles y pestañas verticales | Aprobado; pendiente | alto |
-| 21 | Q-029 (R-2a8d4b73) | AIDE como chatbot con backend/API/servidor | Cubierto por el asistente del ciclo 56; falta trasladar sus campos a Configuración | medio |
 | 23 | Q-031 (R-3b7e2d94) | Addons empaquetados en `lib/addons/` y addons DLL | Aprobado; pendiente | alto |
 
 Ya implementados y verificados: splash dentro de la ventana principal, estilo
@@ -159,6 +157,7 @@ al ciclo anterior.
 
 | ID | Título | Prioridad | Corregido | Prueba de regresión |
 |---|---|---|---|---|
+| R-8b5c1d47 | El subtítulo de la barra mostraba el Markdown de los catálogos | Baja | ciclo 81, 2026-11-28 | `tests/test_activity_bar_and_subtitle.py::test_subtitle_renders_the_catalog_markdown` |
 | R-4a9d1c63 | La vigilancia de parches sólo consultaba al arrancar (Q-013, etapa 1) | Media | ciclo 80, 2026-11-28 | `tests/test_patch_watch_ui.py::test_watch_rechecks_on_a_timer_without_user_action` |
 | R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
 | R-7d4b2c95 | Maximizar o restaurar congelaba la interfaz (~270 ms por gesto) | Alta | ciclo 67, 2026-11-26 | `tests/test_maximize_without_theme_reapply.py` |
@@ -172,7 +171,7 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 9 entradas (ver Resumen). No hay bugs críticos reportados sin
+- **Cola:** 8 entradas (ver Resumen). No hay bugs críticos reportados sin
   atender. El único bug abierto, R-7f2b9c41, espera la decisión de Q-034.
   R-4d9e2b61 (Q-019, entorno aislado) y R-7b2c9e51 (Q-027, splash mínimo y
   reporte de tirones) quedan en observación tras verificarse con arranques y
@@ -194,6 +193,14 @@ al ciclo anterior.
   consultaba al arrancar) queda en observación con su prueba de regresión. Es
   un método corto en `packagemaker.py` más la constante `CHECK_TICK_SECONDS`;
   no sustituye nada del empaquetado.
+- **Nuevo en el ciclo 81:** **R-8b5c1d47** (el subtítulo de la barra mostraba el
+  Markdown de los catálogos) queda en observación con su prueba de regresión.
+  Sólo cambia cómo se dibuja un texto existente: no toca compilación,
+  empaquetado ni blindaje.
+- **Nuevo en el ciclo 81:** **Q-029** añade la tarjeta Configuración → AIDE.
+  Escribe en `data/pm.data` con el mismo backend que la página AIDE y no envía
+  nada a la red por sí misma; no entra en observación como cambio de motor
+  porque no altera compilación, empaquetado ni blindaje.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
 - Septuagésimo primer ciclo (2026-11-27): se corrige **R-6b4d2f81**, encontrado

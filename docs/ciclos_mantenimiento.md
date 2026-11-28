@@ -957,3 +957,27 @@ ciclos: es un registro de auditoría.
   R-4a9d1c63 queda en observación. No se prepara release: siguen pendientes los
   cambios de engine aprobados, la segunda etapa de Q-013 y R-7f2b9c41 espera la
   decisión de Q-034.
+
+- Octogésimo primer ciclo (2026-11-28): sin reportes nuevos en los issues #4,
+  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
+  en `CONFIRM.MD` (el último commit que toca el archivo sigue siendo `0addecb`,
+  ya procesado). Se aplica **Q-029** (R-2a8d4b73, issue #14), la única pieza que
+  faltaba del asistente AIDE: sus campos viven ya en **Configuración → AIDE**
+  (proveedor, URL del endpoint, modelo, clave de API y casilla de contexto),
+  entre Privacidad y Extensiones. La tarjeta y la página AIDE escriben en el
+  mismo almacén (`aide_backend.save_settings`) y la tarjeta avisa con
+  `aideSettingsChanged` para que `AidePage.refresh_settings()` refresque sus
+  campos; la clave guardada nunca se reescribe en un widget. Claves
+  `config.section_aide*`, `config.aide_*` y `aide.api_key_saved` en los 14
+  catálogos con el módulo nuevo `tools/translations_aide.py`. Además se corrige
+  **R-8b5c1d47**, encontrado en la auditoría visual: el subtítulo de la barra
+  mostraba el Markdown de los catálogos («el ecosistema **Influent OS**»,
+  «`.iflapp`»), porque `set_action_bar_subtitle()` pasaba el texto tal cual a un
+  `QLabel`; `lib/page_action_bar.inline_markup()` escapa el texto y convierte
+  negrita y código, y el texto plano sale idéntico. Verificado offscreen con
+  capturas de «Configuración → AIDE» (español e inglés) y de la página de
+  creación. Pruebas nuevas: `tests/test_aide_settings_card.py` (9) y dos casos
+  en `tests/test_activity_bar_and_subtitle.py`. R-2a8d4b73 sale de la cola
+  (8 entradas) y R-8b5c1d47 queda en observación. No se prepara release: siguen
+  pendientes los cambios de engine aprobados, la segunda etapa de Q-013 y
+  R-7f2b9c41 espera la decisión de Q-034.

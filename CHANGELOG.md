@@ -1,3 +1,62 @@
+## 2026-11-28 — octogésimo primer ciclo
+
+### Aplicado — los campos de AIDE se configuran en Configuración (Q-029 / R-2a8d4b73, issue #14)
+
+Aprobación del propietario en `CONFIRM.MD` (commit `73dcdcd`, autoría
+verificada con la API de GitHub), que pedía en el issue #14 un asistente «con un
+backend/API/servidor y puerto configurables desde Configuración». El asistente
+ya existía desde el ciclo 56 (dos proveedores, clave propia y contexto
+saneado); lo que faltaba era exponer sus campos en Configuración.
+
+- **Qué cambia.** Nueva tarjeta **Configuración → AIDE** entre Privacidad y
+  Extensiones, con proveedor (GitHub Copilot o endpoint compatible con OpenAI),
+  URL del endpoint, modelo, clave de API y la casilla de adjuntar contexto del
+  proyecto. La página AIDE conserva sus campos y ambos editores escriben en el
+  mismo almacén (`aide_backend.save_settings` → `data/pm.data`), de modo que no
+  hay dos fuentes de verdad: la tarjeta avisa con `aideSettingsChanged` y la
+  página se refresca con `AidePage.refresh_settings()`.
+- **La clave nunca vuelve al widget.** Ni la tarjeta ni la página reescriben la
+  clave guardada; el campo queda vacío y su marcador dice «Clave guardada;
+  escriba otra para cambiarla». Al escribir una nueva se guarda y se limpia el
+  campo, igual que ya hacía la página.
+- **Idiomas.** Claves nuevas `config.section_aide*`, `config.aide_*` y
+  `aide.api_key_saved` en los 14 catálogos, con traducciones curadas en el
+  módulo nuevo `tools/translations_aide.py` (el generador las aplica como las de
+  `translations_updates`).
+- **Pruebas.** `tests/test_aide_settings_card.py` (9): la tarjeta existe y está
+  en su sitio, guarda endpoint, clave, proveedor y contexto, emite la señal, la
+  página recoge lo guardado sin copiar la clave y la retraducción mantiene los
+  textos.
+- **Verificado** en la ventana real (offscreen): «Configuración → AIDE» muestra
+  proveedor, URL, modelo, clave y casilla; en inglés el título, las etiquetas y
+  el proveedor cambian sin reiniciar.
+- **Sin cambios de motor:** no se toca compilación, empaquetado, blindaje ni el
+  contenido de los paquetes, y no se envía nada a la red sin configuración.
+
+### Corregido — el subtítulo de la barra mostraba el Markdown de los catálogos (R-8b5c1d47)
+
+Bug encontrado en la auditoría visual de este ciclo. No hay reporte externo.
+
+- **Síntoma.** La descripción bajo el título de la página de creación se leía
+  «metadatos para el ecosistema **Influent OS** de forma guiada», con los
+  asteriscos a la vista; Construir Paquete mostraba además `` `.iflapp` `` con
+  las comillas invertidas. El resto de la interfaz no usa Markdown.
+- **Causa raíz.** Los catálogos de idioma guardan las descripciones del sidebar
+  (`sidebar_desc.0`, `.1`, `.5`) con Markdown en línea, y
+  `set_action_bar_subtitle()` las pasaba tal cual a un `QLabel`, que no
+  interpreta Markdown.
+- **Solución.** `lib/page_action_bar.inline_markup()` escapa el texto (los
+  catálogos no son HTML) y convierte `**negrita**` en `<b>` y `` `código` `` en
+  un tramo monoespaciado; el `QLabel` lo dibuja como texto enriquecido. El texto
+  sin marcas sale idéntico.
+- **Pruebas.** `tests/test_activity_bar_and_subtitle.py::test_subtitle_renders_the_catalog_markdown`
+  y `::test_subtitle_escapes_html_and_leaves_plain_text_alone` (la primera falla
+  con el código anterior).
+- **Verificado** con captura offscreen de la página de creación: «Influent OS»
+  sale en negrita y no queda ningún asterisco ni comilla invertida en los
+  subtítulos de las cinco páginas.
+- **Sin cambios de motor:** sólo cambia cómo se dibuja un texto ya existente.
+
 ## 2026-11-28 — octogésimo ciclo
 
 ### Corregido — la vigilancia de parches sólo consultaba al arrancar (R-4a9d1c63)
