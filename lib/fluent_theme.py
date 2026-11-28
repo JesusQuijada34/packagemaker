@@ -25,6 +25,8 @@ from lib.design_tokens import (
     SECTION_LABEL_SIZE,
     SIDEBAR_BG,
     SIDEBAR_BG_LIGHT,
+    SIDEBAR_BORDER_DARK,
+    SIDEBAR_BORDER_LIGHT,
     SIDEBAR_ICON_INSET,
     SIDEBAR_TEXT_GRAY,
     SURFACE,
@@ -69,7 +71,7 @@ else:
 # Extracted styles stay grouped by the interface area that owns them.
 WINDOW_CHROME_STYLES = {
     'packagemaker_001': 'background:transparent;border:none;',
-    'packagemaker_003': f'background:{SIDEBAR_BG};border-right:1px solid #333333;',
+    'packagemaker_003': f'background:{SIDEBAR_BG};border-right:1px solid {SIDEBAR_BORDER_DARK};',
     'packagemaker_004': f"color:{TEXT};font-size:20px;font-weight:600;font-family:{FONT_STACK};letter-spacing:0.3px;background:transparent;border:none;",
     'packagemaker_005': 'QWidget{background-color:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;margin-top:10px;}',
     'packagemaker_006': 'border:none;background:transparent;color:#888;font-weight:bold;font-size:11px;text-transform:uppercase;',
@@ -392,6 +394,8 @@ def sidebar_stylesheet(dark, accent="#0078d4"):
         role="sidebar-frame-dark" if dark else "sidebar-frame-light",
         SIDEBAR_BG=SIDEBAR_BG,
         SIDEBAR_BG_LIGHT=SIDEBAR_BG_LIGHT,
+        SIDEBAR_BORDER_DARK=SIDEBAR_BORDER_DARK,
+        SIDEBAR_BORDER_LIGHT=SIDEBAR_BORDER_LIGHT,
         SIDEBAR_TEXT_GRAY=SIDEBAR_TEXT_GRAY,
         CARD_RADIUS=CARD_RADIUS,
         FONT_STACK=FONT_STACK,
@@ -727,6 +731,7 @@ def applyget(accent: str, dark: bool = True) -> str:
     label = "#cccccc" if dark else "#1f2937"
     page = WINDOW_BG if dark else "#F5F7FB"
     sidebar_bg = SIDEBAR_BG if dark else SIDEBAR_BG_LIGHT
+    sidebar_border = SIDEBAR_BORDER_DARK if dark else SIDEBAR_BORDER_LIGHT
     card_surface = SURFACE if dark else "#FFFFFF"
     card_border = BORDER if dark else "#D1D1D6"
     glass_bg = GLASS_BG if dark else "rgba(255, 255, 255, 0.72)"
@@ -746,6 +751,7 @@ def applyget(accent: str, dark: bool = True) -> str:
         "ACCENT_PRESSED": accent_pressed,
         "WINDOW_BG": page,
         "SIDEBAR_BG": sidebar_bg,
+        "SIDEBAR_BORDER": sidebar_border,
         "SURFACE": SURFACE,
         "BORDER": BORDER,
         "CARD_SURFACE": card_surface,

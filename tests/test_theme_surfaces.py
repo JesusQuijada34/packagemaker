@@ -58,6 +58,45 @@ def test_sidebar_is_not_translucent_at_widget_level():
     assert "setAttribute(Qt.WidgetAttribute.WA_StyledBackground" in block
 
 
+def _sidebar_edge_color(sidebar):
+    image = sidebar.grab().toImage()
+    return image.pixelColor(image.width() - 1, image.height() // 2)
+
+
+def test_sidebar_edge_is_white_on_dark_and_gray_on_light(_qt_app):
+    """R-9b5d3e72 (issue #21): el borde del sidebar debe distinguirse del fondo.
+
+    El propietario pide gris en el tema claro y blanco en el oscuro; con
+    ``#333333`` sobre un fondo ``#1C1C1E`` el separador era invisible.
+    """
+    from PyQt6.QtWidgets import QApplication
+
+    import packagemaker
+
+    app = QApplication.instance() or _qt_app
+    window = packagemaker.PackageTodoGUI()
+    window.resize(1024, 720)
+    window.show()
+    app.processEvents()
+    try:
+        # Sin ``processEvents`` entre medias: el vigilante de tema del sistema
+        # reajustaría ``last_theme_mode`` y volvería a pintar el tema real.
+        window.last_theme_mode = "dark"
+        window.apply_theme()
+        dark_edge = _sidebar_edge_color(window.sidebar)
+        assert dark_edge.name().lower() == tokens.SIDEBAR_BORDER_DARK.lower()
+        assert dark_edge.red() > 240, "el borde oscuro no es blanco"
+
+        window.last_theme_mode = "light"
+        window.apply_theme()
+        light_edge = _sidebar_edge_color(window.sidebar)
+        assert light_edge.name().lower() == tokens.SIDEBAR_BORDER_LIGHT.lower()
+        assert light_edge.red() < 235, "el borde claro debe seguir siendo gris"
+    finally:
+        window.close()
+        app.processEvents()
+
+
 def test_sidebar_paints_its_translucent_background(_qt_app):
     from PyQt6.QtWidgets import QApplication
 

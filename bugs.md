@@ -1,15 +1,18 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-28 (ciclo 84: se ataca la fase «ventana» del
-arranque de **R-6d1e4a83** con evidencia medida —el aplanado del catálogo i18n
-se repetía en cada `tr()`, los QSS se releían del disco por widget y cada
-refresco del panel Reportes lanzaba `git rev-parse`—; se corrigen las tres
-repeticiones y la fase «ventana» deja un desglose propio en el reporte
-`StartupLag`. El caso sigue **pendiente**: falta el desglose real de Windows
-para confirmar los 10,32 s. **R-7e3a1b95** queda bloqueado: el orden
-ventana→splash está fijado por la coreografía aprobada de Q-032 y no se
-reproduce en offscreen. No hay respuestas nuevas del propietario en
-`CONFIRM.MD`).
+Última actualización: 2026-11-28 (ciclo 85: se corrige **R-9b5d3e72**
+—borde del sidebar, issue #21—, el único bug abierto que no dependía de una
+decisión del propietario. El separador derecho llevaba `#333333` sobre un fondo
+`#1C1C1E`: contraste 1,4:1 e invisible, justo lo que reporta el issue. Ahora es
+blanco en tema oscuro y conserva el gris `#D1D1D6` en tema claro, mediante los
+tokens nuevos `SIDEBAR_BORDER_DARK`/`SIDEBAR_BORDER_LIGHT`; ningún QSS vuelve a
+escribir el color a mano. Verificado con capturas offscreen y una prueba que
+muestrea el píxel del borde. Siguen pendientes los casos bloqueados por
+decisiones del propietario: **R-6d1e4a83** espera el desglose real de Windows,
+**R-7e3a1b95** está bloqueado por la coreografía de Q-032, **R-6c2e4d91** espera
+Q-038, **R-7f2b9c41** espera Q-034 y **R-2f9b7c14** espera Q-036. No hay
+respuestas nuevas del propietario en `CONFIRM.MD`; el issue #27 (cuenta externa)
+queda preparado con propuesta, sin push, hasta que la revise el propietario).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -32,7 +35,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-6c2e4d91 | Bug — la titlebar se maximiza en el segundo gesto del triple clic (issue #17) | Media | Pendiente de decisión (Q-038) |
 | R-2f9b7c14 | Bug — el tema claro no se aplica al contenido (issue #18) | Alta | Diagnosticado; alcance en Q-036 |
 | R-6d1e4a83 | Bug — arranque con tirones: 10,3 s en la fase «ventana» (issue #19) | Alta | Mitigado en parte (ciclo 84); falta desglose de Windows |
-| R-9b5d3e72 | Bug — el borde del sidebar no se ve como en Reportes (issue #21) | Baja | Pendiente |
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
 | R-1a7c6d94 | Mejora — faltan temas de ayuda y explicar cada artefacto (issue #22) | Media | Pendiente |
 | R-8f2e5b13 | Mejora — AIDE como chatbot de la base de código (issue #23) | Media | Pendiente |
@@ -48,7 +50,7 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 
-**19 entradas en la cola**: 6 bugs (R-4b8e2c76 ya en observación; R-6d1e4a83
+**18 entradas en la cola**: 5 bugs (R-6d1e4a83
 mitigado en parte, a la espera del desglose de Windows; R-7e3a1b95 bloqueado por
 la coreografía de Q-032), 6 mejoras, 1 tarea de documentación externa y 6
 cambios de engine (5 aprobados y pendientes, más R-7c4b9e36 que espera Q-037).
@@ -203,19 +205,6 @@ Q-019 (entorno aislado) y Q-032 (splash dentro de la ventana).
   tamaño), `lib/report_telemetry.py` (`_git_commit_cache`), y
   `lib/startup_timing.py` + `packagemaker.py` (desglose de la fase «ventana»).
 - **Commit / fecha de resolución:** — (mitigación del ciclo 84).
-
-### R-9b5d3e72 — El borde del sidebar no se ve como en Reportes (issue #21)
-
-- **Usuario:** JesusQuijada34 (issue #21).
-- **Fecha del reporte:** 2026-11-28
-- **Prioridad:** Baja.
-- **Descripción:** el separador del sidebar no se distingue como el del panel
-  de Reportes; pide gris en modo claro y blanco en modo oscuro.
-- **Estado:** pendiente. La regla actual usa `#D1D1D6` (claro) y `#333333`
-  (oscuro); falta confirmar si el reporte habla del borde, del fondo o de la
-  barra de desplazamiento antes de cambiarlo.
-- **Solución aplicada:** ninguna todavía.
-- **Commit / fecha de resolución:** —
 
 ## Mejoras pendientes
 
@@ -375,7 +364,7 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 19 entradas (ver Resumen). R-6d1e4a83 queda **mitigado en parte**
+- **Cola:** 18 entradas (ver Resumen). R-6d1e4a83 queda **mitigado en parte**
   en el ciclo 84 (i18n, QSS y `git rev-parse` ya no repiten trabajo, y la fase
   «ventana» emite su desglose) pero no se cierra sin el reporte de Windows.
   R-7e3a1b95 queda **bloqueado** por el orden aprobado en Q-032. R-6c2e4d91
@@ -386,6 +375,18 @@ al ciclo anterior.
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación, bugs de prioridad alta recién reportados y no ha pasado el
   periodo sin reportes nuevos.
+- **Nuevo en el ciclo 85:** **R-9b5d3e72** (issue #21) queda corregido y
+  archivado. Sólo cambian los tokens y el QSS del marco del sidebar: el borde
+  oscuro pasa de `#333333` a blanco y el claro conserva `#D1D1D6`; no toca
+  compilación, empaquetado, blindaje ni el motor. Prueba:
+  `tests/test_theme_surfaces.py::test_sidebar_edge_is_white_on_dark_and_gray_on_light`
+  (muestrea el píxel del borde con la ventana real offscreen; falla con el
+  código anterior).
+- **Nuevo en el ciclo 85:** el issue #27, abierto por una cuenta externa
+  (`JoseSuppini34`), pregunta si el README incluye capturas y pasos de
+  instalación. Corresponde a **R-0b8d2c47**, que ya espera la revisión del
+  propietario: se responde con el estado real y no se hace push de la mejora de
+  documentación sin su visto bueno.
 - **Nuevo en el ciclo 84:** **R-6d1e4a83** queda mitigado en parte. Tres
   repeticiones medidas desaparecen: el catálogo i18n se aplana una vez por
   idioma, cada QSS se lee una vez mientras no cambie y `git rev-parse` se

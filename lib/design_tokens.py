@@ -41,6 +41,10 @@ DIVIDER = "#333333"
 SIDEBAR_BG = "rgba(28, 28, 30, 0.45)"           # barra lateral, tema oscuro
 SIDEBAR_BG_LIGHT = "rgba(255, 255, 255, 0.45)"  # barra lateral, tema claro
 SIDEBAR_BG_SOLID = "#282828"                    # respaldo sin blur
+# Separador derecho del sidebar (issue #21): gris en claro y blanco en oscuro.
+# El gris ``#333333`` sobre ``#1C1C1E`` hacía el borde invisible en modo oscuro.
+SIDEBAR_BORDER_DARK = "#FFFFFF"
+SIDEBAR_BORDER_LIGHT = "#D1D1D6"
 
 TITLEBAR_BG = "rgba(40, 40, 40, 0.85)"
 CONTENT_BG = "rgba(28, 28, 30, 0.82)"
@@ -413,6 +417,8 @@ def sidebar_qss(dark: bool = True, accent: str = ACCENT) -> str:
         role="sidebar-dark" if dark else "sidebar-light",
         SIDEBAR_BG=SIDEBAR_BG,
         SIDEBAR_BG_LIGHT=SIDEBAR_BG_LIGHT,
+        SIDEBAR_BORDER_DARK=SIDEBAR_BORDER_DARK,
+        SIDEBAR_BORDER_LIGHT=SIDEBAR_BORDER_LIGHT,
         DIVIDER=DIVIDER,
         TEXT_MUTED=TEXT_MUTED,
         TEXT=TEXT,

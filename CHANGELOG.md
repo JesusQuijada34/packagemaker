@@ -1,4 +1,36 @@
-## 2026-11-28 — octogésimo cuarto ciclo
+## 2026-11-28 — octogésimo quinto ciclo
+
+### Corregido — el borde del sidebar era invisible en tema oscuro (R-9b5d3e72, issue #21)
+
+Reportado por **JesusQuijada34** en el [issue #21](https://github.com/JesusQuijada34/packagemaker/issues/21):
+«la barra lateral del sidebar no es visible perfectamente como en el panel de
+reportes, ella debe de tener el color gris en el modo claro y en el modo oscuro
+el color blanco».
+
+- **Causa raíz.** El marco del sidebar venía de tres sitios que escribían el
+  color a mano: el rol `sidebar-frame-dark` de `source/qss/qwidget.qss`
+  (`#333333`), el rol `root` de la misma hoja (`#333333`) y
+  `WINDOW_CHROME_STYLES['packagemaker_003']` en `lib/fluent_theme.py`
+  (`#333333`). Sobre el fondo `#1C1C1E` del modo oscuro ese gris da un contraste
+  de 1,4:1: el separador existía, pero no se veía. El tema claro ya usaba el gris
+  `#D1D1D6`, así que el defecto era sólo del tema oscuro.
+- **Solución.** Dos tokens nuevos en `lib/design_tokens.py`
+  (`SIDEBAR_BORDER_DARK = "#FFFFFF"`, `SIDEBAR_BORDER_LIGHT = "#D1D1D6"`) y los
+  marcadores `__SIDEBAR_BORDER_DARK__`, `__SIDEBAR_BORDER_LIGHT__` y
+  `__SIDEBAR_BORDER__` en los roles `sidebar-dark`, `sidebar-light`,
+  `sidebar-frame-dark`, `sidebar-frame-light` y `root` de `qwidget.qss`.
+  `sidebar_qss()`, `sidebar_stylesheet()` y `applyget()` resuelven el valor
+  según el tema, de modo que ningún `.py` ni `.qss` vuelve a escribir el color.
+- **Verificación.** Capturas offscreen de la ventana completa en ambos temas: la
+  columna derecha del sidebar muestrea `#FFFFFF` en oscuro y `#D1D1D6` en claro
+  (antes `#333333` en oscuro). Prueba nueva
+  `tests/test_theme_surfaces.py::test_sidebar_edge_is_white_on_dark_and_gray_on_light`,
+  que falla con el código anterior. Suite completa: 1549 pasan, 1 omitida;
+  `pyflakes` y `py_compile` limpios.
+- **Alcance.** Sólo tokens y QSS del marco del sidebar; no toca compilación,
+  empaquetado, blindaje ni el motor. Reversible y con el color en un único
+  lugar por tema.
+
 
 ### Mitigado en parte — arranque con tirones: la fase «ventana» repetía trabajo (R-6d1e4a83, issue #19)
 

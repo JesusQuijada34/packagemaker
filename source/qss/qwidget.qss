@@ -3,7 +3,7 @@
 /* @role: sidebar-dark */
 QWidget#NavigationSidebar {
     background: __SIDEBAR_BG__;
-    border-right: 1px solid __DIVIDER__;
+    border-right: 1px solid __SIDEBAR_BORDER_DARK__;
 }
 QWidget#NavigationSidebar QPushButton {
     color: __TEXT_MUTED__;
@@ -26,7 +26,7 @@ QWidget#NavigationSidebar QPushButton:checked {
 /* @role: sidebar-light */
 QWidget#NavigationSidebar {
     background: __SIDEBAR_BG_LIGHT__;
-    border-right: 1px solid #D1D1D6;
+    border-right: 1px solid __SIDEBAR_BORDER_LIGHT__;
 }
 QWidget#NavigationSidebar QPushButton {
     color: #1C1C1E;
@@ -50,7 +50,7 @@ QWidget#NavigationSidebar QPushButton:checked {
 * { outline: none; }
 QWidget:focus { border: none; outline: none; }
 QWidget#ContentContainer { background-color: __WINDOW_BG__; border: none }
-QWidget#NavigationSidebar { background-color: __SIDEBAR_BG__; border-right: 1px solid #333333; }
+QWidget#NavigationSidebar { background-color: __SIDEBAR_BG__; border-right: 1px solid __SIDEBAR_BORDER__; }
 QWidget#DialogCentral { background-color: transparent; border: none; }
 QWidget { background-color: transparent ; border: none; border-radius: 5px; }
 QWidget:focus, QPushButton:focus, QCheckBox:focus, QRadioButton:focus, QComboBox:focus,
@@ -84,7 +84,7 @@ QWidget { font-family: __FONT_STACK__; color: __TEXT__; }
 QWidget#IflappIdePanel { background: __PAGE__; }
 
 /* @role: sidebar-frame-dark */
-QWidget#NavigationSidebar { background: __SIDEBAR_BG__; border-right: 1px solid #333333; }
+QWidget#NavigationSidebar { background: __SIDEBAR_BG__; border-right: 1px solid __SIDEBAR_BORDER_DARK__; }
 QPushButton#SidebarCollapseButton { background: transparent; color: __SIDEBAR_TEXT_GRAY__; border: none; border-radius: 7px; }
 QPushButton#SidebarCollapseButton:hover { background: rgba(255,255,255,.06); }
 QPushButton#SidebarCollapseButton:pressed { background: rgba(255,255,255,.10); }
@@ -92,7 +92,7 @@ QWidget#NavigationSidebar QPushButton { color: __SIDEBAR_TEXT_GRAY__; font-famil
 QWidget#NavigationSidebar QPushButton:focus { outline: none; }
 
 /* @role: sidebar-frame-light */
-QWidget#NavigationSidebar { background: __SIDEBAR_BG_LIGHT__; border-right: 1px solid #D1D1D6; }
+QWidget#NavigationSidebar { background: __SIDEBAR_BG_LIGHT__; border-right: 1px solid __SIDEBAR_BORDER_LIGHT__; }
 QPushButton#SidebarCollapseButton { background: transparent; color: __SIDEBAR_TEXT_GRAY__; border: none; border-radius: 7px; }
 QPushButton#SidebarCollapseButton:hover { background: rgba(15,23,42,.07); }
 QPushButton#SidebarCollapseButton:pressed { background: __ACCENT_SOFT__; }
