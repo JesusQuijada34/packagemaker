@@ -137,7 +137,17 @@
     "account_missing": "Geen GitHub-sessie",
     "account_hint": "Het volledige profiel staat in de extensie Profiel van de zijbalk.",
     "patch_check": "Melden bij patches en nieuwe commits",
-    "patch_check_hint": "Vraagt bij het opstarten elke 6 uur api.github.com. Alleen lezen: er wordt niets gedownload of vervangen."
+    "patch_check_hint": "Vraagt bij het opstarten elke 6 uur api.github.com. Alleen lezen: er wordt niets gedownload of vervangen.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Provider en inloggegevens van de assistent",
+    "aide_provider": "Aanbieder",
+    "aide_endpoint": "Endpoint-URL",
+    "aide_model": "Model",
+    "aide_api_key": "API-sleutel",
+    "aide_key_saved": "Sleutel opgeslagen; typ een nieuwe om hem te vervangen",
+    "aide_key_missing": "Geen sleutel opgeslagen",
+    "aide_send_context": "Projectcontext meesturen (opgeschoond)",
+    "aide_hint": "De sleutel staat in data/pm.data en wordt alleen naar het opgegeven endpoint gestuurd. Zonder deze instelling verlaat niets de computer."
   },
   "create": {
     "sandbox": "Veilige sandbox",
@@ -898,7 +908,8 @@
     "state_no_session": "Meld je aan met je GitHub-account om Copilot te gebruiken.",
     "state_no_endpoint": "Geef de URL van het OpenAI-compatibele eindpunt op in de instellingen.",
     "state_no_key": "Geef je API-sleutel op in de instellingen.",
-    "api_key_placeholder": "API-sleutel (lokaal opgeslagen, nooit getoond)"
+    "api_key_placeholder": "API-sleutel (lokaal opgeslagen, nooit getoond)",
+    "api_key_saved": "Sleutel opgeslagen; typ een nieuwe om hem te vervangen"
   },
   "env": {
     "field": "Gegeven",

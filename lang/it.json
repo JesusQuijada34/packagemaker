@@ -137,7 +137,17 @@
     "account_missing": "Nessuna sessione GitHub",
     "account_hint": "Il profilo completo si trova nell'estensione Profilo della barra laterale.",
     "patch_check": "Avvisa di patch e nuovi commit",
-    "patch_check_hint": "Consulta api.github.com all'avvio ogni 6 ore. Solo lettura: non scarica né sostituisce file."
+    "patch_check_hint": "Consulta api.github.com all'avvio ogni 6 ore. Solo lettura: non scarica né sostituisce file.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Provider e credenziali dell'assistente",
+    "aide_provider": "Fornitore",
+    "aide_endpoint": "URL dell'endpoint",
+    "aide_model": "Modello",
+    "aide_api_key": "Chiave API",
+    "aide_key_saved": "Chiave salvata; scrivine una nuova per sostituirla",
+    "aide_key_missing": "Nessuna chiave salvata",
+    "aide_send_context": "Allega il contesto del progetto (ripulito)",
+    "aide_hint": "La chiave è salvata in data/pm.data e viene inviata solo all'endpoint indicato. Nulla esce dal computer senza questa configurazione."
   },
   "create": {
     "sandbox": "Sandbox sicura",
@@ -898,7 +908,8 @@
     "state_no_session": "Accedi con il tuo account GitHub per usare Copilot.",
     "state_no_endpoint": "Indica l'URL dell'endpoint compatibile con OpenAI nelle impostazioni.",
     "state_no_key": "Indica la tua chiave API nelle impostazioni.",
-    "api_key_placeholder": "Chiave API (salvata in locale, mai mostrata)"
+    "api_key_placeholder": "Chiave API (salvata in locale, mai mostrata)",
+    "api_key_saved": "Chiave salvata; scrivine una nuova per sostituirla"
   },
   "env": {
     "field": "Dato",

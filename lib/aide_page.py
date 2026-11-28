@@ -162,6 +162,33 @@ class AidePage(QWidget):
     def _on_context_toggled(self, checked: bool) -> None:
         aide_backend.save_settings(aide_send_context=bool(checked))
 
+    def refresh_settings(self) -> None:
+        """Relee los ajustes guardados (Configuración → AIDE) sin pisar lo escrito."""
+        self._settings = aide_backend.get_settings()
+        provider = str(self._settings.get("provider") or "copilot")
+        index = self.provider_combo.findData(provider)
+        if index >= 0 and index != self.provider_combo.currentIndex():
+            blocked = self.provider_combo.blockSignals(True)
+            self.provider_combo.setCurrentIndex(index)
+            self.provider_combo.blockSignals(blocked)
+        endpoint = str(self._settings.get("endpoint") or "")
+        if self.endpoint_input.text().strip() != endpoint:
+            self.endpoint_input.setText(endpoint)
+        model = str(self._settings.get("model") or "")
+        if self.model_input.text().strip() != model:
+            self.model_input.setText(model)
+        # La clave guardada no se copia al widget: se anuncia en el marcador.
+        self.key_input.clear()
+        blocked = self.context_check.blockSignals(True)
+        self.context_check.setChecked(bool(self._settings.get("send_context")))
+        self.context_check.blockSignals(blocked)
+        self.key_input.setPlaceholderText(
+            _t("aide.api_key_saved")
+            if self._settings.get("api_key")
+            else _t("aide.api_key_placeholder")
+        )
+        self._refresh_state()
+
     # --- envío ----------------------------------------------------------
     def _project_root(self) -> str:
         try:
@@ -216,4 +243,9 @@ class AidePage(QWidget):
         self.prompt_input.setPlaceholderText(_t("aide.placeholder"))
         self.context_check.setText(_t("aide.attach_context"))
         self.send_button.setText(_t("aide.send"))
+        self.key_input.setPlaceholderText(
+            _t("aide.api_key_saved")
+            if self._settings.get("api_key")
+            else _t("aide.api_key_placeholder")
+        )
         self._refresh_state()

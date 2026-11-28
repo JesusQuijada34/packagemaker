@@ -28,6 +28,10 @@ _IDENTICAL_BY_DESIGN = {
     "dashboard.platform_windows",
     "moonfix.title",
     "sidebar.moonfix",
+    # AIDE es el nombre del asistente y «Model» es la misma palabra en varios
+    # idiomas (Q-029).
+    "config.section_aide",
+    "config.aide_model",
     "config.notifications",
     "build.version",
     "dialog.project_version",

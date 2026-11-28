@@ -137,7 +137,17 @@
     "account_missing": "No GitHub session",
     "account_hint": "The full profile is shown in the Profile extension of the sidebar.",
     "patch_check": "Notify about patches and new commits",
-    "patch_check_hint": "Checks api.github.com at startup every 6 hours. Read-only: it downloads nothing and replaces no files."
+    "patch_check_hint": "Checks api.github.com at startup every 6 hours. Read-only: it downloads nothing and replaces no files.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Assistant provider and credentials",
+    "aide_provider": "Provider",
+    "aide_endpoint": "Endpoint URL",
+    "aide_model": "Model",
+    "aide_api_key": "API key",
+    "aide_key_saved": "Saved key; type a new one to replace it",
+    "aide_key_missing": "No saved key",
+    "aide_send_context": "Attach project context (sanitized)",
+    "aide_hint": "The key is stored in data/pm.data and is only sent to the endpoint you enter. Nothing leaves this machine without this setup."
   },
   "create": {
     "sandbox": "Secure sandbox",
@@ -898,7 +908,8 @@
     "state_no_session": "Sign in with your GitHub account to use Copilot.",
     "state_no_endpoint": "Set the OpenAI-compatible endpoint URL in Settings.",
     "state_no_key": "Set your API key in Settings.",
-    "api_key_placeholder": "API key (stored locally, never shown)"
+    "api_key_placeholder": "API key (stored locally, never shown)",
+    "api_key_saved": "Saved key; type a new one to replace it"
   },
   "env": {
     "field": "Field",

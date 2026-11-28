@@ -1,8 +1,6 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-28 (octogésimo ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
-- **Última revisión:** 2026-11-28 (octogésimo ciclo)
+- **Última revisión:** 2026-11-28 (octogésimo primer ciclo)
 - **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
   (2026-11-26, 21:40 (-04:00), autor `JesusQuijada34
   <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub: el
@@ -18,7 +16,7 @@
   aplicada en el sexagésimo primer ciclo.
 - **Último commit anterior del propietario:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 80 aplica **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 12 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-029, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 4 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 81 aplica **Q-029**: los campos del asistente (proveedor, endpoint, modelo, clave y contexto) ya se configuran en Configuración → AIDE, compartiendo almacén con la página. El ciclo 80 aplicó **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 11 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-029, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -280,21 +278,6 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Nota del propietario (commit `73dcdcd`):** «hazlo con compatibilidad»
 - **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, con la nota «hazlo con compatibilidad»); pendiente de implementación.
 
-### Q-029 — AIDE como chatbot con backend, API, servidor y puerto
-- **Tipo:** cambio de engine
-- **Fecha:** 2026-11-26 (issue #14)
-- **Qué se propone:** AIDE responde como chat (idealmente ya autenticado) o con
-  un backend/API/servidor y puerto configurables desde Configuración; los
-  prompts de la sesión llegan al chat como contexto.
-- **Archivos/componentes afectados:** `lib/aide_page.py`, `lib/pm_data.py`
-  (ajustes), `lib/settings_panel.py`, `addons/aide.yaml`, `tests/`.
-- **Riesgo y efectos secundarios:** alto; introduce credenciales y tráfico de
-  red nuevos. Hay que decidir qué se envía fuera del equipo y dónde se guardan
-  las claves; se respetará el ajuste de reportes y no se enviará nada sin
-  configuración explícita.
-- **Respuesta del propietario (JesusQuijada34):** `[x] SÍ`  `[ ] NO`
-- **Estado:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada). **Cubierta en su mayor parte** por el asistente AIDE del ciclo 56 (`lib/aide_page.py` + `lib/aide_backend.py`): chat con GitHub Copilot o un endpoint compatible con OpenAI, clave propia, contexto saneado y respuesta desde un hilo daemon. Lo único que falta de la ficha es trasladar los campos del endpoint a Configuración; hoy viven en la propia página.
-
 ### Q-031 — Addons empaquetados en `lib/addons/` y addons DLL externos
 - **Tipo:** cambio de engine
 - **Fecha:** 2026-11-26 (issue #14)
@@ -500,6 +483,27 @@ implementen tal como se describen. Sin esta marca no se modifica el engine.
   antes de validar la sesión) queda cubierto porque la comprobación de errores
   internos se hace antes de crear la ventana; no se puede verificar
   visualmente en Windows desde este entorno.
+
+### Q-029 — AIDE como chatbot con backend, API, servidor y puerto
+- **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con
+  la API de GitHub; issue #14).
+- **Aplicada:** octogésimo primer ciclo (2026-11-28). Nueva tarjeta
+  **Configuración → AIDE** (`lib/settings_panel.py`) entre Privacidad y
+  Extensiones: proveedor (GitHub Copilot o endpoint compatible con OpenAI), URL
+  del endpoint, modelo, clave de API y casilla de adjuntar contexto del
+  proyecto. La tarjeta y la página comparten el almacén
+  (`aide_backend.save_settings` → `data/pm.data`); la tarjeta avisa con la señal
+  `aideSettingsChanged` y `AidePage.refresh_settings()` refresca los campos, de
+  modo que no hay dos fuentes de verdad. La clave guardada nunca se reescribe en
+  un widget: el marcador indica «Clave guardada; escriba otra para cambiarla».
+  Claves `config.section_aide*`, `config.aide_*` y `aide.api_key_saved` en los
+  14 catálogos, con `tools/translations_aide.py`.
+- **Resultado:** el asistente ya existía desde el ciclo 56 (dos proveedores,
+  clave propia y contexto saneado); lo que faltaba era exponer sus campos en
+  Configuración, que es lo que pedía la ficha. Verificado en la ventana real
+  (offscreen) en español e inglés y con `tests/test_aide_settings_card.py` (9).
+- **Sin cambios de motor:** no toca compilación, empaquetado ni blindaje, y no
+  envía nada a la red por sí misma.
 
 ### Q-030 — Perfil de GitHub como extensión y orden del sidebar
 - **Decisión:** aprobada el 2026-11-26 (commit `73dcdcd`, autoría verificada con

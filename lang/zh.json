@@ -137,7 +137,17 @@
     "account_missing": "未登录 GitHub",
     "account_hint": "完整资料显示在侧边栏的“个人资料”扩展中。",
     "patch_check": "通知补丁和新提交",
-    "patch_check_hint": "启动时每 6 小时查询一次 api.github.com。仅读取，不下载也不替换任何文件。"
+    "patch_check_hint": "启动时每 6 小时查询一次 api.github.com。仅读取，不下载也不替换任何文件。",
+    "section_aide": "AIDE",
+    "section_aide_hint": "助手服务商与凭据",
+    "aide_provider": "服务商",
+    "aide_endpoint": "端点 URL",
+    "aide_model": "模型",
+    "aide_api_key": "API 密钥",
+    "aide_key_saved": "密钥已保存；输入新的密钥可替换",
+    "aide_key_missing": "尚未保存密钥",
+    "aide_send_context": "附加项目上下文（已清理）",
+    "aide_hint": "密钥保存在 data/pm.data 中，只会发送到你填写的端点。没有这项设置，任何数据都不会离开本机。"
   },
   "create": {
     "sandbox": "安全沙箱",
@@ -898,7 +908,8 @@
     "state_no_session": "请使用 GitHub 账户登录以使用 Copilot。",
     "state_no_endpoint": "请在设置中填写兼容 OpenAI 的端点 URL。",
     "state_no_key": "请在设置中填写你的 API 密钥。",
-    "api_key_placeholder": "API 密钥（本地保存，不会显示）"
+    "api_key_placeholder": "API 密钥（本地保存，不会显示）",
+    "api_key_saved": "密钥已保存；输入新的密钥可替换"
   },
   "env": {
     "field": "项目",

@@ -12,6 +12,8 @@ quedan enlazados (ni sobrescritos) por los de otra.
 
 from __future__ import annotations
 
+import html
+import re
 from typing import Sequence, Tuple
 
 try:
@@ -140,6 +142,22 @@ SUBTITLE_STYLE = (
 )
 
 
+_BOLD = re.compile(r"\*\*(.+?)\*\*")
+_CODE = re.compile(r"`([^`]+)`")
+
+
+def inline_markup(text: str) -> str:
+    """Markdown mínimo de los catálogos: ``**negrita**`` y `` `código` ``.
+
+    El ``QLabel`` del subtítulo no interpreta Markdown, así que los asteriscos
+    salían literales en la página de creación («el ecosistema **Influent OS**»).
+    El texto se escapa antes de convertirlo: los catálogos no son HTML.
+    """
+    escaped = html.escape(text or "", quote=False)
+    escaped = _BOLD.sub(r"<b>\1</b>", escaped)
+    return _CODE.sub(r'<span style="font-family:monospace">\1</span>', escaped)
+
+
 def set_action_bar_subtitle(bar, text: str) -> None:
     """Pone la descripción de la página bajo su título, fuera de la píldora.
 
@@ -149,7 +167,7 @@ def set_action_bar_subtitle(bar, text: str) -> None:
     label = getattr(bar, "subtitle_label", None)
     if label is None:
         return
-    label.setText(text or "")
+    label.setText(inline_markup(text) if text else "")
     label.setVisible(bool(text))
 
 

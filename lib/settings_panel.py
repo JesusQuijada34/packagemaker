@@ -86,6 +86,9 @@ class SettingsPanel(QWidget):
     fontChosen = pyqtSignal(str)
     networkModeChanged = pyqtSignal(str)
     navigationChanged = pyqtSignal(str, int, str)
+    # La página AIDE comparte estos ajustes con esta tarjeta (Q-029): avisa
+    # para que refresque sus campos sin reiniciar.
+    aideSettingsChanged = pyqtSignal()
 
     def __init__(self, host, user: Dict[str, object], parent=None):
         super().__init__(parent)
@@ -385,6 +388,9 @@ class SettingsPanel(QWidget):
             subtitle_key="config.section_privacy_hint",
         )
 
+        # AIDE: proveedor y credenciales del asistente (Q-029).
+        self._build_aide_card()
+
         # Extensiones: instalar un manifiesto del sidebar (Q-022).
         addons_page = SettingsDetailPage(tr("config.section_addons"))
         addons_page.add_widget(section_caption(tr("config.section_addons")))
@@ -506,6 +512,134 @@ class SettingsPanel(QWidget):
         logout_btn = self.widgets.get("conf_account_logout")
         if logout_btn is not None:
             logout_btn.setVisible(bool(login))
+
+    def _build_aide_card(self) -> None:
+        """Tarjeta AIDE: proveedor, endpoint, modelo y clave (Q-029).
+
+        La página AIDE construía estos campos en su propia barra; el propietario
+        los pidió en Configuración. Ambos editores escriben en el mismo almacén
+        (``aide_backend.save_settings``), así que esta tarjeta es la fuente y la
+        página se refresca con ``aideSettingsChanged``.
+        """
+        from lib import aide_backend
+
+        page = SettingsDetailPage(tr("config.section_aide"))
+        page.add_widget(section_caption(tr("config.section_aide")))
+        settings = aide_backend.get_settings()
+        self._aide_settings = settings
+
+        self._aide_provider = QComboBox()
+        self._aide_provider.addItem(tr("aide.provider_copilot"), "copilot")
+        self._aide_provider.addItem(tr("aide.provider_openai"), "openai")
+        index = self._aide_provider.findData(str(settings.get("provider") or "copilot"))
+        if index >= 0:
+            self._aide_provider.setCurrentIndex(index)
+        self._aide_provider.setStyleSheet(conf_field_stylesheet())
+        self._aide_provider.currentIndexChanged.connect(self._on_aide_provider_changed)
+        self.widgets["conf_aide_provider"] = self._aide_provider
+        page.add_widget(self._labelled(tr("config.aide_provider"), self._aide_provider))
+
+        self._aide_endpoint = QLineEdit(str(settings.get("endpoint") or ""))
+        self._aide_endpoint.setStyleSheet(conf_field_stylesheet())
+        self._aide_endpoint.setPlaceholderText("https://api.example.com/v1")
+        self._aide_endpoint.editingFinished.connect(self._on_aide_field_changed)
+        self.widgets["conf_aide_endpoint"] = self._aide_endpoint
+        page.add_widget(self._labelled(tr("config.aide_endpoint"), self._aide_endpoint))
+
+        self._aide_model = QLineEdit(str(settings.get("model") or ""))
+        self._aide_model.setStyleSheet(conf_field_stylesheet())
+        self._aide_model.setPlaceholderText(aide_backend.DEFAULT_MODEL)
+        self._aide_model.editingFinished.connect(self._on_aide_field_changed)
+        self.widgets["conf_aide_model"] = self._aide_model
+        page.add_widget(self._labelled(tr("config.aide_model"), self._aide_model))
+
+        self._aide_key = QLineEdit()
+        self._aide_key.setStyleSheet(conf_field_stylesheet())
+        self._aide_key.setEchoMode(QLineEdit.EchoMode.Password)
+        self._aide_key.editingFinished.connect(self._on_aide_field_changed)
+        self.widgets["conf_aide_key"] = self._aide_key
+        page.add_widget(self._labelled(tr("config.aide_api_key"), self._aide_key))
+
+        self._aide_context = QCheckBox(tr("config.aide_send_context"))
+        self._aide_context.setChecked(bool(settings.get("send_context")))
+        self._aide_context.toggled.connect(self._on_aide_context_toggled)
+        self.widgets["conf_aide_send_context"] = self._aide_context
+        page.add_widget(self._aide_context)
+
+        self._aide_hint = self._hint(tr("config.aide_hint"))
+        self.widgets["conf_aide_hint"] = self._aide_hint
+        page.add_widget(self._aide_hint)
+        page.add_stretch()
+        self._refresh_aide_key_placeholder()
+
+        self._register_card(
+            "aide", tr("config.section_aide"), "aide", page, multi=True,
+            subtitle=tr("config.section_aide_hint"),
+            title_key="config.section_aide",
+            subtitle_key="config.section_aide_hint",
+        )
+
+    def _refresh_aide_key_placeholder(self) -> None:
+        """La clave guardada nunca se reescribe en el campo: sólo se anuncia."""
+        saved = bool(getattr(self, "_aide_settings", {}).get("api_key"))
+        key = "config.aide_key_saved" if saved else "config.aide_key_missing"
+        self._aide_key.setPlaceholderText(tr(key))
+
+    def _on_aide_provider_changed(self, _index: int) -> None:
+        from lib import aide_backend
+
+        provider = self._aide_provider.currentData()
+        if not provider:
+            return
+        aide_backend.save_settings(aide_provider=str(provider))
+        self._aide_settings = aide_backend.get_settings()
+        self.aideSettingsChanged.emit()
+
+    def _on_aide_field_changed(self) -> None:
+        from lib import aide_backend
+
+        values = {
+            "aide_endpoint": self._aide_endpoint.text().strip(),
+            "aide_model": self._aide_model.text().strip() or aide_backend.DEFAULT_MODEL,
+        }
+        typed_key = self._aide_key.text().strip()
+        if typed_key:
+            values["aide_api_key"] = typed_key
+            self._aide_key.clear()
+        aide_backend.save_settings(**values)
+        self._aide_settings = aide_backend.get_settings()
+        self._refresh_aide_key_placeholder()
+        self.aideSettingsChanged.emit()
+
+    def _on_aide_context_toggled(self, checked: bool) -> None:
+        from lib import aide_backend
+
+        aide_backend.save_settings(aide_send_context=bool(checked))
+        self._aide_settings = aide_backend.get_settings()
+        self.aideSettingsChanged.emit()
+
+    def refresh_aide(self) -> None:
+        """Relee los ajustes de AIDE (los comparte con la página AIDE)."""
+        from lib import aide_backend
+
+        settings = aide_backend.get_settings()
+        self._aide_settings = settings
+        index = self._aide_provider.findData(str(settings.get("provider") or "copilot"))
+        if index >= 0 and index != self._aide_provider.currentIndex():
+            blocked = self._aide_provider.blockSignals(True)
+            self._aide_provider.setCurrentIndex(index)
+            self._aide_provider.blockSignals(blocked)
+        endpoint = str(settings.get("endpoint") or "")
+        if self._aide_endpoint.text().strip() != endpoint:
+            self._aide_endpoint.setText(endpoint)
+        model = str(settings.get("model") or "")
+        if self._aide_model.text().strip() != model:
+            self._aide_model.setText(model)
+        self._aide_key.clear()
+        blocked = self._aide_context.blockSignals(True)
+        self._aide_context.setChecked(bool(settings.get("send_context")))
+        self._aide_context.blockSignals(blocked)
+        self._refresh_aide_key_placeholder()
 
     def _delegate(self, name: str) -> None:
         """Ejecuta una acción de sesión del anfitrión si la ofrece."""
@@ -804,6 +938,18 @@ class SettingsPanel(QWidget):
         patch_btn = self.widgets.get("conf_patch_check_now")
         if patch_btn is not None:
             patch_btn.setText(tr("updates.check_now"))
+        aide_provider = self.widgets.get("conf_aide_provider")
+        if aide_provider is not None:
+            aide_provider.setItemText(0, tr("aide.provider_copilot"))
+            aide_provider.setItemText(1, tr("aide.provider_openai"))
+        aide_context = self.widgets.get("conf_aide_send_context")
+        if aide_context is not None:
+            aide_context.setText(tr("config.aide_send_context"))
+        aide_hint = self.widgets.get("conf_aide_hint")
+        if aide_hint is not None:
+            aide_hint.setText(tr("config.aide_hint"))
+        if getattr(self, "_aide_key", None) is not None:
+            self._refresh_aide_key_placeholder()
         self.refresh_account()
         self._refresh_addons_list()
         self._emit_navigation()
