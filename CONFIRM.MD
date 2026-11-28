@@ -1,13 +1,15 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-28 (octogésimo quinto ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `8e9ee9d`
-  (2026-11-28, 10:12 UTC, autor `openhands-agent`; mantenimiento del ciclo 84,
+- **Última revisión:** 2026-11-28 (octogésimo sexto ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0416a97`
+  (2026-11-28, 12:11 UTC, autor `openhands-agent`; mantenimiento del ciclo 85,
   no aporta respuestas). El último commit **del propietario** sigue siendo
   `0addecb` (2026-11-26, 21:40 (-04:00), autor `JesusQuijada34
   <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub), que
   marcó **Q-032** como `[X] SÍ` y ya está aplicada y archivada. En este ciclo no
-  hay marcas nuevas, así que no se aplica ninguna respuesta.
+  hay marcas nuevas, así que no se aplica ninguna respuesta; sí se añade
+  **Q-039**, que pregunta cómo avisar del segundo arranque en un ejecutable sin
+  consola.
 - **Commit anterior procesado:** `03d4d37`
   (mantenimiento del ciclo 79, autor `openhands-agent`; no aporta respuestas).
   Último commit **del propietario** anterior: `71e50f7` (2026-11-26, autor
@@ -16,7 +18,7 @@
   aplicada en el sexagésimo primer ciclo.
 - **Último commit anterior del propietario:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 6 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026, con la evidencia nueva de los issues #18, #20 y #21; Q-037, si se porta el método de compilación y rastreo de la 3.2.6 del issue #26; y Q-038, si el doble clic de la titlebar debe seguir maximizando antes del tercer gesto del modo inmersivo). El ciclo 85 corrige **R-9b5d3e72** (borde del sidebar invisible en tema oscuro, issue #21) sin tocar el motor: sólo tokens y QSS del marco. El ciclo 84 mitigó en parte **R-6d1e4a83** (arranque con tirones, issue #19): el catálogo i18n se aplana una vez, los QSS se leen una vez y `git rev-parse` se consulta una vez por sesión; la fase «ventana» emite ahora `ventana_paginas`, `ventana_tema` y `ventana_landing` para el próximo reporte de Windows. El ciclo 83 corrige **R-4b8e2c76** (modo inmersivo: revelado de la titlebar, icono de salir y cobertura de la barra de tareas, issue #17) sin tocar el motor. El ciclo 82 corrige **R-5e9c1d87** (perfil duplicado y recuento de repositorios, issue #24) y registra los issues #17–#27. El ciclo 81 aplica **Q-029**: los campos del asistente (proveedor, endpoint, modelo, clave y contexto) ya se configuran en Configuración → AIDE, compartiendo almacén con la página. El ciclo 80 aplicó **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 11 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-029, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 7 preguntas pendientes de respuesta (Q-039, cómo avisa del segundo arranque la instancia única; Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026, con la evidencia nueva de los issues #18, #20 y #21; Q-037, si se porta el método de compilación y rastreo de la 3.2.6 del issue #26; y Q-038, si el doble clic de la titlebar debe seguir maximizando antes del tercer gesto del modo inmersivo). El ciclo 86 implementa **R-3d6a8f25** (instancia única, issue #25) sin tocar el motor: `lib/single_instance.py` toma un bloqueo del sistema operativo sobre un archivo (liberado por el kernel al morir el proceso) y `main()` lo exige al abrir la GUI o la TUI, nunca en los comandos del CLI. El ciclo 85 corrige **R-9b5d3e72** (borde del sidebar invisible en tema oscuro, issue #21) sin tocar el motor: sólo tokens y QSS del marco. El ciclo 84 mitigó en parte **R-6d1e4a83** (arranque con tirones, issue #19): el catálogo i18n se aplana una vez, los QSS se leen una vez y `git rev-parse` se consulta una vez por sesión; la fase «ventana» emite ahora `ventana_paginas`, `ventana_tema` y `ventana_landing` para el próximo reporte de Windows. El ciclo 83 corrige **R-4b8e2c76** (modo inmersivo: revelado de la titlebar, icono de salir y cobertura de la barra de tareas, issue #17) sin tocar el motor. El ciclo 82 corrige **R-5e9c1d87** (perfil duplicado y recuento de repositorios, issue #24) y registra los issues #17–#27. El ciclo 81 aplica **Q-029**: los campos del asistente (proveedor, endpoint, modelo, clave y contexto) ya se configuran en Configuración → AIDE, compartiendo almacén con la página. El ciclo 80 aplicó **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 11 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-029, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -444,6 +446,36 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   compilación, empaquetado ni blindaje.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
+
+### Q-039 — Cómo avisa del segundo arranque la instancia única (issue #25)
+- **Tipo:** mejora
+- **Fecha:** 2026-11-28
+- **Qué se propone:** el ciclo 86 ya limita el programa a una instancia
+  (`lib/single_instance.py`). Lo que falta decidir es **cómo se avisa** cuando
+  alguien abre una segunda: hoy se escribe por `stderr` («Influent Package Maker
+  ya está en ejecución (PID N)…») y el proceso sale con código 0. En un
+  ejecutable de Windows sin consola ese texto no se ve, así que el usuario sólo
+  nota que «no pasa nada» al hacer doble clic otra vez. Opciones:
+  - **A)** Diálogo informativo modal con el aviso y un botón «Aceptar» (aparece
+    una ventana pequeña que hay que cerrar).
+  - **B)** Enfocar y traer al frente la ventana que ya está abierta, sin cursor
+    de espera ni texto (lo más cómodo, pero exige un canal entre procesos:
+    socket local o `QLocalServer`).
+  - **C)** Dejarlo como está: aviso sólo por `stderr`, silencio total en el
+    ejecutable compilado (estado actual del ciclo 86).
+  Indica la opción (`A`, `B` o `C`) junto a la marca.
+- **Comportamiento actual:** el segundo arranque se rechaza y avisa por
+  `stderr`; en el ejecutable sin consola no se ve ningún aviso.
+- **Archivos/componentes afectados:** `lib/single_instance.py`
+  (`claim_or_exit`/`already_running_message`) y quizá `packagemaker.py`
+  (crear la `QApplication` mínima para el diálogo o abrir el canal entre
+  procesos); pruebas en `tests/test_single_instance.py`.
+- **Riesgo y efectos secundarios:** **A** añade una ventana que puede molestar
+  a quien lanza el programa desde un script (y exige que exista Qt, que en el
+  modo TUI no está); **B** es el mayor cambio (IPC, hilo de escucha, cierre del
+  canal) y debe probarse en Windows; **C** no cambia nada. Ninguna toca
+  compilación, empaquetado ni blindaje.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO` (indica A, B o C en una nota)
 
 ---
 

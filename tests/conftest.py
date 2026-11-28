@@ -83,6 +83,25 @@ def _no_patch_watch():
 
 
 @pytest.fixture(scope="session", autouse=True)
+def _no_single_instance_guard():
+    """Desactiva la instancia única durante la suite.
+
+    Varios tests arrancan la aplicación de verdad por subproceso; sin este
+    interruptor un arranque anterior todavía vivo rechazaría al siguiente. La
+    guarda tiene sus propias pruebas en ``tests/test_single_instance.py``.
+    """
+    from lib import single_instance
+
+    previous = os.environ.get(single_instance.DISABLE_ENV)
+    os.environ[single_instance.DISABLE_ENV] = "0"
+    yield
+    if previous is None:
+        os.environ.pop(single_instance.DISABLE_ENV, None)
+    else:
+        os.environ[single_instance.DISABLE_ENV] = previous
+
+
+@pytest.fixture(scope="session", autouse=True)
 def _qt_app():
     global _APP
     try:

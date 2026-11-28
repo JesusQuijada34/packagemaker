@@ -1087,3 +1087,50 @@ Windows no se toca. Se documenta en `bugs.md` y se pide evidencia.
 
 No se prepara release: siguen los cambios de engine aprobados, R-6d1e4a83 sin
 verificar en Windows y el periodo sin reportes nuevos sin cumplir.
+
+## Octogésimo sexto ciclo (2026-11-28) — instancia única (R-3d6a8f25, issue #25)
+
+**Triaje.** Sin reportes nuevos ni respuestas del propietario en `CONFIRM.MD`
+(el último commit del archivo es `0416a97`, de mantenimiento). Los cinco bugs
+abiertos siguen bloqueados: R-6d1e4a83 espera el desglose de Windows;
+R-7e3a1b95, el orden que fija Q-032; R-6c2e4d91, Q-038; R-7f2b9c41, Q-034; y
+R-2f9b7c14, Q-036. Se atiende una mejora del propietario que no depende de
+ninguna decisión pendiente.
+
+**Decisión (marco del CEO).** Impacto alto y coste bajo: el issue #25 pide una
+sola instancia y hoy dos ventanas corrompen los ajustes (`PMDataStore.save()`
+vuelca el archivo entero) y comparten el sandbox de build. Opciones: no hacer
+nada (el dueño seguirá perdiendo ajustes), bloquear con archivo de PID (deja
+cerrojos huérfanos tras un cierre forzado) o bloquear con el sistema operativo
+(se libera solo). Se elige la tercera.
+
+**Causa raíz.** Nada en el arranque reclamaba la exclusividad: `main()`
+construía la ventana sin comprobar si ya había otra sesión, y `PMDataStore`
+escribe el JSON completo sin coordinación entre procesos.
+
+**Solución.** `lib/single_instance.py` abre el archivo de cerrojo con
+`O_RDWR|O_CREAT`, bloquea su primer byte (`flock` en POSIX, `msvcrt.locking` en
+Windows) y escribe el PID a continuación; si el bloqueo falla, espera hasta
+0,5 s a leer el PID del dueño y devuelve `acquired=False`. Si el sistema de
+archivos no soporta el bloqueo o no hay permisos, se deja arrancar. El registro
+`_HELD` evita que el mismo proceso se autobloquee y `atexit` libera al salir.
+`_claim_single_instance()` en `packagemaker.py` se llama en la GUI sin
+argumentos y en `--tui`, nunca en las acciones del CLI.
+
+**Pruebas.** `tests/test_single_instance.py` (11 casos) usa procesos reales:
+un segundo `claim()` desde otro proceso queda bloqueado con el PID del dueño; al
+matar al dueño el siguiente arranca (el kernel suelta el bloqueo); un archivo
+sobrante o corrupto no bloquea; el mismo proceso no se autobloquea; liberar deja
+entrar a otro; el interruptor desactiva la guarda; y `main()` con otra instancia
+viva sale sin construir la ventana. Manual: primer arranque con cerrojo, segundo
+rechazado, `--list-compilers` operativo con la ventana abierta y arranque
+correcto tras matar a la primera instancia. Suite completa: 1560 pasan, 1
+omitida; `pyflakes` y `py_compile` limpios.
+
+**Pendiente.** Q-039 en `CONFIRM.MD`: en un ejecutable de Windows sin consola el
+aviso por `stderr` no se ve, así que el propietario debe elegir entre diálogo
+informativo (A), enfocar la ventana existente (B) o dejarlo como está (C).
+
+**Release.** No se prepara: siguen los cambios de engine aprobados pendientes,
+cuatro bugs de prioridad alta sin resolver y el periodo sin reportes nuevos sin
+cumplir.

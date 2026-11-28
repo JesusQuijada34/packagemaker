@@ -1,18 +1,21 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-28 (ciclo 85: se corrige **R-9b5d3e72**
-—borde del sidebar, issue #21—, el único bug abierto que no dependía de una
-decisión del propietario. El separador derecho llevaba `#333333` sobre un fondo
-`#1C1C1E`: contraste 1,4:1 e invisible, justo lo que reporta el issue. Ahora es
-blanco en tema oscuro y conserva el gris `#D1D1D6` en tema claro, mediante los
-tokens nuevos `SIDEBAR_BORDER_DARK`/`SIDEBAR_BORDER_LIGHT`; ningún QSS vuelve a
-escribir el color a mano. Verificado con capturas offscreen y una prueba que
-muestrea el píxel del borde. Siguen pendientes los casos bloqueados por
-decisiones del propietario: **R-6d1e4a83** espera el desglose real de Windows,
-**R-7e3a1b95** está bloqueado por la coreografía de Q-032, **R-6c2e4d91** espera
-Q-038, **R-7f2b9c41** espera Q-034 y **R-2f9b7c14** espera Q-036. No hay
-respuestas nuevas del propietario en `CONFIRM.MD`; el issue #27 (cuenta externa)
-queda preparado con propuesta, sin push, hasta que la revise el propietario).
+Última actualización: 2026-11-28 (ciclo 86: no hay respuestas nuevas del
+propietario en `CONFIRM.MD` ni reportes nuevos; los cinco bugs abiertos siguen
+bloqueados por decisiones suyas o por falta de evidencia de Windows, así que el
+ciclo atiende la mejora **R-3d6a8f25** —instancia única, issue #25—, que él
+mismo reportó. El programa ahora rechaza el segundo arranque con un bloqueo del
+sistema operativo sobre un archivo: dos ventanas reescribían el mismo
+`data/pm.data` (la última en guardar descartaba los ajustes de la otra) y
+compartían la carpeta de build del proyecto. El bloqueo lo libera el kernel al
+morir el proceso, así que un cierre forzado no deja la aplicación bloqueada.
+Verificado con pruebas de procesos reales y con dos arranques manuales. Siguen
+pendientes los casos bloqueados: **R-6d1e4a83** espera el desglose real de
+Windows, **R-7e3a1b95** está bloqueado por la coreografía de Q-032,
+**R-6c2e4d91** espera Q-038, **R-7f2b9c41** espera Q-034 y **R-2f9b7c14**
+espera Q-036. Se añade **Q-039** (qué debe hacer el segundo arranque en un
+ejecutable sin consola). El issue #27 (cuenta externa) sigue preparado, sin
+push, hasta que lo revise el propietario.
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -38,7 +41,6 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
 | R-1a7c6d94 | Mejora — faltan temas de ayuda y explicar cada artefacto (issue #22) | Media | Pendiente |
 | R-8f2e5b13 | Mejora — AIDE como chatbot de la base de código (issue #23) | Media | Pendiente |
-| R-3d6a8f25 | Mejora — instancia única en código y compilado (issue #25) | Media | Pendiente |
 | R-4c8a2f61 | Mejora — pestañas con color invertido por tema (issue #20) | Media | Depende de Q-036 |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aplicada en parte (sidebar, R-8f4b2d61); falta superficie/texto de pestañas (Q-036) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
@@ -50,10 +52,12 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 
-**18 entradas en la cola**: 5 bugs (R-6d1e4a83
+**17 entradas en la cola**: 5 bugs (R-6d1e4a83
 mitigado en parte, a la espera del desglose de Windows; R-7e3a1b95 bloqueado por
-la coreografía de Q-032), 6 mejoras, 1 tarea de documentación externa y 6
+la coreografía de Q-032), 5 mejoras, 1 tarea de documentación externa y 6
 cambios de engine (5 aprobados y pendientes, más R-7c4b9e36 que espera Q-037).
+R-3d6a8f25 (instancia única) se retira de la cola en este mismo ciclo:
+implementada, probada e integrada.
 Q-013 sigue «aplicada en parte»: la consulta y el aviso de parches ya están en
 `main`; la descarga y la aplicación siguen pendientes. El reparto de Q-013/Q-026
 no cambia: el tema claro y las pestañas dependen del alcance que fije el
@@ -264,18 +268,6 @@ Q-019 (entorno aislado) y Q-032 (splash dentro de la ventana).
 - **Solución aplicada:** ninguna todavía.
 - **Commit / fecha de resolución:** —
 
-### R-3d6a8f25 — Instancia única en código y compilado (issue #25)
-
-- **Usuario:** JesusQuijada34 (issue #25).
-- **Fecha del reporte:** 2026-11-28
-- **Prioridad:** Media.
-- **Descripción:** se pueden abrir varias instancias del programa; pide
-  limitarlo a una sola tanto en código fuente como compilado.
-- **Estado:** pendiente. Requiere un cerrojo (socket o fichero con PID) y una
-  decisión sobre qué hacer al segundo arranque (enfocar o salir).
-- **Solución aplicada:** ninguna todavía.
-- **Commit / fecha de resolución:** —
-
 ### R-4c8a2f61 — Pestañas con color invertido por tema (issue #20)
 
 - **Usuario:** JesusQuijada34 (issue #20).
@@ -370,7 +362,7 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 18 entradas (ver Resumen). R-6d1e4a83 queda **mitigado en parte**
+- **Cola:** 17 entradas (ver Resumen). R-6d1e4a83 queda **mitigado en parte**
   en el ciclo 84 (i18n, QSS y `git rev-parse` ya no repiten trabajo, y la fase
   «ventana» emite su desglose) pero no se cierra sin el reporte de Windows.
   R-7e3a1b95 queda **bloqueado** por el orden aprobado en Q-032. R-6c2e4d91
@@ -381,6 +373,23 @@ al ciclo anterior.
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación, bugs de prioridad alta recién reportados y no ha pasado el
   periodo sin reportes nuevos.
+- **Nuevo en el ciclo 86:** **R-3d6a8f25** (instancia única, issue #25) queda
+  implementada, probada y archivada: `lib/single_instance.py` toma un bloqueo del
+  sistema operativo (`flock`/`msvcrt.locking`) sobre un archivo con el PID del
+  dueño, y `main()` lo exige en los dos caminos que abren la aplicación (GUI y
+  `--tui`), nunca en los comandos del CLI. El kernel libera el bloqueo al morir
+  el proceso, así que un cierre forzado no deja la aplicación bloqueada y un
+  PID reciclado no finge una instancia viva. Prueba:
+  `tests/test_single_instance.py` (11 casos con procesos reales, incluido
+  `main()` rechazando el segundo arranque); comprobado además con dos arranques
+  manuales offscreen y matando a la primera instancia. No toca compilación,
+  empaquetado, blindaje ni el motor: módulo de biblioteca estándar y una
+  llamada en `main()`, reversible con `PM_SINGLE_INSTANCE=0`.
+- **Nuevo en el ciclo 86:** se abre **Q-039** en `CONFIRM.MD` porque un
+  ejecutable de Windows sin consola no muestra el aviso por `stderr`: hay que
+  decidir si el segundo arranque enseña un diálogo informativo, enfoca la
+  ventana existente o se queda como está. El cerrojo ya funciona; sólo cambia
+  cómo se avisa.
 - **Nuevo en el ciclo 85:** **R-9b5d3e72** (issue #21) queda corregido y
   archivado. Sólo cambian los tokens y el QSS del marco del sidebar: el borde
   oscuro pasa de `#333333` a blanco y el claro conserva `#D1D1D6`; no toca

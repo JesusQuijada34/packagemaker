@@ -1,3 +1,48 @@
+## 2026-11-28 — octogésimo sexto ciclo
+
+### Añadido — instancia única: el segundo arranque se rechaza (R-3d6a8f25, issue #25)
+
+Pedido por **JesusQuijada34** en el [issue #25](https://github.com/JesusQuijada34/packagemaker/issues/25):
+«hay posibilidad de abrir multiples instancias del propio programa, puedes
+limitarlo a una instancia unica, estando en multimodo? (codigo y compilado)».
+
+- **Por qué importa.** `PMDataStore.save()` abre `data/pm.data` en modo
+  escritura y vuelca el árbol JSON entero: con dos ventanas, la última en
+  guardar descarta los ajustes de la otra. Además ambas comparten
+  `<proyecto>/build/pm-sandbox` y la carpeta del proyecto, así que dos builds
+  simultáneos se pisan (el entorno aislado de Q-019 crea y borra el mismo venv).
+- **Solución.** Nuevo `lib/single_instance.py` con un bloqueo **del sistema
+  operativo** sobre un archivo (`flock` en POSIX, `msvcrt.locking` en Windows),
+  una por usuario en la carpeta temporal (`PM_SINGLE_INSTANCE_DIR` la cambia).
+  El kernel libera el bloqueo al morir el proceso, así que no quedan cerrojos
+  huérfanos que impidan arrancar tras un cierre forzado, ni PIDs reciclados que
+  se confundan con una instancia viva; dentro del archivo se escribe el PID sólo
+  para poder decir cuál es la ventana que ya está abierta. Si el sistema de
+  archivos no soporta el bloqueo, se deja arrancar (fallar abierto) antes que
+  bloquear el programa por un problema del entorno.
+- **Dónde se aplica.** `main()` llama a `_claim_single_instance()` en los dos
+  caminos que **abren la aplicación**: la GUI sin argumentos y el modo `--tui`.
+  Los comandos del CLI (`--list-compilers`, `--create`, `--compile`, …) no toman
+  el cerrojo y siguen funcionando con la ventana abierta. Un segundo arranque
+  avisa por `stderr` («Influent Package Maker ya está en ejecución (PID N)…») y
+  sale con código 0: es el resultado esperado, no un fallo. Se desactiva con
+  `PM_SINGLE_INSTANCE=0` (lo usa la suite, igual que `PM_PATCH_CHECK`).
+- **Verificación.** `tests/test_single_instance.py` (11 casos) con procesos
+  reales: un segundo arranque queda bloqueado con el PID del dueño; al matar al
+  dueño el siguiente arranque entra (sin cerrojos huérfanos); un archivo
+  sobrante o corrupto no bloquea; el mismo proceso no se autobloquea; liberar
+  deja entrar a otro; el interruptor desactiva la guarda; y una prueba de
+  extremo a extremo en la que `main()` con otra instancia viva sale sin
+  construir la ventana. Comprobación manual: primer arranque con el cerrojo,
+  segundo rechazado, `--list-compilers` operativo con la ventana abierta y
+  arranque correcto tras matar a la primera instancia. Suite completa: 1560
+  pasan, 1 omitida; `pyflakes` y `py_compile` limpios.
+- **Alcance.** No toca compilación, empaquetado, blindaje ni el motor: un módulo
+  nuevo de biblioteca estándar y una llamada en `main()`. Reversible con la
+  variable de entorno. Qué debe hacer el segundo arranque en un ejecutable de
+  Windows sin consola (diálogo informativo o enfocar la ventana existente) se
+  pregunta en **Q-039**; hoy sólo se avisa por `stderr`.
+
 ## 2026-11-28 — octogésimo quinto ciclo
 
 ### Corregido — el borde del sidebar era invisible en tema oscuro (R-9b5d3e72, issue #21)

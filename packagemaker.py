@@ -4863,6 +4863,20 @@ def report_startup_lags(timeline, errors=(), minimum=None, ready=None) -> bool:
         return False
 
 
+def _claim_single_instance():
+    """Rechaza el segundo arranque de la aplicación (issue #25 / R-3d6a8f25).
+
+    El cerrojo se toma sólo al abrir la aplicación (GUI o TUI), no en los
+    comandos del CLI: `--create`, `--compile` o `--list-compilers` deben seguir
+    funcionando con la ventana abierta. El ``atexit`` del módulo libera el
+    archivo al salir; si el proceso muere de golpe, el PID huérfano se detecta
+    en el siguiente arranque.
+    """
+    from lib.single_instance import claim_or_exit
+
+    return claim_or_exit()
+
+
 def main():
     global main_window
 
@@ -4903,6 +4917,7 @@ def main():
 
         # ── Modo TUI explícito ─────────────────────────────────────────────
         if getattr(args, 'tui', False):
+            _claim_single_instance()
             from lib.tui import run_tui
             run_tui()
             return
@@ -4970,6 +4985,10 @@ def main():
             return
 
     # ── Sin args: lanzar GUI o TUI según el entorno ───────────────────────────
+    # Instancia única (issue #25): dos ventanas reescriben el mismo
+    # ``data/pm.data`` y comparten la carpeta de build del proyecto.
+    _claim_single_instance()
+
     # En entornos sin display (SSH sin DISPLAY, CI, WSL puro) lanzar TUI automáticamente.
     _no_display = (
         not PYQT6_AVAILABLE

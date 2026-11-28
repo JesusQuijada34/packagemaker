@@ -117,6 +117,14 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   vuelve por la señal `patchChecked`; cada 6 h, se salta en modo red «uso
   medido» y se apaga con `PM_PATCH_CHECK=0` (`tests/conftest.py` lo apaga en la
   suite para que ningún test salga del equipo).
+- `lib/single_instance.py` — instancia única (issue #25/R-3d6a8f25): bloqueo del
+  sistema operativo sobre un archivo por usuario (`flock` en POSIX,
+  `msvcrt.locking` en Windows) con el PID del dueño dentro; el kernel lo libera
+  al morir el proceso, así que no quedan cerrojos huérfanos. `main()` llama a
+  `_claim_single_instance()` al abrir la GUI y la `--tui`, **nunca** en los
+  comandos del CLI (deben correr con la ventana abierta). `PM_SINGLE_INSTANCE=0`
+  lo desactiva (`tests/conftest.py` lo apaga en la suite) y
+  `PM_SINGLE_INSTANCE_DIR` cambia la carpeta del cerrojo.
 - `lib/hardware_sandbox.py` — aislamiento jerárquico
   (qemu-kvm → systemd-nspawn → docker/podman → bwrap/firejail → unshare → local).
   `qemu-kvm` sólo se anuncia con kernel/initrd (`IFLAPP_QEMU_KERNEL`/`_INITRD`).
