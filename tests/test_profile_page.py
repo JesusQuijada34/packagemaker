@@ -298,13 +298,88 @@ def test_window_builds_the_profile_page_and_account_card(qt_app, isolated_store)
     try:
         assert hasattr(win, "page_profile")
         assert win.page_profile.objectName() == "ProfilePage"
-        assert win.github_card is not None
-        assert win.github_card.parent() is not None
+        # La identidad vive sólo en la página (R-5e9c1d87): no hay tarjeta
+        # compacta duplicada en el sidebar ni apilada sobre el perfil.
+        assert win.github_card is None
         panel = win.settings_panel
         assert "account" in panel._cards
         assert panel.widgets["conf_account_status"].text() == i18n.tr(
             "config.account_missing"
         )
+    finally:
+        win.close()
+        qt_app.processEvents()
+
+
+# ── R-5e9c1d87: identidad única y estadísticas persistentes ─────────────────
+
+
+def test_profile_extras_survive_the_store_round_trip(isolated_store):
+    """El recuento de repositorios y la bio deben seguir ahí tras reiniciar."""
+    from lib import github_identity
+
+    profile = github_identity.GitHubProfile(
+        login="octocat",
+        name="The Octocat",
+        extras={
+            "bio": "Constructor de paquetes",
+            "public_repos": 7,
+            "followers": 12,
+            "following": 3,
+        },
+    )
+    github_identity.save_profile(profile)
+
+    restored = github_identity.load_profile()
+    assert restored.extras == {
+        "bio": "Constructor de paquetes",
+        "public_repos": 7,
+        "followers": 12,
+        "following": 3,
+    }
+
+
+def test_clear_identity_removes_the_saved_extras(isolated_store):
+    from lib import github_identity
+
+    github_identity.save_profile(
+        github_identity.GitHubProfile(login="octocat", extras={"public_repos": 7})
+    )
+    github_identity.clear_identity()
+
+    assert github_identity.load_profile().extras == {}
+
+
+def test_profile_page_draws_a_single_identity_and_logout(qt_app):
+    """La tarjeta compacta del sidebar ya no se apila sobre la identidad."""
+    from PyQt6.QtWidgets import QPushButton
+
+    from lib.github_identity import GitHubProfile
+    from lib.github_profile_card import GitHubProfileCard
+
+    page = _page(
+        profile_loader=lambda: GitHubProfile(login="octocat"),
+        avatar_loader=lambda login: None,
+    )
+
+    assert page.findChildren(GitHubProfileCard) == []
+    logout_buttons = [
+        button
+        for button in page.findChildren(QPushButton)
+        if button.text() == i18n.tr("github.logout")
+    ]
+    assert len(logout_buttons) == 1
+    assert len(page.findChildren(type(page.avatar), "ProfileAvatar")) == 1
+
+
+def test_window_profile_page_has_no_duplicate_account_card(qt_app, isolated_store):
+    import packagemaker as pm
+    from lib.github_profile_card import GitHubProfileCard
+
+    win = pm.PackageTodoGUI()
+    try:
+        assert win.page_profile.findChildren(GitHubProfileCard) == []
+        assert getattr(win, "github_card", None) is None
     finally:
         win.close()
         qt_app.processEvents()

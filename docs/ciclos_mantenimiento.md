@@ -981,3 +981,25 @@ ciclos: es un registro de auditoría.
   (8 entradas) y R-8b5c1d47 queda en observación. No se prepara release: siguen
   pendientes los cambios de engine aprobados, la segunda etapa de Q-013 y
   R-7f2b9c41 espera la decisión de Q-034.
+
+## Octogésimo segundo ciclo (2026-11-28)
+
+Llegan once reportes nuevos del propietario (issues #17 a #26) y uno de la
+cuenta externa JoseSuppini34 (#27). Se registran todos en `bugs.md` con su ID y
+se atiende el más contenido: **R-5e9c1d87** (issue #24). La página Perfil
+apilaba la tarjeta compacta `GitHubProfileCard` sobre su propia identidad (dos
+avatares y dos botones «Salir») y `github_identity.save_profile()` no guardaba
+`GitHubProfile.extras`, así que al recargar desde `data/pm.data` se perdían la
+biografía y el recuento de repositorios. Ahora la identidad vive sólo en la
+página, la tarjeta deja de construirse en `packagemaker.py` y los extras se
+guardan como `github_extras` (con limpieza en `clear_identity()`). Verificado
+offscreen con un perfil guardado: un avatar, un «Salir» y «7 repositorios · 12
+seguidores · 3 siguiendo». Pruebas nuevas en `tests/test_profile_page.py`.
+
+El issue #18 (tema claro) queda diagnosticado, no corregido: `system_theme_mode()`
+acierta, el sidebar resuelve su blanco translúcido, pero el stack conserva
+`CONTENT_BG` oscuro y ~40 estilos de página llevan `color:white`; el alcance se
+fija en **Q-036** con la evidencia medida. El issue #26 (compilar y rastrear
+como la 3.2.6) entra como cambio de engine en **Q-037**, sin implementar. No se
+prepara release: hay bugs de prioridad alta recién reportados y cambios de
+engine pendientes.

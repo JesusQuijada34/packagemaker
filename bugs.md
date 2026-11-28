@@ -1,14 +1,17 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-28 (ciclo 81: **Q-029 aplicada** —los campos de
-AIDE ya se configuran en Configuración— y **R-8b5c1d47** corregido —el
-subtítulo de la barra ya no muestra el Markdown de los catálogos—. La cola baja
-a 8 entradas porque R-2a8d4b73 sale al quedar cubierto por completo).
+Última actualización: 2026-11-28 (ciclo 82: llegan once reportes nuevos del
+propietario —issues #17 a #26— y uno externo (#27). Se corrige **R-5e9c1d87**
+(issue #24: perfil duplicado y recuento de repositorios perdido) y el resto
+entra en la cola. El tema claro (issue #18) queda diagnosticado y pendiente de
+la decisión de alcance Q-036; el método de compilación de la 3.2.6 (issue #26)
+se registra como cambio de engine en **Q-037**).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
-[issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14) y
-[issue #15](https://github.com/JesusQuijada34/packagemaker/issues/15)
+[issue #14](https://github.com/JesusQuijada34/packagemaker/issues/14),
+[issue #15](https://github.com/JesusQuijada34/packagemaker/issues/15) y
+[issues #17 a #27](https://github.com/JesusQuijada34/packagemaker/issues?q=is%3Aissue+is%3Aopen)
 Rama de trabajo: `main`
 
 Este archivo es la **cola activa**: sólo contiene lo pendiente. Los bugs ya
@@ -21,32 +24,34 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
+| R-7e3a1b95 | Bug — splash, titlebar, pantalla completa y AIDE (issue #17) | Alta | Pendiente |
+| R-2f9b7c14 | Bug — el tema claro no se aplica al contenido (issue #18) | Alta | Diagnosticado; alcance en Q-036 |
+| R-6d1e4a83 | Bug — arranque con tirones: 10,3 s en la fase «ventana» (issue #19) | Alta | Pendiente |
+| R-9b5d3e72 | Bug — el borde del sidebar no se ve como en Reportes (issue #21) | Baja | Pendiente |
 | R-7f2b9c41 | Bug — el updater de los proyectos no puede instalar un `.iflapp` | Alta | Pendiente de decisión (Q-034) |
+| R-1a7c6d94 | Mejora — faltan temas de ayuda y explicar cada artefacto (issue #22) | Media | Pendiente |
+| R-8f2e5b13 | Mejora — AIDE como chatbot de la base de código (issue #23) | Media | Pendiente |
+| R-3d6a8f25 | Mejora — instancia única en código y compilado (issue #25) | Media | Pendiente |
+| R-4c8a2f61 | Mejora — pestañas con color invertido por tema (issue #20) | Media | Depende de Q-036 |
 | R-5a7d2f16 | Mejora — fondo translúcido y colores de pestañas por tema | Media | Aplicada en parte (sidebar, R-8f4b2d61); falta superficie/texto de pestañas (Q-036) |
 | R-3c8e4b72 | Mejora — faltan ajustes en Configuración | Baja | Pendiente (mejora sin pregunta) |
+| R-0b8d2c47 | Documentación — README con capturas e instalación (issue #27) | Baja | Reporte externo; espera revisión del propietario |
+| R-7c4b9e36 | Cambio de engine — método de compilación y rastreo de la 3.2.6 (issue #26) | Alta | Pendiente de aprobación (Q-037) |
 | R-9a4e2c83 | Cambio de engine — GitHub y CloudCube (issue #11) | Media | Aprobado Q-023; pendiente de implementación |
 | R-5f1b8d24 | Cambio de engine — updater como extensión (issue #11) | Media | Aprobado Q-024; pendiente de implementación |
 | R-8e6a3c15 | Cambio de engine — Leviathan y action bar como control (issue #11) | Media | Aprobado Q-025; pendiente de implementación |
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 
-**8 entradas en la cola**: 1 bug, 2 mejoras de producto y 5 cambios de engine
-(4 aprobados y pendientes de implementación y Q-013 aplicada en parte). Q-013
-sigue «aplicada en parte»: su primera etapa (consulta y aviso de parches) ya
-está en `main`; la descarga y la aplicación del parche siguen pendientes.
-R-2a8d4b73 (AIDE como chatbot, Q-029) sale de la cola en este ciclo: sus
-campos ya se configuran en Configuración, probados y verificados en la ventana
-real. R-5c9a3e17 (splash UWP, Q-032) salió en el ciclo anterior.
-R-6f1c8e35 (perfil de GitHub como extensión, Q-030) sale de la cola en este
-ciclo: implementada, probada y verificada en la ventana real.
-R-2c8d4f71 (addons en `lib/addons/` e instalación desde Configuración, Q-022)
-salió en el ciclo anterior: implementada, probada y verificada.
-R-7b3e9a52 (ayuda global, Q-021) salió de la cola en este ciclo: implementada,
-probada y verificada en la ventana real.
-R-7b2c9e51 salió de la cola en el ciclo anterior: Q-027 quedó implementada,
-probada y verificada con un arranque real (splash cerrado a los 5,61 s con un
-mínimo de 5,50 s) y con el reporte de tirones en la cola de reportes.
-R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
+**18 entradas en la cola**: 6 bugs (R-5e9c1d87 se corrige en este ciclo y pasa
+a observación), 6 mejoras, 1 tarea de documentación externa y 6 cambios de
+engine (5 aprobados y pendientes, más R-7c4b9e36 que espera Q-037). Q-013 sigue
+«aplicada en parte»: la consulta y el aviso de parches ya están en `main`; la
+descarga y la aplicación siguen pendientes. Los once issues nuevos no cambian
+el reparto de Q-013/Q-026: el tema claro y las pestañas dependen del alcance que
+fije el propietario en Q-036. Siguen archivados Q-029 (AIDE en Configuración),
+Q-030 (perfil como extensión), Q-022 (addons), Q-021 (ayuda), Q-027 (splash
+mínimo), Q-019 (entorno aislado) y Q-032 (splash dentro de la ventana).
 
 ## Bugs pendientes
 
@@ -75,6 +80,76 @@ R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
   PackageMaker o dejar `.zip` como único formato documentado.
 - **Solución aplicada:** ninguna todavía. El CLI de Q-017 ya informa del
   formato no soportado en vez de fallar con un traceback.
+- **Commit / fecha de resolución:** —
+
+### R-7e3a1b95 — Splash, titlebar y pantalla completa (issue #17)
+
+- **Usuario:** JesusQuijada34 (issue #17, reporte desde la aplicación).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Alta.
+- **Descripción:** el splash no se muestra primero (la ventana se oculta y
+  luego salta el splash), los gestos de la titlebar se adelantan al tercer
+  clic, al entrar en pantalla completa la titlebar no sale desde arriba, no
+  aparece el icono de salir y queda un borde inferior que deja la barra de
+  tareas activa; además AIDE debe parecer un chatbot y no una pestaña con fondo
+  detrás del texto.
+- **Pasos para reproducirlo:** arrancar la aplicación en Windows y observar la
+  secuencia; hacer tres gestos sobre la titlebar y pasar el cursor por el borde
+  superior en pantalla completa; abrir AIDE.
+- **Estado:** pendiente. Son varios síntomas de UI; se separará el arreglo del
+  splash/titlebar del rediseño de AIDE.
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
+### R-2f9b7c14 — El tema claro no se aplica al contenido (issue #18)
+
+- **Usuario:** JesusQuijada34 (issue #18).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Alta.
+- **Descripción:** en Windows en modo claro todo se ve oscuro y el sidebar no
+  muestra la capa blanca translúcida 0,3–0,5.
+- **Evidencia recogida (ciclo 82, offscreen):** `system_theme_mode()` devuelve
+  `light`, la hoja del `central` sí lleva `#F5F7FB` y el sidebar sí resuelve
+  `SIDEBAR_BG_LIGHT` (alfa 177), pero el `QStackedWidget` del contenido conserva
+  `background:rgba(28,28,30,0.82)` porque `packagemaker_008` usa `CONTENT_BG`
+  literal y `apply_theme()` nunca lo re-resuelve. Medido: píxel del stack
+  `#1c1c1e` en tema claro. Además ~40 estilos de `lib/fluent_theme.py` llevan
+  `color:white`, así que pasar la superficie a clara sin resolver el texto deja
+  los títulos invisibles (visto en captura).
+- **Causa raíz:** dos capas de estilo sin tema: la superficie del stack y los
+  estilos de página en línea.
+- **Estado:** diagnosticado; el alcance (qué superficies y textos se invierten)
+  se decide en **Q-036**. No se toca hasta la respuesta del propietario.
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
+### R-6d1e4a83 — Arranque con tirones: 10,3 s en la fase «ventana» (issue #19)
+
+- **Usuario:** JesusQuijada34 (issue #19, reporte automático `StartupLag`).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Alta.
+- **Descripción:** el arranque tarda 16,21 s en dejar lista la interfaz; la
+  fase «ventana» consume 10,32 s, seguida de `idioma_ui` (2,93 s) y `fuente`
+  (1,22 s). Equipo de 2 núcleos con Windows 10.
+- **Reproducción:** `PM_SPLASH_MIN_SECONDS=0.05` no reproduce el tiempo real;
+  hace falta medir la construcción de la ventana con `StartupTimeline` en el
+  equipo del reporte.
+- **Estado:** pendiente. No se puede atribuir la causa sin el desglose interno
+  de la fase «ventana» en Windows (los tiempos offscreen no son comparables).
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
+### R-9b5d3e72 — El borde del sidebar no se ve como en Reportes (issue #21)
+
+- **Usuario:** JesusQuijada34 (issue #21).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Baja.
+- **Descripción:** el separador del sidebar no se distingue como el del panel
+  de Reportes; pide gris en modo claro y blanco en modo oscuro.
+- **Estado:** pendiente. La regla actual usa `#D1D1D6` (claro) y `#333333`
+  (oscuro); falta confirmar si el reporte habla del borde, del fondo o de la
+  barra de desplazamiento antes de cambiarlo.
+- **Solución aplicada:** ninguna todavía.
 - **Commit / fecha de resolución:** —
 
 ## Mejoras pendientes
@@ -111,6 +186,67 @@ R-4d9e2b61 salió en el ciclo 72 con Q-019 (entorno aislado de compilación).
 - **Estado:** Pendiente. El propio propietario la condiciona a que bajen los
   bugs; no entra en un ciclo con bugs de prioridad alta abiertos.
 
+### R-1a7c6d94 — Faltan temas de ayuda y explicar cada artefacto (issue #22)
+
+- **Usuario:** JesusQuijada34 (issue #22).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Media.
+- **Descripción:** la ayuda está resumida y no explica qué significa cada
+  artefacto ni cada botón; hay usuarios que no pueden adivinarlo.
+- **Estado:** pendiente. Es contenido, no motor: exige temas nuevos en
+  `lib/help_page.py` y claves en los 14 catálogos de `lang/`.
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
+### R-8f2e5b13 — AIDE como chatbot de la base de código (issue #23)
+
+- **Usuario:** JesusQuijada34 (issue #23).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Media.
+- **Descripción:** AIDE debe ser un chatbot tipo ChatGPT para hablar con la IA
+  sobre la base del código, no una pestaña con fondo detrás del texto.
+- **Estado:** pendiente. El backend, la clave y el contexto ya se configuran
+  (Q-029); falta la interfaz de conversación. Se separa del bug visual de #17.
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
+### R-3d6a8f25 — Instancia única en código y compilado (issue #25)
+
+- **Usuario:** JesusQuijada34 (issue #25).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Media.
+- **Descripción:** se pueden abrir varias instancias del programa; pide
+  limitarlo a una sola tanto en código fuente como compilado.
+- **Estado:** pendiente. Requiere un cerrojo (socket o fichero con PID) y una
+  decisión sobre qué hacer al segundo arranque (enfocar o salir).
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
+### R-4c8a2f61 — Pestañas con color invertido por tema (issue #20)
+
+- **Usuario:** JesusQuijada34 (issue #20).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Media.
+- **Descripción:** si el sidebar es blanco en modo claro, las pestañas deben
+  ser blancas con texto oscuro; en oscuro, al contrario.
+- **Estado:** depende de **Q-036**, que fija el alcance de la inversión de
+  superficie y texto (R-5a7d2f16).
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
+### R-0b8d2c47 — README con capturas e instalación (issue #27)
+
+- **Usuario:** JoseSuppini34 (issue #27), cuenta externa.
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Baja.
+- **Descripción:** pregunta si el README está completo para leer con capturas
+  de la aplicación y pide pasos de instalación.
+- **Estado:** pendiente de revisión del propietario (el reporte no es suyo). Se
+  responde al issue con la información disponible; no se modifica el README sin
+  su visto bueno.
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
 ## Cambios de engine pendientes
 
 Cambian comportamiento fundamental, UI o empaquetado y **sólo se implementan
@@ -134,6 +270,7 @@ bloque `Q-xxx` de `CONFIRM.MD`; aquí queda el índice.
 | 19 | Q-027 (R-7b2c9e51) | Duración mínima del splash y reporte de tirones | **Aplicado** (ciclo 73); R-7b2c9e51 en observación | medio |
 | 20 | Q-028 (R-9c3f5a28) | Librería de paneles y pestañas verticales | Aprobado; pendiente | alto |
 | 23 | Q-031 (R-3b7e2d94) | Addons empaquetados en `lib/addons/` y addons DLL | Aprobado; pendiente | alto |
+| 24 | Q-037 (R-7c4b9e36) | Portar el método de compilación y rastreo de la 3.2.6 | **Pendiente de aprobación** (issue #26) | alto |
 
 Ya implementados y verificados: splash dentro de la ventana principal, estilo
 UWP (Q-032, ciclo 80), perfil de GitHub como extensión y panel de
@@ -157,6 +294,7 @@ al ciclo anterior.
 
 | ID | Título | Prioridad | Corregido | Prueba de regresión |
 |---|---|---|---|---|
+| R-5e9c1d87 | Perfil duplicado (avatar y «Salir» dos veces) y recuento de repositorios perdido (issue #24) | Alta | ciclo 82, 2026-11-28 | `tests/test_profile_page.py::test_profile_page_draws_a_single_identity_and_logout`, `::test_profile_extras_survive_the_store_round_trip` |
 | R-8b5c1d47 | El subtítulo de la barra mostraba el Markdown de los catálogos | Baja | ciclo 81, 2026-11-28 | `tests/test_activity_bar_and_subtitle.py::test_subtitle_renders_the_catalog_markdown` |
 | R-4a9d1c63 | La vigilancia de parches sólo consultaba al arrancar (Q-013, etapa 1) | Media | ciclo 80, 2026-11-28 | `tests/test_patch_watch_ui.py::test_watch_rechecks_on_a_timer_without_user_action` |
 | R-8d3f6a21 | El backend Nuitka no podía compilar (opciones inválidas y API embebida sin proteger) | Alta | ciclo 66, 2026-11-26 | `tests/test_nuitka_backend_arguments.py` |
@@ -171,14 +309,21 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 8 entradas (ver Resumen). No hay bugs críticos reportados sin
-  atender. El único bug abierto, R-7f2b9c41, espera la decisión de Q-034.
-  R-4d9e2b61 (Q-019, entorno aislado) y R-7b2c9e51 (Q-027, splash mínimo y
-  reporte de tirones) quedan en observación tras verificarse con arranques y
-  compilaciones reales. De Q-012 sólo quedan la barra marquee permanente y las
-  notificaciones nativas (mejora, no fallo de rendimiento).
+- **Cola:** 18 entradas (ver Resumen). Llegaron once reportes nuevos (issues
+  #17–#27) y el ciclo atiende el más contenido: R-5e9c1d87 (issue #24), que pasa
+  a observación. R-7f2b9c41 sigue esperando Q-034; el tema claro (R-2f9b7c14,
+  issue #18) queda diagnosticado y espera el alcance de Q-036; R-7c4b9e36
+  (issue #26) espera Q-037. R-4d9e2b61 (Q-019) y R-7b2c9e51 (Q-027) siguen en
+  observación tras verificarse con arranques y compilaciones reales.
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
-  de implementación y no ha pasado el periodo sin reportes nuevos.
+  de implementación, bugs de prioridad alta recién reportados y no ha pasado el
+  periodo sin reportes nuevos.
+- **Nuevo en el ciclo 82:** **R-5e9c1d87** (issue #24) queda en observación. El
+  perfil pintaba la tarjeta compacta del sidebar y su propia identidad a la vez
+  (dos avatares y dos botones «Salir»), y `save_profile()` no guardaba `extras`,
+  así que tras reiniciar el perfil mostraba 0 repositorios y sin biografía. Sólo
+  cambia la página Perfil y el almacén de identidad; no toca compilación,
+  empaquetado ni blindaje.
 - **Nuevo en el ciclo 79:** la vigilancia de parches (Q-013, etapa 1) no cambia
   compilación, empaquetado ni blindaje: sólo hace un `GET` de lectura y avisa.
   No entra en observación porque no sustituye nada; su verificación es la
@@ -202,6 +347,11 @@ al ciclo anterior.
   nada a la red por sí misma; no entra en observación como cambio de motor
   porque no altera compilación, empaquetado ni blindaje.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
+
+- Octogésimo segundo ciclo (2026-11-28): once reportes nuevos (issues #17–#27)
+  registrados; se corrige **R-5e9c1d87** (issue #24: perfil duplicado y recuento
+  de repositorios perdido) y pasa a observación. El detalle vive en
+  `CHANGELOG.md` y en `docs/ciclos_mantenimiento.md`.
 
 - Septuagésimo primer ciclo (2026-11-27): se corrige **R-6b4d2f81**, encontrado
   al reproducir R-3a9c6e28: las cuatro ventanas de `lib/coreUpdater/windows.py`

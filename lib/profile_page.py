@@ -83,7 +83,6 @@ class ProfilePage(QWidget):
         self,
         parent=None,
         *,
-        card: Optional[QWidget] = None,
         on_login: Optional[Callable[[], None]] = None,
         on_logout: Optional[Callable[[], None]] = None,
         profile_loader: Optional[Callable[[], Any]] = None,
@@ -139,10 +138,6 @@ class ProfilePage(QWidget):
         layout = QVBoxLayout(body)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(14)
-
-        self.card = card
-        if self.card is not None:
-            layout.addWidget(self.card)
 
         layout.addWidget(self._build_identity())
         layout.addWidget(self._build_repositories())

@@ -27,6 +27,7 @@ LOGIN_KEY = "github_login"
 NAME_KEY = "github_name"
 AVATAR_KEY = "github_avatar_url"
 EMAIL_KEY = "github_email"
+EXTRAS_KEY = "github_extras"
 
 # Al copiar el token desde la web de GitHub se cuelan caracteres invisibles
 # (espacio duro U+00A0, ancho cero U+200B/U+200C/U+200D, BOM U+FEFF). ``str.strip``
@@ -142,7 +143,7 @@ def restore_cached_session() -> Optional["GitHubProfile"]:
 
 def clear_identity() -> None:
     store = _store()
-    for key in (TOKEN_KEY, LOGIN_KEY, NAME_KEY, AVATAR_KEY, EMAIL_KEY):
+    for key in (TOKEN_KEY, LOGIN_KEY, NAME_KEY, AVATAR_KEY, EMAIL_KEY, EXTRAS_KEY):
         store.remove_user(key)
     store.save()
     session_cache.clear_session()
@@ -154,17 +155,20 @@ def save_profile(profile: GitHubProfile) -> None:
     store.set_user(NAME_KEY, profile.name)
     store.set_user(AVATAR_KEY, profile.avatar_url)
     store.set_user(EMAIL_KEY, profile.email)
+    store.set_user(EXTRAS_KEY, dict(profile.extras))
     store.save()
 
 
 def load_profile() -> GitHubProfile:
     store = _store()
+    extras = store.get_user(EXTRAS_KEY, {})
     return GitHubProfile(
         login=str(store.get_user(LOGIN_KEY, "") or ""),
         name=str(store.get_user(NAME_KEY, "") or ""),
         avatar_url=str(store.get_user(AVATAR_KEY, "") or ""),
         email=str(store.get_user(EMAIL_KEY, "") or ""),
         authenticated=bool(store.get_user(TOKEN_KEY, "")),
+        extras=dict(extras) if isinstance(extras, dict) else {},
     )
 
 

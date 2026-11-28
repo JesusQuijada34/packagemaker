@@ -1,13 +1,15 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-28 (octogésimo primer ciclo)
+- **Última revisión:** 2026-11-28 (octogésimo segundo ciclo)
 - **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
   (2026-11-26, 21:40 (-04:00), autor `JesusQuijada34
   <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub: el
   commit sólo toca este archivo y añade una línea). Su único cambio fue marcar
   **Q-032** como `[X] SÍ`: el splash debe pasar a ser un overlay **dentro** de
   la ventana principal, estilo UWP (issue #15). **Aplicada** en el octogésimo
-  ciclo y archivada en el Historial.
+  ciclo y archivada en el Historial. En este ciclo no hay marcas nuevas: el
+  último commit que toca el archivo sigue siendo `34b5b35` (mantenimiento de
+  `openhands`), así que no se aplica ninguna respuesta.
 - **Commit anterior procesado:** `03d4d37`
   (mantenimiento del ciclo 79, autor `openhands-agent`; no aporta respuestas).
   Último commit **del propietario** anterior: `71e50f7` (2026-11-26, autor
@@ -16,7 +18,7 @@
   aplicada en el sexagésimo primer ciclo.
 - **Último commit anterior del propietario:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 4 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; y Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026). El ciclo 81 aplica **Q-029**: los campos del asistente (proveedor, endpoint, modelo, clave y contexto) ya se configuran en Configuración → AIDE, compartiendo almacén con la página. El ciclo 80 aplicó **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 11 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-029, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 5 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026, con la evidencia nueva de los issues #18, #20 y #21; y Q-037, si se porta el método de compilación y rastreo de la 3.2.6 del issue #26). El ciclo 82 corrige **R-5e9c1d87** (perfil duplicado y recuento de repositorios, issue #24) sin tocar el motor, y registra los issues #17–#27. El ciclo 81 aplica **Q-029**: los campos del asistente (proveedor, endpoint, modelo, clave y contexto) ya se configuran en Configuración → AIDE, compartiendo almacén con la página. El ciclo 80 aplicó **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 11 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-029, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -379,7 +381,44 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
 - **Riesgo y efectos secundarios:** A es un cambio visual amplio con riesgo
   medio de contraste en algunas páginas y no se puede verificar el blur de
   Windows en Linux; B no cambia nada más; C rompe la legibilidad.
+- **Nota del ciclo 82 (evidencia nueva, issues #18, #20 y #21):** el propietario
+  reporta que «todo se ve oscuro estando en modo claro» (#18), que las pestañas
+  deben invertirse con el tema (#20) y que el borde del sidebar debe ser gris en
+  claro y blanco en oscuro (#21). Medido en offscreen con tema claro:
+  `system_theme_mode()` devuelve `light`, el sidebar resuelve
+  `rgba(255,255,255,0.45)` (alfa 177) y la hoja del `central` lleva `#F5F7FB`,
+  pero el `QStackedWidget` del contenido conserva `#1c1c1e` porque
+  `packagemaker_008` usa `CONTENT_BG` literal; al forzar el fondo claro, los
+  títulos de página (`color:white`) desaparecen. Es exactamente el escenario de
+  la opción C ya descartada. Para arreglar el #18 hay que hacer A (o dejar B y
+  cerrar el #18 como «no aplicable»); confirma cuál.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO` (indica A, B o C en una nota)
+
+### Q-037 — Portar el método de compilación y rastreo de proyectos de la 3.2.6 (issue #26)
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-28
+- **Qué se propone:** el propietario pide extraer de la versión 3.2.6 el método
+  con el que se compilaban y rastreaban los proyectos, porque «la 3.2.6 tiene el
+  mejor código para rastrear proyectos y saber cuál hay que compilar», y
+  reemplazarlo en **los dos motores de compilación** sin eliminar el blindaje ni
+  la extensión (doble factor de compilación). La 3.2.6 compila con PyInstaller
+  y no tiene el motor BlindCube.
+- **Comportamiento actual:** `lib/project_locator.locate_project()` compara la
+  identidad canónica de la carpeta y cae a `details.xml`; el build usa
+  `lib/compilers.py` (Nuitka por defecto, PyInstaller, zipapp) con el sandbox de
+  Q-019. El reporte no aporta el código de la 3.2.6 ni el error concreto de
+  compilación.
+- **Comportamiento solicitado:** sustituir el rastreo y la invocación de
+  compilación por los de la 3.2.6 en FlatCube y BlindCube, conservando el
+  blindaje y la extensión.
+- **Archivos/componentes afectados:** `lib/project_locator.py`,
+  `lib/compilers.py`, `lib/blindcubeEngine/*`, `lib/flatcubeEngine/*` (si
+  existe), `lib/BuildThread.py` y sus pruebas.
+- **Riesgo y efectos secundarios:** riesgo alto de romper el empaquetado y las
+  garantías del entorno aislado; sin el código de la 3.2.6 ni una traza del
+  fallo no se puede reproducir ni comparar. Requiere que el propietario adjunte
+  la versión 3.2.6 (o los módulos exactos) y el error observado.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 
 ---

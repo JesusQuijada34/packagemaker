@@ -960,9 +960,8 @@ class PackageTodoGUI(QMainWindow):
         # de acciones (ver ``update_sidebar_description``), no en el sidebar.
         self.sidebar_layout.addStretch()
 
-        # La tarjeta de identidad la construye la página Perfil (Q-030): aquí
-        # sólo se reserva el atributo para que el resto del ciclo de sesión
-        # (login, logout, refresco) siga teniendo un único punto de acceso.
+        # La identidad y los botones de sesión los pinta la propia página: la
+        # tarjeta compacta del sidebar ya no se apila aquí (issue #24).
         self.github_card = None
 
         for addon, button in self._sidebar_items:
@@ -1391,31 +1390,8 @@ class PackageTodoGUI(QMainWindow):
             return
         super().keyPressEvent(event)
 
-    def _build_github_card(self, dark: bool):
-        """Construye la tarjeta de perfil de GitHub del sidebar."""
-        from lib.github_profile_card import GitHubProfileCard
-
-        card = GitHubProfileCard(
-            on_login=self._github_login,
-            on_logout=self._github_logout,
-            dark=dark,
-        )
-        card.profile_requested.connect(self._show_github_profile)
-        self._refresh_github_card(card)
-        return card
-
-    def _refresh_github_card(self, card=None) -> None:
-        """Refresca la tarjeta y la página Perfil con el perfil guardado."""
-        from lib import github_identity
-
-        profile = github_identity.load_profile()
-        card = card or getattr(self, "github_card", None)
-        if card is not None:
-            card.set_profile(profile if profile.login else None)
-            if profile.login and profile.avatar_url:
-                cached = github_identity.load_cached_avatar(profile.login)
-                if cached:
-                    card.set_avatar_bytes(cached)
+    def _refresh_github_card(self) -> None:
+        """Refresca la página Perfil y la tarjeta de cuenta de Configuración."""
         page = getattr(self, "page_profile", None)
         if page is not None:
             page.refresh()
@@ -3413,10 +3389,7 @@ class PackageTodoGUI(QMainWindow):
         """Perfil de GitHub como página propia (Q-030, issue #14)."""
         from lib.profile_page import ProfilePage
 
-        if getattr(self, "github_card", None) is None:
-            self.github_card = self._build_github_card(system_theme_mode() != "light")
         return ProfilePage(
-            card=self.github_card,
             on_login=self._github_login,
             on_logout=self._github_logout,
         )

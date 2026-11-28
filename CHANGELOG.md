@@ -1,3 +1,66 @@
+## 2026-11-28 — octogésimo segundo ciclo
+
+### Corregido — perfil duplicado y recuento de repositorios perdido (R-5e9c1d87, issue #24)
+
+Reportado por **JesusQuijada34** en el [issue #24](https://github.com/JesusQuijada34/packagemaker/issues/24):
+«está duplicado los apartados del perfil, aparece 2 veces el logo del perfil y
+el botón de salir y nada está limpiado, y no aparecen cuántos repositorios en
+total hay en el perfil usando conteo por api token».
+
+- **Síntoma.** La página Perfil mostraba dos identidades (dos avatares y dos
+  botones «Salir») y, tras reiniciar, el resumen decía 0 repositorios y la
+  biografía salía vacía.
+- **Causa raíz (dos defectos independientes).**
+  1. `build_profile_page()` pasaba a `ProfilePage` la tarjeta compacta
+     `GitHubProfileCard` del sidebar y la página, además, construía su propia
+     identidad (`_build_identity()`), así que las dos se apilaban.
+  2. `github_identity.save_profile()` guardaba login, nombre, avatar y correo,
+     pero no `GitHubProfile.extras`; `load_profile()` lo devolvía vacío, de modo
+     que `public_repos`, `followers`, `following` y `bio` se perdían en cuanto
+     la página se refrescaba desde el almacén.
+- **Solución.** La identidad vive sólo en la página: `ProfilePage` ya no acepta
+  ni pinta la tarjeta compacta, `packagemaker.py` deja de construirla y
+  `_refresh_github_card()` se limita a refrescar la página y la tarjeta de
+  cuenta de Configuración. Los extras se guardan como `github_extras` en
+  `data/pm.data` y `clear_identity()` los elimina con el resto de la sesión.
+- **Pruebas.** `tests/test_profile_page.py`:
+  `test_profile_extras_survive_the_store_round_trip`,
+  `test_clear_identity_removes_the_saved_extras`,
+  `test_profile_page_draws_a_single_identity_and_logout` y
+  `test_window_profile_page_has_no_duplicate_account_card` (las dos últimas y
+  la primera fallaban con el código anterior).
+- **Verificado** con captura offscreen de la página con un perfil guardado: un
+  solo avatar, un solo botón «Salir» y «7 repositorios · 12 seguidores · 3
+  siguiendo» después de recargar desde el almacén.
+- **Sin cambios de motor:** no se toca compilación, empaquetado, blindaje ni el
+  contenido de los paquetes.
+
+### Registrados — once reportes nuevos (issues #17–#27)
+
+El propietario reportó desde la aplicación los issues #17 a #26 y la cuenta
+externa JoseSuppini34 el #27. Todos quedan en `bugs.md` con su ID y su estado:
+
+| Issue | ID | Tipo | Estado |
+|---|---|---|---|
+| #17 splash, titlebar y pantalla completa | R-7e3a1b95 | Bug | Pendiente |
+| #18 el tema claro no se aplica al contenido | R-2f9b7c14 | Bug | Diagnosticado; alcance en Q-036 |
+| #19 arranque con tirones (10,3 s en «ventana») | R-6d1e4a83 | Bug | Pendiente |
+| #20 pestañas con color invertido por tema | R-4c8a2f61 | Mejora | Depende de Q-036 |
+| #21 borde del sidebar | R-9b5d3e72 | Bug | Pendiente |
+| #22 más temas de ayuda | R-1a7c6d94 | Mejora | Pendiente |
+| #23 AIDE como chatbot | R-8f2e5b13 | Mejora | Pendiente |
+| #25 instancia única | R-3d6a8f25 | Mejora | Pendiente |
+| #26 método de compilación de la 3.2.6 | R-7c4b9e36 | Cambio de engine | **Q-037** |
+| #27 README con capturas e instalación | R-0b8d2c47 | Documentación | Espera revisión del propietario |
+
+El #18 se diagnosticó con evidencia: `system_theme_mode()` devuelve `light` y
+el sidebar resuelve su blanco translúcido, pero el `QStackedWidget` del
+contenido conserva `CONTENT_BG` oscuro (`packagemaker_008`) y ~40 estilos de
+página llevan `color:white`; invertir sólo la superficie deja los títulos
+invisibles. El alcance se pregunta en **Q-036** en lugar de cambiarlo a ciegas.
+El #26 no se implementa: es un cambio de engine y queda en **Q-037** a la espera
+de la marca `[x] SÍ` del propietario.
+
 ## 2026-11-28 — octogésimo primer ciclo
 
 ### Aplicado — los campos de AIDE se configuran en Configuración (Q-029 / R-2a8d4b73, issue #14)
