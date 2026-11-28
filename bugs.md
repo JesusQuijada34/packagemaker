@@ -1,11 +1,11 @@
 # Cola de bugs y reportes — Influent Package Maker
 
-Última actualización: 2026-11-28 (ciclo 82: llegan once reportes nuevos del
-propietario —issues #17 a #26— y uno externo (#27). Se corrige **R-5e9c1d87**
-(issue #24: perfil duplicado y recuento de repositorios perdido) y el resto
-entra en la cola. El tema claro (issue #18) queda diagnosticado y pendiente de
-la decisión de alcance Q-036; el método de compilación de la 3.2.6 (issue #26)
-se registra como cambio de engine en **Q-037**).
+Última actualización: 2026-11-28 (ciclo 83: se extrae y corrige **R-4b8e2c76**
+del issue #17 —el modo inmersivo no revelaba la titlebar, el icono de salir era
+inalcanzable y la ventana no cubría la barra de tareas—; pasa a observación. El
+resto del issue #17 se reparte: el orden del splash queda en **R-7e3a1b95** y
+el gesto de maximizar antes del tercer clic en **R-6c2e4d91**, que espera la
+decisión **Q-038**. No hay respuestas nuevas del propietario en `CONFIRM.MD`).
 Fuente: [issue #4 — Backlog de Reportes Técnicos](https://github.com/JesusQuijada34/packagemaker/issues/4),
 [issue #11](https://github.com/JesusQuijada34/packagemaker/issues/11),
 [issue #13](https://github.com/JesusQuijada34/packagemaker/issues/13),
@@ -24,7 +24,8 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 
 | ID | Tipo | Prioridad | Estado |
 |---|---|---|---|
-| R-7e3a1b95 | Bug — splash, titlebar, pantalla completa y AIDE (issue #17) | Alta | Pendiente |
+| R-7e3a1b95 | Bug — el splash no aparece primero: la ventana se oculta y salta (issue #17) | Alta | Pendiente |
+| R-6c2e4d91 | Bug — la titlebar se maximiza en el segundo gesto del triple clic (issue #17) | Media | Pendiente de decisión (Q-038) |
 | R-2f9b7c14 | Bug — el tema claro no se aplica al contenido (issue #18) | Alta | Diagnosticado; alcance en Q-036 |
 | R-6d1e4a83 | Bug — arranque con tirones: 10,3 s en la fase «ventana» (issue #19) | Alta | Pendiente |
 | R-9b5d3e72 | Bug — el borde del sidebar no se ve como en Reportes (issue #21) | Baja | Pendiente |
@@ -43,15 +44,16 @@ viven en `CONFIRM.MD`, que es la única autoridad para responderlas.
 | R-9c3f5a28 | Cambio de engine — librería de paneles y pestañas (issue #14) | Media | Aprobado Q-028; pendiente de implementación |
 | R-3b7e2d94 | Cambio de engine — addons en `lib/addons/` y DLL (issue #14) | Media | Aprobado Q-031; pendiente de implementación |
 
-**18 entradas en la cola**: 6 bugs (R-5e9c1d87 se corrige en este ciclo y pasa
-a observación), 6 mejoras, 1 tarea de documentación externa y 6 cambios de
-engine (5 aprobados y pendientes, más R-7c4b9e36 que espera Q-037). Q-013 sigue
-«aplicada en parte»: la consulta y el aviso de parches ya están en `main`; la
-descarga y la aplicación siguen pendientes. Los once issues nuevos no cambian
-el reparto de Q-013/Q-026: el tema claro y las pestañas dependen del alcance que
-fije el propietario en Q-036. Siguen archivados Q-029 (AIDE en Configuración),
-Q-030 (perfil como extensión), Q-022 (addons), Q-021 (ayuda), Q-027 (splash
-mínimo), Q-019 (entorno aislado) y Q-032 (splash dentro de la ventana).
+**19 entradas en la cola**: 6 bugs (R-4b8e2c76, extraído del issue #17, se
+corrige en este ciclo y pasa a observación), 6 mejoras, 1 tarea de
+documentación externa y 6 cambios de engine (5 aprobados y pendientes, más
+R-7c4b9e36 que espera Q-037). Q-013 sigue «aplicada en parte»: la consulta y el
+aviso de parches ya están en `main`; la descarga y la aplicación siguen
+pendientes. El reparto de Q-013/Q-026 no cambia: el tema claro y las pestañas
+dependen del alcance que fije el propietario en Q-036. Siguen archivados Q-029
+(AIDE en Configuración), Q-030 (perfil como extensión), Q-022 (addons), Q-021
+(ayuda), Q-027 (splash mínimo), Q-019 (entorno aislado) y Q-032 (splash dentro
+de la ventana).
 
 ## Bugs pendientes
 
@@ -82,24 +84,44 @@ mínimo), Q-019 (entorno aislado) y Q-032 (splash dentro de la ventana).
   formato no soportado en vez de fallar con un traceback.
 - **Commit / fecha de resolución:** —
 
-### R-7e3a1b95 — Splash, titlebar y pantalla completa (issue #17)
+### R-7e3a1b95 — El splash no aparece primero (issue #17)
 
 - **Usuario:** JesusQuijada34 (issue #17, reporte desde la aplicación).
 - **Fecha del reporte:** 2026-11-28
 - **Prioridad:** Alta.
-- **Descripción:** el splash no se muestra primero (la ventana se oculta y
-  luego salta el splash), los gestos de la titlebar se adelantan al tercer
-  clic, al entrar en pantalla completa la titlebar no sale desde arriba, no
-  aparece el icono de salir y queda un borde inferior que deja la barra de
-  tareas activa; además AIDE debe parecer un chatbot y no una pestaña con fondo
-  detrás del texto.
+- **Descripción:** al arrancar, la ventana se oculta primero y luego «salta» el
+  splash, en vez de que el splash sea lo primero que se ve. El resto de
+  síntomas del issue (titlebar y pantalla completa) se corrigió en este ciclo
+  como **R-4b8e2c76**; AIDE como chatbot se sigue en **R-8f2e5b13** (issue
+  #23); el gesto de maximizar antes del tercer clic es **R-6c2e4d91**.
 - **Pasos para reproducirlo:** arrancar la aplicación en Windows y observar la
-  secuencia; hacer tres gestos sobre la titlebar y pasar el cursor por el borde
-  superior en pantalla completa; abrir AIDE.
-- **Estado:** pendiente. Son varios síntomas de UI; se separará el arreglo del
-  splash/titlebar del rediseño de AIDE.
+  secuencia de ventana y splash (el reporte es de la versión `v3.2.7-26.05-20.13`,
+  commit `a1e52d2`, que ya incluye el splash dentro de la ventana de Q-032).
+- **Evidencia recogida (ciclo 83):** no se puede verificar el orden en
+  offscreen; hace falta el desglose de `StartupTimeline` en el equipo del
+  reporte (`ventana` 10,32 s frente a `splash_visible` 0,14 s, issue #19).
+- **Estado:** pendiente. Se atiende junto con la fase «ventana» de R-6d1e4a83,
+  que es donde se pierde el tiempo.
 - **Solución aplicada:** ninguna todavía.
 - **Commit / fecha de resolución:** —
+
+### R-6c2e4d91 — La titlebar se maximiza en el segundo gesto del triple clic (issue #17)
+
+- **Usuario:** JesusQuijada34 (issue #17).
+- **Fecha del reporte:** 2026-11-28
+- **Prioridad:** Media.
+- **Descripción:** «antes de tocar 3 veces, ya se maximiza sin esperar por el
+  transponedor». El doble clic en la titlebar maximiza (comportamiento nativo de
+  Windows) y el tercer gesto entra en modo inmersivo, así que el usuario ve un
+  maximizado intermedio. No está claro si espera conservar el doble clic o
+  retrasarlo hasta confirmar que no hay un tercer gesto.
+- **Pasos para reproducirlo:** tres clics seguidos sobre la titlebar y observar
+  el maximizado que ocurre tras el segundo.
+- **Estado:** pendiente de la decisión del propietario (**Q-038** en
+  `CONFIRM.MD`): mantener el doble clic nativo o retrasar el maximizado.
+- **Solución aplicada:** ninguna todavía.
+- **Commit / fecha de resolución:** —
+
 
 ### R-2f9b7c14 — El tema claro no se aplica al contenido (issue #18)
 
@@ -294,6 +316,7 @@ al ciclo anterior.
 
 | ID | Título | Prioridad | Corregido | Prueba de regresión |
 |---|---|---|---|---|
+| R-4b8e2c76 | Modo inmersivo: la titlebar no se revelaba, el icono de salir era inalcanzable y la ventana no cubría la barra de tareas (issue #17) | Alta | ciclo 83, 2026-11-28 | `tests/test_immersive_fullscreen.py` |
 | R-5e9c1d87 | Perfil duplicado (avatar y «Salir» dos veces) y recuento de repositorios perdido (issue #24) | Alta | ciclo 82, 2026-11-28 | `tests/test_profile_page.py::test_profile_page_draws_a_single_identity_and_logout`, `::test_profile_extras_survive_the_store_round_trip` |
 | R-8b5c1d47 | El subtítulo de la barra mostraba el Markdown de los catálogos | Baja | ciclo 81, 2026-11-28 | `tests/test_activity_bar_and_subtitle.py::test_subtitle_renders_the_catalog_markdown` |
 | R-4a9d1c63 | La vigilancia de parches sólo consultaba al arrancar (Q-013, etapa 1) | Media | ciclo 80, 2026-11-28 | `tests/test_patch_watch_ui.py::test_watch_rechecks_on_a_timer_without_user_action` |
@@ -309,15 +332,22 @@ al ciclo anterior.
 
 ## Periodo de observación y release
 
-- **Cola:** 18 entradas (ver Resumen). Llegaron once reportes nuevos (issues
-  #17–#27) y el ciclo atiende el más contenido: R-5e9c1d87 (issue #24), que pasa
-  a observación. R-7f2b9c41 sigue esperando Q-034; el tema claro (R-2f9b7c14,
+- **Cola:** 19 entradas (ver Resumen). El issue #17 se reparte: R-4b8e2c76
+  (modo inmersivo) se corrige en este ciclo y pasa a observación, R-7e3a1b95
+  queda como el orden del splash y R-6c2e4d91 como el gesto de maximizar, que
+  espera Q-038. R-7f2b9c41 sigue esperando Q-034; el tema claro (R-2f9b7c14,
   issue #18) queda diagnosticado y espera el alcance de Q-036; R-7c4b9e36
   (issue #26) espera Q-037. R-4d9e2b61 (Q-019) y R-7b2c9e51 (Q-027) siguen en
   observación tras verificarse con arranques y compilaciones reales.
 - **Release:** no se prepara. Hay cambios de engine de prioridad alta pendientes
   de implementación, bugs de prioridad alta recién reportados y no ha pasado el
   periodo sin reportes nuevos.
+- **Nuevo en el ciclo 83:** **R-4b8e2c76** (issue #17) queda en observación. Sólo
+  cambia la coreografía del modo inmersivo de `lib/immersive_titlebar.py`: un
+  sondeo del puntero de 80 ms mientras el modo está activo, la ocultación al
+  abandonar la barra y la geometría de pantalla completa con vuelta al área
+  disponible. No toca compilación, empaquetado ni blindaje, y el estado de la
+  ventana sigue siendo coherente con `_pm_maximized`.
 - **Nuevo en el ciclo 82:** **R-5e9c1d87** (issue #24) queda en observación. El
   perfil pintaba la tarjeta compacta del sidebar y su propia identidad a la vez
   (dos avatares y dos botones «Salir»), y `save_profile()` no guardaba `extras`,
@@ -348,216 +378,19 @@ al ciclo anterior.
   porque no altera compilación, empaquetado ni blindaje.
 - La bitácora completa de ciclos vive en `docs/ciclos_mantenimiento.md`.
 
+- Octogésimo tercer ciclo (2026-11-28): sin reportes nuevos ni respuestas en
+  `CONFIRM.MD`, se corrige **R-4b8e2c76**, extraído del issue #17: el modo
+  inmersivo ocultaba la titlebar y no la revelaba (el filtro de la ventana no
+  veía los `MouseMove` que llegan al contenido), `conceal_titlebar()` no se
+  llamaba desde ningún sitio y la ventana se maximizaba al área disponible, así
+  que la barra de tareas seguía activa en la franja inferior. Ahora el puntero
+  se consulta con un `QTimer` de 80 ms sólo en modo inmersivo, la barra se
+  oculta al abandonarla y la ventana cubre la pantalla completa; al salir
+  vuelve al área disponible. Queda en observación. El resto del issue #17 se
+  reparte entre R-7e3a1b95 (splash), R-6c2e4d91 (gesto de maximizar, con
+  Q-038) y R-8f2e5b13 (AIDE). No se prepara release: siguen pendientes los
+  cambios de engine aprobados y los bugs de prioridad alta del ciclo 82.
+
 - Octogésimo segundo ciclo (2026-11-28): once reportes nuevos (issues #17–#27)
   registrados; se corrige **R-5e9c1d87** (issue #24: perfil duplicado y recuento
   de repositorios perdido) y pasa a observación. El detalle vive en
-  `CHANGELOG.md` y en `docs/ciclos_mantenimiento.md`.
-
-- Septuagésimo primer ciclo (2026-11-27): se corrige **R-6b4d2f81**, encontrado
-  al reproducir R-3a9c6e28: las cuatro ventanas de `lib/coreUpdater/windows.py`
-  morían al construirse (`Qt.WindowFlags` no existe en PyQt6, `CustomTitleBar`
-  no acepta `is_main` ni expone `set_color`, y `LeviathanProgressBar` no tiene
-  `setValue`), así que la actualización con interfaz nunca llegaba a abrirse.
-  También se corrige **R-3a9c6e28**: el `updater.py` de las plantillas creaba la
-  `QApplication` dentro del hilo de vigilancia; ahora `main()` crea la
-  aplicación y `UpdateWatcher` avisa por señal encolada, de modo que la ventana
-  nace en el hilo de la interfaz. Las dos quedan en observación. No se prepara
-  release.
-- Septuagésimo ciclo (2026-11-27): se aplica **Q-017**: el `updater.py` de los
-  proyectos nuevos ya tiene CLI (`--check`, `--install`, `--target`,
-  `--silent`, `--version`) con códigos de salida y termina cuando no hay
-  interfaz; antes cualquier argumento se ignoraba y el proceso se quedaba en un
-  bucle infinito (reproducido: `timeout 6` devuelve 124). La auditoría del mismo
-  ciclo deja dos hallazgos nuevos: **R-7f2b9c41** (la plantilla trata el
-  `.iflapp` de la release como ZIP, así que nunca podía instalar una
-  actualización; decisión en **Q-034**) y **R-3a9c6e28** (`verificar()` crea la
-  `QApplication` en un hilo). Se añade **Q-035** para que el propietario elija
-  entre la opción dura y la blanda de Q-018, que quedó marcada sin indicar
-  cuál. No se prepara release.
-- Sexagésimo noveno ciclo (2026-11-27): se corrige **R-7c4a1e95** (guardar
-  ajustes congelaba la interfaz). Medido: `store.save()` 0,5 ms y un guardado de
-  ruta 1,7 ms, pero un cambio de apariencia 120 ms porque `set_qss()` reinstalaba
-  hojas idénticas y Qt re-pulía el árbol. `set_qss()` ahora es idempotente: el
-  guardado baja a ~5 ms y `central` ya no recibe `StyleChange`. Queda en
-  observación. No se prepara release: sigue pendiente el entorno aislado de
-  Q-019 y el resto de cambios de engine aprobados.
-
-- Sexagésimo octavo ciclo (2026-11-27): se corrige **R-3e7d1c58** y se archiva
-  (Q-004/F-001, opción A): `compile-only` compila todos los `.py` del paquete,
-  retira sus fuentes (salvo el `updater.py` obligatorio) y conserva el fuente
-  sólo en builds `zipapp`; los manifiestos de digests se calculan después de la
-  retirada. Queda en observación. No se prepara release: siguen pendientes los
-  cambios de engine aprobados Q-019 y Q-012.
-- Sexagésimo séptimo ciclo (2026-11-26): se corrige **R-7d4b2c95**, la mitad
-  reproducible de R-7c4a1e95: maximizar o restaurar llamaba a `apply_theme`,
-  que reinstala la hoja global de la aplicación y re-pule todos los widgets
-  (~270 ms por gesto, medidos en offscreen). El gesto ahora sólo refresca el
-  radio de las esquinas (~59 ms) y `apply_global_stylesheet()` no reinstala una
-  hoja idéntica (ahorra ~185 ms al cambiar de modo de visualización). Queda en
-  observación; R-7c4a1e95 sigue abierto por el guardado en segundo plano
-  (Q-012). No se prepara release.
-- Sexagésimo sexto ciclo (2026-11-26): se corrige **R-8d3f6a21**, el backend
-  Nuitka que no compilaba (opciones de salida sin `=`, familia de plugins Qt
-  inexistente e importación de `MainControl` fuera del `try`), y se verifica con
-  una compilación real `--standalone --onefile`. Queda en observación; R-4d9e2b61
-  sigue abierto sólo por el entorno aislado de Q-019.
-- Sexagésimo quinto ciclo (2026-11-26): se corrige **R-2f8b6a31** (el triple
-  gesto de la titlebar nunca llegaba a pantalla completa y el modo inmersivo no
-  maximizaba la ventana) y se archiva en `docs/bugs_resueltos.md`. Se compacta
-  esta cola a petición del propietario en el issue #15: fuera los resueltos,
-  los cambios de engine reducidos a su índice y las fichas en `CONFIRM.MD`.
-
-- Septuagésimo segundo ciclo (2026-11-27): no había reportes nuevos en los
-  issues #4, #10, #11, #13, #14 ni #15, no había pull requests abiertas y
-  `CONFIRM.MD` no tenía respuestas nuevas, así que el ciclo aplica una
-  aprobación de prioridad alta: **Q-019** (R-4d9e2b61, «nada tiene el entorno
-  aislado»). El build compila ahora dentro de un venv por proyecto
-  (`<proyecto>/build/pm-sandbox/<backend>/venv`): instala las dependencias del
-  proyecto y las del backend, comprueba que el backend se importa dentro del
-  entorno y lanza Nuitka o PyInstaller como subproceso; el binario se copia a
-  `dist` como antes y, si el entorno falla, se reintenta con el backend
-  embebido. Se añade la tarjeta **Configuración → Red** con el modo de uso
-  medido que pidió el propietario (sin descargas, aviso de que hace falta Python
-  del sistema y de cómo seguir sin conexión). Verificado con dos compilaciones
-  reales (PyInstaller 10,9 s y Nuitka 60,5 s) cuyos binarios se ejecutaron
-  correctamente. R-4d9e2b61 queda en observación. No se prepara release: siguen
-  pendientes los cambios de engine aprobados y R-7f2b9c41 espera Q-034.
-- Septuagésimo tercer ciclo (2026-11-27): sin reportes nuevos en los issues #4,
-  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
-  en `CONFIRM.MD`, así que se aplica la aprobación de prioridad alta **Q-027**
-  (R-7b2c9e51, issue #13: el splash se retiraba antes de que la interfaz
-  estuviera dibujada y los tirones no se reportaban). Nuevo
-  `lib/startup_timing.py`: mínimo del splash de 5 s más hasta 1 s según los
-  puntos de rendimiento (RAM y núcleos), redondeado a 0,25 s; `StartupTimeline`
-  mide cada fase y `SplashWaiter` retrasa el cierre sin bloquear el bucle de
-  eventos, guardando el tiempo real de arranque antes de la espera. Si una fase
-  supera 0,5 s o la interfaz no está lista dentro del mínimo, se encola un
-  reporte `StartupLag` con las fases medidas y los errores restantes, con el
-  opt-in de Reportes y sin duplicar entradas. Verificado con el arranque real
-  (mínimo 5,50 s, cierre a los 5,61 s; con `PM_SPLASH_MIN_SECONDS=0.05` el
-  reporte aparece en la cola con las fases medidas). R-7b2c9e51 queda en
-  observación. No se prepara release: siguen pendientes los cambios de engine
-  aprobados y R-7f2b9c41 espera Q-034.
-- Septuagésimo cuarto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
-  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
-  en `CONFIRM.MD`, así que se aplica la mejora aprobada **Q-021** (R-7b3e9a52,
-  issue #11: «un apartado de ayuda relacionado con toda la app»). Nuevo addon
-  `help` (`addons/help.yaml`) y página `lib/help_page.py`: cuatro temas (crear,
-  compilar, blindar, reportar) con buscador que filtra por título y cuerpo,
-  barra de acciones propia y retraducción en vivo. Los textos viven en
-  `help.*` de los 14 catálogos de `lang/` y el icono se añade a
-  `lib/app_icons.py`. Sin cambios de comportamiento del engine. Verificado en
-  la ventana real (offscreen): el sidebar queda create, build, config, moonfix,
-  report, help, aide, about; el subtítulo sale del manifiesto y «upx» deja sólo
-  el tema de blindaje. Pruebas: `tests/test_help_page.py`. R-7b3e9a52 sale de
-  la cola. No se prepara release: siguen pendientes los cambios de engine
-  aprobados y R-7f2b9c41 espera la decisión de Q-034.
-- Septuagésimo quinto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
-  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
-  en `CONFIRM.MD`. Se aplica la mitad segura de **Q-026** (R-5a7d2f16): el
-  sidebar se creaba con `WA_TranslucentBackground`, que anula el fondo QSS del
-  widget, así que el blanco translúcido nunca se pintaba. Ahora usa
-  `WA_StyledBackground`, `SIDEBAR_BG` pasa a `rgba(28,28,30,0.45)` y se añade
-  `SIDEBAR_BG_LIGHT` `rgba(255,255,255,0.45)`, con los roles
-  `sidebar-light`/`sidebar-frame-light` resueltos por tema. Verificado con
-  capturas offscreen (blanco en claro, oscuro en oscuro) y
-  `tests/test_theme_surfaces.py`. La superficie y el texto de las pestañas no se
-  invierten: los ~40 estilos de `lib/fluent_theme.py` llevan `color:white` y el
-  texto quedaría invisible sobre un fondo claro; el alcance se pregunta en
-  Q-036. R-8f4b2d61 se archiva en `docs/bugs_resueltos.md`. Suite: 1441 pasan,
-  1 omitida, 64 subtests; `pyflakes` limpio. No se prepara release: siguen
-  pendientes los cambios de engine aprobados y R-7f2b9c41 espera Q-034.
-- Septuagésimo sexto ciclo (2026-11-27): sin reportes nuevos en los issues #4,
-  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
-  en `CONFIRM.MD`. Se aplica en parte **Q-022** (R-2c8d4f71): los manifiestos
-  del sidebar pasan de `addons/` a `lib/addons/` —la ubicación que pidió el
-  propietario en el issue #11— y `addons/` se conserva como ruta de
-  compatibilidad. El nuevo `load_addons_from_dirs()` combina los directorios
-  existentes sin duplicar ids (gana el primero); `packagemaker.py` y
-  `--list-addons` usan el resolutor. Pruebas: `ShippedDirsTest` (precedencia,
-  compatibilidad y respaldo) y `tests/test_help_page.py` apunta a la nueva
-  ruta. La instalación de un addon `.yaml` desde Configuración sigue pendiente:
-  exige UI nueva y claves en los 14 catálogos, así que se hará en un ciclo
-  propio. Suite: 1444 pasan, 2 omitidas, 64 subtests; `pyflakes` limpio. No se
-  prepara release: siguen pendientes los cambios de engine aprobados y
-  R-7f2b9c41 espera Q-034.
-- Septuagésimo séptimo ciclo (2026-11-27): sin reportes nuevos en los issues #4,
-  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
-  en `CONFIRM.MD`, así que se completa **Q-022** (R-2c8d4f71, issue #11) con su
-  segunda mitad: instalar un addon `.yaml` desde Configuración → Extensiones.
-  Nuevos `user_addons_dir()`, `all_addons_dirs()`, `installed_addons()` e
-  `install_addon()` en `lib/addons_engine.py`: el manifiesto se valida con el
-  mismo `parse_manifest()` del cargador y se rechazan los ids de addons
-  incluidos, los manifiestos desactivados, un `builder` que el anfitrión no
-  tenga y los `plugin` sueltos (su `.py` se ejecutaría al arrancar; eso queda
-  para Q-031). La copia es atómica en `data/addons/`, que se carga después de
-  `lib/addons/` y de `addons/`, así que una extensión del usuario nunca
-  suplanta una página base. `packagemaker.py` y `--list-addons` usan el nuevo
-  resolutor y la tarjeta nueva trae claves en los 14 catálogos. Verificado con
-  la ventana real (offscreen): sidebar create, build, config, moonfix, report,
-  help, aide, extra, about y la tarjeta muestra «Instaladas: extra». Suite:
-  1466 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. No se prepara release: siguen pendientes los
-  cambios de engine aprobados y R-7f2b9c41 espera Q-034.
-- Septuagésimo octavo ciclo (2026-11-27): sin reportes nuevos en los issues #4,
-  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
-  en `CONFIRM.MD`, así que se aplica **Q-030** (R-6f1c8e35, issue #14): la
-  tarjeta de cuenta sale del sidebar, las extensiones quedan justo debajo de
-  MoonFix y el perfil pasa a ser la extensión «Perfil»
-  (`lib/addons/profile.yaml` + `lib/profile_page.py`) con avatar, nombre,
-  `@login`, descripción, seguidores y repositorios. La descarga de repositorios
-  corre en un `QThread` (`github_identity.fetch_repositories()`: `/user/repos`
-  con token y `/users/<login>/repos` sin él) y `GitHubProfile.extras` guarda
-  `bio`, `public_repos`, `followers` y `following`. Configuración gana la
-  tarjeta **Cuenta** con el estado de la sesión y los botones de acceso y
-  cierre, que delegan en el anfitrión; `_refresh_github_card()` refresca
-  tarjeta, página y panel a la vez. Claves `sidebar.profile`, `sidebar_desc.9`,
-  `profile.*` y `config.account_*` en los 14 catálogos y en
-  `tools/translations_curated.py`. Verificado con la ventana real (offscreen):
-  sidebar create, build, config, moonfix, report, help, aide, perfil, about.
-  Suite: 1481 pasan, 1 omitida, 64 subtests; `pyflakes` limpio. Commit
-  `8ac30ad` en `main`. No se prepara release: siguen pendientes los cambios de
-  engine aprobados y R-7f2b9c41 espera Q-034.
-- Octogésimo ciclo (2026-11-28): sin reportes nuevos en los issues #4, #10,
-  #11, #13, #14 ni #15 y sin pull requests abiertas. `CONFIRM.MD` sí trae una
-  respuesta nueva del propietario (`0addecb`, autoría verificada): **Q-032
-  aprobada** (splash dentro de la ventana, estilo UWP). Además se audita la
-  entrega del ciclo anterior y se corrige
-  **R-4a9d1c63**: la vigilancia de parches de Q-013 se lanzaba sólo al
-  construir la ventana, así que el intervalo de 6 h nunca se reevaluaba y una
-  ventana abierta no avisaba de commits nuevos. `CHECK_TICK_SECONDS = 600` y
-  `PackageTodoGUI._install_patch_timer()` añaden un `QTimer` hijo de la ventana
-  que llama a `_start_patch_watch()` cada 10 minutos; ese método sigue
-  aplicando el ajuste del usuario, el modo red «uso medido» y el intervalo de
-  6 h. Verificado en la ventana real (offscreen): temporizador activo con
-  600000 ms, una consulta con `last_check` de hace 7 h y ninguna con el ajuste
-  apagado. Pruebas nuevas en `tests/test_patch_watch.py` y
-  `tests/test_patch_watch_ui.py`. No se prepara release: siguen pendientes los
-  cambios de engine aprobados, la segunda etapa de Q-013 y R-7f2b9c41 espera la
-  decisión de Q-034.
-- Septuagésimo noveno ciclo (2026-11-27): sin reportes nuevos en los issues #4,
-  #10, #11, #13, #14 ni #15, sin pull requests abiertas y sin respuestas nuevas
-  en `CONFIRM.MD` (el último commit que toca el archivo sigue siendo
-  mantenimiento de `openhands`). Se aplica la **primera etapa de Q-013**
-  (F-006, issue del propietario: «que updater.py notificara en segundo plano
-  estando compilado o no sobre nuevos commits y parches de seguridad»). Nuevo
-  `lib/patch_watch.py`, sólo biblioteca estándar: un `GET` anónimo a
-  `api.github.com/repos/JesusQuijada34/packagemaker/commits/main`, comparación
-  con el commit local (marca `applied_commit` de `data/patch_state.json` o
-  `HEAD` leído de `.git` sin lanzar git) y seis estados (`up_to_date`,
-  `available`, `unknown`, `offline`, `metered`, `disabled`). La consulta corre
-  en un hilo daemon y vuelve por la señal `patchChecked`; al arrancar se hace
-  cada 6 h, se salta en modo red «uso medido» y se apaga con
-  `PM_PATCH_CHECK=0`. Configuración → Notificaciones gana la casilla
-  «Avisar de parches y commits nuevos», el botón «Comprobar ahora» y una línea
-  con el resultado; el aviso también sale en la barra de estado y como
-  notificación nativa si están activas. Diez claves nuevas en los 14 catálogos
-  (`tools/translations_updates.py`). Verificado con la consulta real: commit
-  local `52e9c89` = último de `main`, estado `up_to_date`. Pruebas:
-  `tests/test_patch_watch.py` (21) y `tests/test_patch_watch_ui.py` (9); el
-  `conftest` apaga la vigilancia durante la suite para que ningún test salga del
-  equipo. La cola queda al día: **Q-029** ya estaba cubierta por el asistente
-  AIDE del ciclo 56 (falta sólo trasladar sus campos a Configuración) y
-  **Q-014** la aplaza el propietario en `bugs.txt` hasta tener un release
-  estable sin reportes. No se prepara release: siguen pendientes los cambios de
-  engine aprobados, la segunda etapa de Q-013 (descargar y aplicar el parche) y
-  R-7f2b9c41 espera la decisión de Q-034.

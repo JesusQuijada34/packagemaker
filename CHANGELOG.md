@@ -1,3 +1,62 @@
+## 2026-11-28 — octogésimo tercer ciclo
+
+### Corregido — modo inmersivo: pantalla completa real, barra que entra y sale y icono de salida (R-4b8e2c76, issue #17)
+
+Reportado por **JesusQuijada34** en el [issue #17](https://github.com/JesusQuijada34/packagemaker/issues/17):
+«al ponerse en pantalla completa, el titlebar se supone que debe de salir desde
+arriba cuando el cursor pasa por lo ultimo de arriba de la pantalla, aun asi no
+aparece el icono de salir de pantalla completa, tambien, no se pone full screen
+y deja un borde inferior intacto al tocar, haciendo que sea reaccionable la
+barra de tareas».
+
+- **Síntomas.** En el modo inmersivo (tres gestos sobre la titlebar) la barra
+  desaparecía y no volvía nunca al tocar el borde superior; como el botón de
+  salir vive dentro de la barra, el icono «Salir de pantalla completa» era
+  inalcanzable; y la ventana dejaba una franja inferior con la barra de tareas
+  activa.
+- **Causa raíz (tres defectos en `lib/immersive_titlebar.py`).**
+  1. El vigilante del borde superior era un filtro de eventos instalado en la
+     ventana. En pantalla completa el puntero está sobre las páginas de
+     contenido y Qt sólo entrega `MouseMove` pasivos al widget que tiene
+     `WA_MouseTracking`, así que el filtro de la ventana nunca los veía
+     (reproducido: un movimiento en el borde enviado al contenido no revelaba
+     la barra; enviado a la ventana, sí).
+  2. `conceal_titlebar()` existía pero no se llamaba desde ningún sitio: una
+     barra revelada se quedaba fija, sin volver a ocultarse al bajar el cursor.
+  3. `_ensure_maximized()` sólo maximizaba y `toggle_frameless_maximize()`
+     ajusta la ventana al **área disponible**, que por definición excluye la
+     barra de tareas. Medido con una pantalla de 800×800 y 60 px de barra:
+     la ventana quedaba en 800×740.
+- **Solución.**
+  - La posición del puntero se consulta con un `QTimer` de 80 ms que sólo corre
+    mientras el modo inmersivo está activo (`poll_pointer()`): revela la barra
+    en la franja de 8 px del borde superior y la oculta cuando el cursor baja
+    por debajo de ella. Sin sondeo continuo fuera del modo inmersivo.
+  - Un evento `Leave` de la titlebar también la oculta (filtro que ya contaba
+    los gestos).
+  - Al entrar se guarda la geometría y se cubre `screen.geometry()` completo;
+    al salir se vuelve al área disponible (o a la geometría previa si la
+    ventana no estaba maximizada), de modo que el estado sigue siendo coherente
+    con `_pm_maximized`.
+  - `_slide()` detiene la animación anterior y descarta los finales obsoletos:
+    revelar mientras se ocultaba dejaba que la animación vieja ocultara la
+    barra recién mostrada.
+- **Pruebas.** `tests/test_immersive_fullscreen.py` (10 casos): cobertura de la
+  pantalla completa y vuelta al área disponible, revelado y ocultado por
+  posición del puntero, ocultado al abandonar la barra, cancelación de la
+  animación obsoleta y ciclo de vida del sondeo. Con el código anterior la
+  ventana inmersiva quedaba en 800×740 y no existía sondeo del puntero.
+- **Verificado** con la ventana real en offscreen: al entrar cubre la pantalla
+  y oculta la barra, el borde superior la revela con el icono «Salir de pantalla
+  completa» (34 px de alto), bajar el cursor la vuelve a ocultar y salir
+  devuelve la ventana al área disponible con el sondeo detenido.
+- **Sin cambios de motor:** sólo cambia la coreografía del modo inmersivo
+  (ya aprobada en Q-008/F-004); no toca compilación, empaquetado, blindaje ni
+  contenido de los paquetes.
+- **Queda pendiente en el issue #17:** el orden del splash y el gesto de doble
+  clic antes del tercero (R-6c2e4d91, pregunta **Q-038**); AIDE como chatbot se
+  sigue en R-8f2e5b13 (issue #23).
+
 ## 2026-11-28 — octogésimo segundo ciclo
 
 ### Corregido — perfil duplicado y recuento de repositorios perdido (R-5e9c1d87, issue #24)

@@ -1003,3 +1003,38 @@ fija en **Q-036** con la evidencia medida. El issue #26 (compilar y rastrear
 como la 3.2.6) entra como cambio de engine en **Q-037**, sin implementar. No se
 prepara release: hay bugs de prioridad alta recién reportados y cambios de
 engine pendientes.
+
+## Octogésimo tercer ciclo (2026-11-28)
+
+Sin reportes nuevos y sin respuestas nuevas en `CONFIRM.MD`, se atiende el
+issue #17 del propietario. Se extrae **R-4b8e2c76** para la parte reproducible
+en este entorno (el resto del issue queda en R-7e3a1b95 para el orden del
+splash, R-6c2e4d91 para el gesto de maximizar y R-8f2e5b13 para AIDE).
+
+El modo inmersivo tenía tres defectos encadenados: el vigilante del borde
+superior era un filtro de eventos de la ventana, y Qt sólo entrega `MouseMove`
+pasivos al widget que tiene `WA_MouseTracking`, así que los movimientos sobre
+las páginas de contenido nunca lo alcanzaban (reproducido: el mismo evento
+enviado al contenido no revelaba la barra, enviado a la ventana sí);
+`conceal_titlebar()` existía pero no se llamaba desde ningún sitio, así que una
+barra revelada se quedaba fija; y `_ensure_maximized()` sólo maximizaba, con la
+geometría del **área disponible**, que excluye la barra de tareas (medido: 800×740
+en una pantalla de 800×800 con 60 px de barra). Como el botón de salir vive
+dentro de la barra, el icono «Salir de pantalla completa» era inalcanzable.
+
+Ahora el puntero se consulta con un `QTimer` de 80 ms que sólo corre en modo
+inmersivo (`poll_pointer()`): revela la barra en la franja de 8 px del borde
+superior y la oculta cuando el cursor baja por debajo de ella; un `Leave` de la
+titlebar también la oculta. Al entrar se guarda la geometría y se cubre
+`screen.geometry()`; al salir se vuelve al área disponible (o a la geometría
+previa si la ventana no estaba maximizada). `_slide()` detiene la animación
+anterior y descarta los finales obsoletos, porque revelar mientras se ocultaba
+dejaba que la animación vieja ocultara la barra recién mostrada.
+
+Verificado con la ventana real en offscreen: al entrar cubre la pantalla y
+oculta la barra; el borde superior la revela con el icono «Salir de pantalla
+completa» (34 px); bajar el cursor la vuelve a ocultar; salir devuelve la
+ventana al área disponible con el sondeo detenido. Pruebas nuevas:
+`tests/test_immersive_fullscreen.py` (10 casos). No se prepara release: siguen
+pendientes los cambios de engine aprobados y los bugs de prioridad alta del
+ciclo 82.

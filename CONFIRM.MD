@@ -1,15 +1,13 @@
 # Confirmaciones del propietario — Influent Package Maker
 
-- **Última revisión:** 2026-11-28 (octogésimo segundo ciclo)
-- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `0addecb`
-  (2026-11-26, 21:40 (-04:00), autor `JesusQuijada34
-  <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub: el
-  commit sólo toca este archivo y añade una línea). Su único cambio fue marcar
-  **Q-032** como `[X] SÍ`: el splash debe pasar a ser un overlay **dentro** de
-  la ventana principal, estilo UWP (issue #15). **Aplicada** en el octogésimo
-  ciclo y archivada en el Historial. En este ciclo no hay marcas nuevas: el
-  último commit que toca el archivo sigue siendo `34b5b35` (mantenimiento de
-  `openhands`), así que no se aplica ninguna respuesta.
+- **Última revisión:** 2026-11-28 (octogésimo tercer ciclo)
+- **Último commit de `CONFIRM.MD` procesado en este ciclo:** `8ef3402`
+  (2026-11-28, 06:13 UTC, autor `openhands-agent`; mantenimiento del ciclo 82,
+  no aporta respuestas). El último commit **del propietario** sigue siendo
+  `0addecb` (2026-11-26, 21:40 (-04:00), autor `JesusQuijada34
+  <jesusquijada34.gh@gmail.com>`, autoría verificada con la API de GitHub), que
+  marcó **Q-032** como `[X] SÍ` y ya está aplicada y archivada. En este ciclo no
+  hay marcas nuevas, así que no se aplica ninguna respuesta.
 - **Commit anterior procesado:** `03d4d37`
   (mantenimiento del ciclo 79, autor `openhands-agent`; no aporta respuestas).
   Último commit **del propietario** anterior: `71e50f7` (2026-11-26, autor
@@ -18,7 +16,7 @@
   aplicada en el sexagésimo primer ciclo.
 - **Último commit anterior del propietario:** `73dcdcd` (2026-11-26). Aprobó Q-015, Q-017, Q-018, Q-019, Q-020 y Q-021…Q-031, más las confirmaciones finales `F-001`…`F-006`, varias con instrucciones adicionales.
 - **Único aprobador:** JesusQuijada34 (GitHub `JesusQuijada34`)
-- **Estado:** 5 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026, con la evidencia nueva de los issues #18, #20 y #21; y Q-037, si se porta el método de compilación y rastreo de la 3.2.6 del issue #26). El ciclo 82 corrige **R-5e9c1d87** (perfil duplicado y recuento de repositorios, issue #24) sin tocar el motor, y registra los issues #17–#27. El ciclo 81 aplica **Q-029**: los campos del asistente (proveedor, endpoint, modelo, clave y contexto) ya se configuran en Configuración → AIDE, compartiendo almacén con la página. El ciclo 80 aplicó **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 11 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-029, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
+- **Estado:** 6 preguntas pendientes de respuesta (Q-033, alcance restante de Q-012; Q-034, cómo instalar un `.iflapp` desde el updater de plantilla; Q-035, qué opción de Q-018 se aplica; Q-036, si se invierte también la superficie y el texto de las pestañas de Q-026, con la evidencia nueva de los issues #18, #20 y #21; Q-037, si se porta el método de compilación y rastreo de la 3.2.6 del issue #26; y Q-038, si el doble clic de la titlebar debe seguir maximizando antes del tercer gesto del modo inmersivo). El ciclo 83 corrige **R-4b8e2c76** (modo inmersivo: revelado de la titlebar, icono de salir y cobertura de la barra de tareas, issue #17) sin tocar el motor. El ciclo 82 corrige **R-5e9c1d87** (perfil duplicado y recuento de repositorios, issue #24) y registra los issues #17–#27. El ciclo 81 aplica **Q-029**: los campos del asistente (proveedor, endpoint, modelo, clave y contexto) ya se configuran en Configuración → AIDE, compartiendo almacén con la página. El ciclo 80 aplicó **Q-032**: el splash deja de ser una ventana propia a pantalla completa y pasa a ser un overlay hijo del área de contenido de la ventana principal, con el marco visible desde el primer fotograma y sin abrir ni cerrar ventanas adicionales. Quedan 11 aprobadas pendientes de implementación (Q-007, Q-011…Q-014, Q-018, Q-020, Q-023…Q-025, Q-028, Q-031, con confirmación final `F-002`, `F-004`, `F-005` y `F-006`; de Q-011 sólo queda pendiente la verificación en Windows del snap a media pantalla y Q-020 queda aplicada en parte); Q-026 queda aplicada en parte (sidebar) y el resto espera Q-036; Q-018 está aprobada pero **no se aplica** hasta elegir opción (Q-035); Q-008/F-003 aplicada en parte (splash de nivel superior, ahora sustituido por Q-032 en el arranque); Q-004/F-001, Q-015, Q-016, Q-017, Q-019, Q-021, Q-022, Q-027, Q-029, Q-030 y Q-032 aplicadas y archivadas; 11 aprobadas y aplicadas antes; 0 rechazadas.
 
 Cómo responder: marca exactamente una casilla por bloque (`[x] SÍ` o `[ ] NO`)
 con un commit normal (sin force push). Solo se aplican las respuestas cuyo
@@ -418,6 +416,32 @@ no respondidas. El detalle técnico de cada punto vive en `bugs.md`
   garantías del entorno aislado; sin el código de la 3.2.6 ni una traza del
   fallo no se puede reproducir ni comparar. Requiere que el propietario adjunte
   la versión 3.2.6 (o los módulos exactos) y el error observado.
+- **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
+
+### Q-038 — El doble clic de la titlebar maximiza antes del tercer gesto
+- **Tipo:** cambio de engine
+- **Fecha:** 2026-11-28
+- **Qué se propone:** en el issue #17 dices que «antes de tocar 3 veces, ya se
+  maximiza sin esperar por el transponedor». Hoy el doble clic en la titlebar
+  maximiza o restaura (comportamiento nativo de Windows) y el tercer gesto
+  seguido entra en modo inmersivo, así que se ve un maximizado intermedio.
+  Hay dos caminos:
+  - **A)** Mantener el doble clic nativo: el tercer gesto suma el modo
+    inmersivo sobre la ventana ya maximizada (comportamiento actual).
+  - **B)** Retrasar el maximizado del doble clic ~300 ms para confirmar que no
+    llega un tercer gesto: con tres clics se entra directo en inmersivo, pero
+    el doble clic deja de responder al instante (se percibe como lentitud).
+  Indica la opción (`A` o `B`) junto a la marca.
+- **Comportamiento actual:** el doble clic maximiza/restaura al instante; el
+  tercer clic entra en modo inmersivo a continuación.
+- **Archivos/componentes afectados:** `lib/immersive_titlebar.py` (racha de
+  clics y temporizador de confirmación) y `lib/window_manager_bridge.py`
+  (doble clic de la titlebar); prueba `tests/test_startup_sequence.py`
+  (`TestTitleBarGestureLimit`).
+- **Riesgo y efectos secundarios:** **B** cambia la respuesta del doble clic en
+  toda la aplicación (maximizar deja de ser inmediato) y puede sentirse como un
+  tirón; **A** no corrige la percepción del reporte. Ninguna de las dos toca
+  compilación, empaquetado ni blindaje.
 - **Respuesta del propietario (JesusQuijada34):** `[ ] SÍ`  `[ ] NO`
 
 

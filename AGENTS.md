@@ -141,6 +141,14 @@ Repo: `https://github.com/JesusQuijada34/packagemaker.git`, rama de trabajo `mai
   Cableada en `BuildThread._compile_binary` e `iflapp_ide.compile_project`.
 
 ## Trampas conocidas
+- **Modo inmersivo** (`lib/immersive_titlebar.py`): Qt no entrega `MouseMove`
+  pasivos a widgets sin `WA_MouseTracking`, así que un filtro de eventos de la
+  ventana **nunca** ve el cursor sobre las páginas de contenido (el síntoma es
+  que la titlebar no se revela en pantalla completa). El borde superior se
+  sondea con un `QTimer` de 80 ms que sólo corre mientras el modo está activo.
+  Además, maximizar usa el **área disponible**, que excluye la barra de tareas:
+  el modo inmersivo debe ajustar la geometría a `screen.geometry()` por su
+  cuenta y volver al área disponible al salir.
 - **Inyección bootloader**: el guion inyectado se compila como copia
   `<guion>_pmboot.py` junto al original (nunca se edita in situ) y se borra en el
   `finally` de `_compile_binary`. Los bloques deben indentarse al nivel de la
