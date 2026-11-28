@@ -1165,6 +1165,13 @@ class PackageTodoGUI(QMainWindow):
         """Botón «Comprobar ahora»: consulta explícita, sin esperar intervalo."""
         self._start_patch_watch(force=True, enabled=True)
 
+    def _on_aide_settings_changed(self) -> None:
+        """La tarjeta Configuración → AIDE y la página AIDE comparten ajustes."""
+        page = getattr(self, "page_aide", None)
+        refresh = getattr(page, "refresh_settings", None)
+        if callable(refresh):
+            refresh()
+
     def apply_ui_language(self):
         """Actualiza textos de la interfaz al idioma activo."""
         self.lbl_menu_main.setText(tr("app.main_menu"))
@@ -1206,7 +1213,7 @@ class PackageTodoGUI(QMainWindow):
             )
         # Los textos que no son ``tr()`` directo (ítems de combo, placeholders
         # construidos a mano) los reaplica la propia página.
-        for name in ("report_page", "page_help", "page_profile"):
+        for name in ("report_page", "page_help", "page_profile", "page_aide"):
             page = getattr(self, name, None)
             if page is not None and hasattr(page, "retranslate"):
                 page.retranslate()
@@ -2860,6 +2867,7 @@ class PackageTodoGUI(QMainWindow):
         self.settings_panel.fontChosen.connect(self._on_font_family_chosen)
         self.settings_panel.navigationChanged.connect(self._on_config_navigation)
         self.settings_panel.patchCheckRequested.connect(self._check_patches_now)
+        self.settings_panel.aideSettingsChanged.connect(self._on_aide_settings_changed)
         self.config_back_btn.clicked.connect(self.settings_panel.go_back)
         self.config_confirm_btn.clicked.connect(self.settings_panel.confirm_and_go_back)
         outer.addWidget(self.settings_panel, 1)

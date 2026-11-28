@@ -137,7 +137,17 @@
     "account_missing": "Brak sesji GitHub",
     "account_hint": "Pełny profil znajduje się w rozszerzeniu Profil na pasku bocznym.",
     "patch_check": "Powiadamiaj o poprawkach i nowych commitach",
-    "patch_check_hint": "Odpyta api.github.com przy starcie co 6 godzin. Tylko odczyt: nic nie pobiera ani nie zastępuje."
+    "patch_check_hint": "Odpyta api.github.com przy starcie co 6 godzin. Tylko odczyt: nic nie pobiera ani nie zastępuje.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Dostawca i dane logowania asystenta",
+    "aide_provider": "Dostawca",
+    "aide_endpoint": "Adres URL punktu końcowego",
+    "aide_model": "Model",
+    "aide_api_key": "Klucz API",
+    "aide_key_saved": "Klucz zapisany; wpisz nowy, aby go zastąpić",
+    "aide_key_missing": "Brak zapisanego klucza",
+    "aide_send_context": "Dołącz kontekst projektu (oczyszczony)",
+    "aide_hint": "Klucz jest przechowywany w data/pm.data i wysyłany tylko do wskazanego punktu końcowego. Bez tej konfiguracji nic nie opuszcza komputera."
   },
   "create": {
     "sandbox": "Bezpieczna piaskownica",
@@ -898,7 +908,8 @@
     "state_no_session": "Zaloguj się na swoje konto GitHub, aby używać Copilot.",
     "state_no_endpoint": "Podaj adres punktu końcowego zgodnego z OpenAI w ustawieniach.",
     "state_no_key": "Podaj swój klucz API w ustawieniach.",
-    "api_key_placeholder": "Klucz API (przechowywany lokalnie, nigdy niepokazywany)"
+    "api_key_placeholder": "Klucz API (przechowywany lokalnie, nigdy niepokazywany)",
+    "api_key_saved": "Klucz zapisany; wpisz nowy, aby go zastąpić"
   },
   "env": {
     "field": "Dana",

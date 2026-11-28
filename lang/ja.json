@@ -137,7 +137,17 @@
     "account_missing": "GitHub セッションがありません",
     "account_hint": "完全なプロフィールはサイドバーの「プロフィール」拡張に表示されます。",
     "patch_check": "パッチと新しいコミットを通知する",
-    "patch_check_hint": "起動時に6時間ごとに api.github.com を確認します。読み取りのみで、ダウンロードや置換は行いません。"
+    "patch_check_hint": "起動時に6時間ごとに api.github.com を確認します。読み取りのみで、ダウンロードや置換は行いません。",
+    "section_aide": "AIDE",
+    "section_aide_hint": "アシスタントのプロバイダーと認証情報",
+    "aide_provider": "プロバイダー",
+    "aide_endpoint": "エンドポイント URL",
+    "aide_model": "モデル",
+    "aide_api_key": "API キー",
+    "aide_key_saved": "キーは保存済みです。変更するには新しいキーを入力してください",
+    "aide_key_missing": "保存されたキーはありません",
+    "aide_send_context": "プロジェクトのコンテキストを添付（サニタイズ済み）",
+    "aide_hint": "キーは data/pm.data に保存され、指定したエンドポイントにのみ送信されます。この設定がない限り、データがこの端末から出ることはありません。"
   },
   "create": {
     "sandbox": "安全なサンドボックス",
@@ -898,7 +908,8 @@
     "state_no_session": "Copilot を使うには GitHub アカウントでサインインしてください。",
     "state_no_endpoint": "設定で OpenAI 互換エンドポイントの URL を指定してください。",
     "state_no_key": "設定で API キーを指定してください。",
-    "api_key_placeholder": "API キー（ローカルに保存され、表示されません）"
+    "api_key_placeholder": "API キー（ローカルに保存され、表示されません）",
+    "api_key_saved": "キーは保存済みです。変更するには新しいキーを入力してください"
   },
   "env": {
     "field": "項目",

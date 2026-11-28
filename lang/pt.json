@@ -137,7 +137,17 @@
     "account_missing": "Sem sessão de GitHub",
     "account_hint": "O perfil completo aparece na extensão Perfil da barra lateral.",
     "patch_check": "Avisar sobre patches e novos commits",
-    "patch_check_hint": "Consulta api.github.com ao iniciar a cada 6 horas. Apenas leitura: não baixa nem substitui arquivos."
+    "patch_check_hint": "Consulta api.github.com ao iniciar a cada 6 horas. Apenas leitura: não baixa nem substitui arquivos.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Provedor e credenciais do assistente",
+    "aide_provider": "Provedor",
+    "aide_endpoint": "URL do endpoint",
+    "aide_model": "Modelo",
+    "aide_api_key": "Chave de API",
+    "aide_key_saved": "Chave salva; digite outra para substituí-la",
+    "aide_key_missing": "Nenhuma chave salva",
+    "aide_send_context": "Anexar contexto do projeto (saneado)",
+    "aide_hint": "A chave fica em data/pm.data e só é enviada ao endpoint indicado. Nada sai do computador sem esta configuração."
   },
   "create": {
     "sandbox": "Sandbox segura",
@@ -898,7 +908,8 @@
     "state_no_session": "Inicie sessão com a sua conta GitHub para usar o Copilot.",
     "state_no_endpoint": "Indique o URL do endpoint compatível com OpenAI nas definições.",
     "state_no_key": "Indique a sua chave de API nas definições.",
-    "api_key_placeholder": "Chave de API (guardada localmente, nunca mostrada)"
+    "api_key_placeholder": "Chave de API (guardada localmente, nunca mostrada)",
+    "api_key_saved": "Chave salva; digite outra para substituí-la"
   },
   "env": {
     "field": "Dado",

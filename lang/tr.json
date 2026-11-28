@@ -137,7 +137,17 @@
     "account_missing": "GitHub oturumu yok",
     "account_hint": "Tam profil, kenar çubuğundaki Profil uzantısında görünür.",
     "patch_check": "Yamaları ve yeni commit'leri bildir",
-    "patch_check_hint": "Açılışta her 6 saatte bir api.github.com'u sorgular. Yalnızca okuma: hiçbir şey indirmez veya değiştirmez."
+    "patch_check_hint": "Açılışta her 6 saatte bir api.github.com'u sorgular. Yalnızca okuma: hiçbir şey indirmez veya değiştirmez.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Asistan sağlayıcısı ve kimlik bilgileri",
+    "aide_provider": "Sağlayıcı",
+    "aide_endpoint": "Uç nokta URL'si",
+    "aide_model": "Model",
+    "aide_api_key": "API anahtarı",
+    "aide_key_saved": "Anahtar kaydedildi; değiştirmek için yenisini yazın",
+    "aide_key_missing": "Kayıtlı anahtar yok",
+    "aide_send_context": "Proje bağlamını ekle (temizlenmiş)",
+    "aide_hint": "Anahtar data/pm.data içinde saklanır ve yalnızca belirttiğiniz uç noktaya gönderilir. Bu ayar olmadan hiçbir veri bilgisayardan çıkmaz."
   },
   "create": {
     "sandbox": "Güvenli sanal alan",
@@ -898,7 +908,8 @@
     "state_no_session": "Copilot kullanmak için GitHub hesabınızla oturum açın.",
     "state_no_endpoint": "Ayarlarda OpenAI uyumlu uç nokta adresini belirtin.",
     "state_no_key": "Ayarlarda API anahtarınızı belirtin.",
-    "api_key_placeholder": "API anahtarı (yerelde saklanır, asla gösterilmez)"
+    "api_key_placeholder": "API anahtarı (yerelde saklanır, asla gösterilmez)",
+    "api_key_saved": "Anahtar kaydedildi; değiştirmek için yenisini yazın"
   },
   "env": {
     "field": "Veri",

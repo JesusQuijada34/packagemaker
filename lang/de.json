@@ -137,7 +137,17 @@
     "account_missing": "Keine GitHub-Sitzung",
     "account_hint": "Das vollständige Profil erscheint in der Erweiterung Profil der Seitenleiste.",
     "patch_check": "Auf Patches und neue Commits hinweisen",
-    "patch_check_hint": "Fragt beim Start alle 6 Stunden api.github.com ab. Nur Lesen: es wird nichts geladen oder ersetzt."
+    "patch_check_hint": "Fragt beim Start alle 6 Stunden api.github.com ab. Nur Lesen: es wird nichts geladen oder ersetzt.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Anbieter und Zugangsdaten des Assistenten",
+    "aide_provider": "Anbieter",
+    "aide_endpoint": "Endpunkt-URL",
+    "aide_model": "Modell",
+    "aide_api_key": "API-Schlüssel",
+    "aide_key_saved": "Schlüssel gespeichert; zum Ersetzen einen neuen eingeben",
+    "aide_key_missing": "Kein Schlüssel gespeichert",
+    "aide_send_context": "Projektkontext anhängen (bereinigt)",
+    "aide_hint": "Der Schlüssel liegt in data/pm.data und wird nur an den angegebenen Endpunkt gesendet. Ohne diese Einrichtung verlässt nichts den Rechner."
   },
   "create": {
     "sandbox": "Sichere Sandbox",
@@ -898,7 +908,8 @@
     "state_no_session": "Melden Sie sich mit Ihrem GitHub-Konto an, um Copilot zu nutzen.",
     "state_no_endpoint": "Geben Sie die URL des OpenAI-kompatiblen Endpunkts in den Einstellungen an.",
     "state_no_key": "Geben Sie Ihren API-Schlüssel in den Einstellungen an.",
-    "api_key_placeholder": "API-Schlüssel (lokal gespeichert, nie angezeigt)"
+    "api_key_placeholder": "API-Schlüssel (lokal gespeichert, nie angezeigt)",
+    "api_key_saved": "Schlüssel gespeichert; zum Ersetzen einen neuen eingeben"
   },
   "env": {
     "field": "Angabe",

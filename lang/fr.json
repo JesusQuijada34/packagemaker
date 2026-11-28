@@ -137,7 +137,17 @@
     "account_missing": "Aucune session GitHub",
     "account_hint": "Le profil complet s'affiche dans l'extension Profil de la barre latérale.",
     "patch_check": "Signaler les correctifs et les nouveaux commits",
-    "patch_check_hint": "Consulte api.github.com au démarrage toutes les 6 heures. Lecture seule : rien n'est téléchargé ni remplacé."
+    "patch_check_hint": "Consulte api.github.com au démarrage toutes les 6 heures. Lecture seule : rien n'est téléchargé ni remplacé.",
+    "section_aide": "AIDE",
+    "section_aide_hint": "Fournisseur et identifiants de l'assistant",
+    "aide_provider": "Fournisseur",
+    "aide_endpoint": "URL du point de terminaison",
+    "aide_model": "Modèle",
+    "aide_api_key": "Clé d'API",
+    "aide_key_saved": "Clé enregistrée ; saisissez-en une nouvelle pour la remplacer",
+    "aide_key_missing": "Aucune clé enregistrée",
+    "aide_send_context": "Joindre le contexte du projet (nettoyé)",
+    "aide_hint": "La clé est stockée dans data/pm.data et n'est envoyée qu'au point de terminaison indiqué. Rien ne quitte la machine sans cette configuration."
   },
   "create": {
     "sandbox": "Sandbox sécurisé",
@@ -898,7 +908,8 @@
     "state_no_session": "Connectez-vous avec votre compte GitHub pour utiliser Copilot.",
     "state_no_endpoint": "Indiquez l'URL du point de terminaison compatible OpenAI dans les paramètres.",
     "state_no_key": "Indiquez votre clé d'API dans les paramètres.",
-    "api_key_placeholder": "Clé d'API (stockée en local, jamais affichée)"
+    "api_key_placeholder": "Clé d'API (stockée en local, jamais affichée)",
+    "api_key_saved": "Clé enregistrée ; saisissez-en une nouvelle pour la remplacer"
   },
   "env": {
     "field": "Donnée",
