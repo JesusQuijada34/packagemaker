@@ -66,6 +66,39 @@ def test_subtitle_lives_outside_the_pill(_app):
     assert layout.indexOf(subtitle) == layout.indexOf(action_bar) + 2
 
 
+def test_subtitle_renders_the_catalog_markdown(_app):
+    """R-8b5c1d47: los catálogos usan ``**negrita**`` y `` `código` ``.
+
+    El QLabel no interpreta Markdown, así que los asteriscos y las comillas
+    invertidas salían literales en la descripción de la página de creación.
+    """
+    page = QtWidgets.QWidget()
+    layout = QtWidgets.QVBoxLayout(page)
+    action_bar, _title = pab.install_page_action_bar(layout, "Título")
+
+    pab.set_action_bar_subtitle(
+        action_bar, "Metadatos para el ecosistema **Influent OS** con `.iflapp`."
+    )
+    text = action_bar.subtitle_label.text()
+    assert "<b>Influent OS</b>" in text
+    assert "**" not in text
+    assert "`" not in text
+    assert "monospace" in text
+
+
+def test_subtitle_escapes_html_and_leaves_plain_text_alone(_app):
+    page = QtWidgets.QWidget()
+    layout = QtWidgets.QVBoxLayout(page)
+    action_bar, _title = pab.install_page_action_bar(layout, "Título")
+
+    pab.set_action_bar_subtitle(action_bar, "Usa <ruta> y 1 < 2")
+    assert "<ruta>" not in action_bar.subtitle_label.text()
+    assert "&lt;ruta&gt;" in action_bar.subtitle_label.text()
+
+    pab.set_action_bar_subtitle(action_bar, "Detalle de la página")
+    assert action_bar.subtitle_label.text() == "Detalle de la página"
+
+
 def test_activity_bar_paints_in_both_states(_app):
     """Pintar no debe lanzar ni en reposo ni animada."""
     from PyQt6.QtGui import QPixmap
